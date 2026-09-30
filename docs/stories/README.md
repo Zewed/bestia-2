@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0008** · Vérifier automatiquement chaque envoi. Le jeu est en ligne sur [bestia-2.vercel.app](https://bestia-2.vercel.app). Prochaine : **US-0009** · Consulter une page de santé.
+Dernière story livrée : **US-0009** · Consulter une page de santé ([/sante](https://bestia-2.vercel.app/sante)). L'étape 1 est terminée. Le jeu est en ligne sur [bestia-2.vercel.app](https://bestia-2.vercel.app). Prochaine : **US-0010** · Reprendre la palette du prototype.
 
 ## Sommaire
 

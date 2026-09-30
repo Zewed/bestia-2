@@ -65,16 +65,21 @@ export function isConnectionError(error: unknown): boolean {
   return Boolean(code && (code in PG_CODES || code in NETWORK_CODES)) || /timeout/i.test(message);
 }
 
+/** La raison d'un échec de connexion, en une phrase écrite ici : jamais le texte du pilote. */
+export function connectionFailureReason(error: unknown): string {
+  const code = (error as { code?: string } | null)?.code;
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    (code && (PG_CODES[code] ?? NETWORK_CODES[code])) ||
+    (/timeout/i.test(message) ? "le serveur ne répond pas" : `erreur inattendue${code ? ` (${code})` : ""}`)
+  );
+}
+
 /** Traduit une erreur du pilote en message lisible, sans jamais y recopier l'adresse de la base. */
 export function explainDatabaseError(error: unknown): DatabaseUnavailableError {
   if (error instanceof DatabaseUnavailableError) return error;
-  const code = (error as { code?: string } | null)?.code;
-  const message = error instanceof Error ? error.message : String(error);
-  const reason =
-    (code && (PG_CODES[code] ?? NETWORK_CODES[code])) ??
-    (/timeout/i.test(message) ? "le serveur ne répond pas" : `erreur inattendue (${code ?? message})`);
   return new DatabaseUnavailableError(
-    `Connexion à la base impossible : ${reason}. Vérifiez DATABASE_URL dans .env.local.`,
+    `Connexion à la base impossible : ${connectionFailureReason(error)}. Vérifiez DATABASE_URL dans .env.local.`,
     { cause: error },
   );
 }
