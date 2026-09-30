@@ -13,8 +13,22 @@ L'ensemble d'un seul tenant des Cases qu'un joueur possède ; il grandit de proc
 _Avoid_: Planète, base, colonie
 
 **Case**:
-Un hexagone du Monde, doté d'un biome, qui rapporte selon ce biome à celui qui la possède.
+Un hexagone du Monde, doté d'un biome, qui rapporte un peu et en continu à celui qui la possède.
 _Avoid_: Tuile, parcelle, position, coordonnée
+
+**Biome**:
+Le milieu naturel d'une Case, parmi : prairie, forêt, jungle, savane, désert, montagne, toundra, banquise, eau (côte, lac, rivière, mer).
+_Avoid_: Terrain, climat
+
+**Couronne**:
+La bordure extérieure du Monde, où les joueurs s'installent en arrivant.
+
+**Cœur sauvage**:
+Le centre du Monde, inhabité, où vivent les Espèces les plus rares.
+_Avoid_: Centre, zone dangereuse
+
+**Densité**:
+L'abondance de faune d'une Case, cachée, qui change chaque jour.
 
 **Avant-poste**:
 La construction qui permet de revendiquer une Case voisine de son Territoire.
@@ -54,12 +68,32 @@ _Avoid_: Slot, capacité, logement
 La Nourriture qu'une Bête consomme chaque heure, en plus de ce que coûte son Élevage ; avec les Places, c'est ce qui limite la taille d'une armée.
 _Avoid_: Upkeep, ration, consommation
 
+**Habitant**:
+Un humain du Territoire ; il ne combat jamais, et il exerce un Métier.
+_Avoid_: Villageois, ouvrier, unité, population
+
+**Métier**:
+L'occupation d'un Habitant : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, dresseur, ou un Poste.
+_Avoid_: Job, classe, profession
+
+**Poste**:
+L'emploi d'un Habitant (ou d'une Bête à Rôle) dans une construction, qui ne fonctionne qu'avec son personnel.
+_Avoid_: Affectation, slot
+
+**Récolte**:
+Une sortie d'Habitants vers une Case pour en rapporter des Matériaux ou de la Nourriture ; elle rapporte bien plus que la production continue des Cases.
+_Avoid_: Mission, collecte, farm
+
 **Expédition**:
-Un groupe de Bêtes envoyé explorer le Monde hors du Territoire.
-_Avoid_: Mission, raid, sortie
+Une sortie d'Explorateurs, accompagnés de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages.
+_Avoid_: Mission, raid
 
 **Rencontre**:
-Le moment où une Expédition croise une Bête sauvage ; son issue dépend de la force de l'Expédition.
+Le moment où une Expédition croise une Bête sauvage, à intervalles aléatoires pendant son séjour sur la Case ; son issue dépend de la force de l'Expédition.
+
+**Famine**:
+Le manque de Nourriture pour payer l'Entretien : les Bêtes affamées retournent à l'état sauvage et les Habitants s'en vont, après un avertissement.
+_Avoid_: Mort de faim, pénurie
 
 **Apprivoisement**:
 Le fait qu'une Bête sauvage, une seule à la fois, rejoigne un joueur à l'issue d'une Rencontre ; son sexe est dû au hasard.
@@ -76,7 +110,7 @@ Le fait de produire, à la demande du joueur, des Bêtes d'une Espèce dont il a
 _Avoid_: Reproduction, dressage, entraînement
 
 **Nourriture**:
-La Viande, que mangent les carnivores, et les Végétaux, que mangent les herbivores ; les omnivores mangent l'une ou l'autre.
+La Viande et les Végétaux, que mangent les Bêtes (selon leur régime) et les Habitants.
 _Avoid_: Vivres, ration
 
 **Matériaux**:

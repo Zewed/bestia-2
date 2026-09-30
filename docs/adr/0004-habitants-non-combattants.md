@@ -1,0 +1,3 @@
+# Des Habitants qui travaillent, des Bêtes qui combattent
+
+Le Territoire tourne grâce à des Habitants humains qui exercent un Métier (explorer, récolter, chercher, bâtir, dresser, tenir un Poste) mais ne combattent jamais ; toute la force militaire vient des Bêtes. On a repris cette idée du prototype bestiary (The-Vibe-Company/bestiary) : les Habitants deviennent ce qui limite le nombre de choses faites en même temps, et les Bêtes à Rôle démultiplient leur travail. On a écarté un jeu sans humains, où les Bêtes auraient tout fait, parce que les choix d'affectation donnent de la matière aux courtes sessions.
