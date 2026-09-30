@@ -46,7 +46,7 @@ Un animal du Monde, qu'il soit encore sauvage ou déjà apprivoisé ; toutes les
 _Avoid_: Unité, vaisseau, créature, monstre, individu
 
 **Bête sauvage**:
-Une Bête qui n'appartient à personne et vit librement dans le Monde, où il faut la trouver.
+Une Bête qui n'appartient à personne, que le Monde fait apparaître de temps en temps sur une Case pour une durée limitée ; toutes les Raretés peuvent apparaître partout, mais les plus rares sont plus fréquentes près du Cœur sauvage.
 
 **Espèce**:
 Une sorte d'animal, avec des caractéristiques calquées sur l'animal réel (un mammouth vaut une foule de souris).
@@ -101,7 +101,7 @@ Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointain
 _Avoid_: Mission, raid
 
 **Rencontre**:
-Le moment où une Expédition croise une Bête sauvage, à intervalles aléatoires pendant son séjour sur la Case ; son issue dépend de la force de l'Expédition.
+Le moment où une Bête sauvage apparaît sur une Case où se trouve une Expédition ; seule une Expédition présente la voit, et l'issue dépend de sa force.
 
 **Attaque**:
 Une sortie de Bêtes vers le Territoire d'un autre joueur pour affronter ses Bêtes et piller sa Nourriture et ses Matériaux ; on ne peut jamais y voler de Bêtes.
@@ -156,7 +156,7 @@ Un événement du Monde où une Bête d'Espèce mythique surgit dans le Cœur sa
 _Avoid_: Boss, raid
 
 **Couple de départ**:
-Le Couple d'une Espèce très faible, choisi parmi trois au début du jeu, qui permet d'élever ses premières Bêtes.
+Le Couple d'une Espèce très faible, choisi au début du jeu parmi trois (souris, poule, pigeon), qui permet d'élever ses premières Bêtes.
 _Avoid_: Starter, kit de départ
 
 **Épreuve**:
