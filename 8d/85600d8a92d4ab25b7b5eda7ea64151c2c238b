@@ -1,0 +1,19 @@
+docs/stories/README.md
+  s_a4b2c77b6bd661::t_3e5bdc449c9355 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8d85600d8a92d4ab25b7b5eda7ea64151c2c238b",
+  "prompts": {},
+  "sessions": {
+    "s_a4b2c77b6bd661": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4307e776-bda3-44d4-9789-9e42c43e177c",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
