@@ -9,9 +9,10 @@ import { explainDatabaseError, getPool } from "./index";
  */
 export async function checkDatabase(): Promise<{ written: string; read: string }> {
   const written = `Bête sauvage ${randomUUID()} · é à ç 🐺`;
+  const pool = getPool();
   let client;
   try {
-    client = await getPool().connect();
+    client = await pool.connect();
   } catch (error) {
     throw explainDatabaseError(error);
   }

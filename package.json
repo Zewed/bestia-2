@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "check": "npm run lint && npm run typecheck",
-    "db:check": "tsx scripts/db-check.ts"
+    "check": "npm run lint && npm run typecheck && npm run secrets",
+    "db:check": "tsx scripts/db-check.ts",
+    "secrets": "tsx scripts/check-secrets.ts",
+    "secrets:history": "tsx scripts/check-secrets.ts --history"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.3",

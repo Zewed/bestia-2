@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0002** · Relier le projet à une base Postgres. Prochaine : **US-0003** · Tenir les secrets hors du code.
+Dernière story livrée : **US-0003** · Tenir les secrets hors du code. Prochaine : **US-0004** · Faire évoluer la base par migrations.
 
 ## Sommaire
 

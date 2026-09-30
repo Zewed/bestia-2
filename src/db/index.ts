@@ -1,16 +1,12 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
+import { env } from "../env";
 
 let pool: Pool | undefined;
 
 export function getPool(): Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
-    if (!connectionString) {
-      throw new DatabaseUnavailableError(
-        "DATABASE_URL est vide : ajoutez l'adresse de la base dans .env.local.",
-      );
-    }
+    const connectionString = env("DATABASE_URL");
     // Échouer vite plutôt que d'attendre sans fin une base qui ne répond pas.
     pool = new Pool({ connectionString: withStrictSsl(connectionString), connectionTimeoutMillis: 5_000 });
   }
