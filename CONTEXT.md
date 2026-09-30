@@ -39,8 +39,12 @@ Une Espèce qui a réellement existé mais a disparu, et qui était redoutable (
 _Avoid_: Boss, fossile
 
 **Espèce mythique**:
-Une Espèce qui n'existe que dans les légendes (phénix, dragon), au sommet de la Rareté.
+Une Espèce qui n'existe que dans les légendes (phénix, dragon), au sommet de la Rareté ; elle ne s'élève pas, et un joueur n'en possède au plus qu'une Bête.
 _Avoid_: Monstre, divinité
+
+**Habitat**:
+Le milieu dont une Espèce a besoin pour être élevée : une Case de son biome, ou une construction qui reproduit ce biome.
+_Avoid_: Enclos, zone
 
 **Expédition**:
 Un groupe de Bêtes envoyé explorer le Monde hors du Territoire.
@@ -62,6 +66,18 @@ Le lieu protégé du Territoire où vivent les Couples.
 **Élevage**:
 Le fait de produire, à la demande du joueur, des Bêtes d'une Espèce dont il a réuni un Couple ; il reste acquis pour toujours.
 _Avoid_: Reproduction, dressage, entraînement
+
+**Nourriture**:
+La Viande, que mangent les carnivores, et les Végétaux, que mangent les herbivores ; les omnivores mangent l'une ou l'autre.
+_Avoid_: Vivres, ration
+
+**Matériaux**:
+Le Bois et la Pierre, qui servent à construire.
+_Avoid_: Ressources de construction
+
+**Recherche**:
+Les savoirs d'un joueur, qui débloquent des constructions et l'usage des Espèces à Rôle.
+_Avoid_: Technologie, science, savoir
 
 **Bestiaire**:
 Le catalogue personnel d'un joueur, où s'inscrit chaque Espèce qu'il a croisée, apprivoisée ou dont il a réuni le Couple.
