@@ -5,7 +5,7 @@ Un jeu de stratégie persistant où l'on est d'abord un dresseur : on découvre 
 ## Language
 
 **Monde**:
-L'unique planète sauvage, partagée par tous les joueurs, qui ne s'arrête ni ne se réinitialise jamais.
+Une planète sauvage partagée par ses joueurs, qui ne s'arrête ni ne se réinitialise jamais ; quand un Monde est plein, on en ouvre un autre.
 _Avoid_: Univers, serveur, galaxie
 
 **Territoire**:
@@ -46,7 +46,7 @@ Un animal du Monde, qu'il soit encore sauvage ou déjà apprivoisé ; toutes les
 _Avoid_: Unité, vaisseau, créature, monstre, individu
 
 **Bête sauvage**:
-Une Bête qui n'appartient à personne, que le Monde fait apparaître de temps en temps sur une Case pour une durée limitée ; toutes les Raretés peuvent apparaître partout, mais les plus rares sont plus fréquentes près du Cœur sauvage.
+Une Bête qui n'appartient à personne, que le Monde fait apparaître de temps en temps sur une Case pour une durée limitée ; toutes les Raretés peuvent apparaître partout et les communes restent partout les plus nombreuses, mais les plus rares sont plus fréquentes près du Cœur sauvage.
 
 **Espèce**:
 Une sorte d'animal, avec des caractéristiques calquées sur l'animal réel (un mammouth vaut une foule de souris).
@@ -101,7 +101,7 @@ Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointain
 _Avoid_: Mission, raid
 
 **Rencontre**:
-Le moment où une Bête sauvage apparaît sur une Case où se trouve une Expédition ; seule une Expédition présente la voit, et l'issue dépend de sa force.
+Le moment où une Bête sauvage apparaît sur une Case où se trouve une Expédition ; seules les Expéditions présentes la voient. Si elle est à leur portée, elle suit l'une d'elles, avec des chances proportionnelles à la force de chaque escorte ; sinon elle reste sur la Case jusqu'à la fin de sa durée, et peut attaquer.
 
 **Attaque**:
 Une sortie de Bêtes vers le Territoire d'un autre joueur pour affronter ses Bêtes et piller sa Nourriture et ses Matériaux ; on ne peut jamais y voler de Bêtes.
@@ -113,6 +113,10 @@ _Avoid_: Vague, invasion, attaque sauvage
 
 **Blessé**:
 Une Bête mise hors de combat qui guérit avec le temps, plus vite si l'on s'en occupe ; les autres pertes sont des morts.
+
+**Repos**:
+Un mode que le joueur active pour une durée minimale, pendant lequel son Territoire ne produit plus, ne consomme plus et ne peut plus être attaqué.
+_Avoid_: Vacances, pause, bouclier
 
 **Famine**:
 Le manque de Nourriture pour payer l'Entretien : les Bêtes affamées retournent à l'état sauvage et les Habitants s'en vont, après un avertissement.
