@@ -1,0 +1,21 @@
+CONTEXT.md
+  s_d0f4332113d26c::t_cdd3dca21b5253 16-17,23,26-36,49-55
+docs/adr/0002-betes-identiques-par-espece.md
+  s_d0f4332113d26c::t_3431e5166265f2 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "695f901620df97bcda9bb6c4fe3de47d93d4d64c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
