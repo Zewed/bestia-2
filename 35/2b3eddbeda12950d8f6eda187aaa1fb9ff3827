@@ -1,0 +1,43 @@
+scripts/db-migrate.ts
+  s_d0f4332113d26c::t_3dab89576abcdb 22,37,40-41
+package.json
+  s_d0f4332113d26c::t_3dab89576abcdb 17-18
+vercel.json
+  s_d0f4332113d26c::t_ee00624cfe019e 1-6
+README.md
+  s_d0f4332113d26c::t_b62c357cfeaa15 19,31-34
+scripts/db-check.ts
+  s_d0f4332113d26c::t_3dab89576abcdb 8,11-12
+src/db/check.ts
+  s_d0f4332113d26c::t_3dab89576abcdb 10,24-26,32
+drizzle.config.ts
+  s_d0f4332113d26c::t_3dab89576abcdb 4
+scripts/vercel-build.sh
+  s_d0f4332113d26c::t_1089b4421ef058 1-9
+.vercelignore
+  s_d0f4332113d26c::t_dccedc34d3dd21 1-5
+scripts/db-dev-setup.ts
+  s_d0f4332113d26c::t_54ead41af37a73 1-47
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_50febc6ec2d437 51
+docs/stories/README.md
+  s_d0f4332113d26c::t_2e74883c6665a2 7
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_62c24a49bf396f 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "352b3eddbeda12950d8f6eda187aaa1fb9ff3827",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
