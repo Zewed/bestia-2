@@ -43,8 +43,16 @@ Une Espèce qui n'existe que dans les légendes (phénix, dragon), au sommet de 
 _Avoid_: Monstre, divinité
 
 **Habitat**:
-Le milieu dont une Espèce a besoin pour être élevée : une Case de son biome, ou une construction qui reproduit ce biome.
+Le milieu dont une Espèce a besoin pour être élevée et logée : une Case de son biome, ou une construction qui reproduit ce biome ; chaque Habitat offre un nombre de Places.
 _Avoid_: Enclos, zone
+
+**Place**:
+Ce qu'une Bête occupe dans un Habitat, selon sa taille ; un éléphant prend plus de Places qu'un lapin.
+_Avoid_: Slot, capacité, logement
+
+**Entretien**:
+La Nourriture qu'une Bête consomme chaque heure, en plus de ce que coûte son Élevage ; avec les Places, c'est ce qui limite la taille d'une armée.
+_Avoid_: Upkeep, ration, consommation
 
 **Expédition**:
 Un groupe de Bêtes envoyé explorer le Monde hors du Territoire.
