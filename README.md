@@ -6,3 +6,14 @@ Bestia repensé de zéro. On garde la direction artistique et l'univers validés
 - `docs/adr/` : les décisions structurantes et leurs raisons.
 - `docs/ordre-d-attaque.md` : l'ordre dans lequel on construit le jeu, étape par étape.
 - `docs/stories/` : les 752 user stories qui découpent chaque étape, avec leurs déblocages et les points encore à décider.
+
+## Lancer le jeu
+
+Il faut Node 22 ou plus récent.
+
+```bash
+npm install
+npm run dev
+```
+
+Le jeu répond sur http://localhost:3000. Avant chaque envoi, `npm run check` passe le lint et la vérification des types.

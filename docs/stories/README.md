@@ -2,6 +2,10 @@
 
 Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en 18 fichiers, une par comportement que l'on peut livrer et tester seul. On les construit dans l'ordre, jalon par jalon, en respectant les déblocages. Les mots du jeu sont ceux de [CONTEXT.md](../../CONTEXT.md).
 
+## Où on en est
+
+Dernière story livrée : **US-0001** · Créer le projet Next.js. Prochaine : **US-0002** · Relier le projet à une base Postgres.
+
 ## Sommaire
 
 | Jalon | Étapes | Stories | À décider |

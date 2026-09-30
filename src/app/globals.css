@@ -1,0 +1,12 @@
+/* Habillage provisoire : la palette et les polices Bento arrivent à l'étape 2. */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  font-family: system-ui, sans-serif;
+}
