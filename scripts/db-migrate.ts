@@ -5,6 +5,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
 import { findDestructiveStatements, MIGRATIONS_FOLDER } from "../src/db/migrations";
+import { assertNotProductionDatabase } from "../src/db/production";
 import { assertEnv } from "../src/env";
 
 async function appliedCount(db: ReturnType<typeof drizzle>): Promise<number> {
@@ -29,12 +30,14 @@ async function main() {
     }
     // La connexion directe quand elle existe : une migration ne doit pas passer par le pool.
     pool = createPool(process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL!);
+    // Seule la production migre la base de production (VERCEL_ENV=production).
+    const identity = await assertNotProductionDatabase(pool, "Migration refusée");
     const db = drizzle(pool);
     const before = await appliedCount(db);
     await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
     const after = await appliedCount(db);
     const applied = after - before;
-    const name = (await db.execute<{ base: string }>(sql`select current_database() as base`)).rows[0]?.base;
+    const name = identity.branch ? `${identity.database} (branche ${identity.branch})` : identity.database;
     console.log(
       applied === 0
         ? `Base ${name} déjà à jour : ${after} migration(s), rien à appliquer.`
