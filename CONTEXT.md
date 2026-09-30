@@ -73,8 +73,12 @@ Un humain du Territoire ; il ne combat jamais, et il exerce un Métier.
 _Avoid_: Villageois, ouvrier, unité, population
 
 **Métier**:
-L'occupation d'un Habitant : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, dresseur, ou un Poste.
+L'occupation d'un Habitant : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, ou un Poste.
 _Avoid_: Job, classe, profession
+
+**Voyageur**:
+Un humain de passage qui attend aux portes du Territoire ; accueilli, il devient un Habitant, sinon il repart.
+_Avoid_: Recrue, immigrant
 
 **Poste**:
 L'emploi d'un Habitant (ou d'une Bête à Rôle) dans une construction, qui ne fonctionne qu'avec son personnel.
@@ -85,11 +89,19 @@ Une sortie d'Habitants vers une Case pour en rapporter des Matériaux ou de la N
 _Avoid_: Mission, collecte, farm
 
 **Expédition**:
-Une sortie d'Explorateurs, accompagnés de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages.
+Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages ; seules les Bêtes y risquent leur vie, les Explorateurs fuient.
 _Avoid_: Mission, raid
 
 **Rencontre**:
 Le moment où une Expédition croise une Bête sauvage, à intervalles aléatoires pendant son séjour sur la Case ; son issue dépend de la force de l'Expédition.
+
+**Attaque**:
+Une sortie de Bêtes vers le Territoire d'un autre joueur pour affronter ses Bêtes et piller sa Nourriture et ses Matériaux ; on ne peut jamais y voler de Bêtes.
+_Avoid_: Raid, pillage, assaut
+
+**Incursion**:
+L'attaque d'un Territoire par des Bêtes sauvages, annoncée à l'avance et plus fréquente près du Cœur sauvage.
+_Avoid_: Vague, invasion, attaque sauvage
 
 **Famine**:
 Le manque de Nourriture pour payer l'Entretien : les Bêtes affamées retournent à l'état sauvage et les Habitants s'en vont, après un avertissement.
@@ -118,7 +130,7 @@ Le Bois et la Pierre, qui servent à construire.
 _Avoid_: Ressources de construction
 
 **Recherche**:
-Les savoirs d'un joueur, qui débloquent des constructions et l'usage des Espèces à Rôle.
+Les savoirs d'un joueur, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions, les Rôles et la portée des Expéditions, mais jamais la force des Bêtes.
 _Avoid_: Technologie, science, savoir
 
 **Bestiaire**:
