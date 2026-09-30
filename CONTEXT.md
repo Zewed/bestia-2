@@ -152,7 +152,7 @@ Une période qui change la Densité et les récoltes selon le Biome (un hiver re
 _Avoid_: Saison de jeu, reset
 
 **Apparition**:
-Un événement du Monde où une Bête d'Espèce mythique surgit dans le Cœur sauvage pour un temps.
+Un événement du Monde où une Bête d'Espèce mythique surgit dans le Cœur sauvage pour un temps ; le premier joueur qui la vainc l'apprivoise à coup sûr, les suivants avec des chances décroissantes.
 _Avoid_: Boss, raid
 
 **Couple de départ**:
