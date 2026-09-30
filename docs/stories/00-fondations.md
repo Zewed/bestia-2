@@ -20,7 +20,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Une requête d'essai écrit une ligne dans la base puis la relit à l'identique.
   - Si la base ne répond pas, le projet affiche une erreur claire au lieu d'échouer en silence.
-  - L'hébergeur de la base et l'outil qui y accède depuis le code (à décider).
+  - La base est hébergée chez Neon, et le code y accède avec Drizzle.
 
 ### US-0003 · Tenir les secrets hors du code
 **En tant que** développeur, **je veux** que l'adresse de la base et toutes les clés soient lues dans des variables d'environnement, **afin de** ne jamais exposer un secret dans le dépôt.

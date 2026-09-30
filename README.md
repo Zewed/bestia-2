@@ -16,4 +16,4 @@ npm install
 npm run dev
 ```
 
-Le jeu répond sur http://localhost:3000. Avant chaque envoi, `npm run check` passe le lint et la vérification des types.
+Le jeu répond sur http://localhost:3000. La base est chez Neon, rattachée au projet Vercel `bestia-2` : `vercel env pull .env.local` récupère son adresse, qui ne va jamais dans le dépôt, et `npm run db:check` vérifie que le jeu y lit et écrit. Avant chaque envoi, `npm run check` passe le lint et la vérification des types.
