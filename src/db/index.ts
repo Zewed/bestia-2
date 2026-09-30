@@ -18,7 +18,7 @@ export function createPool(connectionString: string): Pool {
 
 // Neon fournit sslmode=require, dont le sens va s'affaiblir dans pg 9 : on exige
 // dès maintenant la vérification complète du certificat, ce que pg fait déjà.
-function withStrictSsl(connectionString: string): string {
+export function withStrictSsl(connectionString: string): string {
   try {
     const url = new URL(connectionString);
     if (url.searchParams.get("sslmode") === "require") url.searchParams.set("sslmode", "verify-full");
