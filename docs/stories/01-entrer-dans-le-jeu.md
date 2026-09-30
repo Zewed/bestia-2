@@ -1,0 +1,612 @@
+# Jalon 1 · Entrer dans le jeu
+
+Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et un Couple de départ, puis naît sur la Couronne, dans son Foyer. Étapes couvertes : 5 à 9 de l'ordre d'attaque.
+
+## Étape 5 · Créer un compte
+
+### US-0101 · Trouver l'entrée du jeu sur la page d'accueil
+**En tant que** visiteur, **je veux** voir sur la page d'accueil un bouton pour créer un compte et un autre pour me connecter, **afin de** comprendre tout de suite par où entrer dans le jeu.
+
+- **Débloquée par** : Étape 2
+- **Critères d'acceptation** :
+  - La page d'accueil montre « Créer un compte » et « Se connecter », visibles sans défiler, sur ordinateur comme sur mobile.
+  - « Créer un compte » mène au formulaire d'inscription, « Se connecter » au formulaire de connexion.
+  - Une courte phrase présente le jeu ; son texte (à décider).
+
+### US-0102 · Ouvrir le formulaire d'inscription
+**En tant que** visiteur, **je veux** un formulaire court qui ne demande que mon adresse e-mail et un mot de passe, **afin de** créer mon compte en moins d'une minute.
+
+- **Débloquée par** : US-0101
+- **Critères d'acceptation** :
+  - Le formulaire demande l'adresse e-mail et le mot de passe, rien d'autre.
+  - Sur mobile, le champ e-mail ouvre le clavier avec « @ », et le navigateur peut proposer un mot de passe fort.
+  - Le bouton « Créer mon compte » est sous les champs, facile à toucher au pouce.
+  - Un lien « J'ai déjà un compte » mène à la connexion.
+  - Une case d'acceptation des conditions d'utilisation (à décider).
+
+### US-0103 · Vérifier le format de l'adresse e-mail
+**En tant que** visiteur, **je veux** être prévenu tout de suite si mon adresse e-mail est mal écrite, **afin de** corriger avant d'envoyer le formulaire.
+
+- **Débloquée par** : US-0102
+- **Critères d'acceptation** :
+  - Une adresse sans « @ » ou sans domaine (« nom@ », « nom.fr ») affiche « Cette adresse e-mail n'est pas valide » sous le champ.
+  - Un champ vide affiche « Indiquez votre adresse e-mail ».
+  - Le message apparaît quand on quitte le champ, pas à chaque lettre tapée.
+  - Le jeu refait la même vérification à l'envoi, même si le navigateur a été contourné.
+
+### US-0104 · Reconnaître une adresse écrite avec des majuscules
+**En tant que** visiteur, **je veux** que mon adresse soit reconnue même tapée avec des majuscules ou des espaces autour, **afin de** ne jamais me retrouver avec deux comptes, ni bloqué à la connexion.
+
+- **Débloquée par** : US-0103
+- **Critères d'acceptation** :
+  - Les espaces avant et après l'adresse sont retirés.
+  - « Nom@Exemple.fr » et « nom@exemple.fr » désignent le même compte, à l'inscription comme à la connexion.
+  - L'adresse est enregistrée en minuscules.
+
+### US-0105 · Exiger un mot de passe assez long
+**En tant que** visiteur, **je veux** connaître la règle du mot de passe avant de me tromper, **afin de** choisir du premier coup un mot de passe accepté.
+
+- **Débloquée par** : US-0102
+- **Critères d'acceptation** :
+  - La règle est écrite sous le champ : au moins (chiffre à régler) caractères.
+  - Un mot de passe trop court affiche « Le mot de passe doit contenir au moins N caractères » et bloque l'envoi.
+  - Une longueur maximale de (chiffre à régler) caractères évite les mots de passe démesurés.
+  - D'autres règles, comme refuser les mots de passe les plus courants (à décider).
+
+### US-0106 · Afficher ou masquer le mot de passe
+**En tant que** visiteur, **je veux** pouvoir afficher le mot de passe que je tape, **afin de** vérifier que je ne me suis pas trompé, surtout sur un clavier de téléphone.
+
+- **Débloquée par** : US-0105
+- **Critères d'acceptation** :
+  - Le mot de passe est masqué par défaut.
+  - Un bouton en forme d'œil l'affiche en clair ; un second appui le masque.
+  - Le bouton est assez grand pour le pouce et se manie aussi au clavier.
+
+### US-0107 · Créer le compte
+**En tant que** visiteur, **je veux** que mon compte soit créé dès que le formulaire est valide, **afin de** pouvoir entrer dans le jeu.
+
+- **Débloquée par** : US-0104, US-0105
+- **Critères d'acceptation** :
+  - Un formulaire valide crée un compte avec l'adresse et le mot de passe.
+  - Le mot de passe n'est jamais enregistré en clair : seule une empreinte est gardée, et il n'apparaît dans aucun journal.
+  - La date de création du compte est enregistrée.
+
+### US-0108 · Confirmer la création du compte
+**En tant que** visiteur, **je veux** un message qui confirme que mon compte existe, **afin de** passer sereinement à la suite.
+
+- **Débloquée par** : US-0107
+- **Critères d'acceptation** :
+  - Après la création, le message « Votre compte est créé » s'affiche.
+  - Le message propose d'aller à la connexion, avec l'adresse déjà remplie.
+  - Le mot de passe n'est plus présent dans le formulaire.
+
+### US-0109 · Refuser une adresse déjà utilisée
+**En tant que** visiteur, **je veux** un message clair si mon adresse a déjà un compte, **afin de** me connecter au lieu de recommencer.
+
+- **Débloquée par** : US-0107
+- **Critères d'acceptation** :
+  - Une adresse déjà inscrite, majuscules comprises, affiche « Cette adresse a déjà un compte » et rien n'est créé.
+  - Le message propose un lien vers la connexion, avec l'adresse déjà remplie.
+  - L'adresse reste dans le champ, le mot de passe est effacé.
+  - Deux inscriptions avec la même adresse au même instant ne créent qu'un seul compte : la base l'interdit.
+
+### US-0110 · Empêcher le double envoi du formulaire
+**En tant que** visiteur, **je veux** que le bouton montre qu'il travaille et ne réagisse qu'une fois, **afin de** ne pas déclencher deux inscriptions par un double toucher.
+
+- **Débloquée par** : US-0107
+- **Critères d'acceptation** :
+  - Pendant l'envoi, le bouton est désactivé et montre qu'il travaille.
+  - Un double clic ou un double toucher n'envoie le formulaire qu'une fois.
+  - En cas d'erreur, le bouton redevient actif.
+
+### US-0111 · Garder ses saisies quand le jeu ne répond pas
+**En tant que** visiteur, **je veux** un message compréhensible si le jeu ne répond pas pendant l'inscription, **afin de** réessayer sans tout retaper.
+
+- **Débloquée par** : US-0107
+- **Critères d'acceptation** :
+  - Si le réseau coupe ou si le jeu ne répond pas, le message « Impossible de joindre Bestia, réessayez dans un instant » s'affiche.
+  - L'adresse reste dans le champ.
+  - Aucune erreur technique (code, détail interne) n'est montrée au visiteur.
+
+### US-0112 · Freiner les inscriptions en rafale
+**En tant que** joueur, **je veux** que la création de comptes en masse soit freinée, **afin de** partager le Monde avec de vrais chefs, sans noms ni Cases de la Couronne accaparés par des comptes factices.
+
+- **Débloquée par** : US-0107
+- **Critères d'acceptation** :
+  - Au-delà de (chiffre à régler) comptes créés depuis une même adresse réseau en une heure, les suivants sont refusés avec un message poli.
+  - Le refus n'explique pas comment le contourner.
+  - Une vérification supplémentaire contre les robots (à décider).
+
+### US-0113 · Envoyer des e-mails depuis le jeu
+**En tant que** développeur, **je veux** que le jeu puisse envoyer des e-mails, **afin de** permettre la confirmation d'adresse et la réinitialisation du mot de passe.
+
+- **Débloquée par** : Étape 1
+- **Critères d'acceptation** :
+  - Le jeu envoie ses e-mails depuis une adresse d'expédition au nom de Bestia.
+  - Le service d'envoi (à décider) ; ses clés sont lues dans des variables d'environnement.
+  - En local, les e-mails s'affichent dans le journal au lieu de partir.
+  - Un envoi raté est noté dans le journal, sans bloquer le joueur.
+
+### US-0114 · Confirmer son adresse e-mail
+**En tant que** nouveau joueur, **je veux** recevoir un lien pour confirmer mon adresse e-mail, **afin de** prouver qu'elle m'appartient et pouvoir récupérer mon compte plus tard.
+
+- **Débloquée par** : US-0107, US-0113
+- **Critères d'acceptation** :
+  - Juste après l'inscription, un e-mail part avec un lien de confirmation valable (chiffre à régler) heures.
+  - Ouvrir le lien marque l'adresse comme confirmée et affiche « Adresse confirmée ».
+  - Un lien expiré ou déjà utilisé affiche un message et propose d'en recevoir un nouveau.
+  - Confirmer son adresse est obligatoire pour jouer, ou seulement conseillé (à décider).
+
+## Étape 6 · Se connecter et se déconnecter
+
+### US-0115 · Ouvrir le formulaire de connexion
+**En tant que** visiteur, **je veux** un formulaire de connexion simple, **afin de** retrouver mon compte en quelques secondes.
+
+- **Débloquée par** : US-0101, US-0106
+- **Critères d'acceptation** :
+  - Le formulaire demande l'adresse e-mail et le mot de passe, avec le bouton pour afficher le mot de passe.
+  - Le navigateur peut remplir les champs avec les identifiants qu'il a enregistrés.
+  - Un lien « Créer un compte » mène à l'inscription.
+
+### US-0116 · Se connecter
+**En tant que** joueur, **je veux** me connecter avec mon adresse et mon mot de passe, **afin de** retrouver mon jeu là où je l'ai laissé.
+
+- **Débloquée par** : US-0107, US-0115
+- **Critères d'acceptation** :
+  - Une adresse et un mot de passe justes ouvrent une session.
+  - Le joueur arrive sur la page du jeu.
+  - La date de dernière connexion est enregistrée.
+
+### US-0117 · Refuser une connexion par un message unique
+**En tant que** joueur, **je veux** un seul et même message quand l'adresse ou le mot de passe est faux, **afin de** ne donner aucun indice à qui tenterait de deviner mes identifiants.
+
+- **Débloquée par** : US-0116
+- **Critères d'acceptation** :
+  - Une adresse inconnue et un mot de passe faux affichent le même message : « Adresse ou mot de passe incorrect ».
+  - Le jeu met le même temps à répondre dans les deux cas.
+  - L'adresse reste dans le champ, le mot de passe est effacé.
+
+### US-0118 · Freiner les essais répétés de mot de passe
+**En tant que** joueur, **je veux** que les essais de mot de passe à répétition soient bloqués un moment, **afin de** protéger mon compte contre qui essaierait tous les mots de passe.
+
+- **Débloquée par** : US-0117
+- **Critères d'acceptation** :
+  - Après (chiffre à régler) échecs d'affilée sur une même adresse, les essais sont bloqués pendant (chiffre à régler) minutes.
+  - Le message dit combien de temps attendre, et s'affiche aussi pour une adresse inconnue, pour ne rien révéler.
+  - Une connexion réussie remet le décompte des échecs à zéro.
+
+### US-0119 · Rester connecté d'une visite à l'autre
+**En tant que** joueur, **je veux** rester connecté quand je ferme l'onglet et reviens plus tard, **afin de** jouer plusieurs fois par jour sans retaper mon mot de passe.
+
+- **Débloquée par** : US-0116
+- **Critères d'acceptation** :
+  - Après la fermeture de l'onglet ou du navigateur, une nouvelle visite trouve le joueur toujours connecté.
+  - La session dure (chiffre à régler) jours et se prolonge à chaque visite.
+  - Le cookie de session est inaccessible aux scripts de la page et ne circule qu'en HTTPS.
+
+### US-0120 · Se déconnecter
+**En tant que** joueur, **je veux** me déconnecter depuis la barre du haut, **afin de** quitter un appareil partagé sans y laisser mon compte ouvert.
+
+- **Débloquée par** : US-0119, Étape 2
+- **Critères d'acceptation** :
+  - « Se déconnecter » est accessible depuis la barre du haut, sur ordinateur comme sur mobile (dans un menu si la place manque).
+  - Après la déconnexion, le joueur revient à la page d'accueil.
+  - La session est supprimée côté jeu, pas seulement effacée du navigateur.
+  - Le bouton Précédent du navigateur ne réaffiche aucune page du jeu.
+
+### US-0121 · Fermer les pages du jeu aux visiteurs
+**En tant que** joueur, **je veux** que personne ne voie les pages de mon jeu sans être connecté à mon compte, **afin de** garder mon jeu pour moi seul.
+
+- **Débloquée par** : US-0119
+- **Critères d'acceptation** :
+  - Un visiteur non connecté qui ouvre une page du jeu est envoyé vers la connexion.
+  - Après la connexion, il arrive sur la page qu'il voulait ouvrir.
+  - Aucune donnée du jeu n'est renvoyée à un visiteur non connecté, même par un appel direct.
+
+### US-0122 · Renvoyer vers le jeu un joueur déjà connecté
+**En tant que** joueur, **je veux** aller droit dans le jeu quand je suis déjà connecté, **afin de** ne pas repasser par des écrans inutiles.
+
+- **Débloquée par** : US-0119
+- **Critères d'acceptation** :
+  - Un joueur connecté qui ouvre la page de connexion ou d'inscription est envoyé vers le jeu.
+  - Sur la page d'accueil, un joueur connecté voit « Retourner au jeu » à la place des deux boutons d'entrée.
+
+### US-0123 · Être connecté dès la création du compte
+**En tant que** nouveau joueur, **je veux** être connecté dès que mon compte est créé, **afin de** commencer à jouer sans ressaisir mes identifiants.
+
+- **Débloquée par** : US-0108, US-0119
+- **Critères d'acceptation** :
+  - Juste après la création, le joueur est connecté sans ressaisir son adresse ni son mot de passe.
+  - Le message « Votre compte est créé » mène directement à la suite de l'entrée dans le jeu.
+  - Cette session dure et se prolonge comme une connexion normale.
+
+### US-0124 · Jouer sur ordinateur et sur mobile en même temps
+**En tant que** joueur, **je veux** rester connecté à la fois sur mon ordinateur et sur mon téléphone, **afin de** passer de l'un à l'autre au fil de la journée.
+
+- **Débloquée par** : US-0120
+- **Critères d'acceptation** :
+  - Se connecter sur un deuxième appareil ne déconnecte pas le premier.
+  - Se déconnecter sur un appareil laisse l'autre connecté.
+  - Ce qui change sur un appareil apparaît sur l'autre au plus tard au prochain chargement de page.
+
+### US-0125 · Retrouver sa page après une session expirée
+**En tant que** joueur, **je veux** être prévenu clairement quand ma session a expiré, **afin de** me reconnecter et reprendre où j'en étais.
+
+- **Débloquée par** : US-0121
+- **Critères d'acceptation** :
+  - Une action envoyée avec une session expirée n'est pas appliquée.
+  - Le joueur voit « Votre session a expiré, reconnectez-vous » sur le formulaire de connexion.
+  - Après la reconnexion, il revient sur la page où il était.
+
+### US-0126 · Demander un lien de réinitialisation du mot de passe
+**En tant que** joueur, **je veux** demander un lien pour changer mon mot de passe oublié, **afin de** retrouver l'accès à mon compte.
+
+- **Débloquée par** : US-0113, US-0117
+- **Critères d'acceptation** :
+  - Un lien « Mot de passe oublié » apparaît sous le formulaire de connexion et dans le message d'erreur de connexion.
+  - Le joueur saisit son adresse ; le même message s'affiche que l'adresse ait un compte ou non : « Si un compte existe pour cette adresse, un e-mail vient de partir. »
+  - Si le compte existe, un e-mail part avec un lien personnel.
+
+### US-0127 · Recevoir un e-mail de réinitialisation clair
+**En tant que** joueur, **je veux** un e-mail court avec un bouton pour changer mon mot de passe, **afin de** reconnaître tout de suite qu'il vient de Bestia.
+
+- **Débloquée par** : US-0126
+- **Critères d'acceptation** :
+  - L'e-mail porte le nom Bestia, dit en une phrase pourquoi il arrive et contient un bouton vers le lien.
+  - Il indique que le lien est valable (chiffre à régler) minutes.
+  - Il précise que le joueur peut l'ignorer s'il n'a rien demandé.
+  - Il ne contient jamais de mot de passe.
+
+### US-0128 · Choisir un nouveau mot de passe
+**En tant que** joueur, **je veux** saisir un nouveau mot de passe depuis le lien reçu, **afin de** reprendre la main sur mon compte.
+
+- **Débloquée par** : US-0105, US-0127
+- **Critères d'acceptation** :
+  - Le lien ouvre une page qui demande le nouveau mot de passe, avec les mêmes règles qu'à l'inscription.
+  - Le nouveau mot de passe remplace l'ancien, qui ne fonctionne plus.
+  - Le joueur est ensuite connecté et arrive dans son jeu.
+  - Les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées (à décider).
+
+### US-0129 · Refuser un lien expiré ou déjà utilisé
+**En tant que** joueur, **je veux** un message clair quand le lien de réinitialisation ne marche plus, **afin de** redemander un lien sans chercher pourquoi.
+
+- **Débloquée par** : US-0128
+- **Critères d'acceptation** :
+  - Un lien ouvert après (chiffre à régler) minutes affiche « Ce lien a expiré » et propose d'en demander un nouveau.
+  - Un lien déjà utilisé ne sert pas une seconde fois.
+  - Demander un nouveau lien rend les précédents inutilisables.
+
+### US-0130 · Freiner les demandes de lien répétées
+**En tant que** joueur, **je veux** que personne ne puisse remplir ma boîte de réception de demandes de réinitialisation, **afin de** ne pas être importuné à cause de mon compte.
+
+- **Débloquée par** : US-0126
+- **Critères d'acceptation** :
+  - Au-delà de (chiffre à régler) demandes par heure pour une même adresse, aucun nouvel e-mail ne part.
+  - Le message affiché reste le même, pour ne rien révéler.
+
+## Étape 7 · Choisir son nom de chef
+
+### US-0131 · Demander le nom de chef à la première connexion
+**En tant que** nouveau joueur, **je veux** qu'on me demande mon nom de chef dès ma première connexion, **afin de** porter un nom dans le Monde avant toute chose.
+
+- **Débloquée par** : US-0121, US-0123, Étape 3
+- **Critères d'acceptation** :
+  - Un compte sans nom de chef arrive sur l'écran « Votre nom de chef », quelle que soit la page demandée.
+  - Aucune autre page du jeu n'est accessible avant d'avoir choisi un nom.
+  - L'écran précise que ce nom sera vu par les autres joueurs du Monde.
+
+### US-0132 · Respecter la longueur du nom
+**En tant que** nouveau joueur, **je veux** connaître la longueur permise pendant que je tape, **afin de** ne pas découvrir la règle au moment de valider.
+
+- **Débloquée par** : US-0131
+- **Critères d'acceptation** :
+  - Le nom compte entre (chiffre à régler) et (chiffre à régler) caractères.
+  - Un compteur montre les caractères restants pendant la saisie.
+  - Un nom trop court ou trop long affiche la règle sous le champ et bloque la validation.
+
+### US-0133 · Limiter les caractères autorisés
+**En tant que** nouveau joueur, **je veux** un message précis si mon nom contient un caractère refusé, **afin de** corriger sans deviner.
+
+- **Débloquée par** : US-0131
+- **Critères d'acceptation** :
+  - Les lettres, accents compris (é, ç, œ), sont acceptées.
+  - Les espaces, traits d'union, apostrophes et chiffres (à décider).
+  - Les émojis, les caractères invisibles et les symboles sont refusés avec « Ce caractère n'est pas autorisé ».
+  - Le jeu refait la vérification à l'enregistrement.
+
+### US-0134 · Nettoyer les espaces du nom
+**En tant que** nouveau joueur, **je veux** que les espaces en trop soient retirés de mon nom, **afin de** ne pas porter par erreur un nom mal présenté.
+
+- **Débloquée par** : US-0133
+- **Critères d'acceptation** :
+  - Les espaces au début et à la fin sont retirés avant l'enregistrement.
+  - Si les espaces sont autorisés dans le nom, plusieurs espaces de suite sont réduits à un seul.
+  - Un nom fait uniquement d'espaces est refusé comme vide.
+
+### US-0135 · Refuser un nom déjà pris dans le Monde
+**En tant que** nouveau joueur, **je veux** apprendre que mon nom est déjà porté par un autre chef, **afin de** choisir un nom qui soit bien à moi.
+
+- **Débloquée par** : US-0131
+- **Critères d'acceptation** :
+  - Un nom déjà porté dans le Monde est refusé avec « Ce nom est déjà pris ».
+  - La comparaison ignore les majuscules : « Loup » et « loup » sont le même nom.
+  - La prise en compte des accents dans la comparaison, « Élan » contre « Elan » (à décider).
+  - Le nom s'affiche avec les majuscules choisies par le joueur.
+
+### US-0136 · Voir si le nom est libre pendant la saisie
+**En tant que** nouveau joueur, **je veux** voir si mon nom est libre avant de valider, **afin de** chercher un autre nom sans aller-retour.
+
+- **Débloquée par** : US-0135
+- **Critères d'acceptation** :
+  - Quand le joueur s'arrête de taper, un signe indique « disponible » ou « déjà pris ».
+  - La vérification ne part pas à chaque lettre tapée.
+  - « Disponible » ne réserve pas le nom : la validation peut encore le refuser.
+
+### US-0137 · Départager deux chefs qui veulent le même nom au même instant
+**En tant que** nouveau joueur, **je veux** un message clair si quelqu'un a pris mon nom juste avant moi, **afin de** comprendre pourquoi il est refusé alors qu'il était libre.
+
+- **Débloquée par** : US-0135
+- **Critères d'acceptation** :
+  - Si deux joueurs valident le même nom au même instant, un seul l'obtient.
+  - L'autre voit « Ce nom vient d'être pris » et reste sur l'écran du nom, sa saisie conservée.
+  - La base garantit l'unicité du nom dans le Monde, pas seulement l'écran.
+
+### US-0138 · Refuser les noms interdits
+**En tant que** joueur, **je veux** que les noms injurieux ou trompeurs soient refusés, **afin de** partager le Monde avec des chefs aux noms corrects.
+
+- **Débloquée par** : US-0131
+- **Critères d'acceptation** :
+  - Un nom qui contient un mot interdit est refusé avec « Ce nom n'est pas autorisé », sans citer le mot.
+  - Les noms qui se font passer pour l'équipe du jeu (« Bestia », « Admin », « Modérateur ») sont refusés.
+  - La liste des mots interdits se modifie sans toucher au code.
+  - Le contenu de la liste et le traitement des contournements, chiffres à la place des lettres ou espaces glissés (à décider).
+
+### US-0139 · Valider son nom de chef
+**En tant que** nouveau joueur, **je veux** valider mon nom une fois toutes les règles respectées, **afin de** passer à la suite de mon arrivée.
+
+- **Débloquée par** : US-0132, US-0134, US-0136, US-0137, US-0138
+- **Critères d'acceptation** :
+  - Le bouton « Valider » n'est actif que si le nom respecte toutes les règles.
+  - Le nom est enregistré pour ce compte et pour ce Monde.
+  - Le joueur passe à l'étape suivante de l'entrée dans le jeu.
+  - La possibilité de changer de nom plus tard, et l'avertissement à montrer avant de valider (à décider).
+
+### US-0140 · Afficher le nom de chef dans la barre du haut
+**En tant que** joueur, **je veux** voir mon nom de chef dans la barre du haut, **afin de** me sentir chez moi sur chaque page.
+
+- **Débloquée par** : US-0120, US-0139
+- **Critères d'acceptation** :
+  - Le nom de chef s'affiche dans la barre du haut, sur toutes les pages du jeu.
+  - Un nom long est coupé proprement sur mobile (points de suspension) et se lit en entier au survol ou au toucher.
+  - Toucher ou cliquer le nom ouvre un menu qui contient « Se déconnecter ».
+
+## Étape 8 · Choisir son Couple de départ
+
+### US-0141 · Présenter les trois cartes de Couple de départ
+**En tant que** nouveau joueur, **je veux** voir côte à côte trois cartes illustrées, souris, poule et pigeon, **afin de** comparer mes trois choix d'un seul regard.
+
+- **Débloquée par** : US-0139, Étape 4
+- **Critères d'acceptation** :
+  - Après le nom de chef, l'écran « Votre Couple de départ » montre trois cartes, dans l'ordre souris, poule, pigeon.
+  - Chaque carte montre l'illustration de l'Espèce, son nom et sa Rareté.
+  - Aucune autre Espèce n'est proposée.
+  - L'écran rappelle en une phrase qu'un Couple, c'est un mâle et une femelle, qui permettront d'élever ses premières Bêtes.
+
+### US-0142 · Lire le style de jeu de chaque Espèce
+**En tant que** nouveau joueur, **je veux** lire sur chaque carte le style de jeu qu'elle propose, **afin de** choisir selon ma façon de jouer.
+
+- **Débloquée par** : US-0141
+- **Critères d'acceptation** :
+  - Chaque carte porte sa phrase de style de jeu : se défendre (souris), grandir (poule), explorer (pigeon).
+  - La phrase tient sur deux lignes au plus, sur mobile comme sur ordinateur.
+  - La phrase vient des données de référence, pas de l'écran.
+
+### US-0143 · Voir le Rôle de la poule et du pigeon
+**En tant que** nouveau joueur, **je veux** voir sur la carte le Rôle que m'apporterait chaque Espèce, **afin de** mesurer ce que je gagne en plus du combat.
+
+- **Débloquée par** : US-0141
+- **Critères d'acceptation** :
+  - La carte de la poule indique le Rôle Nourricier : elle nourrit sans chasser.
+  - La carte du pigeon indique le Rôle Éclaireur : il éclaire les Expéditions.
+  - La carte de la souris n'affiche aucun Rôle.
+  - Chaque Rôle affiché précise qu'il est débloqué d'office avec ce Couple.
+
+### US-0144 · Consulter les caractéristiques avant de choisir
+**En tant que** nouveau joueur, **je veux** ouvrir le détail d'une Espèce avant de la choisir, **afin de** comparer leurs forces et leurs besoins.
+
+- **Débloquée par** : US-0141
+- **Critères d'acceptation** :
+  - Un bouton « Détails » sur chaque carte montre attaque, vie, vitesse, charge, taille, régime, Entretien par heure et Biome d'Habitat.
+  - Les valeurs viennent de la fiche de l'Espèce en base.
+  - Fermer le détail ramène aux trois cartes sans rien choisir.
+  - Montrer ces chiffres dès cet écran ou les garder pour la Réserve (à décider).
+
+### US-0145 · Sélectionner une carte
+**En tant que** nouveau joueur, **je veux** sélectionner une carte et pouvoir changer d'avis avant de confirmer, **afin de** prendre le temps de comparer.
+
+- **Débloquée par** : US-0141
+- **Critères d'acceptation** :
+  - Toucher ou cliquer une carte la met en évidence ; une seule carte est sélectionnée à la fois.
+  - Sélectionner une autre carte remplace la sélection.
+  - Tant qu'aucune carte n'est sélectionnée, le bouton « Choisir ce Couple » est inactif.
+  - La sélection marche aussi au clavier.
+
+### US-0146 · Confirmer un choix définitif
+**En tant que** nouveau joueur, **je veux** qu'on me demande de confirmer en me rappelant que le choix est définitif, **afin de** ne pas me tromper par un toucher malheureux.
+
+- **Débloquée par** : US-0145
+- **Critères d'acceptation** :
+  - « Choisir ce Couple » ouvre une confirmation : « Vous choisissez le Couple de poules. Ce choix est définitif. »
+  - « Confirmer » enregistre le choix ; « Revenir » ramène aux trois cartes, la sélection conservée.
+  - Sur mobile, la confirmation tient dans l'écran et ses deux boutons se touchent facilement au pouce.
+
+### US-0147 · Enregistrer le Couple de départ
+**En tant que** nouveau joueur, **je veux** recevoir le Couple choisi, **afin de** pouvoir élever mes premières Bêtes.
+
+- **Débloquée par** : US-0146
+- **Critères d'acceptation** :
+  - Le compte reçoit un Couple de l'Espèce choisie : un mâle et une femelle.
+  - L'Élevage de cette Espèce est noté comme ouvert pour toujours (son usage arrive à l'étape 34).
+  - Le Rôle de l'Espèce, s'il y en a un, est noté comme débloqué (son effet arrive à l'étape 37).
+  - La date du choix est enregistrée.
+
+### US-0148 · Rendre le choix du Couple impossible à changer
+**En tant que** joueur, **je veux** que mon choix de Couple soit fixé une fois pour toutes, **afin de** jouer dans un Monde où ce choix compte vraiment.
+
+- **Débloquée par** : US-0147
+- **Critères d'acceptation** :
+  - Une fois le choix confirmé, l'écran des trois cartes n'est plus accessible, même en tapant son adresse.
+  - Toute tentative d'enregistrer un second Couple de départ est refusée par le jeu.
+  - Aucun écran ne propose de changer de Couple de départ.
+
+### US-0149 · Empêcher un double choix
+**En tant que** nouveau joueur, **je veux** qu'un double toucher ou deux onglets ouverts ne me donnent jamais deux Couples, **afin de** partir à égalité avec les autres chefs.
+
+- **Débloquée par** : US-0147
+- **Critères d'acceptation** :
+  - Un double toucher sur « Confirmer » n'enregistre qu'un Couple.
+  - Si deux onglets confirment deux Espèces différentes, seule la première confirmation compte.
+  - L'autre onglet affiche alors le Couple réellement choisi.
+
+### US-0150 · Choisir son Couple sur mobile
+**En tant que** nouveau joueur, **je veux** choisir mon Couple confortablement sur mon téléphone, **afin de** commencer à jouer où que je sois.
+
+- **Débloquée par** : US-0146
+- **Critères d'acceptation** :
+  - Sur mobile, les trois cartes s'empilent l'une sous l'autre, sans défilement de côté.
+  - Les illustrations gardent leurs proportions et restent nettes.
+  - Le bouton « Choisir ce Couple » reste visible en bas de l'écran pendant le défilement.
+  - Tout se fait au pouce, sans zoom.
+
+## Étape 9 · Naître sur la carte
+
+### US-0151 · Préparer les Cases de la Couronne
+**En tant que** développeur, **je veux** un premier ensemble de Cases de la Couronne en base, chacune avec son Biome, **afin de** faire naître des joueurs avant que le Monde entier soit généré (étape 18).
+
+- **Débloquée par** : Étape 3, Étape 4
+- **Critères d'acceptation** :
+  - La base contient des Cases hexagonales, chacune repérée de façon unique dans le Monde et marquée comme faisant partie de la Couronne.
+  - Chaque Case a un Biome parmi ceux en base.
+  - Le nombre de Cases préparées (chiffre à régler).
+  - La façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire (à décider).
+
+### US-0152 · Définir les Cases où un Foyer peut naître
+**En tant que** développeur, **je veux** une règle claire qui dit sur quelles Cases un Foyer peut naître, **afin de** donner à chaque nouveau joueur un départ qui se tient.
+
+- **Débloquée par** : US-0151
+- **Critères d'acceptation** :
+  - Une Case déjà possédée n'est jamais proposée.
+  - Une Case de mer, de lac ou de rivière n'accueille jamais de Foyer.
+  - Deux Foyers sont séparés d'au moins (chiffre à régler) Cases.
+  - Le cas de la côte, et le choix entre tous les Biomes terrestres ou seulement certains, pour que les départs se valent (à décider).
+
+### US-0153 · Recevoir une Case libre sur la Couronne
+**En tant que** nouveau joueur, **je veux** recevoir une Case de la Couronne juste après avoir choisi mon Couple, **afin de** commencer ma vie de chef quelque part dans le Monde.
+
+- **Débloquée par** : US-0147, US-0152
+- **Critères d'acceptation** :
+  - Juste après la confirmation du Couple, le jeu attribue au joueur une Case libre de la Couronne, sans lui demander de choisir.
+  - La Case appartient désormais à ce joueur, et à lui seul.
+  - La façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés (à décider).
+
+### US-0154 · Ne jamais donner la même Case à deux joueurs
+**En tant que** nouveau joueur, **je veux** être sûr que ma Case n'est donnée qu'à moi, **afin de** ne jamais partager mon Foyer avec un inconnu.
+
+- **Débloquée par** : US-0153
+- **Critères d'acceptation** :
+  - Deux joueurs qui naissent au même instant reçoivent deux Cases différentes.
+  - Un test qui fait naître un grand nombre de joueurs en parallèle ne trouve aucun doublon.
+  - La base refuse qu'une Case ait deux propriétaires.
+
+### US-0155 · Faire de sa Case son Foyer
+**En tant que** nouveau joueur, **je veux** que ma Case devienne mon Foyer, avec la hutte du chef, **afin de** posséder un cœur de Territoire que personne ne pourra prendre.
+
+- **Débloquée par** : US-0153
+- **Critères d'acceptation** :
+  - La Case reçue devient le Foyer du joueur, avec la hutte du chef.
+  - Le Territoire du joueur existe et compte une seule Case : son Foyer.
+  - Le Foyer est marqué comme imprenable (la règle jouera à l'étape 59).
+
+### US-0156 · Faire démarrer le temps du Territoire à la naissance
+**En tant que** développeur, **je veux** que le Territoire soit suivi par le mécanisme du temps dès sa naissance, **afin de** préparer la production et tout ce qui avancera ensuite.
+
+- **Débloquée par** : US-0155, Étape 3
+- **Critères d'acceptation** :
+  - Le Territoire porte un instant « calculé jusqu'à » égal à l'heure de sa naissance.
+  - Le rattrapage à l'ouverture de page et la tâche planifiée le font avancer.
+  - Un compte sans Foyer n'a rien à faire avancer.
+
+### US-0157 · Voir l'illustration de son Foyer
+**En tant que** nouveau joueur, **je veux** voir une belle illustration de mon Foyer et de la hutte du chef, **afin de** me sentir chez moi dès la première seconde.
+
+- **Débloquée par** : US-0155, Étape 2
+- **Critères d'acceptation** :
+  - L'écran du Foyer montre une grande illustration de la hutte du chef, dans la direction artistique du prototype.
+  - Le Biome du Foyer est écrit près de l'illustration (« Foyer · forêt »).
+  - Une illustration propre à chaque Biome, ou une seule pour tous (à décider).
+  - L'illustration s'adapte à la largeur de l'écran.
+
+### US-0158 · Annoncer la naissance du Foyer
+**En tant que** nouveau joueur, **je veux** un court récit de ma naissance sur la Couronne, **afin de** comprendre où je suis et ce qui m'attend.
+
+- **Débloquée par** : US-0157
+- **Critères d'acceptation** :
+  - À la première arrivée, un message raconte en quelques lignes : le nom du chef, le Biome du Foyer, la Couronne au bord du Monde, le Couple choisi.
+  - Le message ne s'affiche qu'une fois et se ferme d'un toucher.
+  - Le texte du récit (à décider).
+
+### US-0159 · Prévenir quand la Couronne est pleine
+**En tant que** nouveau joueur, **je veux** un message clair s'il n'y a plus de place sur la Couronne, **afin de** ne pas rester devant une erreur incompréhensible.
+
+- **Débloquée par** : US-0153
+- **Critères d'acceptation** :
+  - S'il ne reste aucune Case où naître, la naissance n'a pas lieu et le joueur voit un message clair.
+  - Son nom de chef et son Couple restent enregistrés ; la naissance sera retentée à sa prochaine visite.
+  - Les développeurs sont alertés quand il reste moins de (chiffre à régler) Cases libres.
+  - Ce qui est proposé au joueur en attendant (à décider) ; l'ouverture d'un autre Monde viendra plus tard.
+
+### US-0160 · Reprendre l'entrée dans le jeu là où on l'a laissée
+**En tant que** nouveau joueur, **je veux** retrouver l'étape où je m'étais arrêté si je ferme l'onglet en plein milieu, **afin de** ne rien refaire ni rien perdre.
+
+- **Débloquée par** : US-0139, US-0148, US-0159
+- **Critères d'acceptation** :
+  - Sans nom de chef, le joueur revient sur le choix du nom.
+  - Avec un nom mais sans Couple, il revient sur les trois cartes.
+  - Avec un Couple mais sans Foyer, la naissance est retentée dès son arrivée.
+  - Avec un Foyer, il arrive sur son Foyer.
+
+### US-0161 · Arriver sur son Foyer à chaque visite
+**En tant que** joueur, **je veux** arriver directement sur mon Foyer quand j'ouvre le jeu, **afin de** reprendre ma session en un geste.
+
+- **Débloquée par** : US-0157, US-0160
+- **Critères d'acceptation** :
+  - Un joueur qui a son Foyer arrive dessus après la connexion et à chaque ouverture du jeu.
+  - Pour un joueur connecté, le logo du loup ramène au Foyer.
+  - Le Foyer a sa propre adresse, que l'on peut garder en favori ou ajouter à l'écran d'accueil du téléphone.
+
+### US-0162 · Voir son Couple de départ depuis le Foyer
+**En tant que** joueur, **je veux** retrouver mon Couple de départ sur l'écran du Foyer, **afin de** garder sous les yeux le choix qui marque mes débuts.
+
+- **Débloquée par** : US-0147, US-0157
+- **Critères d'acceptation** :
+  - Un bloc du Foyer montre le Couple choisi : l'illustration de l'Espèce, avec « un mâle et une femelle ».
+  - Le bloc indique le Rôle débloqué, s'il y en a un.
+  - Le bloc n'est pas cliquable tant que la Réserve n'existe pas (étape 33).
+
+### US-0163 · Garder un premier écran simple
+**En tant que** nouveau joueur, **je veux** un premier écran qui ne montre que ce que j'ai déjà, **afin de** ne pas me perdre dans des menus vides.
+
+- **Débloquée par** : US-0162
+- **Critères d'acceptation** :
+  - Le Foyer ne montre que la barre du haut, l'illustration du Foyer et le bloc du Couple de départ.
+  - Aucun menu, bouton ou bloc ne mène à une fonction qui n'existe pas encore.
+  - Une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte (à décider).
+
+### US-0164 · Voir son Foyer sur mobile
+**En tant que** joueur, **je veux** un Foyer qui se lit bien sur mon téléphone, **afin de** jouer au pouce autant que sur ordinateur.
+
+- **Débloquée par** : US-0158, US-0163
+- **Critères d'acceptation** :
+  - Sur mobile, le Foyer se lit de haut en bas sans zoom ni défilement de côté : barre du haut, illustration, bloc du Couple.
+  - Le nom du chef reste visible ou accessible d'un toucher.
+  - Le récit de naissance tient dans l'écran et se ferme au pouce.

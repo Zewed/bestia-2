@@ -27,6 +27,10 @@ La bordure extérieure du Monde, où les joueurs s'installent en arrivant.
 Le centre du Monde, inhabité, où vivent les Espèces les plus rares.
 _Avoid_: Centre, zone dangereuse
 
+**Anneau**:
+Une bande de Cases à même distance du Cœur sauvage, de la Couronne (la plus extérieure) au Cœur sauvage (la plus intérieure) ; plus un Anneau est intérieur, plus les Raretés élevées y apparaissent souvent.
+_Avoid_: Zone, cercle, couche
+
 **Densité**:
 L'abondance de faune d'une Case, cachée, qui change chaque jour.
 
@@ -46,7 +50,7 @@ Un animal du Monde, qu'il soit encore sauvage ou déjà apprivoisé ; toutes les
 _Avoid_: Unité, vaisseau, créature, monstre, individu
 
 **Bête sauvage**:
-Une Bête qui n'appartient à personne, que le Monde fait apparaître de temps en temps sur une Case pour une durée limitée ; toutes les Raretés peuvent apparaître partout et les communes restent partout les plus nombreuses, mais les plus rares sont plus fréquentes près du Cœur sauvage.
+Une Bête qui n'appartient à personne, que le Monde fait apparaître de temps en temps sur une Case pour une durée limitée ; toutes les Raretés sauf mythique peuvent apparaître partout et les communes restent partout les plus nombreuses, mais les plus rares sont plus fréquentes près du Cœur sauvage.
 
 **Espèce**:
 Une sorte d'animal, avec des caractéristiques calquées sur l'animal réel (un mammouth vaut une foule de souris).
@@ -100,6 +104,10 @@ _Avoid_: Mission, collecte, farm
 Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages ; seules les Bêtes y risquent leur vie, les Explorateurs fuient.
 _Avoid_: Mission, raid
 
+**Récit**:
+Le compte rendu daté d'un événement du Territoire (retour d'une Récolte ou d'une Expédition, Attaque, Incursion, Famine), que le joueur lit après coup.
+_Avoid_: Rapport, journal, message
+
 **Rencontre**:
 Le moment où une Bête sauvage apparaît sur une Case où se trouve une Expédition ; seules les Expéditions présentes la voient. Si elle est à leur portée, elle suit l'une d'elles, avec des chances proportionnelles à la force de chaque escorte ; sinon elle reste sur la Case jusqu'à la fin de sa durée, et peut attaquer.
 
@@ -116,7 +124,11 @@ Une Bête mise hors de combat qui guérit avec le temps, plus vite si l'on s'en 
 
 **Repos**:
 Un mode que le joueur active pour une durée minimale, pendant lequel son Territoire ne produit plus, ne consomme plus et ne peut plus être attaqué.
-_Avoid_: Vacances, pause, bouclier
+_Avoid_: Vacances, pause
+
+**Bouclier**:
+La protection d'un nouveau chef : pendant ses débuts, son Territoire ne peut pas être attaqué par les autres joueurs ; contrairement au Repos, tout continue d'y tourner.
+_Avoid_: Immunité, protection
 
 **Famine**:
 Le manque de Nourriture pour payer l'Entretien : les Bêtes affamées retournent à l'état sauvage et les Habitants s'en vont, après un avertissement.
@@ -145,7 +157,7 @@ Le Bois et la Pierre, qui servent à construire.
 _Avoid_: Ressources de construction
 
 **Recherche**:
-Les savoirs d'un joueur, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions, les Rôles et la portée des Expéditions, mais jamais la force des Bêtes.
+Ce qu'un joueur a appris, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions, les Rôles et la portée des Expéditions, mais jamais la force des Bêtes.
 _Avoid_: Technologie, science, savoir
 
 **Migration**:

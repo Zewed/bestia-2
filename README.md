@@ -5,3 +5,4 @@ Bestia repensé de zéro. On garde la direction artistique et l'univers validés
 - `CONTEXT.md` : le vocabulaire du jeu, écrit au fil de la conception.
 - `docs/adr/` : les décisions structurantes et leurs raisons.
 - `docs/ordre-d-attaque.md` : l'ordre dans lequel on construit le jeu, étape par étape.
+- `docs/stories/` : les 752 user stories qui découpent chaque étape, avec leurs déblocages et les points encore à décider.

@@ -1,0 +1,406 @@
+# Jalon 4 · La carte du Monde
+
+Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en hexagones, avec ses Biomes, son eau, la Couronne et le Cœur sauvage, qu'il parcourt depuis son Foyer mais dont il ne voit d'abord que les abords. Étapes couvertes : 18 à 20 de l'ordre d'attaque.
+
+## Étape 18 · Générer le Monde
+
+### US-0401 · Générer un Monde à partir d'une graine
+**En tant que** développeur, **je veux** générer un Monde entier à partir d'une graine, **afin de** pouvoir le recréer à l'identique à tout moment.
+
+- **Débloquée par** : Étape 4
+- **Critères d'acceptation** :
+  - Une commande crée un Monde en hexagones à partir d'une graine et l'enregistre.
+  - La même graine donne toujours les mêmes Cases avec les mêmes Biomes, vérifié Case par Case par un test automatique.
+  - Deux graines différentes donnent deux Mondes différents.
+  - La graine est enregistrée avec le Monde.
+
+### US-0402 · Donner au Monde sa forme et ses voisinages
+**En tant que** développeur, **je veux** un Monde d'une taille fixe où chaque Case connaît ses voisines, **afin de** mesurer partout les distances de la même façon.
+
+- **Débloquée par** : US-0401
+- **Critères d'acceptation** :
+  - Le Monde a la forme d'un grand hexagone ou d'un disque (à décider), de (chiffre à régler) Cases de rayon.
+  - Chaque Case connaît ses six voisines ; celles du bord en ont moins.
+  - La distance entre deux Cases se compte en nombre de Cases à franchir, avec une seule façon de la calculer, réutilisée partout (trajets, brouillard, Couronne).
+
+### US-0403 · Placer le Cœur sauvage au milieu du Monde
+**En tant que** développeur, **je veux** que le milieu du Monde forme le Cœur sauvage, **afin de** préparer la région où vivront les Espèces les plus rares.
+
+- **Débloquée par** : US-0402
+- **Critères d'acceptation** :
+  - Les Cases à moins de (chiffre à régler) Cases du milieu du Monde appartiennent au Cœur sauvage.
+  - Chaque Case sait si elle appartient au Cœur sauvage.
+  - Aucun Foyer ne peut naître dans le Cœur sauvage.
+  - Le Cœur sauvage mêle plusieurs Biomes au lieu d'un seul (à décider).
+
+### US-0404 · Placer la Couronne sur le bord du Monde
+**En tant que** développeur, **je veux** que le bord du Monde forme la Couronne, **afin de** préparer les Cases où naîtront les joueurs.
+
+- **Débloquée par** : US-0402
+- **Critères d'acceptation** :
+  - Les Cases à moins de (chiffre à régler) Cases du bord appartiennent à la Couronne.
+  - Chaque Case sait si elle appartient à la Couronne.
+  - La Couronne compte assez de Cases de terre pour accueillir (chiffre à régler) joueurs.
+
+### US-0405 · Mesurer l'éloignement de chaque Case au Cœur sauvage
+**En tant que** développeur, **je veux** que chaque Case connaisse sa distance au Cœur sauvage, **afin de** pouvoir plus tard y régler la Rareté des Bêtes sauvages et la fréquence des Incursions.
+
+- **Débloquée par** : US-0403
+- **Critères d'acceptation** :
+  - Chaque Case porte sa distance au Cœur sauvage, en Cases.
+  - Les Cases du Cœur sauvage sont à 0.
+  - La même graine donne toujours les mêmes distances.
+
+### US-0406 · Former des régions de Biomes crédibles
+**En tant que** joueur, **je veux** que les Biomes forment de vraies régions, **afin de** parcourir un Monde qui ressemble à un vrai paysage.
+
+- **Débloquée par** : US-0402
+- **Critères d'acceptation** :
+  - Les huit Biomes de terre (prairie, forêt, jungle, savane, désert, montagne, toundra, banquise) sont tous présents.
+  - Chaque Biome forme des régions d'un seul tenant d'au moins (chiffre à régler) Cases.
+  - Une Case isolée au milieu d'un autre Biome reste rare : au plus (chiffre à régler) sur tout le Monde.
+  - La part de chaque Biome reste dans une fourchette (chiffre à régler).
+
+### US-0407 · Enchaîner les Biomes de façon naturelle
+**En tant que** joueur, **je veux** que les Biomes voisins aillent bien ensemble, **afin de** croire au Monde que je parcours.
+
+- **Débloquée par** : US-0406
+- **Critères d'acceptation** :
+  - Certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu (à décider).
+  - Les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde, ou selon l'éloignement au Cœur sauvage (à décider).
+  - Les montagnes forment des chaînes plutôt que des taches isolées.
+
+### US-0408 · Créer la mer
+**En tant que** joueur, **je veux** trouver de grandes étendues de mer, **afin de** parcourir un Monde aux paysages variés.
+
+- **Débloquée par** : US-0406
+- **Critères d'acceptation** :
+  - La mer forme de grandes étendues d'eau d'un seul tenant.
+  - Elle couvre (chiffre à régler) des Cases du Monde.
+  - Elle peut toucher la Couronne, mais la Couronne garde assez de Cases de terre pour les naissances.
+
+### US-0409 · Border la mer de côtes
+**En tant que** joueur, **je veux** que la mer soit bordée de côtes, **afin de** voir où la terre rencontre l'eau.
+
+- **Débloquée par** : US-0408
+- **Critères d'acceptation** :
+  - Toute Case de mer qui touche la terre devient une Case de côte.
+  - La côte suit tout le rivage, sans trou.
+  - La mer ne touche jamais directement une Case de terre.
+
+### US-0410 · Semer des lacs
+**En tant que** joueur, **je veux** trouver des lacs à l'intérieur des terres, **afin de** rencontrer de l'eau loin de la mer.
+
+- **Débloquée par** : US-0408
+- **Critères d'acceptation** :
+  - Des lacs de (chiffre à régler) à (chiffre à régler) Cases apparaissent à l'intérieur des terres.
+  - Un lac ne touche jamais la mer ni la côte.
+  - Le Monde compte (chiffre à régler) lacs.
+
+### US-0411 · Tracer des rivières
+**En tant que** joueur, **je veux** voir des rivières couler des montagnes vers l'eau, **afin de** lire le paysage comme un vrai relief.
+
+- **Débloquée par** : US-0407, US-0409, US-0410
+- **Critères d'acceptation** :
+  - Une rivière est une suite de Cases voisines, d'un seul tenant.
+  - Elle part d'une montagne et finit sur une côte ou dans un lac.
+  - Elle ne forme jamais de boucle.
+  - Deux rivières peuvent se rejoindre (à décider).
+  - Le Monde compte (chiffre à régler) rivières.
+
+### US-0412 · Contrôler le Monde généré sur une page interne
+**En tant que** développeur, **je veux** voir le Monde entier sur une page de contrôle, **afin de** juger d'un coup d'œil si ses Biomes sont crédibles.
+
+- **Débloquée par** : US-0405, US-0411
+- **Critères d'acceptation** :
+  - Une page de contrôle interne montre le Monde entier, sans brouillard, coloré par Biome, avec la Couronne et le Cœur sauvage.
+  - Elle affiche la part de chaque Biome, le nombre de lacs et de rivières, et le nombre de Cases de naissance encore libres.
+  - Elle signale les voisinages interdits s'il y en a.
+  - Elle est inaccessible aux joueurs.
+
+### US-0413 · Réserver de bonnes Cases de naissance sur la Couronne
+**En tant que** nouveau joueur, **je veux** naître sur une Case qui me laisse une chance de grandir, **afin de** ne pas être désavantagé dès le départ.
+
+- **Débloquée par** : US-0404, US-0411
+- **Critères d'acceptation** :
+  - Seules les Cases de terre de la Couronne peuvent recevoir un Foyer, jamais l'eau.
+  - Certains Biomes, comme la banquise ou le désert, sont exclus des naissances (à décider).
+  - Deux Foyers sont toujours séparés d'au moins (chiffre à régler) Cases.
+
+### US-0414 · Faire naître les joueurs sur le Monde généré
+**En tant que** nouveau joueur, **je veux** naître sur une vraie Case du Monde, **afin de** commencer ma partie sur la carte que partagent tous les joueurs.
+
+- **Débloquée par** : US-0413, Étape 9
+- **Critères d'acceptation** :
+  - La naissance de l'étape 9 choisit désormais une Case libre de la Couronne du Monde généré, selon les règles de US-0413.
+  - Deux joueurs qui naissent au même instant n'obtiennent jamais la même Case.
+  - Les joueurs nés avant cette étape reçoivent un Foyer sur le Monde généré, avec leurs stocks et leurs Habitants intacts.
+  - Pour ces joueurs déjà nés, la production continue suit le Biome de leur nouvelle Case plutôt que l'ancien (à décider).
+
+### US-0415 · Refuser la naissance quand la Couronne est pleine
+**En tant que** nouveau joueur, **je veux** un message clair si le Monde n'a plus de place pour moi, **afin de** ne pas rester bloqué sans comprendre.
+
+- **Débloquée par** : US-0414
+- **Critères d'acceptation** :
+  - Quand plus aucune Case de la Couronne ne respecte les règles de naissance, le Monde est plein.
+  - Le nouveau joueur voit un message qui l'explique, au lieu d'une erreur.
+  - Aucun Foyer n'est créé ; l'ouverture d'un autre Monde viendra plus tard.
+
+### US-0416 · Interdire de régénérer un Monde ouvert
+**En tant que** développeur, **je veux** qu'un Monde où vivent des joueurs ne puisse jamais être régénéré, **afin de** tenir la promesse d'un Monde qui ne se réinitialise jamais.
+
+- **Débloquée par** : US-0414
+- **Critères d'acceptation** :
+  - La commande de génération refuse de toucher un Monde qui compte au moins un joueur.
+  - Aucune autre commande ne peut réinitialiser un Monde ouvert.
+  - En développement, on peut générer un nouveau Monde à côté pour essayer d'autres réglages.
+
+## Étape 19 · Voir la carte
+
+### US-0417 · Ouvrir la carte sur son Foyer
+**En tant que** joueur, **je veux** ouvrir la carte du Monde depuis la navigation, **afin de** voir où se trouve mon Foyer.
+
+- **Débloquée par** : US-0414
+- **Critères d'acceptation** :
+  - Une entrée « Carte » figure dans la navigation, sur ordinateur comme sur mobile.
+  - À l'ouverture, la carte montre le Foyer du joueur au milieu de l'écran.
+  - Les Cases sont dessinées en hexagones.
+  - Pour l'instant, toutes les Cases sont visibles ; le brouillard arrive à l'étape 20.
+
+### US-0418 · Dessiner chaque Case selon son Biome
+**En tant que** joueur, **je veux** reconnaître le Biome de chaque Case au premier regard, **afin de** lire la carte sans effort.
+
+- **Débloquée par** : US-0417
+- **Critères d'acceptation** :
+  - Chaque Biome a sa couleur et son motif, dans la direction artistique du prototype.
+  - Les quatre eaux (côte, lac, rivière, mer) se distinguent entre elles et de la terre.
+  - Deux Biomes voisins se distinguent au premier coup d'œil, même sur un petit écran.
+
+### US-0419 · Repérer son Foyer sur la carte
+**En tant que** joueur, **je veux** repérer mon Foyer tout de suite sur la carte, **afin de** toujours retrouver mon chez-moi d'un coup d'œil.
+
+- **Débloquée par** : US-0418, Étape 9
+- **Critères d'acceptation** :
+  - La Case du Foyer montre l'illustration de la hutte du chef.
+  - Le Foyer reste repérable à tous les degrés de zoom, grâce à un repère qui grossit quand on dézoome.
+  - Les Foyers des autres joueurs ne se confondent pas avec le sien.
+
+### US-0420 · Déplacer la carte à la souris
+**En tant que** joueur, **je veux** faire glisser la carte à la souris, **afin de** parcourir le Monde sur ordinateur.
+
+- **Débloquée par** : US-0417
+- **Critères d'acceptation** :
+  - Glisser en gardant le bouton appuyé déplace la carte, qui suit la souris sans à-coups.
+  - Un clic sans glisser n'est pas pris pour un déplacement.
+  - Le déplacement s'arrête un peu au-delà du bord du Monde : on ne peut pas perdre la carte de vue.
+
+### US-0421 · Déplacer la carte au doigt
+**En tant que** joueur, **je veux** faire glisser la carte du doigt, **afin de** parcourir le Monde sur mon téléphone.
+
+- **Débloquée par** : US-0420
+- **Critères d'acceptation** :
+  - Glisser un doigt déplace la carte, qui suit le doigt sans à-coups.
+  - Glisser sur la carte ne fait pas défiler la page.
+  - Un toucher bref n'est pas pris pour un déplacement.
+  - Les limites sont les mêmes qu'à la souris.
+
+### US-0422 · Déplacer la carte au clavier
+**En tant que** joueur, **je veux** déplacer la carte avec les flèches du clavier, **afin de** parcourir le Monde sans souris.
+
+- **Débloquée par** : US-0420
+- **Critères d'acceptation** :
+  - Quand la carte est sélectionnée, chaque flèche la déplace de (chiffre à régler) Cases.
+  - Les flèches ne font pas défiler la page pendant ce temps.
+  - Les limites sont les mêmes qu'à la souris.
+
+### US-0423 · Zoomer à la molette ou au pavé tactile
+**En tant que** joueur, **je veux** zoomer à la molette ou au pavé tactile, **afin de** passer d'une vue d'ensemble au détail d'une Case.
+
+- **Débloquée par** : US-0420
+- **Critères d'acceptation** :
+  - La molette et le geste de zoom du pavé tactile zooment autour du pointeur.
+  - Le zoom va d'une vue large de (chiffre à régler) Cases de rayon à une vue rapprochée de (chiffre à régler) Cases.
+  - La page elle-même ne zoome pas.
+
+### US-0424 · Zoomer en pinçant
+**En tant que** joueur, **je veux** zoomer en pinçant l'écran, **afin de** naviguer sur mon téléphone comme sur n'importe quelle carte.
+
+- **Débloquée par** : US-0421, US-0423
+- **Critères d'acceptation** :
+  - Pincer à deux doigts zoome autour du point situé entre les deux doigts.
+  - Le zoom du navigateur ne se déclenche pas sur la carte.
+  - Les limites de zoom sont les mêmes qu'à la molette.
+
+### US-0425 · Zoomer avec des boutons
+**En tant que** joueur, **je veux** des boutons pour zoomer, **afin de** pouvoir zoomer même sans molette ni pincement.
+
+- **Débloquée par** : US-0423
+- **Critères d'acceptation** :
+  - Deux boutons « + » et « − » restent visibles sur la carte, à portée de pouce sur mobile.
+  - Chaque appui zoome d'un cran, autour du milieu de l'écran.
+  - Un bouton est grisé quand sa limite de zoom est atteinte.
+
+### US-0426 · Revenir au Foyer sur la carte
+**En tant que** joueur, **je veux** un bouton qui ramène la carte sur mon Foyer, **afin de** ne jamais me perdre dans le Monde.
+
+- **Débloquée par** : US-0419, US-0420
+- **Critères d'acceptation** :
+  - Un bouton ramène la carte sur le Foyer, au zoom par défaut, par un court mouvement.
+  - Le bouton reste visible quoi que l'on fasse sur la carte.
+  - Quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction (à décider).
+
+### US-0427 · Retrouver la carte là où on l'a laissée
+**En tant que** joueur, **je veux** retrouver la carte au même endroit quand j'y reviens, **afin de** ne pas refaire le chemin à chaque fois.
+
+- **Débloquée par** : US-0426
+- **Critères d'acceptation** :
+  - En revenant sur la carte pendant la même visite, on retrouve le même endroit et le même zoom.
+  - À une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée (à décider).
+
+### US-0428 · Ouvrir la fiche d'une Case
+**En tant que** joueur, **je veux** toucher une Case pour ouvrir sa fiche, **afin de** connaître son Biome et son propriétaire.
+
+- **Débloquée par** : US-0421
+- **Critères d'acceptation** :
+  - Toucher ou cliquer une Case ouvre sa fiche, avec son Biome et son propriétaire : « Libre », « Votre Foyer » ou le nom du chef.
+  - La Case choisie est surlignée sur la carte.
+  - Un glissement n'ouvre pas de fiche.
+  - Sur ordinateur, la fiche s'ouvre à côté de la carte, sans la cacher.
+
+### US-0429 · Situer une Case dans le Monde depuis sa fiche
+**En tant que** joueur, **je veux** voir sur la fiche où se trouve la Case dans le Monde, **afin de** juger si elle est proche de chez moi ou du Cœur sauvage.
+
+- **Débloquée par** : US-0428, US-0404, US-0405
+- **Critères d'acceptation** :
+  - La fiche dit si la Case appartient à la Couronne ou au Cœur sauvage.
+  - Elle donne la distance entre la Case et le Foyer, en Cases.
+  - Pour une Case du Cœur sauvage, une phrase explique que les Espèces les plus rares y vivent.
+
+### US-0430 · Fermer la fiche d'une Case
+**En tant que** joueur, **je veux** fermer la fiche d'une Case facilement, **afin de** revenir à la carte sans détour.
+
+- **Débloquée par** : US-0428
+- **Critères d'acceptation** :
+  - La fiche se ferme par sa croix, par la touche Échap, ou en touchant la carte hors de la Case.
+  - Toucher une autre Case remplace la fiche au lieu d'en ouvrir une deuxième.
+  - Fermer la fiche retire le surlignage de la Case.
+
+### US-0431 · Lire la fiche d'une Case sur mobile
+**En tant que** joueur, **je veux** que la fiche d'une Case s'ouvre en bas de l'écran sur mon téléphone, **afin de** garder la carte sous les yeux.
+
+- **Débloquée par** : US-0428
+- **Critères d'acceptation** :
+  - Sur mobile, la fiche s'ouvre dans un panneau en bas de l'écran, sans cacher la Case choisie.
+  - On la ferme en la faisant glisser vers le bas.
+  - La carte reste utilisable au-dessus du panneau.
+
+### US-0432 · Consulter la légende de la carte
+**En tant que** joueur, **je veux** une légende qui explique les couleurs et les repères de la carte, **afin de** ne jamais hésiter sur le Biome d'une Case.
+
+- **Débloquée par** : US-0418
+- **Critères d'acceptation** :
+  - Un bouton « Légende » ouvre la liste des Biomes et des quatre eaux avec leur couleur, ainsi que le repère du Foyer.
+  - La légende s'ouvre et se ferme d'un geste ; l'appareil retient si elle était ouverte.
+  - Sur mobile, elle s'ouvre dans un panneau qui laisse la carte visible.
+
+### US-0433 · Voir les limites de la Couronne et du Cœur sauvage
+**En tant que** joueur, **je veux** voir sur la carte où s'arrêtent la Couronne et le Cœur sauvage, **afin de** mesurer le danger d'une région.
+
+- **Débloquée par** : US-0418, US-0432
+- **Critères d'acceptation** :
+  - Un léger liseré marque la limite de la Couronne et celle du Cœur sauvage.
+  - Le liseré ne cache pas les Biomes.
+  - La légende explique ces deux liserés.
+
+### US-0434 · Afficher la carte rapidement
+**En tant que** joueur, **je veux** que la carte s'affiche vite, **afin de** jouer même quand je n'ai que quelques secondes.
+
+- **Débloquée par** : US-0418
+- **Critères d'acceptation** :
+  - La carte est utilisable en moins de (chiffre à régler) secondes sur une connexion mobile ordinaire.
+  - Pendant le chargement, un état d'attente s'affiche dans l'habillage Bento.
+  - En cas d'échec, un message et un bouton « Réessayer » s'affichent.
+
+### US-0435 · Garder la carte fluide sur mobile
+**En tant que** joueur, **je veux** une carte fluide sur mon téléphone, **afin de** parcourir le Monde sans saccades.
+
+- **Débloquée par** : US-0424
+- **Critères d'acceptation** :
+  - Déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir (à décider).
+  - Seules les Cases à l'écran, et un peu autour, sont dessinées.
+  - Dézoomer au maximum reste aussi fluide.
+  - Après (chiffre à régler) minutes de navigation continue, la carte ne ralentit pas.
+
+## Étape 20 · Le brouillard
+
+### US-0436 · Ne voir d'abord que les abords de son Foyer
+**En tant que** nouveau joueur, **je veux** ne voir au départ que les Cases proches de mon Foyer, **afin de** garder au Monde tout son mystère.
+
+- **Débloquée par** : US-0417
+- **Critères d'acceptation** :
+  - Au départ, seules les Cases à (chiffre à régler) Cases du Foyer ou moins sont découvertes.
+  - Toutes les autres Cases sont sous le brouillard.
+  - Les joueurs nés avant cette étape découvrent eux aussi les abords de leur Foyer, et rien de plus.
+
+### US-0437 · Dessiner le brouillard
+**En tant que** joueur, **je veux** distinguer au premier regard les Cases découvertes de celles sous le brouillard, **afin de** voir ce qu'il me reste à explorer.
+
+- **Débloquée par** : US-0436, US-0432
+- **Critères d'acceptation** :
+  - Une Case sous le brouillard est dessinée d'un aspect uniforme, sans son Biome ni son propriétaire.
+  - Le bord du brouillard ne laisse deviner aucun Biome caché.
+  - La légende ajoute le brouillard.
+
+### US-0438 · Toucher une Case sous le brouillard
+**En tant que** joueur, **je veux** qu'une Case sous le brouillard ne dise rien d'elle, **afin de** garder l'envie d'aller la découvrir.
+
+- **Débloquée par** : US-0437, US-0428
+- **Critères d'acceptation** :
+  - La fiche d'une Case sous le brouillard dit seulement « Case inconnue » et donne sa distance au Foyer.
+  - Elle ne montre ni Biome, ni propriétaire, ni appartenance à la Couronne ou au Cœur sauvage.
+  - Elle explique que les Expéditions permettront plus tard de la découvrir.
+
+### US-0439 · Ne rien laisser passer de ce que cache le brouillard
+**En tant que** développeur, **je veux** que le navigateur ne reçoive jamais ce que cache le brouillard, **afin de** rendre la triche impossible.
+
+- **Débloquée par** : US-0438
+- **Critères d'acceptation** :
+  - Le navigateur ne reçoit ni le Biome ni le propriétaire d'une Case sous le brouillard du joueur.
+  - Dans les échanges du navigateur, seules les Cases découvertes portent un Biome.
+  - Demander directement la fiche d'une Case sous le brouillard renvoie « Case inconnue ».
+
+### US-0440 · Avoir son propre brouillard
+**En tant que** joueur, **je veux** un brouillard qui n'appartient qu'à moi, **afin de** découvrir le Monde à mon rythme.
+
+- **Débloquée par** : US-0436
+- **Critères d'acceptation** :
+  - Chaque joueur a son propre brouillard, enregistré à part.
+  - Deux joueurs aux Foyers éloignés ne voient pas les mêmes Cases.
+  - Une Case découverte par un joueur reste cachée pour les autres.
+
+### US-0441 · Garder visibles les Cases déjà vues
+**En tant que** joueur, **je veux** que les Cases que j'ai découvertes le restent pour toujours, **afin de** ne jamais perdre ce que j'ai exploré.
+
+- **Débloquée par** : US-0440
+- **Critères d'acceptation** :
+  - Une Case découverte reste découverte d'une visite à l'autre et sur tous les appareils.
+  - Son Biome et son propriétaire restent à jour, même si l'on n'y retourne jamais.
+  - Aucune action du jeu ne remet une Case sous le brouillard.
+
+### US-0442 · Découvrir des Cases d'une seule façon
+**En tant que** développeur, **je veux** une seule façon de découvrir des Cases, **afin de** la réutiliser pour les Expéditions et les Avant-postes sans rien réécrire.
+
+- **Débloquée par** : US-0441
+- **Critères d'acceptation** :
+  - Les abords du Foyer sont découverts par cette seule façon de faire.
+  - Découvrir une Case déjà découverte ne change rien.
+  - Une Case découverte apparaît sur la carte sans recharger la page.
+
+### US-0443 · Compter les Cases découvertes
+**En tant que** joueur, **je veux** voir combien de Cases j'ai découvertes, **afin de** mesurer mes progrès dans la découverte du Monde.
+
+- **Débloquée par** : US-0442
+- **Critères d'acceptation** :
+  - La carte affiche le nombre de Cases découvertes.
+  - La part du Monde découverte s'affiche aussi, en pourcentage (à décider).
+  - Le compteur monte à chaque découverte.

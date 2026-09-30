@@ -1,0 +1,365 @@
+# Points à décider
+
+Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
+
+306 points au total.
+
+## [Jalon 0 · Les fondations](00-fondations.md)
+
+- [US-0002](00-fondations.md) · Relier le projet à une base Postgres : l'hébergeur de la base et l'outil qui y accède depuis le code.
+- [US-0005](00-fondations.md) · Mettre le projet en ligne sur Vercel : le nom de domaine du jeu.
+- [US-0007](00-fondations.md) · Prévisualiser une branche avant sa mise en ligne : la base utilisée par les prévisualisations, partagée ou une par branche.
+- [US-0017](00-fondations.md) · Ranger les illustrations reprises du prototype : le lieu de stockage des illustrations, dans le projet ou dans un stockage de fichiers.
+- [US-0020](00-fondations.md) · Enregistrer le Monde en base : le nom du Monde.
+- [US-0034](00-fondations.md) · Ouvrir une page de contrôle interne : elle n'est ouverte qu'aux développeurs ; la façon de les reconnaître.
+- [US-0040](00-fondations.md) · Enregistrer les Biomes : l'eau existe sous ses quatre formes : côte, lac, rivière, mer ; les traiter comme quatre Biomes distincts ou comme quatre variantes de l'eau.
+- [US-0044](00-fondations.md) · Enregistrer la souris : son Biome d'Habitat.
+- [US-0045](00-fondations.md) · Enregistrer la poule : son Biome d'Habitat.
+- [US-0046](00-fondations.md) · Enregistrer le pigeon : son Biome d'Habitat.
+- [US-0047](00-fondations.md) · Marquer les Espèces du Couple de départ : la phrase complète qui présente chaque style.
+
+## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
+
+- [US-0101](01-entrer-dans-le-jeu.md) · Trouver l'entrée du jeu sur la page d'accueil : une courte phrase présente le jeu ; son texte.
+- [US-0102](01-entrer-dans-le-jeu.md) · Ouvrir le formulaire d'inscription : une case d'acceptation des conditions d'utilisation.
+- [US-0105](01-entrer-dans-le-jeu.md) · Exiger un mot de passe assez long : d'autres règles, comme refuser les mots de passe les plus courants.
+- [US-0112](01-entrer-dans-le-jeu.md) · Freiner les inscriptions en rafale : une vérification supplémentaire contre les robots.
+- [US-0113](01-entrer-dans-le-jeu.md) · Envoyer des e-mails depuis le jeu : le service d'envoi ; ses clés sont lues dans des variables d'environnement.
+- [US-0114](01-entrer-dans-le-jeu.md) · Confirmer son adresse e-mail : confirmer son adresse est obligatoire pour jouer, ou seulement conseillé.
+- [US-0128](01-entrer-dans-le-jeu.md) · Choisir un nouveau mot de passe : les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées.
+- [US-0133](01-entrer-dans-le-jeu.md) · Limiter les caractères autorisés : les espaces, traits d'union, apostrophes et chiffres.
+- [US-0135](01-entrer-dans-le-jeu.md) · Refuser un nom déjà pris dans le Monde : la prise en compte des accents dans la comparaison, « Élan » contre « Elan ».
+- [US-0138](01-entrer-dans-le-jeu.md) · Refuser les noms interdits : le contenu de la liste et le traitement des contournements, chiffres à la place des lettres ou espaces glissés.
+- [US-0139](01-entrer-dans-le-jeu.md) · Valider son nom de chef : la possibilité de changer de nom plus tard, et l'avertissement à montrer avant de valider.
+- [US-0144](01-entrer-dans-le-jeu.md) · Consulter les caractéristiques avant de choisir : montrer ces chiffres dès cet écran ou les garder pour la Réserve.
+- [US-0151](01-entrer-dans-le-jeu.md) · Préparer les Cases de la Couronne : la façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire.
+- [US-0152](01-entrer-dans-le-jeu.md) · Définir les Cases où un Foyer peut naître : le cas de la côte, et le choix entre tous les Biomes terrestres ou seulement certains, pour que les départs se valent.
+- [US-0153](01-entrer-dans-le-jeu.md) · Recevoir une Case libre sur la Couronne : la façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés.
+- [US-0157](01-entrer-dans-le-jeu.md) · Voir l'illustration de son Foyer : une illustration propre à chaque Biome, ou une seule pour tous.
+- [US-0158](01-entrer-dans-le-jeu.md) · Annoncer la naissance du Foyer : le texte du récit.
+- [US-0159](01-entrer-dans-le-jeu.md) · Prévenir quand la Couronne est pleine : ce qui est proposé au joueur en attendant ; l'ouverture d'un autre Monde viendra plus tard.
+- [US-0163](01-entrer-dans-le-jeu.md) · Garder un premier écran simple : une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte.
+
+## [Jalon 2 · Le territoire respire](02-le-territoire-respire.md)
+
+- [US-0204](02-le-territoire-respire.md) · Reconnaître chaque ressource à son icône : reprendre des icônes du prototype ou en dessiner de nouvelles.
+- [US-0206](02-le-territoire-respire.md) · Lire des quantités simples : au-delà de (chiffre à régler), les grands nombres s'abrègent (12,5 k) ; le format exact des abréviations.
+- [US-0208](02-le-territoire-respire.md) · Consulter et ajuster les stocks depuis la page de contrôle : cet outil existe en local et sur les prévisualisations ; sa présence en production.
+- [US-0209](02-le-territoire-respire.md) · Régler la production de chaque Biome : le Foyer produit comme une Case ordinaire de son Biome, ou davantage grâce à la hutte du chef.
+- [US-0209](02-le-territoire-respire.md) · Régler la production de chaque Biome : une valeur modifiée s'applique à tous les joueurs dès le calcul suivant ; son effet sur le temps pas encore rattrapé.
+- [US-0230](02-le-territoire-respire.md) · Traiter un stock au-dessus de sa limite : le surplus est gardé ou retiré.
+
+## [Jalon 3 · Les Habitants](03-les-habitants.md)
+
+- [US-0303](03-les-habitants.md) · Lister chaque Habitant avec son état : chaque Habitant porte un prénom tiré au hasard.
+- [US-0307](03-les-habitants.md) · Découvrir les sept Métiers : un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve.
+- [US-0308](03-les-habitants.md) · Donner un Métier à un Habitant : donner un Métier est gratuit et immédiat.
+- [US-0310](03-les-habitants.md) · Changer le Métier d'un Habitant : changer de Métier est gratuit et immédiat, sans temps d'apprentissage.
+- [US-0316](03-les-habitants.md) · Faire manger les Habitants chaque heure : l'Entretien est pris sur la Viande et les Végétaux, à parts égales ou d'abord sur le stock le plus fourni.
+- [US-0323](03-les-habitants.md) · Retirer l'avertissement quand le danger est passé : tant que le danger est là, le joueur ne peut pas le masquer.
+- [US-0325](03-les-habitants.md) · Entrer en Famine : un Habitant mange indifféremment de la Viande ou des Végétaux : la Famine ne commence que quand les deux ensemble ne suffisent plus.
+- [US-0326](03-les-habitants.md) · Voir des Habitants s'en aller : le nombre de départs suit une seule règle : autant qu'il faut pour que l'Entretien restant soit payé, ou (chiffre à régler) Habitants par heure de Famine.
+- [US-0326](03-les-habitants.md) · Voir des Habitants s'en aller : l'ordre des départs suit une seule règle : les Habitants sans Métier d'abord, ou au hasard.
+- [US-0329](03-les-habitants.md) · Afficher un Territoire sans Habitant : la Famine peut faire partir le dernier Habitant, ou elle en garde toujours au moins un.
+- [US-0330](03-les-habitants.md) · Laisser partir un Habitant : le joueur peut renvoyer un Habitant de lui-même.
+- [US-0334](03-les-habitants.md) · Accueillir un Voyageur : accueillir un Voyageur ne coûte rien.
+- [US-0340](03-les-habitants.md) · Mesurer l'Entretien en plus avant d'accueillir : pendant une Famine, l'accueil reste possible.
+- [US-0341](03-les-habitants.md) · Fermer les portes aux Voyageurs pendant une Famine : aucun nouveau Voyageur ne se présente pendant une Famine.
+
+## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
+
+- [US-0402](04-la-carte-du-monde.md) · Donner au Monde sa forme et ses voisinages : le Monde a la forme d'un grand hexagone ou d'un disque, de (chiffre à régler) Cases de rayon.
+- [US-0403](04-la-carte-du-monde.md) · Placer le Cœur sauvage au milieu du Monde : le Cœur sauvage mêle plusieurs Biomes au lieu d'un seul.
+- [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu.
+- [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde, ou selon l'éloignement au Cœur sauvage.
+- [US-0411](04-la-carte-du-monde.md) · Tracer des rivières : deux rivières peuvent se rejoindre.
+- [US-0413](04-la-carte-du-monde.md) · Réserver de bonnes Cases de naissance sur la Couronne : certains Biomes, comme la banquise ou le désert, sont exclus des naissances.
+- [US-0414](04-la-carte-du-monde.md) · Faire naître les joueurs sur le Monde généré : pour ces joueurs déjà nés, la production continue suit le Biome de leur nouvelle Case plutôt que l'ancien.
+- [US-0426](04-la-carte-du-monde.md) · Revenir au Foyer sur la carte : quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction.
+- [US-0427](04-la-carte-du-monde.md) · Retrouver la carte là où on l'a laissée : à une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée.
+- [US-0435](04-la-carte-du-monde.md) · Garder la carte fluide sur mobile : déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir.
+- [US-0443](04-la-carte-du-monde.md) · Compter les Cases découvertes : la part du Monde découverte s'affiche aussi, en pourcentage.
+
+## [Jalon 5 · Récolter](05-recolter.md)
+
+- [US-0502](05-recolter.md) · Choisir le nombre de bûcherons : par défaut, tous les bûcherons libres sont choisis.
+- [US-0504](05-recolter.md) · Calculer le trajet selon la distance : la distance est celle de la carte, en Cases à vol d'oiseau, en traversant l'eau plutôt qu'en la contournant.
+- [US-0504](05-recolter.md) · Calculer le trajet selon la distance : le Biome des Cases traversées ne change pas la vitesse.
+- [US-0505](05-recolter.md) · Voir le déroulé prévu avant de partir : une estimation du Bois rapporté s'affiche, en valeur moyenne ou en fourchette.
+- [US-0510](05-recolter.md) · Déposer le Bois dans les stocks au retour : la limite de stock s'applique : ce qui dépasse est perdu plutôt que gardé en attente au Foyer.
+- [US-0516](05-recolter.md) · Mener plusieurs Récoltes à la fois : deux Récoltes du même joueur peuvent viser la même Case en même temps.
+- [US-0519](05-recolter.md) · Refuser une Case trop loin : une Recherche pourra allonger cette portée.
+- [US-0520](05-recolter.md) · Refuser une Case sous le brouillard : une Récolte ne lève pas le brouillard sur son chemin, ce rôle restant aux Expéditions.
+- [US-0521](05-recolter.md) · Récolter sur la Case de son Foyer : récolter sur la Case de son propre Foyer est permis.
+- [US-0522](05-recolter.md) · Récolter sur une Case d'un autre joueur : récolter sur une Case qui appartient à un autre joueur est refusé.
+- [US-0523](05-recolter.md) · Partager une Case libre avec d'autres joueurs : chacun rapporte comme s'il était seul : une Case ne s'épuise pas.
+- [US-0523](05-recolter.md) · Partager une Case libre avec d'autres joueurs : aucun joueur ne voit les Récoltes des autres.
+- [US-0525](05-recolter.md) · Traverser une Famine pendant une Récolte : les Habitants partis en Récolte peuvent s'en aller pendant une Famine, au même titre que ceux restés au Foyer.
+- [US-0528](05-recolter.md) · Rattacher chaque Métier à ses Biomes : bûcheron : forêt, et peut-être jungle ; mineur : montagne, et peut-être d'autres Biomes ; chasseur et cueilleur : liste de Biomes.
+- [US-0528](05-recolter.md) · Rattacher chaque Métier à ses Biomes : les chasseurs peuvent aussi pêcher sur la côte, les lacs et les rivières.
+- [US-0535](05-recolter.md) · Nourrir ses Habitants grâce aux Récoltes : le formulaire prévient quand le retour prévu tombe après le début prévu de la Famine.
+- [US-0538](05-recolter.md) · Ne plus pouvoir rappeler une fois arrivé : écourter un travail déjà commencé n'est pas possible.
+- [US-0542](05-recolter.md) · Relancer la boucle avec les Habitants encore là : s'il en manque (partis pendant une Famine, par exemple), elle repart avec ceux qui restent plutôt que de s'arrêter.
+- [US-0544](05-recolter.md) · Gérer une boucle quand le stock est plein : quand le stock de la ressource rapportée est plein, la boucle s'arrête plutôt que de continuer en perdant ce qui dépasse.
+- [US-0547](05-recolter.md) · Tirer une Densité du jour pour chaque Case : elle change une fois par jour, au même instant sur tout le Monde, à une heure fixe.
+- [US-0547](05-recolter.md) · Tirer une Densité du jour pour chaque Case : une seule Densité par Case sert aux Récoltes et, plus tard, aux Bêtes sauvages, plutôt qu'une Densité par ressource.
+- [US-0548](05-recolter.md) · Moduler les Récoltes par la Densité : la production continue des Cases possédées n'est pas touchée par la Densité.
+- [US-0549](05-recolter.md) · Compter la Densité du bon jour : la Densité appliquée est celle du jour où le travail a lieu ; un travail à cheval sur deux jours compte chaque heure au jour où elle tombe, plutôt que tout au jour où il commence.
+- [US-0551](05-recolter.md) · Deviner l'abondance dans le récit : le récit qualifie l'abondance du jour en quelques mots, comme « la forêt était généreuse » ou « la forêt était maigre ».
+
+## [Jalon 6 · Construire](06-construire.md)
+
+- [US-0612](06-construire.md) · Annuler un chantier : ce qui dépasserait la limite de stock est perdu, et la confirmation le signale.
+- [US-0616](06-construire.md) · Bâtir plus vite avec plus de bâtisseurs : un nombre maximum de bâtisseurs par chantier (chiffre à régler), au-delà duquel un bâtisseur de plus n'accélère plus rien.
+- [US-0618](06-construire.md) · Savoir ce que devient un chantier sans bâtisseur : sans aucun bâtisseur, le chantier avance à une vitesse réduite (chiffre à régler), ou il s'arrête.
+- [US-0621](06-construire.md) · Répartir les bâtisseurs entre plusieurs chantiers : le joueur choisit combien de bâtisseurs vont sur chaque chantier, ou ils se partagent d'eux-mêmes à parts égales.
+- [US-0625](06-construire.md) · Agrandir les huttes niveau par niveau : les huttes forment une seule construction qui monte en niveau, ou l'on peut en bâtir plusieurs.
+- [US-0626](06-construire.md) · Savoir si une construction sert pendant son amélioration : pendant le chantier du niveau suivant, la construction garde l'effet de son niveau actuel, ou elle cesse de servir.
+- [US-0627](06-construire.md) · Atteindre le niveau maximum : chaque construction a un niveau maximum (chiffre à régler), ou ses niveaux ne s'arrêtent pas.
+- [US-0634](06-construire.md) · Voir les Postes d'une construction : le nombre de Postes vient de la liste des constructions (chiffre à régler) ; il grandit avec le niveau.
+- [US-0638](06-construire.md) · Mesurer ce qu'apporte chaque employé : chaque employé apporte autant que le précédent, ou un peu moins.
+- [US-0641](06-construire.md) · Bâtir la tour de guet : la tour de guet a des Postes, et ne repère alors rien sans personnel.
+- [US-0642](06-construire.md) · Voir un Voyageur approcher : on peut accueillir un Voyageur encore en approche, ou seulement une fois arrivé aux portes.
+- [US-0644](06-construire.md) · Bâtir la taverne : la taverne a des Postes, et ne retient alors personne sans personnel.
+- [US-0645](06-construire.md) · Retenir les Voyageurs plus longtemps : l'allongement vaut aussi pour les Voyageurs déjà aux portes au moment où la taverne est finie.
+
+## [Jalon 7 · La Recherche](07-la-recherche.md)
+
+- [US-0707](07-la-recherche.md) · Savoir ce que devient une Recherche sans chercheur : sans chercheur, on ne peut pas lancer de Recherche, ou elle avance à une vitesse réduite (chiffre à régler) ; la règle est la même que pour les chantiers sans bâtisseur (étape 26).
+- [US-0708](07-la-recherche.md) · Ne mener qu'une Recherche à la fois : une seule Recherche en cours pour tout le Territoire, ou une par branche.
+- [US-0715](07-la-recherche.md) · Améliorer le cercle des sages : ce qu'apporte un niveau de plus (plus de chercheurs utiles, des Recherches plus avancées, ou des Recherches plus rapides).
+- [US-0715](07-la-recherche.md) · Améliorer le cercle des sages : une Recherche en cours continue pendant l'amélioration du cercle.
+- [US-0719](07-la-recherche.md) · Voir les prérequis d'une Recherche : un prérequis peut venir d'une autre branche, ou d'un niveau du cercle des sages.
+- [US-0727](07-la-recherche.md) · Voir ce que débloque chaque Recherche : les Recherches de Rôles et de portée apparaissent déjà dans l'arbre à ce jalon, ou seulement quand leur effet existe ; leur effet se vérifiera aux étapes 38 et 49.
+
+## [Jalon 8 · Les Bêtes à la maison](08-les-betes-a-la-maison.md)
+
+- [US-0809](08-les-betes-a-la-maison.md) · Comprendre comment remplir la Réserve : le Couple de départ compte dans le nombre de Couples réunis du classement principal (étape 60).
+- [US-0814](08-les-betes-a-la-maison.md) · Voir le coût et la durée d'un Élevage : le coût se paie en Viande, en Végétaux, ou selon le régime de l'Espèce.
+- [US-0819](08-les-betes-a-la-maison.md) · Ajouter un Élevage à la file : une longueur maximale de file (chiffre à régler), et, quand il y aura plusieurs Espèces, une file par Espèce ou une seule pour toutes.
+- [US-0820](08-les-betes-a-la-maison.md) · Annuler un Élevage : ce qui dépasserait la limite de stock est perdu, et la confirmation le signale.
+- [US-0823](08-les-betes-a-la-maison.md) · Loger l'Espèce du Couple de départ au Foyer : c'est une exception propre au Couple de départ, ou les trois Espèces de départ ont pour Habitat tous les Biomes de la Couronne.
+- [US-0824](08-les-betes-a-la-maison.md) · Occuper des Places selon la taille : les Bêtes du Couple en Réserve occupent des Places, ou non.
+- [US-0826](08-les-betes-a-la-maison.md) · Payer l'Entretien chaque heure : ce que mange un omnivore (l'une ou l'autre selon les stocks, ou un partage fixe entre les deux).
+- [US-0826](08-les-betes-a-la-maison.md) · Payer l'Entretien chaque heure : les Bêtes du Couple en Réserve mangent un Entretien, ou non.
+- [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : combien partent à chaque heure : autant qu'il faut pour que l'Entretien de celles qui restent soit payé, ou (chiffre à régler) Bêtes par heure de Famine, comme pour les Habitants (étape 16).
+- [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : un Élevage en cours continue pendant la Famine, ou se suspend.
+- [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : les Bêtes parties réapparaissent comme Bêtes sauvages sur la carte, ou disparaissent.
+- [US-0836](08-les-betes-a-la-maison.md) · Partager la Nourriture entre Habitants et Bêtes : quand la Nourriture ne suffit pas pour tous, les Habitants mangent d'abord, les Bêtes d'abord, ou chacun reçoit une part égale.
+- [US-0837](08-les-betes-a-la-maison.md) · Voir le Rôle de son Couple de départ débloqué d'office : le Rôle débloqué d'office vaut aussi pour les autres Espèces du même Rôle apprivoisées plus tard, ou seulement pour l'Espèce du Couple de départ.
+- [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : les poules produisent de la Viande, des Végétaux, ou les deux.
+- [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : les poules du Couple en Réserve produisent aussi, ou seulement celles de l'effectif.
+- [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : une poule rapporte plus de Nourriture qu'elle ne coûte d'Entretien.
+
+## [Jalon 9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md)
+
+- [US-0902](09-explorer-et-apprivoiser.md) · Choisir les explorateurs : ce qu'apporte un explorateur de plus dans une même Expédition.
+- [US-0905](09-explorer-et-apprivoiser.md) · La force de l'escorte : la force d'une Bête vient des caractéristiques de son Espèce, la même pour toutes les Bêtes de l'Espèce et chez tous les joueurs ; la formule à partir de l'attaque et de la vie.
+- [US-0906](09-explorer-et-apprivoiser.md) · Choisir la durée du séjour : quelques durées toutes prêtes se choisissent d'un doigt sur mobile ; lesquelles.
+- [US-0907](09-explorer-et-apprivoiser.md) · Choisir la destination : une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec un message.
+- [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : l'Expédition avance au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce ; que le pas des explorateurs soit aussi une limite.
+- [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : le chemin passe de Case en Case ; la traversée de la mer, des lacs et des rivières (plus lente, contournée ou interdite).
+- [US-0919](09-explorer-et-apprivoiser.md) · Plusieurs Expéditions à la fois : un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs.
+- [US-0920](09-explorer-et-apprivoiser.md) · Rappeler une Expédition à l'aller : rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt.
+- [US-0921](09-explorer-et-apprivoiser.md) · Ceux qui sont partis mangent toujours : en cas de Famine pendant une Expédition, si des Bêtes de l'escorte peuvent retourner au sauvage sur place, et si un explorateur absent peut s'en aller.
+- [US-0923](09-explorer-et-apprivoiser.md) · Les Anneaux, de la Couronne au Cœur sauvage : afficher l'Anneau dans la fiche d'une Case révélée.
+- [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : un petit jeu d'Espèces couvre les Raretés de commune à légendaire dans plusieurs Biomes ; Espèces provisoires ou premières Espèces validées du chantier de contenu.
+- [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : ces Espèces ne servent qu'en développement et aux simulations ; en ligne, seules les Espèces déjà chargées apparaissent jusqu'à l'étape 47.
+- [US-0925](09-explorer-et-apprivoiser.md) · Des Bêtes sauvages apparaissent de temps en temps : chaque Case hors des Territoires voit apparaître des Bêtes sauvages de temps en temps, selon une fréquence moyenne (chiffre à régler) ; les Cases des Territoires.
+- [US-0925](09-explorer-et-apprivoiser.md) · Des Bêtes sauvages apparaissent de temps en temps : plusieurs Bêtes présentes en même temps sur une même Case.
+- [US-0926](09-explorer-et-apprivoiser.md) · Une présence limitée dans le temps : une durée qui change selon la Rareté.
+- [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : côte, lac, rivière et mer comptent chacune à part pour ce tirage.
+- [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : à Rareté égale, chaque Espèce a la même chance ; une pondération par Espèce.
+- [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes.
+- [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
+- [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
+- [US-0932](09-explorer-et-apprivoiser.md) · La Rencontre : une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes.
+- [US-0935](09-explorer-et-apprivoiser.md) · Sans escorte, voir sans apprivoiser : la force d'une Expédition sans escorte étant nulle, aucune Bête n'est à sa portée ; une exception pour les Bêtes les plus faibles.
+- [US-0936](09-explorer-et-apprivoiser.md) · Une Bête à la fois : après un Apprivoisement, l'Expédition poursuit son séjour et peut en apprivoiser d'autres, ou rentre aussitôt avec sa Bête.
+- [US-0938](09-explorer-et-apprivoiser.md) · La Bête apprivoisée arrive au Foyer : jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat.
+- [US-0939](09-explorer-et-apprivoiser.md) · Une Bête apprivoisée sans Place libre : quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage.
+- [US-0942](09-explorer-et-apprivoiser.md) · La Bête trop forte reste sur sa Case : le récit dit « trop forte pour votre escorte » ; dire aussi de combien.
+- [US-0943](09-explorer-et-apprivoiser.md) · La Bête trop forte peut attaquer : une chance d'attaque qui dépend de la Rareté ou du régime, un carnivore étant plus agressif.
+- [US-0944](09-explorer-et-apprivoiser.md) · Le combat par la somme des forces : la répartition des pertes entre les Espèces de l'escorte, au prorata des effectifs ou des forces.
+- [US-0944](09-explorer-et-apprivoiser.md) · Le combat par la somme des forces : la Bête sauvage ne subit aucune perte et reste sur sa Case.
+- [US-0947](09-explorer-et-apprivoiser.md) · Le récit du combat : le récit donne l'heure du combat, l'Espèce de la Bête et la force de l'escorte ; afficher aussi la force exacte de la Bête.
+- [US-0948](09-explorer-et-apprivoiser.md) · Repérer la Bête restée sur la carte : le repère indique jusqu'à quand elle devrait rester ; heure exacte ou approximative.
+- [US-0948](09-explorer-et-apprivoiser.md) · Repérer la Bête restée sur la carte : le repère disparaît à la fin de sa durée, ou dès qu'elle a suivi une autre Expédition ; le joueur l'apprend-il.
+- [US-0951](09-explorer-et-apprivoiser.md) · Des Blessés parmi les pertes : avec de petits nombres (une seule Bête perdue), arrondi ou tirage au sort.
+- [US-0953](09-explorer-et-apprivoiser.md) · Les Blessés restent au Foyer : leur part dans la défense du Foyer, à l'étape 54.
+- [US-0954](09-explorer-et-apprivoiser.md) · La guérison avec le temps : un Blessé guérit après une durée (chiffre à régler) ; la même pour toutes les Espèces ou selon l'Espèce.
+- [US-0954](09-explorer-et-apprivoiser.md) · La guérison avec le temps : la page Récits signale les guérisons ; note à part ou simple compteur.
+- [US-0955](09-explorer-et-apprivoiser.md) · Soigner plus vite : un Blessé dont on s'occupe guérit plus vite ; le moyen, construction, Poste ou Bête à Rôle.
+- [US-0960](09-explorer-et-apprivoiser.md) · Le mâle ou la femelle n'est pas au Foyer : si l'une est Blessée, le Couple se forme aussitôt et elle guérit en Réserve, ou il attend sa guérison.
+- [US-0961](09-explorer-et-apprivoiser.md) · Prévenir avant de risquer une Bête précieuse : si l'escorte emmène la seule Bête d'un sexe d'une Espèce sans Couple, le récapitulatif le signale ; simple avertissement ou confirmation demandée.
+- [US-0962](09-explorer-et-apprivoiser.md) · Chaque Expédition présente voit la Bête : un joueur n'apprend la présence des autres Expéditions que par le récit du retour.
+- [US-0963](09-explorer-et-apprivoiser.md) · Des chances proportionnelles à la force : une Expédition pour qui la Bête est trop forte ne participe pas au tirage ; ou la portée se juge sur la somme des escortes présentes.
+- [US-0964](09-explorer-et-apprivoiser.md) · Le récit du perdant : nommer le chef qui l'a emportée.
+- [US-0965](09-explorer-et-apprivoiser.md) · Une Bête trop forte pour toutes : laquelle elle attaque (au hasard, la plus faible…), et si elle peut en attaquer plusieurs.
+- [US-0967](09-explorer-et-apprivoiser.md) · Deux Expéditions du même joueur sur une Case : envoyer une seconde Expédition vers une Case où l'on en a déjà une : autorisé ou refusé avec un message.
+- [US-0970](09-explorer-et-apprivoiser.md) · Les pigeons gardent les Bêtes en vue : la forme exacte de l'effet, présence prolongée ou Bêtes repérées sur les Cases voisines.
+
+## [Jalon 10 · Le Bestiaire](10-le-bestiaire.md)
+
+- [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : les Espèces sont groupées par Biome, chaque groupe portant le nom et le pictogramme de son Biome ; l'ordre des Biomes.
+- [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : dans chaque Biome, elles vont de commune à mythique ; l'ordre au sein d'une même Rareté, alphabétique ou du plus faible au plus fort.
+- [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : côte, lac, rivière et mer forment un seul groupe « eau » ou quatre groupes.
+- [US-1004](10-le-bestiaire.md) · La silhouette d'une Espèce jamais vue : silhouette générique ou contour réel de l'animal, tant qu'elle ne permet pas de reconnaître l'Espèce.
+- [US-1006](10-le-bestiaire.md) · L'état « croisée » : elle se distingue d'un coup d'œil d'une Espèce apprivoisée ; par quel moyen, illustration adoucie, cadre ou autre.
+- [US-1009](10-le-bestiaire.md) · Signaler les nouvelles inscriptions : la marque disparaît à l'ouverture de la page ou à celle de la fiche.
+- [US-1011](10-le-bestiaire.md) · La fiche d'une Espèce seulement croisée : les caractéristiques d'une Espèce seulement croisée : visibles, partielles ou cachées jusqu'à l'Apprivoisement.
+- [US-1016](10-le-bestiaire.md) · Filtrer par Biome et par Rareté : les compteurs suivent les filtres ou restent globaux.
+- [US-1022](10-le-bestiaire.md) · Une illustration pour chaque Espèce : une Espèce dont l'illustration n'est pas prête est chargée avec une image d'attente, ou tenue hors du Monde jusqu'à son arrivée.
+- [US-1025](10-le-bestiaire.md) · Garder ce que les joueurs ont déjà : ce que deviennent des Bêtes ou des inscriptions d'Espèces d'essai qui existeraient en ligne.
+- [US-1028](10-le-bestiaire.md) · Ce que « compléter » veut dire : l'état demandé : « Couple réuni » (« apprivoisée » pour une mythique), ou une récompense à chaque étape, croiser toutes, apprivoiser toutes, réunir tous les Couples.
+- [US-1029](10-le-bestiaire.md) · La nature des récompenses : chaque Biome et chaque Rareté a sa récompense, annoncée à l'avance ; sa nature, ressources, Voyageurs, embellissement du Foyer ou autre ; son montant (chiffre à régler).
+- [US-1035](10-le-bestiaire.md) · Une récompense quand les stocks sont pleins : si la récompense contient des ressources et que le stock est plein, le surplus est perdu, gardé au-delà de la limite, ou mis de côté à réclamer plus tard.
+- [US-1036](10-le-bestiaire.md) · La Rareté mythique : la Rareté mythique se complète en possédant une Bête de chacune de ses Espèces.
+- [US-1036](10-le-bestiaire.md) · La Rareté mythique : un Biome qui compte une Espèce mythique exige-t-il de l'avoir pour être complet.
+- [US-1037](10-le-bestiaire.md) · Une nouvelle Espèce dans un Biome déjà complet : le compléter à nouveau donne une nouvelle récompense ou non.
+- [US-1038](10-le-bestiaire.md) · Débloquer un Rôle par la Recherche : chacun des quatre Rôles (Porteur, Éclaireur, Nourricier, Bâtisseur) s'ouvre par sa propre Recherche ; la branche de chacune.
+- [US-1042](10-le-bestiaire.md) · Emmener des Porteurs dans une Récolte : le trajet se fait au pas du Porteur le plus lent s'il est plus lent que les Habitants.
+- [US-1043](10-le-bestiaire.md) · Tous les Éclaireurs : la force de l'effet, la même pour toutes ou propre à chaque Espèce (un aigle voit plus loin qu'un pigeon).
+- [US-1044](10-le-bestiaire.md) · Tous les Nourriciers : viande ou Végétaux selon l'Espèce.
+- [US-1044](10-le-bestiaire.md) · Tous les Nourriciers : il faut leur donner un Poste pour qu'elles produisent, ou non.
+- [US-1046](10-le-bestiaire.md) · Les Bâtisseurs pendant et après le chantier : les castors sont occupés pendant le chantier, donc indisponibles pour une Expédition, ou non.
+- [US-1046](10-le-bestiaire.md) · Les Bâtisseurs pendant et après le chantier : si les castors meurent ensuite, la construction terminée continue de fonctionner ou s'arrête.
+
+## [Jalon 11 · S'étendre](11-s-etendre.md)
+
+- [US-1101](11-s-etendre.md) · Débloquer l'Avant-poste : ouvert d'emblée ou par une Recherche de la branche Bâtir ; s'il est verrouillé, il dit quelle Recherche l'ouvre, avec un lien vers elle.
+- [US-1104](11-s-etendre.md) · Les Cases qu'on ne peut pas revendiquer : les Cases du Cœur sauvage, revendicables ou non.
+- [US-1104](11-s-etendre.md) · Les Cases qu'on ne peut pas revendiquer : les Cases d'eau : côte, lac et rivière revendicables, la mer revendicable ou non.
+- [US-1106](11-s-etendre.md) · Annuler un Avant-poste en chantier : les Matériaux rendus : tout, une partie ou rien.
+- [US-1107](11-s-etendre.md) · Un coût qui grandit avec le Territoire : un nombre maximal de Cases par Territoire.
+- [US-1111](11-s-etendre.md) · Un Territoire d'un seul tenant : ce que devient une partie du Territoire coupée du Foyer par la prise d'une Marche à l'étape 59.
+- [US-1112](11-s-etendre.md) · Deux joueurs visent la même Case : deux joueurs peuvent lancer un Avant-poste sur la même Case libre, ou le premier chantier lancé bloque l'autre.
+- [US-1112](11-s-etendre.md) · Deux joueurs visent la même Case : si les deux chantiers existent, le premier terminé emporte la Case et l'autre s'arrête ; le perdant récupère ses Matériaux, tout ou partie, et reçoit un récit.
+- [US-1114](11-s-etendre.md) · Abandonner une Case : pouvoir abandonner une Case de son Territoire.
+- [US-1115](11-s-etendre.md) · Une Bête ou une Expédition sur la Case revendiquée : une Bête sauvage encore présente sur la Case reste jusqu'à la fin de sa durée, ou disparaît aussitôt.
+- [US-1115](11-s-etendre.md) · Une Bête ou une Expédition sur la Case revendiquée : l'Expédition d'un autre joueur qui y séjourne finit son séjour normalement, ou rentre aussitôt.
+- [US-1116](11-s-etendre.md) · Partir de plus loin : la portée d'exploration se compte depuis le Foyer, ou depuis la Case du Territoire la plus proche de la destination.
+- [US-1116](11-s-etendre.md) · Partir de plus loin : les trajets des Expéditions et des Récoltes partent du Foyer, ou de la Case la plus proche.
+- [US-1122](11-s-etendre.md) · Débloquer les constructions d'Habitat : les constructions d'Habitat forment la famille Habitats, ouverte par des Recherches ; lesquelles.
+- [US-1123](11-s-etendre.md) · Le bassin : le bassin ajoute des Places pour l'eau (chiffre à régler) ; pour quelles eaux, côte, lac, rivière ou mer.
+- [US-1124](11-s-etendre.md) · La glacière : la glacière ajoute des Places pour la toundra (chiffre à régler) ; pour la banquise aussi.
+- [US-1125](11-s-etendre.md) · La volière : la volière ajoute des Places pour un Biome (chiffre à régler) ; lequel.
+- [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : la liste des constructions prévoit une construction d'Habitat pour chaque Biome, ou seulement pour certains.
+- [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : deux constructions d'Habitat différentes ne reproduisent jamais le même Biome.
+- [US-1127](11-s-etendre.md) · Les niveaux d'une construction d'Habitat : des Postes dans les constructions d'Habitat.
+- [US-1128](11-s-etendre.md) · Les eaux et leurs Habitats : une Espèce de lac peut vivre sur une Case de rivière, ou chaque eau exige la sienne.
+- [US-1129](11-s-etendre.md) · L'Espèce du Couple de départ toujours logée au Foyer : la règle garde la forme retenue à l'étape 35 : exception propre au Couple de départ, ou Espèces de départ vivant dans tous les Biomes de la Couronne.
+- [US-1130](11-s-etendre.md) · Les Bêtes déjà là quand la règle arrive : les Bêtes logées au Foyer hors de leur Biome restent en surnombre, ou gardent une Place d'exception.
+- [US-1131](11-s-etendre.md) · Une Bête apprivoisée sans Habitat : une Bête apprivoisée d'un Biome où le joueur n'a aucun Habitat le rejoint quand même en surnombre, attend en Réserve, ou repart au sauvage.
+- [US-1132](11-s-etendre.md) · Les Couples en Réserve et les Places : la règle de l'étape 35 s'applique : les Bêtes des Couples en Réserve occupent des Places, ou non.
+- [US-1134](11-s-etendre.md) · Des Places perdues : quand un Biome perd des Places (Case abandonnée, plus tard Marche prise), les Bêtes déjà là restent en surnombre.
+- [US-1135](11-s-etendre.md) · Le Foyer autour de la hutte du chef : la distance se compte en Cases, à vol d'oiseau ou par un chemin à travers le Territoire.
+- [US-1136](11-s-etendre.md) · Les Marches au-delà : un moyen d'agrandir le Foyer, niveau de la hutte du chef ou Recherche.
+
+## [Jalon 12 · Les Épreuves](12-les-epreuves.md)
+
+- [US-1201](12-les-epreuves.md) · Décrire les Épreuves dans les données du jeu : la suite décrite dans ce jalon (US-1215 à US-1230) est une première proposition, à valider en jouant.
+- [US-1207](12-les-epreuves.md) · Une récompense qui déborde des stocks : la part qui dépasse la limite est perdue ou gardée au-dessus de la limite.
+- [US-1212](12-les-epreuves.md) · Une Épreuve déjà accomplie : un objectif qui porte sur une action (une Récolte revenue) compte aussi les actions faites avant l'Épreuve.
+- [US-1213](12-les-epreuves.md) · Les chefs installés avant les Épreuves : les récompenses des Épreuves qu'il a ainsi sautées lui sont versées ou non.
+- [US-1221](12-les-epreuves.md) · Épreuve 7 « Des mains en plus » : accueillir un Voyageur : pendant cette Épreuve, un Voyageur arrive à coup sûr aux portes dans un délai court (chiffre à régler).
+- [US-1230](12-les-epreuves.md) · Une Épreuve propre au Couple de départ : l'existence de cette Épreuve et sa place dans la suite.
+- [US-1232](12-les-epreuves.md) · Passer les Épreuves : le choix de passer les Épreuves est proposé, comme dans le prototype.
+
+## [Jalon 13 · Le danger sauvage](13-le-danger-sauvage.md)
+
+- [US-1302](13-le-danger-sauvage.md) · Composer une Incursion : les Espèces sont tirées parmi celles des Biomes proches du Territoire visé.
+- [US-1302](13-le-danger-sauvage.md) · Composer une Incursion : la force totale d'une Incursion tient compte ou non de la force du Territoire visé.
+- [US-1305](13-le-danger-sauvage.md) · Ce que dit l'annonce : ce qu'elle révèle de sa composition (Espèces, nombre, force estimée) dépend de la tour de guet ou non.
+- [US-1309](13-le-danger-sauvage.md) · Rentrer à temps pour défendre : le rappel d'une Expédition pour défendre le Foyer est possible ou non.
+- [US-1310](13-le-danger-sauvage.md) · Résoudre le combat d'une Incursion : l'issue d'une égalité parfaite de force.
+- [US-1313](13-le-danger-sauvage.md) · Une Incursion qui l'emporte : ce que les Bêtes sauvages emportent ou abîment en plus (Nourriture, constructions).
+- [US-1315](13-le-danger-sauvage.md) · Le récit d'une Incursion : les Espèces sauvages affrontées s'inscrivent au Bestiaire comme croisées.
+- [US-1317](13-le-danger-sauvage.md) · Pas d'Incursion pour les tout nouveaux chefs : aucune Incursion ne vise un chef pendant une durée après sa naissance (chiffre à régler).
+- [US-1317](13-le-danger-sauvage.md) · Pas d'Incursion pour les tout nouveaux chefs : les premières Incursions d'un chef sont plus faibles que les suivantes.
+- [US-1318](13-le-danger-sauvage.md) · Bâtir une palissade : elle se bâtit au Foyer ; en bâtir sur d'autres Cases du Territoire.
+- [US-1319](13-le-danger-sauvage.md) · Creuser des fosses : ce qui distingue les fosses de la palissade dans le combat.
+- [US-1322](13-le-danger-sauvage.md) · Les défenses après le combat : elles s'usent au combat et se réparent, ou restent intactes.
+- [US-1322](13-le-danger-sauvage.md) · Les défenses après le combat : si elles s'usent, leur force baisse jusqu'à leur remise en état, et le coût de la remise en état s'affiche.
+- [US-1324](13-le-danger-sauvage.md) · Les défenses dans le récit : s'il existe une usure des défenses, le récit l'indique.
+
+## [Jalon 14 · Les autres joueurs](14-les-autres-joueurs.md)
+
+- [US-1408](14-les-autres-joueurs.md) · Voir la force, la charge et le trajet avant de partir : les Bêtes au Rôle de Porteur augmentent la charge d'une Attaque comme celle d'une Récolte, ou non.
+- [US-1411](14-les-autres-joueurs.md) · Rappeler une Attaque en chemin : le rappel d'une Attaque pendant l'aller est possible, comme pour une Récolte.
+- [US-1414](14-les-autres-joueurs.md) · Piller dans la limite de la charge : le butin total ne dépasse jamais la charge totale des Bêtes survivantes ; la charge des Blessés compte ou non.
+- [US-1415](14-les-autres-joueurs.md) · Répartir le butin entre les ressources : le butin se prend selon une règle fixe : à parts égales, en proportion des stocks du chef attaqué, ou au choix de l'attaquant.
+- [US-1416](14-les-autres-joueurs.md) · Une part des stocks à l'abri : une part des stocks ne peut jamais être pillée (chiffre à régler).
+- [US-1416](14-les-autres-joueurs.md) · Une part des stocks à l'abri : une construction peut augmenter cette part.
+- [US-1418](14-les-autres-joueurs.md) · Le retour avec le butin : à leur arrivée, le butin s'ajoute à mes stocks dans la limite de stock ; ce qui dépasse est perdu.
+- [US-1422](14-les-autres-joueurs.md) · Le récit du chef attaqué : l'Attaque subie révèle ou non sur ma carte le Territoire de l'attaquant.
+- [US-1425](14-les-autres-joueurs.md) · Rien ne passe d'un chef à l'autre hors du butin : une Attaque repoussée ne laisse pas de Viande au chef attaqué, pour qu'on ne puisse pas nourrir un ami en l'attaquant.
+- [US-1428](14-les-autres-joueurs.md) · Ce que l'annonce révèle de l'Attaque : l'annonce montre le nombre de Bêtes, leurs Espèces ou une force estimée, selon la tour de guet ou non.
+- [US-1429](14-les-autres-joueurs.md) · Le Bouclier des débutants : le Bouclier dure un temps fixe, ou s'arrête aussi selon la progression du chef.
+- [US-1432](14-les-autres-joueurs.md) · Attaquer pendant son Bouclier : un débutant sous Bouclier peut attaquer, ou non.
+- [US-1432](14-les-autres-joueurs.md) · Attaquer pendant son Bouclier : s'il le peut, lancer une Attaque met fin à son Bouclier, après une confirmation.
+- [US-1433](14-les-autres-joueurs.md) · Limiter les Attaques par cible et par jour : une Attaque compte dès son départ, même rappelée ou perdue.
+- [US-1433](14-les-autres-joueurs.md) · Limiter les Attaques par cible et par jour : une limite sur le total des Attaques qu'un chef peut subir par jour, tous attaquants confondus, s'ajoute ou non.
+- [US-1434](14-les-autres-joueurs.md) · Voir combien d'Attaques il me reste contre une cible : un « jour » est une période glissante de 24 heures ou un jour du calendrier.
+- [US-1436](14-les-autres-joueurs.md) · La Case change de main après la victoire : d'autres conditions que la victoire (un nombre de survivants, un Habitant ou un Avant-poste).
+- [US-1438](14-les-autres-joueurs.md) · Un Territoire coupé en deux : si la prise coupe mon Territoire, la partie séparée du Foyer redevient libre ou passe à l'attaquant.
+- [US-1438](14-les-autres-joueurs.md) · Un Territoire coupé en deux : la carte signale les Cases dont la perte couperait mon Territoire.
+- [US-1439](14-les-autres-joueurs.md) · Ce que devient la Case prise : les constructions de la Case passent au vainqueur ou sont détruites.
+- [US-1439](14-les-autres-joueurs.md) · Ce que devient la Case prise : si l'ancien propriétaire a désormais plus de Bêtes que de Places, le sort des Bêtes en trop.
+- [US-1444](14-les-autres-joueurs.md) · Le classement de la puissance de l'armée : les Blessés comptent ou non.
+- [US-1447](14-les-autres-joueurs.md) · Départager les égalités : en cas d'égalité, les chefs partagent le même rang ou sont départagés, par exemple par le premier arrivé au total.
+
+## [Jalon 15 · Le Monde vivant](15-le-monde-vivant.md)
+
+- [US-1501](15-le-monde-vivant.md) · Lancer une Migration : les Raretés possibles pour une Migration : rare seulement, ou aussi peu commune et épique.
+- [US-1503](15-le-monde-vivant.md) · Une Migration qui avance : la région se décale chaque jour dans une direction, ou reste fixe pendant toute la Migration.
+- [US-1503](15-le-monde-vivant.md) · Une Migration qui avance : le trajet ne passe jamais par le Cœur sauvage.
+- [US-1504](15-le-monde-vivant.md) · Être prévenu d'une Migration proche : le message nomme l'Espèce, même si le chef ne l'a jamais croisée, ou la montre en silhouette.
+- [US-1505](15-le-monde-vivant.md) · Voir la Migration sur la carte : elle reste visible sous le brouillard, sans en révéler les Cases (Biome, propriétaire).
+- [US-1508](15-le-monde-vivant.md) · Faire tourner les Saisons du Monde : le Monde suit un cycle de Saisons, dont l'hiver ; la liste des autres Saisons.
+- [US-1511](15-le-monde-vivant.md) · La Saison change les Récoltes : la production continue des Cases change aussi avec la Saison, ou non.
+- [US-1514](15-le-monde-vivant.md) · Une Récolte à cheval sur deux Saisons : le rendement se calcule selon le temps passé dans chaque Saison, ou selon la Saison du départ.
+- [US-1515](15-le-monde-vivant.md) · La carte aux couleurs de la Saison : la carte et l'illustration du Foyer prennent une teinte propre à chaque Saison, selon ce que permet le chantier des illustrations.
+- [US-1516](15-le-monde-vivant.md) · Faire surgir une Apparition : une seule Apparition à la fois par Monde.
+- [US-1517](15-le-monde-vivant.md) · Annoncer une Apparition : l'annonce part vers tous les chefs du Monde, ou seulement vers ceux assez proches du Cœur sauvage.
+- [US-1517](15-le-monde-vivant.md) · Annoncer une Apparition : elle désigne la Case exacte, ou seulement une région du Cœur sauvage.
+- [US-1521](15-le-monde-vivant.md) · Des chances décroissantes pour les suivants : deux victoires au même instant sont départagées selon une règle.
+- [US-1523](15-le-monde-vivant.md) · Une seule Bête mythique par Espèce et par chef : il peut quand même l'affronter ; sa victoire prend un rang parmi les vainqueurs, ou non.
+- [US-1525](15-le-monde-vivant.md) · Garder sa Bête mythique : un chef qui l'a perdue peut en apprivoiser une autre de la même Espèce lors d'une Apparition suivante.
+- [US-1527](15-le-monde-vivant.md) · Le tableau des vainqueurs : la liste reste consultable après la fin de l'Apparition.
+
+## [Jalon 16 · Le confort](16-le-confort.md)
+
+- [US-1601](16-le-confort.md) · Proposer les notifications au bon moment : la proposition n'apparaît jamais à la première visite, mais à un moment où elle a du sens, par exemple à l'approche de la fin du Bouclier des débutants.
+- [US-1607](16-le-confort.md) · Être notifié d'une famine imminente : elle n'est pas répétée à chaque heure ; un rappel unique plus proche de la Famine s'ajoute ou non.
+- [US-1609](16-le-confort.md) · Régler chaque notification séparément : le choix est gardé d'une visite à l'autre, pour tout le compte ou pour chaque appareil.
+- [US-1614](16-le-confort.md) · Quand le Repos est refusé : le Repos est impossible pendant qu'une Attaque ou une Incursion est annoncée contre moi.
+- [US-1614](16-le-confort.md) · Quand le Repos est refusé : le Repos est impossible tant qu'une de mes Attaques est en chemin.
+- [US-1614](16-le-confort.md) · Quand le Repos est refusé : un délai minimal sépare deux Repos (chiffre à régler).
+- [US-1615](16-le-confort.md) · Les sorties en cours au moment du Repos : au moment du Repos, les sorties en cours doivent être rentrées, sont rappelées d'office, ou restent figées là où elles sont.
+- [US-1620](16-le-confort.md) · Ce que le chef peut faire pendant le Repos : toute action qui ferait bouger le Territoire (lancer une sortie, construire, élever, changer un Métier) est interdite, ou met fin au Repos après confirmation.
+- [US-1621](16-le-confort.md) · Sortir du Repos : le Repos a une durée maximale, au-delà de laquelle il s'arrête de lui-même, ou n'en a pas.
+- [US-1623](16-le-confort.md) · Le Monde continue pendant le Repos : les notifications d'Apparition continuent d'arriver pendant le Repos, ou non.
+- [US-1626](16-le-confort.md) · Naviguer au pouce entre les écrans : le menu est atteignable avec le pouce, en tenant le téléphone d'une main ; sa forme exacte.
+- [US-1633](16-le-confort.md) · Tenir le téléphone en largeur : la tenue en largeur est adaptée, ou simplement tolérée sans casser l'affichage.
+
+## [Jalon 17 · Plus tard](17-plus-tard.md)
+
+- [US-1701](17-plus-tard.md) · Fonder un Clan : les conditions pour fonder un Clan (coût, Recherche, construction).
+- [US-1702](17-plus-tard.md) · Rejoindre, quitter et diriger un Clan : on entre dans un Clan sur invitation, sur demande acceptée, ou les deux.
+- [US-1702](17-plus-tard.md) · Rejoindre, quitter et diriger un Clan : un délai avant de rejoindre un autre Clan après un départ (chiffre à régler).
+- [US-1702](17-plus-tard.md) · Rejoindre, quitter et diriger un Clan : les pouvoirs du fondateur (inviter, exclure, transmettre la direction).
+- [US-1703](17-plus-tard.md) · Voir les Bêtes repérées par son Clan : le partage montre seulement la Bête et sa Case, ou lève aussi le brouillard autour.
+- [US-1704](17-plus-tard.md) · Envoyer des renforts à un membre : qui paie leur Entretien pendant leur séjour.
+- [US-1704](17-plus-tard.md) · Envoyer des renforts à un membre : la durée maximale d'un séjour de renforts (chiffre à régler).
+- [US-1705](17-plus-tard.md) · Chasser ensemble une Bête légendaire ou mythique : à qui revient la Bête après une victoire commune : tirage selon la force de chaque escorte, ou autre règle.
+- [US-1705](17-plus-tard.md) · Chasser ensemble une Bête légendaire ou mythique : pour une Apparition, la règle d'une Bête mythique au plus par chef et par Espèce reste vraie ; le calcul des chances décroissantes pour une victoire commune.
+- [US-1706](17-plus-tard.md) · Pas d'Attaque entre membres d'un Clan : une Attaque contre un membre de son propre Clan est interdite.
+- [US-1706](17-plus-tard.md) · Pas d'Attaque entre membres d'un Clan : un délai après avoir quitté un Clan avant de pouvoir attaquer ses anciens membres (chiffre à régler).
+- [US-1708](17-plus-tard.md) · Le classement des Clans : l'existence d'un classement des Clans.
+- [US-1708](17-plus-tard.md) · Le classement des Clans : s'il existe, il se fonde sur le nombre de Couples réunis par ses membres, comme le classement principal des chefs.
+- [US-1709](17-plus-tard.md) · Ajouter un lot de nouvelles Espèces : la taille des lots, leur rythme et leur répartition entre Raretés.
+- [US-1711](17-plus-tard.md) · Les récompenses du Bestiaire après un ajout : compléter à nouveau un Biome ou une Rareté après un ajout rapporte une nouvelle récompense, ou non.
+- [US-1712](17-plus-tard.md) · Savoir qu'un Monde est plein : le critère de Monde plein : nombre de chefs, Cases libres restantes sur la Couronne, ou les deux.
+- [US-1714](17-plus-tard.md) · Arriver dans le bon Monde : un nouveau chef est placé d'office dans le Monde ouvert, ou choisit parmi les Mondes qui accueillent encore.
+- [US-1715](17-plus-tard.md) · Jouer dans plusieurs Mondes : un compte peut avoir un chef dans chaque Monde, ou un seul chef en tout.

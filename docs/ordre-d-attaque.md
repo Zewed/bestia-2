@@ -2,6 +2,8 @@
 
 Le développement avance par petites étapes. Chacune ajoute une seule chose que le joueur peut faire. Elle est mise en ligne et vérifiée avant de passer à la suivante. Les mots du jeu sont ceux de [CONTEXT.md](../CONTEXT.md).
 
+Chaque étape est découpée en user stories dans [stories/](stories/README.md).
+
 Règle d'or : **on ne commence pas une étape tant que la précédente n'est pas en ligne et testée.** Les étapes d'un même jalon se suivent dans l'ordre. Les chantiers de contenu (espèces, illustrations, constructions, chiffres) avancent en parallèle, voir la fin du document.
 
 ---
@@ -160,8 +162,8 @@ _Fini quand_ : les poules produisent de la Nourriture en continu (l'effet des pi
 **38. La première Expédition.** On envoie des explorateurs, avec ou sans escorte de Bêtes, vers une Case lointaine. Le brouillard se lève sur le chemin, et l'Expédition reste sur place le temps choisi.
 _Fini quand_ : le trajet, le séjour et le retour se déroulent, et la carte révélée reste visible.
 
-**39. Le Monde fait apparaître des Bêtes.** Des Bêtes sauvages apparaissent de temps en temps sur les Cases, pour une durée limitée. Leur Rareté dépend de la zone, et les communes restent partout les plus nombreuses.
-_Fini quand_ : sur une longue simulation, les Raretés apparues suivent les pourcentages par zone.
+**39. Le Monde fait apparaître des Bêtes.** Des Bêtes sauvages apparaissent de temps en temps sur les Cases, pour une durée limitée. Leur Rareté dépend de l'Anneau, et les communes restent partout les plus nombreuses.
+_Fini quand_ : sur une longue simulation, les Raretés apparues suivent les pourcentages par Anneau.
 
 **40. La Rencontre.** Une Bête qui apparaît sur la Case d'une Expédition, et qui est à sa portée, la suit : c'est l'Apprivoisement, et le sexe est tiré au hasard. Le récit s'affiche au retour.
 _Fini quand_ : une Bête apprivoisée rejoint le joueur, et son Espèce entre au Bestiaire.
@@ -237,7 +239,7 @@ _Fini quand_ : on voit les voisins dont les Cases ne sont plus dans le brouillar
 **57. Attaquer.** On envoie des Bêtes vers le Territoire d'un autre joueur. Il y a un trajet, puis un combat contre ses Bêtes restées chez lui et ses défenses. Le pillage de Nourriture et de Matériaux est limité par ce que les Bêtes peuvent porter. Jamais de vol de Bêtes.
 _Fini quand_ : les deux joueurs reçoivent un récit de combat juste, et le butin respecte la charge.
 
-**58. Les protections.** Préavis de la tour de guet, bouclier des débutants, limite d'Attaques par cible et par jour.
+**58. Les protections.** Préavis de la tour de guet, Bouclier des débutants, limite d'Attaques par cible et par jour.
 _Fini quand_ : un débutant ne peut pas être attaqué, et la limite bloque l’Attaque de trop.
 
 **59. Prendre une Marche.** Une Attaque victorieuse peut prendre une Case de Marche.
@@ -290,4 +292,4 @@ Ils avancent pendant le développement et doivent être prêts à temps pour les
 - **Les illustrations** : une par Espèce, dans la direction artistique du prototype. On commence par les trois du Couple de départ (étape 4), puis les communes.
 - **La liste des constructions** (pour les jalons 6, 11 et 13) : une trentaine, en familles, chacune avec ses coûts, ses Postes et la Recherche qui la débloque.
 - **Le rattachement des Rôles aux Métiers** (pour l'étape 49).
-- **Les chiffres d'équilibrage**, réglés en jouant : rythme de progression (première peu commune en 3 à 4 jours, rare en 1 mois, épique en 2 à 3 mois, légendaire en 6 mois), distance des Marches, limites d'Attaque, pourcentages de Rareté par zone.
+- **Les chiffres d'équilibrage**, réglés en jouant : rythme de progression (première peu commune en 3 à 4 jours, rare en 1 mois, épique en 2 à 3 mois, légendaire en 6 mois), distance des Marches, limites d'Attaque, pourcentages de Rareté par Anneau.
