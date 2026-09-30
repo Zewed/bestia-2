@@ -33,6 +33,14 @@ L'abondance de faune d'une Case, cachée, qui change chaque jour.
 **Avant-poste**:
 La construction qui permet de revendiquer une Case voisine de son Territoire.
 
+**Foyer**:
+Le cœur d'un Territoire, autour de la hutte du chef, qu'aucun autre joueur ne peut prendre.
+_Avoid_: Capitale, base
+
+**Marche**:
+La partie d'un Territoire trop éloignée du Foyer, dont les Cases peuvent être prises par un autre joueur.
+_Avoid_: Zone disputée, frontière, périphérie
+
 **Bête**:
 Un animal du Monde, qu'il soit encore sauvage ou déjà apprivoisé ; toutes les Bêtes d'une même Espèce sont identiques.
 _Avoid_: Unité, vaisseau, créature, monstre, individu
@@ -103,6 +111,9 @@ _Avoid_: Raid, pillage, assaut
 L'attaque d'un Territoire par des Bêtes sauvages, annoncée à l'avance et plus fréquente près du Cœur sauvage.
 _Avoid_: Vague, invasion, attaque sauvage
 
+**Blessé**:
+Une Bête mise hors de combat qui guérit avec le temps, plus vite si l'on s'en occupe ; les autres pertes sont des morts.
+
 **Famine**:
 Le manque de Nourriture pour payer l'Entretien : les Bêtes affamées retournent à l'état sauvage et les Habitants s'en vont, après un avertissement.
 _Avoid_: Mort de faim, pénurie
@@ -132,6 +143,25 @@ _Avoid_: Ressources de construction
 **Recherche**:
 Les savoirs d'un joueur, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions, les Rôles et la portée des Expéditions, mais jamais la force des Bêtes.
 _Avoid_: Technologie, science, savoir
+
+**Migration**:
+Un événement du Monde où une Espèce rare traverse une région pendant quelques jours.
+
+**Saison du Monde**:
+Une période qui change la Densité et les récoltes selon le Biome (un hiver rend la toundra giboyeuse et les Végétaux rares).
+_Avoid_: Saison de jeu, reset
+
+**Apparition**:
+Un événement du Monde où une Bête d'Espèce mythique surgit dans le Cœur sauvage pour un temps.
+_Avoid_: Boss, raid
+
+**Couple de départ**:
+Le Couple d'une Espèce très faible, choisi parmi trois au début du jeu, qui permet d'élever ses premières Bêtes.
+_Avoid_: Starter, kit de départ
+
+**Épreuve**:
+Une étape guidée du début de jeu, qui débloque le jeu petit à petit et rapporte une récompense.
+_Avoid_: Quête, mission, tutoriel
 
 **Bestiaire**:
 Le catalogue personnel d'un joueur, où s'inscrit chaque Espèce qu'il a croisée, apprivoisée ou dont il a réuni le Couple.
