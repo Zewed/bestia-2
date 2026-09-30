@@ -1,0 +1,19 @@
+CONTEXT.md
+  s_d0f4332113d26c::t_5313d71eaf429b 8,49,104,117-120
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "567d0c92f44c35ba122ebb8ec8dbe4cefcfef7a1",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
