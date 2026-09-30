@@ -1,0 +1,3 @@
+# Un bestiaire d'animaux réels, sans génération procédurale
+
+La variété des Bêtes vient de la faune réelle de la Terre, rangée du plus faible au plus puissant (insecte, écureuil, loutre, cerf, rhinocéros…), puis de quelques Bêtes légendaires tardives (tyrannosaure, yéti, phénix, dragon). On a écarté la génération procédurale d'espèces, les hybrides et les mutations : ils auraient donné une variété infinie, mais on veut une montée en puissance lisible et des animaux que tout le monde reconnaît. Conséquence : chaque Espèce demande sa propre illustration, et le bestiaire grandit par ajouts d'Espèces.
