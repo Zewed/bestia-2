@@ -1,0 +1,43 @@
+src/app/globals.css
+  s_d0f4332113d26c::t_7250f2b451f977 1-12
+src/app/page.tsx
+  s_d0f4332113d26c::t_ba3bdeb8dca58c 1-7
+package.json
+  s_d0f4332113d26c::t_4ede29c9aed2ad 1-26
+src/app/layout.tsx
+  s_d0f4332113d26c::t_b986077fbcd36f 1-15
+.gitignore
+  s_d0f4332113d26c::t_16cd441580088c 1-41
+AGENTS.md
+  s_d0f4332113d26c::t_eed18b7f3a850c 1-9
+CLAUDE.md
+  s_d0f4332113d26c::t_dd64f21b89608e 1
+README.md
+  s_d0f4332113d26c::t_30ffce67ebe113 9-19
+docs/stories/README.md
+  s_d0f4332113d26c::t_66ba743b9dff7c 5-8
+eslint.config.mjs
+  s_d0f4332113d26c::t_0116778bc6ba56 1-18
+next.config.ts
+  s_d0f4332113d26c::t_a37a45c3b0382c 1-7
+package-lock.json
+  s_d0f4332113d26c::t_d56303187e6b25 1-6143
+tsconfig.json
+  s_d0f4332113d26c::t_b47946b13bf76e 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "360d5f496a6e2f53c34c231e0c75991ad034d01d",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
