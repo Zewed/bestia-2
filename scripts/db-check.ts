@@ -5,11 +5,11 @@ import { assertEnv } from "../src/env";
 import { checkDatabase } from "../src/db/check";
 
 async function main() {
-  loadEnvConfig(process.cwd());
+  loadEnvConfig(process.cwd(), true); // en local : .env.development.local passe avant .env.local
   try {
     assertEnv();
-    const { read } = await checkDatabase();
-    console.log(`Base OK : ligne écrite puis relue à l'identique (« ${read} »).`);
+    const { database, read } = await checkDatabase();
+    console.log(`Base ${database} OK : ligne écrite puis relue à l'identique (« ${read} »).`);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;

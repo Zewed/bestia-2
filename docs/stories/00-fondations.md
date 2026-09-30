@@ -48,7 +48,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
   - L'adresse publique répond en HTTPS et affiche la page « Bestia ».
   - La version en ligne utilise la base de production, distincte de la base locale.
   - Les migrations en attente s'appliquent à la mise en ligne, avant que la nouvelle version réponde.
-  - Le nom de domaine du jeu (à décider).
+  - Le jeu répond sur bestia-2.vercel.app en attendant son nom de domaine (à décider).
 
 ### US-0006 · Redéployer à chaque envoi sur main
 **En tant que** développeur, **je veux** que chaque envoi sur la branche main remette le jeu en ligne tout seul, **afin de** livrer chaque étape sans manipulation.

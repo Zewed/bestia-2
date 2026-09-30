@@ -19,7 +19,7 @@ async function appliedCount(db: ReturnType<typeof drizzle>): Promise<number> {
 }
 
 async function main() {
-  loadEnvConfig(process.cwd());
+  loadEnvConfig(process.cwd(), true); // en local : .env.development.local passe avant .env.local
   let pool;
   try {
     assertEnv();
@@ -34,10 +34,11 @@ async function main() {
     await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
     const after = await appliedCount(db);
     const applied = after - before;
+    const name = (await db.execute<{ base: string }>(sql`select current_database() as base`)).rows[0]?.base;
     console.log(
       applied === 0
-        ? `Base déjà à jour : ${after} migration(s), rien à appliquer.`
-        : `${applied} migration(s) appliquée(s), ${after} au total. Base à jour.`,
+        ? `Base ${name} déjà à jour : ${after} migration(s), rien à appliquer.`
+        : `Base ${name} : ${applied} migration(s) appliquée(s), ${after} au total. Base à jour.`,
     );
   } catch (error) {
     const message = isConnectionError(error)
