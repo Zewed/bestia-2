@@ -31,4 +31,4 @@ La première commande écrit la migration à partir du schéma. La seconde appli
 
 ## Mettre en ligne
 
-Le jeu est en ligne sur https://bestia-2.vercel.app. Il tourne sur Vercel, à Francfort comme sa base. `vercel deploy --prod` met en ligne la version locale : en production, les migrations en attente passent pendant la construction, avant que la nouvelle version réponde (`scripts/vercel-build.sh`).
+Le jeu est en ligne sur https://bestia-2.vercel.app. Il tourne sur Vercel, à Francfort comme sa base. Chaque envoi sur `main` le remet en ligne tout seul ; si la construction échoue, la version précédente reste en ligne. La page porte le commit dont elle vient (`<meta name="bestia-version">`). En production, les migrations en attente passent pendant la construction, avant que la nouvelle version réponde (`scripts/vercel-build.sh`).
