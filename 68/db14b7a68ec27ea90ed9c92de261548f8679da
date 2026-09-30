@@ -1,0 +1,25 @@
+src/instrumentation.ts
+  s_d0f4332113d26c::t_8e79d6a0a02941 1-3,8-12
+src/db/production.ts
+  s_d0f4332113d26c::t_697a28d5a66a6f 1-31
+scripts/vercel-build.sh
+  s_d0f4332113d26c::t_8e79d6a0a02941 2-5,7
+scripts/db-migrate.ts
+  s_d0f4332113d26c::t_8e79d6a0a02941 8,33-34,40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "68db14b7a68ec27ea90ed9c92de261548f8679da",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
