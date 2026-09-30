@@ -1,0 +1,30 @@
+src/health.test.ts
+  s_d0f4332113d26c::t_20d214a12ef4e1 1-92
+src/app/sante/route.ts
+  s_d0f4332113d26c::t_67d9bbcb82c51c 1-10
+src/health.ts
+  s_d0f4332113d26c::t_fbc3d935bd8d0c 1,3-43,49-51
+  s_d0f4332113d26c::t_9bf0bb0901c57b 2,44-48
+src/db/index.ts
+  s_d0f4332113d26c::t_9bf0bb0901c57b 68-77,82
+README.md
+  s_d0f4332113d26c::t_19584208368ffb 34
+docs/stories/README.md
+  s_d0f4332113d26c::t_91faecc4ad9566 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e7d9fc52e3325c8aa41e5e18a44cb8001c4e07d3",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
