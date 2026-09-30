@@ -1,0 +1,2 @@
+-- Première migration : elle ne crée aucune table, elle ouvre le registre des migrations.
+-- Les tables du jeu arrivent avec les stories qui en ont besoin (le Monde avec US-0020).

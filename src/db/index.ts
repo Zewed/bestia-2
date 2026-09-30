@@ -6,11 +6,14 @@ let pool: Pool | undefined;
 
 export function getPool(): Pool {
   if (!pool) {
-    const connectionString = env("DATABASE_URL");
-    // Échouer vite plutôt que d'attendre sans fin une base qui ne répond pas.
-    pool = new Pool({ connectionString: withStrictSsl(connectionString), connectionTimeoutMillis: 5_000 });
+    pool = createPool(env("DATABASE_URL"));
   }
   return pool;
+}
+
+export function createPool(connectionString: string): Pool {
+  // Échouer vite plutôt que d'attendre sans fin une base qui ne répond pas.
+  return new Pool({ connectionString: withStrictSsl(connectionString), connectionTimeoutMillis: 5_000 });
 }
 
 // Neon fournit sslmode=require, dont le sens va s'affaiblir dans pg 9 : on exige
@@ -53,6 +56,14 @@ const NETWORK_CODES: Record<string, string> = {
   ETIMEDOUT: "le serveur ne répond pas",
   ECONNRESET: "la connexion a été coupée",
 };
+
+/** Vrai quand l'erreur vient de la connexion elle-même, et non d'une requête. */
+export function isConnectionError(error: unknown): boolean {
+  if (error instanceof DatabaseUnavailableError) return true;
+  const code = (error as { code?: string } | null)?.code;
+  const message = error instanceof Error ? error.message : "";
+  return Boolean(code && (code in PG_CODES || code in NETWORK_CODES)) || /timeout/i.test(message);
+}
 
 /** Traduit une erreur du pilote en message lisible, sans jamais y recopier l'adresse de la base. */
 export function explainDatabaseError(error: unknown): DatabaseUnavailableError {

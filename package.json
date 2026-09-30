@@ -8,10 +8,13 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
-    "check": "npm run lint && npm run typecheck && npm run secrets",
+    "check": "npm run lint && npm run typecheck && npm run secrets && npm run db:guard",
     "db:check": "tsx scripts/db-check.ts",
     "secrets": "tsx scripts/check-secrets.ts",
-    "secrets:history": "tsx scripts/check-secrets.ts --history"
+    "secrets:history": "tsx scripts/check-secrets.ts --history",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "db:guard": "tsx scripts/check-migrations.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.3",
@@ -26,6 +29,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "drizzle-kit": "^0.31.11",
     "eslint": "^9",
     "eslint-config-next": "16.3.7",
     "tsx": "^4.23.15",
