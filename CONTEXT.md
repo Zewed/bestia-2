@@ -20,7 +20,7 @@ _Avoid_: Unité, vaisseau, créature, monstre
 Une Bête qui n'appartient à personne et vit librement dans le Monde, où il faut la trouver.
 
 **Espèce**:
-Une sorte d'animal réel de la Terre, du plus petit insecte au rhinocéros, classée selon sa puissance.
+Une sorte d'animal, presque toujours réelle (du plus petit insecte au rhinocéros), classée selon sa puissance.
 _Avoid_: Race, type, classe
 
 **Bête légendaire**:
