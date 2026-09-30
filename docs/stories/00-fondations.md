@@ -66,7 +66,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Chaque branche envoyée obtient sa propre adresse de prévisualisation.
   - Une prévisualisation n'écrit jamais dans la base de production.
-  - La base utilisée par les prévisualisations, partagée ou une par branche (à décider).
+  - Chaque branche a sa propre base : une branche Neon créée par l'intégration Vercel à la prévisualisation.
 
 ### US-0008 · Vérifier automatiquement chaque envoi
 **En tant que** développeur, **je veux** que la vérification du code et les tests automatiques tournent à chaque envoi, **afin de** ne jamais mettre en ligne une étape cassée.

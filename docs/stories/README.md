@@ -4,13 +4,13 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0006** · Redéployer à chaque envoi sur main. Le jeu est en ligne sur [bestia-2.vercel.app](https://bestia-2.vercel.app). Prochaine : **US-0007** · Prévisualiser une branche avant sa mise en ligne.
+Dernière story livrée : **US-0007** · Prévisualiser une branche avant sa mise en ligne. Le jeu est en ligne sur [bestia-2.vercel.app](https://bestia-2.vercel.app). Prochaine : **US-0008** · Vérifier automatiquement chaque envoi.
 
 ## Sommaire
 
 | Jalon | Étapes | Stories | À décider |
 |---|---|---:|---:|
-| [0 · Les fondations](00-fondations.md) | 1 à 4 | 51 | 10 |
+| [0 · Les fondations](00-fondations.md) | 1 à 4 | 51 | 9 |
 | [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9 | 64 | 19 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 6 |
 | [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 14 |
@@ -28,7 +28,7 @@ Dernière story livrée : **US-0006** · Redéployer à chaque envoi sur main. L
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **66 étapes** | **752** | **305** |
+| **Total** | **66 étapes** | **752** | **304** |
 
 Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (190 au total).
 
