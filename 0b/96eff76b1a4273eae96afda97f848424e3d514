@@ -1,0 +1,47 @@
+package.json
+  s_d0f4332113d26c::t_d5c978d48325c2 5-7,14,21-23
+  s_d0f4332113d26c::t_52531f1a007729 34,42-43
+src/db/index.test.ts
+  s_d0f4332113d26c::t_68088bdc19554e 1-39,42-48
+  s_d0f4332113d26c::t_d32aff1ab9de88 40-41
+.github/workflows/verification.yml
+  s_d0f4332113d26c::t_53093307c27bfe 1-23
+scripts/lib/secrets.ts
+  s_d0f4332113d26c::t_3ce8c3c978acc8 1-43
+README.md
+  s_d0f4332113d26c::t_53093307c27bfe 19
+src/db/index.ts
+  s_d0f4332113d26c::t_d5c978d48325c2 21
+scripts/check-secrets.ts
+  s_d0f4332113d26c::t_90e18cd08ae86e 7,18,30,32-34,43,47,49
+src/db/production.test.ts
+  s_d0f4332113d26c::t_397ba912840ecb 1-60
+src/db/migrations.test.ts
+  s_d0f4332113d26c::t_558ca2228c7fed 1-66
+scripts/lib/secrets.test.ts
+  s_d0f4332113d26c::t_ddbdc71ba012ca 1-45
+scripts/vercel-build.sh
+  s_d0f4332113d26c::t_53093307c27bfe 2-4,7,9
+src/env.test.ts
+  s_d0f4332113d26c::t_b90b70ad886087 1-28
+package-lock.json
+  s_d0f4332113d26c::t_7f98fced7a3236 19,27-28,2197-2485,2513-2530,2553-2555,3213-3250,3484-3493,3711-3720,3926,4739-4745,5271-5280,5291-5300,6410-6413,6415-6416,6418-6690,6729-6738,7049-7062,7537-7571,7924-7930,8131-8150,8509-8727,8833-8845
+vitest.config.mts
+  s_d0f4332113d26c::t_e23c15dcf92653 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0b96eff76b1a4273eae96afda97f848424e3d514",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
