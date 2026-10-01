@@ -1,0 +1,37 @@
+src/components/Bloc.test.tsx
+  s_d0f4332113d26c::t_83952c35c52bd0 1-34
+src/components/Bloc.tsx
+  s_d0f4332113d26c::t_83952c35c52bd0 1-22
+src/styles/formes.css
+  s_d0f4332113d26c::t_83952c35c52bd0 1-8
+src/styles/typographie.css
+  s_d0f4332113d26c::t_83952c35c52bd0 7-9
+vitest.config.mts
+  s_d0f4332113d26c::t_83952c35c52bd0 6
+src/components/Bloc.module.css
+  s_d0f4332113d26c::t_83952c35c52bd0 1-42
+src/app/layout.tsx
+  s_d0f4332113d26c::t_83952c35c52bd0 5
+src/styles/palette.test.ts
+  s_d0f4332113d26c::t_83952c35c52bd0 23
+README.md
+  s_d0f4332113d26c::t_f5bcb857b5b0a7 43-46
+docs/stories/README.md
+  s_d0f4332113d26c::t_338846a9679565 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c65bbd1dd4a55570689524194ee75ca505a2c363",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
