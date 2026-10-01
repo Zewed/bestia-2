@@ -1,0 +1,7 @@
+/* La typographie du prototype : Plus Jakarta Sans partout, 800 pour les titres et les nombres. */
+:root {
+  --police: var(--font-jakarta), system-ui, sans-serif;
+  --taille-texte: 14.5px;
+  --graisse-texte: 500;
+  --graisse-titre: 800;
+}

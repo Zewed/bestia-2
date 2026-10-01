@@ -66,7 +66,8 @@ describe("palette", () => {
     const unknown = screens.flatMap((file) =>
       [...readFileSync(file, "utf8").matchAll(/var\((--[\w-]+)/g)]
         .map((m) => m[1])
-        .filter((name) => !defined.has(name))
+        // Les variables --font-… sont posées par next/font au chargement de la police.
+        .filter((name) => !defined.has(name) && !name.startsWith("--font-"))
         .map((name) => `${relative(SRC, file)} : ${name}`),
     );
     expect(unknown).toEqual([]);

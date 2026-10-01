@@ -36,3 +36,7 @@ Le jeu est en ligne sur https://bestia-2.vercel.app. Il tourne sur Vercel, à Fr
 ## Couleurs
 
 Toutes les couleurs du jeu, reprises du prototype (thème Bento et barre Encre), sont rangées sous un nom unique dans `src/styles/palette.css`. C'est le seul endroit où une couleur s'écrit en clair : les écrans n'utilisent que ces noms (`var(--encre)`, `var(--citron)`…), et un test refuse toute couleur écrite en dur ailleurs.
+
+## Typographie
+
+Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 pour les titres et les nombres (`src/styles/typographie.css`). Next l'héberge avec le jeu (`src/styles/fonts.ts`) et règle la police de secours aux mêmes dimensions, pour que rien ne saute pendant le chargement. Un test vérifie que la police couvre les caractères du jeu (é, ç, œ, É…).

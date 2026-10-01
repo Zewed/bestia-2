@@ -1,4 +1,4 @@
-/* Habillage provisoire : les polices et les blocs Bento arrivent avec les stories suivantes. */
+/* Habillage provisoire : les blocs Bento arrivent avec les stories suivantes. */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -10,5 +10,11 @@ body {
   place-items: center;
   background: var(--fond);
   color: var(--encre);
-  font-family: system-ui, sans-serif;
+  font-family: var(--police);
+  font-size: var(--taille-texte);
+  font-weight: var(--graisse-texte);
+}
+
+h1 {
+  font-weight: var(--graisse-titre);
 }
