@@ -7,8 +7,8 @@ describe("barre du haut", () => {
     expect(renderToStaticMarkup(<BarreHaut />)).toMatch(/^<header[^>]*>/);
   });
 
-  it("n'affiche encore aucune information de joueur", () => {
+  it("n'affiche encore aucune information de joueur, seulement le nom du jeu", () => {
     const text = renderToStaticMarkup(<BarreHaut />).replace(/<[^>]*>/g, "");
-    expect(text).toBe("");
+    expect(text).toBe("Bestia");
   });
 });

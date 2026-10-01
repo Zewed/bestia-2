@@ -1,0 +1,48 @@
+/* Le logo validé du prototype : tête de loup géométrique citron, « BESTIA » en capitales espacées. */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--blanc-chaud);
+  text-decoration: none;
+  border-radius: var(--arrondi-petit);
+}
+
+.logo:focus-visible {
+  outline: 2px solid var(--citron);
+  outline-offset: 4px;
+}
+
+.loup {
+  width: 32px;
+  height: 32px;
+  flex: none;
+}
+
+.tete {
+  fill: var(--citron);
+}
+
+.yeux {
+  fill: var(--encre);
+}
+
+.nom {
+  font-size: 17px;
+  font-weight: var(--graisse-titre);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 820px) {
+  .logo {
+    gap: 8px;
+  }
+  .loup {
+    width: 26px;
+    height: 26px;
+  }
+  .nom {
+    font-size: 15px;
+  }
+}

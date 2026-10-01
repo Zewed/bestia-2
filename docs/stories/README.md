@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0014** · Afficher la barre du haut Encre. Prochaine : **US-0015** · Placer le logo du loup dans la barre du haut.
+Dernière story livrée : **US-0015** · Placer le logo du loup dans la barre du haut. Prochaine : **US-0016** · Donner au jeu son icône et son titre d'onglet.
 
 ## Sommaire
 
