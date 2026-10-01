@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0019** · Vérifier l'habillage sur mobile. Prochaine : **US-0052** · Afficher une page introuvable aux couleurs du jeu.
+Dernière story livrée : **US-0052** · Afficher une page introuvable aux couleurs du jeu. L'étape 2 (l'habillage) est terminée. Prochaine : **US-0020** · Enregistrer le Monde en base.
 
 ## Sommaire
 
