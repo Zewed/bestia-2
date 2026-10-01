@@ -7,7 +7,7 @@ export type Health = {
   version: string;
   environnement: string;
   base:
-    | { statut: "ok"; production: boolean; latenceMs: number }
+    | { statut: "ok"; production: boolean; latenceMs: number; monde: string | null }
     | { statut: "panne"; code: string; raison: string };
 };
 
@@ -20,14 +20,21 @@ export async function checkHealth(getPool: () => Pool): Promise<{ httpStatus: nu
   const environnement = process.env.VERCEL_ENV ?? "local";
   const started = Date.now();
   try {
-    const identity = await identifyDatabase(getPool());
+    const pool = getPool();
+    const identity = await identifyDatabase(pool);
+    const monde = await pool.query<{ nom: string }>("select nom from monde order by id limit 1");
     return {
       httpStatus: 200,
       body: {
         statut: "ok",
         version,
         environnement,
-        base: { statut: "ok", production: identity.isProduction, latenceMs: Date.now() - started },
+        base: {
+          statut: "ok",
+          production: identity.isProduction,
+          latenceMs: Date.now() - started,
+          monde: monde.rows[0]?.nom ?? null,
+        },
       },
     };
   } catch (error) {

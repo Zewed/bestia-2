@@ -7,7 +7,8 @@ export const MIGRATIONS_FOLDER = "drizzle";
 // une table, un schéma ou une colonne. Retirer des données se fait autrement,
 // par une story qui le décide.
 const DESTRUCTIVE: { name: string; pattern: RegExp }[] = [
-  { name: "TRUNCATE vide une table", pattern: /\btruncate\b/i },
+  // En tête d'instruction seulement : un verrou « BEFORE TRUNCATE » reste permis.
+  { name: "TRUNCATE vide une table", pattern: /^\s*truncate\b/i },
   { name: "DELETE FROM efface des lignes", pattern: /\bdelete\s+from\b/i },
   { name: "DROP TABLE supprime une table", pattern: /\bdrop\s+table\b/i },
   { name: "DROP SCHEMA supprime des tables", pattern: /\bdrop\s+schema\b/i },

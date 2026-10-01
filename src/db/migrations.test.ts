@@ -30,6 +30,8 @@ describe("garde-fou des migrations", () => {
         'ALTER TABLE "espece" ALTER COLUMN "nom" DROP NOT NULL;',
         'ALTER TABLE "espece" ALTER COLUMN "rarete" DROP DEFAULT;',
         'ALTER TABLE "espece" DROP CONSTRAINT "espece_nom_unique";',
+        'CREATE TRIGGER "verrou" BEFORE TRUNCATE ON "espece" FOR EACH STATEMENT EXECUTE FUNCTION "refus"();',
+        'CREATE TRIGGER "verrou_ligne" BEFORE DELETE ON "espece" FOR EACH ROW EXECUTE FUNCTION "refus"();',
       ].join("\n--> statement-breakpoint\n"),
     });
     expect(findDestructiveStatements(dir)).toEqual([]);
@@ -37,6 +39,7 @@ describe("garde-fou des migrations", () => {
 
   it.each([
     ['TRUNCATE "monde";', "TRUNCATE"],
+    ['truncate table "monde" cascade;', "TRUNCATE"],
     ['DELETE FROM "monde";', "DELETE FROM"],
     ['DROP TABLE "monde";', "DROP TABLE"],
     ['DROP SCHEMA "public" CASCADE;', "DROP SCHEMA"],

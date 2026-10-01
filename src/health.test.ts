@@ -9,7 +9,10 @@ const SECRET_URL = ["postgresql://neondb_owner:", "motdepasse-secret", "@ep-exem
 const saved = { ...process.env };
 
 function poolAnswering(database: string, timeline: string | null): () => Pool {
-  return () => ({ query: async () => ({ rows: [{ database, timeline }] }) }) as unknown as Pool;
+  return () =>
+    ({
+      query: async (sql: string) => ({ rows: sql.includes("from monde") ? [{ nom: "Aube" }] : [{ database, timeline }] }),
+    }) as unknown as Pool;
 }
 
 function poolFailing(error: Error): () => Pool {
@@ -38,7 +41,7 @@ describe("page de santé", () => {
       statut: "ok",
       version: "086bdc1",
       environnement: "production",
-      base: { statut: "ok", production: true },
+      base: { statut: "ok", production: true, monde: "Aube" },
     });
   });
 

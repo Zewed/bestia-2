@@ -199,7 +199,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - La base contient un Monde, créé une seule fois même si l'initialisation est relancée.
   - Rien dans l'application ne permet de remettre un Monde à zéro.
-  - Le nom du Monde (à décider).
+  - Le premier Monde s'appelle Aube ; les suivants prendront d'autres moments du jour.
 
 ### US-0021 · Mémoriser jusqu'où le temps a été calculé
 **En tant que** développeur, **je veux** que chaque élément qui vit dans le temps garde l'instant jusqu'auquel il a été calculé, **afin de** connaître exactement la durée à rattraper.
