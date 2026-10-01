@@ -1,0 +1,23 @@
+/* Le cadre d'une illustration : il garde sa place pendant le chargement comme en cas d'absence. */
+.cadre {
+  position: relative;
+  overflow: hidden;
+  background: var(--bloc-3);
+}
+
+.image {
+  object-fit: cover;
+}
+
+/* Visuel de remplacement : la tête de loup, discrète, à la place d'une image cassée. */
+.remplacement {
+  display: grid;
+  place-items: center;
+}
+
+.remplacement svg {
+  width: 28%;
+  max-width: 96px;
+  min-width: 24px;
+  fill: var(--trait);
+}

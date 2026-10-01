@@ -160,7 +160,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Les illustrations sont servies dans un format léger pour le web, à une taille adaptée à l'écran.
   - Une illustration manquante affiche un visuel de remplacement, jamais une image cassée.
-  - Le lieu de stockage des illustrations, dans le projet ou dans un stockage de fichiers (à décider).
+  - Les illustrations sont rangées dans le projet, sous public/illustrations ; un stockage de fichiers à part ne viendra que si leur nombre l'exige.
 
 ### US-0018 · Habiller la page d'accueil en Bento
 **En tant que** développeur, **je veux** une page d'accueil faite de la barre du haut et de quelques blocs Bento, **afin de** montrer dès maintenant l'allure du jeu.

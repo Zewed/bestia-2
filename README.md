@@ -51,3 +51,7 @@ Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 po
 ## Icônes
 
 L'icône d'onglet (`src/app/icon.svg`), l'icône d'écran d'accueil (`src/app/apple-icon.png`, `public/icone-*.png`) et les couleurs du manifeste sont fabriquées depuis la palette par `npm run icones`. Ces fichiers ne lisent pas les variables CSS : un test vérifie qu'ils suivent la palette, et demande de relancer `npm run icones` si l'Encre ou le citron changent. Le titre d'onglet est « Bestia », que chaque page peut compléter (« Bestia · Accueil »).
+
+## Illustrations
+
+Toutes les illustrations sont rangées dans le projet, sous `public/illustrations` ; celles du prototype dans `public/illustrations/prototype`, sous leurs noms d'origine, en attendant d'être renommées par les stories qui s'en servent. Le composant `Illustration` (`src/components/Illustration.tsx`) les fait passer par l'optimiseur de Next : AVIF ou WebP, à la largeur de l'écran (`sizes`), chargées au défilement sauf l'illustration principale (`prioritaire`). Si l'une manque, la tête de loup la remplace, jamais une image cassée.
