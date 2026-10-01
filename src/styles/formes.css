@@ -1,0 +1,8 @@
+/* Les formes du prototype Bento : coins arrondis, marges intérieures et écarts. */
+:root {
+  --arrondi: 12px;
+  --arrondi-moyen: 10px;
+  --arrondi-petit: 6px;
+  --marge-bloc: 16px 18px;
+  --ecart: 12px;
+}

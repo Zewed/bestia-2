@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { jakarta } from "@/styles/fonts";
 import "@/styles/palette.css";
 import "@/styles/typographie.css";
+import "@/styles/formes.css";
 import "./globals.css";
 
 export const metadata: Metadata = {

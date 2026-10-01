@@ -40,3 +40,7 @@ Toutes les couleurs du jeu, reprises du prototype (thème Bento et barre Encre),
 ## Typographie
 
 Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 pour les titres et les nombres (`src/styles/typographie.css`). Next l'héberge avec le jeu (`src/styles/fonts.ts`) et règle la police de secours aux mêmes dimensions, pour que rien ne saute pendant le chargement. Un test vérifie que la police couvre les caractères du jeu (é, ç, œ, É…).
+
+## Composants
+
+- `Bloc` (`src/components/Bloc.tsx`) : la brique Bento de chaque écran. Blanc, coins de 12 px, marges de 16 × 18 px, sans bordure ni ombre, comme dans le prototype. Titre facultatif en petites capitales ; `plein` pour une illustration qui touche les bords. Les formes (arrondis, marges, écarts) sont dans `src/styles/formes.css`.

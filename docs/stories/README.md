@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0011** · Reprendre les polices du prototype. Prochaine : **US-0012** · Créer le bloc arrondi Bento.
+Dernière story livrée : **US-0012** · Créer le bloc arrondi Bento. Prochaine : **US-0013** · Ranger les blocs en grille Bento.
 
 ## Sommaire
 

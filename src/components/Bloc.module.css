@@ -1,0 +1,42 @@
+/* Le bloc Bento du prototype : blanc, coins de 12 px, sans bordure ni ombre. */
+.bloc {
+  min-width: 0;
+  padding: var(--marge-bloc);
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+  overflow-wrap: anywhere;
+}
+
+.bloc img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--arrondi-petit);
+}
+
+.titre {
+  margin-bottom: 10px;
+  color: var(--texte-discret);
+  font-size: var(--taille-etiquette);
+  font-weight: var(--graisse-titre);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+}
+
+/* Plein : le contenu (une illustration) touche les bords du bloc. */
+.plein {
+  padding: 0;
+  overflow: hidden;
+}
+
+.plein img {
+  width: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+
+.plein .titre {
+  margin: 0;
+  padding: var(--marge-bloc);
+  padding-bottom: 10px;
+}

@@ -4,4 +4,7 @@
   --taille-texte: 14.5px;
   --graisse-texte: 500;
   --graisse-titre: 800;
+  /* Les étiquettes : titres de blocs, en petites capitales espacées */
+  --taille-etiquette: 12px;
+  --espacement-etiquette: 0.06em;
 }

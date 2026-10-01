@@ -20,7 +20,7 @@ const tokens = [...palette.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)].map(([, name,
 
 // Tout ce qui s'affiche : feuilles de style et composants, hors tests et hors palette.
 const screens = filesIn(SRC).filter(
-  (file) => /\.(css|tsx?)$/.test(file) && !file.endsWith(".test.ts") && file !== PALETTE,
+  (file) => /\.(css|tsx?)$/.test(file) && !/\.test\.tsx?$/.test(file) && file !== PALETTE,
 );
 
 const COLOR_LITERALS = [
