@@ -1,0 +1,32 @@
+src/components/Logo.module.css
+  s_d0f4332113d26c::t_b0c7205bb67b67 6-8
+  s_d0f4332113d26c::t_45224a9d5e6a1d 40
+src/app/page.module.css
+  s_d0f4332113d26c::t_a258200755a9e2 122
+src/app/manifest.ts
+  s_d0f4332113d26c::t_b0c7205bb67b67 9
+src/styles/formes.css
+  s_d0f4332113d26c::t_45224a9d5e6a1d 12-13
+src/app/layout.tsx
+  s_d0f4332113d26c::t_b0c7205bb67b67 14
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_b1a153afa38842 180-181
+docs/stories/README.md
+  s_d0f4332113d26c::t_4d9a972d756e5e 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8449dcc35d25052995d73d1e48016eaaf7827291",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
