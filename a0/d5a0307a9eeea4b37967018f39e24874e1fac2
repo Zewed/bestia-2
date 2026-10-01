@@ -1,0 +1,37 @@
+src/app/globals.css
+  s_d0f4332113d26c::t_40df7f2f4ef878 1
+src/app/page.tsx
+  s_d0f4332113d26c::t_40df7f2f4ef878 1-2,5
+src/components/BarreHaut.test.tsx
+  s_d0f4332113d26c::t_40df7f2f4ef878 1-14
+src/components/BarreHaut.tsx
+  s_d0f4332113d26c::t_40df7f2f4ef878 1-6
+src/app/layout.tsx
+  s_d0f4332113d26c::t_40df7f2f4ef878 2,19-22
+src/styles/formes.css
+  s_d0f4332113d26c::t_40df7f2f4ef878 9-16
+src/app/page.module.css
+  s_d0f4332113d26c::t_40df7f2f4ef878 1-6
+src/components/BarreHaut.module.css
+  s_d0f4332113d26c::t_40df7f2f4ef878 1-21
+README.md
+  s_d0f4332113d26c::t_a8ee192b0b01cd 48
+docs/stories/README.md
+  s_d0f4332113d26c::t_f98d38123e8b08 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "a0d5a0307a9eeea4b37967018f39e24874e1fac2",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
