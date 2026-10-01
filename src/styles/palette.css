@@ -61,7 +61,22 @@
   --citron: oklch(0.94 0.08 100);
   --citron-fonce: oklch(0.44 0.1 85);
 
-  /* Teintes de rareté du prototype (leur attribution aux six Raretés reste à faire) */
+  /* Les six Raretés : un fond pastel et un ton foncé pour le texte, de la plus banale à la plus rare.
+     Ce sont des renvois vers les couleurs ci-dessus, pas de nouvelles couleurs. */
+  --rarete-commune: var(--bloc-3);
+  --rarete-commune-texte: var(--ardoise);
+  --rarete-peu-commune: var(--menthe);
+  --rarete-peu-commune-texte: var(--menthe-fonce);
+  --rarete-rare: var(--ciel);
+  --rarete-rare-texte: var(--ciel-fonce);
+  --rarete-epique: var(--lilas);
+  --rarete-epique-texte: var(--lilas-fonce);
+  --rarete-legendaire: var(--sable);
+  --rarete-legendaire-texte: var(--sable-fonce);
+  --rarete-mythique: var(--rose);
+  --rarete-mythique-texte: var(--rose-fonce);
+
+  /* Teintes de rareté du prototype */
   --ardoise: oklch(0.5 0.03 250);
   --cuivre: oklch(0.55 0.14 55);
   --violet: oklch(0.5 0.16 300);

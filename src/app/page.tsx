@@ -10,14 +10,8 @@ export default function Accueil() {
         <span className={styles.badge}>Ouverture prochaine</span>
         <h1 className={styles.titre}>Un monde sauvage, des bêtes à apprivoiser.</h1>
         <p className={styles.intro}>
-          Bestia est un jeu de stratégie persistant : explorez un monde partagé, découvrez de vraies espèces,
-          apprivoisez-les et faites grandir votre territoire, sur ordinateur comme sur mobile.
+          Faites votre sac : l&apos;aventure vous attend.
         </p>
-        <ul className={styles.points}>
-          <li>200 espèces réelles au lancement, jusqu&apos;à 2000</li>
-          <li>Six raretés, de la commune à la mythique</li>
-          <li>Un monde partagé qui ne se réinitialise jamais</li>
-        </ul>
       </div>
 
       <div className={styles.mosaique}>
@@ -34,8 +28,8 @@ export default function Accueil() {
           <Illustration chemin="accueil/mammouth.webp" alt="Un mammouth dans la neige au coucher du soleil" sizes={TUILE} className={styles.remplir} />
         </div>
         <div className={`${styles.tuile} ${styles.chiffre}`}>
-          <b>200</b>
-          <span>espèces au lancement</span>
+          <b>2000+</b>
+          <span>espèces à découvrir</span>
         </div>
         <div className={styles.tuile}>
           <Illustration chemin="prototype/ships/lightFighter.webp" alt="Un jeune loup qui hurle dans la forêt" sizes={TUILE} className={styles.remplir} />

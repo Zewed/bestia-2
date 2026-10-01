@@ -36,31 +36,6 @@
   line-height: 1.5;
 }
 
-.points {
-  display: grid;
-  gap: 10px;
-  margin-top: 32px;
-  padding: 0;
-  list-style: none;
-  color: var(--texte-2);
-  font-weight: 700;
-}
-
-.points li {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.points li::before {
-  content: "";
-  flex: none;
-  width: 8px;
-  height: 8px;
-  border-radius: 2px;
-  background: var(--encre);
-}
-
 /* La mosaïque : six colonnes, la grande image du monde en premier. */
 .mosaique {
   display: grid;
