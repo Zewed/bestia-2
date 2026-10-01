@@ -1,0 +1,27 @@
+src/app/not-found.module.css
+  s_d0f4332113d26c::t_b1e9066e063bba 1-19,26-79
+  s_d0f4332113d26c::t_6c46fbd043988d 20-25
+src/app/not-found.test.tsx
+  s_d0f4332113d26c::t_b1e9066e063bba 1-16
+src/app/not-found.tsx
+  s_d0f4332113d26c::t_6c46fbd043988d 18
+  s_d0f4332113d26c::t_b1e9066e063bba 1-17,19-31
+docs/stories/README.md
+  s_d0f4332113d26c::t_e1df533f3231c2 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9d5d92d8885a664f48fde756b8d2cb762162798c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
