@@ -32,3 +32,7 @@ La première commande écrit la migration à partir du schéma. La seconde appli
 ## Mettre en ligne
 
 Le jeu est en ligne sur https://bestia-2.vercel.app. Il tourne sur Vercel, à Francfort comme sa base. Chaque envoi sur `main` le remet en ligne tout seul ; si la construction échoue, la version précédente reste en ligne. Chaque autre branche obtient une prévisualisation, réservée à l'équipe Vercel, avec sa propre branche Neon : une prévisualisation ne touche jamais la base de production, et refuse de migrer ou de démarrer si elle s'y retrouve branchée. La page porte le commit dont elle vient (`<meta name="bestia-version">`), et https://bestia-2.vercel.app/sante dit si le jeu et sa base répondent (HTTP 200 « ok », ou 503 avec un code d'erreur), quelle version est en ligne et si la base est celle de production, sans jamais exposer de secret. En production, les migrations en attente passent pendant la construction, avant que la nouvelle version réponde (`scripts/vercel-build.sh`).
+
+## Couleurs
+
+Toutes les couleurs du jeu, reprises du prototype (thème Bento et barre Encre), sont rangées sous un nom unique dans `src/styles/palette.css`. C'est le seul endroit où une couleur s'écrit en clair : les écrans n'utilisent que ces noms (`var(--encre)`, `var(--citron)`…), et un test refuse toute couleur écrite en dur ailleurs.

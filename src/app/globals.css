@@ -1,4 +1,4 @@
-/* Habillage provisoire : la palette et les polices Bento arrivent à l'étape 2. */
+/* Habillage provisoire : les polices et les blocs Bento arrivent avec les stories suivantes. */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -8,5 +8,7 @@ body {
   min-height: 100dvh;
   display: grid;
   place-items: center;
+  background: var(--fond);
+  color: var(--encre);
   font-family: system-ui, sans-serif;
 }
