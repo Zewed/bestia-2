@@ -177,8 +177,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0018
 - **Critères d'acceptation** :
   - Sur un téléphone en portrait, la page se lit sans zoom ni défilement de côté.
-  - Les textes ne descendent jamais sous (chiffre à régler) pixels.
-  - Tout élément touchable mesure au moins (chiffre à régler) pixels de côté.
+  - Les textes ne descendent jamais sous 12 pixels.
+  - Tout élément touchable mesure au moins 44 pixels de côté.
   - En paysage, la barre du haut et le logo restent entiers.
 
 ### US-0052 · Afficher une page introuvable aux couleurs du jeu

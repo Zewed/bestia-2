@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Bestia",
     short_name: "Bestia",
-    description: "Apprivoisez les bêtes d'un monde sauvage et levez votre armée.",
+    description: "Un monde sauvage, des bêtes à apprivoiser. Faites votre sac : l'aventure vous attend.",
     lang: "fr",
     start_url: "/",
     display: "standalone",

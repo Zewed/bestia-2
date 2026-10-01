@@ -9,8 +9,8 @@
   --hauteur-barre: 64px;
 }
 
-/* Sur mobile, la barre du haut reste basse pour laisser la place au jeu. */
-@media (max-width: 820px) {
+/* Sur mobile, en portrait comme en paysage, la barre du haut reste basse pour laisser la place au jeu. */
+@media (max-width: 820px), (max-height: 500px) {
   :root {
     --hauteur-barre: 48px;
   }
