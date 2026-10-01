@@ -123,7 +123,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Sur ordinateur, les blocs se rangent sur plusieurs colonnes, et un bloc peut en occuper deux.
   - Sur mobile, les blocs passent sur une seule colonne, dans l'ordre de lecture.
-  - Aucun défilement de côté n'apparaît, jusqu'à une largeur d'écran de (chiffre à régler) pixels.
+  - Aucun défilement de côté n'apparaît, jusqu'à une largeur d'écran de 320 pixels.
 
 ### US-0014 · Afficher la barre du haut Encre
 **En tant que** développeur, **je veux** la barre du haut couleur Encre du prototype sur chaque page, **afin de** préparer l'endroit où le joueur retrouvera son nom et ses ressources.

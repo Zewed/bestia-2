@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 752 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0012** · Créer le bloc arrondi Bento. Prochaine : **US-0013** · Ranger les blocs en grille Bento.
+Dernière story livrée : **US-0013** · Ranger les blocs en grille Bento. Prochaine : **US-0014** · Afficher la barre du haut Encre.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0012** · Créer le bloc arrondi Bento. Prochaine
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **66 étapes** | **752** | **304** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (190 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (189 au total).
 
 ## Lire une story
 

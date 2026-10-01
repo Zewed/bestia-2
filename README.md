@@ -44,3 +44,4 @@ Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 po
 ## Composants
 
 - `Bloc` (`src/components/Bloc.tsx`) : la brique Bento de chaque écran. Blanc, coins de 12 px, marges de 16 × 18 px, sans bordure ni ombre, comme dans le prototype. Titre facultatif en petites capitales ; `plein` pour une illustration qui touche les bords. Les formes (arrondis, marges, écarts) sont dans `src/styles/formes.css`.
+- `Grille` (`src/components/Grille.tsx`) : range les blocs comme le prototype. Douze colonnes sur ordinateur, où `<Bloc largeur={7}>` occupe 7 colonnes (toutes par défaut) ; deux au plus sur tablette (jusqu'à 1100 px) ; une seule sur mobile (jusqu'à 820 px), dans l'ordre de lecture. Aucun défilement de côté jusqu'à 320 px de large.
