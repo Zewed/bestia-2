@@ -181,6 +181,15 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
   - Tout élément touchable mesure au moins (chiffre à régler) pixels de côté.
   - En paysage, la barre du haut et le logo restent entiers.
 
+### US-0052 · Afficher une page introuvable aux couleurs du jeu
+**En tant que** joueur, **je veux** une page claire quand une adresse n'existe pas, **afin de** retrouver mon chemin sans quitter Bestia.
+
+- **Débloquée par** : US-0018
+- **Critères d'acceptation** :
+  - Une adresse inconnue affiche une page Bento, avec la barre du haut et un texte en français.
+  - La page propose de revenir à l'accueil.
+  - Elle répond avec le code 404.
+
 ## Étape 3 · Le temps du jeu
 
 ### US-0020 · Enregistrer le Monde en base

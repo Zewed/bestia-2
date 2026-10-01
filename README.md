@@ -5,7 +5,7 @@ Bestia repensé de zéro. On garde la direction artistique et l'univers validés
 - `CONTEXT.md` : le vocabulaire du jeu, écrit au fil de la conception.
 - `docs/adr/` : les décisions structurantes et leurs raisons.
 - `docs/ordre-d-attaque.md` : l'ordre dans lequel on construit le jeu, étape par étape.
-- `docs/stories/` : les 752 user stories qui découpent chaque étape, avec leurs déblocages et les points encore à décider.
+- `docs/stories/` : les 753 user stories qui découpent chaque étape, avec leurs déblocages et les points encore à décider.
 
 ## Lancer le jeu
 
@@ -47,3 +47,7 @@ Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 po
 - `Grille` (`src/components/Grille.tsx`) : range les blocs comme le prototype. Douze colonnes sur ordinateur, où `<Bloc largeur={7}>` occupe 7 colonnes (toutes par défaut) ; deux au plus sur tablette (jusqu'à 1100 px) ; une seule sur mobile (jusqu'à 820 px), dans l'ordre de lecture. Aucun défilement de côté jusqu'à 320 px de large.
 - `BarreHaut` (`src/components/BarreHaut.tsx`) : la barre du haut Encre, sur chaque page (posée par `src/app/layout.tsx`). Collée aux bords de la fenêtre, accrochée en haut au défilement, 64 px de haut, 48 px sur mobile (`--hauteur-barre`).
 - `Logo` (`src/components/Logo.tsx`) : la tête de loup citron et « BESTIA » en capitales espacées, en vecteur, à gauche de la barre du haut ; il ramène à l'accueil.
+
+## Icônes
+
+L'icône d'onglet (`src/app/icon.svg`), l'icône d'écran d'accueil (`src/app/apple-icon.png`, `public/icone-*.png`) et les couleurs du manifeste sont fabriquées depuis la palette par `npm run icones`. Ces fichiers ne lisent pas les variables CSS : un test vérifie qu'ils suivent la palette, et demande de relancer `npm run icones` si l'Encre ou le citron changent. Le titre d'onglet est « Bestia », que chaque page peut compléter (« Bestia · Accueil »).
