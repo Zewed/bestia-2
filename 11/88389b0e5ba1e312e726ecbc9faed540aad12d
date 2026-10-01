@@ -1,0 +1,37 @@
+next.config.ts
+  s_d0f4332113d26c::t_9441bc7f71cca9 4-9
+src/components/Logo.tsx
+  s_d0f4332113d26c::t_9441bc7f71cca9 2,9-11
+src/components/Illustration.module.css
+  s_d0f4332113d26c::t_9441bc7f71cca9 1-23
+src/components/Illustration.tsx
+  s_d0f4332113d26c::t_9441bc7f71cca9 1-53
+src/components/Illustration.test.tsx
+  s_d0f4332113d26c::t_2a1aeac4cc8004 1-38
+src/components/loup.ts
+  s_d0f4332113d26c::t_9441bc7f71cca9 1-4
+README.md
+  s_d0f4332113d26c::t_51cd2bfa50ee28 54-57
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_4e3664b39e1633 163
+docs/stories/README.md
+  s_d0f4332113d26c::t_324d1507a6fd48 7,13,31
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_3abd273c643ffd 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "1188389b0e5ba1e312e726ecbc9faed540aad12d",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
