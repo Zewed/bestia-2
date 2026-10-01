@@ -31,4 +31,9 @@ describe("bloc Bento", () => {
     expect(html).toContain('<img src="/foyer.jpg" alt="Le Foyer"/>');
     expect(html).toContain("<li>Bois</li>");
   });
+
+  it("prend une teinte du prototype", () => {
+    const html = renderToStaticMarkup(<Bloc teinte="menthe" titre="Apprivoiser">x</Bloc>);
+    expect(html).toMatch(/^<section class="[^"]+ [^"]+"/);
+  });
 });

@@ -40,3 +40,23 @@
   padding: var(--marge-bloc);
   padding-bottom: 10px;
 }
+
+/* Teintes : un pastel avec son titre dans le ton foncé, ou l'Encre avec un titre citron. */
+.menthe { background: var(--menthe); }
+.menthe .titre { color: var(--menthe-fonce); }
+.sable { background: var(--sable); }
+.sable .titre { color: var(--sable-fonce); }
+.lilas { background: var(--lilas); }
+.lilas .titre { color: var(--lilas-fonce); }
+.ciel { background: var(--ciel); }
+.ciel .titre { color: var(--ciel-fonce); }
+.rose { background: var(--rose); }
+.rose .titre { color: var(--rose-fonce); }
+.sarcelle { background: var(--sarcelle); }
+.sarcelle .titre { color: var(--sarcelle-fonce); }
+.peche { background: var(--peche); }
+.peche .titre { color: var(--peche-fonce); }
+.citron { background: var(--citron); }
+.citron .titre { color: var(--citron-fonce); }
+.encre { background: var(--encre); color: var(--ivoire); }
+.encre .titre { color: var(--citron); }

@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0017** · Ranger les illustrations reprises du prototype. Prochaine : **US-0018** · Habiller la page d'accueil en Bento.
+Dernière story livrée : **US-0018** · Habiller la page d'accueil en Bento. Prochaine : **US-0019** · Vérifier l'habillage sur mobile.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0017** · Ranger les illustrations reprises du pr
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **66 étapes** | **753** | **303** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (189 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (188 au total).
 
 ## Lire une story
 

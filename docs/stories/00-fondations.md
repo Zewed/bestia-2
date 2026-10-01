@@ -169,7 +169,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - La page d'accueil montre la barre du haut, le nom « Bestia » et quelques blocs, dont une illustration du prototype.
   - Mise à côté du prototype, elle en a clairement l'allure : couleurs, polices, arrondis, espacements.
-  - Elle s'affiche en moins de (chiffre à régler) secondes sur une connexion mobile moyenne.
+  - Son plus gros élément s'affiche en moins de 2,5 secondes sur une connexion mobile 4G (mesure Lighthouse, profil mobile).
 
 ### US-0019 · Vérifier l'habillage sur mobile
 **En tant que** développeur, **je veux** contrôler la page d'accueil sur un vrai téléphone, **afin de** garantir que mobile et ordinateur sont à égalité dès le départ.

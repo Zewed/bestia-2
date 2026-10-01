@@ -9,7 +9,7 @@ type IllustrationProps = {
   /** Chemin sous public/illustrations, par exemple « prototype/biomes/forest-1.webp ». */
   chemin: string;
   alt: string;
-  /** Rapport largeur / hauteur du cadre, par exemple « 3 / 2 ». */
+  /** Rapport largeur / hauteur du cadre, par exemple « 3 / 2 ». Sans rapport, le cadre prend la taille que lui donne sa classe. */
   ratio?: string;
   /** La largeur affichée selon l'écran, pour charger la bonne taille (voir next/image). */
   sizes?: string;
@@ -22,11 +22,11 @@ type IllustrationProps = {
  * Une illustration du jeu : servie par Next dans un format léger (AVIF ou WebP) et à la
  * taille de l'écran. Si elle manque ou ne se charge pas, la tête de loup la remplace.
  */
-export function Illustration({ chemin, alt, ratio = "1 / 1", sizes = "100vw", prioritaire, className }: IllustrationProps) {
+export function Illustration({ chemin, alt, ratio, sizes = "100vw", prioritaire, className }: IllustrationProps) {
   const [echec, setEchec] = useState(false);
   const classes = [styles.cadre, echec && styles.remplacement, className].filter(Boolean).join(" ");
   return (
-    <div className={classes} style={{ aspectRatio: ratio }} role={echec ? "img" : undefined} aria-label={echec ? alt : undefined}>
+    <div className={classes} style={ratio ? { aspectRatio: ratio } : undefined} role={echec ? "img" : undefined} aria-label={echec ? alt : undefined}>
       {echec ? (
         <IllustrationManquante />
       ) : (
