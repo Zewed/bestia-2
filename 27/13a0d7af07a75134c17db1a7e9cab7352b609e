@@ -1,0 +1,47 @@
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_aa0ace5305022b 184-192
+src/app/couleurs-app.json
+  s_d0f4332113d26c::t_6224722fc6f81b 1-5
+scripts/lib/couleurs.ts
+  s_d0f4332113d26c::t_6224722fc6f81b 1-30
+docs/stories/README.md
+  s_d0f4332113d26c::t_aa0ace5305022b 3,7,13,31
+src/app/manifest.ts
+  s_d0f4332113d26c::t_aa0ace5305022b 1-21
+README.md
+  s_d0f4332113d26c::t_aa0ace5305022b 8,50-53
+scripts/generate-icons.ts
+  s_d0f4332113d26c::t_6224722fc6f81b 1-35
+src/app/layout.tsx
+  s_d0f4332113d26c::t_aa0ace5305022b 1,7,11-13,19-20
+  s_d0f4332113d26c::t_d1d2ed13fe2478 21
+package.json
+  s_d0f4332113d26c::t_6224722fc6f81b 23-24,42
+scripts/lib/couleurs.test.ts
+  s_d0f4332113d26c::t_6224722fc6f81b 1-18
+src/app/icones.test.ts
+  s_d0f4332113d26c::t_aa0ace5305022b 1-3,5-8,12-47
+  s_d0f4332113d26c::t_e88de59f1fec87 4,9-11
+src/app/icon.svg
+  s_d0f4332113d26c::t_6224722fc6f81b 1
+package-lock.json
+  s_d0f4332113d26c::t_a7091bca261079 26,30-32,298,1408,1421,1444,1464,1487,1504,1521,1538,1555,1572,1589,1606,1623,1640,1657,1680,1703,1726,1749,1772,1795,1818,1838,1858,1878,1898,1918,7751,7801
+vitest.config.mts
+  s_d0f4332113d26c::t_0396492078e9f6 1,5-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2713a0d7af07a75134c17db1a7e9cab7352b609e",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
