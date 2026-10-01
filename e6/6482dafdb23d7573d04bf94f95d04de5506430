@@ -1,0 +1,35 @@
+src/components/Bloc.module.css
+  s_d0f4332113d26c::t_5a25d67d8c0153 43-62
+src/components/Bloc.tsx
+  s_d0f4332113d26c::t_5a25d67d8c0153 6-8,16-17,23-24
+src/app/page.tsx
+  s_d0f4332113d26c::t_d0e01fa80188c9 1-3,6-32,35-80
+src/components/Bloc.test.tsx
+  s_d0f4332113d26c::t_5a25d67d8c0153 34-38
+src/app/page.module.css
+  s_d0f4332113d26c::t_d0e01fa80188c9 1,3-109
+src/components/Illustration.tsx
+  s_d0f4332113d26c::t_5a25d67d8c0153 12,25,29
+README.md
+  s_d0f4332113d26c::t_94fbab63229bf5 46
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_a0563e3ae49259 172
+docs/stories/README.md
+  s_d0f4332113d26c::t_fec7e67528f9c6 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "e66482dafdb23d7573d04bf94f95d04de5506430",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
