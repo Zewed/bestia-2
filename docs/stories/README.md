@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0020** · Enregistrer le Monde en base (le Monde Aube). Prochaine : **US-0021** · Mémoriser jusqu'où le temps a été calculé.
+Dernière story livrée : **US-0021** · Mémoriser jusqu'où le temps a été calculé. Prochaine : **US-0022** · Lire l'heure du jeu à une seule source.
 
 ## Sommaire
 

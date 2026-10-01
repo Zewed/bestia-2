@@ -9,5 +9,8 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
+    // Met la base de test à jour avant les tests sur base (*.db.test.ts).
+    globalSetup: ["./src/test/preparer-base.ts"],
+    testTimeout: 20_000,
   },
 });

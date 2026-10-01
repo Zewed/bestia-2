@@ -21,7 +21,8 @@
     "db:dev-setup": "tsx scripts/db-dev-setup.ts",
     "test": "vitest run",
     "check:code": "npm run lint && npm run typecheck && npm run db:guard && npm run test",
-    "icones": "tsx scripts/generate-icons.ts"
+    "icones": "tsx scripts/generate-icons.ts",
+    "db:test-setup": "tsx scripts/db-dev-setup.ts --test"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.3",

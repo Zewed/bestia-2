@@ -9,4 +9,6 @@ export const monde = pgTable("monde", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   nom: text("nom").notNull().unique(),
   neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
+  /** Le marque-page du temps : l'instant jusqu'auquel le Monde a été calculé. Il ne recule jamais. */
+  calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
 });

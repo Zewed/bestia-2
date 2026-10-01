@@ -237,6 +237,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
   - Chaque page qui montre un élément suivi le rattrape avant de l'afficher.
   - Deux ouvertures rapprochées ne rattrapent que le temps écoulé entre elles.
   - Si le rattrapage échoue, la page affiche un message d'erreur plutôt qu'un état périmé.
+  - Lire ou toucher un Territoire, par n'importe quel joueur (espionnage, Attaque, Récolte), le rattrape d'abord jusqu'à maintenant : même hors ligne, il est vu tel qu'il est à la seconde près.
 
 ### US-0025 · Faire passer une tâche planifiée pour les absents
 **En tant que** développeur, **je veux** une tâche planifiée qui fait avancer régulièrement ce que personne n'a ouvert, **afin de** tenir le Monde à jour même quand les joueurs sont absents.
