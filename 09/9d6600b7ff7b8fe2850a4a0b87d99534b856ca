@@ -1,0 +1,33 @@
+src/styles/formes.css
+  s_d0f4332113d26c::t_f5e42a7d33b597 8
+src/components/Bloc.tsx
+  s_d0f4332113d26c::t_f5e42a7d33b597 1,4-5,11-12,18,20,22
+src/components/Grille.tsx
+  s_d0f4332113d26c::t_f5e42a7d33b597 1-7
+src/components/Grille.module.css
+  s_d0f4332113d26c::t_f5e42a7d33b597 1-37
+src/components/Grille.test.tsx
+  s_d0f4332113d26c::t_f5e42a7d33b597 1-35
+README.md
+  s_d0f4332113d26c::t_6fec244b3c152e 47
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_e55415a8ffca92 126
+docs/stories/README.md
+  s_d0f4332113d26c::t_8b53c2247fe48a 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "099d6600b7ff7b8fe2850a4a0b87d99534b856ca",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
