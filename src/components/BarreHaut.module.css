@@ -1,0 +1,21 @@
+/*
+ * La barre du haut Encre du prototype : collée aux bords de la fenêtre, sans cadre,
+ * accrochée en haut de l'écran au défilement. Plus basse sur mobile.
+ */
+.barre {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  height: var(--hauteur-barre);
+  padding: 0 20px;
+  background: var(--encre);
+  color: var(--ivoire);
+}
+
+@media (max-width: 820px) {
+  .barre {
+    padding: 0 12px;
+  }
+}

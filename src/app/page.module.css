@@ -1,0 +1,6 @@
+/* Accueil provisoire : la vraie page d'accueil Bento arrive avec US-0018. */
+.accueil {
+  display: grid;
+  place-items: center;
+  min-height: calc(100dvh - var(--hauteur-barre));
+}

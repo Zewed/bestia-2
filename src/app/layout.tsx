@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { BarreHaut } from "@/components/BarreHaut";
 import { jakarta } from "@/styles/fonts";
 import "@/styles/palette.css";
 import "@/styles/typographie.css";
@@ -15,7 +16,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={jakarta.variable}>
-      <body>{children}</body>
+      <body>
+        <BarreHaut />
+        {children}
+      </body>
     </html>
   );
 }

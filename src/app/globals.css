@@ -1,4 +1,4 @@
-/* Habillage provisoire : les blocs Bento arrivent avec les stories suivantes. */
+/* Base commune à toutes les pages. */
 * {
   box-sizing: border-box;
   margin: 0;
@@ -6,8 +6,6 @@
 
 body {
   min-height: 100dvh;
-  display: grid;
-  place-items: center;
   background: var(--fond);
   color: var(--encre);
   font-family: var(--police);
