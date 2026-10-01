@@ -1,83 +1,52 @@
-import { Bloc } from "@/components/Bloc";
-import { Grille } from "@/components/Grille";
 import { Illustration } from "@/components/Illustration";
 import styles from "./page.module.css";
 
-const COULOIRS = [
-  {
-    teinte: "menthe",
-    titre: "Apprivoiser",
-    illustration: "prototype/ships/lightFighter.webp",
-    nom: "Croiser des Bêtes",
-    phrase: "Une Bête sauvage vous suit si votre escorte est assez forte.",
-  },
-  {
-    teinte: "lilas",
-    titre: "Élever",
-    illustration: "prototype/buildings/shipyard.webp",
-    nom: "Réunir un Couple",
-    phrase: "Un mâle et une femelle, et l'Espèce s'élève pour toujours.",
-  },
-  {
-    teinte: "ciel",
-    titre: "Explorer",
-    illustration: "prototype/misc/expedition.webp",
-    nom: "Partir en Expédition",
-    phrase: "Jusqu'au Cœur sauvage, où vivent les plus rares.",
-  },
-] as const;
-
-const BIENTOT = ["Créer son compte", "Choisir son nom de chef", "Choisir son Couple de départ : souris, poule ou pigeon"];
+const TUILE = "(max-width: 820px) 50vw, (max-width: 1100px) 33vw, 220px";
 
 export default function Accueil() {
   return (
     <main className={styles.accueil}>
-      <Grille>
-        <Bloc largeur={7} plein className={styles.hero}>
+      <div>
+        <span className={styles.badge}>Ouverture prochaine</span>
+        <h1 className={styles.titre}>Un monde sauvage, des bêtes à apprivoiser.</h1>
+        <p className={styles.intro}>
+          Bestia est un jeu de stratégie persistant : explorez un monde partagé, découvrez de vraies espèces,
+          apprivoisez-les et faites grandir votre territoire, sur ordinateur comme sur mobile.
+        </p>
+        <ul className={styles.points}>
+          <li>200 espèces réelles au lancement, jusqu&apos;à 2000</li>
+          <li>Six raretés, de la commune à la mythique</li>
+          <li>Un monde partagé qui ne se réinitialise jamais</li>
+        </ul>
+      </div>
+
+      <div className={styles.mosaique}>
+        <div className={`${styles.tuile} ${styles.monde}`}>
           <Illustration
-            chemin="prototype/misc/hero.webp"
-            alt="Des Bêtes de toutes tailles, du loup au mammouth, devant un dragon"
-            sizes="(max-width: 1100px) 100vw, 60vw"
+            chemin="accueil/plateau.webp"
+            alt="Le monde de Bestia, sculpté comme un plateau de jeu : montagnes enneigées, forêts, savane, désert, jungle et, au centre, le Cœur sauvage"
+            sizes="(max-width: 1100px) 100vw, 450px"
             prioritaire
-            className={styles.heroImage}
+            className={styles.remplir}
           />
-          <div className={styles.cartouche}>
-            <h1>Bestia</h1>
-            <p>Un monde sauvage qui ne s&apos;arrête jamais.</p>
-          </div>
-        </Bloc>
-
-        <Bloc largeur={5} teinte="peche" titre="Le jeu">
-          <p className={styles.pitch}>
-            Parcourez un Monde partagé avec d&apos;autres chefs, croisez des Bêtes sauvages, du scarabée au mammouth, et
-            réunissez un mâle et une femelle de chaque Espèce pour les élever sans fin.
-          </p>
-          <p className={styles.note}>Les inscriptions ouvrent bientôt.</p>
-        </Bloc>
-
-        {COULOIRS.map((c) => (
-          <Bloc key={c.titre} largeur={4} teinte={c.teinte} titre={c.titre}>
-            <div className={styles.ligne}>
-              <Illustration chemin={c.illustration} alt="" sizes="54px" className={styles.vignette} />
-              <span>
-                <b>{c.nom}</b>
-                <small>{c.phrase}</small>
-              </span>
-            </div>
-          </Bloc>
-        ))}
-
-        <Bloc teinte="encre" titre="Bientôt">
-          <ol className={styles.bientot}>
-            {BIENTOT.map((etape, i) => (
-              <li key={etape}>
-                <span>{i + 1}</span>
-                {etape}
-              </li>
-            ))}
-          </ol>
-        </Bloc>
-      </Grille>
+        </div>
+        <div className={styles.tuile}>
+          <Illustration chemin="accueil/mammouth.webp" alt="Un mammouth dans la neige au coucher du soleil" sizes={TUILE} className={styles.remplir} />
+        </div>
+        <div className={`${styles.tuile} ${styles.chiffre}`}>
+          <b>200</b>
+          <span>espèces au lancement</span>
+        </div>
+        <div className={styles.tuile}>
+          <Illustration chemin="prototype/ships/lightFighter.webp" alt="Un jeune loup qui hurle dans la forêt" sizes={TUILE} className={styles.remplir} />
+        </div>
+        <div className={styles.tuile}>
+          <Illustration chemin="accueil/castors.webp" alt="Trois castors construisent un barrage" sizes={TUILE} className={styles.remplir} />
+        </div>
+        <div className={styles.tuile}>
+          <Illustration chemin="accueil/explorateurs.webp" alt="Deux explorateurs et leur lama découvrent une vallée" sizes={TUILE} className={styles.remplir} />
+        </div>
+      </div>
     </main>
   );
 }

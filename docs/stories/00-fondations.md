@@ -167,8 +167,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 
 - **Débloquée par** : US-0013, US-0015, US-0017
 - **Critères d'acceptation** :
-  - La page d'accueil montre la barre du haut, le nom « Bestia » et quelques blocs, dont une illustration du prototype.
-  - Mise à côté du prototype, elle en a clairement l'allure : couleurs, polices, arrondis, espacements.
+  - La page d'accueil est une vitrine : la barre du haut, une accroche, le badge « Ouverture prochaine » et une mosaïque d'illustrations peintes dans la direction artistique du prototype, sans étiquettes.
+  - Elle reprend les couleurs, la police, les arrondis et les espacements du prototype, et ne montre ni combat ni lien vers une page qui n'existe pas encore.
   - Son plus gros élément s'affiche en moins de 2,5 secondes sur une connexion mobile 4G (mesure Lighthouse, profil mobile).
 
 ### US-0019 · Vérifier l'habillage sur mobile

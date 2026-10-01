@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0018** · Habiller la page d'accueil en Bento. Prochaine : **US-0019** · Vérifier l'habillage sur mobile.
+Dernière story livrée : **US-0018** · Habiller la page d'accueil en Bento (revue en vitrine le 2026-10-01). Prochaine : **US-0019** · Vérifier l'habillage sur mobile.
 
 ## Sommaire
 
