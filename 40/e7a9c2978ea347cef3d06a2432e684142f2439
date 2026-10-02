@@ -1,0 +1,28 @@
+vitest.config.mts
+  s_d0f4332113d26c::t_8175f95f6e7883 18-19
+src/temps/horloge.test.ts
+  s_d0f4332113d26c::t_dfb211ac6c512e 1,7-11
+  s_d0f4332113d26c::t_3e31a257a8d7c6 12
+src/test/environnement.ts
+  s_d0f4332113d26c::t_8175f95f6e7883 1-4
+package.json
+  s_d0f4332113d26c::t_ad731b3588cc15 26-27
+scripts/attendre-mise-en-ligne.sh
+  s_d0f4332113d26c::t_6da9874393f707 1-23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "40e7a9c2978ea347cef3d06a2432e684142f2439",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
