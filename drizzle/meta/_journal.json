@@ -50,6 +50,13 @@
       "when": 1790942135263,
       "tag": "0006_biomes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790943318845,
+      "tag": "0007_raretes",
+      "breakpoints": true
     }
   ]
 }

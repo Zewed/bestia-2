@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0040** · Enregistrer les Biomes. Prochaine : **US-0041** · Enregistrer les six Raretés.
+Dernière story livrée : **US-0041** · Enregistrer les six Raretés. Prochaine : **US-0042** · Enregistrer les quatre Rôles.
 
 ## Sommaire
 

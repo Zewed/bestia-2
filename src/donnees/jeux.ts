@@ -39,5 +39,18 @@ export const VARIANTES: Jeu<EntreeVariante> = {
   colonnes: (v) => ({ id: v.id, biome_id: v.biomeId, nom: v.nom, ordre: v.ordre }),
 };
 
+const entreeRarete = z.object({ id: identifiant, nom, s_elevent: z.boolean(), rang: z.number().int() });
+
+export const RARETES: Jeu<z.infer<typeof entreeRarete>> = {
+  nom: "Raretés",
+  fichier: "raretes.yaml",
+  table: "rarete",
+  cle: "id",
+  // Le rang suit l'ordre du fichier : de la plus banale à la plus rare.
+  extraire: (brut) => brut.map((r, i) => ({ ...(r as object), rang: i + 1 })),
+  schema: entreeRarete,
+  colonnes: (r) => ({ id: r.id, nom: r.nom, rang: r.rang, s_elevent: r.s_elevent }),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES];

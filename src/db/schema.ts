@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, check, doublePrecision, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -74,4 +74,15 @@ export const varianteBiome = pgTable("variante_biome", {
     .references(() => biome.id),
   nom: text("nom").notNull(),
   ordre: integer("ordre").notNull(),
+});
+
+/**
+ * Une Rareté : le rang d'une Espèce, qui dit à la fois sa puissance et la difficulté à la
+ * trouver. Le rang permet de comparer deux Raretés ; les mythiques ne s'élèvent pas.
+ */
+export const rarete = pgTable("rarete", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  rang: integer("rang").notNull().unique(),
+  selevent: boolean("s_elevent").notNull(),
 });

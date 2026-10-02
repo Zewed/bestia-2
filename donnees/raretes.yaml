@@ -1,0 +1,23 @@
+# Les six Raretés, de la plus banale à la plus rare : l'ordre du fichier est leur rang.
+# Plus une Espèce est forte, plus elle est rare.
+# s_elevent : une Espèce de cette Rareté peut-elle être élevée ? Les mythiques, jamais :
+# un joueur n'en possède qu'une Bête, obtenue lors d'une Apparition.
+
+- id: commune
+  nom: Commune
+  s_elevent: true
+- id: peu_commune
+  nom: Peu commune
+  s_elevent: true
+- id: rare
+  nom: Rare
+  s_elevent: true
+- id: epique
+  nom: Épique
+  s_elevent: true
+- id: legendaire
+  nom: Légendaire
+  s_elevent: true
+- id: mythique
+  nom: Mythique
+  s_elevent: false
