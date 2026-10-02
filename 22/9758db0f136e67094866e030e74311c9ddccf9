@@ -1,0 +1,37 @@
+src/temps/rattraper.ts
+  s_d0f4332113d26c::t_db9700486675a9 1-32
+src/app/error.tsx
+  s_d0f4332113d26c::t_db9700486675a9 1-16
+src/health.ts
+  s_d0f4332113d26c::t_db9700486675a9 4,11,26-28,40,54-55
+  s_d0f4332113d26c::t_d28f11e9b1675a 56
+src/temps/rattraper.db.test.ts
+  s_d0f4332113d26c::t_e4e42f76c3b54c 1-68
+src/app/error.module.css
+  s_d0f4332113d26c::t_db9700486675a9 1-40
+src/temps/regles.ts
+  s_d0f4332113d26c::t_db9700486675a9 1-9
+src/health.test.ts
+  s_d0f4332113d26c::t_e4e42f76c3b54c 2,6-9,18,48,52-56
+  s_d0f4332113d26c::t_53b7c0a0ee191e 57-58
+README.md
+  s_d0f4332113d26c::t_8f78d48a54ae18 61
+docs/stories/README.md
+  s_d0f4332113d26c::t_071afdaeaf99d8 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "229758db0f136e67094866e030e74311c9ddccf9",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
