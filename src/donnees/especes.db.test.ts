@@ -25,6 +25,8 @@ describe.skipIf(!URL_TEST)("fiche d'Espèce en base", () => {
       taille: 1,
       regime: "herbivore",
       entretien_par_heure: 0.1,
+      masse_g: 20,
+      facteur_arme: 1,
       biome_id: "prairie",
       rarete_id: "commune",
       ...champs,

@@ -1,17 +1,55 @@
 # Les Espèces : une fiche par Espèce, commune à toutes ses Bêtes (elles sont identiques).
-# Les chiffres sont calqués sur l'animal réel ; « source » note d'où ils viennent.
+# On ne note que les mesures réelles ; le barème (docs/adr/0007) en tire l'attaque, la vie,
+# les Places, la charge et l'Entretien. « source » dit d'où viennent les chiffres.
 #
-#   id                 identifiant stable (minuscules sans accent)
-#   nom                nom affiché
-#   attaque, vie       la force au combat (le combat est une simple somme des forces)
-#   vitesse            la vitesse de déplacement
-#   charge             ce qu'une Bête peut porter
-#   taille             les Places qu'une Bête occupe dans un Habitat
-#   regime             carnivore, herbivore ou omnivore
-#   entretien          la Nourriture consommée par heure
-#   biome              le Biome de son Habitat (voir biomes.yaml)
-#   rarete             sa Rareté (voir raretes.yaml)
-#   role               son Rôle éventuel (voir roles.yaml), sinon rien
-#   illustration       chemin sous public/illustrations
-#   source             facultatif : la source réelle des chiffres
-[]
+#   id                      identifiant stable (minuscules sans accent)
+#   nom                     nom affiché
+#   masse_g                 masse réelle, en grammes
+#   arme                    dangerosité pour sa taille : 1 pour une morsure ordinaire,
+#                           moins pour un bec ou un herbivore, plus pour un prédateur
+#   venin                   true si l'Espèce est venimeuse (l'arme compte double)
+#   vitesse                 vitesse réelle, en km/h
+#   regime                  carnivore, herbivore ou omnivore
+#   nourriture_g_par_jour   ce que l'animal mange par jour, en grammes
+#   biome                   le Biome de son Habitat (voir biomes.yaml)
+#   rarete                  sa Rareté (voir raretes.yaml)
+#   role                    son Rôle éventuel (voir roles.yaml)
+#   illustration            chemin sous public/illustrations
+#   source                  d'où viennent les chiffres
+
+# Les trois Espèces du Couple de départ : communes, en prairie.
+
+- id: souris
+  nom: Souris grise
+  masse_g: 20
+  arme: 1        # morsure : de ces trois, l'Espèce qui défend
+  vitesse: 13
+  regime: omnivore
+  nourriture_g_par_jour: 4
+  biome: prairie
+  rarete: commune
+  source: "Mus musculus : 12 à 30 g, pointes à 13 km/h, 3 à 5 g de nourriture par jour."
+
+- id: poule
+  nom: Poule
+  masse_g: 2000
+  arme: 0.4      # coups de bec
+  vitesse: 14
+  regime: omnivore
+  nourriture_g_par_jour: 120
+  biome: prairie
+  rarete: commune
+  role: nourricier
+  source: "Gallus gallus domesticus : 1,5 à 3 kg, course jusqu'à 14 km/h, 100 à 130 g d'aliment par jour."
+
+- id: pigeon
+  nom: Pigeon biset
+  masse_g: 350
+  arme: 0.3      # bec, peu dangereux
+  vitesse: 80
+  regime: herbivore
+  nourriture_g_par_jour: 30
+  biome: prairie
+  rarete: commune
+  role: eclaireur
+  source: "Columba livia : 240 à 380 g, vol de 77 à 92 km/h, environ 30 g de graines par jour."

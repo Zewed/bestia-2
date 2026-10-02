@@ -428,8 +428,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - La souris est en base, Rareté commune, sans Rôle.
-  - Son régime et ses caractéristiques sont tirés de l'animal réel (chiffre à régler).
-  - Son Biome d'Habitat (à décider).
+  - Son régime et ses caractéristiques sont tirés de l'animal réel par le barème (docs/adr/0007).
+  - Son Biome d'Habitat est la prairie, comme pour les trois Espèces du Couple de départ.
 
 ### US-0045 · Enregistrer la poule
 **En tant que** développeur, **je veux** la poule en base avec toutes ses caractéristiques, **afin de** proposer l'Espèce qui aide à grandir.
@@ -437,8 +437,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - La poule est en base, Rareté commune, avec le Rôle Nourricier.
-  - Son régime et ses caractéristiques sont tirés de l'animal réel (chiffre à régler).
-  - Son Biome d'Habitat (à décider).
+  - Son régime et ses caractéristiques sont tirés de l'animal réel par le barème (docs/adr/0007).
+  - Son Biome d'Habitat est la prairie, comme pour les trois Espèces du Couple de départ.
 
 ### US-0046 · Enregistrer le pigeon
 **En tant que** développeur, **je veux** le pigeon en base avec toutes ses caractéristiques, **afin de** proposer l'Espèce qui aide à explorer.
@@ -446,8 +446,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - Le pigeon est en base, Rareté commune, avec le Rôle Éclaireur.
-  - Son régime et ses caractéristiques sont tirés de l'animal réel (chiffre à régler).
-  - Son Biome d'Habitat (à décider).
+  - Son régime et ses caractéristiques sont tirés de l'animal réel par le barème (docs/adr/0007).
+  - Son Biome d'Habitat est la prairie, comme pour les trois Espèces du Couple de départ.
 
 ### US-0047 · Marquer les Espèces du Couple de départ
 **En tant que** développeur, **je veux** marquer la souris, la poule et le pigeon comme seules Espèces proposées en Couple de départ, avec leur style de jeu, **afin de** préparer l'écran de choix du jalon 1.

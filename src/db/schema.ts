@@ -123,6 +123,9 @@ export const espece = pgTable(
       .references(() => rarete.id),
     /** Au plus un Rôle, ou aucun. */
     roleId: text("role_id").references(() => role.id),
+    /** Les mesures réelles d'où le barème tire les caractéristiques (ADR 0007). */
+    masseG: doublePrecision("masse_g"),
+    facteurArme: doublePrecision("facteur_arme"),
     illustration: text("illustration"),
     source: text("source"),
   },

@@ -498,7 +498,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - Une Case déjà possédée n'est jamais proposée.
   - Une Case de mer, de lac ou de rivière n'accueille jamais de Foyer.
   - Deux Foyers sont séparés d'au moins (chiffre à régler) Cases.
-  - Le cas de la côte, et le choix entre tous les Biomes terrestres ou seulement certains, pour que les départs se valent (à décider).
+  - Le Foyer naît toujours sur une Case de prairie, le Biome des trois Espèces du Couple de départ : tous les départs se valent.
 
 ### US-0153 · Recevoir une Case libre sur la Couronne
 **En tant que** nouveau joueur, **je veux** recevoir une Case de la Couronne juste après avoir choisi mon Couple, **afin de** commencer ma vie de chef quelque part dans le Monde.

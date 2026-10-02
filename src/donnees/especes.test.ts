@@ -1,25 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { valider } from "./charger";
-import { ESPECES, verifierReferences, type EntreeEspece } from "./jeux";
+import { lireJeu, valider } from "./charger";
+import { BIOMES, ESPECES, RARETES, ROLES, verifierReferences, type EntreeEspece } from "./jeux";
 
-const souris: EntreeEspece = {
-  id: "souris_essai",
-  nom: "Souris d'essai",
-  attaque: 0.1,
-  vie: 1,
+const essai: EntreeEspece = {
+  id: "essai",
+  nom: "Bête d'essai",
+  masse_g: 20,
+  arme: 1,
   vitesse: 2,
-  charge: 0.05,
-  taille: 1,
   regime: "omnivore",
-  entretien: 0.01,
+  nourriture_g_par_jour: 4,
   biome: "prairie",
   rarete: "commune",
 };
 
 describe("fiche d'Espèce", () => {
-  it("porte toutes les caractéristiques de l'animal", () => {
-    expect(valider(ESPECES, [souris])).toEqual([souris]);
-    expect(ESPECES.colonnes(souris)).toMatchObject({ entretien_par_heure: 0.01, biome_id: "prairie", role_id: null });
+  it("tire ses caractéristiques des mesures réelles, par le barème", () => {
+    expect(valider(ESPECES, [essai])).toEqual([essai]);
+    expect(ESPECES.colonnes(essai)).toMatchObject({ attaque: 473, vie: 473, taille: 1, charge: 5, biome_id: "prairie", role_id: null });
   });
 
   it.each([
@@ -27,16 +25,51 @@ describe("fiche d'Espèce", () => {
     ["sans Rareté", { rarete: undefined }, /rarete/],
     ["sans régime", { regime: undefined }, /régime/],
     ["avec un régime inconnu", { regime: "frugivore" }, /régime/],
-    ["avec une vie nulle", { vie: 0 }, /vie doit être positif/],
-    ["avec une attaque négative", { attaque: -1 }, /attaque ne peut pas être négatif/],
+    ["sans masse", { masse_g: undefined }, /masse_g/],
+    ["avec une arme négative", { arme: -1 }, /arme ne peut pas être négatif/],
   ])("refuse une Espèce %s", (_, changement, message) => {
-    expect(() => valider(ESPECES, [{ ...souris, ...changement }])).toThrow(message);
+    expect(() => valider(ESPECES, [{ ...essai, ...changement }])).toThrow(message);
   });
 
   it("ne renvoie qu'à des Biomes, Raretés et Rôles qui existent", () => {
     const connus = { biomes: ["prairie"], raretes: ["commune"], roles: ["eclaireur"] };
-    expect(() => verifierReferences([souris], connus)).not.toThrow();
-    expect(() => verifierReferences([{ ...souris, biome: "lune" }], connus)).toThrow(/Biome inconnu « lune »/);
-    expect(() => verifierReferences([{ ...souris, role: "magicien" }], connus)).toThrow(/Rôle inconnu « magicien »/);
+    expect(() => verifierReferences([essai], connus)).not.toThrow();
+    expect(() => verifierReferences([{ ...essai, biome: "lune" }], connus)).toThrow(/Biome inconnu « lune »/);
+    expect(() => verifierReferences([{ ...essai, role: "magicien" }], connus)).toThrow(/Rôle inconnu « magicien »/);
+  });
+});
+
+describe("les Espèces du Couple de départ", () => {
+  const especes = lireJeu(ESPECES);
+  const fiche = (id: string) => {
+    const e = especes.find((x) => x.id === id);
+    if (!e) throw new Error(`${id} absente`);
+    return { entree: e, colonnes: ESPECES.colonnes(e) };
+  };
+
+  it("renvoient toutes à des Biomes, Raretés et Rôles qui existent", () => {
+    const ids = (liste: { id: string }[]) => liste.map((x) => x.id);
+    expect(() =>
+      verifierReferences(especes, { biomes: ids(lireJeu(BIOMES)), raretes: ids(lireJeu(RARETES)), roles: ids(lireJeu(ROLES)) }),
+    ).not.toThrow();
+  });
+
+  it.each([
+    ["souris", null, 473, 473, 1],
+    ["poule", "nourricier", 5981, 14953, 31.623],
+    ["pigeon", "eclaireur", 1214, 4046, 8.556],
+  ])("%s : commune, en prairie, Rôle %s, attaque %i, vie %i, %f Places", (id, role, attaque, vie, taille) => {
+    const { entree, colonnes } = fiche(id);
+    expect(entree).toMatchObject({ rarete: "commune", biome: "prairie" });
+    expect(colonnes).toMatchObject({ role_id: role, attaque, vie, taille });
+  });
+
+  it("donnent à la souris l'avantage au combat à Places égales", () => {
+    const parPlace = (id: string) => {
+      const { attaque, taille } = fiche(id).colonnes as { attaque: number; taille: number };
+      return attaque / taille;
+    };
+    expect(parPlace("souris")).toBeGreaterThan(parPlace("poule"));
+    expect(parPlace("souris")).toBeGreaterThan(parPlace("pigeon"));
   });
 });

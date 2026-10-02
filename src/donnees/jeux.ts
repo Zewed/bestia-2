@@ -1,6 +1,7 @@
 // Les jeux de données de référence, chargés dans cet ordre (les Espèces renvoient aux
 // Biomes, aux Raretés et aux Rôles). Chaque story de l'étape 4 ajoute le sien.
 import { z } from "zod";
+import { appliquerBareme, BAREME } from "./bareme";
 import type { Jeu } from "./charger";
 
 // Un identifiant stable : minuscules sans accent, chiffres et tirets bas.
@@ -71,13 +72,13 @@ const positifOuNul = (champ: string) =>
 export const entreeEspece = z.object({
   id: identifiant,
   nom,
-  attaque: positifOuNul("attaque"),
-  vie: positif("vie"),
+  /** Les mesures réelles : le barème (ADR 0007) en tire attaque, vie, Places, charge et Entretien. */
+  masse_g: positif("masse_g"),
+  arme: positifOuNul("arme"),
+  venin: z.boolean().optional(),
   vitesse: positif("vitesse"),
-  charge: positifOuNul("charge"),
-  taille: positif("taille"),
   regime: z.enum(["carnivore", "herbivore", "omnivore"], { error: "régime : carnivore, herbivore ou omnivore" }),
-  entretien: positifOuNul("entretien"),
+  nourriture_g_par_jour: positifOuNul("nourriture_g_par_jour"),
   biome: identifiant,
   rarete: identifiant,
   role: identifiant.optional(),
@@ -92,22 +93,27 @@ export const ESPECES: Jeu<EntreeEspece> = {
   table: "espece",
   cle: "id",
   schema: entreeEspece,
-  colonnes: (e) => ({
-    id: e.id,
-    nom: e.nom,
-    attaque: e.attaque,
-    vie: e.vie,
-    vitesse: e.vitesse,
-    charge: e.charge,
-    taille: e.taille,
-    regime: e.regime,
-    entretien_par_heure: e.entretien,
-    biome_id: e.biome,
-    rarete_id: e.rarete,
-    role_id: e.role ?? null,
-    illustration: e.illustration ?? null,
-    source: e.source ?? null,
-  }),
+  colonnes: (e) => {
+    const c = appliquerBareme({ masseG: e.masse_g, arme: e.arme, venimeux: e.venin, nourritureGParJour: e.nourriture_g_par_jour });
+    return {
+      id: e.id,
+      nom: e.nom,
+      attaque: c.attaque,
+      vie: c.vie,
+      vitesse: e.vitesse,
+      charge: c.charge,
+      taille: c.taille,
+      regime: e.regime,
+      entretien_par_heure: c.entretienParHeure,
+      biome_id: e.biome,
+      rarete_id: e.rarete,
+      role_id: e.role ?? null,
+      masse_g: e.masse_g,
+      facteur_arme: e.arme * (e.venin ? BAREME.venin : 1),
+      illustration: e.illustration ?? null,
+      source: e.source ?? null,
+    };
+  },
 };
 
 /** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. */

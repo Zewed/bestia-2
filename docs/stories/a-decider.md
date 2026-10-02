@@ -2,15 +2,12 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-297 points au total.
+293 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
 - [US-0005](00-fondations.md) · Mettre le projet en ligne sur Vercel : le nom de domaine du jeu (en attendant : bestia-2.vercel.app).
 - [US-0034](00-fondations.md) · Ouvrir une page de contrôle interne : elle n'est ouverte qu'aux développeurs ; la façon de les reconnaître.
-- [US-0044](00-fondations.md) · Enregistrer la souris : son Biome d'Habitat.
-- [US-0045](00-fondations.md) · Enregistrer la poule : son Biome d'Habitat.
-- [US-0046](00-fondations.md) · Enregistrer le pigeon : son Biome d'Habitat.
 - [US-0047](00-fondations.md) · Marquer les Espèces du Couple de départ : la phrase complète qui présente chaque style.
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
@@ -28,7 +25,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0139](01-entrer-dans-le-jeu.md) · Valider son nom de chef : la possibilité de changer de nom plus tard, et l'avertissement à montrer avant de valider.
 - [US-0144](01-entrer-dans-le-jeu.md) · Consulter les caractéristiques avant de choisir : montrer ces chiffres dès cet écran ou les garder pour la Réserve.
 - [US-0151](01-entrer-dans-le-jeu.md) · Préparer les Cases de la Couronne : la façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire.
-- [US-0152](01-entrer-dans-le-jeu.md) · Définir les Cases où un Foyer peut naître : le cas de la côte, et le choix entre tous les Biomes terrestres ou seulement certains, pour que les départs se valent.
 - [US-0153](01-entrer-dans-le-jeu.md) · Recevoir une Case libre sur la Couronne : la façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés.
 - [US-0157](01-entrer-dans-le-jeu.md) · Voir l'illustration de son Foyer : une illustration propre à chaque Biome, ou une seule pour tous.
 - [US-0158](01-entrer-dans-le-jeu.md) · Annoncer la naissance du Foyer : le texte du récit.
