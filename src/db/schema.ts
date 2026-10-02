@@ -2,7 +2,8 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, check, doublePrecision, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
 export const monde = pgTable("monde", {
@@ -41,3 +42,19 @@ export const passageTache = pgTable("passage_tache", {
   restants: integer("restants").notNull(),
   erreurs: jsonb("erreurs").notNull().default([]),
 });
+
+/**
+ * La vitesse du temps du jeu et son point d'ancrage (US-0030), une seule ligne. À chaque
+ * changement de vitesse, l'ancre passe à l'heure du jeu du moment : elle ne recule jamais.
+ * La production ne la lit pas : son temps passe toujours à vitesse normale.
+ */
+export const horloge = pgTable(
+  "horloge",
+  {
+    id: integer("id").primaryKey().default(1),
+    facteur: doublePrecision("facteur").notNull().default(1),
+    reelAncre: timestamp("reel_ancre", { withTimezone: true }).notNull(),
+    jeuAncre: timestamp("jeu_ancre", { withTimezone: true }).notNull(),
+  },
+  (t) => [check("horloge_une_seule_ligne", sql`${t.id} = 1`), check("horloge_facteur_positif", sql`${t.facteur} > 0`)],
+);

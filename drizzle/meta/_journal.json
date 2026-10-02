@@ -36,6 +36,13 @@
       "when": 1790938920149,
       "tag": "0004_journal_tache",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790939689549,
+      "tag": "0005_horloge",
+      "breakpoints": true
     }
   ]
 }

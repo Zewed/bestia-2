@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0029** · Garder un journal des passages de la tâche planifiée. Prochaine : **US-0030** · Accélérer le temps en développement.
+Dernière story livrée : **US-0030** · Accélérer le temps en développement. Prochaine : **US-0031** · Interdire l'accélération en production.
 
 ## Sommaire
 
