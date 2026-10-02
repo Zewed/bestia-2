@@ -1,0 +1,27 @@
+src/temps/rattraper.ts
+  s_d0f4332113d26c::t_06ffb3fa7f22d8 26,28-35
+src/temps/longue-absence.db.test.ts
+  s_d0f4332113d26c::t_f8ab36c3e5fb3f 1-90
+src/temps/avancer.ts
+  s_d0f4332113d26c::t_06ffb3fa7f22d8 56,73,77-85
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_21595bb9c2aabe 274
+docs/stories/README.md
+  s_d0f4332113d26c::t_741e6fc9c8853d 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5fdaaf1f1843768033712e0bc659a652e0dd0838",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
