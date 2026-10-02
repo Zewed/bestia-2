@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0024** · Rattraper le temps à l'ouverture d'une page. Prochaine : **US-0025** · Faire passer une tâche planifiée pour les absents.
+Dernière story livrée : **US-0025** · Faire passer une tâche planifiée pour les absents. Prochaine : **US-0026** · Protéger l'adresse de la tâche planifiée.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0024** · Rattraper le temps à l'ouverture d'une
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **66 étapes** | **753** | **302** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (186 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (184 au total).
 
 ## Lire une story
 

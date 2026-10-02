@@ -244,8 +244,8 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 
 - **Débloquée par** : US-0023, US-0005
 - **Critères d'acceptation** :
-  - Une tâche planifiée Vercel passe toutes les (chiffre à régler) minutes en production.
-  - À chaque passage, elle avance tout élément qui n'a pas été calculé depuis plus de (chiffre à régler) minutes.
+  - Une tâche planifiée Vercel passe toutes les 5 minutes en production.
+  - À chaque passage, elle avance tout élément qui n'a pas été calculé depuis plus de 5 minutes.
   - Elle travaille par lots, pour rester sous la durée d'exécution permise par Vercel.
 
 ### US-0026 · Protéger l'adresse de la tâche planifiée
