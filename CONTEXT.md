@@ -17,7 +17,7 @@ Un hexagone du Monde, doté d'un biome, qui rapporte un peu et en continu à cel
 _Avoid_: Tuile, parcelle, position, coordonnée
 
 **Biome**:
-Le milieu naturel d'une Case, parmi : prairie, forêt, jungle, savane, désert, montagne, toundra, banquise, eau (côte, lac, rivière, mer).
+Le milieu naturel d'une Case, parmi : prairie, forêt, jungle, savane, désert, montagne, toundra, banquise, eau ; l'eau est un seul Biome, qui se décline en quatre variantes (côte, lac, rivière, mer), toutes bonnes pour une Espèce d'eau.
 _Avoid_: Terrain, climat
 
 **Couronne**:

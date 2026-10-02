@@ -30,7 +30,7 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
   - Les Espèces sont groupées par Biome, chaque groupe portant le nom et le pictogramme de son Biome ; l'ordre des Biomes (à décider).
   - Dans chaque Biome, elles vont de commune à mythique ; l'ordre au sein d'une même Rareté, alphabétique ou du plus faible au plus fort (à décider).
   - Chaque Espèce garde toujours le même emplacement, connue ou en silhouette : en découvrir une ne décale rien.
-  - Côte, lac, rivière et mer forment un seul groupe « eau » ou quatre groupes (à décider).
+  - Côte, lac, rivière et mer forment un seul groupe « eau », comme le Biome.
 
 ### US-1004 · La silhouette d'une Espèce jamais vue
 **En tant que** joueur, **je veux** voir en silhouette les Espèces que je n'ai jamais croisées, **afin de** mesurer tout ce que le Monde me cache encore.

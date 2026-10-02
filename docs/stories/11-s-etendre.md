@@ -216,7 +216,7 @@ Le Territoire grandit Case par Case grâce aux Avant-postes ; chaque Case gagné
 
 - **Débloquée par** : US-1122
 - **Critères d'acceptation** :
-  - Le bassin ajoute des Places pour l'eau (chiffre à régler) ; pour quelles eaux, côte, lac, rivière ou mer (à décider).
+  - Le bassin ajoute des Places pour l'eau (chiffre à régler), quelle que soit sa variante : côte, lac, rivière ou mer.
   - Avec un bassin, on peut élever une Espèce de l'eau qu'il reproduit sans posséder de Case de ce Biome.
   - Ses Places apparaissent dans la page Habitats.
 
@@ -261,7 +261,7 @@ Le Territoire grandit Case par Case grâce aux Avant-postes ; chaque Case gagné
 
 - **Débloquée par** : US-1117
 - **Critères d'acceptation** :
-  - Une Espèce de lac peut vivre sur une Case de rivière, ou chaque eau exige la sienne (à décider).
+  - Toutes les eaux se valent pour loger une Espèce d'eau : une Espèce de lac peut vivre sur une Case de rivière.
   - La fiche de l'Espèce dit précisément quelle eau lui convient.
   - La page Habitats range les Places d'eau selon la règle retenue.
 

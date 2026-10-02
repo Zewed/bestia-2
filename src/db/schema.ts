@@ -58,3 +58,20 @@ export const horloge = pgTable(
   },
   (t) => [check("horloge_une_seule_ligne", sql`${t.id} = 1`), check("horloge_facteur_positif", sql`${t.facteur} > 0`)],
 );
+
+/** Un Biome : le milieu naturel d'une Case. Son identifiant ne change plus une fois choisi. */
+export const biome = pgTable("biome", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  ordre: integer("ordre").notNull(),
+});
+
+/** Une variante de Biome : l'eau se décline en côte, lac, rivière et mer, toutes de même Biome. */
+export const varianteBiome = pgTable("variante_biome", {
+  id: text("id").primaryKey(),
+  biomeId: text("biome_id")
+    .notNull()
+    .references(() => biome.id),
+  nom: text("nom").notNull(),
+  ordre: integer("ordre").notNull(),
+});

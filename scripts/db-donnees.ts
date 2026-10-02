@@ -1,9 +1,8 @@
 // Charge les données de référence (dossier donnees/) en base, sans doublon : npm run db:donnees
 // Se relance sans risque ; il tourne aussi à chaque mise en ligne, après les migrations.
-import { join } from "node:path";
 import { loadEnvConfig } from "@next/env";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
-import { chargerJeu, lireFichier, valider } from "../src/donnees/charger";
+import { chargerJeu, lireJeu } from "../src/donnees/charger";
 import { JEUX } from "../src/donnees/jeux";
 import { assertEnv } from "../src/env";
 
@@ -13,7 +12,7 @@ async function main() {
   try {
     assertEnv();
     // Toutes les données sont validées avant d'écrire quoi que ce soit.
-    const lots = JEUX.map((jeu) => ({ jeu, entrees: valider(jeu, lireFichier(join("donnees", jeu.fichier))) }));
+    const lots = JEUX.map((jeu) => ({ jeu, entrees: lireJeu(jeu) }));
     pool = createPool(process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL!);
     const client = await pool.connect();
     try {

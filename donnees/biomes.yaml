@@ -1,0 +1,31 @@
+# Les Biomes du Monde : le milieu naturel de chaque Case.
+# id : identifiant stable, il ne change plus une fois choisi (même si le nom affiché change).
+# L'eau est un seul Biome, avec quatre variantes : une Espèce d'eau vit dans toutes.
+
+- id: prairie
+  nom: Prairie
+- id: foret
+  nom: Forêt
+- id: jungle
+  nom: Jungle
+- id: savane
+  nom: Savane
+- id: desert
+  nom: Désert
+- id: montagne
+  nom: Montagne
+- id: toundra
+  nom: Toundra
+- id: banquise
+  nom: Banquise
+- id: eau
+  nom: Eau
+  variantes:
+    - id: cote
+      nom: Côte
+    - id: lac
+      nom: Lac
+    - id: riviere
+      nom: Rivière
+    - id: mer
+      nom: Mer

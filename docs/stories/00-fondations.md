@@ -391,7 +391,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0039
 - **Critères d'acceptation** :
   - La base contient prairie, forêt, jungle, savane, désert, montagne, toundra, banquise et eau.
-  - L'eau existe sous ses quatre formes : côte, lac, rivière, mer ; les traiter comme quatre Biomes distincts ou comme quatre variantes de l'eau (à décider).
+  - L'eau est un seul Biome, qui se décline en quatre variantes : côte, lac, rivière et mer.
   - Chaque Biome a un nom affiché en français et un identifiant stable qui ne changera plus.
 
 ### US-0041 · Enregistrer les six Raretés

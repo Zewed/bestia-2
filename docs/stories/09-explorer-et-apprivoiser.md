@@ -275,7 +275,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 - **Débloquée par** : US-0927
 - **Critères d'acceptation** :
   - L'Espèce est tirée parmi celles de la Rareté tirée dont le Biome d'Habitat est celui de la Case.
-  - Côte, lac, rivière et mer comptent chacune à part pour ce tirage (à décider).
+  - Côte, lac, rivière et mer sont des variantes d'un même Biome, l'eau : elles comptent ensemble pour ce tirage.
   - À Rareté égale, chaque Espèce a la même chance ; une pondération par Espèce (à décider).
   - Si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes (à décider).
 

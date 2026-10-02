@@ -13,6 +13,8 @@ export type Jeu<T> = {
   /** La colonne qui identifie une entrée pour toujours (par exemple « id »). */
   cle: string;
   schema: z.ZodType<T>;
+  /** Pour tirer les entrées d'un fichier partagé (les variantes rangées sous leur Biome). */
+  extraire?: (brut: unknown[]) => unknown[];
   /** Les colonnes écrites en base pour une entrée, clé comprise. */
   colonnes: (entree: T) => Record<string, unknown>;
 };
@@ -75,4 +77,10 @@ export async function chargerJeu<T>(client: PoolClient, jeu: Jeu<T>, entrees: T[
     else bilan.modifies += 1;
   }
   return bilan;
+}
+
+/** Lit et valide les entrées d'un jeu depuis son fichier du dossier donnees/. */
+export function lireJeu<T>(jeu: Jeu<T>, dossier = "donnees"): T[] {
+  const brut = lireFichier(`${dossier}/${jeu.fichier}`);
+  return valider(jeu, jeu.extraire ? jeu.extraire(brut) : brut);
 }

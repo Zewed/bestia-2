@@ -1,6 +1,43 @@
 // Les jeux de données de référence, chargés dans cet ordre (les Espèces renvoient aux
 // Biomes, aux Raretés et aux Rôles). Chaque story de l'étape 4 ajoute le sien.
+import { z } from "zod";
 import type { Jeu } from "./charger";
 
+// Un identifiant stable : minuscules sans accent, chiffres et tirets bas.
+const identifiant = z.string().regex(/^[a-z0-9_]+$/, "identifiant en minuscules sans accent (a-z, 0-9, _)");
+const nom = z.string().trim().min(1, "nom affiché manquant");
+
+const variante = z.object({ id: identifiant, nom });
+const entreeBiome = z.object({ id: identifiant, nom, variantes: z.array(variante).optional() });
+type EntreeBiome = z.infer<typeof entreeBiome>;
+
+export const BIOMES: Jeu<EntreeBiome & { ordre: number }> = {
+  nom: "Biomes",
+  fichier: "biomes.yaml",
+  table: "biome",
+  cle: "id",
+  // L'ordre d'affichage suit l'ordre du fichier.
+  extraire: (brut) => brut.map((b, i) => ({ ...(b as object), ordre: i + 1 })),
+  schema: entreeBiome.extend({ ordre: z.number().int() }),
+  colonnes: (b) => ({ id: b.id, nom: b.nom, ordre: b.ordre }),
+};
+
+type EntreeVariante = { id: string; nom: string; biomeId: string; ordre: number };
+
+export const VARIANTES: Jeu<EntreeVariante> = {
+  nom: "Variantes de Biome",
+  fichier: "biomes.yaml",
+  table: "variante_biome",
+  cle: "id",
+  extraire: (brut) =>
+    brut.flatMap((b) => {
+      const biome = b as { id?: unknown; variantes?: unknown };
+      if (!Array.isArray(biome.variantes)) return [];
+      return biome.variantes.map((v, i) => ({ ...(v as object), biomeId: biome.id, ordre: i + 1 }));
+    }),
+  schema: z.object({ id: identifiant, nom, biomeId: identifiant, ordre: z.number().int() }),
+  colonnes: (v) => ({ id: v.id, biome_id: v.biomeId, nom: v.nom, ordre: v.ordre }),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES];

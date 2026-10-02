@@ -2,13 +2,12 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-302 points au total.
+297 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
 - [US-0005](00-fondations.md) · Mettre le projet en ligne sur Vercel : le nom de domaine du jeu (en attendant : bestia-2.vercel.app).
 - [US-0034](00-fondations.md) · Ouvrir une page de contrôle interne : elle n'est ouverte qu'aux développeurs ; la façon de les reconnaître.
-- [US-0040](00-fondations.md) · Enregistrer les Biomes : l'eau existe sous ses quatre formes : côte, lac, rivière, mer ; les traiter comme quatre Biomes distincts ou comme quatre variantes de l'eau.
 - [US-0044](00-fondations.md) · Enregistrer la souris : son Biome d'Habitat.
 - [US-0045](00-fondations.md) · Enregistrer la poule : son Biome d'Habitat.
 - [US-0046](00-fondations.md) · Enregistrer le pigeon : son Biome d'Habitat.
@@ -164,7 +163,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0925](09-explorer-et-apprivoiser.md) · Des Bêtes sauvages apparaissent de temps en temps : chaque Case hors des Territoires voit apparaître des Bêtes sauvages de temps en temps, selon une fréquence moyenne (chiffre à régler) ; les Cases des Territoires.
 - [US-0925](09-explorer-et-apprivoiser.md) · Des Bêtes sauvages apparaissent de temps en temps : plusieurs Bêtes présentes en même temps sur une même Case.
 - [US-0926](09-explorer-et-apprivoiser.md) · Une présence limitée dans le temps : une durée qui change selon la Rareté.
-- [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : côte, lac, rivière et mer comptent chacune à part pour ce tirage.
 - [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : à Rareté égale, chaque Espèce a la même chance ; une pondération par Espèce.
 - [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
@@ -199,7 +197,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 - [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : les Espèces sont groupées par Biome, chaque groupe portant le nom et le pictogramme de son Biome ; l'ordre des Biomes.
 - [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : dans chaque Biome, elles vont de commune à mythique ; l'ordre au sein d'une même Rareté, alphabétique ou du plus faible au plus fort.
-- [US-1003](10-le-bestiaire.md) · Ranger les Espèces par Biome et par Rareté : côte, lac, rivière et mer forment un seul groupe « eau » ou quatre groupes.
 - [US-1004](10-le-bestiaire.md) · La silhouette d'une Espèce jamais vue : silhouette générique ou contour réel de l'animal, tant qu'elle ne permet pas de reconnaître l'Espèce.
 - [US-1006](10-le-bestiaire.md) · L'état « croisée » : elle se distingue d'un coup d'œil d'une Espèce apprivoisée ; par quel moyen, illustration adoucie, cadre ou autre.
 - [US-1009](10-le-bestiaire.md) · Signaler les nouvelles inscriptions : la marque disparaît à l'ouverture de la page ou à celle de la fiche.
@@ -237,13 +234,11 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-1116](11-s-etendre.md) · Partir de plus loin : la portée d'exploration se compte depuis le Foyer, ou depuis la Case du Territoire la plus proche de la destination.
 - [US-1116](11-s-etendre.md) · Partir de plus loin : les trajets des Expéditions et des Récoltes partent du Foyer, ou de la Case la plus proche.
 - [US-1122](11-s-etendre.md) · Débloquer les constructions d'Habitat : les constructions d'Habitat forment la famille Habitats, ouverte par des Recherches ; lesquelles.
-- [US-1123](11-s-etendre.md) · Le bassin : le bassin ajoute des Places pour l'eau (chiffre à régler) ; pour quelles eaux, côte, lac, rivière ou mer.
 - [US-1124](11-s-etendre.md) · La glacière : la glacière ajoute des Places pour la toundra (chiffre à régler) ; pour la banquise aussi.
 - [US-1125](11-s-etendre.md) · La volière : la volière ajoute des Places pour un Biome (chiffre à régler) ; lequel.
 - [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : la liste des constructions prévoit une construction d'Habitat pour chaque Biome, ou seulement pour certains.
 - [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : deux constructions d'Habitat différentes ne reproduisent jamais le même Biome.
 - [US-1127](11-s-etendre.md) · Les niveaux d'une construction d'Habitat : des Postes dans les constructions d'Habitat.
-- [US-1128](11-s-etendre.md) · Les eaux et leurs Habitats : une Espèce de lac peut vivre sur une Case de rivière, ou chaque eau exige la sienne.
 - [US-1129](11-s-etendre.md) · L'Espèce du Couple de départ toujours logée au Foyer : la règle garde la forme retenue à l'étape 35 : exception propre au Couple de départ, ou Espèces de départ vivant dans tous les Biomes de la Couronne.
 - [US-1130](11-s-etendre.md) · Les Bêtes déjà là quand la règle arrive : les Bêtes logées au Foyer hors de leur Biome restent en surnombre, ou gardent une Place d'exception.
 - [US-1131](11-s-etendre.md) · Une Bête apprivoisée sans Habitat : une Bête apprivoisée d'un Biome où le joueur n'a aucun Habitat le rejoint quand même en surnombre, attend en Réserve, ou repart au sauvage.

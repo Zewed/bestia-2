@@ -4,31 +4,31 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0039** · Charger les données de référence par un script rejouable. Prochaine : **US-0040** · Enregistrer les Biomes.
+Dernière story livrée : **US-0040** · Enregistrer les Biomes. Prochaine : **US-0041** · Enregistrer les six Raretés.
 
 ## Sommaire
 
 | Jalon | Étapes | Stories | À décider |
 |---|---|---:|---:|
-| [0 · Les fondations](00-fondations.md) | 1 à 4 | 52 | 7 |
+| [0 · Les fondations](00-fondations.md) | 1 à 4 | 52 | 6 |
 | [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9 | 64 | 19 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 6 |
 | [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 14 |
 | [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 11 |
-| [5 · Récolter](05-recolter.md) | 21 à 24 | 52 | 26 |
+| [5 · Récolter](05-recolter.md) | 21 à 24 | 52 | 24 |
 | [6 · Construire](06-construire.md) | 25 à 30 | 46 | 13 |
 | [7 · La Recherche](07-la-recherche.md) | 31 à 32 | 30 | 6 |
 | [8 · Les Bêtes à la maison](08-les-betes-a-la-maison.md) | 33 à 37 | 42 | 16 |
-| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 74 | 45 |
-| [10 · Le Bestiaire](10-le-bestiaire.md) | 46 à 49 | 47 | 23 |
-| [11 · S'étendre](11-s-etendre.md) | 50 à 52 | 42 | 28 |
+| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 74 | 44 |
+| [10 · Le Bestiaire](10-le-bestiaire.md) | 46 à 49 | 47 | 22 |
+| [11 · S'étendre](11-s-etendre.md) | 50 à 52 | 42 | 26 |
 | [12 · Les Épreuves](12-les-epreuves.md) | 53 | 34 | 7 |
 | [13 · Le danger sauvage](13-le-danger-sauvage.md) | 54 à 55 | 24 | 14 |
 | [14 · Les autres joueurs](14-les-autres-joueurs.md) | 56 à 60 | 49 | 23 |
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **66 étapes** | **753** | **302** |
+| **Total** | **66 étapes** | **753** | **297** |
 
 Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (181 au total).
 
