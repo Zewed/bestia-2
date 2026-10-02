@@ -1,0 +1,51 @@
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_a9e753bc2b8bca 5
+src/db/schema.ts
+  s_d0f4332113d26c::t_546a944c986d00 126-128
+src/donnees/bareme.ts
+  s_d0f4332113d26c::t_92c85df5f61561 1-41
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_a9e753bc2b8bca 501
+docs/adr/0007-bareme-des-caracteristiques.md
+  s_d0f4332113d26c::t_546a944c986d00 1-5
+src/donnees/bareme.test.ts
+  s_d0f4332113d26c::t_92c85df5f61561 1-37
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_a9e753bc2b8bca 431-432,440-441,449-450
+docs/stories/README.md
+  s_d0f4332113d26c::t_a9e753bc2b8bca 7,13-14,31,33
+src/donnees/especes.test.ts
+  s_d0f4332113d26c::t_842e899443fa96 2-9,12,18-20,28-29,31,36-67,72-73
+  s_d0f4332113d26c::t_74a83093f8007f 68-71
+src/donnees/jeux.ts
+  s_d0f4332113d26c::t_842e899443fa96 4,112
+  s_d0f4332113d26c::t_92c85df5f61561 75-78,81,96-111,113-116
+drizzle/0010_bareme_especes.sql
+  s_d0f4332113d26c::t_546a944c986d00 1-2
+src/donnees/especes.db.test.ts
+  s_d0f4332113d26c::t_842e899443fa96 28-29
+donnees/especes.yaml
+  s_d0f4332113d26c::t_842e899443fa96 2-3,5-55
+README.md
+  s_d0f4332113d26c::t_157b71f1bb7f44 65
+drizzle/meta/0010_snapshot.json
+  s_d0f4332113d26c::t_30d075f6754f76 1-636
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_ff8085fd8cddbf 74-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "891932f8fc0b6226ed778d6f1b73f4801a398d10",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
