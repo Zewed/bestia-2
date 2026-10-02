@@ -1,0 +1,51 @@
+docs/stories/11-s-etendre.md
+  s_d0f4332113d26c::t_3fa3392ba32632 219,264
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_3fa3392ba32632 394
+scripts/db-donnees.ts
+  s_d0f4332113d26c::t_d5d17d832b5e61 5,15
+src/db/schema.ts
+  s_d0f4332113d26c::t_f63fc37132d84c 61-77
+docs/stories/10-le-bestiaire.md
+  s_d0f4332113d26c::t_3fa3392ba32632 33
+src/donnees/biomes.test.ts
+  s_d0f4332113d26c::t_d5d17d832b5e61 1-30
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_3fa3392ba32632 5
+drizzle/0006_biomes.sql
+  s_d0f4332113d26c::t_f63fc37132d84c 1-14
+docs/stories/README.md
+  s_d0f4332113d26c::t_d072904e699acf 13,18,22-24,31
+  s_d0f4332113d26c::t_2f65b5323476dd 7
+donnees/biomes.yaml
+  s_d0f4332113d26c::t_d5d17d832b5e61 1-31
+docs/stories/09-explorer-et-apprivoiser.md
+  s_d0f4332113d26c::t_3fa3392ba32632 278
+src/donnees/jeux.ts
+  s_d0f4332113d26c::t_d5d17d832b5e61 3,6-41,43
+CONTEXT.md
+  s_d0f4332113d26c::t_f63fc37132d84c 20
+src/donnees/charger.ts
+  s_d0f4332113d26c::t_d5d17d832b5e61 16-17,81-85
+  s_d0f4332113d26c::t_471a74c1224de0 86
+drizzle/meta/0006_snapshot.json
+  s_d0f4332113d26c::t_32161b279fdd00 1-369
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_ccf25ddec53659 46-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6a363110f68a18cfc328969ab0e079db36d1a91b",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
