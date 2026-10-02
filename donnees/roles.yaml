@@ -1,0 +1,15 @@
+# Les quatre Rôles : un usage particulier qu'ont certaines Espèces en plus du combat.
+# Une Espèce a au plus un Rôle, ou aucun. La phrase s'affiche sur la fiche des Espèces.
+
+- id: porteur
+  nom: Porteur
+  phrase: "Porte de lourdes charges : les Récoltes rapportent davantage."
+- id: eclaireur
+  nom: Éclaireur
+  phrase: "Voit loin : repère les Bêtes sauvages avant les autres."
+- id: nourricier
+  nom: Nourricier
+  phrase: "Nourrit le Territoire : produit de la Nourriture chaque heure."
+- id: batisseur
+  nom: Bâtisseur
+  phrase: "Rend possibles certaines constructions, comme le barrage du castor."

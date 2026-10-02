@@ -52,5 +52,17 @@ export const RARETES: Jeu<z.infer<typeof entreeRarete>> = {
   colonnes: (r) => ({ id: r.id, nom: r.nom, rang: r.rang, s_elevent: r.s_elevent }),
 };
 
+const entreeRole = z.object({ id: identifiant, nom, phrase: z.string().trim().min(1, "phrase manquante"), ordre: z.number().int() });
+
+export const ROLES: Jeu<z.infer<typeof entreeRole>> = {
+  nom: "Rôles",
+  fichier: "roles.yaml",
+  table: "role",
+  cle: "id",
+  extraire: (brut) => brut.map((r, i) => ({ ...(r as object), ordre: i + 1 })),
+  schema: entreeRole,
+  colonnes: (r) => ({ id: r.id, nom: r.nom, phrase: r.phrase, ordre: r.ordre }),
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES];

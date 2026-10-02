@@ -86,3 +86,11 @@ export const rarete = pgTable("rarete", {
   rang: integer("rang").notNull().unique(),
   selevent: boolean("s_elevent").notNull(),
 });
+
+/** Un Rôle : un usage particulier qu'ont certaines Espèces en plus du combat. */
+export const role = pgTable("role", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  phrase: text("phrase").notNull(),
+  ordre: integer("ordre").notNull(),
+});

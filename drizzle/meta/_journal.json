@@ -57,6 +57,13 @@
       "when": 1790943318845,
       "tag": "0007_raretes",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790947663478,
+      "tag": "0008_roles",
+      "breakpoints": true
     }
   ]
 }
