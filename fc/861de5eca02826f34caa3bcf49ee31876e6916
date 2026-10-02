@@ -1,0 +1,34 @@
+src/donnees/jeux.ts
+  s_d0f4332113d26c::t_84bd7346bdd260 42-54,56
+drizzle/0007_raretes.sql
+  s_d0f4332113d26c::t_84bd7346bdd260 1-7
+src/donnees/raretes.test.ts
+  s_d0f4332113d26c::t_84bd7346bdd260 1-22
+donnees/raretes.yaml
+  s_d0f4332113d26c::t_84bd7346bdd260 1-23
+src/db/schema.ts
+  s_d0f4332113d26c::t_84bd7346bdd260 5,78-87
+  s_d0f4332113d26c::t_d4625845f01b08 88
+docs/stories/README.md
+  s_d0f4332113d26c::t_2af133444dccba 7
+drizzle/meta/0007_snapshot.json
+  s_d0f4332113d26c::t_7b9cd0a23ec45c 1-414
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_3bd20c52f16abd 53-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fc861de5eca02826f34caa3bcf49ee31876e6916",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
