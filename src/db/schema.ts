@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
 export const monde = pgTable("monde", {
@@ -12,3 +12,21 @@ export const monde = pgTable("monde", {
   /** Le marque-page du temps : l'instant jusqu'auquel le Monde a été calculé. Il ne recule jamais. */
   calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/**
+ * Un événement daté qui touche un élément du jeu (une Attaque qui arrive, une Bête qui guérit…).
+ * Le temps qui avance le traite à son instant exact, dans l'ordre des dates, une seule fois.
+ */
+export const evenement = pgTable(
+  "evenement",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    element: text("element").notNull(),
+    elementId: integer("element_id").notNull(),
+    survientLe: timestamp("survient_le", { withTimezone: true }).notNull(),
+    type: text("type").notNull(),
+    donnees: jsonb("donnees").notNull().default({}),
+    traiteLe: timestamp("traite_le", { withTimezone: true }),
+  },
+  (t) => [index("evenement_a_traiter").on(t.element, t.elementId, t.survientLe)],
+);
