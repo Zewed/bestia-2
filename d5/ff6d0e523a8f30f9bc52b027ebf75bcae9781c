@@ -1,0 +1,45 @@
+src/db/schema.ts
+  s_d0f4332113d26c::t_e22eb31ab6aa44 33-43
+src/reglages.ts
+  s_d0f4332113d26c::t_e22eb31ab6aa44 11-14
+drizzle/0004_journal_tache.sql
+  s_d0f4332113d26c::t_e22eb31ab6aa44 1-9
+src/app/taches/temps/route.ts
+  s_d0f4332113d26c::t_ae59cd3417237c 2,15-16
+src/temps/journal.db.test.ts
+  s_d0f4332113d26c::t_eef0d66f67c3d3 17-19
+  s_d0f4332113d26c::t_ae1dcde35b004d 1-16,20-48
+src/health.test.ts
+  s_d0f4332113d26c::t_ae59cd3417237c 18-24
+  s_d0f4332113d26c::t_ae1dcde35b004d 65-76
+src/health.ts
+  s_d0f4332113d26c::t_ae59cd3417237c 4-6,13-14,34-35,42
+src/temps/absents.ts
+  s_d0f4332113d26c::t_ae59cd3417237c 7,16-23,42,57,60,72-115
+README.md
+  s_d0f4332113d26c::t_591455b68278ff 61
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_7f947f528b6c82 285
+docs/stories/README.md
+  s_d0f4332113d26c::t_324f494c066ac8 7,33
+drizzle/meta/0004_snapshot.json
+  s_d0f4332113d26c::t_aee73278524c36 1-239
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_97f833adf57eb4 32-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "d5ff6d0e523a8f30f9bc52b027ebf75bcae9781c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
