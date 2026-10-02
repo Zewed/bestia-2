@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0023** · Écrire un mécanisme unique pour faire avancer le temps. Prochaine : **US-0024** · Rattraper le temps à l'ouverture d'une page.
+Dernière story livrée : **US-0024** · Rattraper le temps à l'ouverture d'une page. Prochaine : **US-0025** · Faire passer une tâche planifiée pour les absents.
 
 ## Sommaire
 

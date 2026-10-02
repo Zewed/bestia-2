@@ -1,0 +1,40 @@
+/* La page d'erreur : jamais un état périmé, un message clair et de quoi réessayer. */
+.page {
+  display: grid;
+  place-content: center;
+  gap: 14px;
+  max-width: 560px;
+  min-height: calc(100dvh - var(--hauteur-barre));
+  margin: 0 auto;
+  padding: 40px 16px;
+  text-align: center;
+}
+
+.titre {
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.texte {
+  color: var(--texte-2);
+  font-size: 17px;
+}
+
+.reessayer {
+  justify-self: center;
+  min-height: 48px;
+  margin-top: 8px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.reessayer:hover {
+  background: var(--encre-survol);
+}

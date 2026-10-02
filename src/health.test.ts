@@ -1,7 +1,11 @@
 import type { Pool } from "pg";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MissingEnvError } from "./env";
 import { checkHealth } from "./health";
+
+// Le rattrapage du Monde a ses propres tests sur base ; ici, il répond tout de suite.
+const rattrapage = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date("2026-10-02T08:00:00Z")) }));
+vi.mock("./temps/rattraper", () => rattrapage);
 
 const PRODUCTION_TIMELINE = "2ef3d9ca2dbef4d3407b201804d9325d";
 // Assemblée en morceaux pour ne pas déclencher le scan de secrets.
@@ -11,7 +15,7 @@ const saved = { ...process.env };
 function poolAnswering(database: string, timeline: string | null): () => Pool {
   return () =>
     ({
-      query: async (sql: string) => ({ rows: sql.includes("from monde") ? [{ nom: "Aube" }] : [{ database, timeline }] }),
+      query: async (sql: string) => ({ rows: sql.includes("from monde") ? [{ id: 1, nom: "Aube" }] : [{ database, timeline }] }),
     }) as unknown as Pool;
 }
 
@@ -41,8 +45,15 @@ describe("page de santé", () => {
       statut: "ok",
       version: "086bdc1",
       environnement: "production",
-      base: { statut: "ok", production: true, monde: "Aube" },
+      base: { statut: "ok", production: true, monde: "Aube", calculeJusquA: "2026-10-02T08:00:00.000Z" },
     });
+  });
+
+  it("signale un Monde qui n'a pas pu être rattrapé", async () => {
+    rattrapage.rattraper.mockRejectedValueOnce(Object.assign(new Error("rattrapage"), { name: "RattrapageError" }));
+    const { httpStatus, body } = await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE));
+    expect(httpStatus).toBe(503);
+    expect(body.base).toMatchObject({ code: "RATTRAPAGE_ECHOUE" });
   });
 
   it("dit quand la base n'est pas celle de production", async () => {
