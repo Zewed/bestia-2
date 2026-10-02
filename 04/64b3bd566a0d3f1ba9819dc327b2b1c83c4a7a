@@ -1,0 +1,34 @@
+src/app/taches/temps/route.ts
+  s_d0f4332113d26c::t_2014116cdb183b 1-11
+src/temps/absents.db.test.ts
+  s_d0f4332113d26c::t_1fd81f697505d1 1-75
+src/reglages.ts
+  s_d0f4332113d26c::t_2014116cdb183b 1-10
+vercel.json
+  s_d0f4332113d26c::t_2014116cdb183b 4-13
+src/temps/absents.ts
+  s_d0f4332113d26c::t_1fd81f697505d1 8,20-28,46,48,59
+  s_d0f4332113d26c::t_2014116cdb183b 1-7,9-19,29-45,47,49-58,60-63
+README.md
+  s_d0f4332113d26c::t_465e09c59226c6 61
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_a1d3e8de91f3af 247-248
+docs/stories/README.md
+  s_d0f4332113d26c::t_18fb1fafc9b027 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0464b3bd566a0d3f1ba9819dc327b2b1c83c4a7a",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
