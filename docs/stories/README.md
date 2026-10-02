@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0031** · Interdire l'accélération en production. Prochaine : **US-0032** · Signaler à l'écran que le temps est accéléré.
+Dernière story livrée : **US-0039** · Charger les données de référence par un script rejouable. Prochaine : **US-0040** · Enregistrer les Biomes.
 
 ## Sommaire
 
@@ -47,6 +47,7 @@ Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Le
 - **Personnages** : joueur, nouveau joueur, visiteur, chef attaqué, développeur.
 - **Critères d'acceptation** : deux à cinq, chacun vérifiable par un test ou en jouant.
 - **« (à décider) »** : une règle de jeu encore ouverte. On la tranche avant de coder la story.
+- **Statut** (facultatif) : une story abandonnée, reportée ou couverte autrement le dit ici, avec la date et la raison.
 - **« (chiffre à régler) »** : une valeur d'équilibrage. On code avec une valeur provisoire, réglable sans toucher au code.
 
 ## Comment les stories se débloquent

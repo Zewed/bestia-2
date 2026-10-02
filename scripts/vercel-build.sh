@@ -9,5 +9,6 @@ set -e
 npm run check:code
 if [ "$VERCEL_ENV" = "production" ] || [ "$VERCEL_ENV" = "preview" ]; then
   npm run db:migrate
+  npm run db:donnees
 fi
 npm run build

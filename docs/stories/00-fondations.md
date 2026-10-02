@@ -306,6 +306,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0032 · Signaler à l'écran que le temps est accéléré
 **En tant que** développeur, **je veux** un bandeau visible quand le temps est accéléré, **afin de** ne jamais confondre un test accéléré avec le vrai rythme du jeu.
 
+- **Statut** : Abandonnée le 2026-10-02 : un bandeau de vitesse n'apporte rien au jeu.
 - **Débloquée par** : US-0030, US-0014
 - **Critères d'acceptation** :
   - Quand le temps est accéléré, un bandeau « Temps ×100 » s'affiche sur chaque page.
@@ -315,6 +316,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0033 · Créer un compteur de test
 **En tant que** développeur, **je veux** un compteur rattaché au Monde qui gagne un point par heure de jeu, **afin de** vérifier que le temps avance juste.
 
+- **Statut** : Couverte par les tests automatiques sur base du moteur du temps (src/temps/*.db.test.ts), plutôt que par un compteur à surveiller.
 - **Débloquée par** : US-0023
 - **Critères d'acceptation** :
   - Le compteur passe par le mécanisme unique, comme tout ce qui dépend du temps.
@@ -324,6 +326,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0034 · Ouvrir une page de contrôle interne
 **En tant que** développeur, **je veux** une page interne qui montre l'heure du jeu, la vitesse du temps, le compteur de test et les derniers passages de la tâche planifiée, **afin de** surveiller le temps du jeu d'un coup d'œil.
 
+- **Statut** : Reportée à l'étape 4, où elle sert à vérifier les données de référence.
 - **Débloquée par** : US-0013, US-0029, US-0033
 - **Critères d'acceptation** :
   - La page affiche l'heure du jeu, le facteur d'accélération et la valeur du compteur.
@@ -334,6 +337,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0035 · Vérifier le compteur page ouverte
 **En tant que** développeur, **je veux** voir le compteur avancer à chaque ouverture de la page de contrôle, **afin de** valider le rattrapage à l'ouverture de page.
 
+- **Statut** : Couverte par les tests automatiques sur base (rattrapage à l'ouverture, ouvertures rapprochées).
 - **Débloquée par** : US-0024, US-0034
 - **Critères d'acceptation** :
   - Chaque rechargement montre une valeur supérieure ou égale à la précédente.
@@ -343,6 +347,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0036 · Vérifier le compteur page fermée
 **En tant que** développeur, **je veux** que le compteur avance sans que personne n'ouvre la page, **afin de** valider le passage de la tâche planifiée.
 
+- **Statut** : Couverte par les tests automatiques sur base (tâche planifiée, journal des passages).
 - **Débloquée par** : US-0025, US-0035
 - **Critères d'acceptation** :
   - Page fermée pendant plusieurs heures, le journal montre que la tâche planifiée a fait avancer le compteur.
@@ -351,6 +356,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0037 · Vérifier le compteur en vitesse accélérée
 **En tant que** développeur, **je veux** voir le compteur avancer cent fois plus vite avec le réglage ×100, **afin de** valider l'accélération avant de m'en servir pour tout le reste.
 
+- **Statut** : Couverte par les tests automatiques sur base (temps accéléré, retour à vitesse normale).
 - **Débloquée par** : US-0032, US-0036
 - **Critères d'acceptation** :
   - À ×100, le compteur gagne un point toutes les 36 secondes réelles.
@@ -360,6 +366,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0038 · Faire un saut dans le temps en développement
 **En tant que** développeur, **je veux** avancer l'heure du jeu d'un bloc depuis la page de contrôle, **afin de** tester une longue absence sans attendre.
 
+- **Statut** : Reportée : utile quand il y aura de vraies Récoltes à tester.
 - **Débloquée par** : US-0031, US-0034
 - **Critères d'acceptation** :
   - Un bouton avance l'heure du jeu d'une durée choisie : une heure, un jour, une semaine.
