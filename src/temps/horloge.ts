@@ -19,17 +19,22 @@ export function heureReelle(): number {
   return Date.now();
 }
 
+/** En production, le temps passe toujours à vitesse normale, quel que soit le réglage (US-0031). */
+function enProduction(): boolean {
+  return process.env.VERCEL_ENV === "production";
+}
+
 /** L'instant présent du jeu. Seule fonction du jeu qui donne l'heure du jeu. */
 export function maintenant(): Date {
   const reel = heureReelle();
   const ancre = partage[CLE];
-  if (!ancre) return new Date(reel);
+  if (!ancre || enProduction()) return new Date(reel);
   return new Date(ancre.jeu + (reel - ancre.reel) * ancre.facteur);
 }
 
 /** La vitesse du temps du jeu : 1 à vitesse normale, 100 pour « ×100 ». */
 export function vitesse(): number {
-  return partage[CLE]?.facteur ?? 1;
+  return enProduction() ? 1 : (partage[CLE]?.facteur ?? 1);
 }
 
 /** Fixe l'ancre de l'horloge (au démarrage du serveur, ou dans les tests). */
@@ -45,4 +50,11 @@ export function vitesseDemandee(valeur = process.env.BESTIA_VITESSE_TEMPS): numb
     throw new Error(`BESTIA_VITESSE_TEMPS doit être un nombre positif (reçu : « ${valeur} »).`);
   }
   return facteur;
+}
+
+/** Le message à noter au démarrage si un réglage d'accélération traîne en production, sinon null. */
+export function avertissementProduction(env: Record<string, string | undefined> = process.env): string | null {
+  const valeur = env.BESTIA_VITESSE_TEMPS?.trim();
+  if (env.VERCEL_ENV !== "production" || !valeur || valeur === "1") return null;
+  return `Horloge du jeu : BESTIA_VITESSE_TEMPS=${valeur} est ignoré en production, le temps passe à vitesse normale.`;
 }

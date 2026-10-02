@@ -11,6 +11,9 @@ export async function register() {
       const { assertNotProductionDatabase } = await import("./db/production");
       await assertNotProductionDatabase(getPool(), "Démarrage de la prévisualisation refusé");
     }
+    const { avertissementProduction } = await import("./temps/horloge");
+    const avertissement = avertissementProduction();
+    if (avertissement) console.warn(avertissement);
     if (process.env.VERCEL_ENV !== "production") {
       const { getPool } = await import("./db");
       const { vitesseDemandee } = await import("./temps/horloge");

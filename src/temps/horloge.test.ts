@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { formaterInstant } from "./affichage";
-import { definirAncre, maintenant, vitesse, vitesseDemandee } from "./horloge";
+import { avertissementProduction, definirAncre, maintenant, vitesse, vitesseDemandee } from "./horloge";
+
+const environnement = process.env.VERCEL_ENV;
 
 afterEach(() => {
   vi.useRealTimers();
   definirAncre(null);
+  if (environnement === undefined) delete process.env.VERCEL_ENV;
+  else process.env.VERCEL_ENV = environnement;
 });
 
 describe("heure du jeu", () => {
@@ -37,5 +41,38 @@ describe("heure du jeu", () => {
     expect(vitesseDemandee("100")).toBe(100);
     expect(() => vitesseDemandee("vite")).toThrow(/BESTIA_VITESSE_TEMPS/);
     expect(() => vitesseDemandee("-2")).toThrow(/BESTIA_VITESSE_TEMPS/);
+  });
+
+  it("passe toujours à vitesse normale en production, quel que soit le réglage", () => {
+    vi.useFakeTimers();
+    const reel = new Date("2026-06-01T18:00:00Z").getTime();
+    vi.setSystemTime(reel);
+    definirAncre({ facteur: 100, reel, jeu: reel });
+    vi.setSystemTime(reel + 60_000);
+    process.env.VERCEL_ENV = "production";
+    expect(maintenant()).toEqual(new Date(reel + 60_000));
+    expect(vitesse()).toBe(1);
+  });
+
+  it("garde l'accélération possible sur les prévisualisations et en local", () => {
+    vi.useFakeTimers();
+    const reel = new Date("2026-06-01T18:00:00Z").getTime();
+    vi.setSystemTime(reel);
+    definirAncre({ facteur: 100, reel, jeu: reel });
+    vi.setSystemTime(reel + 60_000);
+    for (const env of ["preview", undefined]) {
+      if (env) process.env.VERCEL_ENV = env;
+      else delete process.env.VERCEL_ENV;
+      expect(maintenant()).toEqual(new Date(reel + 100 * 60_000));
+    }
+  });
+
+  it("signale au démarrage un réglage d'accélération trouvé en production", () => {
+    expect(avertissementProduction({ VERCEL_ENV: "production", BESTIA_VITESSE_TEMPS: "100" })).toMatch(
+      /BESTIA_VITESSE_TEMPS=100 est ignoré en production/,
+    );
+    expect(avertissementProduction({ VERCEL_ENV: "production" })).toBeNull();
+    expect(avertissementProduction({ VERCEL_ENV: "production", BESTIA_VITESSE_TEMPS: "1" })).toBeNull();
+    expect(avertissementProduction({ VERCEL_ENV: "preview", BESTIA_VITESSE_TEMPS: "100" })).toBeNull();
   });
 });
