@@ -1,5 +1,5 @@
 import { connection } from "next/server";
-import { rattraperLesAbsents } from "@/temps/absents";
+import { passageDeLaTache } from "@/temps/absents";
 import { autoriserTache } from "@/temps/autorisation";
 
 // Appelée par la tâche planifiée de Vercel (vercel.json), toutes les 5 minutes.
@@ -12,6 +12,6 @@ export async function GET(request: Request) {
     console.warn(`Tâche planifiée : appel refusé (${verdict.raison}).`);
     return Response.json({ statut: "refusé" }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
-  const passage = await rattraperLesAbsents();
-  return Response.json(passage, { headers: { "Cache-Control": "no-store" } });
+  const { ok, passage } = await passageDeLaTache();
+  return Response.json(passage, { status: ok ? 200 : 500, headers: { "Cache-Control": "no-store" } });
 }

@@ -30,3 +30,14 @@ export const evenement = pgTable(
   },
   (t) => [index("evenement_a_traiter").on(t.element, t.elementId, t.survientLe)],
 );
+
+/** La trace de chaque passage de la tâche planifiée (US-0029), gardée 7 jours. */
+export const passageTache = pgTable("passage_tache", {
+  id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+  debut: timestamp("debut", { withTimezone: true }).notNull(),
+  dureeMs: integer("duree_ms").notNull(),
+  rattrapes: integer("rattrapes").notNull(),
+  echecs: integer("echecs").notNull(),
+  restants: integer("restants").notNull(),
+  erreurs: jsonb("erreurs").notNull().default([]),
+});

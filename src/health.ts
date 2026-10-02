@@ -1,12 +1,17 @@
 import type { Pool } from "pg";
 import { connectionFailureReason, isConnectionError } from "./db";
 import { identifyDatabase } from "./db/production";
+import { TACHE_EN_RETARD_MINUTES } from "./reglages";
+import { dernierPassage } from "./temps/absents";
+import { maintenant } from "./temps/horloge";
 import { rattraper } from "./temps/rattraper";
 
 export type Health = {
   statut: "ok" | "panne";
   version: string;
   environnement: string;
+  /** Le dernier passage de la tâche planifiée, et s'il est en retard (trois passages manqués). */
+  tache?: { dernierPassage: string | null; enRetard: boolean };
   base:
     | { statut: "ok"; production: boolean; latenceMs: number; monde: string | null; calculeJusquA: string | null }
     | { statut: "panne"; code: string; raison: string };
@@ -26,12 +31,15 @@ export async function checkHealth(getPool: () => Pool): Promise<{ httpStatus: nu
     const monde = await pool.query<{ id: number; nom: string }>("select id, nom from monde order by id limit 1");
     // Le Monde est rattrapé avant d'être lu, comme sur toute page du jeu.
     const calcule = monde.rows[0] ? await rattraper("monde", monde.rows[0].id, { pool }) : null;
+    const passe = await dernierPassage(pool);
+    const enRetard = !passe || maintenant().getTime() - passe.getTime() > TACHE_EN_RETARD_MINUTES * 60_000;
     return {
       httpStatus: 200,
       body: {
         statut: "ok",
         version,
         environnement,
+        tache: { dernierPassage: passe?.toISOString() ?? null, enRetard },
         base: {
           statut: "ok",
           production: identity.isProduction,

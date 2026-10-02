@@ -282,7 +282,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Chaque passage note son heure, sa durée, le nombre d'éléments avancés et les erreurs rencontrées.
   - Une erreur sur un élément n'empêche pas les autres d'avancer.
-  - Les (chiffre à régler) derniers passages restent consultables.
+  - Les passages des 7 derniers jours restent consultables ; la page de santé signale une tâche sans passage depuis 15 minutes.
 
 ### US-0030 · Accélérer le temps en développement
 **En tant que** développeur, **je veux** un réglage qui fait passer le temps du jeu cent fois plus vite, **afin de** tester en quelques minutes ce qui prend des heures.

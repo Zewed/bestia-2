@@ -15,7 +15,13 @@ const saved = { ...process.env };
 function poolAnswering(database: string, timeline: string | null): () => Pool {
   return () =>
     ({
-      query: async (sql: string) => ({ rows: sql.includes("from monde") ? [{ id: 1, nom: "Aube" }] : [{ database, timeline }] }),
+      query: async (sql: string) => ({
+        rows: sql.includes("from monde")
+          ? [{ id: 1, nom: "Aube" }]
+          : sql.includes("from passage_tache")
+            ? [{ debut: new Date("2026-10-02T08:00:00Z") }]
+            : [{ database, timeline }],
+      }),
     }) as unknown as Pool;
 }
 
@@ -54,6 +60,18 @@ describe("page de santé", () => {
     const { httpStatus, body } = await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE));
     expect(httpStatus).toBe(503);
     expect(body.base).toMatchObject({ code: "RATTRAPAGE_ECHOUE" });
+  });
+
+  it("dit si la tâche planifiée est passée récemment, ou si elle est en retard", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-02T08:05:00Z"));
+    expect((await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE))).body.tache).toEqual({
+      dernierPassage: "2026-10-02T08:00:00.000Z",
+      enRetard: false,
+    });
+    vi.setSystemTime(new Date("2026-10-02T08:30:00Z"));
+    expect((await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE))).body.tache?.enRetard).toBe(true);
+    vi.useRealTimers();
   });
 
   it("dit quand la base n'est pas celle de production", async () => {

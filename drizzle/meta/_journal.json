@@ -29,6 +29,13 @@
       "when": 1790929100787,
       "tag": "0003_evenements",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790938920149,
+      "tag": "0004_journal_tache",
+      "breakpoints": true
     }
   ]
 }
