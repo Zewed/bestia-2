@@ -1,0 +1,37 @@
+src/donnees/jeux.ts
+  s_d0f4332113d26c::t_11822724deb699 67-126,128
+drizzle/0009_especes.sql
+  s_d0f4332113d26c::t_731fc762fa331a 1-27
+src/donnees/especes.test.ts
+  s_d0f4332113d26c::t_11822724deb699 1-42
+src/db/schema.ts
+  s_d0f4332113d26c::t_731fc762fa331a 5,97-137
+scripts/db-donnees.ts
+  s_d0f4332113d26c::t_11822724deb699 6,16-21
+donnees/especes.yaml
+  s_d0f4332113d26c::t_11822724deb699 1-17
+src/donnees/especes.db.test.ts
+  s_d0f4332113d26c::t_11822724deb699 1-49
+docs/stories/README.md
+  s_d0f4332113d26c::t_856a615e27f179 7
+drizzle/meta/0009_snapshot.json
+  s_d0f4332113d26c::t_822d49371f1850 1-624
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_88852dd6416999 67-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "3205fdad25d3fab0da64aef2ef16eb54074c3969",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
