@@ -3,7 +3,7 @@
 import { loadEnvConfig } from "@next/env";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
 import { chargerJeu, lireJeu } from "../src/donnees/charger";
-import { JEUX } from "../src/donnees/jeux";
+import { BIOMES, ESPECES, JEUX, RARETES, ROLES, verifierReferences, type EntreeEspece } from "../src/donnees/jeux";
 import { assertEnv } from "../src/env";
 
 async function main() {
@@ -13,6 +13,12 @@ async function main() {
     assertEnv();
     // Toutes les données sont validées avant d'écrire quoi que ce soit.
     const lots = JEUX.map((jeu) => ({ jeu, entrees: lireJeu(jeu) }));
+    const ids = (jeu: unknown) => lots.find((l) => l.jeu === jeu)!.entrees.map((e: { id: string }) => e.id);
+    verifierReferences(lots.find((l) => l.jeu === ESPECES)!.entrees as EntreeEspece[], {
+      biomes: ids(BIOMES),
+      raretes: ids(RARETES),
+      roles: ids(ROLES),
+    });
     pool = createPool(process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL!);
     const client = await pool.connect();
     try {

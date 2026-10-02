@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0042** · Enregistrer les quatre Rôles. Prochaine : **US-0043** · Décrire une Espèce en base.
+Dernière story livrée : **US-0043** · Décrire une Espèce en base. Prochaine : **US-0044** · Enregistrer la souris.
 
 ## Sommaire
 

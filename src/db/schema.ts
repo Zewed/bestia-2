@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -94,3 +94,44 @@ export const role = pgTable("role", {
   phrase: text("phrase").notNull(),
   ordre: integer("ordre").notNull(),
 });
+
+export const regime = pgEnum("regime", ["carnivore", "herbivore", "omnivore"]);
+
+/**
+ * Une Espèce : la fiche commune à toutes ses Bêtes, qui sont identiques. Ses chiffres
+ * sont calqués sur l'animal réel (la source peut être notée).
+ */
+export const espece = pgTable(
+  "espece",
+  {
+    id: text("id").primaryKey(),
+    nom: text("nom").notNull(),
+    attaque: doublePrecision("attaque").notNull(),
+    vie: doublePrecision("vie").notNull(),
+    vitesse: doublePrecision("vitesse").notNull(),
+    charge: doublePrecision("charge").notNull(),
+    /** Le nombre de Places qu'une Bête occupe dans un Habitat. */
+    taille: doublePrecision("taille").notNull(),
+    regime: regime("regime").notNull(),
+    /** La Nourriture qu'une Bête consomme chaque heure. */
+    entretienParHeure: doublePrecision("entretien_par_heure").notNull(),
+    biomeId: text("biome_id")
+      .notNull()
+      .references(() => biome.id),
+    rareteId: text("rarete_id")
+      .notNull()
+      .references(() => rarete.id),
+    /** Au plus un Rôle, ou aucun. */
+    roleId: text("role_id").references(() => role.id),
+    illustration: text("illustration"),
+    source: text("source"),
+  },
+  (t) => [
+    check("espece_attaque_positive", sql`${t.attaque} >= 0`),
+    check("espece_vie_positive", sql`${t.vie} > 0`),
+    check("espece_vitesse_positive", sql`${t.vitesse} > 0`),
+    check("espece_charge_positive", sql`${t.charge} >= 0`),
+    check("espece_taille_positive", sql`${t.taille} > 0`),
+    check("espece_entretien_positif", sql`${t.entretienParHeure} >= 0`),
+  ],
+);

@@ -64,5 +64,65 @@ export const ROLES: Jeu<z.infer<typeof entreeRole>> = {
   colonnes: (r) => ({ id: r.id, nom: r.nom, phrase: r.phrase, ordre: r.ordre }),
 };
 
+const positif = (champ: string) => z.number({ error: `${champ} doit être un nombre` }).positive(`${champ} doit être positif`);
+const positifOuNul = (champ: string) =>
+  z.number({ error: `${champ} doit être un nombre` }).nonnegative(`${champ} ne peut pas être négatif`);
+
+export const entreeEspece = z.object({
+  id: identifiant,
+  nom,
+  attaque: positifOuNul("attaque"),
+  vie: positif("vie"),
+  vitesse: positif("vitesse"),
+  charge: positifOuNul("charge"),
+  taille: positif("taille"),
+  regime: z.enum(["carnivore", "herbivore", "omnivore"], { error: "régime : carnivore, herbivore ou omnivore" }),
+  entretien: positifOuNul("entretien"),
+  biome: identifiant,
+  rarete: identifiant,
+  role: identifiant.optional(),
+  illustration: z.string().trim().min(1).optional(),
+  source: z.string().trim().min(1).optional(),
+});
+export type EntreeEspece = z.infer<typeof entreeEspece>;
+
+export const ESPECES: Jeu<EntreeEspece> = {
+  nom: "Espèces",
+  fichier: "especes.yaml",
+  table: "espece",
+  cle: "id",
+  schema: entreeEspece,
+  colonnes: (e) => ({
+    id: e.id,
+    nom: e.nom,
+    attaque: e.attaque,
+    vie: e.vie,
+    vitesse: e.vitesse,
+    charge: e.charge,
+    taille: e.taille,
+    regime: e.regime,
+    entretien_par_heure: e.entretien,
+    biome_id: e.biome,
+    rarete_id: e.rarete,
+    role_id: e.role ?? null,
+    illustration: e.illustration ?? null,
+    source: e.source ?? null,
+  }),
+};
+
+/** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. */
+export function verifierReferences(
+  especes: EntreeEspece[],
+  connus: { biomes: string[]; raretes: string[]; roles: string[] },
+): void {
+  const erreurs: string[] = [];
+  for (const e of especes) {
+    if (!connus.biomes.includes(e.biome)) erreurs.push(`${e.id} : Biome inconnu « ${e.biome} »`);
+    if (!connus.raretes.includes(e.rarete)) erreurs.push(`${e.id} : Rareté inconnue « ${e.rarete} »`);
+    if (e.role && !connus.roles.includes(e.role)) erreurs.push(`${e.id} : Rôle inconnu « ${e.role} »`);
+  }
+  if (erreurs.length > 0) throw new Error(`especes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES];

@@ -1,0 +1,17 @@
+# Les Espèces : une fiche par Espèce, commune à toutes ses Bêtes (elles sont identiques).
+# Les chiffres sont calqués sur l'animal réel ; « source » note d'où ils viennent.
+#
+#   id                 identifiant stable (minuscules sans accent)
+#   nom                nom affiché
+#   attaque, vie       la force au combat (le combat est une simple somme des forces)
+#   vitesse            la vitesse de déplacement
+#   charge             ce qu'une Bête peut porter
+#   taille             les Places qu'une Bête occupe dans un Habitat
+#   regime             carnivore, herbivore ou omnivore
+#   entretien          la Nourriture consommée par heure
+#   biome              le Biome de son Habitat (voir biomes.yaml)
+#   rarete             sa Rareté (voir raretes.yaml)
+#   role               son Rôle éventuel (voir roles.yaml), sinon rien
+#   illustration       chemin sous public/illustrations
+#   source             facultatif : la source réelle des chiffres
+[]
