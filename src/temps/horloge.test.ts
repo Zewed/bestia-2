@@ -1,8 +1,14 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formaterInstant } from "./affichage";
 import { avertissementProduction, definirAncre, maintenant, vitesse, vitesseDemandee } from "./horloge";
 
 const environnement = process.env.VERCEL_ENV;
+
+// Ces tests choisissent eux-mêmes leur environnement : sur Vercel, la construction tourne
+// avec VERCEL_ENV=production, où l'accélération est justement interdite.
+beforeEach(() => {
+  delete process.env.VERCEL_ENV;
+});
 
 afterEach(() => {
   vi.useRealTimers();

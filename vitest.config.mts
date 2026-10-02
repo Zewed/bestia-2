@@ -15,6 +15,8 @@ export default defineConfig({
     include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
     // Met la base de test à jour avant les tests sur base (*.db.test.ts).
     globalSetup: ["./src/test/preparer-base.ts"],
+    // Chaque fichier de test démarre sans VERCEL_ENV (voir src/test/environnement.ts).
+    setupFiles: ["./src/test/environnement.ts"],
     testTimeout: 20_000,
   },
 });
