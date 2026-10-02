@@ -1,11 +1,17 @@
 import { connection } from "next/server";
 import { rattraperLesAbsents } from "@/temps/absents";
+import { autoriserTache } from "@/temps/autorisation";
 
 // Appelée par la tâche planifiée de Vercel (vercel.json), toutes les 5 minutes.
 export const maxDuration = 60;
 
-export async function GET() {
+export async function GET(request: Request) {
   await connection();
+  const verdict = autoriserTache(request.headers.get("authorization"), process.env.CRON_SECRET);
+  if (!verdict.autorise) {
+    console.warn(`Tâche planifiée : appel refusé (${verdict.raison}).`);
+    return Response.json({ statut: "refusé" }, { status: 401, headers: { "Cache-Control": "no-store" } });
+  }
   const passage = await rattraperLesAbsents();
   return Response.json(passage, { headers: { "Cache-Control": "no-store" } });
 }

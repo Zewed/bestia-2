@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0025** · Faire passer une tâche planifiée pour les absents. Prochaine : **US-0026** · Protéger l'adresse de la tâche planifiée.
+Dernière story livrée : **US-0026** · Protéger l'adresse de la tâche planifiée. Prochaine : **US-0027** · Ne jamais compter deux fois le même temps.
 
 ## Sommaire
 
