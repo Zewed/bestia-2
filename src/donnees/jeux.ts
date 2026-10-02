@@ -116,6 +116,24 @@ export const ESPECES: Jeu<EntreeEspece> = {
   },
 };
 
+const entreeCouple = z.object({
+  espece: identifiant,
+  style: z.string().trim().min(1, "style manquant"),
+  phrase: z.string().trim().min(1, "phrase manquante"),
+  ordre: z.number().int(),
+});
+export type EntreeCouple = z.infer<typeof entreeCouple>;
+
+export const COUPLES_DE_DEPART: Jeu<EntreeCouple> = {
+  nom: "Couples de départ",
+  fichier: "couples-de-depart.yaml",
+  table: "couple_de_depart",
+  cle: "espece_id",
+  extraire: (brut) => brut.map((c, i) => ({ ...(c as object), ordre: i + 1 })),
+  schema: entreeCouple,
+  colonnes: (c) => ({ espece_id: c.espece, ordre: c.ordre, style: c.style, phrase: c.phrase }),
+};
+
 /** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. */
 export function verifierReferences(
   especes: EntreeEspece[],
@@ -130,5 +148,11 @@ export function verifierReferences(
   if (erreurs.length > 0) throw new Error(`especes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
+/** Les Couples de départ ne proposent que des Espèces qui existent, chacune une fois. */
+export function verifierCouples(couples: EntreeCouple[], especes: string[]): void {
+  const inconnues = couples.filter((c) => !especes.includes(c.espece)).map((c) => c.espece);
+  if (inconnues.length > 0) throw new Error(`couples-de-depart.yaml : Espèce inconnue ${inconnues.map((i) => `« ${i} »`).join(", ")}`);
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, COUPLES_DE_DEPART];

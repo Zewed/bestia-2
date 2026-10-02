@@ -3,7 +3,18 @@
 import { loadEnvConfig } from "@next/env";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
 import { chargerJeu, lireJeu } from "../src/donnees/charger";
-import { BIOMES, ESPECES, JEUX, RARETES, ROLES, verifierReferences, type EntreeEspece } from "../src/donnees/jeux";
+import {
+  BIOMES,
+  COUPLES_DE_DEPART,
+  ESPECES,
+  JEUX,
+  RARETES,
+  ROLES,
+  verifierCouples,
+  verifierReferences,
+  type EntreeCouple,
+  type EntreeEspece,
+} from "../src/donnees/jeux";
 import { assertEnv } from "../src/env";
 
 async function main() {
@@ -19,6 +30,7 @@ async function main() {
       raretes: ids(RARETES),
       roles: ids(ROLES),
     });
+    verifierCouples(lots.find((l) => l.jeu === COUPLES_DE_DEPART)!.entrees as EntreeCouple[], ids(ESPECES));
     pool = createPool(process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL!);
     const client = await pool.connect();
     try {

@@ -2,13 +2,12 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-293 points au total.
+292 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
 - [US-0005](00-fondations.md) · Mettre le projet en ligne sur Vercel : le nom de domaine du jeu (en attendant : bestia-2.vercel.app).
 - [US-0034](00-fondations.md) · Ouvrir une page de contrôle interne : elle n'est ouverte qu'aux développeurs ; la façon de les reconnaître.
-- [US-0047](00-fondations.md) · Marquer les Espèces du Couple de départ : la phrase complète qui présente chaque style.
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 

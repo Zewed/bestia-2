@@ -138,3 +138,13 @@ export const espece = pgTable(
     check("espece_entretien_positif", sql`${t.entretienParHeure} >= 0`),
   ],
 );
+
+/** Les Espèces proposées comme Couple de départ, dans l'ordre où le nouveau joueur les voit. */
+export const coupleDeDepart = pgTable("couple_de_depart", {
+  especeId: text("espece_id")
+    .primaryKey()
+    .references(() => espece.id),
+  ordre: integer("ordre").notNull().unique(),
+  style: text("style").notNull(),
+  phrase: text("phrase").notNull(),
+});

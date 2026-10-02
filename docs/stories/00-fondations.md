@@ -456,7 +456,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Critères d'acceptation** :
   - Seules ces trois Espèces sont marquées, dans l'ordre souris, poule, pigeon.
   - Chacune porte son style de jeu : se défendre (souris), grandir (poule), explorer (pigeon).
-  - La phrase complète qui présente chaque style (à décider).
+  - Chaque style a sa phrase courte : « Petites, nombreuses, et elles mordent. » (souris), « Elles nourrissent votre Territoire. » (poule), « Ils voient loin, et trouvent avant les autres. » (pigeon).
 
 ### US-0048 · Rattacher les illustrations des trois Espèces
 **En tant que** développeur, **je veux** l'illustration de la souris, de la poule et du pigeon rattachée à leur fiche, **afin de** montrer les premières Bêtes dans la direction artistique du prototype.

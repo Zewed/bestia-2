@@ -78,6 +78,13 @@
       "when": 1790950722609,
       "tag": "0010_bareme_especes",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1790951402373,
+      "tag": "0011_couple_de_depart",
+      "breakpoints": true
     }
   ]
 }
