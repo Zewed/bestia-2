@@ -53,6 +53,7 @@ export async function avancer(
 ): Promise<{ depuis: Date; jusqua: Date; evenements: number } | null> {
   let traites = 0;
   const intervalle = await avancerMarquePage(pool, element, id, jusqua, async (client, depuis, fin) => {
+    const appliques: { id: string; instant: Date }[] = [];
     const { rows } = await client.query<{ id: string; type: string; survient_le: Date; donnees: Record<string, unknown> }>(
       `select id, type, survient_le, donnees from evenement
        where element = $1 and element_id = $2 and traite_le is null and survient_le <= $3
@@ -69,10 +70,19 @@ export async function avancer(
       const appliquer = regles.evenements?.[ligne.type];
       if (!appliquer) throw new Error(`Événement inconnu pour ${element} : « ${ligne.type} ».`);
       await appliquer(client, id, { id: Number(ligne.id), type: ligne.type, survientLe: instant, donnees: ligne.donnees });
-      await client.query("update evenement set traite_le = $2 where id = $1", [ligne.id, instant]);
+      appliques.push({ id: ligne.id, instant });
       traites += 1;
     }
     if (fin.getTime() > curseur.getTime()) await regles.evoluer?.(client, id, curseur, fin);
+    // Une seule requête pour marquer tous les événements traités, quel que soit leur nombre.
+    if (appliques.length > 0) {
+      await client.query(
+        `update evenement set traite_le = lot.instant
+         from unnest($1::bigint[], $2::timestamptz[]) as lot(id, instant)
+         where evenement.id = lot.id`,
+        [appliques.map((a) => a.id), appliques.map((a) => a.instant)],
+      );
+    }
   });
   return intervalle ? { ...intervalle, evenements: traites } : null;
 }

@@ -271,7 +271,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 
 - **Débloquée par** : US-0023
 - **Critères d'acceptation** :
-  - Une absence de (chiffre à régler) jours se rattrape en moins de (chiffre à régler) secondes.
+  - Une absence de 30 jours, avec 300 événements, se rattrape en moins d'une seconde.
   - Le résultat est identique à celui d'un rattrapage heure par heure.
   - La durée de chaque rattrapage est notée dans le journal.
 

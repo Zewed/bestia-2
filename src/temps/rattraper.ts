@@ -23,8 +23,16 @@ export async function rattraper(
   options: { pool?: Pool; regles?: Regles; jusqua?: Date } = {},
 ): Promise<Date> {
   const pool = options.pool ?? getPool();
+  const debut = performance.now();
   try {
-    await avancer(pool, element, id, options.regles ?? REGLES[element], options.jusqua ?? maintenant());
+    const fait = await avancer(pool, element, id, options.regles ?? REGLES[element], options.jusqua ?? maintenant());
+    if (fait) {
+      // La durée de chaque rattrapage est notée dans le journal.
+      const heures = (fait.jusqua.getTime() - fait.depuis.getTime()) / 3_600_000;
+      console.info(
+        `Rattrapage ${element} ${id} : ${heures.toFixed(2)} h et ${fait.evenements} événement(s) en ${Math.round(performance.now() - debut)} ms.`,
+      );
+    }
     return await lireMarquePage(pool, element, id);
   } catch (error) {
     throw new RattrapageError(element, id, { cause: error });

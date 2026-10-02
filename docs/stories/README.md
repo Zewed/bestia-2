@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0027** · Ne jamais compter deux fois le même temps. Prochaine : **US-0028** · Rattraper une longue absence sans attendre.
+Dernière story livrée : **US-0028** · Rattraper une longue absence sans attendre. Prochaine : **US-0029** · Garder un journal des passages de la tâche planifiée.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0027** · Ne jamais compter deux fois le même te
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **66 étapes** | **753** | **302** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (184 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (182 au total).
 
 ## Lire une story
 
