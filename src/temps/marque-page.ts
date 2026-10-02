@@ -1,3 +1,5 @@
+// Calculs du temps : côté serveur uniquement.
+import "server-only";
 import type { Pool, PoolClient } from "pg";
 
 // Les éléments qui vivent dans le temps, et la table qui garde leur marque-page

@@ -18,7 +18,7 @@ export type Health = {
 export async function checkHealth(getPool: () => Pool): Promise<{ httpStatus: number; body: Health }> {
   const version = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local";
   const environnement = process.env.VERCEL_ENV ?? "local";
-  const started = Date.now();
+  const started = performance.now();
   try {
     const pool = getPool();
     const identity = await identifyDatabase(pool);
@@ -32,7 +32,7 @@ export async function checkHealth(getPool: () => Pool): Promise<{ httpStatus: nu
         base: {
           statut: "ok",
           production: identity.isProduction,
-          latenceMs: Date.now() - started,
+          latenceMs: Math.round(performance.now() - started),
           monde: monde.rows[0]?.nom ?? null,
         },
       },
