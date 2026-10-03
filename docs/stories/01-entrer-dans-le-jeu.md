@@ -77,7 +77,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0108 · Confirmer la création du compte
 **En tant que** visiteur, **je veux** un message qui confirme que mon compte existe, **afin de** passer sereinement à la suite.
 
-- **Statut** : Livrée le 2026-10-03. L'adresse est retenue dans la mémoire de l'onglet (sessionStorage), jamais dans l'adresse de la page ; le formulaire de connexion la lira (US-0115).
+- **Statut** : Livrée le 2026-10-03, puis dépassée par US-0123 : le joueur est connecté dès la création, et la confirmation mène droit au jeu (« Entrer dans le jeu »). L'adresse retenue ne sert plus qu'au lien « Se connecter » d'une adresse déjà inscrite (US-0109).
 - **Débloquée par** : US-0107
 - **Critères d'acceptation** :
   - Après la création, le message « Votre compte est créé » s'affiche.
@@ -214,6 +214,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0122 · Renvoyer vers le jeu un joueur déjà connecté
 **En tant que** joueur, **je veux** aller droit dans le jeu quand je suis déjà connecté, **afin de** ne pas repasser par des écrans inutiles.
 
+- **Statut** : Livrée le 2026-10-03. Le renvoi se fait dans le proxy, à l'ouverture de la page seulement : un envoi de formulaire qui connecte le joueur (US-0123) affiche sa confirmation sur place. La page d'accueil, statique, lit un témoin de connexion sans secret.
 - **Débloquée par** : US-0119
 - **Critères d'acceptation** :
   - Un joueur connecté qui ouvre la page de connexion ou d'inscription est envoyé vers le jeu.

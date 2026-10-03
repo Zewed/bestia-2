@@ -8,7 +8,7 @@ import { creerLienConfirmation } from "./confirmation";
 
 /** Le compte créé porte son premier lien de confirmation d'adresse (US-0114), créé avec lui. */
 export type ResultatInscription =
-  | { statut: "cree"; email: string; jetonConfirmation: string }
+  | { statut: "cree"; compteId: number; email: string; jetonConfirmation: string }
   | { statut: "deja-inscrite" }
   | { statut: "freinee" };
 
@@ -43,7 +43,7 @@ export async function inscrireCompte(
     await client.query("insert into inscription_recente (empreinte_reseau) values ($1)", [demande.empreinteReseau]);
     const jetonConfirmation = await creerLienConfirmation(client, compte.id);
     await client.query("commit");
-    return { statut: "cree", email: compte.email, jetonConfirmation };
+    return { statut: "cree", compteId: compte.id, email: compte.email, jetonConfirmation };
   } catch (erreur) {
     await client.query("rollback").catch(() => {});
     throw erreur;

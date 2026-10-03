@@ -218,10 +218,10 @@ describe("confirmation de la création du compte", () => {
     expect(screen.queryByText("J'ai déjà un compte")).toBeNull();
   });
 
-  it("propose d'aller à la connexion, avec l'adresse retenue dans la mémoire de l'onglet", async () => {
+  it("mène droit au jeu : le joueur est déjà connecté (US-0123)", async () => {
     await inscrire();
-    expect(screen.getByRole("link", { name: "Se connecter" }).getAttribute("href")).toBe("/connexion");
-    expect(sessionStorage.getItem("bestia.adresse-connexion")).toBe("nom@exemple.fr");
+    expect(screen.getByRole("link", { name: "Entrer dans le jeu" }).getAttribute("href")).toBe("/jeu");
+    expect(screen.queryByRole("link", { name: "Se connecter" })).toBeNull();
   });
 
   it("ne laisse plus le mot de passe dans la page", async () => {

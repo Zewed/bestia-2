@@ -1,7 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { beforeAll, describe, expect, it, vi } from "vitest";
-
-vi.mock("@/comptes/cookie-session", () => ({ compteConnecte: async () => null }));
+import { beforeAll, describe, expect, it } from "vitest";
 
 import Inscription from "./page";
 

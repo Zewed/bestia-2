@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const sessions = vi.hoisted(() => ({ prolongerSession: vi.fn() }));
+const sessions = vi.hoisted(() => ({ prolongerSession: vi.fn(), compteDeLaSession: vi.fn() }));
 vi.mock("./comptes/session", () => sessions);
 vi.mock("./db", () => ({ getPool: () => ({}) }));
 
@@ -58,5 +58,38 @@ describe("cookie de session en ligne", () => {
   it("ne circule qu'en HTTPS, reste illisible par la page et ne part vers aucun autre site", () => {
     expect(reglagesDuCookie(FIN, { VERCEL_ENV: "production" })).toEqual({ httpOnly: true, secure: true, sameSite: "lax", path: "/", expires: FIN });
     expect(reglagesDuCookie(FIN, {})).toMatchObject({ httpOnly: true, secure: false });
+  });
+});
+
+describe("joueur déjà connecté qui ouvre l'inscription ou la connexion", () => {
+  const ouvrir = (chemin: string, options: { cookie?: string; methode?: string; action?: boolean } = {}) =>
+    new NextRequest(`https://bestia.test${chemin}`, {
+      method: options.methode ?? "GET",
+      headers: { ...(options.cookie ? { cookie: options.cookie } : {}), ...(options.action ? { "next-action": "abc" } : {}) },
+    });
+
+  beforeEach(() => {
+    sessions.compteDeLaSession.mockReset().mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  });
+
+  it.each([
+    ["/inscription", "https://bestia.test/jeu"],
+    ["/connexion", "https://bestia.test/jeu"],
+    ["/connexion?suite=%2Fjeu%2Fterritoire", "https://bestia.test/jeu/territoire"],
+    ["/connexion?suite=https%3A%2F%2Fpirate.exemple", "https://bestia.test/jeu"],
+  ])("envoie droit au jeu à l'ouverture de %s", async (chemin, vers) => {
+    const reponse = await proxy(ouvrir(chemin, { cookie: "bestia_session=jeton-de-session" }));
+    expect(reponse?.status).toBe(307);
+    expect(reponse?.headers.get("location")).toBe(vers);
+  });
+
+  it("laisse un envoi de formulaire afficher sa réponse sur place (la confirmation d'inscription, US-0123)", async () => {
+    expect(await proxy(ouvrir("/inscription", { cookie: "bestia_session=jeton-de-session", methode: "POST", action: true }))).toBeUndefined();
+  });
+
+  it("laisse passer un visiteur, ou une session expirée", async () => {
+    expect(await proxy(ouvrir("/inscription"))).toBeUndefined();
+    sessions.compteDeLaSession.mockResolvedValue(null);
+    expect(await proxy(ouvrir("/connexion", { cookie: "bestia_session=jeton-perime" }))).toBeUndefined();
   });
 });

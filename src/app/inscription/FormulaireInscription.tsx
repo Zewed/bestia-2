@@ -196,16 +196,15 @@ function Formulaire({ etat, envoyer, enAttente, motDePasse, setMotDePasse }: For
 }
 
 /**
- * La confirmation : le compte existe, on peut se connecter. L'adresse est retenue dans la
- * mémoire de l'onglet pour pré-remplir la connexion ; le mot de passe a disparu avec le formulaire.
+ * La confirmation : le compte existe, et le joueur est déjà connecté (US-0123) ; il entre dans
+ * le jeu d'un appui. Le mot de passe a disparu avec le formulaire.
  */
 function CompteCree({ email }: { email: string }) {
   const message = useRef<HTMLParagraphElement>(null);
   useEffect(() => {
-    retenirAdresse(email);
     // Le regard (et le lecteur d'écran) va droit à la confirmation.
     message.current?.focus();
-  }, [email]);
+  }, []);
   return (
     <div className={styles.confirmation} role="status">
       <span className={styles.coche} aria-hidden="true">
@@ -217,8 +216,8 @@ function CompteCree({ email }: { email: string }) {
         Votre compte est créé
       </p>
       <p className={styles.adresse}>{email}</p>
-      <Link href="/connexion" className={styles.envoyer}>
-        Se connecter
+      <Link href="/jeu" className={styles.envoyer}>
+        Entrer dans le jeu
       </Link>
     </div>
   );

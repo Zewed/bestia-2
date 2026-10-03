@@ -58,7 +58,7 @@ describe.skipIf(!URL_TEST)("inscriptions en rafale (sur base)", () => {
   it("crée avec le compte son premier lien de confirmation d'adresse", async () => {
     const adresse = email();
     const resultat = await inscrireCompte(pool, { email: adresse.toUpperCase(), motDePasse: "une phrase de passe", empreinteReseau: connexion("lien") });
-    expect(resultat).toMatchObject({ statut: "cree", email: adresse });
+    expect(resultat).toMatchObject({ statut: "cree", email: adresse, compteId: expect.any(Number) });
     const { rows } = await pool.query(
       "select l.expire_le > now() + interval '23 hours' as valable from lien_confirmation l join compte c on c.id = l.compte_id where c.email = $1",
       [adresse],

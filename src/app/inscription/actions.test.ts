@@ -15,6 +15,14 @@ const apres = vi.hoisted(() => ({ taches: [] as (() => unknown)[] }));
 vi.mock("next/server", () => ({ after: (tache: () => unknown) => apres.taches.push(tache) }));
 const courrier = vi.hoisted(() => ({ envoyerLienConfirmation: vi.fn(async () => true) }));
 vi.mock("@/emails/confirmation", () => courrier);
+// US-0123 : la session s'ouvre dès la création, comme à une connexion normale.
+const FIN = new Date("2026-11-02T12:00:00Z");
+const sessions = vi.hoisted(() => ({ ouvrirSession: vi.fn() }));
+vi.mock("@/comptes/session", () => sessions);
+const connexion = vi.hoisted(() => ({ noterConnexion: vi.fn(async () => {}) }));
+vi.mock("@/comptes/connexion", () => connexion);
+const cookie = vi.hoisted(() => ({ poserCookieSession: vi.fn(async () => {}) }));
+vi.mock("@/comptes/cookie-session", () => cookie);
 
 import { inscrire } from "./actions";
 
@@ -30,7 +38,10 @@ describe("envoi du formulaire d'inscription", () => {
   beforeEach(() => {
     vi.stubEnv("EMPREINTE_RESEAU_SECRET", "secret-de-test");
     inscription.inscrireCompte.mockReset();
-    inscription.inscrireCompte.mockResolvedValue({ statut: "cree", email: "nom@exemple.fr", jetonConfirmation: "jeton123" });
+    inscription.inscrireCompte.mockResolvedValue({ statut: "cree", compteId: 7, email: "nom@exemple.fr", jetonConfirmation: "jeton123" });
+    sessions.ouvrirSession.mockReset().mockResolvedValue({ jeton: "jeton-de-session", expireLe: FIN });
+    connexion.noterConnexion.mockClear();
+    cookie.poserCookieSession.mockClear();
     courrier.envoyerLienConfirmation.mockClear();
     apres.taches = [];
   });
@@ -79,6 +90,23 @@ describe("envoi du formulaire d'inscription", () => {
     inscription.inscrireCompte.mockResolvedValue({ statut: "deja-inscrite" });
     await envoi("nom@exemple.fr");
     expect(apres.taches).toHaveLength(0);
+  });
+
+  it("connecte le nouveau joueur dès la création, comme une connexion normale", async () => {
+    await envoi("nom@exemple.fr");
+    expect(sessions.ouvrirSession).toHaveBeenCalledWith(POOL, 7);
+    expect(connexion.noterConnexion).toHaveBeenCalledWith(POOL, 7);
+    expect(cookie.poserCookieSession).toHaveBeenCalledWith("jeton-de-session", FIN);
+  });
+
+  it.each([
+    ["l'adresse a déjà un compte", { statut: "deja-inscrite" }],
+    ["les inscriptions sont freinées", { statut: "freinee" }],
+  ])("n'ouvre aucune session quand %s", async (_, resultat) => {
+    inscription.inscrireCompte.mockResolvedValue(resultat);
+    await envoi("nom@exemple.fr");
+    expect(sessions.ouvrirSession).not.toHaveBeenCalled();
+    expect(cookie.poserCookieSession).not.toHaveBeenCalled();
   });
 
   it("ne crée rien quand un champ est refusé", async () => {
