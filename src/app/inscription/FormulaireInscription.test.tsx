@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
+import { EMAIL_DEJA_UTILISEE, EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
 import { MOT_DE_PASSE_TROP_COURT, REGLE_MOT_DE_PASSE } from "@/comptes/mot-de-passe";
 import type { EtatInscription } from "./etat";
 
@@ -228,5 +228,50 @@ describe("confirmation de la création du compte", () => {
     await inscrire();
     expect(document.querySelector('[name="motDePasse"]')).toBeNull();
     expect(document.body.innerHTML).not.toContain("une phrase de passe");
+  });
+});
+
+describe("adresse qui a déjà un compte", () => {
+  beforeEach(() => {
+    serveur.inscrire.mockReset();
+    serveur.inscrire.mockImplementation(async (_: EtatInscription, donnees: FormData) => ({
+      erreurs: { email: EMAIL_DEJA_UTILISEE },
+      email: String(donnees.get("email")),
+    }));
+  });
+  afterEach(() => {
+    cleanup();
+    sessionStorage.clear();
+  });
+
+  async function envoyer() {
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.type(screen.getByLabelText("Adresse e-mail"), "Nom@Exemple.fr");
+    await u.type(screen.getByLabelText("Mot de passe"), "une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    await screen.findByRole("alert");
+    return u;
+  }
+
+  it("affiche « Cette adresse a déjà un compte », avec un lien vers la connexion", async () => {
+    await envoyer();
+    expect(document.getElementById("email-erreur")?.textContent).toBe(`${EMAIL_DEJA_UTILISEE} · Se connecter`);
+    expect(screen.getByRole("link", { name: "Se connecter" }).getAttribute("href")).toBe("/connexion");
+  });
+
+  it("garde l'adresse dans le champ et efface le mot de passe", async () => {
+    await envoyer();
+    expect((screen.getByLabelText("Adresse e-mail") as HTMLInputElement).value).toBe("Nom@Exemple.fr");
+    expect((screen.getByLabelText("Mot de passe") as HTMLInputElement).value).toBe("");
+  });
+
+  it("retient l'adresse pour la connexion quand on suit le lien", async () => {
+    const u = await envoyer();
+    const lien = screen.getByRole("link", { name: "Se connecter" });
+    // jsdom ne navigue pas : on n'observe que ce que le lien fait avant de partir.
+    lien.addEventListener("click", (e) => e.preventDefault());
+    await u.click(lien);
+    expect(sessionStorage.getItem("bestia.adresse-connexion")).toBe("nom@exemple.fr");
   });
 });

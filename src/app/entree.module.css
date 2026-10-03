@@ -157,6 +157,17 @@
   outline-offset: 3px;
 }
 
+/* Le lien dans un message d'erreur (« Se connecter » quand l'adresse a déjà un compte). */
+.lienErreur {
+  color: inherit;
+  text-underline-offset: 3px;
+}
+
+.lienErreur:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* La confirmation : une coche sur fond menthe, le message, l'adresse, puis le chemin vers la connexion. */
 .confirmation {
   display: grid;

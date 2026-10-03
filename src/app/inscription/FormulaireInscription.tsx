@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
 import { retenirAdresse } from "@/comptes/adresse-retenue";
-import { normaliserEmail, verifierEmail } from "@/comptes/email";
+import { EMAIL_DEJA_UTILISEE, normaliserEmail, verifierEmail } from "@/comptes/email";
 import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import styles from "../entree.module.css";
@@ -72,6 +72,15 @@ function Formulaire({ etat, envoyer }: { etat: EtatInscription; envoyer: (donnee
         {erreurE ? (
           <p id="email-erreur" className={styles.erreur} role="alert">
             {erreurE}
+            {/* US-0109 : l'adresse a déjà un compte, on y va avec elle. */}
+            {erreurE === EMAIL_DEJA_UTILISEE ? (
+              <>
+                {" · "}
+                <Link href="/connexion" className={styles.lienErreur} onClick={() => retenirAdresse(normaliserEmail(email))}>
+                  Se connecter
+                </Link>
+              </>
+            ) : null}
           </p>
         ) : null}
       </div>
