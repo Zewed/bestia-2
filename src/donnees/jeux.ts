@@ -2,7 +2,7 @@
 // Biomes, aux Raretés et aux Rôles). Chaque story de l'étape 4 ajoute le sien.
 import { z } from "zod";
 import { appliquerBareme, BAREME } from "./bareme";
-import type { Jeu } from "./charger";
+import { lireJeu, type Jeu } from "./charger";
 
 // Un identifiant stable : minuscules sans accent, chiffres et tirets bas.
 const identifiant = z.string().regex(/^[a-z0-9_]+$/, "identifiant en minuscules sans accent (a-z, 0-9, _)");
@@ -148,11 +148,32 @@ export function verifierReferences(
   if (erreurs.length > 0) throw new Error(`especes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
-/** Les Couples de départ ne proposent que des Espèces qui existent, chacune une fois. */
+/** Le nouveau joueur choisit son Couple de départ entre exactement trois Espèces. */
+export const NOMBRE_COUPLES_DE_DEPART = 3;
+
+/** Les Couples de départ sont exactement trois, et ne proposent que des Espèces qui existent. */
 export function verifierCouples(couples: EntreeCouple[], especes: string[]): void {
-  const inconnues = couples.filter((c) => !especes.includes(c.espece)).map((c) => c.espece);
-  if (inconnues.length > 0) throw new Error(`couples-de-depart.yaml : Espèce inconnue ${inconnues.map((i) => `« ${i} »`).join(", ")}`);
+  const erreurs: string[] = [];
+  if (couples.length !== NOMBRE_COUPLES_DE_DEPART) {
+    erreurs.push(`il faut exactement ${NOMBRE_COUPLES_DE_DEPART} Espèces, il y en a ${couples.length}`);
+  }
+  for (const c of couples) if (!especes.includes(c.espece)) erreurs.push(`Espèce inconnue « ${c.espece} »`);
+  if (erreurs.length > 0) throw new Error(`couples-de-depart.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, COUPLES_DE_DEPART];
+
+/**
+ * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en
+ * ligne passe par ici avant d'écrire quoi que ce soit en base : une erreur de saisie l'arrête.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function lireDonnees(dossier?: string): { jeu: Jeu<any>; entrees: any[] }[] {
+  const lots = JEUX.map((jeu) => ({ jeu, entrees: lireJeu(jeu, dossier) }));
+  const entrees = <T>(jeu: Jeu<T>) => lots.find((l) => l.jeu === jeu)!.entrees as T[];
+  const ids = <T extends { id: string }>(jeu: Jeu<T>) => entrees(jeu).map((e) => e.id);
+  verifierReferences(entrees(ESPECES), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) });
+  verifierCouples(entrees(COUPLES_DE_DEPART), ids(ESPECES));
+  return lots;
+}

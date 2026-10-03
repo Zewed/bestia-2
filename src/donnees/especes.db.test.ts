@@ -44,6 +44,11 @@ describe.skipIf(!URL_TEST)("fiche d'Espèce en base", () => {
     ["sans Rareté", { rarete_id: null }],
     ["sans régime", { regime: null }],
     ["avec un Biome qui n'existe pas", { biome_id: "lune" }],
+    ["avec une Rareté qui n'existe pas", { rarete_id: "introuvable" }],
+    ["avec un Rôle qui n'existe pas", { role_id: "magicien" }],
+    ["avec un régime inconnu", { regime: "frugivore" }],
+    ["avec une attaque négative", { attaque: -1 }],
+    ["avec un Entretien négatif", { entretien_par_heure: -0.1 }],
     ["avec une taille nulle", { taille: 0 }],
   ])("refuse une Espèce %s", async (_, champs) => {
     await expect(inserer(champs)).rejects.toThrow();

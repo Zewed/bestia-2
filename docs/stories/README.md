@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0048** · Rattacher les illustrations des trois Espèces. Prochaine : **US-0049** · Vérifier la cohérence des données de référence.
+Dernière story livrée : **US-0049** · Vérifier la cohérence des données de référence. Prochaine : **US-0034** · Ouvrir une page de contrôle interne (reportée jusqu'ici, elle ouvre US-0050 et US-0051).
 
 ## Sommaire
 
