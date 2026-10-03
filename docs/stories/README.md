@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0114** · Confirmer son adresse e-mail ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1 (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0115** · Ouvrir le formulaire de connexion.
+Dernière story livrée : **US-0115** · Ouvrir le formulaire de connexion ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1 (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0116** · Se connecter.
 
 ## Sommaire
 
