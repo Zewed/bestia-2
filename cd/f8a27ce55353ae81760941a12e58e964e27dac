@@ -1,0 +1,31 @@
+src/app/connexion/FormulaireConnexion.test.tsx
+  s_d0f4332113d26c::t_7e1ea9b6ca6b84 1-65
+src/app/inscription/FormulaireInscription.tsx
+  s_d0f4332113d26c::t_dc5395ce2ba153 9,136-155
+src/app/connexion/FormulaireConnexion.tsx
+  s_d0f4332113d26c::t_c282fd0d577614 1-64
+src/app/connexion/page.tsx
+  s_d0f4332113d26c::t_c282fd0d577614 5,9,17
+src/app/connexion/actions.ts
+  s_d0f4332113d26c::t_c282fd0d577614 1-11
+src/app/ChampMotDePasse.tsx
+  s_d0f4332113d26c::t_dc5395ce2ba153 1-44
+docs/stories/README.md
+  s_d0f4332113d26c::t_890fd49fa39fc0 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "cdf8a27ce55353ae81760941a12e58e964e27dac",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
