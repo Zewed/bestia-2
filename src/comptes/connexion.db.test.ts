@@ -52,3 +52,34 @@ describe.skipIf(!URL_TEST)("connexion et sessions (sur base)", () => {
     expect(await compteDeLaSession(pool, jeton)).toBeNull();
   });
 });
+
+describe.skipIf(!URL_TEST)("temps de réponse d'une connexion refusée (sur base)", () => {
+  let pool: Pool;
+  const lancement = `temps-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const email = `${lancement}@essai.test`;
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    await creerCompte(pool, email, "une phrase de passe");
+    // Le premier refus d'une adresse inconnue calcule l'empreinte factice : on le fait avant de mesurer.
+    await verifierIdentifiants(pool, `inconnu-${email}`, "un essai");
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email = $1", [email]);
+    await pool.end();
+  });
+
+  async function duree(adresse: string): Promise<number> {
+    const debut = performance.now();
+    for (let i = 0; i < 4; i++) expect(await verifierIdentifiants(pool, adresse, "un mauvais mot de passe")).toBeNull();
+    return performance.now() - debut;
+  }
+
+  it("est le même pour une adresse inconnue et pour un mot de passe faux", async () => {
+    const inconnue = await duree(`inconnu-${email}`);
+    const motDePasseFaux = await duree(email);
+    // Le calcul de l'empreinte domine les deux cas ; sans lui, l'adresse inconnue répondrait cent fois plus vite.
+    expect(inconnue / motDePasseFaux).toBeGreaterThan(0.6);
+    expect(inconnue / motDePasseFaux).toBeLessThan(1.6);
+  });
+});

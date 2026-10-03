@@ -1,10 +1,17 @@
 // La vérification des identifiants à la connexion (US-0116). Côté serveur uniquement.
 import "server-only";
+import { randomBytes } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { normaliserEmail } from "./email";
-import { verifierEmpreinte } from "./empreinte";
+import { calculerEmpreinte, verifierEmpreinte } from "./empreinte";
 
 type Base = Pool | PoolClient;
+
+// US-0117 : pour une adresse inconnue, on vérifie quand même le mot de passe contre une empreinte
+// factice. La réponse prend alors le même temps que pour un mot de passe faux : la durée ne
+// trahit pas quelles adresses ont un compte. L'empreinte factice est calculée une fois.
+let empreinteFactice: Promise<string> | undefined;
+const factice = () => (empreinteFactice ??= calculerEmpreinte(randomBytes(32).toString("hex")));
 
 /** Le compte si l'adresse (sous sa forme normale) et le mot de passe sont justes, sinon null. */
 export async function verifierIdentifiants(base: Base, email: string, motDePasse: string): Promise<{ id: number; email: string } | null> {
@@ -13,7 +20,11 @@ export async function verifierIdentifiants(base: Base, email: string, motDePasse
     [normaliserEmail(email)],
   );
   const compte = rows[0];
-  if (!compte || !(await verifierEmpreinte(motDePasse, compte.empreinte))) return null;
+  if (!compte) {
+    await verifierEmpreinte(motDePasse, await factice());
+    return null;
+  }
+  if (!(await verifierEmpreinte(motDePasse, compte.empreinte))) return null;
   return { id: compte.id, email: compte.email };
 }
 

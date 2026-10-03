@@ -3,5 +3,5 @@ export type EtatConnexion = { erreur?: string; email: string };
 
 export const ETAT_CONNEXION_INITIAL: EtatConnexion = { email: "" };
 
-/** Le refus, le même que l'adresse soit inconnue ou le mot de passe faux. */
-export const CONNEXION_REFUSEE = "Adresse e-mail ou mot de passe incorrect";
+/** US-0117 : le refus, le même que l'adresse soit inconnue ou le mot de passe faux. */
+export const CONNEXION_REFUSEE = "Adresse ou mot de passe incorrect";
