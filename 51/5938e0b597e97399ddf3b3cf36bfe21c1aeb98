@@ -1,0 +1,51 @@
+src/db/schema.ts
+  s_d0f4332113d26c::t_95c6ca3caaf6ad 228-239
+drizzle/0017_echecs_connexion.sql
+  s_d0f4332113d26c::t_95c6ca3caaf6ad 1-6
+src/comptes/empreinte-reseau.test.ts
+  s_d0f4332113d26c::t_67bda0ab2a84b5 2,23-29
+  s_d0f4332113d26c::t_ae5f3b23e02a0b 30
+src/comptes/frein-connexion.db.test.ts
+  s_d0f4332113d26c::t_63a23bff1c86aa 1-65
+src/comptes/empreinte-reseau.ts
+  s_d0f4332113d26c::t_67bda0ab2a84b5 1-4,14-19,22-27
+src/app/connexion/actions.test.ts
+  s_d0f4332113d26c::t_99c28405a879fb 44,50-56
+  s_d0f4332113d26c::t_39450a4ce4c544 2,5,31-32,42,57,60,66-72,75,81
+  s_d0f4332113d26c::t_906c0abe67fd39 58
+src/app/connexion/actions.ts
+  s_d0f4332113d26c::t_39450a4ce4c544 4,6-7,12,16-17,26-29
+src/reglages.ts
+  s_d0f4332113d26c::t_67bda0ab2a84b5 33-36
+src/comptes/connexion.ts
+  s_d0f4332113d26c::t_95c6ca3caaf6ad 6,36-76
+  s_d0f4332113d26c::t_4aafd953a1227e 77
+src/app/connexion/etat.ts
+  s_d0f4332113d26c::t_39450a4ce4c544 8-12
+.env.example
+  s_d0f4332113d26c::t_928e1b9dea23d4 20-21
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_600eec1ee6e112 181
+docs/stories/README.md
+  s_d0f4332113d26c::t_c88c8f24c1f209 7,33
+drizzle/meta/0017_snapshot.json
+  s_d0f4332113d26c::t_cf60bdf77c82d8 1-1074
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_2d0f4ec5050699 123-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "515938e0b597e97399ddf3b3cf36bfe21c1aeb98",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
