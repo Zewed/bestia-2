@@ -1,27 +1,31 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_DEJA_UTILISEE, EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
 import { MOT_DE_PASSE_TROP_COURT, MOT_DE_PASSE_TROP_LONG } from "@/comptes/mot-de-passe";
+import { CHAMP_PIEGE, ETAT_INITIAL, INSCRIPTIONS_FREINEES } from "./etat";
 
-// La création en base a ses propres tests (src/comptes/compte.db.test.ts) ; ici, on regarde ce que l'envoi en fait.
-const comptes = vi.hoisted(() => ({ creerCompte: vi.fn() }));
-vi.mock("@/comptes/compte", () => comptes);
+// La création freinée a ses propres tests sur base (src/comptes/inscription.db.test.ts) ; ici, on
+// regarde ce que l'envoi du formulaire en fait.
+const inscription = vi.hoisted(() => ({ inscrireCompte: vi.fn() }));
+vi.mock("@/comptes/inscription", () => inscription);
 const POOL = vi.hoisted(() => ({ pool: "de test" }));
 vi.mock("@/db", () => ({ getPool: () => POOL }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" }) }));
 
 import { inscrire } from "./actions";
-import { ETAT_INITIAL } from "./etat";
 
-const envoi = (email: string, motDePasse = "une phrase de passe") => {
+const envoi = (email: string, motDePasse = "une phrase de passe", piege = "") => {
   const donnees = new FormData();
   donnees.set("email", email);
   donnees.set("motDePasse", motDePasse);
+  donnees.set(CHAMP_PIEGE, piege);
   return inscrire(ETAT_INITIAL, donnees);
 };
 
 describe("envoi du formulaire d'inscription", () => {
   beforeEach(() => {
-    comptes.creerCompte.mockReset();
-    comptes.creerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", creeLe: new Date() });
+    vi.stubEnv("EMPREINTE_RESEAU_SECRET", "secret-de-test");
+    inscription.inscrireCompte.mockReset();
+    inscription.inscrireCompte.mockResolvedValue("cree");
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -47,27 +51,46 @@ describe("envoi du formulaire d'inscription", () => {
     expect(JSON.stringify(await envoi("nom@", "court-secret"))).not.toContain("court-secret");
   });
 
-  it("crée le compte quand le formulaire est valide", async () => {
+  it("crée le compte quand le formulaire est valide, avec l'empreinte de la connexion et jamais son adresse", async () => {
     expect(await envoi("Nom@Exemple.fr")).toEqual({ erreurs: {}, email: "Nom@Exemple.fr", cree: true });
-    expect(comptes.creerCompte).toHaveBeenCalledWith(POOL, "Nom@Exemple.fr", "une phrase de passe");
+    const [pool, demande] = inscription.inscrireCompte.mock.calls[0];
+    expect(pool).toBe(POOL);
+    expect(demande).toMatchObject({ email: "Nom@Exemple.fr", motDePasse: "une phrase de passe" });
+    expect(demande.empreinteReseau).toMatch(/^[0-9a-f]{64}$/);
+    expect(JSON.stringify(demande)).not.toContain("203.0.113.7");
   });
 
   it("ne crée rien quand un champ est refusé", async () => {
     await envoi("nom@");
     await envoi("nom@exemple.fr", "court");
-    expect(comptes.creerCompte).not.toHaveBeenCalled();
+    expect(inscription.inscrireCompte).not.toHaveBeenCalled();
   });
 
   it("dit quand l'adresse a déjà un compte", async () => {
-    comptes.creerCompte.mockResolvedValue(null);
+    inscription.inscrireCompte.mockResolvedValue("deja-inscrite");
     expect(await envoi("nom@exemple.fr")).toEqual({ erreurs: { email: EMAIL_DEJA_UTILISEE }, email: "nom@exemple.fr" });
+  });
+
+  it("refuse poliment au-delà de la limite de l'heure, sans dire comment contourner", async () => {
+    inscription.inscrireCompte.mockResolvedValue("freinee");
+    expect(await envoi("nom@exemple.fr")).toEqual({ erreurs: { general: INSCRIPTIONS_FREINEES }, email: "nom@exemple.fr" });
+    expect(INSCRIPTIONS_FREINEES).not.toMatch(/connexion|adresse|réseau|heure|\d/i);
+    expect(INSCRIPTIONS_FREINEES).not.toMatch(/\bIP\b/);
+  });
+
+  it("refuse un robot qui remplit le champ piège, sans rien créer", async () => {
+    expect(await envoi("nom@exemple.fr", "une phrase de passe", "https://robot.exemple")).toEqual({
+      erreurs: { general: INSCRIPTIONS_FREINEES },
+      email: "nom@exemple.fr",
+    });
+    expect(inscription.inscrireCompte).not.toHaveBeenCalled();
   });
 
   it("n'écrit jamais le mot de passe dans un journal", async () => {
     const journal = (["log", "info", "warn", "error", "debug"] as const).map((niveau) => vi.spyOn(console, niveau));
     await envoi("nom@exemple.fr", "un secret bien gardé");
     await envoi("nom@", "un secret bien gardé");
-    comptes.creerCompte.mockRejectedValue(new Error("base injoignable"));
+    inscription.inscrireCompte.mockRejectedValue(new Error("base injoignable"));
     await envoi("nom@exemple.fr", "un secret bien gardé").catch(() => {});
     for (const espion of journal) expect(JSON.stringify(espion.mock.calls)).not.toContain("un secret bien gardé");
   });
@@ -75,5 +98,6 @@ describe("envoi du formulaire d'inscription", () => {
   it("ne fait rien en production tant que l'entrée du jeu est fermée", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
     expect(await envoi("nom@")).toEqual(ETAT_INITIAL);
+    expect(inscription.inscrireCompte).not.toHaveBeenCalled();
   });
 });

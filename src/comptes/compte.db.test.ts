@@ -43,7 +43,7 @@ describe.skipIf(!URL_TEST)("adresse e-mail des comptes (sur base)", () => {
 
   it("enregistre l'adresse en minuscules, sans les espaces autour", async () => {
     expect(await enregistrer(normaliserEmail("  Nom@Exemple.fr "))).toBeNull();
-    const { rows } = await client.query("select email from compte");
+    const { rows } = await client.query("select email from compte where lower(email) = 'nom@exemple.fr'");
     expect(rows).toEqual([{ email: "nom@exemple.fr" }]);
   });
 
@@ -71,7 +71,7 @@ describe.skipIf(!URL_TEST)("adresse e-mail des comptes (sur base)", () => {
   it("ne crée rien pour une adresse qui a déjà un compte, majuscules comprises", async () => {
     expect(await creerCompte(client, "nom@exemple.fr", "une phrase de passe")).not.toBeNull();
     expect(await creerCompte(client, "NOM@exemple.fr", "une autre phrase")).toBeNull();
-    const { rows } = await client.query("select count(*)::int as n from compte");
+    const { rows } = await client.query("select count(*)::int as n from compte where email = 'nom@exemple.fr'");
     expect(rows[0].n).toBe(1);
   });
 

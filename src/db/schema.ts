@@ -170,3 +170,17 @@ export const compte = pgTable(
     check("compte_empreinte_scrypt", sql`${t.empreinteMotDePasse} ~ '^scrypt\\$[0-9]+\\$[0-9]+\\$[0-9]+\\$[A-Za-z0-9+/=]+\\$[A-Za-z0-9+/=]+$'`),
   ],
 );
+
+/**
+ * Les inscriptions de la dernière heure, par empreinte de connexion (US-0112), pour freiner
+ * les inscriptions en rafale. Jamais l'adresse réseau elle-même ; une ligne vit une heure.
+ */
+export const inscriptionRecente = pgTable(
+  "inscription_recente",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    empreinteReseau: text("empreinte_reseau").notNull(),
+    le: timestamp("le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("inscription_recente_par_connexion").on(t.empreinteReseau, t.le)],
+);

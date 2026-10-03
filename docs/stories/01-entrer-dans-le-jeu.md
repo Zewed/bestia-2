@@ -117,9 +117,9 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 - **Débloquée par** : US-0107
 - **Critères d'acceptation** :
-  - Au-delà de (chiffre à régler) comptes créés depuis une même adresse réseau en une heure, les suivants sont refusés avec un message poli.
+  - Au-delà de 5 comptes (INSCRIPTIONS_PAR_HEURE_MAX) créés depuis une même adresse réseau en une heure, les suivants sont refusés avec un message poli. L'adresse réseau n'est jamais gardée : seule son empreinte chiffrée, une heure.
   - Le refus n'explique pas comment le contourner.
-  - Une vérification supplémentaire contre les robots (à décider).
+  - Un champ piège invisible arrête les robots naïfs ; Vercel BotID viendra si des robots plus malins se montrent.
 
 ### US-0113 · Envoyer des e-mails depuis le jeu
 **En tant que** développeur, **je veux** que le jeu puisse envoyer des e-mails, **afin de** permettre la confirmation d'adresse et la réinitialisation du mot de passe.

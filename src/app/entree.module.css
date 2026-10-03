@@ -252,3 +252,12 @@
   color: var(--texte-2);
   overflow-wrap: anywhere;
 }
+
+/* US-0112 : le champ piège, hors de l'écran (pas « display: none », que certains robots savent éviter). */
+.piege {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

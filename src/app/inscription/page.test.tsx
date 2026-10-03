@@ -4,7 +4,8 @@ import Inscription from "./page";
 
 describe("formulaire d'inscription", () => {
   const html = renderToStaticMarkup(<Inscription />);
-  const champs = [...html.matchAll(/<input [^>]*>/g)].map((m) => m[0]);
+  // Les champs que voit un humain : le champ piège (US-0112) est hors de l'écran et caché aux lecteurs d'écran.
+  const champs = [...html.matchAll(/<input [^>]*>/g)].map((m) => m[0]).filter((champ) => !champ.includes('name="siteWeb"'));
 
   it("ne demande que l'adresse e-mail et le mot de passe", () => {
     expect(champs).toHaveLength(2);
@@ -25,5 +26,10 @@ describe("formulaire d'inscription", () => {
     expect(html.indexOf("Créer mon compte")).toBeGreaterThan(html.lastIndexOf("<input"));
     expect(html).toMatch(/<button type="submit"[^>]*>Créer mon compte<\/button>/);
     expect(html).toMatch(/<a [^>]*href="\/connexion"[^>]*>J&#x27;ai déjà un compte<\/a>/);
+  });
+
+  it("cache le champ piège aux humains : hors de l'écran, hors du clavier, muet pour les lecteurs d'écran", () => {
+    expect(html).toMatch(/<div class="[^"]*piege[^"]*" aria-hidden="true">.*name="siteWeb"/);
+    expect(html).toMatch(/<input [^>]*name="siteWeb"[^>]*tabindex="-1"|<input [^>]*tabindex="-1"[^>]*name="siteWeb"/i);
   });
 });

@@ -8,7 +8,7 @@ import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { INSCRIPTION_DELAI_MAX_MS, MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import styles from "../entree.module.css";
 import { inscrire } from "./actions";
-import { ETAT_INITIAL, JEU_INJOIGNABLE, type EtatInscription } from "./etat";
+import { CHAMP_PIEGE, ETAT_INITIAL, JEU_INJOIGNABLE, type EtatInscription } from "./etat";
 
 /**
  * Le formulaire d'inscription. Le message sous un champ apparaît quand on quitte le champ ou
@@ -175,6 +175,12 @@ function Formulaire({ etat, envoyer, enAttente, motDePasse, setMotDePasse }: For
             {REGLE_MOT_DE_PASSE}
           </p>
         )}
+      </div>
+      {/* US-0112 : le champ piège, hors de l'écran et hors du parcours au clavier. Un humain ne le voit
+          jamais ; un robot naïf le remplit, et son inscription est refusée. */}
+      <div className={styles.piege} aria-hidden="true">
+        <label htmlFor="site-web">Site web</label>
+        <input id="site-web" type="text" name={CHAMP_PIEGE} tabIndex={-1} autoComplete="off" defaultValue="" />
       </div>
       {etat.erreurs.general ? (
         <p className={styles.erreurGenerale} role="alert">

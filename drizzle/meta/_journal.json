@@ -99,6 +99,13 @@
       "when": 1791049245318,
       "tag": "0013_empreinte_mot_de_passe",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791050927214,
+      "tag": "0014_inscriptions_recentes",
+      "breakpoints": true
     }
   ]
 }

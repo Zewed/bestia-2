@@ -8,3 +8,9 @@ export const ETAT_INITIAL: EtatInscription = { erreurs: {}, email: "" };
 
 /** US-0111 : le message quand le réseau coupe, que le jeu plante ou ne répond pas. Jamais de détail technique. */
 export const JEU_INJOIGNABLE = "Impossible de joindre Bestia, réessayez dans un instant";
+
+/** US-0112 : le refus poli des inscriptions en rafale (et des robots), sans dire comment contourner. */
+export const INSCRIPTIONS_FREINEES = "Les inscriptions sont momentanément limitées. Réessayez un peu plus tard.";
+
+/** Le nom du champ piège, invisible pour un humain : un robot naïf le remplit. */
+export const CHAMP_PIEGE = "siteWeb";

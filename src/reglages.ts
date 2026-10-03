@@ -18,3 +18,5 @@ export const MOT_DE_PASSE_MIN = 12;
 export const MOT_DE_PASSE_MAX = 128;
 /** US-0111 : sans réponse du jeu au bout de ce délai, l'inscription prévient qu'il est injoignable. */
 export const INSCRIPTION_DELAI_MAX_MS = 15_000;
+/** US-0112 : au plus 5 comptes créés en une heure depuis une même connexion. */
+export const INSCRIPTIONS_PAR_HEURE_MAX = 5;
