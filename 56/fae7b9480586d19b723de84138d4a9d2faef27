@@ -1,0 +1,31 @@
+src/app/entree.module.css
+  s_d0f4332113d26c::t_e41a8f3eb90740 31-98
+src/app/inscription/page.tsx
+  s_d0f4332113d26c::t_e41a8f3eb90740 6,10,16-40
+src/app/inscription/page.test.tsx
+  s_d0f4332113d26c::t_9a650621129749 1-29
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_5655759191498f 26
+docs/stories/README.md
+  s_d0f4332113d26c::t_5655759191498f 7,14,31
+src/app/inscription/actions.ts
+  s_d0f4332113d26c::t_e41a8f3eb90740 1-12
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_5655759191498f 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "56fae7b9480586d19b723de84138d4a9d2faef27",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
