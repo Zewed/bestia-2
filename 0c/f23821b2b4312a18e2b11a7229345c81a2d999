@@ -1,0 +1,29 @@
+docs/stories/README.md
+  s_d0f4332113d26c::t_e909c27b035c6f 7
+scripts/db-donnees.ts
+  s_d0f4332113d26c::t_ccf978ec91ac80 5-6,14-15
+src/donnees/coherence.test.ts
+  s_d0f4332113d26c::t_decfc6c37b1cce 1-53
+src/donnees/jeux.ts
+  s_d0f4332113d26c::t_085a51cb185503 175
+  s_d0f4332113d26c::t_9507e7a41b80e2 151-154,156-161,166-174,176-179
+  s_d0f4332113d26c::t_a6d17723f32a4f 5
+src/donnees/especes.db.test.ts
+  s_d0f4332113d26c::t_c571e7e3e39b4e 47-51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0cf23821b2b4312a18e2b11a7229345c81a2d999",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
