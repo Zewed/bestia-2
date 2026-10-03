@@ -232,6 +232,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0124 · Jouer sur ordinateur et sur mobile en même temps
 **En tant que** joueur, **je veux** rester connecté à la fois sur mon ordinateur et sur mon téléphone, **afin de** passer de l'un à l'autre au fil de la journée.
 
+- **Statut** : Livrée le 2026-10-03. Chaque appareil a sa propre session ; les pages du jeu partent en « private, no-cache, no-store » (vérifié sur une construction de production), donc jamais servies depuis un cache.
 - **Débloquée par** : US-0120
 - **Critères d'acceptation** :
   - Se connecter sur un deuxième appareil ne déconnecte pas le premier.
