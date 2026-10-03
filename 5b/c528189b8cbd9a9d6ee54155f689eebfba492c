@@ -1,0 +1,61 @@
+src/comptes/compte.db.test.ts
+  s_d0f4332113d26c::t_87ad8cc46f11b3 46
+  s_d0f4332113d26c::t_399c41892009cf 74
+src/comptes/empreinte-reseau.test.ts
+  s_d0f4332113d26c::t_6ec49ad95379ac 1-23
+src/db/schema.ts
+  s_d0f4332113d26c::t_4baa26fd4ed09c 173-186
+src/app/inscription/page.test.tsx
+  s_d0f4332113d26c::t_49ae0178b17abc 7-8,30-33
+  s_d0f4332113d26c::t_412ce076119f6a 34
+src/app/inscription/FormulaireInscription.tsx
+  s_d0f4332113d26c::t_ecef5edf6eb2f9 11,179-183
+  s_d0f4332113d26c::t_7abc9db4de1499 184
+src/comptes/inscription.ts
+  s_d0f4332113d26c::t_4baa26fd4ed09c 1-43
+src/app/inscription/etat.ts
+  s_d0f4332113d26c::t_ecef5edf6eb2f9 11-16
+drizzle/0014_inscriptions_recentes.sql
+  s_d0f4332113d26c::t_4baa26fd4ed09c 1-7
+src/comptes/inscription.db.test.ts
+  s_d0f4332113d26c::t_4467c969cd9894 1-57
+src/reglages.ts
+  s_d0f4332113d26c::t_6ec49ad95379ac 21-22
+src/app/inscription/actions.test.ts
+  s_d0f4332113d26c::t_399c41892009cf 77-78
+  s_d0f4332113d26c::t_49ae0178b17abc 4,6-9,12,16,20,26-28,54,56-60,66,70,74-76,79-88,93,101
+src/app/entree.module.css
+  s_d0f4332113d26c::t_ecef5edf6eb2f9 255-263
+.env.example
+  s_d0f4332113d26c::t_f6382cb8677ade 19-21
+src/app/inscription/actions.ts
+  s_d0f4332113d26c::t_ecef5edf6eb2f9 3,5-6,10,17,22-23,31-34
+src/comptes/empreinte-reseau.ts
+  s_d0f4332113d26c::t_6ec49ad95379ac 1-17
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_745996c1952f24 120,122
+docs/stories/README.md
+  s_d0f4332113d26c::t_63dfe7707c0d2d 7,14,31,33
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_d77851b3452e0b 5
+drizzle/meta/0014_snapshot.json
+  s_d0f4332113d26c::t_50806cb6cf4437 1-826
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_06656df3f1bf48 102-108
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "5bc528189b8cbd9a9d6ee54155f689eebfba492c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
