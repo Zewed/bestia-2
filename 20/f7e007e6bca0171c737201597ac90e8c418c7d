@@ -1,0 +1,38 @@
+src/db/schema.ts
+  s_d0f4332113d26c::t_8175544866064b 154,165
+  s_d0f4332113d26c::t_5fcd9ac65768dd 151-153,155-164,166
+src/comptes/compte.db.test.ts
+  s_d0f4332113d26c::t_71cffa7cadf8ee 1-55
+src/comptes/email.test.ts
+  s_d0f4332113d26c::t_ba05dd32a7111b 2,20-32
+  s_d0f4332113d26c::t_810065e2abb8be 33
+drizzle/0012_comptes.sql
+  s_d0f4332113d26c::t_5fcd9ac65768dd 1-5,7
+  s_d0f4332113d26c::t_8175544866064b 6
+src/comptes/email.ts
+  s_d0f4332113d26c::t_ba05dd32a7111b 20-27
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_d691f2d274ac7e 41
+docs/stories/README.md
+  s_d0f4332113d26c::t_76e4c6062dcb25 7
+drizzle/meta/0012_snapshot.json
+  s_d0f4332113d26c::t_ed139e42d14839 1-751
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_c9eb0caa70199d 88-94
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "20f7e007e6bca0171c737201597ac90e8c418c7d",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
