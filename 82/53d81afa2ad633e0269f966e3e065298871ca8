@@ -1,0 +1,40 @@
+src/app/inscription/page.tsx
+  s_d0f4332113d26c::t_be6fcf7b494653 1-21
+src/app/entree.module.css
+  s_d0f4332113d26c::t_be6fcf7b494653 1-30
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_a9bdea9168088c 5
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_a9bdea9168088c 14-15
+src/app/page.tsx
+  s_d0f4332113d26c::t_7d8536d7a8f5e2 1-2,9-10,14,19-28
+src/app/connexion/page.tsx
+  s_d0f4332113d26c::t_be6fcf7b494653 1-21
+src/comptes/ouverture.ts
+  s_d0f4332113d26c::t_37ecac5050fa67 1-10
+docs/stories/README.md
+  s_d0f4332113d26c::t_a9bdea9168088c 7,14,31
+src/app/page.test.tsx
+  s_d0f4332113d26c::t_c0f829a183dbfa 1-34,42-43
+  s_d0f4332113d26c::t_fb6aef86e0e7df 35-41
+src/app/page.module.css
+  s_d0f4332113d26c::t_7d8536d7a8f5e2 39-83,147-152
+src/comptes/ouverture.test.ts
+  s_d0f4332113d26c::t_37ecac5050fa67 1-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "8253d81afa2ad633e0269f966e3e065298871ca8",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
