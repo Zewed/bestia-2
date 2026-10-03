@@ -194,6 +194,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0120 · Se déconnecter
 **En tant que** joueur, **je veux** me déconnecter depuis la barre du haut, **afin de** quitter un appareil partagé sans y laisser mon compte ouvert.
 
+- **Statut** : Livrée le 2026-10-03. Le bouton n'apparaît que sur les pages du jeu (/jeu…), qui exigent d'être connecté : la page d'accueil reste statique. Il tient dans la barre jusqu'à 320 px ; le menu viendra quand la barre se remplira.
 - **Débloquée par** : US-0119, Étape 2
 - **Critères d'acceptation** :
   - « Se déconnecter » est accessible depuis la barre du haut, sur ordinateur comme sur mobile (dans un menu si la place manque).

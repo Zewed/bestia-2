@@ -22,8 +22,18 @@ export async function poserCookieSession(jeton: string, expireLe: Date): Promise
   (await cookies()).set(nomDuCookie(), jeton, reglagesDuCookie(expireLe));
 }
 
+/** Efface le cookie, avec les mêmes réglages : un cookie __Host- ne s'efface qu'en HTTPS. */
+export async function effacerCookieSession(): Promise<void> {
+  (await cookies()).set(nomDuCookie(), "", { ...reglagesDuCookie(new Date(0)), maxAge: 0 });
+}
+
+/** Le jeton de session de ce navigateur, s'il y en a un. */
+export async function jetonDeSession(): Promise<string | undefined> {
+  return (await cookies()).get(nomDuCookie())?.value;
+}
+
 /** Le compte connecté dans ce navigateur, ou null. */
 export async function compteConnecte(): Promise<{ id: number; email: string } | null> {
-  const jeton = (await cookies()).get(nomDuCookie())?.value;
+  const jeton = await jetonDeSession();
   return jeton ? compteDeLaSession(getPool(), jeton) : null;
 }

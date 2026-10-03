@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
 import { noterConnexion, verifierIdentifiants } from "./connexion";
-import { compteDeLaSession, ouvrirSession, prolongerSession } from "./session";
+import { compteDeLaSession, fermerSession, ouvrirSession, prolongerSession } from "./session";
 
 describe.skipIf(!URL_TEST)("connexion et sessions (sur base)", () => {
   let pool: Pool;
@@ -122,5 +122,29 @@ describe.skipIf(!URL_TEST)("prolongation des sessions (sur base)", () => {
     expect(await prolongerSession(pool, jeton)).toBeNull();
     expect(await compteDeLaSession(pool, jeton)).toBeNull();
     expect(await prolongerSession(pool, "un-jeton-invente")).toBeNull();
+  });
+});
+
+describe.skipIf(!URL_TEST)("fermeture des sessions (sur base)", () => {
+  let pool: Pool;
+  const lancement = `fermeture-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let compteId: number;
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    compteId = (await creerCompte(pool, `${lancement}@essai.test`, "une phrase de passe"))!.id;
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}%`]);
+    await pool.end();
+  });
+
+  it("supprime la session en base : son jeton ne retrouve plus le compte", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    const autre = await ouvrirSession(pool, compteId);
+    await fermerSession(pool, jeton);
+    expect(await compteDeLaSession(pool, jeton)).toBeNull();
+    // Les autres appareils du joueur restent connectés.
+    expect(await compteDeLaSession(pool, autre.jeton)).not.toBeNull();
   });
 });

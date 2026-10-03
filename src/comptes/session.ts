@@ -46,3 +46,8 @@ export async function prolongerSession(base: Base, jeton: string): Promise<Date 
   );
   return rows[0]?.expire_le ?? null;
 }
+
+/** Ferme une session (US-0120) : elle est supprimée en base, plus seulement oubliée du navigateur. */
+export async function fermerSession(base: Base, jeton: string): Promise<void> {
+  await base.query("delete from session where empreinte_jeton = $1", [empreinte(jeton)]);
+}
