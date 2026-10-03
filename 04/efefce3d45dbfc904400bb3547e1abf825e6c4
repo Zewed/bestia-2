@@ -1,0 +1,33 @@
+src/app/controle/page.tsx
+  s_d0f4332113d26c::t_1198b9a1ab39b7 9,20,25,70-89
+  s_d0f4332113d26c::t_998f215ce6aa61 90-91
+src/app/controle/page.test.tsx
+  s_d0f4332113d26c::t_aae7b2a3d4e8ce 17-32,61-68
+  s_d0f4332113d26c::t_888abebb1276a5 69
+src/app/controle/page.module.css
+  s_d0f4332113d26c::t_6b7d67ff5a032a 64,87
+  s_d0f4332113d26c::t_c7fd702b7c0beb 77-81
+  s_d0f4332113d26c::t_1198b9a1ab39b7 58-63,65-76,82-86,88-101
+src/donnees/en-base.db.test.ts
+  s_d0f4332113d26c::t_020f411be32cbc 1-50
+src/donnees/en-base.ts
+  s_d0f4332113d26c::t_68186b89bbaf09 1-18
+docs/stories/README.md
+  s_d0f4332113d26c::t_945674522b0056 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "04efefce3d45dbfc904400bb3547e1abf825e6c4",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
