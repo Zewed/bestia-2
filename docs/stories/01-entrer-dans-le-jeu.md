@@ -124,10 +124,11 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0113 · Envoyer des e-mails depuis le jeu
 **En tant que** développeur, **je veux** que le jeu puisse envoyer des e-mails, **afin de** permettre la confirmation d'adresse et la réinitialisation du mot de passe.
 
+- **Statut** : Livrée le 2026-10-03 sans envoi réel : Resend n'est pas encore branché (offre payante ou compte existant à trancher, DNS chez Cloudflare), voir Zewed/bestia-2#1. D'ici là, les e-mails restent dans le journal, et en ligne leur échec est noté.
 - **Débloquée par** : Étape 1
 - **Critères d'acceptation** :
-  - Le jeu envoie ses e-mails depuis une adresse d'expédition au nom de Bestia.
-  - Le service d'envoi (à décider) ; ses clés sont lues dans des variables d'environnement.
+  - Le jeu envoie ses e-mails depuis une adresse d'expédition au nom de Bestia : « Bestia <bonjour@bestia.thevibecompany.co> ».
+  - Le service d'envoi est Resend, par la place de marché Vercel ; sa clé est lue dans la variable RESEND_API_KEY.
   - En local, les e-mails s'affichent dans le journal au lieu de partir.
   - Un envoi raté est noté dans le journal, sans bloquer le joueur.
 

@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-287 points au total.
+286 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 
-- [US-0113](01-entrer-dans-le-jeu.md) · Envoyer des e-mails depuis le jeu : le service d'envoi ; ses clés sont lues dans des variables d'environnement.
 - [US-0114](01-entrer-dans-le-jeu.md) · Confirmer son adresse e-mail : confirmer son adresse est obligatoire pour jouer, ou seulement conseillé.
 - [US-0128](01-entrer-dans-le-jeu.md) · Choisir un nouveau mot de passe : les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées.
 - [US-0133](01-entrer-dans-le-jeu.md) · Limiter les caractères autorisés : les espaces, traits d'union, apostrophes et chiffres.
