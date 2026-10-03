@@ -1,0 +1,43 @@
+src/components/ActionsJoueur.tsx
+  s_d0f4332113d26c::t_7f5b04206d02c7 7,24
+  s_d0f4332113d26c::t_2616d4dc1a51aa 1-6,8-23,25-33
+src/components/BarreHaut.module.css
+  s_d0f4332113d26c::t_2616d4dc1a51aa 17-44
+src/comptes/connexion.db.test.ts
+  s_d0f4332113d26c::t_7f5b04206d02c7 6,127-149
+  s_d0f4332113d26c::t_e74dc8dc0c3e1a 150
+src/components/BarreHaut.tsx
+  s_d0f4332113d26c::t_2616d4dc1a51aa 1,5,10
+src/comptes/deconnexion.test.ts
+  s_d0f4332113d26c::t_7f5b04206d02c7 1-43
+src/comptes/cookie-session.ts
+  s_d0f4332113d26c::t_2616d4dc1a51aa 25-34,37
+src/components/ActionsJoueur.test.tsx
+  s_d0f4332113d26c::t_7f5b04206d02c7 1-43
+src/components/recharger.ts
+  s_d0f4332113d26c::t_7f5b04206d02c7 1-5
+src/comptes/session.ts
+  s_d0f4332113d26c::t_2616d4dc1a51aa 49-53
+src/comptes/deconnexion.ts
+  s_d0f4332113d26c::t_2616d4dc1a51aa 1-15
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_9d4f33a9bc4d40 197
+docs/stories/README.md
+  s_d0f4332113d26c::t_801c6c4765ab70 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6a78a473828112412c37d062474fcf6329c3e5c9",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
