@@ -178,7 +178,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 - **Débloquée par** : US-0117
 - **Critères d'acceptation** :
-  - Après (chiffre à régler) échecs d'affilée sur une même adresse, les essais sont bloqués pendant (chiffre à régler) minutes.
+  - Après 5 échecs d'affilée (ECHECS_CONNEXION_MAX) sur une même adresse, les essais sont bloqués pendant 15 minutes (BLOCAGE_CONNEXION_MINUTES), même avec le bon mot de passe. L'adresse n'est gardée que sous son empreinte chiffrée.
   - Le message dit combien de temps attendre, et s'affiche aussi pour une adresse inconnue, pour ne rien révéler.
   - Une connexion réussie remet le décompte des échecs à zéro.
 

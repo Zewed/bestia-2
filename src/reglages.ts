@@ -30,3 +30,7 @@ export const LIEN_CONFIRMATION_HEURES = 24;
 export const NOUVEAU_LIEN_ATTENTE_SECONDES = 60;
 /** US-0116 : une session dure 30 jours (valeur provisoire, à fixer avec US-0119). */
 export const SESSION_JOURS = 30;
+/** US-0118 : après 5 échecs de connexion d'affilée sur une même adresse… */
+export const ECHECS_CONNEXION_MAX = 5;
+/** … les essais sont bloqués 15 minutes. */
+export const BLOCAGE_CONNEXION_MINUTES = 15;

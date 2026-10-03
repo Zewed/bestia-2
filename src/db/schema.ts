@@ -225,3 +225,15 @@ export const session = pgTable(
   },
   (t) => [index("session_par_compte").on(t.compteId)],
 );
+
+/**
+ * Les échecs de connexion récents par adresse essayée (US-0118), pour freiner les essais de
+ * mot de passe à répétition. L'adresse n'est gardée que sous son empreinte chiffrée ; une ligne
+ * s'efface au premier succès, ou un jour après le dernier échec.
+ */
+export const echecConnexion = pgTable("echec_connexion", {
+  empreinteAdresse: text("empreinte_adresse").primaryKey(),
+  echecs: integer("echecs").notNull(),
+  dernierEchec: timestamp("dernier_echec", { withTimezone: true }).notNull().defaultNow(),
+  bloqueJusqua: timestamp("bloque_jusqua", { withTimezone: true }),
+});

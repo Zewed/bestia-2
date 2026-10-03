@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { adresseReseau, empreinteReseau } from "./empreinte-reseau";
+import { adresseReseau, empreinteAdresse, empreinteReseau } from "./empreinte-reseau";
 
 describe("empreinte de la connexion", () => {
   it("prend l'adresse posée par la plateforme, la première de la liste", () => {
@@ -19,5 +19,13 @@ describe("empreinte de la connexion", () => {
 
   it("refuse de travailler sans son secret, en le nommant", () => {
     expect(() => empreinteReseau("203.0.113.7", "")).toThrow(/EMPREINTE_RESEAU_SECRET/);
+  });
+
+  it("chiffre aussi les adresses e-mail essayées, sans jamais les confondre avec une adresse réseau", () => {
+    const empreinte = empreinteAdresse("nom@exemple.fr", "secret-a");
+    expect(empreinte).toMatch(/^[0-9a-f]{64}$/);
+    expect(empreinte).not.toContain("exemple");
+    expect(empreinteAdresse("nom@exemple.fr", "secret-a")).toBe(empreinte);
+    expect(empreinteReseau("nom@exemple.fr", "secret-a")).not.toBe(empreinte);
   });
 });
