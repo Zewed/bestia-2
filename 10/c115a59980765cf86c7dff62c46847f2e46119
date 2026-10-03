@@ -1,0 +1,46 @@
+src/app/connexion/page.tsx
+  s_d0f4332113d26c::t_4d0b93173ba301 2,12-13
+src/proxy.ts
+  s_d0f4332113d26c::t_4d0b93173ba301 3-4,8-9,12,15-17,21-35
+  s_d0f4332113d26c::t_5848a1eec8e1b2 36-37
+src/proxy.test.ts
+  s_d0f4332113d26c::t_3700552bfbd778 4,63-94
+  s_d0f4332113d26c::t_8899267cdabf28 95
+src/comptes/inscription.ts
+  s_d0f4332113d26c::t_9b6a5b86fbd4d6 11,46
+src/app/inscription/FormulaireInscription.tsx
+  s_d0f4332113d26c::t_bbfa0b71f560b2 199-200,207,219-220
+src/app/inscription/page.test.tsx
+  s_d0f4332113d26c::t_4d0b93173ba301 2
+src/app/inscription/actions.test.ts
+  s_d0f4332113d26c::t_a305ffed6edc21 18-25,41-44,95-110
+  s_d0f4332113d26c::t_00c33633ae4b90 111
+src/app/inscription/FormulaireInscription.test.tsx
+  s_d0f4332113d26c::t_a305ffed6edc21 221,223-224
+src/app/inscription/page.tsx
+  s_d0f4332113d26c::t_4d0b93173ba301 2,11-12,14
+src/app/inscription/actions.ts
+  s_d0f4332113d26c::t_9b6a5b86fbd4d6 5-6,12,22-23,38-39,45-47
+src/comptes/inscription.db.test.ts
+  s_d0f4332113d26c::t_9b6a5b86fbd4d6 61
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_f874107f7bba59 80,217
+docs/stories/README.md
+  s_d0f4332113d26c::t_9cec13235d2075 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "10c115a59980765cf86c7dff62c46847f2e46119",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
