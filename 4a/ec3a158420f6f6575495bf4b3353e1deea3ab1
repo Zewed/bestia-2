@@ -1,0 +1,29 @@
+src/components/PastilleRarete.tsx
+  s_d0f4332113d26c::t_172f4f8a31a8ca 1-10
+src/app/controle/page.tsx
+  s_d0f4332113d26c::t_172f4f8a31a8ca 7,15
+src/donnees/raretes.test.ts
+  s_d0f4332113d26c::t_172f4f8a31a8ca 25-26,29
+src/components/PastilleRarete.module.css
+  s_d0f4332113d26c::t_172f4f8a31a8ca 1-40
+src/app/controle/page.test.tsx
+  s_d0f4332113d26c::t_172f4f8a31a8ca 120,135
+src/app/controle/FicheEspece.tsx
+  s_d0f4332113d26c::t_172f4f8a31a8ca 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "4aec3a158420f6f6575495bf4b3353e1deea3ab1",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
