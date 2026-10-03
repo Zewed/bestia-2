@@ -3,7 +3,7 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { SESSION_JOURS } from "@/reglages";
+import { SESSION_JOURS, SESSION_PROLONGEE_APRES_HEURES } from "@/reglages";
 
 type Base = Pool | PoolClient;
 
@@ -29,4 +29,20 @@ export async function compteDeLaSession(base: Base, jeton: string): Promise<{ id
     [empreinte(jeton)],
   );
   return rows[0] ?? null;
+}
+
+/**
+ * Prolonge une session encore valable de SESSION_JOURS jours à partir de maintenant (US-0119),
+ * si sa dernière prolongation date d'au moins SESSION_PROLONGEE_APRES_HEURES heures. Rend la
+ * nouvelle fin, ou null s'il n'y avait rien à prolonger.
+ */
+export async function prolongerSession(base: Base, jeton: string): Promise<Date | null> {
+  const { rows } = await base.query<{ expire_le: Date }>(
+    `update session set expire_le = now() + make_interval(days => $2)
+     where empreinte_jeton = $1 and expire_le > now()
+       and expire_le <= now() + make_interval(days => $2) - make_interval(hours => $3)
+     returning expire_le`,
+    [empreinte(jeton), SESSION_JOURS, SESSION_PROLONGEE_APRES_HEURES],
+  );
+  return rows[0]?.expire_le ?? null;
 }

@@ -188,7 +188,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 - **Débloquée par** : US-0116
 - **Critères d'acceptation** :
   - Après la fermeture de l'onglet ou du navigateur, une nouvelle visite trouve le joueur toujours connecté.
-  - La session dure (chiffre à régler) jours et se prolonge à chaque visite.
+  - La session dure 30 jours (SESSION_JOURS) et se prolonge à chaque visite d'une page du jeu, au plus une fois par jour.
   - Le cookie de session est inaccessible aux scripts de la page et ne circule qu'en HTTPS.
 
 ### US-0120 · Se déconnecter

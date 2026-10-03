@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
 import { noterConnexion, verifierIdentifiants } from "./connexion";
-import { compteDeLaSession, ouvrirSession } from "./session";
+import { compteDeLaSession, ouvrirSession, prolongerSession } from "./session";
 
 describe.skipIf(!URL_TEST)("connexion et sessions (sur base)", () => {
   let pool: Pool;
@@ -81,5 +81,46 @@ describe.skipIf(!URL_TEST)("temps de réponse d'une connexion refusée (sur base
     // Le calcul de l'empreinte domine les deux cas ; sans lui, l'adresse inconnue répondrait cent fois plus vite.
     expect(inconnue / motDePasseFaux).toBeGreaterThan(0.6);
     expect(inconnue / motDePasseFaux).toBeLessThan(1.6);
+  });
+});
+
+describe.skipIf(!URL_TEST)("prolongation des sessions (sur base)", () => {
+  let pool: Pool;
+  const lancement = `prolongation-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let compteId: number;
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    compteId = (await creerCompte(pool, `${lancement}@essai.test`, "une phrase de passe"))!.id;
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}%`]);
+    await pool.end();
+  });
+
+  const finDans = async (jeton: string, intervalle: string) => {
+    await pool.query("update session set expire_le = now() + $2::interval where empreinte_jeton = encode(sha256($1::bytea), 'hex')", [jeton, intervalle]);
+  };
+
+  it("prolonge de 30 jours une session dont la dernière prolongation a plus d'un jour", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    await finDans(jeton, "20 days");
+    const fin = await prolongerSession(pool, jeton);
+    expect(fin!.getTime()).toBeGreaterThan(Date.now() + 29.9 * 24 * 3_600_000);
+  });
+
+  it("ne réécrit pas une session prolongée il y a moins d'un jour", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    expect(await prolongerSession(pool, jeton)).toBeNull();
+    await finDans(jeton, "29 days 2 hours");
+    expect(await prolongerSession(pool, jeton)).toBeNull();
+  });
+
+  it("ne ranime ni une session expirée, ni un jeton inventé", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    await finDans(jeton, "-1 second");
+    expect(await prolongerSession(pool, jeton)).toBeNull();
+    expect(await compteDeLaSession(pool, jeton)).toBeNull();
+    expect(await prolongerSession(pool, "un-jeton-invente")).toBeNull();
   });
 });

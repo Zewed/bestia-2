@@ -39,17 +39,17 @@ describe("proxy des pages de contrôle", () => {
   const demande = (authorization?: string) =>
     new NextRequest("https://bestia.test/controle", { headers: authorization ? { authorization } : {} });
 
-  it("fait demander le mot de passe par le navigateur", () => {
+  it("fait demander le mot de passe par le navigateur", async () => {
     vi.stubEnv("CONTROLE_MOT_DE_PASSE", ATTENDU);
-    const reponse = proxy(demande());
+    const reponse = await proxy(demande());
     expect(reponse?.status).toBe(401);
     expect(reponse?.headers.get("WWW-Authenticate")).toBe(DEMANDE_MOT_DE_PASSE);
     expect(reponse?.headers.get("Cache-Control")).toBe("no-store");
   });
 
-  it("laisse passer avec le bon mot de passe", () => {
+  it("laisse passer avec le bon mot de passe", async () => {
     vi.stubEnv("CONTROLE_MOT_DE_PASSE", ATTENDU);
-    expect(proxy(demande(basic(`dev:${ATTENDU}`)))).toBeUndefined();
+    expect(await proxy(demande(basic(`dev:${ATTENDU}`)))).toBeUndefined();
   });
 });
 

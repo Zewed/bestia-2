@@ -28,8 +28,10 @@ export const ENVOI_EMAIL_DELAI_MAX_MS = 10_000;
 export const LIEN_CONFIRMATION_HEURES = 24;
 /** … et on n'en renvoie pas un nouveau plus d'une fois par minute, pour ne pas inonder une boîte. */
 export const NOUVEAU_LIEN_ATTENTE_SECONDES = 60;
-/** US-0116 : une session dure 30 jours (valeur provisoire, à fixer avec US-0119). */
+/** US-0119 : une session dure 30 jours, prolongés à chaque visite… */
 export const SESSION_JOURS = 30;
+/** … au plus une fois par jour, pour ne pas écrire en base à chaque page. */
+export const SESSION_PROLONGEE_APRES_HEURES = 24;
 /** US-0118 : après 5 échecs de connexion d'affilée sur une même adresse… */
 export const ECHECS_CONNEXION_MAX = 5;
 /** … les essais sont bloqués 15 minutes. */
