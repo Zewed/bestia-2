@@ -1,6 +1,7 @@
 "use server";
 
 import { verifierEmail } from "@/comptes/email";
+import { verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { ETAT_INITIAL, type EtatInscription } from "./etat";
 
@@ -12,7 +13,10 @@ import { ETAT_INITIAL, type EtatInscription } from "./etat";
 export async function inscrire(_precedent: EtatInscription, donnees: FormData): Promise<EtatInscription> {
   if (!entreeDuJeuOuverte()) return ETAT_INITIAL;
   const email = String(donnees.get("email") ?? "");
+  const erreurs: EtatInscription["erreurs"] = {};
   const erreurEmail = verifierEmail(email);
-  if (erreurEmail) return { erreurs: { email: erreurEmail }, email };
-  return { erreurs: {}, email };
+  if (erreurEmail) erreurs.email = erreurEmail;
+  const erreurMotDePasse = verifierMotDePasse(String(donnees.get("motDePasse") ?? ""));
+  if (erreurMotDePasse) erreurs.motDePasse = erreurMotDePasse;
+  return { erreurs, email };
 }

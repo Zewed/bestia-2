@@ -2,30 +2,38 @@
 
 import { useActionState, useRef, useState, type FormEvent } from "react";
 import { verifierEmail } from "@/comptes/email";
+import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
+import { MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import styles from "../entree.module.css";
 import { inscrire } from "./actions";
 import { ETAT_INITIAL } from "./etat";
 
 /**
- * Le formulaire d'inscription. Le message sous le champ e-mail apparaît quand on quitte le
- * champ ou à l'envoi, jamais pendant la frappe ; il s'efface dès qu'on recommence à écrire.
+ * Le formulaire d'inscription. Le message sous un champ apparaît quand on quitte le champ ou
+ * à l'envoi, jamais pendant la frappe ; il s'efface dès qu'on recommence à écrire.
  */
 export function FormulaireInscription() {
   const [etat, envoyer] = useActionState(inscrire, ETAT_INITIAL);
   const [email, setEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
+  const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
+  // Le dernier envoi dont on a recommencé à corriger le mot de passe : son refus ne s'affiche plus.
+  const [envoiCorrige, setEnvoiCorrige] = useState(ETAT_INITIAL);
   const champEmail = useRef<HTMLInputElement>(null);
-  // Le refus du serveur reste affiché tant que l'adresse n'a pas changé depuis l'envoi.
-  const refusServeur = etat.erreurs.email && etat.email === email ? etat.erreurs.email : null;
-  const erreur = erreurEmail ?? refusServeur;
+  const champMotDePasse = useRef<HTMLInputElement>(null);
+
+  // Un refus du serveur reste affiché tant que le champ n'a pas changé depuis l'envoi.
+  const erreurE = erreurEmail ?? (etat.erreurs.email && etat.email === email ? etat.erreurs.email : null);
+  const erreurM = erreurMotDePasse ?? (etat !== envoiCorrige ? (etat.erreurs.motDePasse ?? null) : null);
 
   function verifierAvantEnvoi(evenement: FormEvent<HTMLFormElement>) {
-    const message = verifierEmail(email);
-    if (message) {
-      evenement.preventDefault();
-      setErreurEmail(message);
-      champEmail.current?.focus();
-    }
+    const messageEmail = verifierEmail(email);
+    const messageMotDePasse = verifierMotDePasse(String(new FormData(evenement.currentTarget).get("motDePasse") ?? ""));
+    if (!messageEmail && !messageMotDePasse) return;
+    evenement.preventDefault();
+    setErreurEmail(messageEmail);
+    setErreurMotDePasse(messageMotDePasse);
+    (messageEmail ? champEmail : champMotDePasse).current?.focus();
   }
 
   return (
@@ -48,19 +56,45 @@ export function FormulaireInscription() {
             setErreurEmail(null);
           }}
           onBlur={() => setErreurEmail(verifierEmail(email))}
-          aria-invalid={erreur ? true : undefined}
-          aria-describedby={erreur ? "email-erreur" : undefined}
+          aria-invalid={erreurE ? true : undefined}
+          aria-describedby={erreurE ? "email-erreur" : undefined}
         />
-        {erreur ? (
+        {erreurE ? (
           <p id="email-erreur" className={styles.erreur} role="alert">
-            {erreur}
+            {erreurE}
           </p>
         ) : null}
       </div>
       <div className={styles.champ}>
         <label htmlFor="mot-de-passe">Mot de passe</label>
-        {/* « new-password » : le navigateur propose un mot de passe fort et le retient. */}
-        <input id="mot-de-passe" type="password" name="motDePasse" autoComplete="new-password" required />
+        {/* « new-password » et les longueurs : le navigateur propose un mot de passe fort qui respecte la règle. */}
+        <input
+          ref={champMotDePasse}
+          id="mot-de-passe"
+          type="password"
+          name="motDePasse"
+          autoComplete="new-password"
+          minLength={MOT_DE_PASSE_MIN}
+          {...{ passwordrules: `minlength: ${MOT_DE_PASSE_MIN}; maxlength: ${MOT_DE_PASSE_MAX};` }}
+          required
+          onChange={() => {
+            setErreurMotDePasse(null);
+            setEnvoiCorrige(etat);
+          }}
+          onBlur={(e) => setErreurMotDePasse(verifierMotDePasse(e.currentTarget.value))}
+          aria-invalid={erreurM ? true : undefined}
+          aria-describedby="mot-de-passe-aide"
+        />
+        {/* La règle est écrite avant qu'on se trompe ; en cas d'erreur, le message prend sa place. */}
+        {erreurM ? (
+          <p id="mot-de-passe-aide" className={styles.erreur} role="alert">
+            {erreurM}
+          </p>
+        ) : (
+          <p id="mot-de-passe-aide" className={styles.aide}>
+            {REGLE_MOT_DE_PASSE}
+          </p>
+        )}
       </div>
       <button type="submit" className={styles.envoyer}>
         Créer mon compte

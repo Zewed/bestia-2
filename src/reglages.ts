@@ -12,3 +12,7 @@ export const BUDGET_TACHE_MS = 45_000;
 export const JOURNAL_TACHE_JOURS = 7;
 /** US-0029 : sans passage depuis ce délai (trois passages manqués), la tâche est signalée en retard. */
 export const TACHE_EN_RETARD_MINUTES = 15;
+/** US-0105 : un mot de passe compte au moins 12 caractères, sans autre contrainte (longueur plutôt que complexité)… */
+export const MOT_DE_PASSE_MIN = 12;
+/** … et au plus 128, assez pour une phrase de passe. */
+export const MOT_DE_PASSE_MAX = 128;

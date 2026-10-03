@@ -38,6 +38,13 @@
   border-color: var(--rose-fonce);
 }
 
+/* La règle d'un champ, écrite avant qu'on se trompe. */
+.aide {
+  color: var(--texte-discret);
+  font-size: 13.5px;
+  font-weight: var(--graisse-texte);
+}
+
 .erreur {
   color: var(--rose-fonce);
   font-size: 13.5px;

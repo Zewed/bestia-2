@@ -50,10 +50,10 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 - **Débloquée par** : US-0102
 - **Critères d'acceptation** :
-  - La règle est écrite sous le champ : au moins (chiffre à régler) caractères.
+  - La règle est écrite sous le champ : au moins 12 caractères (MOT_DE_PASSE_MIN), sans exiger chiffre, majuscule ni symbole.
   - Un mot de passe trop court affiche « Le mot de passe doit contenir au moins N caractères » et bloque l'envoi.
-  - Une longueur maximale de (chiffre à régler) caractères évite les mots de passe démesurés.
-  - D'autres règles, comme refuser les mots de passe les plus courants (à décider).
+  - Une longueur maximale de 128 caractères (MOT_DE_PASSE_MAX) évite les mots de passe démesurés.
+  - Pas de liste des mots de passe courants pour l'instant : à 12 caractères, presque tous sont déjà trop courts.
 
 ### US-0106 · Afficher ou masquer le mot de passe
 **En tant que** visiteur, **je veux** pouvoir afficher le mot de passe que je tape, **afin de** vérifier que je ne me suis pas trompé, surtout sur un clavier de téléphone.
