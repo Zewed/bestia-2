@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0047** · Marquer les Espèces du Couple de départ. Prochaine : **US-0048** · Rattacher les illustrations des trois Espèces.
+Dernière story livrée : **US-0048** · Rattacher les illustrations des trois Espèces. Prochaine : **US-0049** · Vérifier la cohérence des données de référence.
 
 ## Sommaire
 

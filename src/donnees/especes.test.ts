@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { lireJeu, valider } from "./charger";
 import { BIOMES, ESPECES, RARETES, ROLES, verifierReferences, type EntreeEspece } from "./jeux";
@@ -62,6 +64,12 @@ describe("les Espèces du Couple de départ", () => {
     const { entree, colonnes } = fiche(id);
     expect(entree).toMatchObject({ rarete: "commune", biome: "prairie" });
     expect(colonnes).toMatchObject({ role_id: role, attaque, vie, taille });
+  });
+
+  it.each(["souris", "poule", "pigeon"])("%s a son illustration, rangée dans public/illustrations", (id) => {
+    const { illustration } = fiche(id).entree;
+    expect(illustration).toBe(`especes/${id}.webp`);
+    expect(existsSync(join(__dirname, "../../public/illustrations", illustration!))).toBe(true);
   });
 
   it("donnent à la souris l'avantage au combat à Places égales", () => {

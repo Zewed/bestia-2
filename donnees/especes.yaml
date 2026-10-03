@@ -28,6 +28,7 @@
   nourriture_g_par_jour: 4
   biome: prairie
   rarete: commune
+  illustration: especes/souris.webp
   source: "Mus musculus : 12 à 30 g, pointes à 13 km/h, 3 à 5 g de nourriture par jour."
 
 - id: poule
@@ -40,6 +41,7 @@
   biome: prairie
   rarete: commune
   role: nourricier
+  illustration: especes/poule.webp
   source: "Gallus gallus domesticus : 1,5 à 3 kg, course jusqu'à 14 km/h, 100 à 130 g d'aliment par jour."
 
 - id: pigeon
@@ -52,4 +54,5 @@
   biome: prairie
   rarete: commune
   role: eclaireur
+  illustration: especes/pigeon.webp
   source: "Columba livia : 240 à 380 g, vol de 77 à 92 km/h, environ 30 g de graines par jour."
