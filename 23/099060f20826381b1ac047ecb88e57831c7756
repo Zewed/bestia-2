@@ -1,0 +1,25 @@
+src/comptes/connexion.ts
+  s_d0f4332113d26c::t_6965eaf27c7a5f 3,6,10-15,23-27
+src/app/connexion/etat.ts
+  s_d0f4332113d26c::t_6965eaf27c7a5f 6-7
+src/comptes/connexion.db.test.ts
+  s_d0f4332113d26c::t_6965eaf27c7a5f 55-85
+docs/stories/README.md
+  s_d0f4332113d26c::t_02cd1c2ef03c3f 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "23099060f20826381b1ac047ecb88e57831c7756",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
