@@ -1,0 +1,66 @@
+src/app/confirmer/[jeton]/actions.test.ts
+  s_d0f4332113d26c::t_d63708f0c02025 1-42
+drizzle/0015_confirmation_adresse.sql
+  s_d0f4332113d26c::t_0c8915b54d0894 1-13
+src/comptes/inscription.db.test.ts
+  s_d0f4332113d26c::t_fab908ac91c9e9 13-14,57-66
+  s_d0f4332113d26c::t_c686fe89842cbb 67
+src/comptes/confirmation.ts
+  s_d0f4332113d26c::t_a8e1896e76d91b 1-81
+.env.example
+  s_d0f4332113d26c::t_9ce326f90982d3 26-29
+src/comptes/confirmation.db.test.ts
+  s_d0f4332113d26c::t_c4ee1723ed7549 1-82
+src/db/schema.ts
+  s_d0f4332113d26c::t_0c8915b54d0894 166-167,189-206
+  s_d0f4332113d26c::t_8bb66c61783b50 207
+src/emails/confirmation.ts
+  s_d0f4332113d26c::t_9ce326f90982d3 1-39
+src/app/inscription/actions.test.ts
+  s_d0f4332113d26c::t_96170747664423 13-17,33-35,70-83,91,96
+src/app/confirmer/[jeton]/page.test.tsx
+  s_d0f4332113d26c::t_d63708f0c02025 1-56
+src/emails/confirmation.test.ts
+  s_d0f4332113d26c::t_9ce326f90982d3 1-21
+src/app/confirmer/[jeton]/actions.ts
+  s_d0f4332113d26c::t_e6d1c0863d5fa5 1-17
+src/reglages.ts
+  s_d0f4332113d26c::t_0c8915b54d0894 27-30
+src/comptes/inscription.ts
+  s_d0f4332113d26c::t_fab908ac91c9e9 7,9-13,36,39-44,46
+src/app/confirmer/[jeton]/NouveauLien.tsx
+  s_d0f4332113d26c::t_e6d1c0863d5fa5 1-46
+src/app/inscription/actions.ts
+  s_d0f4332113d26c::t_fab908ac91c9e9 4,11,35-39
+src/app/confirmer/[jeton]/NouveauLien.test.tsx
+  s_d0f4332113d26c::t_d63708f0c02025 1-29
+src/app/confirmer/[jeton]/page.tsx
+  s_d0f4332113d26c::t_d63708f0c02025 9,41-43
+  s_d0f4332113d26c::t_e6d1c0863d5fa5 1-8,10-40,44-62
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_2d537c990ed4bd 138,141,144
+docs/stories/README.md
+  s_d0f4332113d26c::t_540238e70213ac 7,14,31,33
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_d3bb329e67dd5e 5
+drizzle/meta/0015_snapshot.json
+  s_d0f4332113d26c::t_f78a6a03d32778 1-937
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_1bd817233a21cd 109-115
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b913b8128a8701190910ec2acb0a94df32203612",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
