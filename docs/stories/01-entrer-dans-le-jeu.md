@@ -11,7 +11,8 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 - **Critères d'acceptation** :
   - La page d'accueil montre « Créer un compte » et « Se connecter », visibles sans défiler, sur ordinateur comme sur mobile.
   - « Créer un compte » mène au formulaire d'inscription, « Se connecter » au formulaire de connexion.
-  - Une courte phrase présente le jeu ; son texte (à décider).
+  - Une courte phrase présente le jeu : « Faites votre sac : l'aventure vous attend. »
+  - En production, les deux boutons attendent que l'inscription marche (US-0107) ; « Ouverture prochaine » tient leur place.
 
 ### US-0102 · Ouvrir le formulaire d'inscription
 **En tant que** visiteur, **je veux** un formulaire court qui ne demande que mon adresse e-mail et un mot de passe, **afin de** créer mon compte en moins d'une minute.

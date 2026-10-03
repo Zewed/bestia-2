@@ -1,17 +1,31 @@
+import Link from "next/link";
+import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
 import styles from "./page.module.css";
 
 const TUILE = "(max-width: 820px) 50vw, (max-width: 1100px) 33vw, 220px";
 
 export default function Accueil() {
+  // Tant que l'entrée du jeu est fermée, « Ouverture prochaine » tient sa place.
+  const ouverte = entreeDuJeuOuverte();
   return (
     <main className={styles.accueil}>
       <div>
-        <span className={styles.badge}>Ouverture prochaine</span>
+        {ouverte ? null : <span className={styles.badge}>Ouverture prochaine</span>}
         <h1 className={styles.titre}>Un monde sauvage, des bêtes à apprivoiser.</h1>
         <p className={styles.intro}>
           Faites votre sac : l&apos;aventure vous attend.
         </p>
+        {ouverte ? (
+          <div className={styles.entree}>
+            <Link href="/inscription" className={styles.principal}>
+              Créer un compte
+            </Link>
+            <Link href="/connexion" className={styles.secondaire}>
+              Se connecter
+            </Link>
+          </div>
+        ) : null}
       </div>
 
       <div className={styles.mosaique}>

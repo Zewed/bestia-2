@@ -1,0 +1,30 @@
+/* Les pages d'entrée du jeu (inscription, connexion) : une colonne étroite, centrée. */
+.page {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+
+.titre {
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.03em;
+}
+
+.texte {
+  margin-top: 12px;
+  color: var(--texte-2);
+}
+
+.retour {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  margin-top: 24px;
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+}
+
+.retour:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 3px;
+}
