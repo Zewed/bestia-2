@@ -4,7 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_DEJA_UTILISEE, EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
 import { MOT_DE_PASSE_TROP_COURT, REGLE_MOT_DE_PASSE } from "@/comptes/mot-de-passe";
-import type { EtatInscription } from "./etat";
+import { JEU_INJOIGNABLE, type EtatInscription } from "./etat";
 
 const serveur = vi.hoisted(() => ({ inscrire: vi.fn() }));
 vi.mock("./actions", () => serveur);
@@ -336,5 +336,54 @@ describe("un seul envoi à la fois", () => {
     await u.click(bouton);
     expect(serveur.inscrire).toHaveBeenCalledTimes(2);
     await act(async () => repondre({ erreurs: {}, email: "nom@exemple.fr", cree: true }));
+  });
+});
+
+describe("quand le jeu ne répond pas", () => {
+  beforeEach(() => {
+    serveur.inscrire.mockReset();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  async function envoyer(u: ReturnType<typeof userEvent.setup>) {
+    render(<FormulaireInscription />);
+    await u.type(screen.getByLabelText("Adresse e-mail"), "nom@exemple.fr");
+    await u.type(screen.getByLabelText("Mot de passe"), "une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+  }
+
+  it("prévient sans détail technique quand le réseau coupe ou que le jeu plante", async () => {
+    serveur.inscrire.mockRejectedValue(new Error("ECONNREFUSED 10.0.0.7:5432 (relation compte)"));
+    const u = userEvent.setup();
+    await envoyer(u);
+    expect((await screen.findByText(JEU_INJOIGNABLE)).getAttribute("role")).toBe("alert");
+    expect(document.body.textContent).not.toMatch(/ECONNREFUSED|5432|relation/);
+  });
+
+  it("garde l'adresse et le mot de passe, et laisse réessayer", async () => {
+    serveur.inscrire.mockRejectedValueOnce(new Error("Failed to fetch"));
+    serveur.inscrire.mockResolvedValueOnce({ erreurs: {}, email: "nom@exemple.fr", cree: true });
+    const u = userEvent.setup();
+    await envoyer(u);
+    await screen.findByText(JEU_INJOIGNABLE);
+    expect((screen.getByLabelText("Adresse e-mail") as HTMLInputElement).value).toBe("nom@exemple.fr");
+    expect((screen.getByLabelText("Mot de passe") as HTMLInputElement).value).toBe("une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    expect((await screen.findByRole("status")).textContent).toContain("Votre compte est créé");
+  });
+
+  it("arrête d'attendre un jeu qui ne répond pas du tout, au bout de 15 secondes", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    serveur.inscrire.mockImplementation(() => new Promise(() => {}));
+    const u = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    await envoyer(u);
+    await act(async () => vi.advanceTimersByTime(14_000));
+    expect(screen.queryByText(JEU_INJOIGNABLE)).toBeNull();
+    await act(async () => vi.advanceTimersByTime(1_500));
+    expect(await screen.findByText(JEU_INJOIGNABLE)).toBeTruthy();
+    expect((screen.getByRole("button", { name: "Créer mon compte" }) as HTMLButtonElement).disabled).toBe(false);
   });
 });

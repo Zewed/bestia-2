@@ -1,14 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
+import { useActionState, useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { retenirAdresse } from "@/comptes/adresse-retenue";
 import { EMAIL_DEJA_UTILISEE, normaliserEmail, verifierEmail } from "@/comptes/email";
 import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
-import { MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
+import { INSCRIPTION_DELAI_MAX_MS, MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import styles from "../entree.module.css";
 import { inscrire } from "./actions";
-import { ETAT_INITIAL, type EtatInscription } from "./etat";
+import { ETAT_INITIAL, JEU_INJOIGNABLE, type EtatInscription } from "./etat";
 
 /**
  * Le formulaire d'inscription. Le message sous un champ apparaît quand on quitte le champ ou
@@ -16,15 +16,47 @@ import { ETAT_INITIAL, type EtatInscription } from "./etat";
  * compte créé, la confirmation prend la place du formulaire (US-0108).
  */
 export function FormulaireInscription() {
-  const [etat, envoyer, enAttente] = useActionState(inscrire, ETAT_INITIAL);
+  const [motDePasse, setMotDePasse] = useState("");
+  const envoyerEtSuivre = useCallback(async (precedent: EtatInscription, donnees: FormData) => {
+    const suite = await envoyerAuServeur(precedent, donnees);
+    // Après une réponse du serveur, le mot de passe s'efface ; si le jeu n'a pas répondu, on le garde pour réessayer.
+    if (!suite.erreurs.general) setMotDePasse("");
+    return suite;
+  }, []);
+  const [etat, envoyer, enAttente] = useActionState(envoyerEtSuivre, ETAT_INITIAL);
   if (etat.cree) return <CompteCree email={normaliserEmail(etat.email)} />;
-  return <Formulaire etat={etat} envoyer={envoyer} enAttente={enAttente} />;
+  return <Formulaire etat={etat} envoyer={envoyer} enAttente={enAttente} motDePasse={motDePasse} setMotDePasse={setMotDePasse} />;
 }
 
-type FormulaireProps = { etat: EtatInscription; envoyer: (donnees: FormData) => void; enAttente: boolean };
+/**
+ * US-0111 : l'envoi au serveur. Si le réseau coupe, si le jeu plante ou ne répond pas à temps,
+ * le formulaire reçoit un message compréhensible, jamais le détail technique de la panne.
+ */
+async function envoyerAuServeur(precedent: EtatInscription, donnees: FormData): Promise<EtatInscription> {
+  let minuterie: ReturnType<typeof setTimeout> | undefined;
+  const delaiDepasse = new Promise<never>((_, refus) => {
+    minuterie = setTimeout(() => refus(new Error("délai dépassé")), INSCRIPTION_DELAI_MAX_MS);
+  });
+  try {
+    return await Promise.race([inscrire(precedent, donnees), delaiDepasse]);
+  } catch {
+    return { erreurs: { general: JEU_INJOIGNABLE }, email: String(donnees.get("email") ?? "") };
+  } finally {
+    clearTimeout(minuterie);
+  }
+}
 
-function Formulaire({ etat, envoyer, enAttente }: FormulaireProps) {
-  const [email, setEmail] = useState("");
+type FormulaireProps = {
+  etat: EtatInscription;
+  envoyer: (donnees: FormData) => void;
+  enAttente: boolean;
+  motDePasse: string;
+  setMotDePasse: (valeur: string) => void;
+};
+
+function Formulaire({ etat, envoyer, enAttente, motDePasse, setMotDePasse }: FormulaireProps) {
+  // L'adresse vit dans l'état de l'envoi : elle reste dans le champ quoi qu'il arrive.
+  const [email, setEmail] = useState(etat.email);
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
   const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
@@ -47,7 +79,7 @@ function Formulaire({ etat, envoyer, enAttente }: FormulaireProps) {
   function verifierAvantEnvoi(evenement: FormEvent<HTMLFormElement>) {
     if (envoiVerrouille.current) return evenement.preventDefault();
     const messageEmail = verifierEmail(email);
-    const messageMotDePasse = verifierMotDePasse(String(new FormData(evenement.currentTarget).get("motDePasse") ?? ""));
+    const messageMotDePasse = verifierMotDePasse(motDePasse);
     // À l'envoi, le mot de passe repasse masqué : les gestionnaires de mots de passe le reconnaissent mieux.
     if (!messageEmail && !messageMotDePasse) {
       envoiVerrouille.current = true;
@@ -113,11 +145,13 @@ function Formulaire({ etat, envoyer, enAttente }: FormulaireProps) {
             minLength={MOT_DE_PASSE_MIN}
             {...{ passwordrules: `minlength: ${MOT_DE_PASSE_MIN}; maxlength: ${MOT_DE_PASSE_MAX};` }}
             required
-            onChange={() => {
+            value={motDePasse}
+            onChange={(e) => {
+              setMotDePasse(e.target.value);
               setErreurMotDePasse(null);
               setEnvoiCorrige(etat);
             }}
-            onBlur={(e) => setErreurMotDePasse(verifierMotDePasse(e.currentTarget.value))}
+            onBlur={() => setErreurMotDePasse(verifierMotDePasse(motDePasse))}
             aria-invalid={erreurM ? true : undefined}
             aria-describedby="mot-de-passe-aide"
           />
@@ -142,6 +176,11 @@ function Formulaire({ etat, envoyer, enAttente }: FormulaireProps) {
           </p>
         )}
       </div>
+      {etat.erreurs.general ? (
+        <p className={styles.erreurGenerale} role="alert">
+          {etat.erreurs.general}
+        </p>
+      ) : null}
       {/* US-0110 : pendant l'envoi, le bouton est désactivé et montre qu'il travaille. */}
       <button type="submit" className={styles.envoyer} disabled={enAttente}>
         {enAttente ? (

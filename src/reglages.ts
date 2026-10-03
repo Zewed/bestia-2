@@ -16,3 +16,5 @@ export const TACHE_EN_RETARD_MINUTES = 15;
 export const MOT_DE_PASSE_MIN = 12;
 /** … et au plus 128, assez pour une phrase de passe. */
 export const MOT_DE_PASSE_MAX = 128;
+/** US-0111 : sans réponse du jeu au bout de ce délai, l'inscription prévient qu'il est injoignable. */
+export const INSCRIPTION_DELAI_MAX_MS = 15_000;

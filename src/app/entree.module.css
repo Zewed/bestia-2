@@ -186,6 +186,16 @@
   outline-offset: 3px;
 }
 
+/* US-0111 : le jeu n'a pas répondu ; le message se pose au-dessus du bouton, pour réessayer. */
+.erreurGenerale {
+  padding: 10px 14px;
+  border-radius: var(--arrondi-moyen);
+  background: var(--rose);
+  color: var(--rose-fonce);
+  font-size: 14px;
+  font-weight: var(--graisse-titre);
+}
+
 /* Le lien dans un message d'erreur (« Se connecter » quand l'adresse a déjà un compte). */
 .lienErreur {
   color: inherit;
