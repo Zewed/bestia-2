@@ -33,6 +33,17 @@
   border-color: var(--trait);
 }
 
+/* Un champ refusé : contour et message dans le ton du danger. */
+.champ input[aria-invalid="true"] {
+  border-color: var(--rose-fonce);
+}
+
+.erreur {
+  color: var(--rose-fonce);
+  font-size: 13.5px;
+  font-weight: var(--graisse-titre);
+}
+
 .champ input:focus-visible {
   border-color: var(--encre);
   background: var(--bloc);

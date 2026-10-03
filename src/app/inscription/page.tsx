@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { PageEntree } from "@/components/PageEntree";
 import styles from "../entree.module.css";
-import { inscrire } from "./actions";
+import { FormulaireInscription } from "./FormulaireInscription";
 
 export const metadata: Metadata = { title: "Créer un compte" };
 
@@ -16,29 +16,7 @@ export default function Inscription() {
       titre="Créer un compte"
       illustration={{ chemin: "entree/inscription.webp", alt: "Un sac d'aventurier ouvert sur un rocher, au-dessus d'une vallée sauvage au lever du soleil" }}
     >
-      {/* Les messages d'erreur sur les champs arrivent avec US-0103 à US-0105 : pas de bulles du navigateur d'ici là. */}
-      <form action={inscrire} className={styles.formulaire} noValidate>
-        <label className={styles.champ}>
-          <span>Adresse e-mail</span>
-          <input
-            type="email"
-            name="email"
-            inputMode="email"
-            autoComplete="email"
-            autoCapitalize="none"
-            spellCheck={false}
-            required
-          />
-        </label>
-        <label className={styles.champ}>
-          <span>Mot de passe</span>
-          {/* « new-password » : le navigateur propose un mot de passe fort et le retient. */}
-          <input type="password" name="motDePasse" autoComplete="new-password" required />
-        </label>
-        <button type="submit" className={styles.envoyer}>
-          Créer mon compte
-        </button>
-      </form>
+      <FormulaireInscription />
       <p className={styles.autre}>
         <Link href="/connexion" className={styles.lien}>
           J&apos;ai déjà un compte
