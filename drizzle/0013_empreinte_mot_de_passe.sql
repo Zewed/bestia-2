@@ -1,0 +1,2 @@
+ALTER TABLE "compte" ADD COLUMN "empreinte_mot_de_passe" text NOT NULL;--> statement-breakpoint
+ALTER TABLE "compte" ADD CONSTRAINT "compte_empreinte_scrypt" CHECK ("compte"."empreinte_mot_de_passe" ~ '^scrypt\$[0-9]+\$[0-9]+\$[0-9]+\$[A-Za-z0-9+/=]+\$[A-Za-z0-9+/=]+$');

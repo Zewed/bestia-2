@@ -150,8 +150,8 @@ export const coupleDeDepart = pgTable("couple_de_depart", {
 });
 
 /**
- * Un compte : pour l'instant, son adresse e-mail (le mot de passe arrive avec US-0107).
- * La base refuse une adresse avec des majuscules ou des espaces (US-0104) : elle est
+ * Un compte : son adresse e-mail et l'empreinte de son mot de passe (US-0107), jamais le mot
+ * de passe lui-même. La base refuse une adresse avec des majuscules ou des espaces (US-0104) : elle est
  * toujours enregistrée sous sa forme normale, donc deux écritures d'une même adresse
  * tombent sur le même compte, et l'unicité vaut sans tenir compte des majuscules.
  */
@@ -160,7 +160,13 @@ export const compte = pgTable(
   {
     id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
     email: text("email").notNull().unique(),
+    /** L'empreinte scrypt du mot de passe (src/comptes/empreinte.ts). */
+    empreinteMotDePasse: text("empreinte_mot_de_passe").notNull(),
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [check("compte_email_normalise", sql`${t.email} = lower(${t.email}) and ${t.email} !~ '[[:space:]]'`)],
+  (t) => [
+    check("compte_email_normalise", sql`${t.email} = lower(${t.email}) and ${t.email} !~ '[[:space:]]'`),
+    // Garde-fou : rien d'autre qu'une empreinte ne peut entrer, jamais un mot de passe en clair.
+    check("compte_empreinte_scrypt", sql`${t.empreinteMotDePasse} ~ '^scrypt\\$[0-9]+\\$[0-9]+\\$[0-9]+\\$[A-Za-z0-9+/=]+\\$[A-Za-z0-9+/=]+$'`),
+  ],
 );

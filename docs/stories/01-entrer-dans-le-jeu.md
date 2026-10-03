@@ -12,7 +12,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - La page d'accueil montre « Créer un compte » et « Se connecter », visibles sans défiler, sur ordinateur comme sur mobile.
   - « Créer un compte » mène au formulaire d'inscription, « Se connecter » au formulaire de connexion.
   - Une courte phrase présente le jeu : « Faites votre sac : l'aventure vous attend. »
-  - En production, les deux boutons attendent que l'inscription marche (US-0107) ; « Ouverture prochaine » tient leur place.
+  - En production, les deux boutons attendent que la connexion marche (US-0116) ; « Ouverture prochaine » tient leur place.
 
 ### US-0102 · Ouvrir le formulaire d'inscription
 **En tant que** visiteur, **je veux** un formulaire court qui ne demande que mon adresse e-mail et un mot de passe, **afin de** créer mon compte en moins d'une minute.
@@ -67,6 +67,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0107 · Créer le compte
 **En tant que** visiteur, **je veux** que mon compte soit créé dès que le formulaire est valide, **afin de** pouvoir entrer dans le jeu.
 
+- **Statut** : Livrée le 2026-10-03. Empreinte scrypt (réglages OWASP), sel par compte ; la base refuse tout ce qui n'est pas une empreinte. L'inscription reste fermée en production jusqu'à US-0116.
 - **Débloquée par** : US-0104, US-0105
 - **Critères d'acceptation** :
   - Un formulaire valide crée un compte avec l'adresse et le mot de passe.

@@ -25,3 +25,6 @@ export function verifierEmail(valeur: string): string | null {
 export function normaliserEmail(valeur: string): string {
   return valeur.trim().toLowerCase();
 }
+
+/** US-0109 : le message quand l'adresse a déjà un compte. */
+export const EMAIL_DEJA_UTILISEE = "Cette adresse a déjà un compte";
