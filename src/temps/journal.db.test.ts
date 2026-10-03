@@ -1,7 +1,7 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
-import { dernierPassage, journaliserPassage } from "./absents";
+import { dernierPassage, derniersPassages, journaliserPassage } from "./absents";
 
 describe.skipIf(!URL_TEST)("journal de la tâche planifiée (sur base)", () => {
   let pool: Pool;
@@ -33,6 +33,19 @@ describe.skipIf(!URL_TEST)("journal de la tâche planifiée (sur base)", () => {
       erreurs: [{ element: "monde", id: 7, raison: "panne d'essai" }],
     });
     expect(await dernierPassage(pool)).toEqual(debut);
+  });
+
+  it("rend les derniers passages, du plus récent au plus ancien, pour la page de contrôle", async () => {
+    // Comme plus haut : deux instants lointains, juste après ceux des lancements précédents.
+    const debut = Date.UTC(3000, 0, 1) + Date.now();
+    const reussi = { rattrapes: 4, echecs: 0, restants: 0, dureeMs: 120, erreurs: [] };
+    const rate = { rattrapes: 0, echecs: 1, restants: 2, dureeMs: 45000, erreurs: [{ element: "tache", id: null, raison: "base injoignable" }] };
+    await journaliserPassage(pool, new Date(debut), reussi);
+    await journaliserPassage(pool, new Date(debut + 1), rate);
+    expect(await derniersPassages(pool, 2)).toEqual([
+      { debut: new Date(debut + 1), ...rate },
+      { debut: new Date(debut), ...reussi },
+    ]);
   });
 
   it("garde les passages des 7 derniers jours et efface les plus anciens", async () => {

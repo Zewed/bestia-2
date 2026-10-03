@@ -1,0 +1,57 @@
+/* La page de contrôle : des blocs Bento, sans illustration. */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 40px 56px;
+}
+
+.titre {
+  margin-bottom: 20px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.valeur {
+  font-size: 24px;
+  font-weight: var(--graisse-titre);
+}
+
+.note {
+  margin-top: 4px;
+  color: var(--texte-discret);
+}
+
+/* Sur un écran étroit, le tableau défile dans son bloc plutôt que d'élargir la page. */
+.defilement {
+  overflow-x: auto;
+}
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableau th {
+  padding: 6px 12px 6px 0;
+  color: var(--texte-discret);
+  font-size: var(--taille-etiquette);
+  text-align: left;
+}
+
+.tableau td {
+  padding: 8px 12px 8px 0;
+  border-top: 1px solid var(--trait-doux);
+}
+
+.echec {
+  color: var(--rose-fonce);
+  font-weight: var(--graisse-titre);
+}
+
+@media (max-width: 820px) {
+  .page {
+    padding: 20px 16px 40px;
+  }
+}

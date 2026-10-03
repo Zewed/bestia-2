@@ -108,6 +108,18 @@ export async function passageDeLaTache(pool: Pool = getPool()): Promise<{ ok: bo
   return { ok, passage };
 }
 
+export type PassageNote = Passage & { debut: Date };
+
+/** Les derniers passages notés, du plus récent au plus ancien, pour la page de contrôle. */
+export async function derniersPassages(pool: Pool, nombre = 20): Promise<PassageNote[]> {
+  const { rows } = await pool.query<PassageNote>(
+    `select debut, duree_ms as "dureeMs", rattrapes, echecs, restants, erreurs
+     from passage_tache order by debut desc limit $1`,
+    [nombre],
+  );
+  return rows;
+}
+
 /** Le dernier passage noté, pour la page de santé. */
 export async function dernierPassage(pool: Pool): Promise<Date | null> {
   const { rows } = await pool.query<{ debut: Date }>("select debut from passage_tache order by debut desc limit 1");

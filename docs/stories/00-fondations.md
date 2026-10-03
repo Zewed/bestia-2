@@ -324,14 +324,14 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
   - Un développeur peut le remettre à zéro sans toucher au reste du Monde.
 
 ### US-0034 · Ouvrir une page de contrôle interne
-**En tant que** développeur, **je veux** une page interne qui montre l'heure du jeu, la vitesse du temps, le compteur de test et les derniers passages de la tâche planifiée, **afin de** surveiller le temps du jeu d'un coup d'œil.
+**En tant que** développeur, **je veux** une page interne qui montre l'heure du jeu, la vitesse du temps et les derniers passages de la tâche planifiée, **afin de** surveiller le temps du jeu d'un coup d'œil.
 
-- **Statut** : Reportée à l'étape 4, où elle sert à vérifier les données de référence.
+- **Statut** : Reportée à l'étape 4, où elle sert à vérifier les données de référence. Livrée le 2026-10-03 sans compteur : US-0033 est couverte par les tests.
 - **Débloquée par** : US-0013, US-0029, US-0033
 - **Critères d'acceptation** :
-  - La page affiche l'heure du jeu, le facteur d'accélération et la valeur du compteur.
+  - La page affiche l'heure du jeu et le facteur d'accélération.
   - Elle liste les derniers passages de la tâche planifiée avec leur résultat.
-  - Elle n'est ouverte qu'aux développeurs ; la façon de les reconnaître (à décider).
+  - Elle n'est ouverte qu'aux développeurs, reconnus par un mot de passe de contrôle en attendant les comptes.
   - Aucun lien visible par un joueur n'y mène.
 
 ### US-0035 · Vérifier le compteur page ouverte
