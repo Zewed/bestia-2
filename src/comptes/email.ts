@@ -17,3 +17,11 @@ export function verifierEmail(valeur: string): string | null {
   if (email.length > LONGUEUR_MAX || !FORME.test(email)) return EMAIL_INVALIDE;
   return null;
 }
+
+/**
+ * La forme sous laquelle une adresse est enregistrée et cherchée (US-0104) : sans espaces
+ * autour, en minuscules. « Nom@Exemple.fr » et « nom@exemple.fr » désignent le même compte.
+ */
+export function normaliserEmail(valeur: string): string {
+  return valeur.trim().toLowerCase();
+}

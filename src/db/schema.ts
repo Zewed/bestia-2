@@ -148,3 +148,19 @@ export const coupleDeDepart = pgTable("couple_de_depart", {
   style: text("style").notNull(),
   phrase: text("phrase").notNull(),
 });
+
+/**
+ * Un compte : pour l'instant, son adresse e-mail (le mot de passe arrive avec US-0107).
+ * La base refuse une adresse avec des majuscules ou des espaces (US-0104) : elle est
+ * toujours enregistrée sous sa forme normale, donc deux écritures d'une même adresse
+ * tombent sur le même compte, et l'unicité vaut sans tenir compte des majuscules.
+ */
+export const compte = pgTable(
+  "compte",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    email: text("email").notNull().unique(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("compte_email_normalise", sql`${t.email} = lower(${t.email}) and ${t.email} !~ '[[:space:]]'`)],
+);

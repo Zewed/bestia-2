@@ -38,6 +38,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0104 · Reconnaître une adresse écrite avec des majuscules
 **En tant que** visiteur, **je veux** que mon adresse soit reconnue même tapée avec des majuscules ou des espaces autour, **afin de** ne jamais me retrouver avec deux comptes, ni bloqué à la connexion.
 
+- **Statut** : Livrée le 2026-10-03 avant la création des comptes : la table des comptes existe, réduite à l'adresse, et la base refuse une adresse avec majuscules ou espaces, ou déjà utilisée. L'inscription (US-0107) et la connexion (US-0116) passeront par la même règle (normaliserEmail).
 - **Débloquée par** : US-0103
 - **Critères d'acceptation** :
   - Les espaces avant et après l'adresse sont retirés.

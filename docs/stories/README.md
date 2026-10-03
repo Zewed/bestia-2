@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0103** · Vérifier le format de l'adresse e-mail (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0104** · Reconnaître une adresse écrite avec des majuscules.
+Dernière story livrée : **US-0104** · Reconnaître une adresse écrite avec des majuscules (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0105** · Exiger un mot de passe assez long.
 
 ## Sommaire
 
