@@ -1,0 +1,23 @@
+src/comptes/deux-appareils.db.test.ts
+  s_d0f4332113d26c::t_9de91d974acbaa 1-42
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_9c80542b8e6631 235
+docs/stories/README.md
+  s_d0f4332113d26c::t_255e05dc9a8f20 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "6e0148f561c88e2ef06d96fea153335466529785",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
