@@ -28,3 +28,5 @@ export const ENVOI_EMAIL_DELAI_MAX_MS = 10_000;
 export const LIEN_CONFIRMATION_HEURES = 24;
 /** … et on n'en renvoie pas un nouveau plus d'une fois par minute, pour ne pas inonder une boîte. */
 export const NOUVEAU_LIEN_ATTENTE_SECONDES = 60;
+/** US-0116 : une session dure 30 jours (valeur provisoire, à fixer avec US-0119). */
+export const SESSION_JOURS = 30;

@@ -3,10 +3,11 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const serveur = vi.hoisted(() => ({ seConnecter: vi.fn(async () => {}) }));
+const serveur = vi.hoisted(() => ({ seConnecter: vi.fn(async (_: unknown, donnees: FormData) => ({ email: String(donnees.get("email")) })) }));
 vi.mock("./actions", () => serveur);
 
 import { FormulaireConnexion } from "./FormulaireConnexion";
+import { CONNEXION_REFUSEE } from "./etat";
 
 describe("formulaire de connexion", () => {
   afterEach(() => {
@@ -61,5 +62,17 @@ describe("formulaire de connexion", () => {
     await u.click(screen.getByRole("button", { name: "Se connecter" }));
     await vi.waitFor(() => expect(serveur.seConnecter).toHaveBeenCalledTimes(1));
     expect(location.href).not.toContain("phrase");
+  });
+
+  it("affiche le refus et garde l'adresse quand les identifiants sont faux", async () => {
+    serveur.seConnecter.mockImplementationOnce(async (_: unknown, donnees: FormData) => ({ erreur: CONNEXION_REFUSEE, email: String(donnees.get("email")) }));
+    const u = userEvent.setup();
+    render(<FormulaireConnexion />);
+    await u.type(email(), "nom@exemple.fr");
+    await u.type(motDePasse(), "un mauvais mot de passe");
+    await u.click(screen.getByRole("button", { name: "Se connecter" }));
+    expect((await screen.findByRole("alert")).textContent).toBe(CONNEXION_REFUSEE);
+    expect(email().value).toBe("nom@exemple.fr");
+    expect(motDePasse().value).toBe("");
   });
 });

@@ -165,6 +165,8 @@ export const compte = pgTable(
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
     /** US-0114 : quand l'adresse a été confirmée, ou null tant qu'elle ne l'est pas. */
     emailConfirmeLe: timestamp("email_confirme_le", { withTimezone: true }),
+    /** US-0116 : la dernière connexion, ou null avant la première. */
+    derniereConnexionLe: timestamp("derniere_connexion_le", { withTimezone: true }),
   },
   (t) => [
     check("compte_email_normalise", sql`${t.email} = lower(${t.email}) and ${t.email} !~ '[[:space:]]'`),
@@ -204,4 +206,22 @@ export const lienConfirmation = pgTable(
     utiliseLe: timestamp("utilise_le", { withTimezone: true }),
   },
   (t) => [index("lien_confirmation_par_compte").on(t.compteId, t.creeLe)],
+);
+
+/**
+ * Une session (US-0116) : ce qui garde un joueur connecté. Le navigateur garde un jeton tiré
+ * au hasard dans un cookie ; la base n'en garde que l'empreinte.
+ */
+export const session = pgTable(
+  "session",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    compteId: integer("compte_id")
+      .notNull()
+      .references(() => compte.id, { onDelete: "cascade" }),
+    empreinteJeton: text("empreinte_jeton").notNull().unique(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    expireLe: timestamp("expire_le", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("session_par_compte").on(t.compteId)],
 );

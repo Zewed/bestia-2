@@ -8,7 +8,7 @@ describe("ouverture de l'entrée du jeu", () => {
     expect(entreeDuJeuOuverte({ VERCEL_ENV: "development" })).toBe(true);
   });
 
-  it("reste fermée en production tant qu'on ne peut pas se connecter (US-0116)", () => {
+  it("reste fermée en production tant qu'un nouveau joueur ne peut pas vraiment commencer", () => {
     expect(COMPTES_OUVERTS_EN_PRODUCTION).toBe(false);
     expect(entreeDuJeuOuverte({ VERCEL_ENV: "production" })).toBe(false);
   });

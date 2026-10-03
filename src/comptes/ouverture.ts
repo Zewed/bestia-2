@@ -1,7 +1,10 @@
 // L'entrée du jeu (créer un compte, se connecter) : visible en local et sur les prévisualisations
-// dès maintenant ; en production, seulement quand on peut s'inscrire puis se connecter.
+// dès maintenant ; en production, seulement quand un nouveau joueur peut vraiment commencer.
 
-/** Passe à true quand la connexion marche (US-0116) : un nouveau compte peut alors entrer. Jusque-là : « Ouverture prochaine ». */
+/**
+ * Passe à true quand un nouveau joueur peut vraiment commencer (nom de chef et premières Bêtes)
+ * et que les e-mails partent (Zewed/bestia-2#1). Jusque-là : « Ouverture prochaine ».
+ */
 export const COMPTES_OUVERTS_EN_PRODUCTION = false;
 
 /** Vrai si la page d'accueil montre l'entrée du jeu, et si les pages d'inscription et de connexion répondent. */

@@ -12,7 +12,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - La page d'accueil montre « Créer un compte » et « Se connecter », visibles sans défiler, sur ordinateur comme sur mobile.
   - « Créer un compte » mène au formulaire d'inscription, « Se connecter » au formulaire de connexion.
   - Une courte phrase présente le jeu : « Faites votre sac : l'aventure vous attend. »
-  - En production, les deux boutons attendent que la connexion marche (US-0116) ; « Ouverture prochaine » tient leur place.
+  - En production, les deux boutons attendent qu'un nouveau joueur puisse vraiment commencer (nom de chef, premières Bêtes) et que les e-mails partent (Zewed/bestia-2#1) ; « Ouverture prochaine » tient leur place.
 
 ### US-0102 · Ouvrir le formulaire d'inscription
 **En tant que** visiteur, **je veux** un formulaire court qui ne demande que mon adresse e-mail et un mot de passe, **afin de** créer mon compte en moins d'une minute.
@@ -157,6 +157,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0116 · Se connecter
 **En tant que** joueur, **je veux** me connecter avec mon adresse et mon mot de passe, **afin de** retrouver mon jeu là où je l'ai laissé.
 
+- **Statut** : Livrée le 2026-10-03. La session tient dans un cookie httpOnly (__Host- en ligne), la base n'en garde que l'empreinte ; sa durée provisoire est de 30 jours (US-0119). La page du jeu est provisoire. L'entrée reste fermée en production.
 - **Débloquée par** : US-0107, US-0115
 - **Critères d'acceptation** :
   - Une adresse et un mot de passe justes ouvrent une session.

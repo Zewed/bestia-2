@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { lireAdresseRetenue } from "@/comptes/adresse-retenue";
 import { ChampMotDePasse } from "../ChampMotDePasse";
 import styles from "../entree.module.css";
 import { seConnecter } from "./actions";
+import { ETAT_CONNEXION_INITIAL } from "./etat";
 
 /**
  * Le formulaire de connexion (US-0115) : l'adresse et le mot de passe, que le navigateur peut
  * remplir avec ce qu'il a enregistré. En arrivant de l'inscription, l'adresse est déjà là (US-0108).
+ * Des identifiants justes mènent au jeu (US-0116) ; sinon un message s'affiche et l'adresse reste.
  */
 export function FormulaireConnexion() {
+  const [etat, envoyer, enAttente] = useActionState(seConnecter, ETAT_CONNEXION_INITIAL);
   const [email, setEmail] = useState("");
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
 
@@ -23,7 +26,7 @@ export function FormulaireConnexion() {
   }, []);
 
   return (
-    <form action={seConnecter} className={styles.formulaire}>
+    <form action={envoyer} className={styles.formulaire}>
       <div className={styles.champ}>
         <label htmlFor="email">Adresse e-mail</label>
         {/* « username » : le navigateur y reconnaît l'identifiant à associer au mot de passe enregistré. */}
@@ -51,8 +54,20 @@ export function FormulaireConnexion() {
           basculer={() => setMotDePasseVisible((visible) => !visible)}
         />
       </div>
-      <button type="submit" className={styles.envoyer}>
-        Se connecter
+      {etat.erreur ? (
+        <p className={styles.erreurGenerale} role="alert">
+          {etat.erreur}
+        </p>
+      ) : null}
+      <button type="submit" className={styles.envoyer} disabled={enAttente}>
+        {enAttente ? (
+          <>
+            <span className={styles.roue} aria-hidden="true" />
+            Connexion…
+          </>
+        ) : (
+          "Se connecter"
+        )}
       </button>
       <p className={styles.autre}>
         <Link href="/inscription" className={styles.lien}>
