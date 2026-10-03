@@ -27,6 +27,8 @@ describe("se déconnecter", () => {
     await seDeconnecter();
     expect(sessions.fermerSession).toHaveBeenCalledWith({}, "jeton-de-session");
     expect(pot.cookies.get("bestia_session")).toMatchObject({ value: "", options: { maxAge: 0, httpOnly: true, path: "/" } });
+    // Le témoin de connexion (US-0122) part avec la session.
+    expect(pot.cookies.get("bestia_connecte")).toMatchObject({ value: "", options: { maxAge: 0, path: "/" } });
   });
 
   it("efface en ligne le cookie __Host- avec ses réglages HTTPS, sans quoi le navigateur l'ignorerait", async () => {
@@ -39,5 +41,16 @@ describe("se déconnecter", () => {
   it("ne va pas en base sans session", async () => {
     await seDeconnecter();
     expect(sessions.fermerSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("à la connexion", () => {
+  it("pose avec la session un témoin lisible par la page, sans aucun secret, qui dure autant qu'elle", async () => {
+    pot.cookies.clear();
+    const fin = new Date("2026-11-02T12:00:00Z");
+    const { poserCookieSession } = await import("./cookie-session");
+    await poserCookieSession("jeton-de-session", fin);
+    expect(pot.cookies.get("bestia_session")).toMatchObject({ value: "jeton-de-session", options: { httpOnly: true, expires: fin } });
+    expect(pot.cookies.get("bestia_connecte")).toMatchObject({ value: "1", options: { httpOnly: false, expires: fin, sameSite: "lax" } });
   });
 });

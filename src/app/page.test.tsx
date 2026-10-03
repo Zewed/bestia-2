@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+// La session du visiteur : personne n'est connecté, sauf quand un test le décide.
+const session = vi.hoisted(() => ({ compteConnecte: vi.fn(async () => null as { id: number; email: string } | null) }));
+vi.mock("@/comptes/cookie-session", () => session);
+
 import Connexion from "./connexion/page";
 import Inscription from "./inscription/page";
 import Accueil from "./page";
@@ -44,5 +48,13 @@ describe("entrée du jeu sur la page d'accueil", () => {
     const rendre = async (suite: string) => renderToStaticMarkup(await Connexion({ searchParams: Promise.resolve({ suite }) }));
     expect(await rendre("/jeu/territoire")).toContain('<input type="hidden" name="suite" value="/jeu/territoire"/>');
     expect(await rendre("https://pirate.exemple")).toContain('<input type="hidden" name="suite" value="/jeu"/>');
+  });
+
+  it.each([
+    ["l'inscription", () => Inscription(), "/jeu"],
+    ["la connexion", () => Connexion({ searchParams: Promise.resolve({ suite: "/jeu/territoire" }) }), "/jeu/territoire"],
+  ])("envoie droit au jeu un joueur déjà connecté qui ouvre %s", async (_, ouvrir, vers) => {
+    session.compteConnecte.mockResolvedValueOnce({ id: 7, email: "nom@exemple.fr" });
+    await expect(ouvrir()).rejects.toMatchObject({ digest: expect.stringContaining(`;${vers};`) });
   });
 });

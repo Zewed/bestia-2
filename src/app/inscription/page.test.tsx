@@ -1,25 +1,31 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/comptes/cookie-session", () => ({ compteConnecte: async () => null }));
+
 import Inscription from "./page";
 
 describe("formulaire d'inscription", () => {
-  const html = renderToStaticMarkup(<Inscription />);
+  let html = "";
+  beforeAll(async () => {
+    html = renderToStaticMarkup(await Inscription());
+  });
   // Les champs que voit un humain : le champ piège (US-0112) est hors de l'écran et caché aux lecteurs d'écran.
-  const champs = [...html.matchAll(/<input [^>]*>/g)].map((m) => m[0]).filter((champ) => !champ.includes('name="siteWeb"'));
+  const champs = () => [...html.matchAll(/<input [^>]*>/g)].map((m) => m[0]).filter((champ) => !champ.includes('name="siteWeb"'));
 
   it("ne demande que l'adresse e-mail et le mot de passe", () => {
-    expect(champs).toHaveLength(2);
+    expect(champs()).toHaveLength(2);
     expect(html).not.toContain('type="checkbox"');
     expect(html).toContain("Adresse e-mail");
     expect(html).toContain("Mot de passe");
   });
 
   it("ouvre le clavier avec « @ » et laisse le navigateur proposer un mot de passe fort", () => {
-    expect(champs[0]).toMatch(/type="email"/);
-    expect(champs[0]).toMatch(/inputMode="email"/);
-    expect(champs[0]).toMatch(/autoComplete="email"/);
-    expect(champs[1]).toMatch(/type="password"/);
-    expect(champs[1]).toMatch(/autoComplete="new-password"/);
+    expect(champs()[0]).toMatch(/type="email"/);
+    expect(champs()[0]).toMatch(/inputMode="email"/);
+    expect(champs()[0]).toMatch(/autoComplete="email"/);
+    expect(champs()[1]).toMatch(/type="password"/);
+    expect(champs()[1]).toMatch(/autoComplete="new-password"/);
   });
 
   it("place « Créer mon compte » sous les champs, et « J'ai déjà un compte » mène à la connexion", () => {

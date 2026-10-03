@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
+import { EntreeDuJeu } from "./EntreeDuJeu";
 import styles from "./page.module.css";
 
 const TUILE = "(max-width: 820px) 50vw, (max-width: 1100px) 33vw, 220px";
@@ -16,16 +16,7 @@ export default function Accueil() {
         <p className={styles.intro}>
           Faites votre sac : l&apos;aventure vous attend.
         </p>
-        {ouverte ? (
-          <div className={styles.entree}>
-            <Link href="/inscription" className={styles.principal}>
-              Créer un compte
-            </Link>
-            <Link href="/connexion" className={styles.secondaire}>
-              Se connecter
-            </Link>
-          </div>
-        ) : null}
+        {ouverte ? <EntreeDuJeu /> : null}
       </div>
 
       <div className={styles.mosaique}>

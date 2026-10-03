@@ -30,6 +30,11 @@ describe("prolongation de la session au passage d'une page du jeu", () => {
     expect(cookie).toMatch(/HttpOnly/i);
     expect(cookie).toMatch(/SameSite=lax/i);
     expect(cookie).toContain("Path=/");
+    // Le témoin de connexion suit la session (US-0122) : prolongé avec elle, lisible par la page.
+    const temoin = reponse?.headers.getSetCookie().find((c) => c.startsWith("bestia_connecte=")) ?? "";
+    expect(temoin).toContain("bestia_connecte=1");
+    expect(temoin).toContain(`Expires=${FIN.toUTCString()}`);
+    expect(temoin).not.toMatch(/HttpOnly/i);
   });
 
   it("ne touche à rien quand la session n'a pas besoin d'être prolongée", async () => {

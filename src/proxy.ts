@@ -3,7 +3,7 @@
 // - les pages du jeu : la session du joueur est prolongée, au plus une fois par jour (US-0119).
 import { NextResponse, type NextRequest } from "next/server";
 import { DEMANDE_MOT_DE_PASSE, motDePasseAccepte } from "./controle/acces";
-import { nomDuCookie, reglagesDuCookie } from "./comptes/cookie-session";
+import { nomDuCookie, nomDuTemoin, reglagesDuCookie, reglagesDuTemoin } from "./comptes/cookie-session";
 import { prolongerSession } from "./comptes/session";
 import { getPool } from "./db";
 
@@ -30,6 +30,7 @@ async function prolongerLaSession(request: NextRequest) {
     if (!fin) return;
     const reponse = NextResponse.next();
     reponse.cookies.set(nomDuCookie(), jeton, reglagesDuCookie(fin));
+    reponse.cookies.set(nomDuTemoin(), "1", reglagesDuTemoin(fin));
     return reponse;
   } catch (erreur) {
     // Une prolongation manquée n'empêche pas de jouer : la session court encore.
