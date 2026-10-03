@@ -491,5 +491,5 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 - **Débloquée par** : US-0048, US-0050
 - **Critères d'acceptation** :
   - Chaque Espèce s'affiche avec son illustration, sa Rareté, son Rôle et toutes ses caractéristiques.
-  - Une caractéristique vide ou encore à régler est signalée en couleur.
+  - Une caractéristique vide est signalée en couleur (rien ne marque encore une valeur « à régler » dans les données).
   - Les Raretés et les Rôles en base sont listés aussi.

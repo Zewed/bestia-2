@@ -99,3 +99,108 @@
   color: inherit;
   opacity: 0.75;
 }
+
+/* Une Espèce par ligne : sa vignette à gauche, sa fiche à droite. */
+.espece {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px 0;
+  border-top: 1px solid var(--trait-doux);
+}
+
+.espece:first-of-type {
+  padding-top: 4px;
+  border-top: 0;
+}
+
+.vignette {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  justify-items: start;
+}
+
+.cadreVignette {
+  width: 100%;
+  border-radius: var(--arrondi-petit);
+}
+
+.nomEspece {
+  font-size: 17px;
+}
+
+.etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: center;
+  margin-top: 4px;
+  color: var(--texte-2);
+}
+
+.pastille {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+}
+
+.caracteristiques {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 10px 16px;
+  margin: 12px 0 0;
+}
+
+.caracteristiques dt {
+  color: var(--texte-discret);
+  font-size: var(--taille-etiquette);
+}
+
+.caracteristiques dd {
+  margin: 0;
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
+.source {
+  margin-top: 10px;
+  color: var(--texte-discret);
+  font-size: 13px;
+}
+
+/* Une valeur absente de la base : signalée en couleur. */
+.vide {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--rose);
+  color: var(--rose-fonce);
+  font-size: 12px;
+  font-weight: var(--graisse-titre);
+}
+
+/* Les Raretés et les Rôles : une ligne chacun, la phrase ou le rang en dessous. */
+.lignes {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.lignes .note {
+  display: block;
+  margin-top: 2px;
+}
+
+@media (max-width: 820px) {
+  .espece {
+    grid-template-columns: 64px minmax(0, 1fr);
+    gap: 12px;
+  }
+  .caracteristiques {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 12px;
+  }
+}

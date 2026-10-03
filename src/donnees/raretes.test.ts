@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { lireJeu } from "./charger";
 import { RARETES } from "./jeux";
@@ -18,5 +20,14 @@ describe("Raretés", () => {
 
   it("ne laissent pas élever les mythiques, et seulement elles", () => {
     expect(raretes.filter((r) => !r.s_elevent).map((r) => r.id)).toEqual(["mythique"]);
+  });
+
+  it("ont chacune leurs deux couleurs dans la palette : un fond et un ton pour le texte", () => {
+    const palette = readFileSync(join(__dirname, "../styles/palette.css"), "utf8");
+    for (const { id } of raretes) {
+      const teinte = id.replaceAll("_", "-");
+      expect(palette).toContain(`--rarete-${teinte}:`);
+      expect(palette).toContain(`--rarete-${teinte}-texte:`);
+    }
   });
 });

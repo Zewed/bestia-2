@@ -28,6 +28,49 @@ vi.mock("@/donnees/en-base", () => ({
       ],
     },
   ],
+  especesEnBase: async () => [
+    {
+      id: "poule",
+      nom: "Poule",
+      attaque: 5981,
+      vie: 14953,
+      vitesse: 14,
+      charge: 500,
+      taille: 31.623,
+      regime: "omnivore",
+      entretienParHeure: 5,
+      biome: { id: "prairie", nom: "Prairie" },
+      rarete: { id: "commune", nom: "Commune" },
+      role: { id: "nourricier", nom: "Nourricier" },
+      masseG: 2000,
+      facteurArme: 0.4,
+      illustration: "especes/poule.webp",
+      source: "Gallus gallus domesticus",
+    },
+    {
+      id: "essai",
+      nom: "Bête d'essai",
+      attaque: 473,
+      vie: 473,
+      vitesse: 2,
+      charge: 5,
+      taille: 1,
+      regime: "herbivore",
+      entretienParHeure: 0.167,
+      biome: { id: "prairie", nom: "Prairie" },
+      rarete: { id: "peu_commune", nom: "Peu commune" },
+      role: null,
+      masseG: null,
+      facteurArme: null,
+      illustration: null,
+      source: null,
+    },
+  ],
+  raretesEnBase: async () => [
+    { id: "commune", nom: "Commune", rang: 1, selevent: true },
+    { id: "mythique", nom: "Mythique", rang: 6, selevent: false },
+  ],
+  rolesEnBase: async () => [{ id: "eclaireur", nom: "Éclaireur", phrase: "Voit loin." }],
 }));
 
 import Controle from "./page";
@@ -66,5 +109,39 @@ describe("page de contrôle", () => {
     expect(html).toMatch(/Prairie<\/span> <code[^>]*>prairie<\/code>/);
     expect(html).toContain('aria-label="Les 4 formes : Eau"');
     for (const forme of ["Côte", "Lac", "Rivière", "Mer"]) expect(html).toContain(`<li>${forme} <code`);
+  });
+
+  it("montre chaque Espèce avec sa vignette, sa Rareté, son Rôle et toutes ses caractéristiques", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const html = renderToStaticMarkup(await Controle());
+    expect(html).toContain("Espèces en base · 2");
+    expect(html).toMatch(/srcSet="\/_next\/image\?url=%2Fillustrations%2Fespeces%2Fpoule\.webp/);
+    expect(html).toContain('sizes="96px"');
+    expect(html).toContain("var(--rarete-commune)");
+    expect(html).toContain("Nourricier");
+    for (const valeur of ["5 981", "14 953", "14 km/h", "31,623", "5 / h", "omnivore", "2 000 g", "0,4", "Gallus gallus domesticus"]) {
+      expect(html.replaceAll("\u202f", " ")).toContain(valeur);
+    }
+  });
+
+  it("signale en couleur chaque champ vide, et met la tête de loup à la place d'une illustration absente", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const html = renderToStaticMarkup(await Controle());
+    const essai = html.slice(html.indexOf("Bête d&#x27;essai"));
+    // L'illustration, la masse, l'arme et la source : quatre champs vides.
+    expect(essai.match(/class="[^"]*vide[^"]*"( title="[^"]*")?>vide</g)).toHaveLength(4);
+    expect(essai).toContain('title="Pas d&#x27;illustration en base"');
+    expect(html).toContain('aria-label="Bête d&#x27;essai"');
+    expect(html).toContain("var(--rarete-peu-commune)");
+    expect(essai).toContain("Aucun Rôle");
+  });
+
+  it("liste aussi les Raretés et les Rôles en base", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const html = renderToStaticMarkup(await Controle());
+    expect(html).toContain("Raretés en base · 2");
+    expect(html).toContain("rang 6 · ne s&#x27;élèvent pas");
+    expect(html).toContain("Rôles en base · 1");
+    expect(html).toContain("Voit loin.");
   });
 });

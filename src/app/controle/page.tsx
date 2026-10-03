@@ -6,11 +6,12 @@ import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
-import { biomesEnBase } from "@/donnees/en-base";
+import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
 import { maintenant, vitesse } from "@/temps/horloge";
+import { FicheEspece, PastilleRarete } from "./FicheEspece";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Contrôle", robots: { index: false, follow: false } };
@@ -22,7 +23,14 @@ export default async function Controle() {
   await connection();
   // Le proxy demande déjà le mot de passe ; la page vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) notFound();
-  const [passages, biomes] = await Promise.all([derniersPassages(getPool()), biomesEnBase(getPool())]);
+  const pool = getPool();
+  const [passages, biomes, especes, raretes, roles] = await Promise.all([
+    derniersPassages(pool),
+    biomesEnBase(pool),
+    especesEnBase(pool),
+    raretesEnBase(pool),
+    rolesEnBase(pool),
+  ]);
   const facteur = vitesse();
 
   return (
@@ -88,6 +96,35 @@ export default async function Controle() {
               ))}
             </ul>
           )}
+        </Bloc>
+        <Bloc titre={`Espèces en base · ${especes.length}`}>
+          {especes.length === 0 ? (
+            <p className={styles.note}>Aucune Espèce en base : lancez npm run db:donnees.</p>
+          ) : (
+            especes.map((e) => <FicheEspece key={e.id} espece={e} />)
+          )}
+        </Bloc>
+        <Bloc titre={`Raretés en base · ${raretes.length}`} largeur={6}>
+          <ul className={styles.lignes}>
+            {raretes.map((r) => (
+              <li key={r.id}>
+                <PastilleRarete rarete={r} /> <code className={styles.id}>{r.id}</code>
+                <span className={styles.note}>
+                  rang {r.rang} · {r.selevent ? "s'élèvent" : "ne s'élèvent pas"}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Bloc>
+        <Bloc titre={`Rôles en base · ${roles.length}`} largeur={6}>
+          <ul className={styles.lignes}>
+            {roles.map((r) => (
+              <li key={r.id}>
+                <span className={styles.nom}>{r.nom}</span> <code className={styles.id}>{r.id}</code>
+                <span className={styles.note}>{r.phrase}</span>
+              </li>
+            ))}
+          </ul>
         </Bloc>
       </Grille>
     </main>
