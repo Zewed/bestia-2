@@ -1,0 +1,28 @@
+src/app/entree.module.css
+  s_d0f4332113d26c::t_7cd0285ea4173c 160-170
+src/app/inscription/FormulaireInscription.tsx
+  s_d0f4332113d26c::t_7cd0285ea4173c 6,75-83
+src/app/inscription/FormulaireInscription.test.tsx
+  s_d0f4332113d26c::t_721c33d9d322d5 5,233-276
+  s_d0f4332113d26c::t_83b423115667f3 277
+src/comptes/inscriptions-simultanees.db.test.ts
+  s_d0f4332113d26c::t_721c33d9d322d5 1-28
+docs/stories/README.md
+  s_d0f4332113d26c::t_3d014d5318b5b0 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "61b3a60e9fa08a0891ee2a95ef0f11675c4ef38c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
