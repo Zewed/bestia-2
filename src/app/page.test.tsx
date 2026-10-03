@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Connexion from "./connexion/page";
@@ -28,16 +29,20 @@ describe("entrée du jeu sur la page d'accueil", () => {
   it.each([
     ["inscription", Inscription, "Créer un compte"],
     ["connexion", Connexion, "Se connecter"],
-  ])("la page de %s répond, et reste introuvable en production", (_, Page, titre) => {
-    expect(renderToStaticMarkup(<Page />)).toContain(`<h1`);
-    expect(renderToStaticMarkup(<Page />)).toContain(titre);
+  ])("la page de %s répond, et reste introuvable en production", async (_, Page, titre) => {
+    // La page de connexion lit ses paramètres (US-0121) : elle est asynchrone.
+    const rendre = async () =>
+      renderToStaticMarkup(await (Page as (p: { searchParams: Promise<object> }) => ReactNode)({ searchParams: Promise.resolve({}) }));
+    const html = await rendre();
+    expect(html).toContain("<h1");
+    expect(html).toContain(titre);
     vi.stubEnv("VERCEL_ENV", "production");
-    let erreur: unknown;
-    try {
-      renderToStaticMarkup(<Page />);
-    } catch (e) {
-      erreur = e;
-    }
-    expect(erreur).toMatchObject({ digest: expect.stringContaining("404") });
+    await expect(rendre()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+  });
+
+  it("garde dans la connexion la page du jeu où revenir, après l'avoir vérifiée", async () => {
+    const rendre = async (suite: string) => renderToStaticMarkup(await Connexion({ searchParams: Promise.resolve({ suite }) }));
+    expect(await rendre("/jeu/territoire")).toContain('<input type="hidden" name="suite" value="/jeu/territoire"/>');
+    expect(await rendre("https://pirate.exemple")).toContain('<input type="hidden" name="suite" value="/jeu"/>');
   });
 });

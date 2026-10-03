@@ -25,7 +25,8 @@ describe("formulaire de connexion", () => {
     expect(email().getAttribute("autocomplete")).toBe("username");
     expect(motDePasse().type).toBe("password");
     expect(motDePasse().getAttribute("autocomplete")).toBe("current-password");
-    expect(document.querySelectorAll("input")).toHaveLength(2);
+    // Deux champs à remplir ; le troisième, caché, porte la page où revenir (US-0121).
+    expect(document.querySelectorAll('input:not([type="hidden"])')).toHaveLength(2);
   });
 
   it("a l'œil pour afficher le mot de passe", async () => {

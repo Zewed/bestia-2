@@ -13,7 +13,7 @@ import { ETAT_CONNEXION_INITIAL } from "./etat";
  * remplir avec ce qu'il a enregistré. En arrivant de l'inscription, l'adresse est déjà là (US-0108).
  * Des identifiants justes mènent au jeu (US-0116) ; sinon un message s'affiche et l'adresse reste.
  */
-export function FormulaireConnexion() {
+export function FormulaireConnexion({ suite = "/jeu" }: { suite?: string }) {
   const [etat, envoyer, enAttente] = useActionState(seConnecter, ETAT_CONNEXION_INITIAL);
   const [email, setEmail] = useState("");
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
@@ -27,6 +27,8 @@ export function FormulaireConnexion() {
 
   return (
     <form action={envoyer} className={styles.formulaire}>
+      {/* US-0121 : la page du jeu où revenir une fois connecté. */}
+      <input type="hidden" name="suite" value={suite} />
       <div className={styles.champ}>
         <label htmlFor="email">Adresse e-mail</label>
         {/* « username » : le navigateur y reconnaît l'identifiant à associer au mot de passe enregistré. */}

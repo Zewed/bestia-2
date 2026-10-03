@@ -18,10 +18,11 @@ vi.mock("next/navigation", () => ({
 
 import { seConnecter } from "./actions";
 
-const envoi = (email: string, motDePasse: string) => {
+const envoi = (email: string, motDePasse: string, suite = "/jeu") => {
   const donnees = new FormData();
   donnees.set("email", email);
   donnees.set("motDePasse", motDePasse);
+  donnees.set("suite", suite);
   return seConnecter(ETAT_CONNEXION_INITIAL, donnees);
 };
 const FIN = new Date("2026-11-02T12:00:00Z");
@@ -45,6 +46,16 @@ describe("envoi du formulaire de connexion", () => {
     expect(sessions.ouvrirSession).toHaveBeenCalledWith({}, 7);
     expect(connexion.noterConnexion).toHaveBeenCalledWith({}, 7);
     expect(cookie.poserCookieSession).toHaveBeenCalledWith("jeton-de-session", FIN);
+  });
+
+  it("mène, une fois connecté, à la page du jeu demandée avant la connexion", async () => {
+    connexion.seConnecterAvecFrein.mockResolvedValue({ statut: "acceptee", compte: { id: 7, email: "nom@exemple.fr" } });
+    await expect(envoi("nom@exemple.fr", "une phrase de passe", "/jeu/territoire")).rejects.toMatchObject({ vers: "/jeu/territoire" });
+  });
+
+  it("ne suit jamais un retour vers un autre site", async () => {
+    connexion.seConnecterAvecFrein.mockResolvedValue({ statut: "acceptee", compte: { id: 7, email: "nom@exemple.fr" } });
+    await expect(envoi("nom@exemple.fr", "une phrase de passe", "https://pirate.exemple")).rejects.toMatchObject({ vers: "/jeu" });
   });
 
   it("freine par adresse, sous sa forme normale, sans la garder en clair", async () => {

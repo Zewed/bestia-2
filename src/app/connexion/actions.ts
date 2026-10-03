@@ -7,14 +7,15 @@ import { normaliserEmail } from "@/comptes/email";
 import { empreinteAdresse } from "@/comptes/empreinte-reseau";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { ouvrirSession } from "@/comptes/session";
+import { suiteSure } from "@/comptes/suite";
 import { getPool } from "@/db";
 import { MOT_DE_PASSE_MAX } from "@/reglages";
 import { CONNEXION_REFUSEE, connexionBloquee, ETAT_CONNEXION_INITIAL, type EtatConnexion } from "./etat";
 
 /**
  * L'envoi du formulaire de connexion (US-0116). Il passe par le serveur (POST), jamais par
- * l'adresse de la page. Des identifiants justes ouvrent une session et mènent au jeu ; les
- * essais répétés sont freinés (US-0118).
+ * l'adresse de la page. Des identifiants justes ouvrent une session et mènent au jeu, sur la
+ * page demandée avant la connexion (US-0121) ; les essais répétés sont freinés (US-0118).
  */
 export async function seConnecter(_precedent: EtatConnexion, donnees: FormData): Promise<EtatConnexion> {
   if (!entreeDuJeuOuverte()) return ETAT_CONNEXION_INITIAL;
@@ -30,5 +31,6 @@ export async function seConnecter(_precedent: EtatConnexion, donnees: FormData):
   const { jeton, expireLe } = await ouvrirSession(pool, compte.id);
   await noterConnexion(pool, compte.id);
   await poserCookieSession(jeton, expireLe);
-  redirect("/jeu");
+  // Le chemin de retour vient du navigateur : il est revérifié ici, jamais suivi les yeux fermés.
+  redirect(suiteSure(String(donnees.get("suite") ?? "")));
 }

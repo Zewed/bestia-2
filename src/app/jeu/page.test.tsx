@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const session = vi.hoisted(() => ({ compteConnecte: vi.fn() }));
 vi.mock("@/comptes/cookie-session", () => session);
+// La vraie garde, branchée sur la session simulée.
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
 import Jeu from "./page";
