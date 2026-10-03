@@ -1,0 +1,31 @@
+src/emails/envoi.test.ts
+  s_d0f4332113d26c::t_13ad1bfbfefe26 1-74
+src/emails/envoi.ts
+  s_d0f4332113d26c::t_3d84072a077258 1-50
+src/reglages.ts
+  s_d0f4332113d26c::t_3d84072a077258 23-26
+.env.example
+  s_d0f4332113d26c::t_5343000f3406f6 22-25
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_ea2471a02e1708 127,130-131
+docs/stories/README.md
+  s_d0f4332113d26c::t_e754d90e6d7c31 7,14,31
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_2729a5621ed70a 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2b4cebcd579ebe7feb18c8e75659ba4a242246a9",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
