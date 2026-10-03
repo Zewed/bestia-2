@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_DEJA_UTILISEE, EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
@@ -273,5 +273,68 @@ describe("adresse qui a déjà un compte", () => {
     lien.addEventListener("click", (e) => e.preventDefault());
     await u.click(lien);
     expect(sessionStorage.getItem("bestia.adresse-connexion")).toBe("nom@exemple.fr");
+  });
+});
+
+describe("un seul envoi à la fois", () => {
+  // Une réponse du serveur qu'on libère quand on veut.
+  let repondre: (etat: EtatInscription) => void;
+  beforeEach(() => {
+    serveur.inscrire.mockReset();
+    serveur.inscrire.mockImplementation(() => new Promise<EtatInscription>((ok) => (repondre = ok)));
+  });
+  afterEach(cleanup);
+
+  async function remplir() {
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.type(screen.getByLabelText("Adresse e-mail"), "nom@exemple.fr");
+    await u.type(screen.getByLabelText("Mot de passe"), "une phrase de passe");
+    return u;
+  }
+
+  it("désactive le bouton pendant l'envoi et montre qu'il travaille", async () => {
+    const u = await remplir();
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    const bouton = await screen.findByRole("button", { name: "Création…" });
+    expect((bouton as HTMLButtonElement).disabled).toBe(true);
+    await act(async () => repondre({ erreurs: {}, email: "nom@exemple.fr", cree: true }));
+  });
+
+  // React met un second envoi en file d'attente et le fait partir après la première réponse :
+  // on vérifie donc qu'aucun envoi ne suit la réponse.
+  async function apresLaReponse() {
+    await act(async () => repondre({ erreurs: { email: EMAIL_DEJA_UTILISEE }, email: "nom@exemple.fr" }));
+    await act(() => new Promise((ok) => setTimeout(ok, 50)));
+  }
+
+  it("n'envoie le formulaire qu'une fois sur un double clic", async () => {
+    const u = await remplir();
+    await u.dblClick(screen.getByRole("button", { name: "Créer mon compte" }));
+    await apresLaReponse();
+    expect(serveur.inscrire).toHaveBeenCalledTimes(1);
+  });
+
+  it("n'envoie le formulaire qu'une fois sur deux appuis dans le même instant", async () => {
+    await remplir();
+    const bouton = screen.getByRole("button", { name: "Créer mon compte" }) as HTMLButtonElement;
+    // Comme dans un vrai navigateur : les deux appuis arrivent avant que le bouton ne se désactive.
+    bouton.click();
+    bouton.click();
+    await apresLaReponse();
+    expect(serveur.inscrire).toHaveBeenCalledTimes(1);
+  });
+
+  it("redevient actif quand le serveur refuse", async () => {
+    const u = await remplir();
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    await screen.findByRole("button", { name: "Création…" });
+    await act(async () => repondre({ erreurs: { email: EMAIL_DEJA_UTILISEE }, email: "nom@exemple.fr" }));
+    const bouton = screen.getByRole("button", { name: "Créer mon compte" }) as HTMLButtonElement;
+    expect(bouton.disabled).toBe(false);
+    await u.type(screen.getByLabelText("Mot de passe"), "une phrase de passe");
+    await u.click(bouton);
+    expect(serveur.inscrire).toHaveBeenCalledTimes(2);
+    await act(async () => repondre({ erreurs: {}, email: "nom@exemple.fr", cree: true }));
   });
 });

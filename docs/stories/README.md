@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0109** · Refuser une adresse déjà utilisée (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0110** · Empêcher le double envoi du formulaire.
+Dernière story livrée : **US-0110** · Empêcher le double envoi du formulaire (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0111** · Garder ses saisies quand le jeu ne répond pas.
 
 ## Sommaire
 

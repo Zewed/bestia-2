@@ -16,12 +16,14 @@ import { ETAT_INITIAL, type EtatInscription } from "./etat";
  * compte créé, la confirmation prend la place du formulaire (US-0108).
  */
 export function FormulaireInscription() {
-  const [etat, envoyer] = useActionState(inscrire, ETAT_INITIAL);
+  const [etat, envoyer, enAttente] = useActionState(inscrire, ETAT_INITIAL);
   if (etat.cree) return <CompteCree email={normaliserEmail(etat.email)} />;
-  return <Formulaire etat={etat} envoyer={envoyer} />;
+  return <Formulaire etat={etat} envoyer={envoyer} enAttente={enAttente} />;
 }
 
-function Formulaire({ etat, envoyer }: { etat: EtatInscription; envoyer: (donnees: FormData) => void }) {
+type FormulaireProps = { etat: EtatInscription; envoyer: (donnees: FormData) => void; enAttente: boolean };
+
+function Formulaire({ etat, envoyer, enAttente }: FormulaireProps) {
   const [email, setEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
   const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
@@ -30,16 +32,27 @@ function Formulaire({ etat, envoyer }: { etat: EtatInscription; envoyer: (donnee
   const [envoiCorrige, setEnvoiCorrige] = useState(ETAT_INITIAL);
   const champEmail = useRef<HTMLInputElement>(null);
   const champMotDePasse = useRef<HTMLInputElement>(null);
+  // US-0110 : un envoi à la fois. Deux appuis dans le même instant passent tous deux avant que
+  // React n'ait désactivé le bouton : le verrou se pose dès le premier, et se lève quand la
+  // réponse du serveur arrive.
+  const envoiVerrouille = useRef(false);
+  useEffect(() => {
+    envoiVerrouille.current = false;
+  }, [etat]);
 
   // Un refus du serveur reste affiché tant que le champ n'a pas changé depuis l'envoi.
   const erreurE = erreurEmail ?? (etat.erreurs.email && etat.email === email ? etat.erreurs.email : null);
   const erreurM = erreurMotDePasse ?? (etat !== envoiCorrige ? (etat.erreurs.motDePasse ?? null) : null);
 
   function verifierAvantEnvoi(evenement: FormEvent<HTMLFormElement>) {
+    if (envoiVerrouille.current) return evenement.preventDefault();
     const messageEmail = verifierEmail(email);
     const messageMotDePasse = verifierMotDePasse(String(new FormData(evenement.currentTarget).get("motDePasse") ?? ""));
     // À l'envoi, le mot de passe repasse masqué : les gestionnaires de mots de passe le reconnaissent mieux.
-    if (!messageEmail && !messageMotDePasse) return setMotDePasseVisible(false);
+    if (!messageEmail && !messageMotDePasse) {
+      envoiVerrouille.current = true;
+      return setMotDePasseVisible(false);
+    }
     evenement.preventDefault();
     setErreurEmail(messageEmail);
     setErreurMotDePasse(messageMotDePasse);
@@ -129,8 +142,16 @@ function Formulaire({ etat, envoyer }: { etat: EtatInscription; envoyer: (donnee
           </p>
         )}
       </div>
-      <button type="submit" className={styles.envoyer}>
-        Créer mon compte
+      {/* US-0110 : pendant l'envoi, le bouton est désactivé et montre qu'il travaille. */}
+      <button type="submit" className={styles.envoyer} disabled={enAttente}>
+        {enAttente ? (
+          <>
+            <span className={styles.roue} aria-hidden="true" />
+            Création…
+          </>
+        ) : (
+          "Créer mon compte"
+        )}
       </button>
       <p className={styles.autre}>
         <Link href="/connexion" className={styles.lien}>

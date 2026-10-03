@@ -125,6 +125,35 @@
   background: var(--encre-survol);
 }
 
+/* Pendant l'envoi : le bouton ne réagit plus et montre qu'il travaille. */
+.envoyer:disabled {
+  gap: 10px;
+  background: var(--encre-survol);
+  cursor: progress;
+}
+
+.roue {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--sur-encre-eteint);
+  border-top-color: var(--blanc-chaud);
+  border-radius: 999px;
+  animation: tourner 0.8s linear infinite;
+}
+
+@keyframes tourner {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+/* Sans animation pour qui l'a demandé : la roue reste visible, immobile. */
+@media (prefers-reduced-motion: reduce) {
+  .roue {
+    animation: none;
+  }
+}
+
 .envoyer:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 3px;
