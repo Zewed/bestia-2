@@ -23,7 +23,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - Sur mobile, le champ e-mail ouvre le clavier avec « @ », et le navigateur peut proposer un mot de passe fort.
   - Le bouton « Créer mon compte » est sous les champs, facile à toucher au pouce.
   - Un lien « J'ai déjà un compte » mène à la connexion.
-  - Une case d'acceptation des conditions d'utilisation (à décider).
+  - Pas de case à cocher : quand les conditions d'utilisation existeront, une phrase sous le bouton y renverra (« En créant un compte, vous acceptez les conditions d'utilisation »).
 
 ### US-0103 · Vérifier le format de l'adresse e-mail
 **En tant que** visiteur, **je veux** être prévenu tout de suite si mon adresse e-mail est mal écrite, **afin de** corriger avant d'envoyer le formulaire.
