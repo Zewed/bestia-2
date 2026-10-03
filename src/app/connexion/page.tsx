@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
+import { PageEntree } from "@/components/PageEntree";
 import styles from "../entree.module.css";
 
 export const metadata: Metadata = { title: "Se connecter" };
@@ -10,12 +11,16 @@ export const metadata: Metadata = { title: "Se connecter" };
 export default function Connexion() {
   if (!entreeDuJeuOuverte()) notFound();
   return (
-    <main className={styles.page}>
-      <h1 className={styles.titre}>Se connecter</h1>
+    <PageEntree
+      titre="Se connecter"
+      illustration={{ chemin: "entree/connexion.webp", alt: "Une hutte au toit de chaume, éclairée au crépuscule, au bout d'un chemin fleuri" }}
+    >
       <p className={styles.texte}>Le formulaire arrive bientôt.</p>
-      <Link href="/" className={styles.retour}>
-        Revenir à l&apos;accueil
-      </Link>
-    </main>
+      <p className={styles.autre}>
+        <Link href="/inscription" className={styles.lien}>
+          Créer un compte
+        </Link>
+      </p>
+    </PageEntree>
   );
 }

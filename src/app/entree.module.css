@@ -1,69 +1,48 @@
-/* Les pages d'entrée du jeu (inscription, connexion) : une colonne étroite, centrée. */
-.page {
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 56px 24px;
-}
-
-.titre {
-  font-size: clamp(28px, 4vw, 40px);
-  letter-spacing: -0.03em;
-}
-
-.texte {
-  margin-top: 12px;
-  color: var(--texte-2);
-}
-
-.retour {
-  display: inline-flex;
-  align-items: center;
-  min-height: 48px;
-  margin-top: 24px;
-  color: var(--encre);
-  font-weight: var(--graisse-titre);
-}
-
-.retour:focus-visible {
-  outline: 2px solid var(--encre);
-  outline-offset: 3px;
-}
-
-/* Le formulaire : un champ par ligne, le bouton en dessous, sur toute la largeur. */
+/* Les formulaires des pages d'entrée : un champ par ligne, le bouton en dessous, sur toute la largeur. */
 .formulaire {
   display: grid;
-  gap: 18px;
+  gap: 16px;
   margin-top: 28px;
 }
 
 .champ {
   display: grid;
   gap: 6px;
+  color: var(--texte-2);
+  font-size: 13.5px;
   font-weight: var(--graisse-titre);
 }
 
 /* 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page à la saisie. */
 .champ input {
-  min-height: 48px;
-  padding: 0 14px;
-  border: 1px solid var(--trait);
+  min-height: 50px;
+  padding: 0 16px;
+  border: 1px solid var(--trait-doux);
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
+  background: var(--bloc-2);
   color: var(--encre);
   font: inherit;
   font-size: 16px;
   font-weight: var(--graisse-texte);
+  transition:
+    border-color 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.champ input:hover {
+  border-color: var(--trait);
 }
 
 .champ input:focus-visible {
   border-color: var(--encre);
-  outline: 2px solid var(--encre);
-  outline-offset: 1px;
+  background: var(--bloc);
+  outline: 2px solid var(--encre-douce);
+  outline-offset: 2px;
 }
 
 .envoyer {
   min-height: 52px;
-  margin-top: 6px;
+  margin-top: 8px;
   border: 0;
   border-radius: var(--arrondi-moyen);
   background: var(--encre);
@@ -72,6 +51,7 @@
   font-size: 16px;
   font-weight: var(--graisse-titre);
   cursor: pointer;
+  transition: background-color 160ms ease-out;
 }
 
 .envoyer:hover {
@@ -83,13 +63,26 @@
   outline-offset: 3px;
 }
 
+.texte {
+  margin-top: 12px;
+  color: var(--texte-2);
+}
+
+/* L'autre chemin (se connecter, créer un compte), séparé du formulaire par un trait. */
+.autre {
+  margin-top: 24px;
+  padding-top: 8px;
+  border-top: 1px solid var(--trait-doux);
+  text-align: center;
+}
+
 .lien {
   display: inline-flex;
   align-items: center;
   min-height: 48px;
-  margin-top: 12px;
   color: var(--encre);
   font-weight: var(--graisse-titre);
+  text-underline-offset: 3px;
 }
 
 .lien:focus-visible {

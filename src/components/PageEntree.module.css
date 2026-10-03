@@ -1,0 +1,76 @@
+/* Les pages d'entrée : deux blocs Bento côte à côte, l'illustration un peu plus large. */
+.page {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: var(--ecart);
+  max-width: 1180px;
+  min-height: calc(100dvh - var(--hauteur-barre));
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.image {
+  position: relative;
+  min-height: 560px;
+  border-radius: var(--arrondi);
+  overflow: hidden;
+}
+
+/* Sélecteur double pour passer devant le cadre du composant Illustration. */
+.image .remplir {
+  position: absolute;
+  inset: 0;
+}
+
+/* La devise du jeu, posée en bas de l'image sur un voile qui la rend lisible. */
+.devise {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 72px 32px 28px;
+  background: linear-gradient(to top, color-mix(in oklch, var(--voile) 72%, transparent), transparent);
+  color: var(--blanc-chaud);
+  font-size: clamp(22px, 2.2vw, 30px);
+  font-weight: var(--graisse-titre);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.bloc {
+  display: grid;
+  place-items: center;
+  padding: 48px 40px;
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+}
+
+.contenu {
+  width: 100%;
+  max-width: 380px;
+}
+
+.titre {
+  font-size: clamp(30px, 3vw, 40px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+/* Mobile : l'illustration en bandeau au-dessus, sans devise ; le formulaire juste en dessous. */
+@media (max-width: 820px) {
+  .page {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    min-height: 0;
+    padding: 12px;
+    gap: var(--ecart-mobile);
+  }
+  .image {
+    min-height: 0;
+    height: clamp(140px, 28dvh, 240px);
+  }
+  .devise {
+    display: none;
+  }
+  .bloc {
+    padding: 28px 20px 24px;
+  }
+}
