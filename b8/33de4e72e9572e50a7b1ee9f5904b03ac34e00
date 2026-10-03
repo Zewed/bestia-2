@@ -1,0 +1,39 @@
+src/app/controle/page.module.css
+  s_d0f4332113d26c::t_e20e399416560e 102-201,206
+  s_d0f4332113d26c::t_23367c159f6146 202-205
+src/donnees/raretes.test.ts
+  s_d0f4332113d26c::t_6a467945997d44 1-2,24-31
+  s_d0f4332113d26c::t_26e831cc61f0c9 32
+src/app/controle/page.tsx
+  s_d0f4332113d26c::t_e20e399416560e 9,14,26-33,100-128
+src/app/controle/FicheEspece.tsx
+  s_d0f4332113d26c::t_8a1dae76731cb3 1-44,50-76
+  s_d0f4332113d26c::t_0f8bdaf20f2058 45-49
+src/donnees/en-base.ts
+  s_d0f4332113d26c::t_c74eb9bc0c7559 19-72
+src/app/controle/page.test.tsx
+  s_d0f4332113d26c::t_0f8bdaf20f2058 131-133
+  s_d0f4332113d26c::t_43e3fd5e4e09d6 31-73,113-130,134-146
+src/donnees/en-base.db.test.ts
+  s_d0f4332113d26c::t_9b54c79531ceae 4-6,8,22,49-86
+docs/stories/00-fondations.md
+  s_d0f4332113d26c::t_c54c23519be2b3 494
+docs/stories/README.md
+  s_d0f4332113d26c::t_eb42f5d0c587e6 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "b833de4e72e9572e50a7b1ee9f5904b03ac34e00",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
