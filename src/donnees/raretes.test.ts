@@ -22,12 +22,11 @@ describe("Raretés", () => {
     expect(raretes.filter((r) => !r.s_elevent).map((r) => r.id)).toEqual(["mythique"]);
   });
 
-  it("ont chacune leurs deux couleurs dans la palette : un fond et un ton pour le texte", () => {
-    const palette = readFileSync(join(__dirname, "../styles/palette.css"), "utf8");
+  it("ont chacune leurs couleurs : un fond et un ton pour le texte, pris dans la palette", () => {
+    const pastille = readFileSync(join(__dirname, "../components/PastilleRarete.module.css"), "utf8");
     for (const { id } of raretes) {
       const teinte = id.replaceAll("_", "-");
-      expect(palette).toContain(`--rarete-${teinte}:`);
-      expect(palette).toContain(`--rarete-${teinte}-texte:`);
+      expect(pastille).toContain(`[data-rarete="${id}"] {\n  background: var(--rarete-${teinte});\n  color: var(--rarete-${teinte}-texte);`);
     }
   });
 });

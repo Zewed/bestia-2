@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
+import { PastilleRarete } from "@/components/PastilleRarete";
 import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
@@ -11,7 +12,7 @@ import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
 import { maintenant, vitesse } from "@/temps/horloge";
-import { FicheEspece, PastilleRarete } from "./FicheEspece";
+import { FicheEspece } from "./FicheEspece";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Contrôle", robots: { index: false, follow: false } };

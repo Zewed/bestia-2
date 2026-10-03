@@ -139,13 +139,6 @@
   color: var(--texte-2);
 }
 
-.pastille {
-  padding: 2px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: var(--graisse-titre);
-}
-
 .caracteristiques {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));

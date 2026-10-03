@@ -1,0 +1,40 @@
+/* Une Rareté : un fond pastel et son ton foncé pour le texte, de la plus banale à la plus rare. */
+.pastille {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--bloc-3);
+  color: var(--texte-2);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+}
+
+.pastille[data-rarete="commune"] {
+  background: var(--rarete-commune);
+  color: var(--rarete-commune-texte);
+}
+
+.pastille[data-rarete="peu_commune"] {
+  background: var(--rarete-peu-commune);
+  color: var(--rarete-peu-commune-texte);
+}
+
+.pastille[data-rarete="rare"] {
+  background: var(--rarete-rare);
+  color: var(--rarete-rare-texte);
+}
+
+.pastille[data-rarete="epique"] {
+  background: var(--rarete-epique);
+  color: var(--rarete-epique-texte);
+}
+
+.pastille[data-rarete="legendaire"] {
+  background: var(--rarete-legendaire);
+  color: var(--rarete-legendaire-texte);
+}
+
+.pastille[data-rarete="mythique"] {
+  background: var(--rarete-mythique);
+  color: var(--rarete-mythique-texte);
+}

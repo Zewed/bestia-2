@@ -117,7 +117,7 @@ describe("page de contrôle", () => {
     expect(html).toContain("Espèces en base · 2");
     expect(html).toMatch(/srcSet="\/_next\/image\?url=%2Fillustrations%2Fespeces%2Fpoule\.webp/);
     expect(html).toContain('sizes="96px"');
-    expect(html).toContain("var(--rarete-commune)");
+    expect(html).toContain('data-rarete="commune"');
     expect(html).toContain("Nourricier");
     for (const valeur of ["5 981", "14 953", "14 km/h", "31,623", "5 / h", "omnivore", "2 000 g", "0,4", "Gallus gallus domesticus"]) {
       expect(html.replaceAll("\u202f", " ")).toContain(valeur);
@@ -132,7 +132,7 @@ describe("page de contrôle", () => {
     expect(essai.match(/class="[^"]*vide[^"]*"( title="[^"]*")?>vide</g)).toHaveLength(4);
     expect(essai).toContain('title="Pas d&#x27;illustration en base"');
     expect(html).toContain('aria-label="Bête d&#x27;essai"');
-    expect(html).toContain("var(--rarete-peu-commune)");
+    expect(html).toContain('data-rarete="peu_commune"');
     expect(essai).toContain("Aucun Rôle");
   });
 

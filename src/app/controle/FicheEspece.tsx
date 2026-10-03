@@ -1,4 +1,5 @@
 import { IllustrationEspece } from "@/components/IllustrationEspece";
+import { PastilleRarete } from "@/components/PastilleRarete";
 import type { EspeceEnBase } from "@/donnees/en-base";
 import styles from "./page.module.css";
 
@@ -12,16 +13,6 @@ function Valeur({ valeur, unite }: { valeur: string | number | null; unite?: str
       {typeof valeur === "number" ? nombre(valeur) : valeur}
       {unite ? ` ${unite}` : null}
     </>
-  );
-}
-
-/** Le nom d'une Rareté sur ses couleurs de la palette. */
-export function PastilleRarete({ rarete }: { rarete: { id: string; nom: string } }) {
-  const teinte = rarete.id.replaceAll("_", "-");
-  return (
-    <span className={styles.pastille} style={{ background: `var(--rarete-${teinte})`, color: `var(--rarete-${teinte}-texte)` }}>
-      {rarete.nom}
-    </span>
   );
 }
 
