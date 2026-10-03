@@ -6,6 +6,7 @@ import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
+import { biomesEnBase } from "@/donnees/en-base";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
@@ -16,12 +17,12 @@ export const metadata: Metadata = { title: "Contrôle", robots: { index: false, 
 
 const FUSEAU = "Europe/Paris";
 
-/** La page de contrôle interne (US-0034) : le temps du jeu d'un coup d'œil. Aucun lien n'y mène. */
+/** La page de contrôle interne (US-0034) : le temps du jeu et les données en base. Aucun lien n'y mène. */
 export default async function Controle() {
   await connection();
   // Le proxy demande déjà le mot de passe ; la page vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) notFound();
-  const passages = await derniersPassages(getPool());
+  const [passages, biomes] = await Promise.all([derniersPassages(getPool()), biomesEnBase(getPool())]);
   const facteur = vitesse();
 
   return (
@@ -64,6 +65,28 @@ export default async function Controle() {
                 </tbody>
               </table>
             </div>
+          )}
+        </Bloc>
+        <Bloc titre={`Biomes en base · ${biomes.length}`}>
+          {biomes.length === 0 ? (
+            <p className={styles.note}>Aucun Biome en base : lancez npm run db:donnees.</p>
+          ) : (
+            <ul className={styles.liste}>
+              {biomes.map((b) => (
+                <li key={b.id}>
+                  <span className={styles.nom}>{b.nom}</span> <code className={styles.id}>{b.id}</code>
+                  {b.variantes.length > 0 ? (
+                    <ul className={styles.variantes} aria-label={`Les ${b.variantes.length} formes : ${b.nom}`}>
+                      {b.variantes.map((v) => (
+                        <li key={v.id}>
+                          {v.nom} <code className={styles.id}>{v.id}</code>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
           )}
         </Bloc>
       </Grille>

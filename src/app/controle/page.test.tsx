@@ -14,6 +14,22 @@ vi.mock("@/temps/absents", () => ({
   ],
 }));
 
+vi.mock("@/donnees/en-base", () => ({
+  biomesEnBase: async () => [
+    { id: "prairie", nom: "Prairie", variantes: [] },
+    {
+      id: "eau",
+      nom: "Eau",
+      variantes: [
+        { id: "cote", nom: "Côte" },
+        { id: "lac", nom: "Lac" },
+        { id: "riviere", nom: "Rivière" },
+        { id: "mer", nom: "Mer" },
+      ],
+    },
+  ],
+}));
+
 import Controle from "./page";
 
 const MOT_DE_PASSE = "mot-de-passe-d-essai";
@@ -41,5 +57,14 @@ describe("page de contrôle", () => {
     expect(html).toContain("Réussi");
     expect(html).toContain("0,8 s");
     expect(html.indexOf("1 échec")).toBeLessThan(html.indexOf("Réussi"));
+  });
+
+  it("liste les Biomes en base, avec leur nom, leur identifiant et les quatre formes de l'eau", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const html = renderToStaticMarkup(await Controle());
+    expect(html).toContain("Biomes en base · 2");
+    expect(html).toMatch(/Prairie<\/span> <code[^>]*>prairie<\/code>/);
+    expect(html).toContain('aria-label="Les 4 formes : Eau"');
+    for (const forme of ["Côte", "Lac", "Rivière", "Mer"]) expect(html).toContain(`<li>${forme} <code`);
   });
 });

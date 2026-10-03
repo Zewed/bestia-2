@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0034** · Ouvrir une page de contrôle interne. Prochaine : **US-0050** · Lister les Biomes sur la page de contrôle.
+Dernière story livrée : **US-0050** · Lister les Biomes sur la page de contrôle. Prochaine : **US-0051** · Lister les Espèces sur la page de contrôle.
 
 ## Sommaire
 

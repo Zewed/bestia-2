@@ -55,3 +55,47 @@
     padding: 20px 16px 40px;
   }
 }
+
+/* Les données en base : un nom, puis son identifiant en plus discret. */
+.liste {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px 24px;
+  padding: 0;
+  list-style: none;
+}
+
+.nom {
+  font-weight: var(--graisse-titre);
+}
+
+.id {
+  color: var(--texte-discret);
+  font-size: 13px;
+}
+
+/* Un Biome qui a des variantes (l'eau) prend toute la largeur ; ses formes, en pastilles sous son nom. */
+.liste > li:has(.variantes) {
+  grid-column: 1 / -1;
+}
+
+.variantes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.variantes li {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--sarcelle);
+  color: var(--sarcelle-fonce);
+}
+
+.variantes .id {
+  color: inherit;
+  opacity: 0.75;
+}
