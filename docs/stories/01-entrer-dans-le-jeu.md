@@ -77,6 +77,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0108 · Confirmer la création du compte
 **En tant que** visiteur, **je veux** un message qui confirme que mon compte existe, **afin de** passer sereinement à la suite.
 
+- **Statut** : Livrée le 2026-10-03. L'adresse est retenue dans la mémoire de l'onglet (sessionStorage), jamais dans l'adresse de la page ; le formulaire de connexion la lira (US-0115).
 - **Débloquée par** : US-0107
 - **Critères d'acceptation** :
   - Après la création, le message « Votre compte est créé » s'affiche.

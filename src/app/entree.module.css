@@ -104,7 +104,11 @@
 }
 
 .envoyer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-height: 52px;
+  text-decoration: none;
   margin-top: 8px;
   border: 0;
   border-radius: var(--arrondi-moyen);
@@ -151,4 +155,50 @@
 .lien:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 3px;
+}
+
+/* La confirmation : une coche sur fond menthe, le message, l'adresse, puis le chemin vers la connexion. */
+.confirmation {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin-top: 28px;
+}
+
+.confirmation .envoyer {
+  justify-self: stretch;
+  margin-top: 14px;
+}
+
+.coche {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--menthe);
+  color: var(--menthe-fonce);
+}
+
+.coche svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.confirme {
+  font-size: 22px;
+  font-weight: var(--graisse-titre);
+  letter-spacing: -0.02em;
+}
+
+.confirme:focus {
+  outline: none;
+}
+
+.adresse {
+  color: var(--texte-2);
+  overflow-wrap: anywhere;
 }

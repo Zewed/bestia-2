@@ -185,3 +185,48 @@ describe("bouton pour afficher ou masquer le mot de passe", () => {
     expect(motDePasse().getAttribute("type")).toBe("password");
   });
 });
+
+describe("confirmation de la création du compte", () => {
+  beforeEach(() => {
+    serveur.inscrire.mockReset();
+    serveur.inscrire.mockImplementation(async (_: EtatInscription, donnees: FormData) => ({
+      erreurs: {},
+      email: String(donnees.get("email")),
+      cree: true,
+    }));
+  });
+  afterEach(() => {
+    cleanup();
+    sessionStorage.clear();
+  });
+
+  async function inscrire() {
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.type(screen.getByLabelText("Adresse e-mail"), " Nom@Exemple.fr");
+    await u.type(screen.getByLabelText("Mot de passe"), "une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    return screen.findByRole("status");
+  }
+
+  it("affiche « Votre compte est créé » à la place du formulaire, et y porte le regard", async () => {
+    const confirmation = await inscrire();
+    expect(confirmation.textContent).toContain("Votre compte est créé");
+    expect(confirmation.textContent).toContain("nom@exemple.fr");
+    expect(document.activeElement?.textContent).toBe("Votre compte est créé");
+    expect(screen.queryByRole("button", { name: "Créer mon compte" })).toBeNull();
+    expect(screen.queryByText("J'ai déjà un compte")).toBeNull();
+  });
+
+  it("propose d'aller à la connexion, avec l'adresse retenue dans la mémoire de l'onglet", async () => {
+    await inscrire();
+    expect(screen.getByRole("link", { name: "Se connecter" }).getAttribute("href")).toBe("/connexion");
+    expect(sessionStorage.getItem("bestia.adresse-connexion")).toBe("nom@exemple.fr");
+  });
+
+  it("ne laisse plus le mot de passe dans la page", async () => {
+    await inscrire();
+    expect(document.querySelector('[name="motDePasse"]')).toBeNull();
+    expect(document.body.innerHTML).not.toContain("une phrase de passe");
+  });
+});

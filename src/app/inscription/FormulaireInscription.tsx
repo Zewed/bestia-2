@@ -1,19 +1,27 @@
 "use client";
 
-import { useActionState, useRef, useState, type FormEvent } from "react";
-import { verifierEmail } from "@/comptes/email";
+import Link from "next/link";
+import { useActionState, useEffect, useRef, useState, type FormEvent } from "react";
+import { retenirAdresse } from "@/comptes/adresse-retenue";
+import { normaliserEmail, verifierEmail } from "@/comptes/email";
 import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import styles from "../entree.module.css";
 import { inscrire } from "./actions";
-import { ETAT_INITIAL } from "./etat";
+import { ETAT_INITIAL, type EtatInscription } from "./etat";
 
 /**
  * Le formulaire d'inscription. Le message sous un champ apparaît quand on quitte le champ ou
- * à l'envoi, jamais pendant la frappe ; il s'efface dès qu'on recommence à écrire.
+ * à l'envoi, jamais pendant la frappe ; il s'efface dès qu'on recommence à écrire. Une fois le
+ * compte créé, la confirmation prend la place du formulaire (US-0108).
  */
 export function FormulaireInscription() {
   const [etat, envoyer] = useActionState(inscrire, ETAT_INITIAL);
+  if (etat.cree) return <CompteCree email={normaliserEmail(etat.email)} />;
+  return <Formulaire etat={etat} envoyer={envoyer} />;
+}
+
+function Formulaire({ etat, envoyer }: { etat: EtatInscription; envoyer: (donnees: FormData) => void }) {
   const [email, setEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
   const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
@@ -115,7 +123,41 @@ export function FormulaireInscription() {
       <button type="submit" className={styles.envoyer}>
         Créer mon compte
       </button>
+      <p className={styles.autre}>
+        <Link href="/connexion" className={styles.lien}>
+          J&apos;ai déjà un compte
+        </Link>
+      </p>
     </form>
+  );
+}
+
+/**
+ * La confirmation : le compte existe, on peut se connecter. L'adresse est retenue dans la
+ * mémoire de l'onglet pour pré-remplir la connexion ; le mot de passe a disparu avec le formulaire.
+ */
+function CompteCree({ email }: { email: string }) {
+  const message = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    retenirAdresse(email);
+    // Le regard (et le lecteur d'écran) va droit à la confirmation.
+    message.current?.focus();
+  }, [email]);
+  return (
+    <div className={styles.confirmation} role="status">
+      <span className={styles.coche} aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22">
+          <path d="M5 12.5 10 17.5 19 7" />
+        </svg>
+      </span>
+      <p ref={message} tabIndex={-1} className={styles.confirme}>
+        Votre compte est créé
+      </p>
+      <p className={styles.adresse}>{email}</p>
+      <Link href="/connexion" className={styles.envoyer}>
+        Se connecter
+      </Link>
+    </div>
   );
 }
 
