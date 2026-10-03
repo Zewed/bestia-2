@@ -10,6 +10,11 @@ vi.mock("@/comptes/inscription", () => inscription);
 const POOL = vi.hoisted(() => ({ pool: "de test" }));
 vi.mock("@/db", () => ({ getPool: () => POOL }));
 vi.mock("next/headers", () => ({ headers: async () => new Headers({ "x-forwarded-for": "203.0.113.7, 10.0.0.1" }) }));
+// « after » lance sa tâche une fois la réponse partie ; ici, on la garde pour l'observer.
+const apres = vi.hoisted(() => ({ taches: [] as (() => unknown)[] }));
+vi.mock("next/server", () => ({ after: (tache: () => unknown) => apres.taches.push(tache) }));
+const courrier = vi.hoisted(() => ({ envoyerLienConfirmation: vi.fn(async () => true) }));
+vi.mock("@/emails/confirmation", () => courrier);
 
 import { inscrire } from "./actions";
 
@@ -25,7 +30,9 @@ describe("envoi du formulaire d'inscription", () => {
   beforeEach(() => {
     vi.stubEnv("EMPREINTE_RESEAU_SECRET", "secret-de-test");
     inscription.inscrireCompte.mockReset();
-    inscription.inscrireCompte.mockResolvedValue("cree");
+    inscription.inscrireCompte.mockResolvedValue({ statut: "cree", email: "nom@exemple.fr", jetonConfirmation: "jeton123" });
+    courrier.envoyerLienConfirmation.mockClear();
+    apres.taches = [];
   });
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -60,6 +67,20 @@ describe("envoi du formulaire d'inscription", () => {
     expect(JSON.stringify(demande)).not.toContain("203.0.113.7");
   });
 
+  it("envoie le lien de confirmation après la réponse, sans la faire attendre", async () => {
+    await envoi("Nom@Exemple.fr");
+    expect(courrier.envoyerLienConfirmation).not.toHaveBeenCalled();
+    expect(apres.taches).toHaveLength(1);
+    await apres.taches[0]();
+    expect(courrier.envoyerLienConfirmation).toHaveBeenCalledWith("nom@exemple.fr", "jeton123");
+  });
+
+  it("n'envoie aucun lien quand rien n'est créé", async () => {
+    inscription.inscrireCompte.mockResolvedValue({ statut: "deja-inscrite" });
+    await envoi("nom@exemple.fr");
+    expect(apres.taches).toHaveLength(0);
+  });
+
   it("ne crée rien quand un champ est refusé", async () => {
     await envoi("nom@");
     await envoi("nom@exemple.fr", "court");
@@ -67,12 +88,12 @@ describe("envoi du formulaire d'inscription", () => {
   });
 
   it("dit quand l'adresse a déjà un compte", async () => {
-    inscription.inscrireCompte.mockResolvedValue("deja-inscrite");
+    inscription.inscrireCompte.mockResolvedValue({ statut: "deja-inscrite" });
     expect(await envoi("nom@exemple.fr")).toEqual({ erreurs: { email: EMAIL_DEJA_UTILISEE }, email: "nom@exemple.fr" });
   });
 
   it("refuse poliment au-delà de la limite de l'heure, sans dire comment contourner", async () => {
-    inscription.inscrireCompte.mockResolvedValue("freinee");
+    inscription.inscrireCompte.mockResolvedValue({ statut: "freinee" });
     expect(await envoi("nom@exemple.fr")).toEqual({ erreurs: { general: INSCRIPTIONS_FREINEES }, email: "nom@exemple.fr" });
     expect(INSCRIPTIONS_FREINEES).not.toMatch(/connexion|adresse|réseau|heure|\d/i);
     expect(INSCRIPTIONS_FREINEES).not.toMatch(/\bIP\b/);

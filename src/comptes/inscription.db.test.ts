@@ -10,8 +10,8 @@ describe.skipIf(!URL_TEST)("inscriptions en rafale (sur base)", () => {
   let numero = 0;
   const email = () => `${lancement}-${++numero}@essai.test`;
   const connexion = (nom: string) => `${lancement}-${nom}`;
-  const inscrire = (empreinteReseau: string, adresse = email()) =>
-    inscrireCompte(pool, { email: adresse, motDePasse: "une phrase de passe", empreinteReseau });
+  const inscrire = async (empreinteReseau: string, adresse = email()) =>
+    (await inscrireCompte(pool, { email: adresse, motDePasse: "une phrase de passe", empreinteReseau })).statut;
 
   beforeAll(() => {
     pool = poolDeTest();
@@ -53,5 +53,16 @@ describe.skipIf(!URL_TEST)("inscriptions en rafale (sur base)", () => {
     const resultats = await Promise.all(Array.from({ length: 10 }, () => inscrire(usine)));
     expect(resultats.filter((r) => r === "cree")).toHaveLength(5);
     expect(resultats.filter((r) => r === "freinee")).toHaveLength(5);
+  });
+
+  it("crée avec le compte son premier lien de confirmation d'adresse", async () => {
+    const adresse = email();
+    const resultat = await inscrireCompte(pool, { email: adresse.toUpperCase(), motDePasse: "une phrase de passe", empreinteReseau: connexion("lien") });
+    expect(resultat).toMatchObject({ statut: "cree", email: adresse });
+    const { rows } = await pool.query(
+      "select l.expire_le > now() + interval '23 hours' as valable from lien_confirmation l join compte c on c.id = l.compte_id where c.email = $1",
+      [adresse],
+    );
+    expect(rows).toEqual([{ valable: true }]);
   });
 });

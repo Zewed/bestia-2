@@ -163,6 +163,8 @@ export const compte = pgTable(
     /** L'empreinte scrypt du mot de passe (src/comptes/empreinte.ts). */
     empreinteMotDePasse: text("empreinte_mot_de_passe").notNull(),
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    /** US-0114 : quand l'adresse a été confirmée, ou null tant qu'elle ne l'est pas. */
+    emailConfirmeLe: timestamp("email_confirme_le", { withTimezone: true }),
   },
   (t) => [
     check("compte_email_normalise", sql`${t.email} = lower(${t.email}) and ${t.email} !~ '[[:space:]]'`),
@@ -183,4 +185,23 @@ export const inscriptionRecente = pgTable(
     le: timestamp("le", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index("inscription_recente_par_connexion").on(t.empreinteReseau, t.le)],
+);
+
+/**
+ * Un lien de confirmation d'adresse (US-0114) : à usage unique, valable un temps limité. Le
+ * jeton du lien n'est jamais gardé, seulement son empreinte.
+ */
+export const lienConfirmation = pgTable(
+  "lien_confirmation",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    compteId: integer("compte_id")
+      .notNull()
+      .references(() => compte.id, { onDelete: "cascade" }),
+    empreinteJeton: text("empreinte_jeton").notNull().unique(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    expireLe: timestamp("expire_le", { withTimezone: true }).notNull(),
+    utiliseLe: timestamp("utilise_le", { withTimezone: true }),
+  },
+  (t) => [index("lien_confirmation_par_compte").on(t.compteId, t.creeLe)],
 );

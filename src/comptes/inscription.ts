@@ -4,8 +4,13 @@ import "server-only";
 import type { Pool } from "pg";
 import { INSCRIPTIONS_PAR_HEURE_MAX } from "@/reglages";
 import { creerCompte } from "./compte";
+import { creerLienConfirmation } from "./confirmation";
 
-export type ResultatInscription = "cree" | "deja-inscrite" | "freinee";
+/** Le compte créé porte son premier lien de confirmation d'adresse (US-0114), créé avec lui. */
+export type ResultatInscription =
+  | { statut: "cree"; email: string; jetonConfirmation: string }
+  | { statut: "deja-inscrite" }
+  | { statut: "freinee" };
 
 /**
  * Crée le compte, sauf si la connexion a déjà atteint sa limite de l'heure. Seuls les comptes
@@ -28,12 +33,17 @@ export async function inscrireCompte(
     );
     if (rows[0].n >= INSCRIPTIONS_PAR_HEURE_MAX) {
       await client.query("commit");
-      return "freinee";
+      return { statut: "freinee" };
     }
     const compte = await creerCompte(client, demande.email, demande.motDePasse);
-    if (compte) await client.query("insert into inscription_recente (empreinte_reseau) values ($1)", [demande.empreinteReseau]);
+    if (!compte) {
+      await client.query("commit");
+      return { statut: "deja-inscrite" };
+    }
+    await client.query("insert into inscription_recente (empreinte_reseau) values ($1)", [demande.empreinteReseau]);
+    const jetonConfirmation = await creerLienConfirmation(client, compte.id);
     await client.query("commit");
-    return compte ? "cree" : "deja-inscrite";
+    return { statut: "cree", email: compte.email, jetonConfirmation };
   } catch (erreur) {
     await client.query("rollback").catch(() => {});
     throw erreur;

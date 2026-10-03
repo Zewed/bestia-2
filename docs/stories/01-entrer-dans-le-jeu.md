@@ -135,12 +135,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0114 · Confirmer son adresse e-mail
 **En tant que** nouveau joueur, **je veux** recevoir un lien pour confirmer mon adresse e-mail, **afin de** prouver qu'elle m'appartient et pouvoir récupérer mon compte plus tard.
 
+- **Statut** : Livrée le 2026-10-03. Les e-mails ne partent pas encore pour de vrai (Zewed/bestia-2#1). Un lien déjà utilisé affiche « Adresse déjà confirmée » : un nouveau lien n'y servirait à rien. Le rappel de confirmer viendra avec les premiers écrans du jeu.
 - **Débloquée par** : US-0107, US-0113
 - **Critères d'acceptation** :
-  - Juste après l'inscription, un e-mail part avec un lien de confirmation valable (chiffre à régler) heures.
+  - Juste après l'inscription, un e-mail part avec un lien de confirmation valable 24 heures (LIEN_CONFIRMATION_HEURES), à usage unique ; seule l'empreinte du jeton est gardée.
   - Ouvrir le lien marque l'adresse comme confirmée et affiche « Adresse confirmée ».
   - Un lien expiré ou déjà utilisé affiche un message et propose d'en recevoir un nouveau.
-  - Confirmer son adresse est obligatoire pour jouer, ou seulement conseillé (à décider).
+  - Confirmer son adresse est conseillé, pas obligatoire pour jouer : un rappel y invite, et seule la récupération du compte l'exige. On la rendra obligatoire si les faux comptes posent problème.
 
 ## Étape 6 · Se connecter et se déconnecter
 

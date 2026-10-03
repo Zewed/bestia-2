@@ -1,12 +1,14 @@
 "use server";
 
 import { headers } from "next/headers";
+import { after } from "next/server";
 import { EMAIL_DEJA_UTILISEE, verifierEmail } from "@/comptes/email";
 import { adresseReseau, empreinteReseau } from "@/comptes/empreinte-reseau";
 import { inscrireCompte } from "@/comptes/inscription";
 import { verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
+import { envoyerLienConfirmation } from "@/emails/confirmation";
 import { CHAMP_PIEGE, ETAT_INITIAL, INSCRIPTIONS_FREINEES, type EtatInscription } from "./etat";
 
 /**
@@ -30,7 +32,10 @@ export async function inscrire(_precedent: EtatInscription, donnees: FormData): 
   if (erreurEmail || erreurMotDePasse) return { erreurs, email };
   const empreinte = empreinteReseau(adresseReseau(await headers()));
   const resultat = await inscrireCompte(getPool(), { email, motDePasse, empreinteReseau: empreinte });
-  if (resultat === "freinee") return { erreurs: { general: INSCRIPTIONS_FREINEES }, email };
-  if (resultat === "deja-inscrite") return { erreurs: { email: EMAIL_DEJA_UTILISEE }, email };
+  if (resultat.statut === "freinee") return { erreurs: { general: INSCRIPTIONS_FREINEES }, email };
+  if (resultat.statut === "deja-inscrite") return { erreurs: { email: EMAIL_DEJA_UTILISEE }, email };
+  // US-0114 : le lien de confirmation part après la réponse. L'inscription n'attend pas l'envoi,
+  // et un envoi raté est noté dans le journal sans la bloquer.
+  after(() => envoyerLienConfirmation(resultat.email, resultat.jetonConfirmation));
   return { erreurs: {}, email, cree: true };
 }
