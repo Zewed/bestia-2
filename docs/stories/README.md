@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0105** · Exiger un mot de passe assez long (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0106** · Afficher ou masquer le mot de passe.
+Dernière story livrée : **US-0106** · Afficher ou masquer le mot de passe (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0107** · Créer le compte.
 
 ## Sommaire
 

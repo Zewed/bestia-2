@@ -17,6 +17,7 @@ export function FormulaireInscription() {
   const [email, setEmail] = useState("");
   const [erreurEmail, setErreurEmail] = useState<string | null>(null);
   const [erreurMotDePasse, setErreurMotDePasse] = useState<string | null>(null);
+  const [motDePasseVisible, setMotDePasseVisible] = useState(false);
   // Le dernier envoi dont on a recommencé à corriger le mot de passe : son refus ne s'affiche plus.
   const [envoiCorrige, setEnvoiCorrige] = useState(ETAT_INITIAL);
   const champEmail = useRef<HTMLInputElement>(null);
@@ -29,7 +30,8 @@ export function FormulaireInscription() {
   function verifierAvantEnvoi(evenement: FormEvent<HTMLFormElement>) {
     const messageEmail = verifierEmail(email);
     const messageMotDePasse = verifierMotDePasse(String(new FormData(evenement.currentTarget).get("motDePasse") ?? ""));
-    if (!messageEmail && !messageMotDePasse) return;
+    // À l'envoi, le mot de passe repasse masqué : les gestionnaires de mots de passe le reconnaissent mieux.
+    if (!messageEmail && !messageMotDePasse) return setMotDePasseVisible(false);
     evenement.preventDefault();
     setErreurEmail(messageEmail);
     setErreurMotDePasse(messageMotDePasse);
@@ -68,23 +70,37 @@ export function FormulaireInscription() {
       <div className={styles.champ}>
         <label htmlFor="mot-de-passe">Mot de passe</label>
         {/* « new-password » et les longueurs : le navigateur propose un mot de passe fort qui respecte la règle. */}
-        <input
-          ref={champMotDePasse}
-          id="mot-de-passe"
-          type="password"
-          name="motDePasse"
-          autoComplete="new-password"
-          minLength={MOT_DE_PASSE_MIN}
-          {...{ passwordrules: `minlength: ${MOT_DE_PASSE_MIN}; maxlength: ${MOT_DE_PASSE_MAX};` }}
-          required
-          onChange={() => {
-            setErreurMotDePasse(null);
-            setEnvoiCorrige(etat);
-          }}
-          onBlur={(e) => setErreurMotDePasse(verifierMotDePasse(e.currentTarget.value))}
-          aria-invalid={erreurM ? true : undefined}
-          aria-describedby="mot-de-passe-aide"
-        />
+        <div className={styles.saisie}>
+          <input
+            ref={champMotDePasse}
+            id="mot-de-passe"
+            type={motDePasseVisible ? "text" : "password"}
+            name="motDePasse"
+            autoComplete="new-password"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            minLength={MOT_DE_PASSE_MIN}
+            {...{ passwordrules: `minlength: ${MOT_DE_PASSE_MIN}; maxlength: ${MOT_DE_PASSE_MAX};` }}
+            required
+            onChange={() => {
+              setErreurMotDePasse(null);
+              setEnvoiCorrige(etat);
+            }}
+            onBlur={(e) => setErreurMotDePasse(verifierMotDePasse(e.currentTarget.value))}
+            aria-invalid={erreurM ? true : undefined}
+            aria-describedby="mot-de-passe-aide"
+          />
+          <button
+            type="button"
+            className={styles.oeil}
+            onClick={() => setMotDePasseVisible((visible) => !visible)}
+            aria-label={motDePasseVisible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
+            aria-controls="mot-de-passe"
+          >
+            <Oeil barre={motDePasseVisible} />
+          </button>
+        </div>
         {/* La règle est écrite avant qu'on se trompe ; en cas d'erreur, le message prend sa place. */}
         {erreurM ? (
           <p id="mot-de-passe-aide" className={styles.erreur} role="alert">
@@ -100,5 +116,16 @@ export function FormulaireInscription() {
         Créer mon compte
       </button>
     </form>
+  );
+}
+
+/** L'œil du champ mot de passe : ouvert pour afficher, barré pour masquer. */
+function Oeil({ barre }: { barre: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">
+      <path d="M2.5 12s3.5-6.5 9.5-6.5 9.5 6.5 9.5 6.5-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z" />
+      <circle cx="12" cy="12" r="3" />
+      {barre ? <path d="M4 20 20 4" /> : null}
+    </svg>
   );
 }

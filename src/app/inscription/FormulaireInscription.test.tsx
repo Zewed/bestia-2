@@ -135,3 +135,53 @@ describe("règle du mot de passe sous le champ", () => {
     expect(aide()?.textContent).toBe(REGLE_MOT_DE_PASSE);
   });
 });
+
+describe("bouton pour afficher ou masquer le mot de passe", () => {
+  beforeEach(() => {
+    serveur.inscrire.mockReset();
+  });
+  afterEach(cleanup);
+
+  const motDePasse = () => screen.getByLabelText("Mot de passe");
+
+  it("laisse le mot de passe masqué par défaut", () => {
+    render(<FormulaireInscription />);
+    expect(motDePasse().getAttribute("type")).toBe("password");
+    expect(screen.getByRole("button", { name: "Afficher le mot de passe" })).toBeTruthy();
+  });
+
+  it("l'affiche en clair au premier appui, le masque au second, sans envoyer le formulaire", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.type(motDePasse(), "une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Afficher le mot de passe" }));
+    expect(motDePasse().getAttribute("type")).toBe("text");
+    expect((motDePasse() as HTMLInputElement).value).toBe("une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Masquer le mot de passe" }));
+    expect(motDePasse().getAttribute("type")).toBe("password");
+    expect(serveur.inscrire).not.toHaveBeenCalled();
+  });
+
+  it("se manie au clavier, juste après le champ", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.click(motDePasse());
+    await u.tab();
+    expect(document.activeElement?.getAttribute("aria-label")).toBe("Afficher le mot de passe");
+    await u.keyboard("{Enter}");
+    expect(motDePasse().getAttribute("type")).toBe("text");
+    await u.keyboard(" ");
+    expect(motDePasse().getAttribute("type")).toBe("password");
+  });
+
+  it("repasse masqué à l'envoi", async () => {
+    serveur.inscrire.mockImplementation(async (_: EtatInscription, donnees: FormData) => ({ erreurs: {}, email: String(donnees.get("email")) }));
+    const u = userEvent.setup();
+    render(<FormulaireInscription />);
+    await u.type(screen.getByLabelText("Adresse e-mail"), "nom@exemple.fr");
+    await u.type(motDePasse(), "une phrase de passe");
+    await u.click(screen.getByRole("button", { name: "Afficher le mot de passe" }));
+    await u.click(screen.getByRole("button", { name: "Créer mon compte" }));
+    expect(motDePasse().getAttribute("type")).toBe("password");
+  });
+});

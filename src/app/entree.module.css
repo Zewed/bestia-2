@@ -38,6 +38,51 @@
   border-color: var(--rose-fonce);
 }
 
+/* Le champ mot de passe et son œil, posé à l'intérieur, à droite. */
+.saisie {
+  position: relative;
+}
+
+.saisie input {
+  width: 100%;
+  padding-right: 56px;
+}
+
+/* 44 px : la taille minimale d'une cible au pouce. */
+.oeil {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: var(--arrondi-petit);
+  background: transparent;
+  color: var(--texte-discret);
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.oeil:hover {
+  color: var(--encre);
+  background: var(--survol);
+}
+
+.oeil:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: -2px;
+}
+
+.oeil svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 /* La règle d'un champ, écrite avant qu'on se trompe. */
 .aide {
   color: var(--texte-discret);
