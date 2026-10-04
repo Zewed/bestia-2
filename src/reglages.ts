@@ -36,7 +36,7 @@ export const SESSION_PROLONGEE_APRES_HEURES = 24;
 export const ECHECS_CONNEXION_MAX = 5;
 /** … les essais sont bloqués 15 minutes. */
 export const BLOCAGE_CONNEXION_MINUTES = 15;
-/** US-0126 : un lien pour changer de mot de passe reste valable 60 minutes (valeur provisoire, à fixer avec US-0127)… */
+/** US-0126, US-0127 : un lien pour changer de mot de passe reste valable 60 minutes… */
 export const LIEN_REINITIALISATION_MINUTES = 60;
 /** … et on n'en envoie pas plus d'un par minute pour une même adresse, pour ne pas inonder une boîte. */
 export const NOUVELLE_REINITIALISATION_ATTENTE_SECONDES = 60;

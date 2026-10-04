@@ -22,6 +22,7 @@
     "test": "vitest run",
     "check:code": "npm run lint && npm run typecheck && npm run db:guard && npm run test",
     "icones": "tsx scripts/generate-icons.ts",
+    "emails": "tsx scripts/generate-emails.ts",
     "db:test-setup": "tsx scripts/db-dev-setup.ts --test",
     "db:donnees": "tsx scripts/db-donnees.ts",
     "attendre-en-ligne": "sh scripts/attendre-mise-en-ligne.sh"

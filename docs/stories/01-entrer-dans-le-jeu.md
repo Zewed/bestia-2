@@ -261,11 +261,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0127 · Recevoir un e-mail de réinitialisation clair
 **En tant que** joueur, **je veux** un e-mail court avec un bouton pour changer mon mot de passe, **afin de** reconnaître tout de suite qu'il vient de Bestia.
 
+- **Statut** : Livrée le 2026-10-04, épurée sur décision d'Antoine : le loup, « Mot de passe oublié ? » et le bouton, centrés, rien d'autre (ni phrase, ni durée, ni « ignorez si… », ni lien de secours). Le lien reste valable 60 minutes (LIEN_REINITIALISATION_MINUTES), sans que l'e-mail le dise.
 - **Débloquée par** : US-0126
 - **Critères d'acceptation** :
-  - L'e-mail porte le nom Bestia, dit en une phrase pourquoi il arrive et contient un bouton vers le lien.
-  - Il indique que le lien est valable (chiffre à régler) minutes.
-  - Il précise que le joueur peut l'ignorer s'il n'a rien demandé.
+  - L'e-mail porte le nom Bestia (le loup) et contient un bouton « Changer mon mot de passe » vers le lien.
+  - Le lien est valable 60 minutes.
+  - Une version texte accompagne la mise en forme, pour les messageries qui ne l'affichent pas.
   - Il ne contient jamais de mot de passe.
 
 ### US-0128 · Choisir un nouveau mot de passe

@@ -1,25 +1,22 @@
-// L'e-mail pour changer un mot de passe oublié (US-0126 ; sa forme soignée vient avec US-0127).
-// Côté serveur uniquement.
+// L'e-mail pour changer un mot de passe oublié (US-0126, US-0127) : le loup, « Mot de passe
+// oublié ? » et un bouton vers le lien personnel, rien d'autre. Jamais de mot de passe. Côté
+// serveur uniquement.
 import "server-only";
-import { LIEN_REINITIALISATION_MINUTES } from "@/reglages";
 import { adresseDuSite } from "./confirmation";
 import { envoyerEmail, type Email } from "./envoi";
+import { miseEnForme } from "./mise-en-forme";
 
 type Env = Record<string, string | undefined>;
 
 export function emailDeReinitialisation(email: string, jeton: string, env: Env = process.env): Email {
-  const lien = `${adresseDuSite(env)}/reinitialiser/${jeton}`;
+  const site = adresseDuSite(env);
+  const lien = `${site}/reinitialiser/${jeton}`;
   return {
     a: email,
-    sujet: "Changer votre mot de passe Bestia",
-    texte: [
-      "Bonjour,",
-      "",
-      "Vous avez demandé à changer votre mot de passe Bestia. Ouvrez ce lien pour en choisir un nouveau :",
-      lien,
-      "",
-      `Il reste valable ${LIEN_REINITIALISATION_MINUTES} minutes. Si vous n'avez rien demandé, ignorez simplement cet e-mail : votre mot de passe ne change pas.`,
-    ].join("\n"),
+    sujet: "Mot de passe oublié",
+    // Pour les messageries qui n'affichent pas la mise en forme : le lien, seul.
+    texte: `Mot de passe oublié ? Changez-le ici :\n${lien}`,
+    html: miseEnForme({ titre: "Mot de passe oublié ?", bouton: { texte: "Changer mon mot de passe", lien }, site }),
   };
 }
 
