@@ -214,6 +214,7 @@ describe("confirmation de la création du compte", () => {
     expect(confirmation.textContent).toContain("Votre compte est créé");
     expect(confirmation.textContent).toContain("nom@exemple.fr");
     expect(document.activeElement?.textContent).toBe("Votre compte est créé");
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Bienvenue dans Bestia");
     expect(screen.queryByRole("button", { name: "Créer mon compte" })).toBeNull();
     expect(screen.queryByText("J'ai déjà un compte")).toBeNull();
   });

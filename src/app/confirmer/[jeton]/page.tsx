@@ -47,13 +47,9 @@ export default async function ConfirmerAdresse({ params }: { params: Promise<{ j
         <p className={styles.texte}>Vérifiez qu&apos;il est complet, ou ouvrez le dernier e-mail de Bestia que vous avez reçu.</p>
       ) : (
         <div className={styles.confirmation}>
-          <span className={styles.coche} aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="22" height="22">
-              <path d="M5 12.5 10 17.5 19 7" />
-            </svg>
-          </span>
-          <Link href="/connexion" className={styles.envoyer}>
-            Se connecter
+          <p className={styles.texte}>Merci : votre adresse e-mail est vérifiée.</p>
+          <Link href="/jeu" className={styles.envoyer}>
+            Aller au jeu
           </Link>
         </div>
       )}

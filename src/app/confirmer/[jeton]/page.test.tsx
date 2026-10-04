@@ -24,7 +24,7 @@ describe("page du lien de confirmation", () => {
     const html = await ouvrir("confirmee");
     expect(confirmation.confirmerAdresse).toHaveBeenCalledWith({}, "jeton123");
     expect(html).toMatch(/<h1[^>]*>Adresse confirmée<\/h1>/);
-    expect(html).toMatch(/<a [^>]*href="\/connexion"[^>]*>Se connecter<\/a>/);
+    expect(html).toMatch(/<a [^>]*href="\/jeu"[^>]*>Aller au jeu<\/a>/);
   });
 
   it("dit qu'une adresse est déjà confirmée quand le lien a déjà servi", async () => {

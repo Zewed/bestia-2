@@ -15,7 +15,6 @@ export default function Inscription() {
   if (!entreeDuJeuOuverte()) notFound();
   return (
     <PageEntree
-      titre="Créer un compte"
       illustration={{ chemin: "entree/inscription.webp", alt: "Un sac d'aventurier ouvert sur un rocher, au-dessus d'une vallée sauvage au lever du soleil" }}
     >
       <FormulaireInscription />

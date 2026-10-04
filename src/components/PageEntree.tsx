@@ -5,9 +5,15 @@ import styles from "./PageEntree.module.css";
 type PageEntreeProps = {
   /** La grande illustration, sous public/illustrations. */
   illustration: { chemin: string; alt: string };
-  titre: string;
+  /** Le titre de la page ; sans titre, le contenu pose le sien avec TitreEntree (il peut alors changer). */
+  titre?: string;
   children: ReactNode;
 };
+
+/** Le grand titre d'une page d'entrée, pour un contenu qui le change en cours de route. */
+export function TitreEntree({ children }: { children: ReactNode }) {
+  return <h1 className={styles.titre}>{children}</h1>;
+}
 
 /**
  * L'habillage des pages d'entrée du jeu (inscription, connexion) : une grande illustration
@@ -30,7 +36,7 @@ export function PageEntree({ illustration, titre, children }: PageEntreeProps) {
       </div>
       <section className={styles.bloc}>
         <div className={styles.contenu}>
-          <h1 className={styles.titre}>{titre}</h1>
+          {titre ? <TitreEntree>{titre}</TitreEntree> : null}
           {children}
         </div>
       </section>

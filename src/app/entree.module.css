@@ -207,49 +207,103 @@
   outline-offset: 2px;
 }
 
-/* La confirmation : une coche sur fond menthe, le message, l'adresse, puis le chemin vers la connexion. */
-.confirmation {
+/* La confirmation (US-0108, US-0123) : une validation qui se dessine, l'accueil, l'entrée. Centrée. */
+.bienvenue {
   display: grid;
-  gap: 10px;
-  justify-items: start;
-  margin-top: 28px;
+  gap: 18px;
+  justify-items: center;
+  text-align: center;
 }
 
-.confirmation .envoyer {
+.bienvenue .envoyer {
   justify-self: stretch;
-  margin-top: 14px;
+  margin-top: 6px;
 }
 
-.coche {
+/* La validation : le loup de Bestia sur un disque citron, marqué d'une pastille verte. Le disque
+   apparaît, puis la pastille. */
+.validation {
+  position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 88px;
+  height: 88px;
   border-radius: 999px;
-  background: var(--menthe);
-  color: var(--menthe-fonce);
+  background: var(--citron);
+  animation: disque 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-.coche svg {
+.loup {
+  width: 52px;
+  height: 52px;
+  fill: var(--encre);
+}
+
+.pastilleValidation {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--bloc);
+  border-radius: 999px;
+  background: var(--menthe-fonce);
+  color: var(--blanc-chaud);
+  animation: disque 360ms 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.pastilleValidation svg {
+  width: 18px;
+  height: 18px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 2.4;
+  stroke-width: 5;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
-.confirme {
-  font-size: 22px;
-  font-weight: var(--graisse-titre);
-  letter-spacing: -0.02em;
+@keyframes disque {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
 }
 
-.confirme:focus {
+/* Le titre, puis le texte, arrivent juste après la validation. */
+.bienvenue > :not(.validation) {
+  animation: apparaitre 420ms 180ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes apparaitre {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .validation,
+  .pastilleValidation,
+  .bienvenue > :not(.validation) {
+    animation: none;
+  }
+}
+
+.compteCree {
+  color: var(--texte-2);
+  font-size: 17px;
+  font-weight: var(--graisse-titre);
+}
+
+.compteCree:focus {
   outline: none;
 }
 
 .adresse {
-  color: var(--texte-2);
+  margin-top: 2px;
+  color: var(--texte-discret);
   overflow-wrap: anywhere;
 }
 
@@ -260,4 +314,11 @@
   width: 1px;
   height: 1px;
   overflow: hidden;
+}
+
+/* La confirmation de l'adresse (US-0114) : une phrase, puis le chemin vers le jeu. */
+.confirmation {
+  display: grid;
+  gap: 18px;
+  margin-top: 8px;
 }

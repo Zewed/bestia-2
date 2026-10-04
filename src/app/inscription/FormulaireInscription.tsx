@@ -5,6 +5,8 @@ import { useActionState, useCallback, useEffect, useRef, useState, type FormEven
 import { retenirAdresse } from "@/comptes/adresse-retenue";
 import { EMAIL_DEJA_UTILISEE, normaliserEmail, verifierEmail } from "@/comptes/email";
 import { REGLE_MOT_DE_PASSE, verifierMotDePasse } from "@/comptes/mot-de-passe";
+import { LOUP_TETE, LOUP_VIEWBOX } from "@/components/loup";
+import { TitreEntree } from "@/components/PageEntree";
 import { INSCRIPTION_DELAI_MAX_MS, MOT_DE_PASSE_MAX, MOT_DE_PASSE_MIN } from "@/reglages";
 import { ChampMotDePasse } from "../ChampMotDePasse";
 import styles from "../entree.module.css";
@@ -26,7 +28,12 @@ export function FormulaireInscription() {
   }, []);
   const [etat, envoyer, enAttente] = useActionState(envoyerEtSuivre, ETAT_INITIAL);
   if (etat.cree) return <CompteCree email={normaliserEmail(etat.email)} />;
-  return <Formulaire etat={etat} envoyer={envoyer} enAttente={enAttente} motDePasse={motDePasse} setMotDePasse={setMotDePasse} />;
+  return (
+    <>
+      <TitreEntree>Créer un compte</TitreEntree>
+      <Formulaire etat={etat} envoyer={envoyer} enAttente={enAttente} motDePasse={motDePasse} setMotDePasse={setMotDePasse} />
+    </>
+  );
 }
 
 /**
@@ -196,8 +203,9 @@ function Formulaire({ etat, envoyer, enAttente, motDePasse, setMotDePasse }: For
 }
 
 /**
- * La confirmation : le compte existe, et le joueur est déjà connecté (US-0123) ; il entre dans
- * le jeu d'un appui. Le mot de passe a disparu avec le formulaire.
+ * La confirmation : le compte existe, et le joueur est déjà connecté (US-0123). Le loup de Bestia
+ * marqué d'une validation, l'accueil, et l'entrée dans le jeu d'un appui. Le mot de passe a
+ * disparu avec le formulaire.
  */
 function CompteCree({ email }: { email: string }) {
   const message = useRef<HTMLParagraphElement>(null);
@@ -206,16 +214,24 @@ function CompteCree({ email }: { email: string }) {
     message.current?.focus();
   }, []);
   return (
-    <div className={styles.confirmation} role="status">
-      <span className={styles.coche} aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="22" height="22">
-          <path d="M5 12.5 10 17.5 19 7" />
+    <div className={styles.bienvenue} role="status">
+      <span className={styles.validation} aria-hidden="true">
+        <svg viewBox={LOUP_VIEWBOX} className={styles.loup}>
+          <path d={LOUP_TETE} />
         </svg>
+        <span className={styles.pastilleValidation}>
+          <svg viewBox="0 0 52 52">
+            <path d="M15 27.5 22.5 35 37.5 18.5" />
+          </svg>
+        </span>
       </span>
-      <p ref={message} tabIndex={-1} className={styles.confirme}>
-        Votre compte est créé
-      </p>
-      <p className={styles.adresse}>{email}</p>
+      <TitreEntree>Bienvenue dans Bestia</TitreEntree>
+      <div>
+        <p ref={message} tabIndex={-1} className={styles.compteCree}>
+          Votre compte est créé
+        </p>
+        <p className={styles.adresse}>{email}</p>
+      </div>
       <Link href="/jeu" className={styles.envoyer}>
         Entrer dans le jeu
       </Link>
