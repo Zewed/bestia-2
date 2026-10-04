@@ -2,7 +2,9 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
-import { preparerReinitialisation } from "./reinitialisation";
+import { verifierIdentifiants } from "./connexion";
+import { changerMotDePasse, lienValable, preparerReinitialisation } from "./reinitialisation";
+import { compteDeLaSession, ouvrirSession } from "./session";
 
 describe.skipIf(!URL_TEST)("liens pour changer de mot de passe (sur base)", () => {
   let pool: Pool;
@@ -46,5 +48,65 @@ describe.skipIf(!URL_TEST)("liens pour changer de mot de passe (sur base)", () =
     expect(await preparerReinitialisation(pool, compte.email)).toBeNull();
     await pool.query("update lien_reinitialisation set cree_le = now() - interval '2 minutes' where compte_id = $1", [compte.id]);
     expect(await preparerReinitialisation(pool, compte.email)).not.toBeNull();
+  });
+});
+
+describe.skipIf(!URL_TEST)("choisir un nouveau mot de passe (sur base)", () => {
+  let pool: Pool;
+  const lancement = `nouveau-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let numero = 0;
+
+  beforeAll(() => {
+    pool = poolDeTest();
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    await pool.end();
+  });
+
+  /** Un compte avec deux sessions ouvertes et un lien pour changer de mot de passe. */
+  async function situation() {
+    const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "l'ancien mot de passe"))!;
+    const ordinateur = await ouvrirSession(pool, compte.id);
+    const telephone = await ouvrirSession(pool, compte.id);
+    const { jeton } = (await preparerReinitialisation(pool, compte.email))!;
+    return { compte, jeton, sessions: [ordinateur.jeton, telephone.jeton] };
+  }
+
+  it("remplace l'ancien mot de passe, qui ne fonctionne plus", async () => {
+    const { compte, jeton } = await situation();
+    expect(await lienValable(pool, jeton)).toEqual({ email: compte.email });
+    expect(await changerMotDePasse(pool, jeton, "le nouveau mot de passe")).toEqual({ id: compte.id, email: compte.email });
+    expect(await verifierIdentifiants(pool, compte.email, "le nouveau mot de passe")).toMatchObject({ id: compte.id });
+    expect(await verifierIdentifiants(pool, compte.email, "l'ancien mot de passe")).toBeNull();
+  });
+
+  it("ferme toutes les sessions du compte, et confirme l'adresse au passage", async () => {
+    const { compte, jeton, sessions } = await situation();
+    await changerMotDePasse(pool, jeton, "le nouveau mot de passe");
+    for (const session of sessions) expect(await compteDeLaSession(pool, session)).toBeNull();
+    const { rows } = await pool.query("select email_confirme_le is not null as confirmee from compte where id = $1", [compte.id]);
+    expect(rows[0].confirmee).toBe(true);
+  });
+
+  it("use le lien, et les autres liens du compte avec lui", async () => {
+    const { compte, jeton } = await situation();
+    await pool.query("update lien_reinitialisation set cree_le = now() - interval '2 minutes' where compte_id = $1", [compte.id]);
+    const autre = (await preparerReinitialisation(pool, compte.email))!;
+    await changerMotDePasse(pool, jeton, "le nouveau mot de passe");
+    expect(await lienValable(pool, jeton)).toBeNull();
+    expect(await changerMotDePasse(pool, jeton, "encore un autre")).toBeNull();
+    expect(await changerMotDePasse(pool, autre.jeton, "encore un autre")).toBeNull();
+    expect(await verifierIdentifiants(pool, compte.email, "le nouveau mot de passe")).not.toBeNull();
+  });
+
+  it("ne change rien avec un lien expiré ou inventé", async () => {
+    const { compte, jeton, sessions } = await situation();
+    await pool.query("update lien_reinitialisation set expire_le = now() - interval '1 second' where compte_id = $1", [compte.id]);
+    expect(await lienValable(pool, jeton)).toBeNull();
+    expect(await changerMotDePasse(pool, jeton, "le nouveau mot de passe")).toBeNull();
+    expect(await changerMotDePasse(pool, "un-jeton-invente", "le nouveau mot de passe")).toBeNull();
+    expect(await verifierIdentifiants(pool, compte.email, "l'ancien mot de passe")).not.toBeNull();
+    expect(await compteDeLaSession(pool, sessions[0])).not.toBeNull();
   });
 });

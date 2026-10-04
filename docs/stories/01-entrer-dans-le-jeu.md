@@ -272,12 +272,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0128 · Choisir un nouveau mot de passe
 **En tant que** joueur, **je veux** saisir un nouveau mot de passe depuis le lien reçu, **afin de** reprendre la main sur mon compte.
 
+- **Statut** : Livrée le 2026-10-04. Ouvrir la page ne consomme pas le lien ; seul le changement le fait, tout ou rien. Un lien périmé affiche un message simple en attendant US-0129.
 - **Débloquée par** : US-0105, US-0127
 - **Critères d'acceptation** :
   - Le lien ouvre une page qui demande le nouveau mot de passe, avec les mêmes règles qu'à l'inscription.
   - Le nouveau mot de passe remplace l'ancien, qui ne fonctionne plus. Ouvrir le lien confirme aussi l'adresse e-mail (décidé avec US-0126).
   - Le joueur est ensuite connecté et arrive dans son jeu.
-  - Les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées (à décider).
+  - Les sessions déjà ouvertes sur d'autres appareils sont toutes fermées : si l'ancien mot de passe a été volé, qui s'en servait perd l'accès. Les autres liens de réinitialisation du compte sont annulés.
 
 ### US-0129 · Refuser un lien expiré ou déjà utilisé
 **En tant que** joueur, **je veux** un message clair quand le lien de réinitialisation ne marche plus, **afin de** redemander un lien sans chercher pourquoi.

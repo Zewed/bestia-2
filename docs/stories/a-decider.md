@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-285 points au total.
+284 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 
-- [US-0128](01-entrer-dans-le-jeu.md) · Choisir un nouveau mot de passe : les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées.
 - [US-0133](01-entrer-dans-le-jeu.md) · Limiter les caractères autorisés : les espaces, traits d'union, apostrophes et chiffres.
 - [US-0135](01-entrer-dans-le-jeu.md) · Refuser un nom déjà pris dans le Monde : la prise en compte des accents dans la comparaison, « Élan » contre « Elan ».
 - [US-0138](01-entrer-dans-le-jeu.md) · Refuser les noms interdits : le contenu de la liste et le traitement des contournements, chiffres à la place des lettres ou espaces glissés.
