@@ -2,10 +2,10 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
-import { NOM_TROP_COURT } from "@/chefs/nom";
+import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_TROP_COURT } from "@/chefs/nom";
 import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
 
-describe("champ du nom de chef (US-0132)", () => {
+describe("champ du nom de chef (US-0132, US-0133)", () => {
   afterEach(cleanup);
   const champ = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Nom de chef" });
 
@@ -54,5 +54,30 @@ describe("champ du nom de chef (US-0132)", () => {
     render(<FormulaireNomDeChef />);
     await u.type(champ(), "Ourse");
     expect(screen.getByRole<HTMLButtonElement>("button", { name: "Valider" }).disabled).toBe(true);
+  });
+
+  it("signale un caractère refusé dès qu'il est tapé, et l'oublie dès qu'il est retiré", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Loup@");
+    expect(screen.getByRole("alert").textContent).toBe(caractereRefuse("@"));
+    expect(champ().getAttribute("aria-invalid")).toBe("true");
+    await u.type(champ(), "{Backspace}");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("demande de commencer par une lettre", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "-");
+    expect(screen.getByRole("alert").textContent).toBe(COMMENCER_PAR_UNE_LETTRE);
+  });
+
+  it("redresse l'apostrophe courbe des téléphones", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "L\u2019Ourse");
+    expect(champ().value).toBe("L'Ourse");
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

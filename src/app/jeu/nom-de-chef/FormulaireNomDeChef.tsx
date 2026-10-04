@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from "react";
-import { couperNom, longueurDuNom, verifierLongueurDuNom } from "@/chefs/nom";
+import { couperNom, longueurDuNom, preparerNom, verifierCaracteresDuNom, verifierLongueurDuNom } from "@/chefs/nom";
 import { NOM_DE_CHEF_MAX } from "@/reglages";
 import styles from "../../entree.module.css";
 
 /**
  * Le champ du nom de chef. US-0132 : le compteur paraît dès qu'on écrit, le champ ne prend pas
  * plus de 16 caractères, et un nom trop court se signale quand on quitte le champ, jamais pendant
- * la frappe. « Valider » s'activera avec l'enregistrement du nom (US-0139).
+ * la frappe. US-0133 : un caractère refusé se signale dès qu'il est tapé, pour qu'on voie lequel
+ * retirer. « Valider » s'activera avec l'enregistrement du nom (US-0139).
  */
 export function FormulaireNomDeChef() {
   const [nom, setNom] = useState("");
-  const [erreur, setErreur] = useState<string | null>(null);
+  const [erreurLongueur, setErreurLongueur] = useState<string | null>(null);
+  const erreur = verifierCaracteresDuNom(nom) ?? erreurLongueur;
   const decrit = [erreur ? "nom-erreur" : null, nom ? "nom-compteur" : null].filter(Boolean).join(" ");
   return (
     <form className={styles.formulaire} noValidate>
@@ -26,10 +28,10 @@ export function FormulaireNomDeChef() {
           spellCheck={false}
           value={nom}
           onChange={(e) => {
-            setNom(couperNom(e.target.value));
-            setErreur(null);
+            setNom(couperNom(preparerNom(e.target.value)));
+            setErreurLongueur(null);
           }}
-          onBlur={() => setErreur(nom ? verifierLongueurDuNom(nom) : null)}
+          onBlur={() => setErreurLongueur(nom ? verifierLongueurDuNom(nom) : null)}
           aria-invalid={erreur ? true : undefined}
           aria-describedby={decrit || undefined}
         />

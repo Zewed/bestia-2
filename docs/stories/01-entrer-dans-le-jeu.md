@@ -323,11 +323,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0133 · Limiter les caractères autorisés
 **En tant que** nouveau joueur, **je veux** un message précis si mon nom contient un caractère refusé, **afin de** corriger sans deviner.
 
+- **Statut** : Livrée le 2026-10-04. Le message paraît dès que le caractère est tapé et le nomme : « « @ » n'est pas autorisé », ou « Caractère invisible non autorisé ». L'apostrophe courbe des téléphones devient droite d'elle-même. La règle complète du nom (`verifierNomDeChef`) attend l'enregistrement (US-0139) pour être refaite par le serveur.
 - **Débloquée par** : US-0131
 - **Critères d'acceptation** :
-  - Les lettres, accents compris (é, ç, œ), sont acceptées.
-  - Les espaces, traits d'union, apostrophes et chiffres (à décider).
-  - Les émojis, les caractères invisibles et les symboles sont refusés avec « Ce caractère n'est pas autorisé ».
+  - Les lettres de l'alphabet latin, accents compris (é, ç, œ, ß, ș), sont acceptées ; pas les autres alphabets, dont les lettres imitent les nôtres (« О » cyrillique).
+  - Les espaces, traits d'union, apostrophes et chiffres sont acceptés. Le nom commence par une lettre, et deux signes ne se suivent pas (« Loup--Gris », « L''Ourse »).
+  - Les émojis, les caractères invisibles et les symboles sont refusés, avec un message qui nomme le caractère.
   - Le jeu refait la vérification à l'enregistrement.
 
 ### US-0134 · Nettoyer les espaces du nom

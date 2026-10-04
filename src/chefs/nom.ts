@@ -1,8 +1,12 @@
-// Les règles du nom de chef (US-0132), les mêmes dans le navigateur et sur le serveur.
+// Les règles du nom de chef (US-0132, US-0133), les mêmes dans le navigateur et sur le serveur.
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_MIN } from "@/reglages";
 
 export const NOM_TROP_COURT = `${NOM_DE_CHEF_MIN} caractères minimum`;
 export const NOM_TROP_LONG = `${NOM_DE_CHEF_MAX} caractères maximum`;
+export const CARACTERE_INVISIBLE = "Caractère invisible non autorisé";
+export const COMMENCER_PAR_UNE_LETTRE = "Commencez par une lettre";
+export const DEUX_SIGNES_A_LA_SUITE = "Pas deux signes à la suite";
+export const caractereRefuse = (caractere: string) => `« ${caractere} » n'est pas autorisé`;
 
 const segmenteur = new Intl.Segmenter("fr", { granularity: "grapheme" });
 const caracteres = (texte: string) => [...segmenteur.segment(texte)].map((s) => s.segment);
@@ -28,4 +32,40 @@ export function couperNom(nom: string): string {
     garde += caractere;
   }
   return garde;
+}
+
+/**
+ * La saisie mise au propre, sans rien changer à ce qu'on voit : les apostrophes courbes des
+ * téléphones deviennent droites, les traits d'union et espaces spéciaux deviennent ordinaires, et
+ * un accent écrit en deux morceaux n'en fait plus qu'un.
+ */
+export function preparerNom(saisie: string): string {
+  return saisie.replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2010\u2011]/g, "-").replace(/\p{Zs}/gu, " ").normalize("NFC");
+}
+
+// L'alphabet latin et ses accents (é, ç, œ, ß, ș…), sans les lettres qui en imitent d'autres
+// (ſ, ŉ) ; les autres alphabets permettraient de se faire passer pour un autre chef (« О » cyrillique).
+const LETTRE = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u0148\u014A-\u017E\u0218-\u021B]$/;
+const SIGNE = /^[ '-]$/;
+const INVISIBLE = /^[\p{M}\p{Cf}\p{Cc}\p{Co}\p{Cs}\p{Cn}\u115F\u1160\u3164\uFFA0\u2800]+$|[\p{Cf}\p{Cc}](?!.*\p{Extended_Pictographic})/u;
+const VISIBLE_SEUL = /\p{Extended_Pictographic}/u;
+
+/** Le message qui refuse un caractère du nom, ou null s'ils sont tous permis (US-0133). */
+export function verifierCaracteresDuNom(nom: string): string | null {
+  const liste = caracteres(preparerNom(nom).trim());
+  for (const caractere of liste) {
+    if (!VISIBLE_SEUL.test(caractere) && INVISIBLE.test(caractere)) return CARACTERE_INVISIBLE;
+    if (!LETTRE.test(caractere) && !/^[0-9]$/.test(caractere) && !SIGNE.test(caractere)) return caractereRefuse(caractere);
+  }
+  if (liste.length > 0 && !LETTRE.test(liste[0])) return COMMENCER_PAR_UNE_LETTRE;
+  // Deux espaces de suite seront réduits à un seul (US-0134) ; un tiret ou une apostrophe ne se double pas.
+  for (let i = 1; i < liste.length; i++) {
+    if (SIGNE.test(liste[i - 1]) && SIGNE.test(liste[i]) && !(liste[i - 1] === " " && liste[i] === " ")) return DEUX_SIGNES_A_LA_SUITE;
+  }
+  return null;
+}
+
+/** Toutes les règles du nom, dans l'ordre où le joueur les rencontre ; le serveur les refait à l'enregistrement. */
+export function verifierNomDeChef(nom: string): string | null {
+  return verifierCaracteresDuNom(nom) ?? verifierLongueurDuNom(nom);
 }

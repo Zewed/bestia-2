@@ -1,6 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_MIN } from "@/reglages";
-import { couperNom, longueurDuNom, NOM_TROP_COURT, NOM_TROP_LONG, verifierLongueurDuNom } from "./nom";
+import {
+  CARACTERE_INVISIBLE,
+  caractereRefuse,
+  COMMENCER_PAR_UNE_LETTRE,
+  couperNom,
+  DEUX_SIGNES_A_LA_SUITE,
+  longueurDuNom,
+  NOM_TROP_COURT,
+  NOM_TROP_LONG,
+  preparerNom,
+  verifierCaracteresDuNom,
+  verifierLongueurDuNom,
+  verifierNomDeChef,
+} from "./nom";
 
 describe("longueur du nom de chef (US-0132)", () => {
   it("va de 3 à 16 caractères", () => {
@@ -11,7 +24,7 @@ describe("longueur du nom de chef (US-0132)", () => {
 
   it("compte les caractères tels qu'on les voit, sans les espaces autour", () => {
     expect(longueurDuNom("Élan")).toBe(4);
-    expect(longueurDuNom("Élan")).toBe(4); // le même « É », écrit en deux morceaux
+    expect(longueurDuNom("E\u0301lan")).toBe(4); // le même « É », écrit en deux morceaux
     expect(longueurDuNom("  Ourse  ")).toBe(5);
     expect(longueurDuNom("Ours brun")).toBe(9);
   });
@@ -29,8 +42,60 @@ describe("longueur du nom de chef (US-0132)", () => {
 
   it("coupe un collage trop long à 16 caractères, sans casser un accent", () => {
     expect(couperNom("Le grand ours des montagnes")).toBe("Le grand ours de");
-    expect(longueurDuNom(couperNom("É".repeat(20)))).toBe(16);
-    expect(couperNom("É".repeat(20))).toBe("É".repeat(16));
+    expect(longueurDuNom(couperNom("E\u0301".repeat(20)))).toBe(16);
+    expect(couperNom("E\u0301".repeat(20))).toBe("E\u0301".repeat(16));
     expect(couperNom("  Ourse")).toBe("  Ourse");
+  });
+});
+
+describe("caractères du nom de chef (US-0133)", () => {
+  it.each(["Ourse", "Élan", "Ça Va", "Cœur De Loup", "Ægir", "Straße", "Ștefan", "Jean-Loup", "L'Ourse", "Loup42", "Ours  Brun", "ÿÉçŒ"])(
+    "accepte « %s »",
+    (nom) => {
+      expect(verifierCaracteresDuNom(nom)).toBeNull();
+    },
+  );
+
+  it.each([
+    ["Loup🐺", caractereRefuse("🐺")],
+    ["Loup👨\u200D👩\u200D👧", caractereRefuse("👨\u200D👩\u200D👧")],
+    ["Loup@", caractereRefuse("@")],
+    ["Ours_Brun", caractereRefuse("_")],
+    ["Loup.", caractereRefuse(".")],
+    ["Оurse", caractereRefuse("О")], // un « О » cyrillique
+    ["Ourſe", caractereRefuse("ſ")],
+    ["Ｌoup", caractereRefuse("Ｌ")],
+    ["Lo\u200Bup", CARACTERE_INVISIBLE],
+    ["Lo\u202Eup", CARACTERE_INVISIBLE],
+    ["Lou\u3164p", CARACTERE_INVISIBLE],
+    ["Lo\u0301\u0302\u0303up", caractereRefuse("ó\u0302\u0303")], // des accents empilés sur une lettre
+    ["1234", COMMENCER_PAR_UNE_LETTRE],
+    ["-Loup", COMMENCER_PAR_UNE_LETTRE],
+    ["'Ours", COMMENCER_PAR_UNE_LETTRE],
+    ["Loup--Gris", DEUX_SIGNES_A_LA_SUITE],
+    ["L''Ourse", DEUX_SIGNES_A_LA_SUITE],
+    ["L' Ourse", DEUX_SIGNES_A_LA_SUITE],
+    ["Loup -Gris", DEUX_SIGNES_A_LA_SUITE],
+  ])("refuse « %s »", (nom, message) => {
+    expect(verifierCaracteresDuNom(nom)).toBe(message);
+  });
+
+  it("nomme le caractère fautif en peu de mots", () => {
+    expect(caractereRefuse("@")).toBe("« @ » n'est pas autorisé");
+    expect(CARACTERE_INVISIBLE).toBe("Caractère invisible non autorisé");
+  });
+
+  it("redresse les apostrophes courbes et les espaces spéciaux, et soude les accents", () => {
+    expect(preparerNom("L\u2019Ourse")).toBe("L'Ourse");
+    expect(preparerNom("Jean\u2011Loup")).toBe("Jean-Loup");
+    expect(preparerNom("Ours\u00A0Brun")).toBe("Ours Brun");
+    expect(preparerNom("E\u0301lan")).toBe("Élan");
+    expect(verifierCaracteresDuNom("L\u2019Ourse")).toBeNull();
+  });
+
+  it("vérifie les caractères avant la longueur, comme le joueur les rencontre", () => {
+    expect(verifierNomDeChef("@@")).toBe(caractereRefuse("@"));
+    expect(verifierNomDeChef("Ou")).toBe(NOM_TROP_COURT);
+    expect(verifierNomDeChef("Ourse")).toBeNull();
   });
 });
