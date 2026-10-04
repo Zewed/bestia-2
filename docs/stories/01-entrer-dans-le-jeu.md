@@ -304,11 +304,11 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0131 · Demander le nom de chef à la première connexion
 **En tant que** nouveau joueur, **je veux** qu'on me demande mon nom de chef dès ma première connexion, **afin de** porter un nom dans le Monde avant toute chose.
 
+- **Statut** : Livrée le 2026-10-04. L'écran « Votre nom de chef » (`/jeu/nom-de-chef`) : le titre, le champ et « Valider », grisé jusqu'à US-0139. Un joueur qui a déjà son nom va droit au jeu.
 - **Débloquée par** : US-0121, US-0123, Étape 3
 - **Critères d'acceptation** :
   - Un compte sans nom de chef arrive sur l'écran « Votre nom de chef », quelle que soit la page demandée.
   - Aucune autre page du jeu n'est accessible avant d'avoir choisi un nom.
-  - L'écran précise que ce nom sera vu par les autres joueurs du Monde.
 
 ### US-0132 · Respecter la longueur du nom
 **En tant que** nouveau joueur, **je veux** connaître la longueur permise pendant que je tape, **afin de** ne pas découvrir la règle au moment de valider.

@@ -48,6 +48,10 @@ Plus Jakarta Sans partout, comme dans le prototype : 500 pour les textes, 800 po
 - `BarreHaut` (`src/components/BarreHaut.tsx`) : la barre du haut Encre, sur chaque page (posée par `src/app/layout.tsx`). Collée aux bords de la fenêtre, accrochée en haut au défilement, 64 px de haut, 48 px sur mobile (`--hauteur-barre`).
 - `Logo` (`src/components/Logo.tsx`) : la tête de loup citron et « BESTIA » en capitales espacées, en vecteur, à gauche de la barre du haut ; il ramène à l'accueil.
 
+## Textes à l'écran
+
+Une page ne dit que ce que ses titres, champs et boutons ne disent pas déjà. Pas de phrase d'explication, d'introduction ni de rappel quand l'écran est clair sans elle : un titre, les champs, le bouton, et c'est tout. Un texte n'apparaît que s'il apporte quelque chose qu'on ne devinerait pas (une erreur, une règle à connaître avant de se tromper). Ne jamais surcharger une page ; dans le doute, on enlève.
+
 ## Icônes
 
 L'icône d'onglet (`src/app/icon.svg`), l'icône d'écran d'accueil (`src/app/apple-icon.png`, `public/icone-*.png`) et les couleurs du manifeste sont fabriquées depuis la palette par `npm run icones`. Ces fichiers ne lisent pas les variables CSS : un test vérifie qu'ils suivent la palette, et demande de relancer `npm run icones` si l'Encre ou le citron changent. Le titre d'onglet est « Bestia », que chaque page peut compléter (« Bestia · Accueil »).

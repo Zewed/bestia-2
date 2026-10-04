@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 // US-0121 : aucune donnée du jeu pour un visiteur non connecté, même par un appel direct. Toute
 // page, mise en page, route ou action sous /jeu doit passer par exigerCompte avant de lire quoi
 // que ce soit. Ce test les parcourt toutes : une nouvelle page qui l'oublie le fait échouer.
+// Seul l'écran du nom de chef passe par exigerCompteSansChef, qui ouvre au joueur encore sans nom.
 const JEU = __dirname;
 
 function fichiers(dir: string): string[] {
@@ -26,6 +27,11 @@ describe("garde des pages du jeu", () => {
   });
 
   it.each(aGarder.map((f) => [relative(JEU, f), f]))("%s passe par exigerCompte", (_, fichier) => {
-    expect(readFileSync(fichier, "utf8")).toMatch(/\bexigerCompte\(/);
+    expect(readFileSync(fichier, "utf8")).toMatch(/\bexigerCompte(SansChef)?\(/);
+  });
+
+  it("seul l'écran du nom de chef s'ouvre sans nom de chef (US-0131)", () => {
+    const sansChef = aGarder.filter((f) => /\bexigerCompteSansChef\(/.test(readFileSync(f, "utf8")));
+    expect(sansChef.map((f) => relative(JEU, f))).toEqual(["nom-de-chef/page.tsx"]);
   });
 });

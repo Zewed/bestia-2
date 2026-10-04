@@ -134,6 +134,13 @@
       "when": 1791124380098,
       "tag": "0018_liens_reinitialisation",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791137042325,
+      "tag": "0019_chefs",
+      "breakpoints": true
     }
   ]
 }

@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -255,4 +255,24 @@ export const lienReinitialisation = pgTable(
     utiliseLe: timestamp("utilise_le", { withTimezone: true }),
   },
   (t) => [index("lien_reinitialisation_par_compte").on(t.compteId, t.creeLe)],
+);
+
+/**
+ * Le Chef d'un compte dans un Monde (US-0131), sous le nom que voient les autres joueurs. Un
+ * compte a au plus un Chef par Monde ; tant qu'il n'en a pas, il ne peut que choisir son nom.
+ */
+export const chef = pgTable(
+  "chef",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    compteId: integer("compte_id")
+      .notNull()
+      .references(() => compte.id, { onDelete: "cascade" }),
+    mondeId: integer("monde_id")
+      .notNull()
+      .references(() => monde.id),
+    nom: text("nom").notNull(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [unique("chef_un_par_monde").on(t.compteId, t.mondeId)],
 );

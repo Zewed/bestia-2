@@ -6,6 +6,8 @@ const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
 vi.mock("@/comptes/cookie-session", () => cookie);
 const session = vi.hoisted(() => ({ compteDeLaSession: vi.fn() }));
 vi.mock("@/comptes/session", () => session);
+const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn(async () => ({ nom: "Ourse" })) }));
+vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 

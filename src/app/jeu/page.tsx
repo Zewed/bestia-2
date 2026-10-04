@@ -9,8 +9,8 @@ import styles from "../entree.module.css";
 export const metadata: Metadata = { title: "Le jeu" };
 
 /**
- * La page du jeu (US-0116), provisoire : elle accueille le joueur connecté, en attendant le
- * choix du nom de chef et des premières Bêtes. Sans session, la garde mène à la connexion.
+ * La page du jeu (US-0116), provisoire : elle accueille le joueur connecté, en attendant les
+ * premières Bêtes. Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
  */
 export default async function Jeu() {
   await connection();
@@ -21,7 +21,7 @@ export default async function Jeu() {
       <p className={styles.texte}>
         Vous êtes connecté avec <strong>{compte.email}</strong>.
       </p>
-      <p className={styles.texte}>La suite arrive : votre nom de chef, puis vos premières Bêtes.</p>
+      <p className={styles.texte}>Vos premières Bêtes arrivent bientôt.</p>
     </PageEntree>
   );
 }

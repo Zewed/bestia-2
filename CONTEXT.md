@@ -8,6 +8,10 @@ Un jeu de stratégie persistant où l'on est d'abord un dresseur : on découvre 
 Une planète sauvage partagée par ses joueurs, qui ne s'arrête ni ne se réinitialise jamais ; quand un Monde est plein, on en ouvre un autre.
 _Avoid_: Univers, serveur, galaxie
 
+**Chef**:
+Ce qu'est un joueur dans un Monde, sous le nom que voient les autres joueurs ; un compte a au plus un Chef par Monde.
+_Avoid_: Pseudo, avatar, personnage
+
 **Territoire**:
 L'ensemble d'un seul tenant des Cases qu'un joueur possède ; il grandit de proche en proche.
 _Avoid_: Planète, base, colonie
