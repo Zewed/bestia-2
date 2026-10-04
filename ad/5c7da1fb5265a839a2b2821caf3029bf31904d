@@ -1,0 +1,30 @@
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_9ddf82008751db 296,299
+docs/stories/README.md
+  s_d0f4332113d26c::t_9ddf82008751db 7,33
+src/reglages.ts
+  s_d0f4332113d26c::t_80625fd17fa4aa 43-44
+src/app/mot-de-passe-oublie/actions.test.ts
+  s_d0f4332113d26c::t_68f81ebea63f2a 38
+src/comptes/reinitialisation.db.test.ts
+  s_d0f4332113d26c::t_f55c470c062e16 72-73
+  s_d0f4332113d26c::t_91f931f1b18195 3,53-71,74-78
+src/comptes/reinitialisation.ts
+  s_d0f4332113d26c::t_f55c470c062e16 10,17-20,23-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ad5c7da1fb5265a839a2b2821caf3029bf31904d",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
