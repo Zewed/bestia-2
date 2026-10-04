@@ -1,0 +1,32 @@
+docs/stories/README.md
+  s_d0f4332113d26c::t_5cfbc4723dce70 7,14,31
+src/chefs/nom.ts
+  s_d0f4332113d26c::t_7c4816d1af72a1 1,6-9,36-71
+src/chefs/nom.test.ts
+  s_d0f4332113d26c::t_7b76b7740bf6bf 3-16,27,45-46,50-70,72-101
+  s_d0f4332113d26c::t_25d0a9ced1b1b9 71
+src/app/jeu/nom-de-chef/FormulaireNomDeChef.test.tsx
+  s_d0f4332113d26c::t_9fcba70ef1f7b0 5,8,58-82
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_5cfbc4723dce70 326,329-331
+src/app/jeu/nom-de-chef/FormulaireNomDeChef.tsx
+  s_d0f4332113d26c::t_9fcba70ef1f7b0 4,11-12,16-17,31-32,34
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_5cfbc4723dce70 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7eb4e29beb368b1bce9ddbf2500e40ce61f12a02",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
