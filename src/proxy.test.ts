@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const sessions = vi.hoisted(() => ({ prolongerSession: vi.fn(), compteDeLaSession: vi.fn() }));
+const sessions = vi.hoisted(() => ({ etatDeLaSession: vi.fn(), compteDeLaSession: vi.fn() }));
 vi.mock("./comptes/session", () => sessions);
 vi.mock("./db", () => ({ getPool: () => ({}) }));
 
@@ -13,7 +13,7 @@ const visite = (cookie?: string) => new NextRequest("https://bestia.test/jeu", {
 
 describe("prolongation de la session au passage d'une page du jeu", () => {
   beforeEach(() => {
-    sessions.prolongerSession.mockReset();
+    sessions.etatDeLaSession.mockReset();
   });
   afterEach(() => {
     vi.restoreAllMocks();
@@ -21,9 +21,9 @@ describe("prolongation de la session au passage d'une page du jeu", () => {
   });
 
   it("renouvelle le cookie quand la session vient d'être prolongée", async () => {
-    sessions.prolongerSession.mockResolvedValue(FIN);
+    sessions.etatDeLaSession.mockResolvedValue({ valide: true, prolongeeJusqua: FIN });
     const reponse = await proxy(visite("bestia_session=jeton-de-session"));
-    expect(sessions.prolongerSession).toHaveBeenCalledWith({}, "jeton-de-session");
+    expect(sessions.etatDeLaSession).toHaveBeenCalledWith({}, "jeton-de-session");
     const cookie = reponse?.headers.get("set-cookie") ?? "";
     expect(cookie).toContain("bestia_session=jeton-de-session");
     expect(cookie).toContain(`Expires=${FIN.toUTCString()}`);
@@ -38,18 +38,18 @@ describe("prolongation de la session au passage d'une page du jeu", () => {
   });
 
   it("ne touche à rien quand la session n'a pas besoin d'être prolongée", async () => {
-    sessions.prolongerSession.mockResolvedValue(null);
+    sessions.etatDeLaSession.mockResolvedValue({ valide: true, prolongeeJusqua: null });
     expect(await proxy(visite("bestia_session=jeton-de-session"))).toBeUndefined();
   });
 
   it("ne va pas en base sans cookie de session", async () => {
     expect(await proxy(visite())).toBeUndefined();
-    expect(sessions.prolongerSession).not.toHaveBeenCalled();
+    expect(sessions.etatDeLaSession).not.toHaveBeenCalled();
   });
 
   it("laisse jouer si la prolongation échoue", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
-    sessions.prolongerSession.mockRejectedValue(new Error("base injoignable"));
+    sessions.etatDeLaSession.mockRejectedValue(new Error("base injoignable"));
     expect(await proxy(visite("bestia_session=jeton-de-session"))).toBeUndefined();
   });
 });
@@ -87,9 +87,37 @@ describe("joueur déjà connecté qui ouvre l'inscription ou la connexion", () =
     expect(await proxy(ouvrir("/inscription", { cookie: "bestia_session=jeton-de-session", methode: "POST", action: true }))).toBeUndefined();
   });
 
-  it("laisse passer un visiteur, ou une session expirée", async () => {
+  it("laisse passer un visiteur", async () => {
     expect(await proxy(ouvrir("/inscription"))).toBeUndefined();
+  });
+
+  it("laisse passer une session expirée, en effaçant ses cookies périmés (US-0125)", async () => {
     sessions.compteDeLaSession.mockResolvedValue(null);
-    expect(await proxy(ouvrir("/connexion", { cookie: "bestia_session=jeton-perime" }))).toBeUndefined();
+    const reponse = await proxy(ouvrir("/connexion", { cookie: "bestia_session=jeton-perime; bestia_connecte=1" }));
+    expect(reponse?.headers.get("location")).toBeNull();
+    const effaces = reponse?.headers.getSetCookie() ?? [];
+    expect(effaces.find((c) => c.startsWith("bestia_session="))).toMatch(/Max-Age=0/);
+    expect(effaces.find((c) => c.startsWith("bestia_connecte="))).toMatch(/Max-Age=0/);
+  });
+});
+
+describe("session expirée au passage d'une page du jeu (US-0125)", () => {
+  beforeEach(() => {
+    sessions.etatDeLaSession.mockReset().mockResolvedValue({ valide: false });
+  });
+
+  it("mène à la connexion, qui le dira et ramènera ensuite à la même page, et efface les cookies périmés", async () => {
+    const requete = new NextRequest("https://bestia.test/jeu/territoire?onglet=betes&_rsc=abc", { headers: { cookie: "bestia_session=jeton-perime" } });
+    const reponse = await proxy(requete);
+    expect(reponse?.status).toBe(307);
+    expect(reponse?.headers.get("location")).toBe("https://bestia.test/connexion?suite=%2Fjeu%2Fterritoire%3Fonglet%3Dbetes&expiree=1");
+    const effaces = reponse?.headers.getSetCookie() ?? [];
+    expect(effaces.find((c) => c.startsWith("bestia_session="))).toMatch(/Max-Age=0/);
+    expect(effaces.find((c) => c.startsWith("bestia_connecte="))).toMatch(/Max-Age=0/);
+  });
+
+  it("laisse une action envoyée se faire arrêter par la garde du jeu, qui ne l'applique pas", async () => {
+    const action = new NextRequest("https://bestia.test/jeu", { method: "POST", headers: { cookie: "bestia_session=jeton-perime", "next-action": "abc" } });
+    expect(await proxy(action)).toBeUndefined();
   });
 });

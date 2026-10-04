@@ -7,7 +7,7 @@ const serveur = vi.hoisted(() => ({ seConnecter: vi.fn(async (_: unknown, donnee
 vi.mock("./actions", () => serveur);
 
 import { FormulaireConnexion } from "./FormulaireConnexion";
-import { CONNEXION_REFUSEE } from "./etat";
+import { CONNEXION_REFUSEE, SESSION_EXPIREE } from "./etat";
 
 describe("formulaire de connexion", () => {
   afterEach(() => {
@@ -75,5 +75,16 @@ describe("formulaire de connexion", () => {
     expect((await screen.findByRole("alert")).textContent).toBe(CONNEXION_REFUSEE);
     expect(email().value).toBe("nom@exemple.fr");
     expect(motDePasse().value).toBe("");
+  });
+
+  it("dit que la session a expiré quand on arrive d'une page du jeu (US-0125)", () => {
+    render(<FormulaireConnexion suite="/jeu/territoire" sessionExpiree />);
+    expect(screen.getByRole("status").textContent).toBe(SESSION_EXPIREE);
+    expect((document.querySelector('input[name="suite"]') as HTMLInputElement).value).toBe("/jeu/territoire");
+  });
+
+  it("ne parle pas de session expirée à un visiteur qui vient se connecter", () => {
+    render(<FormulaireConnexion />);
+    expect(screen.queryByText(SESSION_EXPIREE)).toBeNull();
   });
 });

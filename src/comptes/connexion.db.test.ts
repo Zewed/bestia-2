@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
 import { noterConnexion, verifierIdentifiants } from "./connexion";
-import { compteDeLaSession, fermerSession, ouvrirSession, prolongerSession } from "./session";
+import { compteDeLaSession, etatDeLaSession, fermerSession, ouvrirSession, prolongerSession } from "./session";
 
 describe.skipIf(!URL_TEST)("connexion et sessions (sur base)", () => {
   let pool: Pool;
@@ -146,5 +146,39 @@ describe.skipIf(!URL_TEST)("fermeture des sessions (sur base)", () => {
     expect(await compteDeLaSession(pool, jeton)).toBeNull();
     // Les autres appareils du joueur restent connectés.
     expect(await compteDeLaSession(pool, autre.jeton)).not.toBeNull();
+  });
+});
+
+describe.skipIf(!URL_TEST)("état d'une session au passage d'une page (sur base)", () => {
+  let pool: Pool;
+  const lancement = `etat-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let compteId: number;
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    compteId = (await creerCompte(pool, `${lancement}@essai.test`, "une phrase de passe"))!.id;
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}%`]);
+    await pool.end();
+  });
+
+  it("dit valable une session fraîche, sans la réécrire", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    expect(await etatDeLaSession(pool, jeton)).toEqual({ valide: true, prolongeeJusqua: null });
+  });
+
+  it("prolonge au passage une session dont la dernière prolongation a plus d'un jour", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    await pool.query("update session set expire_le = now() + interval '20 days' where empreinte_jeton = encode(sha256($1::bytea), 'hex')", [jeton]);
+    const etat = await etatDeLaSession(pool, jeton);
+    expect(etat.valide && etat.prolongeeJusqua!.getTime()).toBeGreaterThan(Date.now() + 29.9 * 24 * 3_600_000);
+  });
+
+  it("dit expirée une session passée ou un jeton inconnu", async () => {
+    const { jeton } = await ouvrirSession(pool, compteId);
+    await pool.query("update session set expire_le = now() - interval '1 second' where empreinte_jeton = encode(sha256($1::bytea), 'hex')", [jeton]);
+    expect(await etatDeLaSession(pool, jeton)).toEqual({ valide: false });
+    expect(await etatDeLaSession(pool, "un-jeton-invente")).toEqual({ valide: false });
   });
 });

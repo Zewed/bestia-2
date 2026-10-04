@@ -6,14 +6,14 @@ import { lireAdresseRetenue } from "@/comptes/adresse-retenue";
 import { ChampMotDePasse } from "../ChampMotDePasse";
 import styles from "../entree.module.css";
 import { seConnecter } from "./actions";
-import { ETAT_CONNEXION_INITIAL } from "./etat";
+import { ETAT_CONNEXION_INITIAL, SESSION_EXPIREE } from "./etat";
 
 /**
  * Le formulaire de connexion (US-0115) : l'adresse et le mot de passe, que le navigateur peut
  * remplir avec ce qu'il a enregistré. En arrivant de l'inscription, l'adresse est déjà là (US-0108).
  * Des identifiants justes mènent au jeu (US-0116) ; sinon un message s'affiche et l'adresse reste.
  */
-export function FormulaireConnexion({ suite = "/jeu" }: { suite?: string }) {
+export function FormulaireConnexion({ suite = "/jeu", sessionExpiree = false }: { suite?: string; sessionExpiree?: boolean }) {
   const [etat, envoyer, enAttente] = useActionState(seConnecter, ETAT_CONNEXION_INITIAL);
   const [email, setEmail] = useState("");
   const [motDePasseVisible, setMotDePasseVisible] = useState(false);
@@ -27,6 +27,12 @@ export function FormulaireConnexion({ suite = "/jeu" }: { suite?: string }) {
 
   return (
     <form action={envoyer} className={styles.formulaire}>
+      {/* US-0125 : on arrive d'une page du jeu dont la session a expiré ; le message s'efface au premier refus. */}
+      {sessionExpiree && !etat.erreur ? (
+        <p className={styles.information} role="status">
+          {SESSION_EXPIREE}
+        </p>
+      ) : null}
       {/* US-0121 : la page du jeu où revenir une fois connecté. */}
       <input type="hidden" name="suite" value={suite} />
       <div className={styles.champ}>

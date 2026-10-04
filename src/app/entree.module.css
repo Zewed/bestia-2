@@ -196,6 +196,16 @@
   font-weight: var(--graisse-titre);
 }
 
+/* Une information, pas une erreur (la session a expiré) : sur fond sable. */
+.information {
+  padding: 10px 14px;
+  border-radius: var(--arrondi-moyen);
+  background: var(--sable);
+  color: var(--sable-fonce);
+  font-size: 14px;
+  font-weight: var(--graisse-titre);
+}
+
 /* Le lien dans un message d'erreur (« Se connecter » quand l'adresse a déjà un compte). */
 .lienErreur {
   color: inherit;

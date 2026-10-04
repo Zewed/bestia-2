@@ -51,3 +51,19 @@ export async function prolongerSession(base: Base, jeton: string): Promise<Date 
 export async function fermerSession(base: Base, jeton: string): Promise<void> {
   await base.query("delete from session where empreinte_jeton = $1", [empreinte(jeton)]);
 }
+
+export type EtatSession = { valide: false } | { valide: true; prolongeeJusqua: Date | null };
+
+/**
+ * L'état d'une session au passage d'une page du jeu : expirée (ou inconnue), valable, ou
+ * valable et prolongée à l'instant (US-0119, US-0125).
+ */
+export async function etatDeLaSession(base: Base, jeton: string): Promise<EtatSession> {
+  const { rows } = await base.query<{ a_prolonger: boolean }>(
+    `select expire_le <= now() + make_interval(days => $2) - make_interval(hours => $3) as a_prolonger
+     from session where empreinte_jeton = $1 and expire_le > now()`,
+    [empreinte(jeton), SESSION_JOURS, SESSION_PROLONGEE_APRES_HEURES],
+  );
+  if (!rows[0]) return { valide: false };
+  return { valide: true, prolongeeJusqua: rows[0].a_prolonger ? await prolongerSession(base, jeton) : null };
+}

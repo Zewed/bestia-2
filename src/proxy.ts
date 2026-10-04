@@ -1,12 +1,13 @@
 // Passe avant certaines pages :
 // - les pages de contrôle : sans le mot de passe de contrôle, le navigateur le demande ;
-// - les pages du jeu : la session du joueur est prolongée, au plus une fois par jour (US-0119) ;
+// - les pages du jeu : la session est prolongée, au plus une fois par jour (US-0119) ; expirée,
+//   elle mène à la connexion, qui le dit, et ramène ensuite à la même page (US-0125) ;
 // - l'inscription et la connexion : un joueur déjà connecté qui les ouvre va droit au jeu (US-0122).
 import { NextResponse, type NextRequest } from "next/server";
 import { DEMANDE_MOT_DE_PASSE, motDePasseAccepte } from "./controle/acces";
 import { nomDuCookie, nomDuTemoin, reglagesDuCookie, reglagesDuTemoin } from "./comptes/cookie-session";
-import { compteDeLaSession, prolongerSession } from "./comptes/session";
-import { suiteSure } from "./comptes/suite";
+import { compteDeLaSession, etatDeLaSession } from "./comptes/session";
+import { connexionPuis, suiteSure } from "./comptes/suite";
 import { getPool } from "./db";
 
 export const config = { matcher: ["/controle", "/controle/:path*", "/jeu", "/jeu/:path*", "/inscription", "/connexion"] };
@@ -15,19 +16,30 @@ export async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname;
   if (chemin.startsWith("/controle")) return protegerControle(request);
   if (chemin === "/inscription" || chemin === "/connexion") return envoyerAuJeuSiConnecte(request);
-  return prolongerLaSession(request);
+  return suivreLaSession(request);
+}
+
+/** L'ouverture d'une page (GET), par opposition à un envoi de formulaire. */
+const ouverture = (request: NextRequest) => request.method === "GET" && !request.headers.has("next-action");
+
+/** Le cookie de session et le témoin, effacés avec leurs réglages (un cookie __Host- ne s'efface qu'en HTTPS). */
+function effacerLesCookies(reponse: NextResponse): NextResponse {
+  reponse.cookies.set(nomDuCookie(), "", { ...reglagesDuCookie(new Date(0)), maxAge: 0 });
+  reponse.cookies.set(nomDuTemoin(), "", { ...reglagesDuTemoin(new Date(0)), maxAge: 0 });
+  return reponse;
 }
 
 /**
- * À l'ouverture seulement (GET), pas pendant un envoi de formulaire : un envoi qui connecte le
- * joueur, comme l'inscription (US-0123), doit pouvoir afficher sa confirmation sur place.
+ * À l'ouverture seulement, pas pendant un envoi de formulaire : un envoi qui connecte le joueur,
+ * comme l'inscription (US-0123), doit pouvoir afficher sa confirmation sur place. Un cookie de
+ * session périmé est effacé au passage, pour que l'accueil ne propose plus de retourner au jeu.
  */
 async function envoyerAuJeuSiConnecte(request: NextRequest) {
-  if (request.method !== "GET" || request.headers.has("next-action")) return;
+  if (!ouverture(request)) return;
   const jeton = request.cookies.get(nomDuCookie())?.value;
   if (!jeton) return;
   try {
-    if (!(await compteDeLaSession(getPool(), jeton))) return;
+    if (!(await compteDeLaSession(getPool(), jeton))) return effacerLesCookies(NextResponse.next());
   } catch {
     return; // Sans réponse de la base, la page s'affiche simplement.
   }
@@ -43,18 +55,31 @@ function protegerControle(request: NextRequest) {
   });
 }
 
-async function prolongerLaSession(request: NextRequest) {
+/** La page du jeu demandée, sans le paramètre interne de Next (_rsc). */
+function pageDemandee(request: NextRequest): string {
+  const parametres = new URLSearchParams(request.nextUrl.searchParams);
+  parametres.delete("_rsc");
+  const requete = parametres.toString();
+  return request.nextUrl.pathname + (requete ? `?${requete}` : "");
+}
+
+async function suivreLaSession(request: NextRequest) {
   const jeton = request.cookies.get(nomDuCookie())?.value;
   if (!jeton) return;
   try {
-    const fin = await prolongerSession(getPool(), jeton);
-    if (!fin) return;
+    const etat = await etatDeLaSession(getPool(), jeton);
+    if (!etat.valide) {
+      // Une action envoyée avec une session expirée est arrêtée par la garde du jeu (exigerCompte).
+      if (!ouverture(request)) return;
+      return effacerLesCookies(NextResponse.redirect(new URL(connexionPuis(pageDemandee(request), { expiree: true }), request.url)));
+    }
+    if (!etat.prolongeeJusqua) return;
     const reponse = NextResponse.next();
-    reponse.cookies.set(nomDuCookie(), jeton, reglagesDuCookie(fin));
-    reponse.cookies.set(nomDuTemoin(), "1", reglagesDuTemoin(fin));
+    reponse.cookies.set(nomDuCookie(), jeton, reglagesDuCookie(etat.prolongeeJusqua));
+    reponse.cookies.set(nomDuTemoin(), "1", reglagesDuTemoin(etat.prolongeeJusqua));
     return reponse;
   } catch (erreur) {
-    // Une prolongation manquée n'empêche pas de jouer : la session court encore.
-    console.error(`Session non prolongée : ${erreur instanceof Error ? erreur.message : "erreur inconnue"}.`);
+    // Sans réponse de la base, la page décide seule (la garde du jeu vérifie la session).
+    console.error(`Session non suivie : ${erreur instanceof Error ? erreur.message : "erreur inconnue"}.`);
   }
 }

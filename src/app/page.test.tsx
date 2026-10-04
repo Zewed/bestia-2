@@ -40,6 +40,12 @@ describe("entrée du jeu sur la page d'accueil", () => {
     await expect(rendre()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
   });
 
+  it("dit à la connexion qu'une session a expiré, seulement quand elle arrive de là", async () => {
+    const rendre = async (parametres: object) => renderToStaticMarkup(await Connexion({ searchParams: Promise.resolve(parametres) }));
+    expect(await rendre({ expiree: "1", suite: "/jeu" })).toContain("Votre session a expiré, reconnectez-vous");
+    expect(await rendre({})).not.toContain("Votre session a expiré");
+  });
+
   it("garde dans la connexion la page du jeu où revenir, après l'avoir vérifiée", async () => {
     const rendre = async (suite: string) => renderToStaticMarkup(await Connexion({ searchParams: Promise.resolve({ suite }) }));
     expect(await rendre("/jeu/territoire")).toContain('<input type="hidden" name="suite" value="/jeu/territoire"/>');

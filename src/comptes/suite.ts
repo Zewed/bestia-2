@@ -18,8 +18,15 @@ export function suiteSure(valeur: string | null | undefined): string {
   }
 }
 
-/** L'adresse de la connexion qui ramènera ensuite au chemin demandé. */
-export function connexionPuis(chemin: string): string {
+/**
+ * L'adresse de la connexion qui ramènera ensuite au chemin demandé ; « expiree » y fait dire
+ * que la session a expiré (US-0125).
+ */
+export function connexionPuis(chemin: string, { expiree = false }: { expiree?: boolean } = {}): string {
   const suite = suiteSure(chemin);
-  return suite === ACCUEIL_DU_JEU ? "/connexion" : `/connexion?suite=${encodeURIComponent(suite)}`;
+  const parametres = new URLSearchParams();
+  if (suite !== ACCUEIL_DU_JEU) parametres.set("suite", suite);
+  if (expiree) parametres.set("expiree", "1");
+  const requete = parametres.toString();
+  return requete ? `/connexion?${requete}` : "/connexion";
 }

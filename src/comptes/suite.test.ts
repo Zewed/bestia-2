@@ -25,4 +25,9 @@ describe("chemin de retour après la connexion", () => {
     expect(connexionPuis("/jeu/territoire")).toBe("/connexion?suite=%2Fjeu%2Fterritoire");
     expect(connexionPuis("/jeu")).toBe("/connexion");
   });
+
+  it("dit à la connexion qu'une session a expiré (US-0125)", () => {
+    expect(connexionPuis("/jeu/territoire", { expiree: true })).toBe("/connexion?suite=%2Fjeu%2Fterritoire&expiree=1");
+    expect(connexionPuis("/jeu", { expiree: true })).toBe("/connexion?expiree=1");
+  });
 });
