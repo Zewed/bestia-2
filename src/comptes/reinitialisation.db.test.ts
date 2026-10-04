@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
 import { verifierIdentifiants } from "./connexion";
-import { changerMotDePasse, lienValable, preparerReinitialisation } from "./reinitialisation";
+import { changerMotDePasse, etatDuLien, preparerReinitialisation } from "./reinitialisation";
 import { compteDeLaSession, ouvrirSession } from "./session";
 
 describe.skipIf(!URL_TEST)("liens pour changer de mot de passe (sur base)", () => {
@@ -75,7 +75,7 @@ describe.skipIf(!URL_TEST)("choisir un nouveau mot de passe (sur base)", () => {
 
   it("remplace l'ancien mot de passe, qui ne fonctionne plus", async () => {
     const { compte, jeton } = await situation();
-    expect(await lienValable(pool, jeton)).toEqual({ email: compte.email });
+    expect(await etatDuLien(pool, jeton)).toEqual({ etat: "valable", email: compte.email });
     expect(await changerMotDePasse(pool, jeton, "le nouveau mot de passe")).toEqual({ id: compte.id, email: compte.email });
     expect(await verifierIdentifiants(pool, compte.email, "le nouveau mot de passe")).toMatchObject({ id: compte.id });
     expect(await verifierIdentifiants(pool, compte.email, "l'ancien mot de passe")).toBeNull();
@@ -93,20 +93,33 @@ describe.skipIf(!URL_TEST)("choisir un nouveau mot de passe (sur base)", () => {
     const { compte, jeton } = await situation();
     await pool.query("update lien_reinitialisation set cree_le = now() - interval '2 minutes' where compte_id = $1", [compte.id]);
     const autre = (await preparerReinitialisation(pool, compte.email))!;
-    await changerMotDePasse(pool, jeton, "le nouveau mot de passe");
-    expect(await lienValable(pool, jeton)).toBeNull();
-    expect(await changerMotDePasse(pool, jeton, "encore un autre")).toBeNull();
+    // Deux demandes au même instant peuvent laisser deux liens valables : on rend vie au premier.
+    await pool.query("update lien_reinitialisation set expire_le = now() + interval '1 hour' where compte_id = $1", [compte.id]);
+    await changerMotDePasse(pool, autre.jeton, "le nouveau mot de passe");
+    expect(await etatDuLien(pool, autre.jeton)).toEqual({ etat: "utilise" });
+    expect(await etatDuLien(pool, jeton)).toEqual({ etat: "expire" });
     expect(await changerMotDePasse(pool, autre.jeton, "encore un autre")).toBeNull();
+    expect(await changerMotDePasse(pool, jeton, "encore un autre")).toBeNull();
     expect(await verifierIdentifiants(pool, compte.email, "le nouveau mot de passe")).not.toBeNull();
   });
 
   it("ne change rien avec un lien expiré ou inventé", async () => {
     const { compte, jeton, sessions } = await situation();
     await pool.query("update lien_reinitialisation set expire_le = now() - interval '1 second' where compte_id = $1", [compte.id]);
-    expect(await lienValable(pool, jeton)).toBeNull();
+    expect(await etatDuLien(pool, jeton)).toEqual({ etat: "expire" });
+    expect(await etatDuLien(pool, "un-jeton-invente")).toEqual({ etat: "inconnu" });
     expect(await changerMotDePasse(pool, jeton, "le nouveau mot de passe")).toBeNull();
     expect(await changerMotDePasse(pool, "un-jeton-invente", "le nouveau mot de passe")).toBeNull();
     expect(await verifierIdentifiants(pool, compte.email, "l'ancien mot de passe")).not.toBeNull();
     expect(await compteDeLaSession(pool, sessions[0])).not.toBeNull();
+  });
+
+  it("rend inutilisables les liens précédents quand un nouveau lien est demandé (US-0129)", async () => {
+    const { compte, jeton } = await situation();
+    await pool.query("update lien_reinitialisation set cree_le = now() - interval '2 minutes' where compte_id = $1", [compte.id]);
+    const nouveau = (await preparerReinitialisation(pool, compte.email))!;
+    expect(await etatDuLien(pool, jeton)).toEqual({ etat: "expire" });
+    expect(await changerMotDePasse(pool, jeton, "le nouveau mot de passe")).toBeNull();
+    expect(await etatDuLien(pool, nouveau.jeton)).toEqual({ etat: "valable", email: compte.email });
   });
 });

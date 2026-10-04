@@ -1,7 +1,14 @@
 /** Ce que le serveur renvoie au formulaire « Nouveau mot de passe » quand il refuse. */
-export type EtatNouveauMotDePasse = { erreur?: string; lienPerime?: boolean };
+export type EtatNouveauMotDePasse = { erreur?: string; lien?: LienHorsService };
 
 export const ETAT_NOUVEAU_INITIAL: EtatNouveauMotDePasse = {};
 
-/** Le lien ne sert plus (expiré ou déjà utilisé) ; le vrai message arrive avec US-0129. */
-export const LIEN_PERIME = "Ce lien n'est plus valable.";
+/** US-0129 : pourquoi un lien ne sert plus. */
+export type LienHorsService = "expire" | "utilise" | "inconnu";
+
+/** Ce que la page dit d'un lien qui ne sert plus, et où elle propose d'aller. */
+export const LIEN_HORS_SERVICE: Record<LienHorsService, { titre: string; bouton: { texte: string; lien: string } }> = {
+  expire: { titre: "Ce lien a expiré", bouton: { texte: "Recevoir un nouveau lien", lien: "/mot-de-passe-oublie" } },
+  utilise: { titre: "Ce lien a déjà servi", bouton: { texte: "Se connecter", lien: "/connexion" } },
+  inconnu: { titre: "Ce lien n'est pas valable", bouton: { texte: "Recevoir un nouveau lien", lien: "/mot-de-passe-oublie" } },
+};

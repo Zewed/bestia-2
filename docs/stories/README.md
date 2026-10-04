@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0128** · Choisir un nouveau mot de passe ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0129** · Refuser un lien expiré ou déjà utilisé.
+Dernière story livrée : **US-0129** · Refuser un lien expiré ou déjà utilisé ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0130** · Freiner les demandes de lien répétées.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0128** · Choisir un nouveau mot de passe ; les e
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **66 étapes** | **753** | **284** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (185 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (184 au total).
 
 ## Lire une story
 

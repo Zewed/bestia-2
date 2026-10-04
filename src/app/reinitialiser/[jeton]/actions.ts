@@ -5,7 +5,7 @@ import { noterConnexion } from "@/comptes/connexion";
 import { poserCookieSession } from "@/comptes/cookie-session";
 import { verifierMotDePasse } from "@/comptes/mot-de-passe";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { changerMotDePasse } from "@/comptes/reinitialisation";
+import { changerMotDePasse, etatDuLien } from "@/comptes/reinitialisation";
 import { ouvrirSession } from "@/comptes/session";
 import { getPool } from "@/db";
 import { ETAT_NOUVEAU_INITIAL, type EtatNouveauMotDePasse } from "./etat";
@@ -22,7 +22,11 @@ export async function choisirMotDePasse(jeton: string, _precedent: EtatNouveauMo
   if (erreur) return { erreur };
   const pool = getPool();
   const compte = await changerMotDePasse(pool, jeton, motDePasse);
-  if (!compte) return { lienPerime: true };
+  if (!compte) {
+    // Le lien ne sert plus : on dit pourquoi (US-0129).
+    const lien = await etatDuLien(pool, jeton);
+    return { lien: lien.etat === "valable" ? "inconnu" : lien.etat };
+  }
   const session = await ouvrirSession(pool, compte.id);
   await noterConnexion(pool, compte.id);
   await poserCookieSession(session.jeton, session.expireLe);

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MOT_DE_PASSE_TROP_COURT } from "@/comptes/mot-de-passe";
 import { ETAT_NOUVEAU_INITIAL } from "./etat";
 
-const reinitialisation = vi.hoisted(() => ({ changerMotDePasse: vi.fn() }));
+const reinitialisation = vi.hoisted(() => ({ changerMotDePasse: vi.fn(), etatDuLien: vi.fn() }));
 vi.mock("@/comptes/reinitialisation", () => reinitialisation);
 const sessions = vi.hoisted(() => ({ ouvrirSession: vi.fn() }));
 vi.mock("@/comptes/session", () => sessions);
@@ -49,9 +49,10 @@ describe("choisir un nouveau mot de passe", () => {
     expect(reinitialisation.changerMotDePasse).not.toHaveBeenCalled();
   });
 
-  it("dit que le lien ne sert plus, sans ouvrir de session", async () => {
+  it("dit pourquoi le lien ne sert plus, sans ouvrir de session", async () => {
     reinitialisation.changerMotDePasse.mockResolvedValue(null);
-    expect(await envoi("le nouveau mot de passe")).toEqual({ lienPerime: true });
+    reinitialisation.etatDuLien.mockResolvedValue({ etat: "utilise" });
+    expect(await envoi("le nouveau mot de passe")).toEqual({ lien: "utilise" });
     expect(sessions.ouvrirSession).not.toHaveBeenCalled();
   });
 

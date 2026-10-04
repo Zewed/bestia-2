@@ -18,12 +18,15 @@ describe("formulaire du nouveau mot de passe", () => {
     expect(choisir).not.toHaveBeenCalled();
   });
 
-  it("propose un nouveau lien quand celui-ci ne sert plus", async () => {
-    const choisir = vi.fn(async () => ({ lienPerime: true }));
+  it("dit pourquoi le lien ne sert plus, à la place du formulaire et de son titre (US-0129)", async () => {
+    const choisir = vi.fn(async () => ({ lien: "expire" as const }));
     const u = userEvent.setup();
     render(<FormulaireNouveauMotDePasse email="nom@exemple.fr" choisir={choisir} />);
+    expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Nouveau mot de passe");
     await u.type(screen.getByLabelText("Mot de passe"), "le nouveau mot de passe");
     await u.click(screen.getByRole("button", { name: "Changer mon mot de passe" }));
     expect((await screen.findByRole("link", { name: "Recevoir un nouveau lien" })).getAttribute("href")).toBe("/mot-de-passe-oublie");
+    expect(screen.getAllByRole("heading", { level: 1 }).map((t) => t.textContent)).toEqual(["Ce lien a expiré"]);
+    expect(screen.queryByLabelText("Mot de passe")).toBeNull();
   });
 });

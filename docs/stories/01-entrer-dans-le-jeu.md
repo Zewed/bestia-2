@@ -272,7 +272,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0128 · Choisir un nouveau mot de passe
 **En tant que** joueur, **je veux** saisir un nouveau mot de passe depuis le lien reçu, **afin de** reprendre la main sur mon compte.
 
-- **Statut** : Livrée le 2026-10-04. Ouvrir la page ne consomme pas le lien ; seul le changement le fait, tout ou rien. Un lien périmé affiche un message simple en attendant US-0129.
+- **Statut** : Livrée le 2026-10-04. Ouvrir la page ne consomme pas le lien ; seul le changement le fait, tout ou rien. Un lien qui ne sert plus dit pourquoi (US-0129).
 - **Débloquée par** : US-0105, US-0127
 - **Critères d'acceptation** :
   - Le lien ouvre une page qui demande le nouveau mot de passe, avec les mêmes règles qu'à l'inscription.
@@ -283,11 +283,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0129 · Refuser un lien expiré ou déjà utilisé
 **En tant que** joueur, **je veux** un message clair quand le lien de réinitialisation ne marche plus, **afin de** redemander un lien sans chercher pourquoi.
 
+- **Statut** : Livrée le 2026-10-04. La page dit pourquoi le lien ne sert plus, à l'ouverture comme à l'envoi s'il expire entre-temps : « Ce lien a expiré » (avec « Recevoir un nouveau lien »), « Ce lien a déjà servi » (avec « Se connecter ») ou « Ce lien n'est pas valable » pour un lien inconnu.
 - **Débloquée par** : US-0128
 - **Critères d'acceptation** :
-  - Un lien ouvert après (chiffre à régler) minutes affiche « Ce lien a expiré » et propose d'en demander un nouveau.
+  - Un lien ouvert après 60 minutes affiche « Ce lien a expiré » et propose d'en demander un nouveau.
   - Un lien déjà utilisé ne sert pas une seconde fois.
-  - Demander un nouveau lien rend les précédents inutilisables.
+  - Demander un nouveau lien rend les précédents inutilisables : ils sont considérés comme expirés.
 
 ### US-0130 · Freiner les demandes de lien répétées
 **En tant que** joueur, **je veux** que personne ne puisse remplir ma boîte de réception de demandes de réinitialisation, **afin de** ne pas être importuné à cause de mon compte.
