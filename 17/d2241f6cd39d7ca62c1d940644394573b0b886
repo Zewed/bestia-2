@@ -1,0 +1,40 @@
+src/emails/mise-en-forme.ts
+  s_d0f4332113d26c::t_f393818cdf47c4 1-21,24-35,39-40,42-49
+  s_d0f4332113d26c::t_4536cd609f74d4 23,41
+  s_d0f4332113d26c::t_6c124d8cc91b20 22,36-38
+src/emails/couleurs-emails.json
+  s_d0f4332113d26c::t_55a514a1d5d1be 1-9
+src/emails/reinitialisation.test.ts
+  s_d0f4332113d26c::t_66fad4848a6fe3 4-20
+src/emails/reinitialisation.ts
+  s_d0f4332113d26c::t_4536cd609f74d4 1-3,16-19
+  s_d0f4332113d26c::t_f393818cdf47c4 7,12-13
+package.json
+  s_d0f4332113d26c::t_55a514a1d5d1be 25
+scripts/generate-emails.ts
+  s_d0f4332113d26c::t_55a514a1d5d1be 1-22
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_66fad4848a6fe3 264,267-269
+src/emails/mise-en-forme.test.ts
+  s_d0f4332113d26c::t_66fad4848a6fe3 1-43
+src/reglages.ts
+  s_d0f4332113d26c::t_66fad4848a6fe3 39
+docs/stories/README.md
+  s_d0f4332113d26c::t_66fad4848a6fe3 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "17d2241f6cd39d7ca62c1d940644394573b0b886",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
