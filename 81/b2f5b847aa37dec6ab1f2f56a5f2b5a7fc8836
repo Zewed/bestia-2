@@ -1,0 +1,48 @@
+src/app/reinitialiser/[jeton]/actions.test.ts
+  s_d0f4332113d26c::t_cdbd38dddf3316 5,52,54-55
+src/comptes/reinitialisation.db.test.ts
+  s_d0f4332113d26c::t_c573387ce02b10 96-100,102
+  s_d0f4332113d26c::t_cdbd38dddf3316 6,78,109-110,116-123
+  s_d0f4332113d26c::t_fef2f3c3218bc8 124
+src/app/reinitialiser/[jeton]/etat.ts
+  s_d0f4332113d26c::t_1fbb41b57ae651 2,6-14
+src/app/reinitialiser/[jeton]/LienHorsService.tsx
+  s_d0f4332113d26c::t_1fbb41b57ae651 1-17
+src/app/reinitialiser/[jeton]/page.tsx
+  s_d0f4332113d26c::t_1fbb41b57ae651 5,10,17-18,24-32,35
+  s_d0f4332113d26c::t_ff566793a11216 34
+src/app/reinitialiser/[jeton]/actions.ts
+  s_d0f4332113d26c::t_1fbb41b57ae651 8,25-29
+src/app/reinitialiser/[jeton]/FormulaireNouveauMotDePasse.test.tsx
+  s_d0f4332113d26c::t_cdbd38dddf3316 22
+  s_d0f4332113d26c::t_5fee28d45369f6 21,25,29-30
+src/app/reinitialiser/[jeton]/FormulaireNouveauMotDePasse.tsx
+  s_d0f4332113d26c::t_536eefdf58f39a 44
+  s_d0f4332113d26c::t_ff566793a11216 5,18-21,42-43,45-88
+  s_d0f4332113d26c::t_1fbb41b57ae651 9-10,28
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_0eb730c8378676 275,286,289,291
+docs/stories/README.md
+  s_d0f4332113d26c::t_0eb730c8378676 7,33
+src/app/reinitialiser/[jeton]/page.test.tsx
+  s_d0f4332113d26c::t_cdbd38dddf3316 4,16,20,34,39-44,46-47
+src/comptes/reinitialisation.ts
+  s_d0f4332113d26c::t_fbc1aa08a7b267 18-19,24-38,44-54,57-61
+  s_d0f4332113d26c::t_1fbb41b57ae651 74-75,90-95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "81b2f5b847aa37dec6ab1f2f56a5f2b5a7fc8836",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
