@@ -206,6 +206,24 @@
   font-weight: var(--graisse-titre);
 }
 
+/* Un lien discret sous un champ, à droite (« Mot de passe oublié ? »). */
+.lienDiscret {
+  justify-self: end;
+  color: var(--texte-discret);
+  font-size: 13.5px;
+  font-weight: var(--graisse-titre);
+  text-underline-offset: 3px;
+}
+
+.lienDiscret:hover {
+  color: var(--encre);
+}
+
+.lienDiscret:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* Le lien dans un message d'erreur (« Se connecter » quand l'adresse a déjà un compte). */
 .lienErreur {
   color: inherit;

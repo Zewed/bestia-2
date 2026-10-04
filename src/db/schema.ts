@@ -237,3 +237,22 @@ export const echecConnexion = pgTable("echec_connexion", {
   dernierEchec: timestamp("dernier_echec", { withTimezone: true }).notNull().defaultNow(),
   bloqueJusqua: timestamp("bloque_jusqua", { withTimezone: true }),
 });
+
+/**
+ * Un lien pour changer de mot de passe (US-0126) : à usage unique, valable peu de temps. Le jeton
+ * du lien n'est jamais gardé, seulement son empreinte.
+ */
+export const lienReinitialisation = pgTable(
+  "lien_reinitialisation",
+  {
+    id: bigint("id", { mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    compteId: integer("compte_id")
+      .notNull()
+      .references(() => compte.id, { onDelete: "cascade" }),
+    empreinteJeton: text("empreinte_jeton").notNull().unique(),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+    expireLe: timestamp("expire_le", { withTimezone: true }).notNull(),
+    utiliseLe: timestamp("utilise_le", { withTimezone: true }),
+  },
+  (t) => [index("lien_reinitialisation_par_compte").on(t.compteId, t.creeLe)],
+);

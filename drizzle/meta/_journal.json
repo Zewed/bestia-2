@@ -127,6 +127,13 @@
       "when": 1791061190013,
       "tag": "0017_echecs_connexion",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791124380098,
+      "tag": "0018_liens_reinitialisation",
+      "breakpoints": true
     }
   ]
 }

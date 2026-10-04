@@ -72,7 +72,10 @@ describe("formulaire de connexion", () => {
     await u.type(email(), "nom@exemple.fr");
     await u.type(motDePasse(), "un mauvais mot de passe");
     await u.click(screen.getByRole("button", { name: "Se connecter" }));
-    expect((await screen.findByRole("alert")).textContent).toBe(CONNEXION_REFUSEE);
+    const refus = await screen.findByRole("alert");
+    expect(refus.textContent).toBe(`${CONNEXION_REFUSEE} · Mot de passe oublié ?`);
+    // US-0126 : le refus propose de changer de mot de passe.
+    expect(refus.querySelector("a")?.getAttribute("href")).toBe("/mot-de-passe-oublie");
     expect(email().value).toBe("nom@exemple.fr");
     expect(motDePasse().value).toBe("");
   });
@@ -86,5 +89,16 @@ describe("formulaire de connexion", () => {
   it("ne parle pas de session expirée à un visiteur qui vient se connecter", () => {
     render(<FormulaireConnexion />);
     expect(screen.queryByText(SESSION_EXPIREE)).toBeNull();
+  });
+
+  it("propose « Mot de passe oublié ? » sous le formulaire, et y emmène l'adresse tapée (US-0126)", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireConnexion />);
+    await u.type(email(), "Nom@Exemple.fr");
+    const lien = screen.getByRole("link", { name: "Mot de passe oublié ?" });
+    expect(lien.getAttribute("href")).toBe("/mot-de-passe-oublie");
+    lien.addEventListener("click", (e) => e.preventDefault());
+    await u.click(lien);
+    expect(sessionStorage.getItem("bestia.adresse-connexion")).toBe("nom@exemple.fr");
   });
 });

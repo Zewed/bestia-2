@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import Connexion from "./connexion/page";
 import Inscription from "./inscription/page";
+import MotDePasseOublie from "./mot-de-passe-oublie/page";
 import Accueil from "./page";
 
 describe("entrée du jeu sur la page d'accueil", () => {
@@ -29,6 +30,7 @@ describe("entrée du jeu sur la page d'accueil", () => {
   it.each([
     ["inscription", Inscription, "Créer un compte"],
     ["connexion", Connexion, "Se connecter"],
+    ["mot de passe oublié", MotDePasseOublie, "Mot de passe oublié"],
   ])("la page de %s répond, et reste introuvable en production", async (_, Page, titre) => {
     // La page de connexion lit ses paramètres (US-0121) : elle est asynchrone.
     const rendre = async () =>

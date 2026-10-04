@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { useActionState, useEffect, useState } from "react";
-import { lireAdresseRetenue } from "@/comptes/adresse-retenue";
+import { lireAdresseRetenue, retenirAdresse } from "@/comptes/adresse-retenue";
+import { normaliserEmail } from "@/comptes/email";
 import { ChampMotDePasse } from "../ChampMotDePasse";
 import styles from "../entree.module.css";
 import { seConnecter } from "./actions";
-import { ETAT_CONNEXION_INITIAL, SESSION_EXPIREE } from "./etat";
+import { CONNEXION_REFUSEE, ETAT_CONNEXION_INITIAL, SESSION_EXPIREE } from "./etat";
 
 /**
  * Le formulaire de connexion (US-0115) : l'adresse et le mot de passe, que le navigateur peut
@@ -24,6 +25,10 @@ export function FormulaireConnexion({ suite = "/jeu", sessionExpiree = false }: 
     // eslint-disable-next-line react-hooks/set-state-in-effect -- lecture unique d'un état extérieur (sessionStorage)
     if (retenue) setEmail((saisie) => saisie || retenue);
   }, []);
+
+  const retenirLAdresse = () => {
+    if (email.trim()) retenirAdresse(normaliserEmail(email));
+  };
 
   return (
     <form action={envoyer} className={styles.formulaire}>
@@ -61,10 +66,22 @@ export function FormulaireConnexion({ suite = "/jeu", sessionExpiree = false }: 
           visible={motDePasseVisible}
           basculer={() => setMotDePasseVisible((visible) => !visible)}
         />
+        {/* US-0126 : l'adresse tapée suit vers la demande de lien. */}
+        <Link href="/mot-de-passe-oublie" className={styles.lienDiscret} onClick={retenirLAdresse}>
+          Mot de passe oublié ?
+        </Link>
       </div>
       {etat.erreur ? (
         <p className={styles.erreurGenerale} role="alert">
           {etat.erreur}
+          {etat.erreur === CONNEXION_REFUSEE ? (
+            <>
+              {" · "}
+              <Link href="/mot-de-passe-oublie" className={styles.lienErreur} onClick={retenirLAdresse}>
+                Mot de passe oublié ?
+              </Link>
+            </>
+          ) : null}
         </p>
       ) : null}
       <button type="submit" className={styles.envoyer} disabled={enAttente}>

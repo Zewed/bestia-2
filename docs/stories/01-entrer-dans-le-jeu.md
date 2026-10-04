@@ -141,7 +141,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - Juste après l'inscription, un e-mail part avec un lien de confirmation valable 24 heures (LIEN_CONFIRMATION_HEURES), à usage unique ; seule l'empreinte du jeton est gardée.
   - Ouvrir le lien marque l'adresse comme confirmée et affiche « Adresse confirmée ».
   - Un lien expiré ou déjà utilisé affiche un message et propose d'en recevoir un nouveau.
-  - Confirmer son adresse est conseillé, pas obligatoire pour jouer : un rappel y invite, et seule la récupération du compte l'exige. On la rendra obligatoire si les faux comptes posent problème.
+  - Confirmer son adresse est conseillé, pas obligatoire pour jouer : un rappel y invite. La récupération du compte ne l'exige pas non plus : le lien de réinitialisation part vers toute adresse qui a un compte, et l'ouvrir confirme l'adresse (US-0126, US-0128). On la rendra obligatoire si les faux comptes posent problème.
 
 ## Étape 6 · Se connecter et se déconnecter
 
@@ -251,6 +251,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0126 · Demander un lien de réinitialisation du mot de passe
 **En tant que** joueur, **je veux** demander un lien pour changer mon mot de passe oublié, **afin de** retrouver l'accès à mon compte.
 
+- **Statut** : Livrée le 2026-10-04. Le lien part vers toute adresse qui a un compte, confirmée ou non ; pas plus d'un par minute pour une même adresse. Durée provisoire : 60 minutes (US-0127). Les e-mails ne partent pas encore pour de vrai (Zewed/bestia-2#1).
 - **Débloquée par** : US-0113, US-0117
 - **Critères d'acceptation** :
   - Un lien « Mot de passe oublié » apparaît sous le formulaire de connexion et dans le message d'erreur de connexion.
@@ -273,7 +274,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 - **Débloquée par** : US-0105, US-0127
 - **Critères d'acceptation** :
   - Le lien ouvre une page qui demande le nouveau mot de passe, avec les mêmes règles qu'à l'inscription.
-  - Le nouveau mot de passe remplace l'ancien, qui ne fonctionne plus.
+  - Le nouveau mot de passe remplace l'ancien, qui ne fonctionne plus. Ouvrir le lien confirme aussi l'adresse e-mail (décidé avec US-0126).
   - Le joueur est ensuite connecté et arrive dans son jeu.
   - Les sessions déjà ouvertes sur d'autres appareils sont fermées ou gardées (à décider).
 
