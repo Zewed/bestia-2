@@ -7,38 +7,58 @@ import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import type { Pool } from "pg";
 import { calculerEmpreinte } from "./empreinte";
-import { LIEN_REINITIALISATION_MINUTES, NOUVELLE_REINITIALISATION_ATTENTE_SECONDES } from "@/reglages";
+import { LIEN_REINITIALISATION_MINUTES, NOUVELLE_REINITIALISATION_ATTENTE_SECONDES, REINITIALISATIONS_PAR_HEURE_MAX } from "@/reglages";
 import { normaliserEmail } from "./email";
 
 const empreinte = (jeton: string) => createHash("sha256").update(jeton).digest("hex");
 
 /**
  * Prépare un lien pour l'adresse : rend l'adresse du compte et le jeton à mettre dans le lien,
- * ou null s'il n'y a rien à envoyer (pas de compte, ou un lien parti il y a moins d'une minute).
- * Les liens précédents du compte, pas encore utilisés, expirent aussitôt (US-0129). L'appelant
- * répond la même chose dans tous les cas.
+ * ou null s'il n'y a rien à envoyer : pas de compte, un lien parti il y a moins d'une minute, ou
+ * déjà REINITIALISATIONS_PAR_HEURE_MAX liens dans l'heure (US-0130). Les liens précédents du
+ * compte, pas encore utilisés, expirent aussitôt (US-0129). L'appelant répond la même chose dans
+ * tous les cas.
  */
 export async function preparerReinitialisation(pool: Pool, email: string): Promise<{ email: string; jeton: string } | null> {
-  const jeton = randomBytes(32).toString("base64url");
-  const { rows } = await pool.query<{ email: string }>(
-    `with vise as (
-       select c.id, c.email from compte c
-       where c.email = $1
-         and not exists (
-           select 1 from lien_reinitialisation r
-           where r.compte_id = c.id and r.cree_le > now() - make_interval(secs => $4)
-         )
-     ),
-     anciens as (
-       update lien_reinitialisation set expire_le = now()
-       where compte_id in (select id from vise) and utilise_le is null and expire_le > now()
-     )
-     insert into lien_reinitialisation (compte_id, empreinte_jeton, expire_le)
-     select id, $2, now() + make_interval(mins => $3) from vise
-     returning (select email from vise) as email`,
-    [normaliserEmail(email), empreinte(jeton), LIEN_REINITIALISATION_MINUTES, NOUVELLE_REINITIALISATION_ATTENTE_SECONDES],
-  );
-  return rows[0] ? { email: rows[0].email, jeton } : null;
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    // Le compte reste verrouillé jusqu'à la fin : des demandes simultanées passent l'une après
+    // l'autre, et chacune compte les liens des précédentes.
+    const { rows } = await client.query<{ id: number; email: string }>(
+      "select id, email from compte where email = $1 for no key update",
+      [normaliserEmail(email)],
+    );
+    const compte = rows[0];
+    const { rows: freins } = compte
+      ? await client.query<{ trop_tot: boolean; trop_souvent: boolean }>(
+          `select count(*) filter (where cree_le > now() - make_interval(secs => $2)) > 0 as trop_tot,
+                  count(*) >= $3 as trop_souvent
+           from lien_reinitialisation where compte_id = $1 and cree_le > now() - interval '1 hour'`,
+          [compte.id, NOUVELLE_REINITIALISATION_ATTENTE_SECONDES, REINITIALISATIONS_PAR_HEURE_MAX],
+        )
+      : { rows: [] };
+    if (!compte || freins[0].trop_tot || freins[0].trop_souvent) {
+      await client.query("rollback");
+      return null;
+    }
+    const jeton = randomBytes(32).toString("base64url");
+    await client.query(
+      "update lien_reinitialisation set expire_le = now() where compte_id = $1 and utilise_le is null and expire_le > now()",
+      [compte.id],
+    );
+    await client.query(
+      "insert into lien_reinitialisation (compte_id, empreinte_jeton, expire_le) values ($1, $2, now() + make_interval(mins => $3))",
+      [compte.id, empreinte(jeton), LIEN_REINITIALISATION_MINUTES],
+    );
+    await client.query("commit");
+    return { email: compte.email, jeton };
+  } catch (erreur) {
+    await client.query("rollback").catch(() => {});
+    throw erreur;
+  } finally {
+    client.release();
+  }
 }
 
 export type EtatDuLien = { etat: "valable"; email: string } | { etat: "expire" | "utilise" | "inconnu" };

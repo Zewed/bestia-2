@@ -40,3 +40,5 @@ export const BLOCAGE_CONNEXION_MINUTES = 15;
 export const LIEN_REINITIALISATION_MINUTES = 60;
 /** … et on n'en envoie pas plus d'un par minute pour une même adresse, pour ne pas inonder une boîte. */
 export const NOUVELLE_REINITIALISATION_ATTENTE_SECONDES = 60;
+/** US-0130 : … ni plus de 5 en une heure. */
+export const REINITIALISATIONS_PAR_HEURE_MAX = 5;

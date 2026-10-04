@@ -293,9 +293,10 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0130 · Freiner les demandes de lien répétées
 **En tant que** joueur, **je veux** que personne ne puisse remplir ma boîte de réception de demandes de réinitialisation, **afin de** ne pas être importuné à cause de mon compte.
 
+- **Statut** : Livrée le 2026-10-04. Le plafond s'ajoute à la règle d'un lien par minute ; il compte les liens des 60 dernières minutes. Des demandes simultanées passent l'une après l'autre : une rafale ne fait partir qu'un e-mail.
 - **Débloquée par** : US-0126
 - **Critères d'acceptation** :
-  - Au-delà de (chiffre à régler) demandes par heure pour une même adresse, aucun nouvel e-mail ne part.
+  - Au-delà de 5 demandes par heure pour une même adresse, aucun nouvel e-mail ne part.
   - Le message affiché reste le même, pour ne rien révéler.
 
 ## Étape 7 · Choisir son nom de chef

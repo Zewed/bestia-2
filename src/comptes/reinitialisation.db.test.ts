@@ -1,5 +1,6 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { REINITIALISATIONS_PAR_HEURE_MAX } from "@/reglages";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { creerCompte } from "./compte";
 import { verifierIdentifiants } from "./connexion";
@@ -48,6 +49,32 @@ describe.skipIf(!URL_TEST)("liens pour changer de mot de passe (sur base)", () =
     expect(await preparerReinitialisation(pool, compte.email)).toBeNull();
     await pool.query("update lien_reinitialisation set cree_le = now() - interval '2 minutes' where compte_id = $1", [compte.id]);
     expect(await preparerReinitialisation(pool, compte.email)).not.toBeNull();
+  });
+
+  it("n'envoie pas plus de 5 liens par heure à une même adresse (US-0130)", async () => {
+    const compte = await nouveauCompte();
+    const reculer = (minutes: number) =>
+      pool.query("update lien_reinitialisation set cree_le = cree_le - make_interval(mins => $2) where compte_id = $1", [compte.id, minutes]);
+    for (let i = 0; i < REINITIALISATIONS_PAR_HEURE_MAX; i++) {
+      expect(await preparerReinitialisation(pool, compte.email)).not.toBeNull();
+      await reculer(2);
+    }
+    expect(REINITIALISATIONS_PAR_HEURE_MAX).toBe(5);
+    expect(await preparerReinitialisation(pool, compte.email)).toBeNull();
+    // Le plus ancien lien (il y a 10 minutes) sort de l'heure : une demande peut repartir.
+    await reculer(51);
+    expect(await preparerReinitialisation(pool, compte.email)).not.toBeNull();
+    expect(await preparerReinitialisation(pool, compte.email)).toBeNull();
+  });
+
+  it("ne prépare qu'un lien pour une rafale de demandes simultanées", async () => {
+    const compte = await nouveauCompte();
+    // Les connexions s'ouvrent d'abord : sinon leur ouverture, une à une, étalerait la rafale.
+    await Promise.all(Array.from({ length: 8 }, () => pool.query("select pg_sleep(0.2)")));
+    const liens = await Promise.all(Array.from({ length: 8 }, () => preparerReinitialisation(pool, compte.email)));
+    expect(liens.filter(Boolean)).toHaveLength(1);
+    const { rows } = await pool.query("select count(*)::int as n from lien_reinitialisation where compte_id = $1", [compte.id]);
+    expect(rows[0].n).toBe(1);
   });
 });
 

@@ -35,7 +35,7 @@ describe("demande d'un lien pour changer de mot de passe", () => {
     expect(courrier.envoyerLienReinitialisation).toHaveBeenCalledWith("nom@exemple.fr", "jeton123");
   });
 
-  it("répond exactement la même chose quand l'adresse n'a pas de compte, sans rien envoyer", async () => {
+  it("répond exactement la même chose quand il n'y a rien à envoyer (pas de compte, ou trop de demandes), sans rien envoyer", async () => {
     reinitialisation.preparerReinitialisation.mockResolvedValue(null);
     expect(await demande("Nom@Exemple.fr")).toEqual({ envoye: true, email: "Nom@Exemple.fr" });
     expect(apres.taches).toHaveLength(0);
