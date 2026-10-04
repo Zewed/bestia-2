@@ -1,0 +1,43 @@
+src/app/reinitialiser/[jeton]/actions.test.ts
+  s_d0f4332113d26c::t_1a6ada7c0089d0 1-63
+src/app/reinitialiser/[jeton]/page.test.tsx
+  s_d0f4332113d26c::t_1a6ada7c0089d0 1-26,31-55
+  s_d0f4332113d26c::t_a89ea320421846 27-30
+src/app/reinitialiser/[jeton]/FormulaireNouveauMotDePasse.tsx
+  s_d0f4332113d26c::t_fff4f4e2cff2ef 1-92
+src/app/reinitialiser/[jeton]/actions.ts
+  s_d0f4332113d26c::t_fff4f4e2cff2ef 1-30
+src/app/reinitialiser/[jeton]/etat.ts
+  s_d0f4332113d26c::t_fff4f4e2cff2ef 1-7
+src/comptes/reinitialisation.ts
+  s_d0f4332113d26c::t_a7c269765c4bb3 5,9,35-82
+src/comptes/reinitialisation.db.test.ts
+  s_d0f4332113d26c::t_4863229fe56480 5-7,53-111
+  s_d0f4332113d26c::t_982709250ce928 112
+src/app/reinitialiser/[jeton]/page.tsx
+  s_d0f4332113d26c::t_fff4f4e2cff2ef 1-43
+src/app/reinitialiser/[jeton]/FormulaireNouveauMotDePasse.test.tsx
+  s_d0f4332113d26c::t_1a6ada7c0089d0 1-29
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_a84cef39125c9a 275,281
+docs/stories/README.md
+  s_d0f4332113d26c::t_1b06faf0938e36 7,14,31
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_6c3ae4279cd284 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f12601799033ab32dad112d294a3d98267d75ea0",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
