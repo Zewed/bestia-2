@@ -1,0 +1,34 @@
+src/app/confirmer/[jeton]/page.test.tsx
+  s_d0f4332113d26c::t_746aad5800f0c4 27
+src/app/entree.module.css
+  s_d0f4332113d26c::t_9426fa21272261 211,272-273,277-286,292-295,300,306
+  s_d0f4332113d26c::t_6a041d93906490 223-224,229-230,232,236-242,244-250,252-254,257-259,262,288
+  s_d0f4332113d26c::t_746aad5800f0c4 318-324
+  s_d0f4332113d26c::t_51fc3a7a7d5481 210,213-215,218,220,225-226,231,233-235,243,267-271,274-276,287,289-291,296,305
+src/app/inscription/FormulaireInscription.test.tsx
+  s_d0f4332113d26c::t_8470735cce3ce2 217
+src/app/confirmer/[jeton]/page.tsx
+  s_d0f4332113d26c::t_746aad5800f0c4 50-52
+src/app/inscription/FormulaireInscription.tsx
+  s_d0f4332113d26c::t_51fc3a7a7d5481 218,229-234
+  s_d0f4332113d26c::t_6a041d93906490 8,206-208,219-220,222-226
+  s_d0f4332113d26c::t_9426fa21272261 9,31-36,217,228
+src/components/PageEntree.tsx
+  s_d0f4332113d26c::t_9426fa21272261 8-9,13-17,39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a62cfe8d939f4f1bd4cf148deb7b3d751703091d",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
