@@ -313,9 +313,10 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0132 · Respecter la longueur du nom
 **En tant que** nouveau joueur, **je veux** connaître la longueur permise pendant que je tape, **afin de** ne pas découvrir la règle au moment de valider.
 
+- **Statut** : Livrée le 2026-10-04. Les caractères comptent tels qu'on les voit (« É » en vaut un), sans les espaces autour. Le compteur (« 5/16 ») paraît dès qu'on écrit ; le champ ne prend pas plus de 16 caractères, un collage trop long est coupé. « 3 caractères minimum » paraît quand on quitte le champ.
 - **Débloquée par** : US-0131
 - **Critères d'acceptation** :
-  - Le nom compte entre (chiffre à régler) et (chiffre à régler) caractères.
+  - Le nom compte entre 3 et 16 caractères.
   - Un compteur montre les caractères restants pendant la saisie.
   - Un nom trop court ou trop long affiche la règle sous le champ et bloque la validation.
 

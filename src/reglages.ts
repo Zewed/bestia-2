@@ -42,3 +42,6 @@ export const LIEN_REINITIALISATION_MINUTES = 60;
 export const NOUVELLE_REINITIALISATION_ATTENTE_SECONDES = 60;
 /** US-0130 : … ni plus de 5 en une heure. */
 export const REINITIALISATIONS_PAR_HEURE_MAX = 5;
+/** US-0132 : un nom de chef compte de 3 à 16 caractères, tels qu'on les voit (« É » en vaut un). */
+export const NOM_DE_CHEF_MIN = 3;
+export const NOM_DE_CHEF_MAX = 16;

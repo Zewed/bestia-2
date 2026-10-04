@@ -96,6 +96,21 @@
   font-weight: var(--graisse-titre);
 }
 
+/* Sous un champ : le message à gauche, le compteur à droite (US-0132). */
+.sousLeChamp {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+}
+
+.compteur {
+  margin-left: auto;
+  color: var(--texte-discret);
+  font-size: 13.5px;
+  font-weight: var(--graisse-texte);
+  font-variant-numeric: tabular-nums;
+}
+
 .champ input:focus-visible {
   border-color: var(--encre);
   background: var(--bloc);

@@ -4,7 +4,7 @@ import { connection } from "next/server";
 import { exigerCompteSansChef } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { PageEntree } from "@/components/PageEntree";
-import styles from "../../entree.module.css";
+import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
 
 export const metadata: Metadata = { title: "Nom de chef" };
 
@@ -22,14 +22,7 @@ export default async function NomDeChef() {
       titre="Votre nom de chef"
       illustration={{ chemin: "entree/inscription.webp", alt: "Un sac d'aventurier ouvert sur un rocher, au-dessus d'une vallée sauvage au lever du soleil" }}
     >
-      <form className={styles.formulaire}>
-        <div className={styles.champ}>
-          <input id="nom-de-chef" type="text" name="nom" aria-label="Nom de chef" autoComplete="off" spellCheck={false} />
-        </div>
-        <button type="submit" className={styles.envoyer} disabled>
-          Valider
-        </button>
-      </form>
+      <FormulaireNomDeChef />
     </PageEntree>
   );
 }
