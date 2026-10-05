@@ -123,8 +123,8 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 
 - **Débloquée par** : US-0404, US-0411
 - **Critères d'acceptation** :
-  - Seules les Cases de terre de la Couronne peuvent recevoir un Foyer, jamais l'eau.
-  - Certains Biomes, comme la banquise ou le désert, sont exclus des naissances (à décider).
+  - Seules les Cases de prairie de la Couronne peuvent recevoir un Foyer, comme à l'étape 9 (US-0152) : tous les départs se valent (ADR 0008).
+  - La Couronne générée compte assez de prairie pour les naissances, tout autour du Monde.
   - Deux Foyers sont toujours séparés d'au moins (chiffre à régler) Cases.
 
 ### US-0414 · Faire naître les joueurs sur le Monde généré
@@ -135,7 +135,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
   - La naissance de l'étape 9 choisit désormais une Case libre de la Couronne du Monde généré, selon les règles de US-0413.
   - Deux joueurs qui naissent au même instant n'obtiennent jamais la même Case.
   - Les joueurs nés avant cette étape reçoivent un Foyer sur le Monde généré, avec leurs stocks et leurs Habitants intacts.
-  - Pour ces joueurs déjà nés, la production continue suit le Biome de leur nouvelle Case plutôt que l'ancien (à décider).
+  - Leur nouvelle Case est en prairie comme l'ancienne : leur production continue ne change pas.
 
 ### US-0415 · Refuser la naissance quand la Couronne est pleine
 **En tant que** nouveau joueur, **je veux** un message clair si le Monde n'a plus de place pour moi, **afin de** ne pas rester bloqué sans comprendre.

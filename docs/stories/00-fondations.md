@@ -425,6 +425,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0044 · Enregistrer la souris
 **En tant que** développeur, **je veux** la souris en base avec toutes ses caractéristiques, **afin de** proposer l'Espèce qui aide à se défendre.
 
+- **Statut** : Le Couple de départ est retiré le 2026-10-05 (ADR 0008) : la souris reste une Espèce commune de prairie, comme une autre.
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - La souris est en base, Rareté commune, sans Rôle.
@@ -434,6 +435,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0045 · Enregistrer la poule
 **En tant que** développeur, **je veux** la poule en base avec toutes ses caractéristiques, **afin de** proposer l'Espèce qui aide à grandir.
 
+- **Statut** : Le Couple de départ est retiré le 2026-10-05 (ADR 0008) : la poule reste une Espèce commune de prairie, comme une autre.
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - La poule est en base, Rareté commune, avec le Rôle Nourricier.
@@ -443,6 +445,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0046 · Enregistrer le pigeon
 **En tant que** développeur, **je veux** le pigeon en base avec toutes ses caractéristiques, **afin de** proposer l'Espèce qui aide à explorer.
 
+- **Statut** : Le Couple de départ est retiré le 2026-10-05 (ADR 0008) : le pigeon reste une Espèce commune de prairie, comme une autre.
 - **Débloquée par** : US-0043
 - **Critères d'acceptation** :
   - Le pigeon est en base, Rareté commune, avec le Rôle Éclaireur.
@@ -452,6 +455,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0047 · Marquer les Espèces du Couple de départ
 **En tant que** développeur, **je veux** marquer la souris, la poule et le pigeon comme seules Espèces proposées en Couple de départ, avec leur style de jeu, **afin de** préparer l'écran de choix du jalon 1.
 
+- **Statut** : Le Couple de départ est retiré le 2026-10-05 (ADR 0008) : la liste reste en base, mais le jeu ne la lit plus.
 - **Débloquée par** : US-0044, US-0045, US-0046
 - **Critères d'acceptation** :
   - Seules ces trois Espèces sont marquées, dans l'ordre souris, poule, pigeon.
@@ -470,6 +474,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0049 · Vérifier la cohérence des données de référence
 **En tant que** développeur, **je veux** un test automatique qui contrôle les données de référence, **afin de** repérer une erreur de saisie avant qu'elle n'arrive en ligne.
 
+- **Statut** : Le Couple de départ est retiré le 2026-10-05 (ADR 0008) : sa liste n'est plus lue par le jeu, et le contrôle qui en compte les Espèces devient sans objet.
 - **Débloquée par** : US-0008, US-0047
 - **Critères d'acceptation** :
   - Le test vérifie que chaque Espèce a un Biome d'Habitat, une Rareté et un régime qui existent en base.

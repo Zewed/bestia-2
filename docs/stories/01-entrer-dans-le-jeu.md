@@ -1,6 +1,6 @@
 # Jalon 1 · Entrer dans le jeu
 
-Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et un Couple de départ, puis naît sur la Couronne, dans son Foyer. Étapes couvertes : 5 à 9 de l'ordre d'attaque.
+Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, puis, après un court récit, naît sur la Couronne, dans son Foyer, toujours en prairie. Étapes couvertes : 5 à 9 de l'ordre d'attaque, sauf l'étape 8, retirée le 2026-10-05 (ADR 0008).
 
 ## Étape 5 · Créer un compte
 
@@ -12,7 +12,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - La page d'accueil montre « Créer un compte » et « Se connecter », visibles sans défiler, sur ordinateur comme sur mobile.
   - « Créer un compte » mène au formulaire d'inscription, « Se connecter » au formulaire de connexion.
   - Une courte phrase présente le jeu : « Faites votre sac : l'aventure vous attend. »
-  - En production, les deux boutons attendent qu'un nouveau joueur puisse vraiment commencer (nom de chef, premières Bêtes) et que les e-mails partent (Zewed/bestia-2#1) ; « Ouverture prochaine » tient leur place.
+  - En production, « Ouverture prochaine » tient la place des deux boutons jusqu'à ce qu'Antoine ouvre le jeu : il en décide seul, à la main, quand il le veut, sans attendre une story précise (décidé le 2026-10-05). Il faut seulement que les e-mails partent pour de vrai (Zewed/bestia-2#1), sans quoi un joueur ne pourrait ni confirmer son adresse ni changer de mot de passe.
 
 ### US-0102 · Ouvrir le formulaire d'inscription
 **En tant que** visiteur, **je veux** un formulaire court qui ne demande que mon adresse e-mail et un mot de passe, **afin de** créer mon compte en moins d'une minute.
@@ -407,102 +407,18 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 ## Étape 8 · Choisir son Couple de départ
 
-### US-0141 · Présenter les trois cartes de Couple de départ
-**En tant que** nouveau joueur, **je veux** voir côte à côte trois cartes illustrées, souris, poule et pigeon, **afin de** comparer mes trois choix d'un seul regard.
+Étape retirée le 2026-10-05 : il n'y a plus de Couple de départ, les premières Bêtes, ce sont les explorateurs qui les ramènent (ADR 0008). Après son nom de chef, le joueur passe directement à l'étape 9. Les stories de l'étape sont abandonnées, et leurs numéros ne resservent pas :
 
-- **Statut** : Livrée le 2026-10-05. Valider son nom mène à `/jeu/couple-de-depart` ; les cartes viennent de la liste des Couples de départ en base. Sur mobile, elles s'empilent, l'illustration en vignette à gauche. Le renvoi de toutes les pages du jeu vers cet écran, tant que le Couple n'est pas choisi, viendra avec l'enregistrement du choix (US-0147).
-- **Débloquée par** : US-0139, Étape 4
-- **Critères d'acceptation** :
-  - Après le nom de chef, l'écran « Votre Couple de départ » montre trois cartes, dans l'ordre souris, poule, pigeon.
-  - Chaque carte montre l'illustration de l'Espèce, son nom et sa Rareté.
-  - Aucune autre Espèce n'est proposée.
-  - Aucune phrase d'explication : le titre et les cartes suffisent (README, « Textes à l'écran » ; et pas de « mâle et femelle » mis en avant).
-
-### US-0142 · Lire le style de jeu de chaque Espèce
-**En tant que** nouveau joueur, **je veux** lire sur chaque carte le style de jeu qu'elle propose, **afin de** choisir selon ma façon de jouer.
-
-- **Débloquée par** : US-0141
-- **Critères d'acceptation** :
-  - Chaque carte porte sa phrase de style de jeu : se défendre (souris), grandir (poule), explorer (pigeon).
-  - La phrase tient sur deux lignes au plus, sur mobile comme sur ordinateur.
-  - La phrase vient des données de référence, pas de l'écran.
-
-### US-0143 · Voir le Rôle de la poule et du pigeon
-**En tant que** nouveau joueur, **je veux** voir sur la carte le Rôle que m'apporterait chaque Espèce, **afin de** mesurer ce que je gagne en plus du combat.
-
-- **Débloquée par** : US-0141
-- **Critères d'acceptation** :
-  - La carte de la poule indique le Rôle Nourricier : elle nourrit sans chasser.
-  - La carte du pigeon indique le Rôle Éclaireur : il éclaire les Expéditions.
-  - La carte de la souris n'affiche aucun Rôle.
-  - Chaque Rôle affiché précise qu'il est débloqué d'office avec ce Couple.
-
-### US-0144 · Consulter les caractéristiques avant de choisir
-**En tant que** nouveau joueur, **je veux** ouvrir le détail d'une Espèce avant de la choisir, **afin de** comparer leurs forces et leurs besoins.
-
-- **Débloquée par** : US-0141
-- **Critères d'acceptation** :
-  - Un bouton « Détails » sur chaque carte montre attaque, vie, vitesse, charge, taille, régime, Entretien par heure et Biome d'Habitat.
-  - Les valeurs viennent de la fiche de l'Espèce en base.
-  - Fermer le détail ramène aux trois cartes sans rien choisir.
-  - Montrer ces chiffres dès cet écran ou les garder pour la Réserve (à décider).
-
-### US-0145 · Sélectionner une carte
-**En tant que** nouveau joueur, **je veux** sélectionner une carte et pouvoir changer d'avis avant de confirmer, **afin de** prendre le temps de comparer.
-
-- **Débloquée par** : US-0141
-- **Critères d'acceptation** :
-  - Toucher ou cliquer une carte la met en évidence ; une seule carte est sélectionnée à la fois.
-  - Sélectionner une autre carte remplace la sélection.
-  - Tant qu'aucune carte n'est sélectionnée, le bouton « Choisir ce Couple » est inactif.
-  - La sélection marche aussi au clavier.
-
-### US-0146 · Confirmer un choix définitif
-**En tant que** nouveau joueur, **je veux** qu'on me demande de confirmer en me rappelant que le choix est définitif, **afin de** ne pas me tromper par un toucher malheureux.
-
-- **Débloquée par** : US-0145
-- **Critères d'acceptation** :
-  - « Choisir ce Couple » ouvre une confirmation : « Vous choisissez le Couple de poules. Ce choix est définitif. »
-  - « Confirmer » enregistre le choix ; « Revenir » ramène aux trois cartes, la sélection conservée.
-  - Sur mobile, la confirmation tient dans l'écran et ses deux boutons se touchent facilement au pouce.
-
-### US-0147 · Enregistrer le Couple de départ
-**En tant que** nouveau joueur, **je veux** recevoir le Couple choisi, **afin de** pouvoir élever mes premières Bêtes.
-
-- **Débloquée par** : US-0146
-- **Critères d'acceptation** :
-  - Le compte reçoit un Couple de l'Espèce choisie : un mâle et une femelle.
-  - L'Élevage de cette Espèce est noté comme ouvert pour toujours (son usage arrive à l'étape 34).
-  - Le Rôle de l'Espèce, s'il y en a un, est noté comme débloqué (son effet arrive à l'étape 37).
-  - La date du choix est enregistrée.
-
-### US-0148 · Rendre le choix du Couple impossible à changer
-**En tant que** joueur, **je veux** que mon choix de Couple soit fixé une fois pour toutes, **afin de** jouer dans un Monde où ce choix compte vraiment.
-
-- **Débloquée par** : US-0147
-- **Critères d'acceptation** :
-  - Une fois le choix confirmé, l'écran des trois cartes n'est plus accessible, même en tapant son adresse.
-  - Toute tentative d'enregistrer un second Couple de départ est refusée par le jeu.
-  - Aucun écran ne propose de changer de Couple de départ.
-
-### US-0149 · Empêcher un double choix
-**En tant que** nouveau joueur, **je veux** qu'un double toucher ou deux onglets ouverts ne me donnent jamais deux Couples, **afin de** partir à égalité avec les autres chefs.
-
-- **Débloquée par** : US-0147
-- **Critères d'acceptation** :
-  - Un double toucher sur « Confirmer » n'enregistre qu'un Couple.
-  - Si deux onglets confirment deux Espèces différentes, seule la première confirmation compte.
-  - L'autre onglet affiche alors le Couple réellement choisi.
-
-### US-0150 · Choisir son Couple sur mobile
-**En tant que** nouveau joueur, **je veux** choisir mon Couple confortablement sur mon téléphone, **afin de** commencer à jouer où que je sois.
-
-- **Débloquée par** : US-0146
-- **Critères d'acceptation** :
-  - Sur mobile, les trois cartes s'empilent l'une sous l'autre, sans défilement de côté.
-  - Les illustrations gardent leurs proportions et restent nettes.
-  - Le bouton « Choisir ce Couple » reste visible en bas de l'écran pendant le défilement.
-  - Tout se fait au pouce, sans zoom.
+- US-0141 · Présenter les trois cartes de Couple de départ : livrée le 2026-10-05, retirée le même jour.
+- US-0142 · Lire le style de jeu de chaque Espèce.
+- US-0143 · Voir le Rôle de la poule et du pigeon.
+- US-0144 · Consulter les caractéristiques avant de choisir.
+- US-0145 · Sélectionner une carte.
+- US-0146 · Confirmer un choix définitif.
+- US-0147 · Enregistrer le Couple de départ.
+- US-0148 · Rendre le choix du Couple impossible à changer.
+- US-0149 · Empêcher un double choix.
+- US-0150 · Choisir son Couple sur mobile.
 
 ## Étape 9 · Naître sur la carte
 
@@ -524,14 +440,14 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - Une Case déjà possédée n'est jamais proposée.
   - Une Case de mer, de lac ou de rivière n'accueille jamais de Foyer.
   - Deux Foyers sont séparés d'au moins (chiffre à régler) Cases.
-  - Le Foyer naît toujours sur une Case de prairie, le Biome des trois Espèces du Couple de départ : tous les départs se valent.
+  - Le Foyer naît toujours sur une Case de prairie : tous les départs se valent (ADR 0008).
 
 ### US-0153 · Recevoir une Case libre sur la Couronne
-**En tant que** nouveau joueur, **je veux** recevoir une Case de la Couronne juste après avoir choisi mon Couple, **afin de** commencer ma vie de chef quelque part dans le Monde.
+**En tant que** nouveau joueur, **je veux** recevoir une Case de la Couronne juste après avoir validé mon nom de chef, **afin de** commencer ma vie de chef quelque part dans le Monde.
 
-- **Débloquée par** : US-0147, US-0152
+- **Débloquée par** : US-0139, US-0152
 - **Critères d'acceptation** :
-  - Juste après la confirmation du Couple, le jeu attribue au joueur une Case libre de la Couronne, sans lui demander de choisir.
+  - Juste après la validation du nom de chef, le jeu attribue au joueur une Case libre de la Couronne, sans lui demander de choisir.
   - La Case appartient désormais à ce joueur, et à lui seul.
   - La façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés (à décider).
 
@@ -567,18 +483,19 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 - **Débloquée par** : US-0155, Étape 2
 - **Critères d'acceptation** :
-  - L'écran du Foyer montre une grande illustration de la hutte du chef, dans la direction artistique du prototype.
-  - Le Biome du Foyer est écrit près de l'illustration (« Foyer · forêt »).
-  - Une illustration propre à chaque Biome, ou une seule pour tous (à décider).
+  - L'écran du Foyer montre une grande illustration de la hutte du chef dans la prairie, dans la direction artistique du prototype.
+  - Le Biome du Foyer est écrit près de l'illustration (« Foyer · prairie »).
+  - Tous les Foyers naissant en prairie (US-0152), une seule illustration sert à tous.
   - L'illustration s'adapte à la largeur de l'écran.
 
-### US-0158 · Annoncer la naissance du Foyer
-**En tant que** nouveau joueur, **je veux** un court récit de ma naissance sur la Couronne, **afin de** comprendre où je suis et ce qui m'attend.
+### US-0158 · Lire le récit d'arrivée
+**En tant que** nouveau joueur, **je veux** un court récit entre mon nom de chef et mon Foyer, **afin de** savoir où j'arrive avant d'y entrer.
 
 - **Débloquée par** : US-0157
 - **Critères d'acceptation** :
-  - À la première arrivée, un message raconte en quelques lignes : le nom du chef, le Biome du Foyer, la Couronne au bord du Monde, le Couple choisi.
-  - Le message ne s'affiche qu'une fois et se ferme d'un toucher.
+  - À la première arrivée, juste après le nom de chef, un court récit dit en quelques lignes : le nom du chef, la prairie où naît son Foyer, la Couronne au bord du Monde.
+  - Ni consigne ni explication du jeu : le récit et un bouton qui mène au Foyer, rien d'autre (README, « Textes à l'écran »).
+  - Le récit ne s'affiche qu'une fois.
   - Le texte du récit (à décider).
 
 ### US-0159 · Prévenir quand la Couronne est pleine
@@ -587,19 +504,19 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 - **Débloquée par** : US-0153
 - **Critères d'acceptation** :
   - S'il ne reste aucune Case où naître, la naissance n'a pas lieu et le joueur voit un message clair.
-  - Son nom de chef et son Couple restent enregistrés ; la naissance sera retentée à sa prochaine visite.
+  - Son nom de chef reste enregistré ; la naissance sera retentée à sa prochaine visite.
   - Les développeurs sont alertés quand il reste moins de (chiffre à régler) Cases libres.
   - Ce qui est proposé au joueur en attendant (à décider) ; l'ouverture d'un autre Monde viendra plus tard.
 
 ### US-0160 · Reprendre l'entrée dans le jeu là où on l'a laissée
 **En tant que** nouveau joueur, **je veux** retrouver l'étape où je m'étais arrêté si je ferme l'onglet en plein milieu, **afin de** ne rien refaire ni rien perdre.
 
-- **Débloquée par** : US-0139, US-0148, US-0159
+- **Débloquée par** : US-0139, US-0158, US-0159
 - **Critères d'acceptation** :
   - Sans nom de chef, le joueur revient sur le choix du nom.
-  - Avec un nom mais sans Couple, il revient sur les trois cartes.
-  - Avec un Couple mais sans Foyer, la naissance est retentée dès son arrivée.
-  - Avec un Foyer, il arrive sur son Foyer.
+  - Avec un nom mais sans Foyer, la naissance est retentée dès son arrivée.
+  - Avec un Foyer mais sans avoir vu le récit d'arrivée, il le voit d'abord.
+  - Ensuite, il arrive sur son Foyer.
 
 ### US-0161 · Arriver sur son Foyer à chaque visite
 **En tant que** joueur, **je veux** arriver directement sur mon Foyer quand j'ouvre le jeu, **afin de** reprendre ma session en un geste.
@@ -613,18 +530,14 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0162 · Voir son Couple de départ depuis le Foyer
 **En tant que** joueur, **je veux** retrouver mon Couple de départ sur l'écran du Foyer, **afin de** garder sous les yeux le choix qui marque mes débuts.
 
-- **Débloquée par** : US-0147, US-0157
-- **Critères d'acceptation** :
-  - Un bloc du Foyer montre le Couple choisi : l'illustration de l'Espèce, avec « un mâle et une femelle ».
-  - Le bloc indique le Rôle débloqué, s'il y en a un.
-  - Le bloc n'est pas cliquable tant que la Réserve n'existe pas (étape 33).
+- **Statut** : Abandonnée le 2026-10-05 avec l'étape 8 : il n'y a plus de Couple de départ (ADR 0008).
 
 ### US-0163 · Garder un premier écran simple
 **En tant que** nouveau joueur, **je veux** un premier écran qui ne montre que ce que j'ai déjà, **afin de** ne pas me perdre dans des menus vides.
 
-- **Débloquée par** : US-0162
+- **Débloquée par** : US-0157
 - **Critères d'acceptation** :
-  - Le Foyer ne montre que la barre du haut, l'illustration du Foyer et le bloc du Couple de départ.
+  - Le Foyer ne montre que la barre du haut et l'illustration du Foyer.
   - Aucun menu, bouton ou bloc ne mène à une fonction qui n'existe pas encore.
   - Une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte (à décider).
 
@@ -633,6 +546,6 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 
 - **Débloquée par** : US-0158, US-0163
 - **Critères d'acceptation** :
-  - Sur mobile, le Foyer se lit de haut en bas sans zoom ni défilement de côté : barre du haut, illustration, bloc du Couple.
+  - Sur mobile, le Foyer se lit de haut en bas sans zoom ni défilement de côté : barre du haut, puis illustration.
   - Le nom du chef reste visible ou accessible d'un toucher.
-  - Le récit de naissance tient dans l'écran et se ferme au pouce.
+  - Le récit d'arrivée tient dans l'écran, et son bouton se touche au pouce.

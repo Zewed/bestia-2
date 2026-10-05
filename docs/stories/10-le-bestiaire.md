@@ -1,6 +1,6 @@
 # Jalon 10 · Le Bestiaire
 
-Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a croisées, apprivoisées ou dont il a réuni le Couple, et toutes les autres en silhouette ; compléter un Biome ou une Rareté le récompense, et les quatre Rôles prennent vie pour toutes les Espèces qui en ont un. Étapes couvertes : 46 à 49 de l'ordre d'attaque.
+Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a croisées, apprivoisées ou dont il a réuni le Couple, et toutes les autres en silhouette ; compléter un Biome ou une Rareté le récompense, et les quatre Rôles servent pour toutes les Espèces qui en ont un, dès qu'on y affecte une Bête. Étapes couvertes : 46 à 49 de l'ordre d'attaque.
 
 ## Étape 46 · La page Bestiaire
 
@@ -13,14 +13,14 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
   - La page reprend l'habillage Bento : une vignette par Espèce.
   - Toutes les inscriptions faites depuis le jalon 9 (croisée, apprivoisée, Couple réuni) s'y retrouvent.
 
-### US-1002 · Le Couple de départ déjà inscrit
-**En tant que** nouveau joueur, **je veux** trouver mon Couple de départ dans le Bestiaire dès mon arrivée, **afin de** ne pas commencer devant une page vide.
+### US-1002 · Le Bestiaire d'un nouveau chef
+**En tant que** nouveau joueur, **je veux** voir dès mon arrivée tout ce que le Monde me cache, **afin de** savoir d'emblée tout ce qu'il me reste à découvrir.
 
-- **Débloquée par** : US-1001, Étape 8
+- **Débloquée par** : US-1001
 - **Critères d'acceptation** :
-  - Dès le choix du Couple de départ, son Espèce est inscrite à l'état « Couple réuni ».
-  - Les joueurs arrivés avant ce jalon retrouvent aussi leur Couple de départ à cet état.
-  - Un nouveau joueur voit une Espèce connue, et toutes les autres en silhouette.
+  - Avant sa première Rencontre, le Bestiaire d'un nouveau chef ne montre que des silhouettes, compteurs à zéro, sans phrase d'explication.
+  - Dès sa première Rencontre (US-0933), l'Espèce croisée y prend sa place.
+  - Un chef arrivé avant ce jalon retrouve toutes ses inscriptions depuis le jalon 9, et rien d'autre.
 
 ### US-1003 · Ranger les Espèces par Biome et par Rareté
 **En tant que** joueur, **je veux** que les Espèces soient rangées par Biome puis par Rareté, **afin de** voir où chercher et ce qu'il me reste à trouver.
@@ -235,7 +235,7 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 
 - **Débloquée par** : US-1020
 - **Critères d'acceptation** :
-  - La souris, la poule et le pigeon restent les mêmes Espèces : Couples de départ, effectifs, Élevages et états au Bestiaire sont intacts.
+  - La souris, la poule et le pigeon restent les mêmes Espèces : Couples réunis, effectifs, Élevages et états au Bestiaire sont intacts.
   - Ce que deviennent des Bêtes ou des inscriptions d'Espèces d'essai qui existeraient en ligne (à décider).
   - Aucun Couple réuni, aucun Élevage ouvert n'est perdu.
 
@@ -350,15 +350,15 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 
 ## Étape 49 · Les autres Rôles
 
-### US-1038 · Débloquer un Rôle par la Recherche
-**En tant que** joueur, **je veux** débloquer les Rôles par la Recherche, **afin de** tirer de mes Bêtes autre chose que leur force.
+### US-1038 · Les Rôles et la Recherche
+**En tant que** joueur, **je veux** savoir ce qu'il me faut pour affecter une Bête à son Rôle, **afin de** tirer de mes Bêtes autre chose que leur force.
 
 - **Débloquée par** : Étape 32, Étape 37
 - **Critères d'acceptation** :
-  - Chacun des quatre Rôles (Porteur, Éclaireur, Nourricier, Bâtisseur) s'ouvre par sa propre Recherche ; la branche de chacune (à décider).
-  - Avant cette Recherche, les Bêtes de ces Espèces combattent et escortent comme les autres, sans effet de Rôle.
-  - Le Rôle de l'Espèce du Couple de départ reste débloqué d'office, sans Recherche.
-  - Une fois faite, la Recherche vaut pour toutes les Espèces qui ont ce Rôle, présentes et futures.
+  - Qu'une Recherche soit demandée avant d'affecter une Bête à son Rôle, pour chacun des quatre Rôles (Porteur, Éclaireur, Nourricier, Bâtisseur) ou pour certains seulement, et dans quelle branche (à décider).
+  - Sans Recherche demandée, toute Bête à Rôle s'affecte dès qu'on l'a, comme les poules et les pigeons (étapes 37 et 45).
+  - Si une Recherche est demandée, l'affectation la nomme, avec un lien vers elle ; une fois faite, elle vaut pour toutes les Espèces qui ont ce Rôle, présentes et futures.
+  - La règle est la même pour tous les chefs : aucun n'a de Rôle acquis d'avance.
 
 ### US-1039 · Le Rôle sur la fiche d'Espèce
 **En tant que** joueur, **je veux** voir le Rôle d'une Espèce sur sa fiche, **afin de** savoir à quoi elle me servira en dehors du combat.
@@ -366,7 +366,7 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 - **Débloquée par** : US-1038, US-1010
 - **Critères d'acceptation** :
   - La fiche d'une Espèce à Rôle montre son Rôle, avec une phrase qui dit ce qu'il fait.
-  - Tant que le Rôle n'est pas débloqué, il apparaît grisé avec un lien vers la Recherche qui l'ouvre.
+  - Si ce Rôle demande une Recherche pas encore faite (US-1038), il apparaît grisé avec un lien vers elle.
   - Le Rôle d'une Espèce en silhouette n'est jamais révélé.
 
 ### US-1040 · Filtrer le Bestiaire par Rôle
@@ -383,15 +383,15 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 - **Débloquée par** : US-1038, Étape 21
 - **Critères d'acceptation** :
   - Quand la durée choisie pour une Récolte dépasse ce que ses Habitants peuvent porter (charge de l'étape 21), l'avertissement existant mentionne les Porteurs.
-  - Si le Rôle Porteur est débloqué et que l'effectif compte des Porteurs, l'avertissement propose de les ajouter d'un toucher.
-  - Sinon, il nomme la Recherche qui débloque le Rôle Porteur, avec un lien vers elle.
+  - Si l'effectif compte des Porteurs, l'avertissement propose de les ajouter d'un toucher.
+  - Si le Rôle Porteur demande une Recherche pas encore faite (US-1038), il la nomme, avec un lien vers elle.
 
 ### US-1042 · Emmener des Porteurs dans une Récolte
 **En tant que** joueur, **je veux** ajouter des Bêtes Porteuses à une Récolte, **afin de** rapporter bien plus à chaque sortie.
 
 - **Débloquée par** : US-1041, US-1038
 - **Critères d'acceptation** :
-  - Une fois le Rôle Porteur débloqué, l'écran de Récolte propose d'ajouter des Porteurs de l'effectif (chameau…), selon le rattachement des Rôles aux Métiers.
+  - L'écran de Récolte propose d'ajouter des Porteurs de l'effectif (chameau…), selon le rattachement des Rôles aux Métiers : c'est les affecter à leur Rôle le temps de la Récolte, comme les Éclaireurs d'une Expédition (US-0976).
   - Chaque Porteur ajoute la charge de son Espèce à celle de la Récolte ; l'écran montre la charge avec et sans eux.
   - Un chameau augmente bien ce que rapporte une Récolte limitée par la charge.
   - Les Porteurs partis ne sont disponibles pour rien d'autre, et rentrent avec la Récolte, même rappelée.
@@ -402,35 +402,34 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 
 - **Débloquée par** : US-1038, Étape 45
 - **Critères d'acceptation** :
-  - Une fois le Rôle Éclaireur débloqué, toute Espèce Éclaireuse de l'escorte lève plus de brouillard et garde les Bêtes en vue plus longtemps, comme les pigeons.
+  - Toute Espèce Éclaireuse peut partir comme Éclaireur (US-0976) : elle lève plus de brouillard et garde les Bêtes en vue plus longtemps, comme les pigeons, sans combattre.
   - La force de l'effet, la même pour toutes ou propre à chaque Espèce (un aigle voit plus loin qu'un pigeon) (à décider).
-  - Plusieurs Espèces Éclaireuses dans une même escorte cumulent leurs effets jusqu'au plafond (chiffre à régler).
+  - Plusieurs Espèces Éclaireuses dans une même Expédition cumulent leurs effets jusqu'au plafond (chiffre à régler).
 
 ### US-1044 · Tous les Nourriciers
 **En tant que** joueur, **je veux** que mes Espèces Nourricières produisent de la Nourriture, **afin de** nourrir mon Territoire sans tout chasser.
 
 - **Débloquée par** : US-1038, Étape 37
 - **Critères d'acceptation** :
-  - Une fois le Rôle Nourricier débloqué, chaque Bête d'une Espèce Nourricière produit de la Nourriture en continu, comme les poules (chiffre à régler par Espèce).
+  - Chaque Bête d'une Espèce Nourricière affectée à son Rôle produit de la Nourriture en continu, comme les poules (chiffre à régler par Espèce), sans Poste : l'affectation suffit (étape 37).
   - Viande ou Végétaux selon l'Espèce (à décider).
   - Cette production s'ajoute à la production horaire affichée et respecte les limites de stock.
-  - Il faut leur donner un Poste pour qu'elles produisent, ou non (à décider).
 
 ### US-1045 · Le Bâtisseur rend une construction possible
 **En tant que** joueur, **je veux** qu'une Espèce Bâtisseuse m'ouvre sa construction, **afin de** bâtir ce qu'aucun Habitant ne peut bâtir seul.
 
 - **Débloquée par** : US-1038, Étape 32
 - **Critères d'acceptation** :
-  - Une construction qui exige un Bâtisseur (le barrage exige des castors) reste verrouillée tant que le joueur n'a pas le Rôle Bâtisseur et des Bêtes de cette Espèce dans son effectif (nombre : chiffre à régler).
-  - La construction verrouillée dit ce qui manque : la Recherche, l'Espèce, ou les deux.
-  - Avec des castors et la Recherche, le barrage peut être lancé.
+  - Une construction qui exige un Bâtisseur (le barrage exige des castors) reste verrouillée tant que le joueur ne peut pas affecter assez de Bêtes de cette Espèce à leur Rôle (nombre : chiffre à régler).
+  - La construction verrouillée dit ce qui manque : l'Espèce, et la Recherche si le Rôle en demande une (US-1038).
+  - Avec assez de castors, le barrage peut être lancé.
 
 ### US-1046 · Les Bâtisseurs pendant et après le chantier
 **En tant que** joueur, **je veux** savoir ce que deviennent mes Bâtisseurs pendant et après le chantier, **afin de** ne pas bloquer mes Expéditions par surprise.
 
 - **Débloquée par** : US-1045
 - **Critères d'acceptation** :
-  - Les castors sont occupés pendant le chantier, donc indisponibles pour une Expédition, ou non (à décider).
+  - Pendant le chantier, les castors sont affectés à leur Rôle : ils ne combattent pas et ne partent pas en escorte (US-0842).
   - Si les castors meurent ensuite, la construction terminée continue de fonctionner ou s'arrête (à décider).
   - L'écran de la construction dit clairement lesquelles des Bêtes sont occupées.
 
@@ -439,6 +438,6 @@ Le joueur ouvre son Bestiaire : les 200 Espèces du lancement, celles qu'il a cr
 
 - **Débloquée par** : US-1042, US-1044
 - **Critères d'acceptation** :
-  - Une Bête partie en Récolte comme Porteur ne peut être ni en Expédition, ni à un Poste en même temps, et inversement.
-  - L'effectif indique pour chaque Espèce à Rôle combien de Bêtes sont au Foyer, en Expédition, en Récolte ou à un Poste.
+  - Une Bête partie en Récolte comme Porteur ne peut être ni en Expédition, ni affectée ailleurs en même temps, et inversement.
+  - L'effectif indique pour chaque Espèce à Rôle combien de Bêtes sont libres au Foyer, affectées au Foyer, en Expédition ou en Récolte.
   - Les Bêtes à Rôle occupées continuent de coûter leur Entretien.

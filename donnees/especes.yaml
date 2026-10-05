@@ -17,7 +17,7 @@
 #   illustration            chemin sous public/illustrations
 #   source                  d'où viennent les chiffres
 
-# Les trois Espèces du Couple de départ : communes, en prairie.
+# Les trois premières Espèces : communes, en prairie.
 
 - id: souris
   nom: Souris grise

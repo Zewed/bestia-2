@@ -1,9 +1,9 @@
 // L'entrée du jeu (créer un compte, se connecter) : visible en local et sur les prévisualisations
-// dès maintenant ; en production, seulement quand un nouveau joueur peut vraiment commencer.
+// dès maintenant ; en production, seulement quand Antoine décide d'ouvrir le jeu.
 
 /**
- * Passe à true quand un nouveau joueur peut vraiment commencer (nom de chef et premières Bêtes)
- * et que les e-mails partent (Zewed/bestia-2#1). Jusque-là : « Ouverture prochaine ».
+ * Passe à true le jour où Antoine décide d'ouvrir le jeu au public, à la main (ADR 0008) ; il faut
+ * aussi que les e-mails partent (Zewed/bestia-2#1). Jusque-là : « Ouverture prochaine ».
  */
 export const COMPTES_OUVERTS_EN_PRODUCTION = false;
 

@@ -1,6 +1,6 @@
 # Jalon 6 · Construire
 
-Le joueur bâtit ses premières constructions : des huttes pour accueillir plus d'Habitants, des stockages pour garder plus de ressources, des constructions à Postes qu'il faut faire tourner avec du personnel, puis la tour de guet et la taverne qui changent la venue des Voyageurs. Étapes couvertes : 25 à 30 de l'ordre d'attaque.
+Le joueur bâtit ses premières constructions : des huttes pour accueillir plus d'Habitants, des stockages pour garder plus de ressources, des constructions à Postes qu'il faut faire tourner avec du personnel, puis la tour de guet et la taverne qui changent la venue des Voyageurs. Étapes couvertes : 25 à 30 de l'ordre d'attaque, attaquées après les jalons 9 et 8 (ADR 0008).
 
 ## Étape 25 · Les huttes
 

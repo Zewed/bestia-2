@@ -116,24 +116,6 @@ export const ESPECES: Jeu<EntreeEspece> = {
   },
 };
 
-const entreeCouple = z.object({
-  espece: identifiant,
-  style: z.string().trim().min(1, "style manquant"),
-  phrase: z.string().trim().min(1, "phrase manquante"),
-  ordre: z.number().int(),
-});
-export type EntreeCouple = z.infer<typeof entreeCouple>;
-
-export const COUPLES_DE_DEPART: Jeu<EntreeCouple> = {
-  nom: "Couples de départ",
-  fichier: "couples-de-depart.yaml",
-  table: "couple_de_depart",
-  cle: "espece_id",
-  extraire: (brut) => brut.map((c, i) => ({ ...(c as object), ordre: i + 1 })),
-  schema: entreeCouple,
-  colonnes: (c) => ({ espece_id: c.espece, ordre: c.ordre, style: c.style, phrase: c.phrase }),
-};
-
 /** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. */
 export function verifierReferences(
   especes: EntreeEspece[],
@@ -148,21 +130,8 @@ export function verifierReferences(
   if (erreurs.length > 0) throw new Error(`especes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
-/** Le nouveau joueur choisit son Couple de départ entre exactement trois Espèces. */
-export const NOMBRE_COUPLES_DE_DEPART = 3;
-
-/** Les Couples de départ sont exactement trois, et ne proposent que des Espèces qui existent. */
-export function verifierCouples(couples: EntreeCouple[], especes: string[]): void {
-  const erreurs: string[] = [];
-  if (couples.length !== NOMBRE_COUPLES_DE_DEPART) {
-    erreurs.push(`il faut exactement ${NOMBRE_COUPLES_DE_DEPART} Espèces, il y en a ${couples.length}`);
-  }
-  for (const c of couples) if (!especes.includes(c.espece)) erreurs.push(`Espèce inconnue « ${c.espece} »`);
-  if (erreurs.length > 0) throw new Error(`couples-de-depart.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
-}
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, COUPLES_DE_DEPART];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES];
 
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en
@@ -174,6 +143,5 @@ export function lireDonnees(dossier?: string): { jeu: Jeu<any>; entrees: any[] }
   const entrees = <T>(jeu: Jeu<T>) => lots.find((l) => l.jeu === jeu)!.entrees as T[];
   const ids = <T extends { id: string }>(jeu: Jeu<T>) => entrees(jeu).map((e) => e.id);
   verifierReferences(entrees(ESPECES), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) });
-  verifierCouples(entrees(COUPLES_DE_DEPART), ids(ESPECES));
   return lots;
 }

@@ -67,7 +67,7 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
 - **Débloquée par** : US-1406
 - **Critères d'acceptation** :
   - La préparation liste chaque Espèce avec le nombre de Bêtes présentes et disponibles.
-  - Les Couples en Réserve, les Blessés et les Bêtes déjà sorties n'y figurent pas.
+  - Les Couples en Réserve, les Bêtes affectées à leur Rôle (US-0842), les Blessés et les Bêtes déjà sorties n'y figurent pas.
   - On choisit un nombre par Espèce, avec un raccourci pour tout prendre ou tout retirer.
   - Une Attaque sans aucune Bête ne peut pas partir.
 
@@ -79,7 +79,7 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
   - La préparation affiche la force totale, la charge totale, la durée de l'aller et l'heure d'arrivée.
   - Ces valeurs se mettent à jour à chaque changement de sélection.
   - Elle rappelle la force qui restera au Foyer pour se défendre.
-  - Les Bêtes au Rôle de Porteur augmentent la charge d'une Attaque comme celle d'une Récolte, ou non (à décider).
+  - Une Bête affectée à son Rôle ne part pas à l'Attaque (US-0842) : un Porteur n'y porte que la charge de son Espèce, comme toute Bête.
 
 ### US-1409 · Le trajet de l'Attaque
 **En tant que** joueur, **je veux** que mes Bêtes mettent un temps de trajet réaliste pour atteindre la cible, **afin de** tenir compte de la distance dans mes choix.
@@ -115,7 +115,7 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
 - **Critères d'acceptation** :
   - Le combat oppose mes Bêtes aux Bêtes présentes chez le chef attaqué et à ses défenses construites.
   - Il suit la même règle de somme des forces que les Incursions.
-  - Les Couples en Réserve, les Bêtes sorties et les Blessés du chef attaqué ne combattent pas.
+  - Les Couples en Réserve, les Bêtes affectées à leur Rôle, les Bêtes sorties et les Blessés du chef attaqué ne combattent pas.
   - Les Habitants des deux camps ne combattent jamais.
   - Le combat se résout à l'heure prévue, même si aucun des deux joueurs n'est connecté.
 
@@ -127,7 +127,7 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
   - Chaque camp perd des Bêtes selon l'écart de force, une partie en Blessés, le reste en morts (chiffre à régler).
   - Les Blessés de l'attaquant rentrent avec les survivants et guérissent chez lui.
   - Les Blessés du chef attaqué guérissent chez lui.
-  - Aucune perte ne touche un Habitant ou un Couple.
+  - Aucune perte ne touche un Habitant, un Couple ou une Bête affectée à son Rôle.
 
 ### US-1414 · Piller dans la limite de la charge
 **En tant que** joueur, **je veux** que mes Bêtes victorieuses emportent de la Nourriture et des Matériaux, **afin de** rapporter un butin à la hauteur de ce qu'elles peuvent porter.
@@ -163,8 +163,8 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
 - **Débloquée par** : US-1413
 - **Critères d'acceptation** :
   - Aucune Attaque ne fait passer une Bête d'un joueur à l'autre, quelle que soit son issue.
-  - Les Couples en Réserve ne sont ni tués, ni blessés, ni emportés.
-  - L'Élevage du chef attaqué reste ouvert quoi qu'il arrive.
+  - Les Couples en Réserve et les Bêtes affectées à leur Rôle ne sont ni tués, ni blessés, ni emportés.
+  - Les Élevages du chef attaqué restent acquis quoi qu'il arrive.
   - Un test automatique le vérifie sur une longue série d'Attaques simulées.
 
 ### US-1418 · Le retour avec le butin
@@ -403,7 +403,6 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
 - **Critères d'acceptation** :
   - C'est le classement principal : la page des classements s'ouvre sur lui.
   - Chaque ligne donne le rang, le nom du chef et le nombre de Couples réunis.
-  - Le Couple de départ compte comme un Couple réuni.
   - Seuls les chefs du même Monde y figurent.
 
 ### US-1443 · Le classement de la taille du Territoire
@@ -420,7 +419,7 @@ Le Monde se peuple : on voit ses voisins, on peut les attaquer pour piller leurs
 
 - **Débloquée par** : US-1442
 - **Critères d'acceptation** :
-  - La puissance est la somme des forces des Bêtes du chef, Couples en Réserve exclus.
+  - La puissance est la somme des forces des Bêtes du chef, Couples en Réserve et Bêtes affectées à leur Rôle exclus.
   - Les Blessés comptent ou non (à décider).
   - Le détail de l'armée n'est jamais dévoilé : seul le total s'affiche.
 

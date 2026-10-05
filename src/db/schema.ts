@@ -139,7 +139,10 @@ export const espece = pgTable(
   ],
 );
 
-/** Les Espèces proposées comme Couple de départ, dans l'ordre où le nouveau joueur les voit. */
+/**
+ * Les Espèces autrefois proposées comme Couple de départ. Plus lue depuis le retrait du Couple de
+ * départ (ADR 0008), mais gardée : une table ne se supprime pas.
+ */
 export const coupleDeDepart = pgTable("couple_de_depart", {
   especeId: text("espece_id")
     .primaryKey()

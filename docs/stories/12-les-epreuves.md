@@ -1,6 +1,6 @@
 # Jalon 12 · Les Épreuves
 
-Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le guide pas à pas, du choix de son Couple de départ jusqu'à sa première Expédition et au-delà, en ouvrant l'interface petit à petit et en le récompensant à chaque étape. Étape couverte : 53 de l'ordre d'attaque.
+Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le guide pas à pas, de son arrivée jusqu'à sa première Bête et au-delà, en ouvrant l'interface petit à petit et en le récompensant à chaque étape. Étape couverte : 53 de l'ordre d'attaque.
 
 ## Étape 53 · Les Épreuves guidées
 
@@ -19,7 +19,7 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
 
 - **Débloquée par** : US-1201
 - **Critères d'acceptation** :
-  - Juste après la naissance sur la carte, un message d'accueil s'affiche une seule fois, avec le nom du chef et l'Espèce du Couple de départ choisi.
+  - Juste après le récit d'arrivée (US-0158), un message d'accueil s'affiche une seule fois.
   - Il annonce le nombre d'Épreuves et présente la première (titre, récit, objectif).
   - Un bouton « Commencer la première Épreuve » ferme le message et mène à l'écran où agir.
   - Une fois fermé, le message ne revient plus, même après déconnexion ou sur un autre appareil.
@@ -133,10 +133,10 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
 
 - **Débloquée par** : US-1201
 - **Critères d'acceptation** :
-  - Une simulation en temps accéléré joue toute la suite depuis un Foyer neuf, pour chacun des trois Couples de départ, sans jamais manquer de Nourriture ni de Matériaux.
-  - Elle passe pour un Foyer posé sur chacun des Biomes présents sur la Couronne, y compris pour l'Élevage du Couple de départ.
+  - Une simulation en temps accéléré joue toute la suite depuis un Foyer neuf, en prairie comme tous (US-0152), sans jamais manquer de Nourriture ni de Matériaux.
+  - Elle passe pour de nombreux tirages des Bêtes communes à portée du nouveau Foyer (US-0975), quelles que soient leurs Espèces.
   - Si un objectif demande plus que les stocks de départ, la production et les récompenses précédentes, le test échoue.
-  - La durée mesurée jusqu'à la première Expédition est comparée à l'objectif visé (chiffre à régler).
+  - La durée mesurée jusqu'à la première Bête ramenée est comparée à l'objectif visé (chiffre à régler).
 
 ### US-1215 · Épreuve 1 « Chacun sa tâche » : donner un Métier
 **En tant que** nouveau joueur, **je veux** que la première Épreuve me demande de donner un Métier à mes Habitants, **afin de** comprendre que mon village tourne grâce à eux.
@@ -146,49 +146,100 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
   - Objectif : chaque Habitant a un Métier, avec un compteur « N/3 » au départ.
   - Le récit rappelle que les Habitants ne combattent jamais et que toute la force vient des Bêtes.
   - « Y aller » ouvre la page Habitants sur le premier Habitant sans Métier.
-  - Récompense : de la Nourriture (chiffre à régler) ; ouvre la Réserve.
-
-### US-1216 · Épreuve 2 « Le Couple de départ » : découvrir sa Réserve
-**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse ouvrir la fiche de l'Espèce de mon Couple de départ, **afin de** connaître ses forces et son Rôle.
-
-- **Débloquée par** : US-1215, Étape 33, Étape 37
-- **Critères d'acceptation** :
-  - Objectif : ouvrir la fiche de l'Espèce du Couple de départ dans la Réserve.
-  - Le récit reprend le style de jeu choisi (se défendre, grandir ou explorer) et nomme le Rôle de l'Espèce quand elle en a un (Nourricier pour la poule, Éclaireur pour le pigeon).
-  - Le récit explique qu'un Couple réuni ne combat plus et vit à l'abri dans la Réserve.
-  - Récompense : de la Nourriture (chiffre à régler) ; ouvre l'Élevage.
-
-### US-1217 · Épreuve 3 « Les premiers petits » : élever des Bêtes
-**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse élever mes premières Bêtes de l'Espèce de mon Couple, **afin de** voir mon effectif grandir.
-
-- **Débloquée par** : US-1216, Étape 35
-- **Critères d'acceptation** :
-  - Objectif : posséder un nombre de Bêtes élevées de l'Espèce du Couple de départ (chiffre à régler), avec son compteur.
-  - Les stocks de départ et les récompenses précédentes suffisent à payer cet Élevage.
-  - Le récit prévient que chaque Bête mange chaque heure selon son régime et occupe des Places.
   - Récompense : de la Nourriture (chiffre à régler) ; ouvre la carte.
 
-### US-1218 · Épreuve 4 « Au-delà du feu » : ouvrir la carte
+### US-1218 · Épreuve 2 « Au-delà du feu » : ouvrir la carte
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse ouvrir la carte et toucher une Case autour de mon Foyer, **afin de** découvrir le Monde qui m'entoure.
 
-- **Débloquée par** : US-1217, Étape 20
+- **Débloquée par** : US-1215, Étape 20
 - **Critères d'acceptation** :
   - Objectif : ouvrir la fiche d'une Case qui n'est pas le Foyer.
   - « Y aller » ouvre la carte centrée sur le Foyer.
   - Le récit explique le brouillard, la Couronne où l'on naît et, au loin, le Cœur sauvage.
-  - Récompense : du Bois et de la Pierre (chiffre à régler) ; ouvre les Récoltes.
+  - Récompense : de la Nourriture (chiffre à régler).
 
-### US-1219 · Épreuve 5 « La première Récolte » : ramener une Récolte
+### US-1225 · Épreuve 3 « Des yeux au loin » : affecter un explorateur
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse donner le Métier d'explorateur à un Habitant, **afin de** préparer ma première Expédition.
+
+- **Débloquée par** : US-1218, Étape 38
+- **Critères d'acceptation** :
+  - Objectif : au moins un Habitant explorateur.
+  - Le récit dit que les explorateurs trouvent les Bêtes sauvages et fuient toujours le combat.
+  - « Y aller » ouvre la page Habitants.
+  - Récompense : de la Nourriture (chiffre à régler) ; ouvre les Expéditions.
+
+### US-1226 · Épreuve 4 « La première Expédition » : partir à la découverte
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse envoyer une première Expédition et la voir revenir, **afin de** découvrir comment on part chercher des Bêtes sauvages.
+
+- **Débloquée par** : US-1225, Étape 40
+- **Critères d'acceptation** :
+  - Objectif : une Expédition revenue.
+  - Le récit dit qu'une Expédition sans escorte ne ramène que des Bêtes communes, et que ses explorateurs ne risquent rien.
+  - « Y aller » ouvre la préparation d'une Expédition.
+  - Récompense : de la Nourriture (chiffre à régler).
+
+### US-1227 · Épreuve 5 « Un nouveau visage » : ramener une première Bête
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me pousse à ramener ma première Bête, **afin de** découvrir le cœur du jeu : trouver des Bêtes sauvages et les apprivoiser.
+
+- **Débloquée par** : US-1226, US-0975, Étape 46
+- **Critères d'acceptation** :
+  - Objectif : une Bête sauvage apprivoisée, rentrée au Foyer.
+  - Le récit prévient qu'il faut parfois plusieurs Expéditions, et que des Bêtes communes rôdent toujours près d'un nouveau Foyer.
+  - « Y aller » ouvre la préparation d'une Expédition.
+  - C'est la dernière Épreuve qui verrouille l'interface : sa récompense ouvre le Bestiaire et tous les écrans restants.
+  - Récompense : de la Nourriture, du Bois et de la Pierre (chiffre à régler).
+
+### US-1228 · Épreuve 6 « Un premier Couple » : réunir un Couple
+**En tant que** joueur, **je veux** que l'Épreuve me fixe comme but de réunir mon premier Couple, **afin de** comprendre le but profond du jeu.
+
+- **Débloquée par** : US-1227, Étape 43
+- **Critères d'acceptation** :
+  - Objectif : un premier Couple réuni.
+  - L'encart montre, pour l'Espèce la plus avancée, s'il manque le mâle ou la femelle.
+  - Le récit prévient que cela peut prendre plusieurs jours et que l'Élevage de l'Espèce restera acquis pour toujours.
+  - Récompense : de la Nourriture et des Matériaux (chiffre à régler).
+
+### US-1216 · Épreuve 7 « L'éleveur » : ouvrir un Élevage
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse confier l'Élevage de mon premier Couple à un éleveur, **afin de** voir naître mes premières Bêtes.
+
+- **Débloquée par** : US-1228, Étape 34
+- **Critères d'acceptation** :
+  - Objectifs : au moins un Habitant éleveur, et un Élevage lancé.
+  - « Y aller » ouvre la page Habitants s'il n'y a pas d'éleveur, sinon le bloc « Élever » de l'Espèce du Couple réuni.
+  - Le récit dit qu'un éleveur ne s'occupe que d'un Élevage à la fois.
+  - Récompense : de la Nourriture (chiffre à régler).
+
+### US-1217 · Épreuve 8 « Les premiers petits » : élever des Bêtes
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse élever mes premières Bêtes, **afin de** voir mon effectif grandir.
+
+- **Débloquée par** : US-1216, Étape 35
+- **Critères d'acceptation** :
+  - Objectif : posséder un nombre de Bêtes élevées (chiffre à régler), avec son compteur.
+  - Les stocks de départ et les récompenses précédentes suffisent à payer cet Élevage.
+  - Le récit prévient que chaque Bête mange chaque heure selon son régime et occupe des Places.
+  - Récompense : de la Nourriture (chiffre à régler).
+
+### US-1230 · Épreuve 9 « Chacun son Rôle » : affecter une Bête à son Rôle
+**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse affecter une Bête à son Rôle, **afin de** découvrir ce que mes Bêtes savent faire en dehors du combat.
+
+- **Débloquée par** : US-1217, Étape 37
+- **Critères d'acceptation** :
+  - Objectif : une Bête affectée à son Rôle, poule nourricière au Foyer ou pigeon éclaireur parti en Expédition.
+  - Le récit dit qu'une Bête affectée remplit son Rôle aussitôt, mais ne combat plus.
+  - Récompense : de la Nourriture (chiffre à régler).
+  - Sa place dans la suite, et ce qu'elle devient tant que le chef n'a aucune Bête à Rôle (à décider).
+
+### US-1219 · Épreuve 10 « La première Récolte » : ramener une Récolte
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse envoyer une Récolte et la voir revenir, **afin de** comprendre qu'une sortie rapporte bien plus que la production du Foyer.
 
-- **Débloquée par** : US-1218, Étape 22
+- **Débloquée par** : US-1230, Étape 22
 - **Critères d'acceptation** :
   - Objectif : une Récolte revenue, quels que soient le Métier et la ressource.
   - « Y aller » propose une Case proche qui convient à un Métier déjà donné ; si aucun Habitant n'a de Métier de Récolte, il mène d'abord à la page Habitants.
   - Une Récolte rappelée à l'aller ne remplit pas l'objectif.
-  - Récompense : du Bois (chiffre à régler) ; ouvre les constructions.
+  - Récompense : du Bois (chiffre à régler).
 
-### US-1220 · Épreuve 6 « Un toit de plus » : bâtir une hutte
+### US-1220 · Épreuve 11 « Un toit de plus » : bâtir une hutte
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse bâtir une hutte, **afin de** découvrir la construction et de faire de la place pour de nouveaux Habitants.
 
 - **Débloquée par** : US-1219, Étape 26
@@ -198,7 +249,7 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
   - L'encart montre l'avancée du chantier en cours.
   - Récompense : du Bois et de la Pierre (chiffre à régler).
 
-### US-1221 · Épreuve 7 « Des mains en plus » : accueillir un Voyageur
+### US-1221 · Épreuve 12 « Des mains en plus » : accueillir un Voyageur
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse accueillir un Voyageur, **afin de** découvrir comment mon village grandit.
 
 - **Débloquée par** : US-1220, Étape 17
@@ -208,7 +259,7 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
   - S'il repart sans être accueilli, un autre arrive plus tard, pour que l'Épreuve ne se bloque pas.
   - Récompense : de la Nourriture (chiffre à régler).
 
-### US-1222 · Épreuve 8 « Des réserves pour durer » : bâtir un stockage
+### US-1222 · Épreuve 13 « Des réserves pour durer » : bâtir un stockage
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse bâtir un premier stockage, **afin de** comprendre que mes stocks ont une limite.
 
 - **Débloquée par** : US-1221, Étape 28
@@ -218,16 +269,16 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
   - Le récit explique qu'un stock plein ne monte plus.
   - Récompense : du Bois et de la Pierre (chiffre à régler).
 
-### US-1223 · Épreuve 9 « Le cercle des sages » : ouvrir la Recherche
+### US-1223 · Épreuve 14 « Le cercle des sages » : ouvrir la Recherche
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse bâtir le cercle des sages et y placer un chercheur, **afin de** débloquer la Recherche.
 
 - **Débloquée par** : US-1222, Étape 31
 - **Critères d'acceptation** :
   - Objectifs : le cercle des sages terminé, et au moins un Habitant chercheur.
-  - Le récit précise que la Recherche ouvre des constructions, des Rôles et la portée des Expéditions, mais ne rend jamais les Bêtes plus fortes.
-  - Récompense : du Bois et de la Pierre (chiffre à régler) ; ouvre la Recherche.
+  - Le récit précise que la Recherche ouvre des constructions et la portée des Expéditions, mais ne rend jamais les Bêtes plus fortes.
+  - Récompense : du Bois et de la Pierre (chiffre à régler).
 
-### US-1224 · Épreuve 10 « Les sages au travail » : mener une Recherche
+### US-1224 · Épreuve 15 « Les sages au travail » : mener une Recherche
 **En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse mener une première Recherche jusqu'au bout, **afin de** voir comment la Recherche ouvre le jeu.
 
 - **Débloquée par** : US-1223, Étape 32
@@ -237,65 +288,15 @@ Le nouveau chef n'est plus lâché seul dans le Monde : une suite d'Épreuves le
   - L'encart montre le temps restant de la Recherche en cours.
   - Récompense : de la Nourriture (chiffre à régler).
 
-### US-1225 · Épreuve 11 « Des yeux au loin » : former un explorateur
-**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse donner le Métier d'explorateur à un Habitant, **afin de** préparer ma première Expédition.
-
-- **Débloquée par** : US-1224, Étape 38
-- **Critères d'acceptation** :
-  - Objectif : au moins un Habitant explorateur.
-  - Le récit explique que les explorateurs trouvent les Bêtes sauvages et fuient toujours le combat.
-  - « Y aller » ouvre la page Habitants.
-  - Récompense : de la Nourriture (chiffre à régler) ; ouvre les Expéditions.
-
-### US-1226 · Épreuve 12 « La première Expédition » : partir à la découverte
-**En tant que** nouveau joueur, **je veux** que l'Épreuve me fasse envoyer une première Expédition et la voir revenir, **afin de** découvrir le cœur du jeu : trouver des Bêtes sauvages.
-
-- **Débloquée par** : US-1225, Étape 45
-- **Critères d'acceptation** :
-  - Objectif : une Expédition revenue.
-  - Le récit conseille d'emmener quelques Bêtes en escorte, rappelle que seules les Bêtes risquent leur vie, et cite l'effet des pigeons pour qui les a choisis.
-  - C'est la dernière Épreuve qui verrouille l'interface : sa récompense ouvre le Bestiaire et tous les écrans restants.
-  - Récompense : de la Nourriture, du Bois et de la Pierre (chiffre à régler).
-
-### US-1227 · Épreuve 13 « Un nouveau visage » : apprivoiser une Bête sauvage
-**En tant que** joueur, **je veux** que l'Épreuve suivante me pousse à apprivoiser ma première Bête sauvage, **afin de** poursuivre au-delà de la première Expédition.
-
-- **Débloquée par** : US-1226, Étape 46
-- **Critères d'acceptation** :
-  - Objectif : une Bête sauvage apprivoisée.
-  - Le récit prévient qu'il faut parfois plusieurs Expéditions, et que l'escorte doit être assez forte pour que la Bête suive.
-  - « Y aller » ouvre la préparation d'une Expédition.
-  - Récompense : de la Nourriture (chiffre à régler).
-
-### US-1228 · Épreuve 14 « Un deuxième Couple » : réunir un Couple
-**En tant que** joueur, **je veux** que l'Épreuve me fixe comme but de réunir un Couple d'une nouvelle Espèce, **afin de** comprendre le but profond du jeu.
-
-- **Débloquée par** : US-1227, Étape 43
-- **Critères d'acceptation** :
-  - Objectif : un Couple réuni d'une autre Espèce que celle du Couple de départ.
-  - L'encart montre, pour l'Espèce la plus avancée, s'il manque le mâle ou la femelle.
-  - Le récit prévient que cela peut prendre plusieurs jours et que l'Élevage de l'Espèce restera ouvert pour toujours.
-  - Récompense : de la Nourriture et des Matériaux (chiffre à régler).
-
-### US-1229 · Épreuve 15 « Une Case de plus » : bâtir un Avant-poste
+### US-1229 · Épreuve 16 « Une Case de plus » : bâtir un Avant-poste
 **En tant que** joueur, **je veux** que l'Épreuve me fasse revendiquer une Case voisine, **afin de** savoir étendre mon Territoire et offrir de nouveaux Habitats.
 
-- **Débloquée par** : US-1228, Étape 51
+- **Débloquée par** : US-1224, Étape 51
 - **Critères d'acceptation** :
   - Objectif : un Avant-poste terminé et une nouvelle Case dans le Territoire.
   - Le récit explique que chaque Case offre des Places pour les Espèces de son Biome.
   - Le récit prévient que les Cases trop éloignées du Foyer forment les Marches, que d'autres chefs pourront prendre.
   - Récompense : des Matériaux (chiffre à régler).
-
-### US-1230 · Une Épreuve propre au Couple de départ
-**En tant que** nouveau joueur, **je veux** une Épreuve qui met en valeur le Couple que j'ai choisi, **afin de** sentir l'intérêt de mon choix.
-
-- **Débloquée par** : US-1226
-- **Critères d'acceptation** :
-  - Poule : faire produire de la Nourriture par des poules grâce à leur Rôle de Nourricier.
-  - Pigeon : emmener des pigeons dans une Expédition grâce à leur Rôle d'Éclaireur.
-  - Souris : réunir un effectif de souris prêtes à défendre le Foyer (chiffre à régler).
-  - L'existence de cette Épreuve et sa place dans la suite (à décider).
 
 ### US-1231 · La fin des Épreuves
 **En tant que** joueur, **je veux** un dernier message quand j'ai réussi toutes les Épreuves, **afin de** savoir que je vole désormais de mes propres ailes.

@@ -89,7 +89,7 @@ Un humain du Territoire ; il ne combat jamais, et il exerce un Métier.
 _Avoid_: Villageois, ouvrier, unité, population
 
 **Métier**:
-L'occupation d'un Habitant : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, ou un Poste.
+L'occupation d'un Habitant : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, éleveur, ou un Poste.
 _Avoid_: Job, classe, profession
 
 **Voyageur**:
@@ -105,7 +105,7 @@ Une sortie d'Habitants vers une Case pour en rapporter des Matériaux ou de la N
 _Avoid_: Mission, collecte, farm
 
 **Expédition**:
-Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages ; seules les Bêtes y risquent leur vie, les Explorateurs fuient.
+Une sortie d'Explorateurs, accompagnés ou non de Bêtes, vers une Case lointaine, pour y trouver des Bêtes sauvages ; sans Bêtes, elle ne peut ramener que des Bêtes communes ; seules les Bêtes y risquent leur vie, les Explorateurs fuient.
 _Avoid_: Mission, raid
 
 **Récit**:
@@ -149,7 +149,7 @@ Un mâle et une femelle apprivoisés de la même Espèce ; une fois réuni, il p
 Le lieu protégé du Territoire où vivent les Couples.
 
 **Élevage**:
-Le fait de produire, à la demande du joueur, des Bêtes d'une Espèce dont il a réuni un Couple ; il reste acquis pour toujours.
+Le fait de produire, à la demande du joueur, des Bêtes d'une Espèce dont il a réuni un Couple, grâce à un Habitant éleveur qui ne s'occupe que d'un Élevage à la fois ; il reste acquis pour toujours.
 _Avoid_: Reproduction, dressage, entraînement
 
 **Nourriture**:
@@ -161,7 +161,7 @@ Le Bois et la Pierre, qui servent à construire.
 _Avoid_: Ressources de construction
 
 **Recherche**:
-Ce qu'un joueur a appris, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions, les Rôles et la portée des Expéditions, mais jamais la force des Bêtes.
+Ce qu'un joueur a appris, en quatre branches (Bâtir, Le vivant, Explorer, Défendre), qui débloquent des constructions et la portée des Expéditions, mais jamais la force des Bêtes.
 _Avoid_: Technologie, science, savoir
 
 **Migration**:
@@ -175,10 +175,6 @@ _Avoid_: Saison de jeu, reset
 Un événement du Monde où une Bête d'Espèce mythique surgit dans le Cœur sauvage pour un temps ; le premier joueur qui la vainc l'apprivoise à coup sûr, les suivants avec des chances décroissantes.
 _Avoid_: Boss, raid
 
-**Couple de départ**:
-Le Couple d'une Espèce très faible, choisi au début du jeu parmi trois (souris, poule, pigeon), qui permet d'élever ses premières Bêtes.
-_Avoid_: Starter, kit de départ
-
 **Épreuve**:
 Une étape guidée du début de jeu, qui débloque le jeu petit à petit et rapporte une récompense.
 _Avoid_: Quête, mission, tutoriel
@@ -188,7 +184,7 @@ Le catalogue personnel d'un joueur, où s'inscrit chaque Espèce qu'il a croisé
 _Avoid_: Pokédex, collection, encyclopédie
 
 **Rôle**:
-Un usage particulier qu'ont certaines Espèces en plus du combat : Bâtisseur, Éclaireur, Porteur ou Nourricier.
+Un usage particulier qu'ont certaines Espèces en plus du combat : Bâtisseur, Éclaireur, Porteur ou Nourricier ; une Bête affectée à son Rôle le remplit aussitôt, mais ne combat plus.
 
 **Bâtisseur**:
 Une Espèce sans laquelle certaines constructions sont impossibles (le castor pour le barrage).

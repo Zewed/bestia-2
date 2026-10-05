@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse, stringify } from "yaml";
 import { lireJeu } from "./charger";
-import { COUPLES_DE_DEPART, ESPECES, lireDonnees, verifierCouples, type EntreeEspece } from "./jeux";
+import { ESPECES, lireDonnees, type EntreeEspece } from "./jeux";
 
 type Entree = Record<string, unknown>;
 
@@ -40,14 +40,5 @@ describe("cohérence des données de référence", () => {
     ["une Espèce qui a deux Rôles", premiereEspece({ role: ["nourricier", "eclaireur"] }), /\(role\)/],
   ])("arrête la mise en ligne pour %s", (_, modifier, message) => {
     expect(() => lireDonnees(donneesAvec("especes.yaml", modifier))).toThrow(message);
-  });
-
-  it("arrête la mise en ligne si le Couple de départ ne compte pas trois Espèces", () => {
-    expect(() => lireDonnees(donneesAvec("couples-de-depart.yaml", (c) => c.slice(0, 2)))).toThrow(
-      /il faut exactement 3 Espèces, il y en a 2/,
-    );
-    const couples = lireJeu(COUPLES_DE_DEPART);
-    const quatre = [...couples, { espece: "abeille", style: "Butiner", phrase: "Elles piquent.", ordre: 4 }];
-    expect(() => verifierCouples(quatre, ["souris", "poule", "pigeon", "abeille"])).toThrow(/il y en a 4/);
   });
 });

@@ -41,7 +41,7 @@ describe("fiche d'Espèce", () => {
   });
 });
 
-describe("les Espèces du Couple de départ", () => {
+describe("les trois premières Espèces", () => {
   const especes = lireJeu(ESPECES);
   const fiche = (id: string) => {
     const e = especes.find((x) => x.id === id);

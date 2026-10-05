@@ -70,7 +70,7 @@ Le monde sauvage ne se contente plus d'attendre : des Bêtes sauvages viennent a
 - **Critères d'acceptation** :
   - Seules les Bêtes présentes sur le Territoire à l'heure de l'Incursion défendent.
   - Les Bêtes parties en Récolte ou en Expédition ne défendent pas.
-  - Les Couples en Réserve ne combattent jamais et ne subissent aucune perte.
+  - Les Couples en Réserve et les Bêtes affectées à leur Rôle (US-0842) ne combattent jamais et ne subissent aucune perte.
   - Les Blessés en cours de guérison ne combattent pas.
   - Les Habitants ne combattent jamais et ne comptent jamais dans les pertes.
 
@@ -79,8 +79,8 @@ Le monde sauvage ne se contente plus d'attendre : des Bêtes sauvages viennent a
 
 - **Débloquée par** : US-1307
 - **Critères d'acceptation** :
-  - L'écran des Bêtes sépare, par Espèce, les Bêtes présentes, parties et Blessées.
-  - La force totale des Bêtes présentes s'affiche.
+  - L'écran des Bêtes sépare, par Espèce, les Bêtes présentes, parties, Blessées et affectées à leur Rôle.
+  - La force totale des Bêtes présentes qui défendront s'affiche.
   - Quand une Incursion est annoncée, l'écran indique pour chaque sortie si ses Bêtes seront rentrées avant son arrivée.
 
 ### US-1309 · Rentrer à temps pour défendre
@@ -136,7 +136,7 @@ Le monde sauvage ne se contente plus d'attendre : des Bêtes sauvages viennent a
 
 - **Débloquée par** : US-1313
 - **Critères d'acceptation** :
-  - Sans Bête présente, l'Incursion l'emporte sans combat.
+  - Sans Bête présente pour défendre, l'Incursion l'emporte sans combat ; les Bêtes affectées à leur Rôle ne comptent pas.
   - Le récit le dit clairement et conseille de garder des Bêtes au Foyer.
   - Aucun Couple et aucun Habitant n'est perdu.
 
@@ -160,7 +160,7 @@ Le monde sauvage ne se contente plus d'attendre : des Bêtes sauvages viennent a
   - Un test compare le même scénario joué page ouverte et page fermée : les résultats sont identiques.
 
 ### US-1317 · Pas d'Incursion pour les tout nouveaux chefs
-**En tant que** nouveau joueur, **je veux** être à l'abri des Incursions pendant mes premiers jours, **afin de** découvrir le jeu sans perdre mes premières Bêtes.
+**En tant que** nouveau joueur, **je veux** être à l'abri des Incursions pendant mes premiers jours, **afin de** découvrir le jeu sans perdre les premières Bêtes que mes explorateurs ramènent.
 
 - **Débloquée par** : US-1301
 - **Critères d'acceptation** :

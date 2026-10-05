@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-280 points au total.
+270 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,11 +10,9 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 
-- [US-0144](01-entrer-dans-le-jeu.md) · Consulter les caractéristiques avant de choisir : montrer ces chiffres dès cet écran ou les garder pour la Réserve.
 - [US-0151](01-entrer-dans-le-jeu.md) · Préparer les Cases de la Couronne : la façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire.
 - [US-0153](01-entrer-dans-le-jeu.md) · Recevoir une Case libre sur la Couronne : la façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés.
-- [US-0157](01-entrer-dans-le-jeu.md) · Voir l'illustration de son Foyer : une illustration propre à chaque Biome, ou une seule pour tous.
-- [US-0158](01-entrer-dans-le-jeu.md) · Annoncer la naissance du Foyer : le texte du récit.
+- [US-0158](01-entrer-dans-le-jeu.md) · Lire le récit d'arrivée : le texte du récit.
 - [US-0159](01-entrer-dans-le-jeu.md) · Prévenir quand la Couronne est pleine : ce qui est proposé au joueur en attendant ; l'ouverture d'un autre Monde viendra plus tard.
 - [US-0163](01-entrer-dans-le-jeu.md) · Garder un premier écran simple : une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte.
 
@@ -30,7 +28,7 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 ## [Jalon 3 · Les Habitants](03-les-habitants.md)
 
 - [US-0303](03-les-habitants.md) · Lister chaque Habitant avec son état : chaque Habitant porte un prénom tiré au hasard.
-- [US-0307](03-les-habitants.md) · Découvrir les sept Métiers : un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve.
+- [US-0307](03-les-habitants.md) · Découvrir les huit Métiers : un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve.
 - [US-0308](03-les-habitants.md) · Donner un Métier à un Habitant : donner un Métier est gratuit et immédiat.
 - [US-0310](03-les-habitants.md) · Changer le Métier d'un Habitant : changer de Métier est gratuit et immédiat, sans temps d'apprentissage.
 - [US-0316](03-les-habitants.md) · Faire manger les Habitants chaque heure : l'Entretien est pris sur la Viande et les Végétaux, à parts égales ou d'abord sur le stock le plus fourni.
@@ -51,8 +49,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu.
 - [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde, ou selon l'éloignement au Cœur sauvage.
 - [US-0411](04-la-carte-du-monde.md) · Tracer des rivières : deux rivières peuvent se rejoindre.
-- [US-0413](04-la-carte-du-monde.md) · Réserver de bonnes Cases de naissance sur la Couronne : certains Biomes, comme la banquise ou le désert, sont exclus des naissances.
-- [US-0414](04-la-carte-du-monde.md) · Faire naître les joueurs sur le Monde généré : pour ces joueurs déjà nés, la production continue suit le Biome de leur nouvelle Case plutôt que l'ancien.
 - [US-0426](04-la-carte-du-monde.md) · Revenir au Foyer sur la carte : quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction.
 - [US-0427](04-la-carte-du-monde.md) · Retrouver la carte là où on l'a laissée : à une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée.
 - [US-0435](04-la-carte-du-monde.md) · Garder la carte fluide sur mobile : déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir.
@@ -80,7 +76,7 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0542](05-recolter.md) · Relancer la boucle avec les Habitants encore là : s'il en manque (partis pendant une Famine, par exemple), elle repart avec ceux qui restent plutôt que de s'arrêter.
 - [US-0544](05-recolter.md) · Gérer une boucle quand le stock est plein : quand le stock de la ressource rapportée est plein, la boucle s'arrête plutôt que de continuer en perdant ce qui dépasse.
 - [US-0547](05-recolter.md) · Tirer une Densité du jour pour chaque Case : elle change une fois par jour, au même instant sur tout le Monde, à une heure fixe.
-- [US-0547](05-recolter.md) · Tirer une Densité du jour pour chaque Case : une seule Densité par Case sert aux Récoltes et, plus tard, aux Bêtes sauvages, plutôt qu'une Densité par ressource.
+- [US-0547](05-recolter.md) · Tirer une Densité du jour pour chaque Case : une seule Densité par Case sert aux Récoltes et aux apparitions de Bêtes sauvages (US-0929), plutôt qu'une Densité par ressource.
 - [US-0548](05-recolter.md) · Moduler les Récoltes par la Densité : la production continue des Cases possédées n'est pas touchée par la Densité.
 - [US-0549](05-recolter.md) · Compter la Densité du bon jour : la Densité appliquée est celle du jour où le travail a lieu ; un travail à cheval sur deux jours compte chaque heure au jour où elle tombe, plutôt que tout au jour où il commence.
 - [US-0551](05-recolter.md) · Deviner l'abondance dans le récit : le récit qualifie l'abondance du jour en quelques mots, comme « la forêt était généreuse » ou « la forêt était maigre ».
@@ -108,15 +104,13 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0715](07-la-recherche.md) · Améliorer le cercle des sages : ce qu'apporte un niveau de plus (plus de chercheurs utiles, des Recherches plus avancées, ou des Recherches plus rapides).
 - [US-0715](07-la-recherche.md) · Améliorer le cercle des sages : une Recherche en cours continue pendant l'amélioration du cercle.
 - [US-0719](07-la-recherche.md) · Voir les prérequis d'une Recherche : un prérequis peut venir d'une autre branche, ou d'un niveau du cercle des sages.
-- [US-0727](07-la-recherche.md) · Voir ce que débloque chaque Recherche : les Recherches de Rôles et de portée apparaissent déjà dans l'arbre à ce jalon, ou seulement quand leur effet existe ; leur effet se vérifiera aux étapes 38 et 49.
+- [US-0727](07-la-recherche.md) · Voir ce que débloque chaque Recherche : si les Rôles demandent une Recherche, leurs Recherches apparaissent déjà dans l'arbre à ce jalon, ou seulement à l'étape 49, quand leur effet existe.
 
 ## [Jalon 8 · Les Bêtes à la maison](08-les-betes-a-la-maison.md)
 
-- [US-0809](08-les-betes-a-la-maison.md) · Comprendre comment remplir la Réserve : le Couple de départ compte dans le nombre de Couples réunis du classement principal (étape 60).
 - [US-0814](08-les-betes-a-la-maison.md) · Voir le coût et la durée d'un Élevage : le coût se paie en Viande, en Végétaux, ou selon le régime de l'Espèce.
-- [US-0819](08-les-betes-a-la-maison.md) · Ajouter un Élevage à la file : une longueur maximale de file (chiffre à régler), et, quand il y aura plusieurs Espèces, une file par Espèce ou une seule pour toutes.
+- [US-0819](08-les-betes-a-la-maison.md) · Ajouter un Élevage à la file : une longueur maximale de file (chiffre à régler) ; chaque éleveur a la sienne (US-0844).
 - [US-0820](08-les-betes-a-la-maison.md) · Annuler un Élevage : ce qui dépasserait la limite de stock est perdu, et la confirmation le signale.
-- [US-0823](08-les-betes-a-la-maison.md) · Loger l'Espèce du Couple de départ au Foyer : c'est une exception propre au Couple de départ, ou les trois Espèces de départ ont pour Habitat tous les Biomes de la Couronne.
 - [US-0824](08-les-betes-a-la-maison.md) · Occuper des Places selon la taille : les Bêtes du Couple en Réserve occupent des Places, ou non.
 - [US-0826](08-les-betes-a-la-maison.md) · Payer l'Entretien chaque heure : ce que mange un omnivore (l'une ou l'autre selon les stocks, ou un partage fixe entre les deux).
 - [US-0826](08-les-betes-a-la-maison.md) · Payer l'Entretien chaque heure : les Bêtes du Couple en Réserve mangent un Entretien, ou non.
@@ -124,9 +118,8 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : un Élevage en cours continue pendant la Famine, ou se suspend.
 - [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : les Bêtes parties réapparaissent comme Bêtes sauvages sur la carte, ou disparaissent.
 - [US-0836](08-les-betes-a-la-maison.md) · Partager la Nourriture entre Habitants et Bêtes : quand la Nourriture ne suffit pas pour tous, les Habitants mangent d'abord, les Bêtes d'abord, ou chacun reçoit une part égale.
-- [US-0837](08-les-betes-a-la-maison.md) · Voir le Rôle de son Couple de départ débloqué d'office : le Rôle débloqué d'office vaut aussi pour les autres Espèces du même Rôle apprivoisées plus tard, ou seulement pour l'Espèce du Couple de départ.
+- [US-0837](08-les-betes-a-la-maison.md) · Affecter une Bête à son Rôle : les Bêtes d'un Couple en Réserve peuvent être affectées à leur Rôle, ou non.
 - [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : les poules produisent de la Viande, des Végétaux, ou les deux.
-- [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : les poules du Couple en Réserve produisent aussi, ou seulement celles de l'effectif.
 - [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : une poule rapporte plus de Nourriture qu'elle ne coûte d'Entretien.
 
 ## [Jalon 9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md)
@@ -139,7 +132,7 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : le chemin passe de Case en Case ; la traversée de la mer, des lacs et des rivières (plus lente, contournée ou interdite).
 - [US-0919](09-explorer-et-apprivoiser.md) · Plusieurs Expéditions à la fois : un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs.
 - [US-0920](09-explorer-et-apprivoiser.md) · Rappeler une Expédition à l'aller : rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt.
-- [US-0921](09-explorer-et-apprivoiser.md) · Ceux qui sont partis mangent toujours : en cas de Famine pendant une Expédition, si des Bêtes de l'escorte peuvent retourner au sauvage sur place, et si un explorateur absent peut s'en aller.
+- [US-0921](09-explorer-et-apprivoiser.md) · Ceux qui sont partis mangent toujours : en cas de Famine pendant une Expédition, si un explorateur absent peut s'en aller, et, une fois que les Bêtes mangeront, si des Bêtes de l'escorte peuvent retourner au sauvage sur place.
 - [US-0923](09-explorer-et-apprivoiser.md) · Les Anneaux, de la Couronne au Cœur sauvage : afficher l'Anneau dans la fiche d'une Case révélée.
 - [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : un petit jeu d'Espèces couvre les Raretés de commune à légendaire dans plusieurs Biomes ; Espèces provisoires ou premières Espèces validées du chantier de contenu.
 - [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : ces Espèces ne servent qu'en développement et aux simulations ; en ligne, seules les Espèces déjà chargées apparaissent jusqu'à l'étape 47.
@@ -150,8 +143,9 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0928](09-explorer-et-apprivoiser.md) · L'Espèce tirée selon le Biome : si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
+- [US-0975](09-explorer-et-apprivoiser.md) · Des Bêtes communes à portée de chaque nouveau Foyer : elles sont réservées au nouveau chef, ou les Expéditions des autres peuvent aussi les rencontrer.
+- [US-0975](09-explorer-et-apprivoiser.md) · Des Bêtes communes à portée de chaque nouveau Foyer : comme toute Bête sauvage, elles ne se voient pas sur la carte ; qu'un indice aide le nouveau chef à les trouver.
 - [US-0932](09-explorer-et-apprivoiser.md) · La Rencontre : une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes.
-- [US-0935](09-explorer-et-apprivoiser.md) · Sans escorte, voir sans apprivoiser : la force d'une Expédition sans escorte étant nulle, aucune Bête n'est à sa portée ; une exception pour les Bêtes les plus faibles.
 - [US-0936](09-explorer-et-apprivoiser.md) · Une Bête à la fois : après un Apprivoisement, l'Expédition poursuit son séjour et peut en apprivoiser d'autres, ou rentre aussitôt avec sa Bête.
 - [US-0938](09-explorer-et-apprivoiser.md) · La Bête apprivoisée arrive au Foyer : jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat.
 - [US-0939](09-explorer-et-apprivoiser.md) · Une Bête apprivoisée sans Place libre : quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage.
@@ -193,12 +187,10 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-1036](10-le-bestiaire.md) · La Rareté mythique : la Rareté mythique se complète en possédant une Bête de chacune de ses Espèces.
 - [US-1036](10-le-bestiaire.md) · La Rareté mythique : un Biome qui compte une Espèce mythique exige-t-il de l'avoir pour être complet.
 - [US-1037](10-le-bestiaire.md) · Une nouvelle Espèce dans un Biome déjà complet : le compléter à nouveau donne une nouvelle récompense ou non.
-- [US-1038](10-le-bestiaire.md) · Débloquer un Rôle par la Recherche : chacun des quatre Rôles (Porteur, Éclaireur, Nourricier, Bâtisseur) s'ouvre par sa propre Recherche ; la branche de chacune.
+- [US-1038](10-le-bestiaire.md) · Les Rôles et la Recherche : qu'une Recherche soit demandée avant d'affecter une Bête à son Rôle, pour chacun des quatre Rôles (Porteur, Éclaireur, Nourricier, Bâtisseur) ou pour certains seulement, et dans quelle branche.
 - [US-1042](10-le-bestiaire.md) · Emmener des Porteurs dans une Récolte : le trajet se fait au pas du Porteur le plus lent s'il est plus lent que les Habitants.
 - [US-1043](10-le-bestiaire.md) · Tous les Éclaireurs : la force de l'effet, la même pour toutes ou propre à chaque Espèce (un aigle voit plus loin qu'un pigeon).
 - [US-1044](10-le-bestiaire.md) · Tous les Nourriciers : viande ou Végétaux selon l'Espèce.
-- [US-1044](10-le-bestiaire.md) · Tous les Nourriciers : il faut leur donner un Poste pour qu'elles produisent, ou non.
-- [US-1046](10-le-bestiaire.md) · Les Bâtisseurs pendant et après le chantier : les castors sont occupés pendant le chantier, donc indisponibles pour une Expédition, ou non.
 - [US-1046](10-le-bestiaire.md) · Les Bâtisseurs pendant et après le chantier : si les castors meurent ensuite, la construction terminée continue de fonctionner ou s'arrête.
 
 ## [Jalon 11 · S'étendre](11-s-etendre.md)
@@ -222,7 +214,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : la liste des constructions prévoit une construction d'Habitat pour chaque Biome, ou seulement pour certains.
 - [US-1126](11-s-etendre.md) · Une construction d'Habitat pour chaque Biome qui manque : deux constructions d'Habitat différentes ne reproduisent jamais le même Biome.
 - [US-1127](11-s-etendre.md) · Les niveaux d'une construction d'Habitat : des Postes dans les constructions d'Habitat.
-- [US-1129](11-s-etendre.md) · L'Espèce du Couple de départ toujours logée au Foyer : la règle garde la forme retenue à l'étape 35 : exception propre au Couple de départ, ou Espèces de départ vivant dans tous les Biomes de la Couronne.
 - [US-1130](11-s-etendre.md) · Les Bêtes déjà là quand la règle arrive : les Bêtes logées au Foyer hors de leur Biome restent en surnombre, ou gardent une Place d'exception.
 - [US-1131](11-s-etendre.md) · Une Bête apprivoisée sans Habitat : une Bête apprivoisée d'un Biome où le joueur n'a aucun Habitat le rejoint quand même en surnombre, attend en Réserve, ou repart au sauvage.
 - [US-1132](11-s-etendre.md) · Les Couples en Réserve et les Places : la règle de l'étape 35 s'applique : les Bêtes des Couples en Réserve occupent des Places, ou non.
@@ -236,8 +227,8 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-1207](12-les-epreuves.md) · Une récompense qui déborde des stocks : la part qui dépasse la limite est perdue ou gardée au-dessus de la limite.
 - [US-1212](12-les-epreuves.md) · Une Épreuve déjà accomplie : un objectif qui porte sur une action (une Récolte revenue) compte aussi les actions faites avant l'Épreuve.
 - [US-1213](12-les-epreuves.md) · Les chefs installés avant les Épreuves : les récompenses des Épreuves qu'il a ainsi sautées lui sont versées ou non.
-- [US-1221](12-les-epreuves.md) · Épreuve 7 « Des mains en plus » : accueillir un Voyageur : pendant cette Épreuve, un Voyageur arrive à coup sûr aux portes dans un délai court (chiffre à régler).
-- [US-1230](12-les-epreuves.md) · Une Épreuve propre au Couple de départ : l'existence de cette Épreuve et sa place dans la suite.
+- [US-1230](12-les-epreuves.md) · Épreuve 9 « Chacun son Rôle » : affecter une Bête à son Rôle : sa place dans la suite, et ce qu'elle devient tant que le chef n'a aucune Bête à Rôle.
+- [US-1221](12-les-epreuves.md) · Épreuve 12 « Des mains en plus » : accueillir un Voyageur : pendant cette Épreuve, un Voyageur arrive à coup sûr aux portes dans un délai court (chiffre à régler).
 - [US-1232](12-les-epreuves.md) · Passer les Épreuves : le choix de passer les Épreuves est proposé, comme dans le prototype.
 
 ## [Jalon 13 · Le danger sauvage](13-le-danger-sauvage.md)
@@ -259,7 +250,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 14 · Les autres joueurs](14-les-autres-joueurs.md)
 
-- [US-1408](14-les-autres-joueurs.md) · Voir la force, la charge et le trajet avant de partir : les Bêtes au Rôle de Porteur augmentent la charge d'une Attaque comme celle d'une Récolte, ou non.
 - [US-1411](14-les-autres-joueurs.md) · Rappeler une Attaque en chemin : le rappel d'une Attaque pendant l'aller est possible, comme pour une Récolte.
 - [US-1414](14-les-autres-joueurs.md) · Piller dans la limite de la charge : le butin total ne dépasse jamais la charge totale des Bêtes survivantes ; la charge des Blessés compte ou non.
 - [US-1415](14-les-autres-joueurs.md) · Répartir le butin entre les ressources : le butin se prend selon une règle fixe : à parts égales, en proportion des stocks du chef attaqué, ou au choix de l'attaquant.

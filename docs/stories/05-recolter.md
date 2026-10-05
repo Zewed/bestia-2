@@ -1,6 +1,6 @@
 # Jalon 5 · Récolter
 
-Le joueur envoie ses Habitants sur les Cases du Monde et en rapporte bien plus que ce que son Territoire produit seul : du Bois, de la Pierre, de la Viande et des Végétaux, au prix d'un trajet et d'un temps de travail, avec une abondance qui change chaque jour. Étapes couvertes : 21 à 24 de l'ordre d'attaque.
+Le joueur envoie ses Habitants sur les Cases du Monde et en rapporte bien plus que ce que son Territoire produit seul : du Bois, de la Pierre, de la Viande et des Végétaux, au prix d'un trajet et d'un temps de travail, avec une abondance qui change chaque jour. Étapes couvertes : 21 à 24 de l'ordre d'attaque, attaquées après les jalons 9 et 8 (ADR 0008) ; US-0929, reportée du jalon 9, se fait avec l'étape 24.
 
 ## Étape 21 · Une première Récolte
 
@@ -128,9 +128,9 @@ Le joueur envoie ses Habitants sur les Cases du Monde et en rapporte bien plus q
 ### US-0514 · Suivre ses sorties en cours
 **En tant que** joueur, **je veux** une liste de toutes mes sorties en cours, **afin de** voir d'un coup d'œil qui revient et quand.
 
-- **Débloquée par** : US-0507
+- **Débloquée par** : US-0507, US-0918
 - **Critères d'acceptation** :
-  - Une liste « Sorties en cours » montre chaque Récolte : Case, Métier, nombre d'Habitants, phase et temps restant.
+  - La liste des Expéditions en cours (US-0918) devient « Sorties en cours » et montre aussi chaque Récolte : Case, Métier, nombre d'Habitants, phase et temps restant.
   - Elle s'ouvre depuis la navigation, où s'affiche le nombre de sorties en cours.
   - Elle est triée par heure de retour, la plus proche en premier, et ses comptes à rebours avancent sans recharger la page.
   - Sans sortie, elle affiche « Aucune sortie en cours. » avec un lien vers la carte.
@@ -331,6 +331,7 @@ Le joueur envoie ses Habitants sur les Cases du Monde et en rapporte bien plus q
   - Au retour, l'avertissement « famine imminente » est recalculé, et disparaît si le danger est passé.
   - Une Récolte de Nourriture qui revient pendant une Famine arrête les départs dès son arrivée.
   - Le formulaire prévient quand le retour prévu tombe après le début prévu de la Famine (à décider).
+  - L'avertissement « famine imminente », pour les Habitants comme pour les Bêtes (US-0830), propose de lancer une Récolte de chasseurs ou de cueilleurs, selon la Nourriture qui manque.
 
 ## Étape 23 · Rappeler et relancer
 
@@ -443,7 +444,7 @@ Le joueur envoie ses Habitants sur les Cases du Monde et en rapporte bien plus q
   - Chaque Case a, chaque jour, une Densité comprise entre (chiffre à régler) et (chiffre à régler).
   - Elle change une fois par jour, au même instant sur tout le Monde, à une heure fixe (à décider).
   - Elle se déduit de la graine du Monde, de la Case et du jour : recalculée, elle donne toujours la même valeur.
-  - Une seule Densité par Case sert aux Récoltes et, plus tard, aux Bêtes sauvages, plutôt qu'une Densité par ressource (à décider).
+  - Une seule Densité par Case sert aux Récoltes et aux apparitions de Bêtes sauvages (US-0929), plutôt qu'une Densité par ressource (à décider).
 
 ### US-0548 · Moduler les Récoltes par la Densité
 **En tant que** joueur, **je veux** que l'abondance du jour change ce que rapporte une Case, **afin de** vivre des jours fastes et des jours maigres.

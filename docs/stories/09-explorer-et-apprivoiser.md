@@ -1,6 +1,6 @@
 # Jalon 9 · Explorer et apprivoiser
 
-Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Cases lointaines où le Monde fait apparaître des Bêtes sauvages ; il les apprivoise une à une quand son escorte est assez forte, perd des Bêtes face à plus fort que lui, et réunit ses premiers Couples pour ouvrir de nouveaux Élevages. Étapes couvertes : 38 à 45 de l'ordre d'attaque.
+Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des Cases lointaines où le Monde fait apparaître des Bêtes sauvages. Seuls, ils ne ramènent que des Bêtes communes : ce sont ses premières Bêtes, et chaque nouveau Foyer en a quelques-unes à portée. Avec une escorte assez forte, il apprivoise plus rare, perd des Bêtes face à plus fort que lui, et réunit ses premiers Couples, qui lui ouvrent l'Élevage. Étapes couvertes : 38 à 45 de l'ordre d'attaque, attaquées juste après la carte du Monde (ADR 0008).
 
 ## Étape 38 · La première Expédition
 
@@ -33,11 +33,11 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
   - Le lien mène directement à la page Habitants, sur ordinateur comme sur mobile.
 
 ### US-0904 · Choisir l'escorte
-**En tant que** joueur, **je veux** choisir, Espèce par Espèce, combien de Bêtes accompagnent mes explorateurs, **afin de** leur donner assez de force pour qu'une Bête sauvage les suive.
+**En tant que** joueur, **je veux** choisir, Espèce par Espèce, combien de Bêtes accompagnent mes explorateurs, **afin de** leur donner assez de force pour qu'une Bête sauvage plus rare les suive.
 
-- **Débloquée par** : US-0902, Étape 34
+- **Débloquée par** : US-0902
 - **Critères d'acceptation** :
-  - Chaque Espèce de l'effectif apparaît avec son illustration et le nombre de Bêtes disponibles.
+  - Chaque Espèce de l'effectif apparaît avec son illustration et le nombre de Bêtes disponibles ; sans aucune Bête, l'écran ne propose pas d'escorte et l'Expédition part sans (US-0909).
   - Les Bêtes d'un Couple en Réserve et les Bêtes déjà sorties ne sont jamais proposées.
   - On ne peut pas dépasser le nombre disponible ; un bouton « toutes » prend le maximum d'une Espèce, un autre remet à zéro.
   - Rien n'est retenu tant que le départ n'est pas confirmé : les Bêtes choisies restent disponibles ailleurs jusque-là.
@@ -72,22 +72,22 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
   - Une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec un message (à décider).
 
 ### US-0908 · La portée d'exploration
-**En tant que** joueur, **je veux** voir jusqu'où mes Expéditions peuvent aller, et aller plus loin grâce à la Recherche, **afin de** viser un jour les Cases proches du Cœur sauvage.
+**En tant que** joueur, **je veux** voir jusqu'où mes Expéditions peuvent aller, **afin de** choisir une destination qu'elles peuvent atteindre.
 
-- **Débloquée par** : US-0907, Étape 32
+- **Débloquée par** : US-0907
 - **Critères d'acceptation** :
   - Une portée d'exploration de départ limite la distance d'une destination, comptée en Cases depuis le Foyer (chiffre à régler).
   - Pendant le choix de la destination, les Cases hors de portée sont grisées et ne peuvent pas être choisies.
-  - Des Recherches de la branche Explorer agrandissent cette portée (chiffre à régler par Recherche).
-  - Toucher une Case hors de portée nomme la Recherche qui permettrait de l'atteindre, avec un lien vers elle.
+  - Le jeu refuse une destination hors de portée, même demandée par un autre chemin que l'écran.
+  - Des Recherches de la branche Explorer agrandiront cette portée (US-0731, jalon 7).
 
 ### US-0909 · Partir sans escorte
-**En tant que** joueur, **je veux** envoyer des explorateurs seuls, **afin de** lever le brouillard et repérer des Bêtes sans risquer les miennes.
+**En tant que** joueur, **je veux** envoyer des explorateurs seuls, **afin de** lever le brouillard et ramener mes premières Bêtes sans en risquer aucune.
 
 - **Débloquée par** : US-0902, US-0906, US-0907
 - **Critères d'acceptation** :
   - Une Expédition avec au moins un explorateur et aucune Bête peut partir.
-  - Avant le départ, un avertissement rappelle qu'une Expédition sans escorte a une force nulle et ne pourra sans doute rien apprivoiser (règle à l'étape 40).
+  - Sans escorte, elle ne peut ramener que des Bêtes communes (règle à l'étape 40) ; le récapitulatif l'indique en quelques mots, à la place de la force.
   - Sans escorte, l'Expédition avance au pas des explorateurs (chiffre à régler).
 
 ### US-0910 · Le récapitulatif avant le départ
@@ -96,7 +96,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 - **Débloquée par** : US-0905, US-0906, US-0908
 - **Critères d'acceptation** :
   - Le récapitulatif montre les explorateurs, l'escorte par Espèce, sa force, la destination et son Biome (ou « inconnu »), les durées de l'aller, du séjour et du retour, et l'heure de retour prévue.
-  - Il rappelle que l'escorte continue de coûter son Entretien, et les explorateurs leur Nourriture, pendant toute l'absence.
+  - Il rappelle que ceux qui partent continuent de manger pendant toute l'absence.
   - Tant qu'un choix manque, le bouton « Partir » reste grisé et nomme ce qui manque.
   - Sur mobile, le récapitulatif reste visible en bas de l'écran pendant qu'on compose l'Expédition.
 
@@ -161,9 +161,9 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0917 · Le récit de retour
 **En tant que** joueur, **je veux** lire un récit à chaque retour d'Expédition, **afin de** savoir ce que mes explorateurs ont vécu.
 
-- **Débloquée par** : US-0916, Étape 21
+- **Débloquée par** : US-0916, Étape 16
 - **Critères d'acceptation** :
-  - Chaque retour ajoute un récit daté à la page Récits, comme pour les Récoltes.
+  - Chaque retour ajoute un récit daté à la page Récits (US-0324).
   - Le récit donne la destination et son Biome désormais connu, les durées réelles de l'aller, du séjour et du retour, et le nombre de Cases sorties du brouillard.
   - Quand rien ne s'est passé, le récit le dit en une phrase (« aucune Bête ne s'est montrée ») : il n'est jamais vide.
   - Un compteur de récits non lus s'affiche dans la barre du haut, sur ordinateur comme sur mobile.
@@ -190,7 +190,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0920 · Rappeler une Expédition à l'aller
 **En tant que** joueur, **je veux** rappeler une Expédition pendant son trajet aller, **afin de** récupérer mes Bêtes si j'en ai besoin ailleurs.
 
-- **Débloquée par** : US-0912, Étape 23
+- **Débloquée par** : US-0912
 - **Critères d'acceptation** :
   - Pendant l'aller, un bouton « Rappeler » fait faire demi-tour ; le retour dure le temps déjà parcouru.
   - Une Expédition rappelée ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent.
@@ -199,14 +199,14 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
   - Rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt (à décider).
 
 ### US-0921 · Ceux qui sont partis mangent toujours
-**En tant que** joueur, **je veux** que mes explorateurs et mon escorte continuent de manger pendant l'Expédition, **afin de** prévoir mes stocks de Nourriture avant un long départ.
+**En tant que** joueur, **je veux** que mes explorateurs continuent de manger pendant l'Expédition, **afin de** prévoir mes stocks de Nourriture avant un long départ.
 
-- **Débloquée par** : US-0911, Étape 15, Étape 35
+- **Débloquée par** : US-0911, Étape 15
 - **Critères d'acceptation** :
-  - L'Entretien des Bêtes de l'escorte et la Nourriture des explorateurs continuent d'être pris sur les stocks pendant toute l'Expédition.
-  - Les Bêtes parties gardent leurs Places dans l'Habitat du Foyer, pour pouvoir rentrer.
+  - La Nourriture des explorateurs continue d'être prise sur les stocks pendant toute l'Expédition.
   - L'avertissement « famine imminente » tient compte des Expéditions en cours.
-  - En cas de Famine pendant une Expédition, si des Bêtes de l'escorte peuvent retourner au sauvage sur place, et si un explorateur absent peut s'en aller (à décider).
+  - L'Entretien des Bêtes de l'escorte s'y ajoutera quand les Bêtes mangeront (étape 35, US-0826).
+  - En cas de Famine pendant une Expédition, si un explorateur absent peut s'en aller, et, une fois que les Bêtes mangeront, si des Bêtes de l'escorte peuvent retourner au sauvage sur place (à décider).
 
 ### US-0922 · Une Expédition vécue en mon absence
 **En tant que** joueur, **je veux** retrouver le résultat exact d'une Expédition qui s'est entièrement déroulée pendant que je n'étais pas là, **afin de** jouer par courtes sessions sans rien perdre.
@@ -282,6 +282,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0929 · La Densité change la fréquence
 **En tant que** joueur, **je veux** que certaines Cases soient plus giboyeuses certains jours, **afin de** ne pas toujours viser les mêmes Cases.
 
+- **Statut** : Reportée le 2026-10-05 à l'étape 24 (jalon 5), qui crée la Densité du jour : ce jalon est désormais attaqué avant elle (ADR 0008).
 - **Débloquée par** : US-0925, Étape 24
 - **Critères d'acceptation** :
   - La Densité de faune de la Case, cachée et changeante chaque jour, augmente ou diminue la fréquence des apparitions (effet : chiffre à régler).
@@ -301,12 +302,23 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0931 · La simulation des Raretés par Anneau
 **En tant que** développeur, **je veux** simuler les apparitions sur une longue période, **afin de** vérifier que les Raretés suivent les pourcentages de chaque Anneau.
 
-- **Débloquée par** : US-0927, US-0928, US-0929
+- **Débloquée par** : US-0927, US-0928
 - **Critères d'acceptation** :
   - Un outil de la page de contrôle interne simule les apparitions sur une longue période (chiffre à régler), Anneau par Anneau.
   - Il affiche, pour chaque Anneau, la part obtenue de chaque Rareté à côté de la part attendue.
   - Le contrôle échoue si un écart dépasse la tolérance (chiffre à régler), ou si les communes ne sont pas majoritaires dans un Anneau.
   - Il donne le nombre moyen d'apparitions par Case et par jour, pour régler le rythme (première peu commune en 3 à 4 jours, rare en un mois).
+
+### US-0975 · Des Bêtes communes à portée de chaque nouveau Foyer
+**En tant que** nouveau joueur, **je veux** que quelques Bêtes communes se trouvent à portée de mon Foyer quand je nais, **afin de** pouvoir ramener mes premières Bêtes dès mes premières Expéditions.
+
+- **Débloquée par** : US-0908, US-0926, US-0928
+- **Critères d'acceptation** :
+  - À la naissance d'un Foyer, (chiffre à régler) Bêtes sauvages communes apparaissent sur des Cases libres à portée d'exploration de départ (US-0908), une par Case ; un chef né avant cette story les reçoit aussi, une seule fois.
+  - L'Espèce de chacune est tirée au hasard parmi les communes qui vivent dans le Biome de sa Case (US-0928) ; une Case dont le Biome n'en compte aucune n'est pas choisie.
+  - Elles restent sur leur Case plus longtemps qu'une apparition ordinaire, assez pour qu'une première Expédition sans escorte les trouve (chiffre à régler).
+  - Elles sont réservées au nouveau chef, ou les Expéditions des autres peuvent aussi les rencontrer (à décider).
+  - Comme toute Bête sauvage, elles ne se voient pas sur la carte ; qu'un indice aide le nouveau chef à les trouver (à décider).
 
 ## Étape 40 · La Rencontre
 
@@ -335,19 +347,20 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 
 - **Débloquée par** : US-0932, US-0905
 - **Critères d'acceptation** :
-  - Une Bête est à portée quand la force de l'escorte est au moins égale à la sienne, qui est celle de son Espèce.
+  - Une Bête est à portée quand la force de l'escorte est au moins égale à la sienne, qui est celle de son Espèce ; une Bête commune l'est toujours, même sans escorte (US-0935).
   - À portée, elle suit l'Expédition sans combat : c'est l'Apprivoisement.
   - Aucune Bête de l'escorte n'est blessée ni tuée lors d'un Apprivoisement.
   - Dès qu'elle suit l'Expédition, la Bête quitte sa Case : personne d'autre ne peut plus la rencontrer.
 
-### US-0935 · Sans escorte, voir sans apprivoiser
-**En tant que** joueur, **je veux** savoir ce que rapporte une Expédition sans escorte, **afin de** choisir en connaissance de cause entre explorer et apprivoiser.
+### US-0935 · Sans escorte, ramener une Bête commune
+**En tant que** joueur, **je veux** que mes explorateurs partis seuls puissent ramener une Bête commune, **afin de** trouver mes premières Bêtes avant d'avoir de quoi les escorter.
 
 - **Débloquée par** : US-0934, US-0909
 - **Critères d'acceptation** :
-  - La force d'une Expédition sans escorte étant nulle, aucune Bête n'est à sa portée ; une exception pour les Bêtes les plus faibles (à décider).
-  - Elle inscrit quand même au Bestiaire les Espèces qu'elle croise.
-  - Le récit le dit clairement : « vos explorateurs ont vu … mais aucune Bête ne les a suivis ».
+  - Une Bête commune est à portée de toute Expédition, avec ou sans escorte : elle la suit sans combat, c'est un Apprivoisement.
+  - Une Bête plus rare n'est jamais à portée d'une Expédition sans escorte, dont la force est nulle : elle reste sur sa Case (étape 41).
+  - Comme toute Expédition, elle inscrit au Bestiaire les Espèces qu'elle croise, et ne ramène qu'une Bête par Rencontre (US-0936).
+  - Quand seules des Bêtes plus rares se sont montrées, le récit le dit : « vos explorateurs ont vu … mais aucune Bête ne les a suivis ».
 
 ### US-0936 · Une Bête à la fois
 **En tant que** joueur, **je veux** que les Bêtes me rejoignent une par une, **afin de** faire de chaque Apprivoisement un événement.
@@ -380,6 +393,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0939 · Une Bête apprivoisée sans Place libre
 **En tant que** joueur, **je veux** savoir ce que devient une Bête apprivoisée quand mon Habitat est plein, **afin de** ne pas la perdre sans comprendre.
 
+- **Statut** : Reportée le 2026-10-05 à l'étape 35 (jalon 8), où arrivent les Places : ce jalon est désormais attaqué avant elle (ADR 0008).
 - **Débloquée par** : US-0938, Étape 35
 - **Critères d'acceptation** :
   - Quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage (à décider).
@@ -412,7 +426,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 
 - **Débloquée par** : US-0934
 - **Critères d'acceptation** :
-  - Quand la force de l'escorte est inférieure à la sienne, la Bête ne suit pas et reste sur sa Case jusqu'à la fin de sa durée.
+  - Quand la force de l'escorte est inférieure à la sienne, la Bête ne suit pas et reste sur sa Case jusqu'à la fin de sa durée ; une Bête commune n'est jamais dans ce cas (US-0935).
   - L'Expédition la voit pendant tout son séjour, et son Espèce s'inscrit « croisée ».
   - Le récit dit « trop forte pour votre escorte » ; dire aussi de combien (à décider).
 
@@ -519,7 +533,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 - **Débloquée par** : US-0951, US-0904
 - **Critères d'acceptation** :
   - Les Blessés ne sont jamais proposés dans une escorte (ni, plus tard, dans une Attaque).
-  - Ils continuent de coûter leur Entretien et d'occuper leurs Places.
+  - Ils restent dans l'effectif : quand les Bêtes mangeront et occuperont des Places (étape 35), les Blessés aussi.
   - Leur part dans la défense du Foyer, à l'étape 54 (à décider).
 
 ### US-0954 · La guérison avec le temps
@@ -545,29 +559,28 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 ### US-0956 · Réunir le Couple
 **En tant que** joueur, **je veux** que mon mâle et ma femelle d'une même Espèce forment un Couple, **afin de** pouvoir enfin élever cette Espèce.
 
-- **Débloquée par** : US-0937, US-0938, Étape 33
+- **Débloquée par** : US-0937, US-0938
 - **Critères d'acceptation** :
   - Dès que l'effectif d'une Espèce sans Couple compte un mâle et une femelle au Foyer, ils forment son Couple, sans action du joueur.
-  - Les deux Bêtes quittent l'effectif et partent à l'abri en Réserve ; elles ne combattent plus et ne peuvent plus sortir.
+  - Les deux Bêtes quittent l'effectif et partent à l'abri, en Réserve ; elles ne combattent plus et ne peuvent plus sortir. La page de la Réserve arrive à l'étape 33.
   - Les autres Bêtes de l'Espèce, s'il y en a, restent dans l'effectif.
-  - L'Espèce passe à l'état « Couple réuni » au Bestiaire, et le Couple apparaît dans la Réserve avec sa fiche.
+  - L'Espèce passe à l'état « Couple réuni » au Bestiaire.
 
 ### US-0957 · L'Élevage s'ouvre pour toujours
 **En tant que** joueur, **je veux** que l'Élevage d'une Espèce me reste acquis dès son Couple réuni, **afin de** ne jamais perdre ce que j'ai gagné.
 
-- **Débloquée par** : US-0956, Étape 34
+- **Débloquée par** : US-0956
 - **Critères d'acceptation** :
-  - Dès le Couple réuni, l'Espèce apparaît dans l'Élevage, avec son coût en Nourriture et son temps (chiffre à régler par Espèce).
-  - On y élève ses Bêtes comme celles du Couple de départ, dans la limite des Places et avec leur Entretien.
-  - L'Élevage reste ouvert même si toutes les Bêtes de l'Espèce dans l'effectif meurent.
-  - Le sexe des Bêtes élevées ne compte plus : seul le Couple importe.
+  - Dès le Couple réuni, l'Élevage de l'Espèce est noté comme acquis pour toujours ; on s'en servira, avec un Habitant éleveur, à l'étape 34.
+  - Il reste acquis même si toutes les Bêtes de l'Espèce dans l'effectif meurent.
+  - Le sexe des Bêtes élevées ne comptera pas : seul le Couple importe.
 
 ### US-0958 · Annoncer le Couple réuni
 **En tant que** joueur, **je veux** que la réunion d'un Couple soit fêtée, **afin de** savourer le moment le plus important du jeu.
 
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
-  - Le récit du retour qui réunit le Couple l'annonce en tête, avec l'illustration de l'Espèce et un bouton vers son Élevage.
+  - Le récit du retour qui réunit le Couple l'annonce en tête, avec l'illustration de l'Espèce ; un bouton vers son Élevage s'y ajoutera à l'étape 34.
   - Le nombre de Couples réunis du joueur s'affiche et augmente d'un ; il servira au classement principal (étape 60).
   - Sur mobile, l'annonce tient sur un seul écran.
 
@@ -578,7 +591,6 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 - **Critères d'acceptation** :
   - Une fois le Couple réuni, toute nouvelle Bête apprivoisée de l'Espèce rejoint l'effectif, quel que soit son sexe.
   - Aucun second Couple de la même Espèce ne se forme.
-  - L'Espèce du Couple de départ est dans ce cas dès le début du jeu.
 
 ### US-0960 · Le mâle ou la femelle n'est pas au Foyer
 **En tant que** joueur, **je veux** que le Couple se forme correctement même quand l'une des deux Bêtes est absente ou blessée, **afin de** ne pas être pénalisé par un mauvais moment.
@@ -617,6 +629,7 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
   - Si la Bête est à portée de plusieurs Expéditions, une seule l'emporte, tirée au sort avec des chances proportionnelles à la force de chaque escorte.
   - Une Expédition pour qui la Bête est trop forte ne participe pas au tirage ; ou la portée se juge sur la somme des escortes présentes (à décider).
   - Le tirage a lieu une seule fois, au moment de la Rencontre, et son résultat ne change plus.
+  - Pour une Bête commune, une Expédition sans escorte n'a aucune chance face à une Expédition escortée ; entre Expéditions sans escorte, chacune a la même chance.
 
 ### US-0964 · Le récit du perdant
 **En tant que** joueur, **je veux** apprendre qu'une Bête m'a échappé au profit d'une autre Expédition, **afin de** comprendre pourquoi je rentre les mains vides.
@@ -664,49 +677,59 @@ Le joueur envoie ses explorateurs, avec ou sans escorte de Bêtes, vers des Case
 
 ## Étape 45 · Les pigeons éclaireurs
 
-### US-0969 · Les pigeons lèvent plus de brouillard
-**En tant que** joueur, **je veux** que les pigeons de mon Couple de départ révèlent plus de carte pendant une Expédition, **afin de** découvrir le Monde plus vite que les autres.
+### US-0976 · Emmener des Éclaireurs
+**En tant que** joueur, **je veux** affecter des pigeons à leur Rôle d'Éclaireur au départ d'une Expédition, **afin de** mieux explorer sans les exposer au combat.
 
-- **Débloquée par** : US-0914, Étape 37
+- **Débloquée par** : US-0904, US-0945
 - **Critères d'acceptation** :
-  - Quand l'escorte compte des pigeons et que le joueur a le Rôle Éclaireur, le rayon de brouillard levé le long du chemin et autour de la destination s'agrandit (chiffre à régler).
-  - L'effet grandit avec le nombre de pigeons, jusqu'à un plafond (chiffre à régler).
+  - Pour une Espèce Éclaireuse (le pigeon), l'écran d'Expédition propose de choisir combien de Bêtes partent comme Éclaireurs, à côté de l'escorte ; une même Bête est l'un ou l'autre, jamais les deux.
+  - Un Éclaireur est affecté à son Rôle : il ne combat pas, n'ajoute rien à la force de l'escorte, et fuit avec les explorateurs sans jamais être perdu.
+  - Aucune Recherche n'est demandée ici ; si les Rôles en demandent une un jour, ce sera à l'étape 49 (US-1038).
+  - Au retour, les Éclaireurs rentrent dans l'effectif, libres pour la sortie suivante.
+
+### US-0969 · Les pigeons lèvent plus de brouillard
+**En tant que** joueur, **je veux** que mes pigeons éclaireurs révèlent plus de carte pendant une Expédition, **afin de** découvrir le Monde plus vite que les autres.
+
+- **Débloquée par** : US-0914, US-0976
+- **Critères d'acceptation** :
+  - Quand l'Expédition emmène des Éclaireurs, le rayon de brouillard levé le long du chemin et autour de la destination s'agrandit (chiffre à régler).
+  - L'effet grandit avec le nombre d'Éclaireurs, jusqu'à un plafond (chiffre à régler).
   - Les Cases révélées en plus restent visibles pour toujours.
 
 ### US-0970 · Les pigeons gardent les Bêtes en vue
-**En tant que** joueur, **je veux** que les pigeons de mon Couple de départ gardent plus longtemps en vue les Bêtes apparues, **afin de** faire plus de Rencontres.
+**En tant que** joueur, **je veux** que mes pigeons éclaireurs gardent plus longtemps en vue les Bêtes apparues, **afin de** faire plus de Rencontres.
 
-- **Débloquée par** : US-0932, Étape 37
+- **Débloquée par** : US-0932, US-0976
 - **Critères d'acceptation** :
-  - Avec des pigeons, une Bête apparue sur la Case de l'Expédition lui reste visible et atteignable plus longtemps que sa durée ordinaire (chiffre à régler, avec un plafond).
-  - Une Expédition avec pigeons qui arrive peu après le départ d'une Bête peut encore la rencontrer.
-  - Cet effet ne vaut que pour l'Expédition qui a les pigeons.
+  - Avec des Éclaireurs, une Bête apparue sur la Case de l'Expédition lui reste visible et atteignable plus longtemps que sa durée ordinaire (chiffre à régler, avec un plafond).
+  - Une Expédition avec Éclaireurs qui arrive peu après le départ d'une Bête peut encore la rencontrer.
+  - Cet effet ne vaut que pour l'Expédition qui a les Éclaireurs.
   - La forme exacte de l'effet, présence prolongée ou Bêtes repérées sur les Cases voisines (à décider).
 
 ### US-0971 · L'effet des pigeons avant le départ
-**En tant que** joueur, **je veux** voir ce que mes pigeons apporteront avant de partir, **afin de** décider combien en emmener.
+**En tant que** joueur, **je veux** voir ce que mes pigeons éclaireurs apporteront avant de partir, **afin de** décider combien en emmener.
 
 - **Débloquée par** : US-0969, US-0970, US-0910
 - **Critères d'acceptation** :
-  - Le récapitulatif indique ce qu'apportent les pigeons choisis : rayon de brouillard en plus, présence prolongée des Bêtes.
-  - Les pigeons comptent dans la force de l'escorte et risquent les mêmes pertes que les autres Bêtes.
-  - Sans pigeon dans l'escorte, rien ne s'affiche à ce sujet.
+  - Le récapitulatif indique ce qu'apportent les Éclaireurs choisis : rayon de brouillard en plus, présence prolongée des Bêtes.
+  - La force affichée est celle de l'escorte seule : les Éclaireurs n'y comptent pas.
+  - Sans Éclaireur, rien ne s'affiche à ce sujet.
 
-### US-0972 · Des pigeons sans le Rôle Éclaireur
-**En tant que** joueur, **je veux** comprendre pourquoi mes pigeons apprivoisés n'éclairent pas alors que je ne les ai pas choisis au départ, **afin de** savoir comment débloquer leur Rôle.
+### US-0972 · Un pigeon en escorte n'éclaire pas
+**En tant que** joueur, **je veux** savoir ce que fait un pigeon que j'envoie en escorte, **afin de** choisir entre sa force et son Rôle.
 
 - **Débloquée par** : US-0969
 - **Critères d'acceptation** :
-  - Les pigeons d'un joueur qui ne les a pas choisis comme Couple de départ n'ont pas l'effet Éclaireur tant que la Recherche correspondante n'est pas faite (étape 49).
-  - Ces pigeons escortent comme toutes les Bêtes.
-  - L'écran d'Expédition indique « Rôle Éclaireur : à débloquer par la Recherche ».
+  - Un pigeon parti dans l'escorte combat comme toute Bête : il compte dans la force et risque les mêmes pertes.
+  - Il ne lève pas plus de brouillard et ne garde pas les Bêtes en vue : seuls les Éclaireurs le font.
+  - Le récit distingue les pigeons partis en escorte de ceux partis comme Éclaireurs.
 
 ### US-0973 · Les pigeons dans le récit
 **En tant que** joueur, **je veux** que le récit dise ce que mes pigeons ont apporté, **afin de** juger s'ils valent la peine.
 
 - **Débloquée par** : US-0969, US-0970, US-0940
 - **Critères d'acceptation** :
-  - Le récit indique combien de Cases supplémentaires les pigeons ont révélées.
+  - Le récit indique combien de Cases supplémentaires les Éclaireurs ont révélées.
   - Il signale les Rencontres qui n'ont eu lieu que grâce à eux.
 
 ### US-0974 · La simulation des pigeons

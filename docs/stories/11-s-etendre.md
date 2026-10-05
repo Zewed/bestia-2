@@ -265,14 +265,14 @@ Le Territoire grandit Case par Case grâce aux Avant-postes ; chaque Case gagné
   - La fiche de l'Espèce dit précisément quelle eau lui convient.
   - La page Habitats range les Places d'eau selon la règle retenue.
 
-### US-1129 · L'Espèce du Couple de départ toujours logée au Foyer
-**En tant que** nouveau joueur, **je veux** pouvoir élever l'Espèce de mon Couple de départ quel que soit le Biome de mon Foyer, **afin de** ne jamais être bloqué dès le début.
+### US-1129 · Le Foyer loge toujours les Espèces de prairie
+**En tant que** joueur, **je veux** que mon Foyer reste l'Habitat des Espèces de prairie, **afin de** ne pas perdre les Places de mes Bêtes de prairie quand les Habitats par Biome arrivent.
 
 - **Débloquée par** : US-1120, Étape 9
 - **Critères d'acceptation** :
-  - Quel que soit le Biome du Foyer, l'Espèce du Couple de départ peut toujours y être élevée, comme à l'étape 35.
-  - La règle garde la forme retenue à l'étape 35 : exception propre au Couple de départ, ou Espèces de départ vivant dans tous les Biomes de la Couronne (à décider).
-  - Le passage aux Habitats par Biome ne retire à aucun joueur les Places de son Espèce de départ.
+  - Le Foyer, toujours en prairie (US-0152), offre des Places aux Espèces de prairie, dont la souris, la poule et le pigeon, comme toute Case de prairie.
+  - Le passage aux Habitats par Biome ne retire à aucun joueur les Places de prairie de son Foyer.
+  - Les Bêtes d'autres Biomes logées au Foyer jusque-là (étape 35) suivent la règle de US-1130.
 
 ### US-1130 · Les Bêtes déjà là quand la règle arrive
 **En tant que** joueur, **je veux** ne perdre aucune Bête le jour où les Habitats par Biome arrivent, **afin de** continuer ma partie sereinement.

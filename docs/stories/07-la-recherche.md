@@ -1,6 +1,6 @@
 # Jalon 7 · La Recherche
 
-Le joueur bâtit le cercle des sages, y met des chercheurs et mène ses premières Recherches dans un arbre en quatre branches ; une construction verrouillée dit enfin quelle Recherche l'ouvre, et y mène d'un toucher. Aucune Recherche ne rend jamais les Bêtes plus fortes. Étapes couvertes : 31 à 32 de l'ordre d'attaque.
+Le joueur bâtit le cercle des sages, y met des chercheurs et mène ses premières Recherches dans un arbre en quatre branches ; une construction verrouillée dit enfin quelle Recherche l'ouvre, et y mène d'un toucher ; la branche Explorer agrandit aussi la portée des Expéditions. Aucune Recherche ne rend jamais les Bêtes plus fortes. Étapes couvertes : 31 à 32 de l'ordre d'attaque, attaquées après les jalons 9 et 8 (ADR 0008).
 
 ## Étape 31 · Le cercle des sages
 
@@ -37,7 +37,7 @@ Le joueur bâtit le cercle des sages, y met des chercheurs et mène ses premièr
 - **Débloquée par** : US-0702
 - **Critères d'acceptation** :
   - Toucher une Recherche ouvre sa fiche : nom, branche, description en une phrase.
-  - La fiche dit ce que la Recherche débloque : une construction, un Rôle, ou de la portée pour les Expéditions.
+  - La fiche dit ce que la Recherche débloque : une construction, de la portée pour les Expéditions, ou un Rôle si les Rôles en demandent une (US-1038).
   - La fiche affiche le coût (chiffre à régler) et la durée prévue avec les chercheurs présents.
 
 ### US-0705 · Lancer une Recherche
@@ -249,8 +249,8 @@ Le joueur bâtit le cercle des sages, y met des chercheurs et mène ses premièr
 
 - **Débloquée par** : US-0704, US-0717
 - **Critères d'acceptation** :
-  - Chaque Recherche annonce un effet, et un seul genre d'effet : une construction, un Rôle, ou de la portée pour les Expéditions.
-  - (à décider) : les Recherches de Rôles et de portée apparaissent déjà dans l'arbre à ce jalon, ou seulement quand leur effet existe ; leur effet se vérifiera aux étapes 38 et 49.
+  - Chaque Recherche annonce un effet, et un seul genre d'effet : une construction, de la portée pour les Expéditions (US-0731), ou un Rôle si les Rôles en demandent une (US-1038).
+  - (à décider) : si les Rôles demandent une Recherche, leurs Recherches apparaissent déjà dans l'arbre à ce jalon, ou seulement à l'étape 49, quand leur effet existe.
   - Aucune Recherche n'apparaît dans l'arbre sans effet annoncé.
 
 ### US-0728 · Parcourir l'arbre sur mobile
@@ -269,13 +269,22 @@ Le joueur bâtit le cercle des sages, y met des chercheurs et mène ses premièr
 - **Critères d'acceptation** :
   - Aucune Recherche, dans aucune branche, ne change l'attaque, la vie, la vitesse, la charge, la taille ou l'Entretien d'une Espèce.
   - La branche Défendre débloque des constructions de défense, jamais un gain de force pour les Bêtes.
-  - Les caractéristiques d'une Espèce sont les mêmes chez tous les joueurs, quelles que soient leurs Recherches (vérifié dès que la fiche d'Espèce existe, étape 33).
+  - Les caractéristiques d'une Espèce sont les mêmes chez tous les joueurs, quelles que soient leurs Recherches (vérifié sur la fiche d'Espèce, étape 33).
 
 ### US-0730 · Interdire une Recherche de force dans la liste
 **En tant que** développeur, **je veux** que la liste des Recherches ne puisse contenir aucun effet sur les caractéristiques d'une Espèce, **afin de** garder cette règle vraie quand l'arbre grandira.
 
 - **Débloquée par** : US-0729
 - **Critères d'acceptation** :
-  - Les seuls effets qu'une Recherche peut porter sont : débloquer une construction, débloquer un Rôle, augmenter la portée des Expéditions.
+  - Les seuls effets qu'une Recherche peut porter sont : débloquer une construction, augmenter la portée des Expéditions, et, si les Rôles en demandent une, débloquer un Rôle (US-1038).
   - Une Recherche avec un autre effet est refusée au chargement de la liste, avec un message qui la nomme.
   - Ce contrôle passe automatiquement à chaque mise en ligne.
+
+### US-0731 · Agrandir la portée des Expéditions par la Recherche
+**En tant que** joueur, **je veux** que des Recherches de la branche Explorer agrandissent la portée de mes Expéditions, **afin de** viser un jour les Cases proches du Cœur sauvage.
+
+- **Débloquée par** : US-0727, Étape 38
+- **Critères d'acceptation** :
+  - Des Recherches de la branche Explorer agrandissent la portée d'exploration de départ, celle de US-0908 (chiffre à régler par Recherche).
+  - Dès la Recherche acquise, les Cases nouvellement à portée ne sont plus grisées sur l'écran d'Expédition.
+  - Toucher une Case hors de portée nomme la Recherche qui permettrait de l'atteindre, avec un lien vers elle.

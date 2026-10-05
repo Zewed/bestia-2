@@ -1,30 +1,29 @@
 # Jalon 8 · Les Bêtes à la maison
 
-Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche complète de son Espèce, élève ses premières Bêtes et apprend à les loger et à les nourrir : si elles ont faim, elles retournent à l'état sauvage. Le Rôle de son Couple de départ se met au travail. Étapes couvertes : 33 à 37 de l'ordre d'attaque.
+Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre la fiche complète de chaque Espèce, confie à un éleveur l'Élevage d'un Couple réuni, et apprend à loger et à nourrir ses Bêtes : si elles ont faim, elles retournent à l'état sauvage. Il affecte enfin des Bêtes à leur Rôle. Étapes couvertes : 33 à 37 de l'ordre d'attaque, attaquées juste après le jalon 9 (ADR 0008) ; US-0939, reportée du jalon 9, se fait avec l'étape 35.
 
 ## Étape 33 · La Réserve
 
 ### US-0801 · Ouvrir la Réserve
 **En tant que** joueur, **je veux** ouvrir la Réserve de mon Territoire, **afin de** voir les Couples que j'ai réunis.
 
-- **Débloquée par** : Étape 4, Étape 8
+- **Débloquée par** : Étape 4, US-0956
 - **Critères d'acceptation** :
   - Une entrée « Réserve » de la navigation ouvre la page, sur ordinateur comme sur mobile.
   - La page présente la Réserve comme le lieu protégé où vivent les Couples, qui ne combattent plus.
-  - La page affiche le nombre de Couples qu'elle abrite (un seul au départ).
+  - La page affiche le nombre de Couples qu'elle abrite.
 
-### US-0802 · Voir son Couple de départ
-**En tant que** joueur, **je veux** voir mon Couple de départ dans la Réserve, **afin de** retrouver les Bêtes avec lesquelles tout commence.
+### US-0802 · Voir ses Couples réunis
+**En tant que** joueur, **je veux** voir dans la Réserve chaque Couple que j'ai réuni, **afin de** retrouver les Espèces que je peux élever.
 
 - **Débloquée par** : US-0801
 - **Critères d'acceptation** :
-  - Le Couple choisi à l'étape 8 apparaît avec l'illustration de son Espèce, son nom et sa Rareté.
-  - Le mâle et la femelle sont tous deux visibles, et marqués comme tels.
-  - Le style de jeu choisi est rappelé en une phrase (se défendre, grandir ou explorer).
+  - Chaque Couple réuni (US-0956) apparaît avec l'illustration de son Espèce, son nom et sa Rareté.
+  - Les deux Bêtes du Couple sont visibles.
   - Un joueur ne voit jamais la Réserve d'un autre joueur.
 
 ### US-0803 · Ouvrir la fiche d'une Espèce
-**En tant que** joueur, **je veux** ouvrir la fiche de l'Espèce de mon Couple, **afin de** tout savoir sur elle.
+**En tant que** joueur, **je veux** ouvrir la fiche de l'Espèce d'un Couple, **afin de** tout savoir sur elle.
 
 - **Débloquée par** : US-0802
 - **Critères d'acceptation** :
@@ -57,7 +56,6 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 - **Critères d'acceptation** :
   - La fiche affiche le Biome d'Habitat de l'Espèce, avec son nom et son pictogramme.
   - Elle affiche le Rôle de l'Espèce (Porteur, Éclaireur, Nourricier ou Bâtisseur), ou « Aucun Rôle ».
-  - Un Rôle pas encore débloqué s'affiche grisé, avec la mention « À débloquer par la Recherche ».
 
 ### US-0807 · Comprendre une caractéristique
 **En tant que** nouveau joueur, **je veux** qu'on m'explique chaque caractéristique d'une Espèce, **afin de** comprendre ce que veulent dire les chiffres.
@@ -77,21 +75,21 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
   - Toute la fiche se lit sans zoom.
   - Les explications des caractéristiques s'ouvrent et se ferment au pouce.
 
-### US-0809 · Comprendre comment remplir la Réserve
-**En tant que** nouveau joueur, **je veux** comprendre comment d'autres Couples rejoindront ma Réserve, **afin de** savoir ce que je chercherai ensuite.
+### US-0809 · Voir une Réserve vide
+**En tant que** joueur, **je veux** une Réserve sobre tant que je n'ai réuni aucun Couple, **afin de** savoir d'un coup d'œil qu'elle attend son premier Couple.
 
-- **Débloquée par** : US-0802
+- **Débloquée par** : US-0801
 - **Critères d'acceptation** :
-  - Sous le Couple de départ, la Réserve explique en une phrase qu'un mâle et une femelle apprivoisés d'une même Espèce y forment un nouveau Couple.
-  - Cette explication reste affichée tant que la Réserve ne compte que le Couple de départ.
-  - (à décider) : le Couple de départ compte dans le nombre de Couples réunis du classement principal (étape 60).
+  - Sans Couple, la Réserve affiche « Aucun Couple pour l'instant », sans autre phrase.
+  - Un bouton « Envoyer une Expédition » mène à l'écran d'Expédition (US-0901).
+  - Dès le premier Couple réuni, ce message laisse place à la liste.
 
 ## Étape 34 · L'Élevage
 
 ### US-0810 · Voir l'effectif par Espèce
 **En tant que** joueur, **je veux** voir combien de Bêtes j'ai de chaque Espèce, **afin de** connaître la taille de mon armée.
 
-- **Débloquée par** : US-0803
+- **Débloquée par** : US-0803, US-0938
 - **Critères d'acceptation** :
   - Une page Bêtes liste chaque Espèce dont le joueur a des Bêtes, avec son illustration et son effectif.
   - Les Bêtes du Couple, en Réserve, ne comptent pas dans l'effectif.
@@ -99,22 +97,33 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
   - Toucher une Espèce ouvre sa fiche, qui rappelle aussi l'effectif.
 
 ### US-0811 · Voir un effectif vide
-**En tant que** nouveau joueur, **je veux** comprendre pourquoi je n'ai encore aucune Bête, **afin de** savoir comment en obtenir.
+**En tant que** nouveau joueur, **je veux** une page Bêtes sobre tant que je n'ai aucune Bête, **afin de** savoir où aller en chercher.
 
 - **Débloquée par** : US-0810
 - **Critères d'acceptation** :
-  - Sans aucune Bête, la page Bêtes affiche « Aucune Bête pour l'instant » et explique qu'on élève des Bêtes à partir de son Couple.
-  - Un bouton mène à la fiche de l'Espèce du Couple de départ.
-  - Dès la première Bête née, ce message laisse place à la liste.
+  - Sans aucune Bête, la page Bêtes affiche « Aucune Bête pour l'instant », sans autre phrase.
+  - Un bouton « Envoyer une Expédition » mène à l'écran d'Expédition (US-0901).
+  - Dès la première Bête ramenée, ce message laisse place à la liste.
 
-### US-0812 · Trouver l'Élevage de son Espèce
-**En tant que** joueur, **je veux** trouver l'Élevage sur la fiche de l'Espèce de mon Couple, **afin de** produire mes premières Bêtes.
+### US-0812 · Trouver l'Élevage d'une Espèce
+**En tant que** joueur, **je veux** trouver l'Élevage sur la fiche d'une Espèce dont j'ai réuni le Couple, **afin de** produire des Bêtes de cette Espèce.
 
-- **Débloquée par** : US-0803
+- **Débloquée par** : US-0803, US-0957
 - **Critères d'acceptation** :
-  - La fiche de l'Espèce du Couple de départ propose un bloc « Élever ».
+  - La fiche d'une Espèce dont le Couple est réuni propose un bloc « Élever ».
   - Seules les Espèces dont le joueur a réuni le Couple proposent ce bloc.
   - Le jeu refuse l'Élevage d'une Espèce sans Couple, même demandé par un autre chemin que le bouton.
+  - Le récit d'un Couple réuni (US-0958) mène désormais à ce bloc.
+
+### US-0843 · Confier l'Élevage à un éleveur
+**En tant que** joueur, **je veux** confier l'Élevage d'une Espèce à un Habitant éleveur, **afin de** faire naître des Bêtes de son Couple.
+
+- **Débloquée par** : US-0812, Étape 14
+- **Critères d'acceptation** :
+  - Le bloc « Élever » demande un éleveur libre : un Habitant au Métier d'éleveur qui ne s'occupe d'aucun autre Élevage.
+  - Sans éleveur libre, « Élever » est grisé et dit pourquoi, avec un lien vers la page Habitants.
+  - Pendant son Élevage, l'éleveur est « à l'Élevage » sur la page Habitants, avec l'Espèce qu'il élève ; son Métier ne peut pas être changé avant la fin, comme celui d'un explorateur parti (US-0911).
+  - L'Élevage d'une Espèce reste acquis sans éleveur : seul le lancement en demande un.
 
 ### US-0813 · Choisir combien de Bêtes élever
 **En tant que** joueur, **je veux** choisir le nombre de Bêtes à élever, **afin de** doser ce que j'investis.
@@ -138,7 +147,7 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 ### US-0815 · Lancer un Élevage
 **En tant que** joueur, **je veux** lancer l'Élevage de la quantité choisie, **afin de** voir grandir mon effectif.
 
-- **Débloquée par** : US-0814
+- **Débloquée par** : US-0814, US-0843
 - **Critères d'acceptation** :
   - Le bouton « Élever » retire aussitôt le coût total des stocks, et la barre du haut se met à jour.
   - L'Élevage démarre à l'heure du clic.
@@ -170,17 +179,27 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 - **Critères d'acceptation** :
   - Le bloc « Élever » montre l'Élevage en cours : Bêtes déjà nées sur quantité demandée, temps avant la prochaine naissance, heure de la dernière.
   - Le décompte avance sans recharger la page, et reste juste après un rechargement ou sur un autre appareil.
-  - Un bloc de l'accueil résume l'Élevage en cours, ou affiche « Aucun Élevage en cours ».
+  - Un bloc de l'accueil résume les Élevages en cours, un par éleveur, ou affiche « Aucun Élevage en cours ».
 
 ### US-0819 · Ajouter un Élevage à la file
 **En tant que** joueur, **je veux** commander un nouvel Élevage pendant qu'un autre est en cours, **afin de** ne pas avoir à revenir au bon moment pour relancer.
 
 - **Débloquée par** : US-0818
 - **Critères d'acceptation** :
-  - Pendant un Élevage, le joueur peut en lancer un autre de la même Espèce : il se paie aussitôt et prend place dans une file.
+  - Pendant un Élevage, le joueur peut en lancer un autre de la même Espèce, pour le même éleveur : il se paie aussitôt et prend place dans sa file.
   - Les Élevages de la file se suivent dans l'ordre, sans temps mort entre eux.
   - La file affiche chaque Élevage avec sa quantité et son heure de fin prévue.
-  - (à décider) : une longueur maximale de file (chiffre à régler), et, quand il y aura plusieurs Espèces, une file par Espèce ou une seule pour toutes.
+  - (à décider) : une longueur maximale de file (chiffre à régler) ; chaque éleveur a la sienne (US-0844).
+
+### US-0844 · Un éleveur, un Élevage
+**En tant que** joueur, **je veux** élever plusieurs Espèces en même temps grâce à plusieurs éleveurs, **afin de** faire grandir plusieurs Espèces à la fois.
+
+- **Débloquée par** : US-0819, US-0843
+- **Critères d'acceptation** :
+  - Un éleveur ne s'occupe que d'un Élevage à la fois : tant que sa file n'est pas finie, il n'est proposé pour aucune autre Espèce.
+  - Une Espèce n'a qu'un éleveur à la fois : un deuxième éleveur ne double pas son rythme.
+  - Avec deux éleveurs libres, on élève deux Espèces en même temps, chacune avec sa file.
+  - Quand sa file est finie, ou annulée en entier, l'éleveur redevient libre.
 
 ### US-0820 · Annuler un Élevage
 **En tant que** joueur, **je veux** annuler un Élevage de la file, **afin de** récupérer de la Nourriture si j'en ai besoin ailleurs.
@@ -212,15 +231,14 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
   - Le nombre total de Places du Foyer vient des réglages du jeu (chiffre à régler).
   - Le même compteur apparaît dans le bloc « Élever ».
 
-### US-0823 · Loger l'Espèce du Couple de départ au Foyer
-**En tant que** joueur, **je veux** pouvoir élever l'Espèce de mon Couple de départ quel que soit le Biome de mon Foyer, **afin de** ne pas être bloqué dès le départ par la Case où je suis né.
+### US-0823 · Loger au Foyer les Bêtes de tout Biome
+**En tant que** joueur, **je veux** loger au Foyer toutes les Bêtes que je ramène, quel que soit leur Biome, **afin de** ne pas être bloqué avant d'avoir des Habitats.
 
 - **Débloquée par** : US-0822
 - **Critères d'acceptation** :
-  - Tout Foyer offre des Places à l'Espèce du Couple de départ, quel que soit son Biome.
-  - (à décider) : c'est une exception propre au Couple de départ, ou les trois Espèces de départ ont pour Habitat tous les Biomes de la Couronne.
-  - Le Biome d'Habitat affiché sur la fiche de l'Espèce est cohérent avec la règle retenue.
-  - Les Habitats des autres Espèces, Case par Case, arrivent à l'étape 51.
+  - Jusqu'aux Habitats par Biome (étape 51), les Places du Foyer accueillent les Bêtes de toutes les Espèces, quel que soit leur Biome d'Habitat.
+  - La fiche de l'Espèce affiche quand même son Biome d'Habitat.
+  - Le Foyer, toujours en prairie (US-0152), restera l'Habitat des Espèces de prairie ; ce que deviennent les autres au passage aux Habitats se règle à l'étape 51 (US-1130).
 
 ### US-0824 · Occuper des Places selon la taille
 **En tant que** joueur, **je veux** que chaque Bête occupe des Places selon sa taille, **afin de** comprendre qu'un grand animal se loge moins facilement qu'un petit.
@@ -229,7 +247,7 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 - **Critères d'acceptation** :
   - Chaque Bête née occupe autant de Places que la taille de son Espèce.
   - Les Places occupées valent la somme, Espèce par Espèce, de l'effectif fois la taille.
-  - Une Bête qui quitte l'effectif libère aussitôt ses Places.
+  - Une Bête qui quitte l'effectif libère aussitôt ses Places ; une Bête partie en sortie garde les siennes, pour pouvoir rentrer.
   - (à décider) : les Bêtes du Couple en Réserve occupent des Places, ou non.
 
 ### US-0825 · Bloquer l'Élevage quand les Places manquent
@@ -247,7 +265,7 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 
 - **Débloquée par** : US-0817
 - **Critères d'acceptation** :
-  - Chaque heure, chaque Bête de l'effectif mange l'Entretien de son Espèce, à partir de sa naissance.
+  - Chaque heure, chaque Bête de l'effectif, au Foyer ou en sortie, mange l'Entretien de son Espèce, à partir de sa naissance ou de son arrivée.
   - Un carnivore mange de la Viande, un herbivore des Végétaux.
   - (à décider) : ce que mange un omnivore (l'une ou l'autre selon les stocks, ou un partage fixe entre les deux).
   - (à décider) : les Bêtes du Couple en Réserve mangent un Entretien, ou non.
@@ -290,7 +308,6 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 - **Critères d'acceptation** :
   - L'avertissement nomme la Nourriture qui va manquer (Viande ou Végétaux) et les Espèces qui en dépendent.
   - Il donne, pour chaque Espèce, le nombre de Bêtes menacées.
-  - Il propose un lien pour lancer une Récolte de chasseurs ou de cueilleurs, selon la Nourriture qui manque.
 
 ### US-0831 · Recalculer l'avertissement quand l'effectif change
 **En tant que** joueur, **je veux** que l'avertissement suive les naissances et les départs de mes Bêtes, **afin de** savoir à tout moment si elles sont tirées d'affaire.
@@ -321,13 +338,13 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
   - Le récit reste consultable après coup sur la page Récits (étape 16).
   - Si des Habitants sont partis dans la même Famine (étape 16), le récit les distingue des Bêtes.
 
-### US-0834 · Garder son Couple et son Élevage après une Famine
-**En tant que** joueur, **je veux** que mon Couple et mon Élevage survivent à une Famine, **afin de** pouvoir tout reconstruire ensuite.
+### US-0834 · Garder ses Couples et ses Élevages après une Famine
+**En tant que** joueur, **je veux** que mes Couples et mes Élevages survivent à une Famine, **afin de** pouvoir tout reconstruire ensuite.
 
 - **Débloquée par** : US-0832
 - **Critères d'acceptation** :
-  - Les Bêtes du Couple, à l'abri en Réserve, ne retournent jamais à l'état sauvage.
-  - L'Élevage de l'Espèce reste ouvert même si toutes les Bêtes de l'effectif sont parties.
+  - Les Bêtes des Couples, à l'abri en Réserve, ne retournent jamais à l'état sauvage.
+  - L'Élevage d'une Espèce reste acquis même si toutes les Bêtes de l'effectif sont parties.
   - On peut relancer un Élevage dès que la Nourriture le permet.
 
 ### US-0835 · Subir une Famine pendant l'absence
@@ -348,27 +365,26 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
   - La règle retenue est expliquée dans l'avertissement « famine imminente ».
   - En vitesse accélérée, une Famine qui touche à la fois Habitants et Bêtes fait partir chacun selon cette règle.
 
-## Étape 37 · Le Rôle du Couple de départ
+## Étape 37 · Affecter une Bête à son Rôle
 
-### US-0837 · Voir le Rôle de son Couple de départ débloqué d'office
-**En tant que** joueur, **je veux** que le Rôle de mon Couple de départ soit acquis dès le début, **afin de** profiter tout de suite du style de jeu que j'ai choisi.
+### US-0837 · Affecter une Bête à son Rôle
+**En tant que** joueur, **je veux** affecter des Bêtes à leur Rôle, comme je donne un Métier à un Habitant, **afin de** tirer d'elles autre chose que leur force.
 
-- **Débloquée par** : US-0806
+- **Débloquée par** : US-0806, US-0810
 - **Critères d'acceptation** :
-  - Pour un Couple de poules, la fiche affiche le Rôle Nourricier comme débloqué, avec la mention « Débloqué d'office ».
-  - Pour un Couple de pigeons, la fiche affiche de même le Rôle Éclaireur.
-  - Aucune Recherche n'est demandée pour ce Rôle.
-  - (à décider) : le Rôle débloqué d'office vaut aussi pour les autres Espèces du même Rôle apprivoisées plus tard, ou seulement pour l'Espèce du Couple de départ.
+  - Sur la page Bêtes, une Espèce dont le Rôle sert au Foyer (Nourricier) propose « + » et « − » pour affecter des Bêtes à son Rôle, avec le compte « affectées / effectif » ; un Éclaireur, lui, s'affecte au départ d'une Expédition (US-0976).
+  - Une Bête affectée remplit son Rôle aussitôt, sans Recherche ni Poste ; si les Rôles demandent une Recherche un jour, ce sera à l'étape 49 (US-1038).
+  - Seules les Bêtes valides au Foyer peuvent être affectées, ni Blessées ni sorties ; une Bête affectée continue de manger et d'occuper ses Places.
+  - Les Bêtes d'un Couple en Réserve peuvent être affectées à leur Rôle, ou non (à décider).
 
 ### US-0838 · Nourrir le Territoire avec les poules
-**En tant que** joueur, **je veux** que mes poules Nourricières produisent de la Nourriture sans que j'aie à chasser, **afin de** grandir plus vite.
+**En tant que** joueur, **je veux** que mes poules affectées à leur Rôle de Nourricier produisent de la Nourriture sans que j'aie à chasser, **afin de** grandir plus vite.
 
 - **Débloquée par** : US-0826, US-0837
 - **Critères d'acceptation** :
-  - Chaque poule de l'effectif produit de la Nourriture en continu, heure après heure (chiffre à régler par poule).
+  - Chaque poule affectée produit de la Nourriture en continu, heure après heure (chiffre à régler par poule).
   - (à décider) : les poules produisent de la Viande, des Végétaux, ou les deux.
-  - (à décider) : les poules du Couple en Réserve produisent aussi, ou seulement celles de l'effectif.
-  - Après une absence, la Nourriture produite est exactement celle attendue, poule par poule, de sa naissance à son éventuel départ.
+  - Après une absence, la Nourriture produite est exactement celle attendue, poule par poule, de son affectation à son retrait ou à son départ.
   - (à décider) : une poule rapporte plus de Nourriture qu'elle ne coûte d'Entretien.
 
 ### US-0839 · Voir la production des poules dans le solde horaire
@@ -377,32 +393,33 @@ Le joueur retrouve son Couple de départ dans la Réserve, découvre la fiche co
 - **Débloquée par** : US-0827, US-0838
 - **Critères d'acceptation** :
   - Le détail du solde horaire affiche une ligne « Poules nourricières : + N par heure ».
-  - La ligne change dès qu'une poule naît ou part.
+  - La ligne change dès qu'une poule est affectée ou retirée, ou quitte l'effectif.
   - La fiche de la poule affiche ce qu'une poule rapporte par heure.
 
 ### US-0840 · Arrêter la production des poules quand le stock est plein
 **En tant que** joueur, **je veux** que la production des poules respecte la limite de stock, **afin de** comprendre qu'il faut agrandir mes stockages pour en profiter.
 
-- **Débloquée par** : US-0838, Étape 28
+- **Débloquée par** : US-0838, Étape 12
 - **Critères d'acceptation** :
   - La Nourriture produite par les poules s'arrête à la limite de stock, comme la production du Foyer (étape 12).
   - La production reprend dès qu'il y a de nouveau de la place dans le stock.
   - Après une absence, rien n'est compté au-delà de la limite.
 
-### US-0841 · Voir les pigeons Éclaireurs attendre les Expéditions
-**En tant que** joueur, **je veux** savoir à quoi serviront mes pigeons Éclaireurs, **afin de** préparer mes premières Expéditions.
+### US-0841 · Retirer une Bête de son Rôle
+**En tant que** joueur, **je veux** retirer une Bête de son Rôle, **afin de** la rendre au combat quand j'en ai besoin.
 
 - **Débloquée par** : US-0837
 - **Critères d'acceptation** :
-  - La fiche du pigeon explique le Rôle Éclaireur : révéler plus de brouillard et garder plus longtemps visibles, pour l'Expédition, les Bêtes apparues.
-  - Tant que les Expéditions n'existent pas, ce Rôle n'a aucun effet, et la fiche le dit (« Servira lors des Expéditions »).
-  - Son effet se vérifiera au jalon 9 (étape 45).
+  - Le « − » de la page Bêtes retire une Bête de son Rôle : elle cesse aussitôt de le remplir.
+  - Retirée, elle redevient une Bête de l'effectif comme une autre, qui peut escorter, défendre et attaquer.
+  - Affecter et retirer sont gratuits et immédiats, autant de fois qu'on veut.
 
-### US-0842 · Voir la souris sans Rôle
-**En tant que** joueur, **je veux** comprendre pourquoi mes souris n'ont pas de Rôle, **afin de** savoir sur quoi compter pour me défendre.
+### US-0842 · Une Bête affectée ne combat plus
+**En tant que** joueur, **je veux** qu'une Bête affectée à son Rôle reste hors des combats, **afin de** savoir sur quelles Bêtes compter pour me défendre et explorer.
 
-- **Débloquée par** : US-0806
+- **Débloquée par** : US-0837
 - **Critères d'acceptation** :
-  - La fiche de la souris affiche « Aucun Rôle », sans erreur ni case vide.
-  - La Réserve rappelle le style choisi : se défendre.
-  - Aucun Rôle n'est débloqué d'office pour ce joueur.
+  - Une Bête affectée à son Rôle n'est plus proposée en escorte (US-0904), et ne partira pas à l'Attaque (étape 57).
+  - Elle ne défendra pas le Foyer contre une Incursion (étape 54), et n'y subira aucune perte.
+  - La page Bêtes sépare, Espèce par Espèce, les Bêtes affectées des autres.
+  - Les Éclaireurs partis en Expédition (US-0976) suivent la même règle.

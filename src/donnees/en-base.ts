@@ -1,5 +1,5 @@
 // Les données de référence telles qu'elles sont en base (pas dans les fichiers de donnees/),
-// pour la page de contrôle et les écrans du jeu.
+// pour la page de contrôle.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 
@@ -70,22 +70,3 @@ export async function especesEnBase(base: Pool | PoolClient): Promise<EspeceEnBa
   );
   return rows;
 }
-
-export type CoupleDeDepartEnBase = {
-  espece: { id: string; nom: string; illustration: string | null };
-  rarete: { id: string; nom: string };
-};
-
-/** Les Couples de départ proposés au nouveau joueur (US-0141), dans leur ordre. */
-export async function couplesDeDepartEnBase(base: Pool | PoolClient): Promise<CoupleDeDepartEnBase[]> {
-  const { rows } = await base.query<CoupleDeDepartEnBase>(
-    `select json_build_object('id', e.id, 'nom', e.nom, 'illustration', e.illustration) as espece,
-       json_build_object('id', r.id, 'nom', r.nom) as rarete
-     from couple_de_depart c
-     join espece e on e.id = c.espece_id
-     join rarete r on r.id = e.rarete_id
-     order by c.ordre`,
-  );
-  return rows;
-}
-

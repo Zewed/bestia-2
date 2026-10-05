@@ -30,7 +30,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 - **Débloquée par** : US-0302
 - **Critères d'acceptation** :
   - Chaque Habitant occupe une ligne qui montre son Métier, ou « sans Métier ».
-  - Chaque ligne montre l'état de l'Habitant ; à ce stade, le seul état possible est « libre » (au Foyer et disponible), les autres arriveront avec les Récoltes, les Expéditions et les chantiers.
+  - Chaque ligne montre l'état de l'Habitant ; à ce stade, le seul état possible est « libre » (au Foyer et disponible), les autres arriveront avec les Expéditions, les Élevages, les Récoltes et les chantiers.
   - Les lignes sont rangées par Métier, les Habitants sans Métier en premier.
   - Chaque Habitant porte un prénom tiré au hasard (à décider).
 
@@ -65,12 +65,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 
 ## Étape 14 · Donner un Métier
 
-### US-0307 · Découvrir les sept Métiers
-**En tant que** joueur, **je veux** voir les sept Métiers avec une phrase qui dit à quoi chacun sert, **afin de** choisir en connaissance de cause.
+### US-0307 · Découvrir les huit Métiers
+**En tant que** joueur, **je veux** voir les huit Métiers avec une phrase qui dit à quoi chacun sert, **afin de** choisir en connaissance de cause.
 
 - **Débloquée par** : US-0303
 - **Critères d'acceptation** :
-  - Les sept Métiers sont listés : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur.
+  - Les huit Métiers sont listés : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, éleveur ; l'éleveur servira avec l'Élevage (étape 34).
   - Chaque Métier a son icône et une phrase courte (par exemple « bûcheron : rapporte du Bois des forêts »).
   - Un Métier qui ne sert à rien pour l'instant le dit (« servira quand le cercle des sages sera bâti »).
   - Un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve (à décider).
@@ -81,7 +81,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 
 - **Débloquée par** : US-0307
 - **Critères d'acceptation** :
-  - Depuis la ligne d'un Habitant sans Métier, on choisit l'un des sept Métiers.
+  - Depuis la ligne d'un Habitant sans Métier, on choisit l'un des huit Métiers.
   - L'Habitant affiche aussitôt son nouveau Métier.
   - Le Métier est enregistré : il est toujours là après rechargement et sur un autre appareil.
   - Donner un Métier est gratuit et immédiat (à décider).
@@ -349,7 +349,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 
 - **Débloquée par** : US-0334, US-0308
 - **Critères d'acceptation** :
-  - Au moment d'accueillir, on peut choisir l'un des sept Métiers.
+  - Au moment d'accueillir, on peut choisir l'un des huit Métiers.
   - Sans choix, le nouvel Habitant arrive sans Métier.
   - Les compteurs par Métier en tiennent compte aussitôt.
 
