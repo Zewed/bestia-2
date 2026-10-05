@@ -43,8 +43,9 @@ export type Enregistrement =
 const VERROU_NAISSANCE = 153;
 
 /**
- * Donne au compte son nom de chef dans le Monde du jeu (US-0137) et sa Case sur la Couronne
- * (US-0153), ensemble ou pas du tout. La saisie est nettoyée et repasse par toutes les règles,
+ * Donne au compte son nom de chef dans le Monde du jeu (US-0137), sa Case sur la Couronne
+ * (US-0153), et son Territoire, qui n'a qu'une Case : son Foyer, imprenable (US-0155). Tout
+ * naît ensemble ou rien. La saisie est nettoyée et repasse par toutes les règles,
  * mots interdits compris (US-0138). Les naissances d'un Monde passent l'une après l'autre : si
  * deux joueurs veulent le même nom au même instant, un seul l'obtient, l'autre reçoit « pris » ;
  * et deux nouveaux chefs ne visent jamais la même Case. Un double appui du même joueur n'est pas
@@ -58,16 +59,22 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
   const client = await pool.connect();
   try {
     await client.query("begin");
-    const { rows: mondes } = await client.query<{ id: number; nom: string }>(`select id, nom from monde where id = ${MONDE_DU_JEU}`);
+    // Le verrou des naissances est pris dans la même requête que le Monde : six allers-retours en tout.
+    const { rows: mondes } = await client.query<{ id: number; nom: string }>(
+      `select id, nom, pg_advisory_xact_lock($1, id) from monde where id = ${MONDE_DU_JEU}`,
+      [VERROU_NAISSANCE],
+    );
     const monde = mondes[0];
-    await client.query("select pg_advisory_xact_lock($1, $2)", [VERROU_NAISSANCE, monde.id]);
-    const { rows: existant } = await client.query<{ nom: string }>("select nom from chef where compte_id = $1 and monde_id = $2", [compteId, monde.id]);
-    if (existant[0]) {
+    const { rows: deja } = await client.query<{ existant: string | null; doublon: boolean }>(
+      `select (select nom from chef where compte_id = $1 and monde_id = $2) as existant,
+         exists (select 1 from chef where monde_id = $2 and cle_nom = $3) as doublon`,
+      [compteId, monde.id, cleDuNom(nom)],
+    );
+    if (deja[0].existant !== null) {
       await client.query("commit");
-      return { statut: "enregistre", nom: existant[0].nom };
+      return { statut: "enregistre", nom: deja[0].existant };
     }
-    const { rows: doublon } = await client.query("select 1 from chef where monde_id = $1 and cle_nom = $2", [monde.id, cleDuNom(nom)]);
-    if (doublon[0]) {
+    if (deja[0].doublon) {
       await client.query("rollback");
       return { statut: "pris" };
     }
@@ -76,13 +83,17 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
       await client.query("rollback");
       return { statut: "complet", monde: monde.nom };
     }
-    const { rows: chefs } = await client.query<{ id: number }>("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $2, $3, $4) returning id", [
-      compteId,
-      monde.id,
-      nom,
-      cleDuNom(nom),
-    ]);
-    const { rowCount } = await client.query("update case_du_monde set chef_id = $1 where id = $2 and chef_id is null", [chefs[0].id, naissance.id]);
+    // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête.
+    const { rowCount } = await client.query(
+      `with nouveau as (
+         insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $2, $3, $4) returning id
+       ), prise as (
+         update case_du_monde set chef_id = (select id from nouveau), imprenable = true
+         where id = $5 and chef_id is null returning id
+       )
+       insert into territoire (chef_id, foyer_case_id) select nouveau.id, prise.id from nouveau, prise`,
+      [compteId, monde.id, nom, cleDuNom(nom), naissance.id],
+    );
     if (rowCount !== 1) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
     await client.query("commit");
     return { statut: "enregistre", nom };
@@ -101,18 +112,20 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
 }
 
 /**
- * La Case libre de la Couronne où naît le nouveau chef (US-0153), ou null si elle est pleine. Les
- * Foyers déjà nés sont pour l'instant toutes les Cases possédées, chaque chef n'en ayant qu'une.
+ * La Case libre de la Couronne où naît le nouveau chef (US-0153), ou null si elle est pleine,
+ * loin des Foyers des Territoires déjà nés et près du dernier arrivé.
  */
 async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () => number): Promise<{ id: number } | null> {
-  const { rows: cases } = await client.query<{ id: number; q: number; r: number; biome: string; possedee: boolean }>(
-    "select id, q, r, biome_id as biome, chef_id is not null as possedee from case_du_monde where monde_id = $1 and couronne",
+  // Seules les prairies libres peuvent accueillir un Foyer : inutile de lire le reste de la Couronne.
+  const { rows } = await client.query<{ libres: { id: number; q: number; r: number; biome: string }[] | null; foyers: { q: number; r: number }[] | null }>(
+    `select
+       (select json_agg(json_build_object('id', id, 'q', q, 'r', r, 'biome', biome_id))
+        from case_du_monde where monde_id = $1 and couronne and biome_id = 'prairie' and chef_id is null) as libres,
+       (select json_agg(json_build_object('q', c.q, 'r', c.r) order by ch.cree_le desc, ch.id desc)
+        from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
+        where c.monde_id = $1) as foyers`,
     [mondeId],
   );
-  const { rows: foyers } = await client.query<{ q: number; r: number }>(
-    `select c.q, c.r from case_du_monde c join chef ch on ch.id = c.chef_id
-     where c.monde_id = $1 order by ch.cree_le desc, ch.id desc`,
-    [mondeId],
-  );
-  return choisirCaseDeNaissance(cases, foyers, foyers[0] ?? null, hasard);
+  const foyers = rows[0].foyers ?? [];
+  return choisirCaseDeNaissance(rows[0].libres ?? [], foyers, foyers[0] ?? null, hasard);
 }

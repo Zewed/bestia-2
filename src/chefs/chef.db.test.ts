@@ -1,6 +1,8 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { creerCompte } from "@/comptes/compte";
+import { calculerEmpreinte } from "@/comptes/empreinte";
+import { choisirCaseDeNaissance } from "@/monde/foyers";
 import { distance } from "@/monde/hex";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
@@ -176,15 +178,38 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       expect(cases[0]).toMatchObject({ couronne: true, biome: "prairie" });
     });
 
-    it("fait naître le chef suivant tout près du dernier arrivé, à 4 Cases au moins", async () => {
+    it("fait de cette Case son Foyer, imprenable, seule Case de son Territoire (US-0155)", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Foyer"));
+      const { rows } = await pool.query(
+        `select t.foyer_case_id = c.id as foyer, c.imprenable,
+           (select count(*)::int from case_du_monde where chef_id = ch.id) as cases
+         from territoire t join chef ch on ch.id = t.chef_id join case_du_monde c on c.chef_id = ch.id
+         where ch.compte_id = $1`,
+        [compte.id],
+      );
+      expect(rows).toEqual([{ foyer: true, imprenable: true, cases: 1 }]);
+    });
+
+    it("fait naître le chef suivant parmi les 5 emplacements libres les plus proches du dernier arrivé", async () => {
       const premier = await nouveauCompte();
       const second = await nouveauCompte();
       await enregistrerNomDeChef(pool, premier.id, nomUnique("Aîné"));
+      // Les 5 emplacements possibles juste avant la naissance du second, selon la règle elle-même.
+      const { rows: libres } = await pool.query(
+        "select q, r, biome_id as biome from case_du_monde where monde_id = (select id from monde order by id limit 1) and couronne and chef_id is null",
+      );
+      const { rows: foyers } = await pool.query(
+        `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
+         where c.monde_id = (select id from monde order by id limit 1) order by ch.cree_le desc, ch.id desc`,
+      );
+      const possibles = new Set([0, 1, 2, 3, 4].map((i) => choisirCaseDeNaissance(libres, foyers, foyers[0], () => i / 5)).map((c) => `${c?.q},${c?.r}`));
       await enregistrerNomDeChef(pool, second.id, nomUnique("Cadet"));
       const [a] = await caseDu(premier.id);
       const [b] = await caseDu(second.id);
+      expect(foyers[0]).toEqual({ q: a.q, r: a.r });
+      expect(possibles.has(`${b.q},${b.r}`)).toBe(true);
       expect(distance(a, b)).toBeGreaterThanOrEqual(4);
-      expect(distance(a, b)).toBeLessThanOrEqual(15);
     });
 
     it("ne donne qu'une Case pour un double appui, et aucune à qui n'obtient pas le nom", async () => {
@@ -207,22 +232,38 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
     });
 
     it("donne 30 Cases différentes, toutes bien espacées, à 30 chefs qui naissent au même instant (US-0154)", async () => {
-      const comptes = await Promise.all(Array.from({ length: 30 }, () => nouveauCompte()));
-      await Promise.all(Array.from({ length: 10 }, () => pool.query("select pg_sleep(0.2)")));
-      const resultats = await Promise.all(comptes.map((compte, i) => enregistrerNomDeChef(pool, compte.id, nomUnique(`Rafale${String.fromCharCode(97 + i % 26)}${i >= 26 ? "z" : ""}`))));
+      // Trente comptes d'un coup, avec une seule empreinte de mot de passe : la calculer trente fois
+      // à la fois prendrait des gigaoctets de mémoire et étoufferait les autres tests.
+      const empreinte = await calculerEmpreinte("une phrase de passe");
+      const { rows: comptes } = await pool.query<{ id: number }>(
+        "insert into compte (email, empreinte_mot_de_passe) select $1 || '-rafale-' || n || '@essai.test', $2 from generate_series(1, 30) as n returning id",
+        [lancement, empreinte],
+      );
+      // De la patience, pas plus de connexions (les naissances passent de toute façon une par une) :
+      // depuis un poste loin de la base, trente naissances durent plus que le délai d'attente habituel.
+      const rafale = poolDeTest({ connectionTimeoutMillis: 60_000 });
+      await Promise.all(Array.from({ length: 10 }, () => rafale.query("select pg_sleep(0.2)")));
+      const resultats = await Promise.all(
+        comptes.map((compte, i) => enregistrerNomDeChef(rafale, compte.id, nomUnique(`Rafale${String.fromCharCode(97 + (i % 26))}${i >= 26 ? "z" : ""}`))),
+      );
+      await rafale.end();
       expect(resultats.every((r) => r.statut === "enregistre")).toBe(true);
       const cases = (await Promise.all(comptes.map((compte) => caseDu(compte.id)))).map((c) => c[0]);
       expect(new Set(cases.map((c) => `${c.q},${c.r}`)).size).toBe(30);
       for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
-    }, 30_000);
+      // Depuis un poste loin de la base, une naissance prend près d'une demi-seconde : trente à la suite, une quinzaine.
+    }, 90_000);
 
-    it("libère la Case d'un compte supprimé", async () => {
+    it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {
       const compte = await nouveauCompte();
       await enregistrerNomDeChef(pool, compte.id, nomUnique("Passant"));
       const [c] = await caseDu(compte.id);
       await pool.query("delete from compte where id = $1", [compte.id]);
-      const { rows } = await pool.query("select chef_id from case_du_monde where q = $1 and r = $2 and monde_id = (select id from monde order by id limit 1)", [c.q, c.r]);
-      expect(rows[0].chef_id).toBeNull();
+      const { rows } = await pool.query(
+        "select chef_id, imprenable from case_du_monde where q = $1 and r = $2 and monde_id = (select id from monde order by id limit 1)",
+        [c.q, c.r],
+      );
+      expect(rows[0]).toEqual({ chef_id: null, imprenable: false });
     });
   });
 });

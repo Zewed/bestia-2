@@ -11,9 +11,9 @@ export function getPool(): Pool {
   return pool;
 }
 
-export function createPool(connectionString: string): Pool {
+export function createPool(connectionString: string, reglages: { max?: number; connectionTimeoutMillis?: number } = {}): Pool {
   // Échouer vite plutôt que d'attendre sans fin une base qui ne répond pas.
-  return new Pool({ connectionString: withStrictSsl(connectionString), connectionTimeoutMillis: 5_000 });
+  return new Pool({ connectionString: withStrictSsl(connectionString), connectionTimeoutMillis: 5_000, ...reglages });
 }
 
 // Neon fournit sslmode=require, dont le sens va s'affaiblir dans pg 9 : on exige

@@ -20,9 +20,9 @@ export function urlBaseDeTest(): string | undefined {
 
 export const URL_TEST = urlBaseDeTest();
 
-export function poolDeTest() {
+export function poolDeTest(reglages?: { max?: number; connectionTimeoutMillis?: number }) {
   if (!URL_TEST) throw new Error("Pas de base de test : lancez npm run db:test-setup.");
-  return createPool(URL_TEST);
+  return createPool(URL_TEST, reglages);
 }
 
 /**

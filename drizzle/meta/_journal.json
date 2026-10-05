@@ -169,6 +169,13 @@
       "when": 1791213166135,
       "tag": "0023_case_possedee",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791217025947,
+      "tag": "0024_territoire",
+      "breakpoints": true
     }
   ]
 }

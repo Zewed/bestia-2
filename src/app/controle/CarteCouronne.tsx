@@ -21,17 +21,18 @@ const SOMMETS = Array.from({ length: 6 }, (_, i) => {
   return { x: Math.cos(angle), y: Math.sin(angle) };
 });
 
-/** Le contour d'une Case, en coordonnées du plan. */
-function hexagone(q: number, r: number): string {
+/** Le contour d'une Case, en coordonnées du plan ; `taille` le réduit autour de son centre. */
+function hexagone(q: number, r: number, taille = 1): string {
   const { x, y } = centre({ q, r });
-  return `M${SOMMETS.map((s) => `${(x + s.x).toFixed(2)} ${(y + s.y).toFixed(2)}`).join("L")}Z`;
+  return `M${SOMMETS.map((s) => `${(x + s.x * taille).toFixed(2)} ${(y + s.y * taille).toFixed(2)}`).join("L")}Z`;
 }
 
 /**
  * La Couronne vue d'en haut (US-0151), pour vérifier la répartition des Biomes : une forme par
  * Biome, dans sa couleur de la palette, et la légende avec la part de chacun. Un point marque
  * chaque emplacement où un Foyer pourrait encore naître (US-0152) ; une Case possédée est cerclée
- * d'Encre, avec le nom de son chef au survol (US-0153).
+ * d'Encre, avec le nom de son chef au survol (US-0153), et un Foyer marqué d'un hexagone plein
+ * (US-0155).
  */
 export function CarteCouronne({ couronne, noms, emplacements }: { couronne: CouronneEnBase; noms: Record<string, string>; emplacements: Coordonnees[] }) {
   const parBiome = new Map<string, { q: number; r: number }[]>();
@@ -39,6 +40,7 @@ export function CarteCouronne({ couronne, noms, emplacements }: { couronne: Cour
   const etendue = Math.max(...couronne.cases.map((c) => Math.abs(centre(c).x)), ...couronne.cases.map((c) => Math.abs(centre(c).y))) + 2;
   const biomes = [...parBiome.entries()].sort((a, b) => b[1].length - a[1].length);
   const possedees = couronne.cases.filter((c) => c.chef !== null);
+  const foyers = couronne.cases.filter((c) => c.foyer);
   return (
     <div className={styles.carte}>
       <svg viewBox={`${-etendue} ${-etendue} ${2 * etendue} ${2 * etendue}`} role="img" aria-label={`La Couronne de ${couronne.monde}, ${couronne.cases.length} Cases`}>
@@ -52,6 +54,7 @@ export function CarteCouronne({ couronne, noms, emplacements }: { couronne: Cour
             </path>
           ))}
         </g>
+        <path className={styles.foyers} d={foyers.map((c) => hexagone(c.q, c.r, 0.55)).join("")} />
         <g className={styles.emplacements}>
           {emplacements.map((e) => {
             const { x, y } = centre(e);
@@ -64,6 +67,11 @@ export function CarteCouronne({ couronne, noms, emplacements }: { couronne: Cour
           <span className={`${styles.pastille} ${styles.cerclee}`} aria-hidden="true" />
           Cases possédées
           <span className={styles.note}>{possedees.length}</span>
+        </li>
+        <li>
+          <span className={`${styles.pastille} ${styles.foyer}`} aria-hidden="true" />
+          Foyers
+          <span className={styles.note}>{foyers.length}</span>
         </li>
         <li>
           <span className={`${styles.pastille} ${styles.point}`} aria-hidden="true" />

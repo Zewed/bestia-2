@@ -78,10 +78,10 @@ vi.mock("@/monde/en-base", () => monde);
 const COURONNE = {
   monde: "Aube",
   cases: [
-    { q: 0, r: -2, biome: "prairie", chef: null },
-    { q: 1, r: -2, biome: "prairie", chef: null },
-    { q: 2, r: -2, biome: "prairie", chef: null },
-    { q: 2, r: -1, biome: "eau", chef: null },
+    { q: 0, r: -2, biome: "prairie", chef: null, foyer: false },
+    { q: 1, r: -2, biome: "prairie", chef: null, foyer: false },
+    { q: 2, r: -2, biome: "prairie", chef: null, foyer: false },
+    { q: 2, r: -1, biome: "eau", chef: null, foyer: false },
   ],
 };
 
@@ -186,10 +186,12 @@ describe("page de contrôle", () => {
 
   it("cercle chaque Case possédée, avec le nom de son chef au survol, et en tient compte pour les emplacements (US-0153)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
-    monde.couronneEnBase.mockResolvedValue({ ...COURONNE, cases: COURONNE.cases.map((c, i) => (i === 0 ? { ...c, chef: "Ourse" } : c)) });
+    monde.couronneEnBase.mockResolvedValue({ ...COURONNE, cases: COURONNE.cases.map((c, i) => (i === 0 ? { ...c, chef: "Ourse", foyer: true } : c)) });
     const html = renderToStaticMarkup(await Controle());
     expect(html).toMatch(/<path d="[^"]+"><title>Ourse<\/title><\/path>/);
     expect(html).toMatch(/Cases possédées<span[^>]*>1<\/span>/);
+    expect(html).toMatch(/Foyers<span[^>]*>1<\/span>/);
+    expect(html).toMatch(/<path class="[^"]*foyers[^"]*" d="M[^"]+Z"/);
     expect(html).toMatch(/Emplacements de Foyer<span[^>]*>0<\/span>/);
   });
 });

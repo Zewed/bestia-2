@@ -467,6 +467,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0155 · Faire de sa Case son Foyer
 **En tant que** nouveau joueur, **je veux** que ma Case devienne mon Foyer, avec la hutte du chef, **afin de** posséder un cœur de Territoire que personne ne pourra prendre.
 
+- **Statut** : Livrée le 2026-10-05. Le Territoire est une fiche en base, liée à sa Case Foyer ; il naît avec le chef et sa Case, ou rien. La hutte du chef n'est pas encore une donnée : elle deviendra le premier bâtiment avec les constructions (jalon 6), et n'existe d'ici là qu'en image (US-0157). Un Territoire qui disparaît (compte supprimé) rend sa Case libre et prenable. La page de contrôle marque chaque Foyer.
 - **Débloquée par** : US-0153
 - **Critères d'acceptation** :
   - La Case reçue devient le Foyer du joueur, avec la hutte du chef.

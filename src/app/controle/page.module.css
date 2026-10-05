@@ -257,6 +257,15 @@
   border: 2px solid var(--encre);
 }
 
+/* US-0155 : un Foyer, un hexagone plein au cœur de sa Case. */
+.foyers {
+  fill: var(--encre);
+}
+
+.foyer {
+  background: var(--encre);
+}
+
 @media (max-width: 820px) {
   .carte {
     grid-template-columns: minmax(0, 1fr);

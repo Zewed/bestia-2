@@ -332,6 +332,8 @@ export const caseDuMonde = pgTable(
     varianteId: text("variante_id").references(() => varianteBiome.id),
     /** US-0153 : le chef à qui la Case appartient, un seul ; null tant qu'elle est libre. */
     chefId: integer("chef_id").references(() => chef.id, { onDelete: "set null" }),
+    /** US-0155 : la Case ne peut pas être prise par un autre joueur (un Foyer). La règle joue à l'étape 59. */
+    imprenable: boolean("imprenable").notNull().default(false),
   },
   (t) => [
     unique("case_unique_dans_le_monde").on(t.mondeId, t.q, t.r),
@@ -340,4 +342,22 @@ export const caseDuMonde = pgTable(
     check("case_anneau_exact", sql`${t.anneau} = greatest(abs(${t.q}), abs(${t.r}), abs(${t.q} + ${t.r}))`),
   ],
 );
+
+/**
+ * Le Territoire d'un chef (US-0155) : l'ensemble de ses Cases, d'un seul tenant, autour de son
+ * Foyer. Ses Cases sont celles qui portent son chef ; il naît avec une seule, son Foyer.
+ */
+export const territoire = pgTable("territoire", {
+  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+  chefId: integer("chef_id")
+    .notNull()
+    .unique()
+    .references(() => chef.id, { onDelete: "cascade" }),
+  /** La Case du Foyer, autour de la hutte du chef. */
+  foyerCaseId: integer("foyer_case_id")
+    .notNull()
+    .unique()
+    .references(() => caseDuMonde.id),
+  neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
+});
 
