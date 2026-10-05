@@ -1,0 +1,29 @@
+src/chefs/chef.ts
+  s_d0f4332113d26c::t_badd6215638987 5-6,28-50
+  s_d0f4332113d26c::t_11c4ea9c5769f9 51-52
+docs/stories/README.md
+  s_d0f4332113d26c::t_1300ba596c4272 7
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_1300ba596c4272 368,393
+src/chefs/nom.ts
+  s_d0f4332113d26c::t_badd6215638987 11-12
+src/chefs/chef.db.test.ts
+  s_d0f4332113d26c::t_badd6215638987 5-6,84-137
+  s_d0f4332113d26c::t_e9466f8b1f7ef7 138
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8cf313e36fddfc9455f7fbeccb2db8af7da1060c",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
