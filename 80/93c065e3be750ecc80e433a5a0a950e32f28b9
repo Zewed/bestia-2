@@ -1,0 +1,23 @@
+src/chefs/chef.db.test.ts
+  s_97a431cfa65ca7::t_821625be10ea84 209-218
+docs/stories/01-entrer-dans-le-jeu.md
+  s_97a431cfa65ca7::t_9660689951264a 460
+docs/stories/README.md
+  s_97a431cfa65ca7::t_2d90dde4ed6817 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8093c065e3be750ecc80e433a5a0a950e32f28b9",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
