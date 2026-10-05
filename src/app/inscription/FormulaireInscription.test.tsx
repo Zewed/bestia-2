@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { EMAIL_DEJA_UTILISEE, EMAIL_INVALIDE, EMAIL_VIDE } from "@/comptes/email";
@@ -213,7 +213,8 @@ describe("confirmation de la création du compte", () => {
     const confirmation = await inscrire();
     expect(confirmation.textContent).toContain("Votre compte est créé");
     expect(confirmation.textContent).toContain("nom@exemple.fr");
-    expect(document.activeElement?.textContent).toBe("Votre compte est créé");
+    // Le regard est posé par un effet, juste après l'affichage : on l'attend.
+    await waitFor(() => expect(document.activeElement?.textContent).toBe("Votre compte est créé"));
     expect(screen.getByRole("heading", { level: 1 }).textContent).toBe("Bienvenue dans Bestia");
     expect(screen.queryByRole("button", { name: "Créer mon compte" })).toBeNull();
     expect(screen.queryByText("J'ai déjà un compte")).toBeNull();

@@ -375,12 +375,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0138 · Refuser les noms interdits
 **En tant que** joueur, **je veux** que les noms injurieux ou trompeurs soient refusés, **afin de** partager le Monde avec des chefs aux noms corrects.
 
+- **Statut** : Livrée le 2026-10-05. La liste vit en base (`mot_interdit`), remplie au départ par la migration 0021 : injures, termes sexuels et haineux courants en français et en anglais, et noms de l'équipe. Le refus paraît comme « déjà pris » : après la pause dans la frappe, ou en quittant le champ ; l'enregistrement refait la vérification.
 - **Débloquée par** : US-0131
 - **Critères d'acceptation** :
   - Un nom qui contient un mot interdit est refusé avec « Ce nom n'est pas autorisé », sans citer le mot.
-  - Les noms qui se font passer pour l'équipe du jeu (« Bestia », « Admin », « Modérateur ») sont refusés.
+  - Les noms qui se font passer pour l'équipe du jeu (« Bestia », « Admin », « Modérateur ») sont refusés ; « Bestia » l'est même à l'intérieur d'un nom.
   - La liste des mots interdits se modifie sans toucher au code.
-  - Le contenu de la liste et le traitement des contournements, chiffres à la place des lettres ou espaces glissés (à décider).
+  - Un mot long est refusé où qu'il soit (« Connard42 ») ; un mot court seulement seul (« Le Con », pas « Faucon »). Les contournements sont défaits : espaces et signes glissés, chiffres lus comme des lettres (0 → o, 1 → i ou l, 3 → e, 4 → a, 5 → s, 7 → t), lettres répétées (« Connnnard »).
 
 ### US-0139 · Valider son nom de chef
 **En tant que** nouveau joueur, **je veux** valider mon nom une fois toutes les règles respectées, **afin de** passer à la suite de mon arrivée.

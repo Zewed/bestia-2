@@ -2,11 +2,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const garde = vi.hoisted(() => ({ exigerCompteSansChef: vi.fn(async () => ({ id: 7, email: "nom@exemple.fr" })) }));
 vi.mock("@/comptes/garde", () => garde);
-const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn() }));
+const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn(), nomInterdit: vi.fn(async () => false) }));
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 
-import { NOM_DEJA_PRIS } from "@/chefs/nom";
+import { NOM_DEJA_PRIS, NOM_NON_AUTORISE } from "@/chefs/nom";
 import { verifierNomLibre } from "./actions";
 
 describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
@@ -21,6 +21,12 @@ describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
     expect(await verifierNomLibre("  Ours   Brun ")).toBe(NOM_DEJA_PRIS);
     expect(chefs.nomDejaPris).toHaveBeenCalledWith(expect.anything(), "Ours Brun");
     expect(garde.exigerCompteSansChef).toHaveBeenCalled();
+  });
+
+  it("refuse un nom interdit, sans dire s'il est pris (US-0138)", async () => {
+    chefs.nomInterdit.mockResolvedValueOnce(true);
+    expect(await verifierNomLibre("Connard42")).toBe(NOM_NON_AUTORISE);
+    expect(chefs.nomDejaPris).not.toHaveBeenCalled();
   });
 
   it("ne dit rien d'un nom libre", async () => {

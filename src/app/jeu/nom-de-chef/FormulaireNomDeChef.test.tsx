@@ -2,10 +2,10 @@
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_TROP_COURT } from "@/chefs/nom";
+import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_NON_AUTORISE, NOM_TROP_COURT } from "@/chefs/nom";
 import { NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
 
-const actions = vi.hoisted(() => ({ verifierNomLibre: vi.fn(async (): Promise<string | null> => null) }));
+const actions = vi.hoisted(() => ({ verifierNomLibre: vi.fn<(nom: string) => Promise<string | null>>(async () => null) }));
 vi.mock("./actions", () => actions);
 
 import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
@@ -236,6 +236,30 @@ describe("disponibilité du nom pendant la saisie (US-0136)", () => {
     await u.type(champ(), "Loup@");
     await attendre(NOM_DE_CHEF_PAUSE_MS);
     expect(actions.verifierNomLibre).not.toHaveBeenCalled();
+  });
+
+  it("dit qu'un nom n'est pas autorisé, sans coche (US-0138)", async () => {
+    actions.verifierNomLibre.mockResolvedValue(NOM_NON_AUTORISE);
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Le Con");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    expect(screen.getByRole("alert").textContent).toBe(NOM_NON_AUTORISE);
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("demande séparément deux noms de même forme mais de sens différent (« Le Con », « Leçon »)", async () => {
+    actions.verifierNomLibre.mockImplementation(async (nom: string) => (nom === "Le Con" ? NOM_NON_AUTORISE : null));
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Le Con");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    await u.clear(champ());
+    await u.type(champ(), "Leçon");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    expect(actions.verifierNomLibre).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.getByRole("status").textContent).toBe("Disponible");
   });
 });
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { cleDuNom, couperNom, longueurDuNom, NOM_DEJA_PRIS, nettoyerNom, nettoyerSaisie, verifierCaracteresDuNom, verifierNomDeChef } from "@/chefs/nom";
+import { couperNom, longueurDuNom, nettoyerNom, nettoyerSaisie, verifierCaracteresDuNom, verifierNomDeChef } from "@/chefs/nom";
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
 import styles from "../../entree.module.css";
 import { verifierNomLibre } from "./actions";
@@ -13,40 +13,40 @@ import { verifierNomLibre } from "./actions";
  * retirer. US-0134 : le champ montre le nom tel qu'il sera enregistré ; un espace en tête ou un
  * deuxième espace de suite ne s'écrivent pas, l'espace de fin disparaît quand on quitte le champ.
  * US-0135, US-0136 : un nom par ailleurs correct est cherché parmi ceux du Monde dès que le joueur
- * s'arrête de taper (ou quitte le champ) ; libre, une coche le dit, sans rien réserver.
+ * s'arrête de taper (ou quitte le champ) ; libre, une coche le dit, sans rien réserver. US-0138 :
+ * la même recherche refuse un nom interdit.
  * « Valider » s'activera avec l'enregistrement du nom (US-0139).
  */
 export function FormulaireNomDeChef() {
   const [nom, setNom] = useState("");
   const [erreurEnQuittant, setErreurEnQuittant] = useState<string | null>(null);
-  // Les réponses du jeu, par forme de comparaison : true si le nom est pris. Un nom déjà demandé
-  // (ou en cours de demande) ne repart pas au serveur.
-  const [verdicts, setVerdicts] = useState<Record<string, boolean>>({});
+  // Les réponses du jeu, par nom nettoyé : le message (pris, interdit), ou null si le nom est libre.
+  // Un nom déjà demandé (ou en cours de demande) ne repart pas au serveur.
+  const [verdicts, setVerdicts] = useState<Record<string, string | null>>({});
   const demandes = useRef(new Set<string>());
 
   const propre = nettoyerNom(nom);
   const valable = propre !== "" && !verifierNomDeChef(propre);
-  const pris = valable ? verdicts[cleDuNom(propre)] : undefined;
-  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? (pris ? NOM_DEJA_PRIS : null);
-  const libre = pris === false && !erreur;
+  const verdict = valable ? verdicts[propre] : undefined;
+  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? verdict ?? null;
+  const libre = verdict === null && !erreur;
   const decrit = [erreur ? "nom-erreur" : null, nom ? "nom-compteur" : null].filter(Boolean).join(" ");
 
   const chercher = useCallback(async (candidat: string) => {
-    const cle = cleDuNom(candidat);
-    if (demandes.current.has(cle)) return;
-    demandes.current.add(cle);
+    if (demandes.current.has(candidat)) return;
+    demandes.current.add(candidat);
     try {
       const refus = await verifierNomLibre(candidat);
-      setVerdicts((precedents) => ({ ...precedents, [cle]: refus !== null }));
+      setVerdicts((precedents) => ({ ...precedents, [candidat]: refus }));
     } catch {
       // Sans réponse du jeu, rien n'est affiché ; une prochaine pause redemandera.
-      demandes.current.delete(cle);
+      demandes.current.delete(candidat);
     }
   }, []);
 
   // US-0136 : la recherche part quand le joueur s'arrête de taper, pas à chaque lettre.
   useEffect(() => {
-    if (!valable || demandes.current.has(cleDuNom(propre))) return;
+    if (!valable || demandes.current.has(propre)) return;
     const minuterie = setTimeout(() => void chercher(propre), NOM_DE_CHEF_PAUSE_MS);
     return () => clearTimeout(minuterie);
   }, [propre, valable, chercher]);

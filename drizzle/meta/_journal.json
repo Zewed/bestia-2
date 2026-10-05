@@ -148,6 +148,13 @@
       "when": 1791188918554,
       "tag": "0020_nom_de_chef_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791191388361,
+      "tag": "0021_mots_interdits",
+      "breakpoints": true
     }
   ]
 }

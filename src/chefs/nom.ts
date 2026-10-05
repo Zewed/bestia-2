@@ -10,6 +10,8 @@ export const caractereRefuse = (caractere: string) => `« ${caractere} » n'est 
 export const NOM_DEJA_PRIS = "Ce nom est déjà pris";
 /** US-0137 : pris entre la coche « disponible » et la validation. */
 export const NOM_VIENT_D_ETRE_PRIS = "Ce nom vient d'être pris";
+/** US-0138 : un nom injurieux ou qui se fait passer pour l'équipe du jeu, sans citer le mot. */
+export const NOM_NON_AUTORISE = "Ce nom n'est pas autorisé";
 
 const segmenteur = new Intl.Segmenter("fr", { granularity: "grapheme" });
 const caracteres = (texte: string) => [...segmenteur.segment(texte)].map((s) => s.segment);

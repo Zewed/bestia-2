@@ -284,3 +284,21 @@ export const chef = pgTable(
     check("chef_cle_nom_a_plat", sql`${t.cleNom} ~ '^[a-z0-9]+$'`),
   ],
 );
+
+/**
+ * Les mots interdits dans un nom de chef (US-0138), sous leur forme de comparaison (minuscules,
+ * sans accents ni signes). Un mot « entier » n'est refusé que seul, pas caché dans un autre mot
+ * (« con » refuse « Le Con », pas « Faucon ») ; les autres sont refusés où qu'ils soient. La liste
+ * se modifie directement en base, sans nouvelle version du jeu.
+ */
+export const motInterdit = pgTable(
+  "mot_interdit",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    mot: text("mot").notNull().unique(),
+    entier: boolean("entier").notNull().default(false),
+    creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [check("mot_interdit_a_plat", sql`${t.mot} ~ '^[a-z0-9]+$'`)],
+);
+

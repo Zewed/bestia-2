@@ -2,8 +2,8 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, URL_TEST } from "@/test/base";
-import { chefDuCompte, enregistrerNomDeChef, nomDejaPris } from "./chef";
-import { caractereRefuse, cleDuNom, NOM_TROP_COURT } from "./nom";
+import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
+import { caractereRefuse, cleDuNom, NOM_NON_AUTORISE, NOM_TROP_COURT } from "./nom";
 
 describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   let pool: Pool;
@@ -134,6 +134,25 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       ]);
       const { rows } = await pool.query("select count(*)::int as n from chef where compte_id = $1", [compte.id]);
       expect(rows[0].n).toBe(1);
+    });
+  });
+
+  describe("noms interdits, avec la liste de la base (US-0138)", () => {
+    it.each(["Connard42", "Bestia Officiel", "BestiaTeam", "Le Con", "Admin", "P3d0", "Salooope", "C-o-n-n-a-r-d"])("refuse « %s »", async (nom) => {
+      expect(await nomInterdit(pool, nom)).toBe(true);
+    });
+
+    it.each(["Conquête", "Faucon", "Leçon", "Dispute", "Badminton", "Communiquer", "Unique", "Violon", "Pornic", "Habite", "Nazim", "Niger", "Fagot", "Kaki", "Dickens", "Culotte", "Ourse"])(
+      "laisse passer « %s »",
+      async (nom) => {
+        expect(await nomInterdit(pool, nom)).toBe(false);
+      },
+    );
+
+    it("refuse un nom interdit à l'enregistrement, sans rien enregistrer", async () => {
+      const compte = await nouveauCompte();
+      expect(await enregistrerNomDeChef(pool, compte.id, "Connard42")).toEqual({ statut: "refuse", erreur: NOM_NON_AUTORISE });
+      expect(await chefDuCompte(pool, compte.id)).toBeNull();
     });
   });
 });
