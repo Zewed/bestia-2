@@ -246,6 +246,17 @@
   background: var(--encre);
 }
 
+/* US-0153 : une Case possédée, cerclée d'Encre. */
+.possedees {
+  fill: none;
+  stroke: var(--encre);
+  stroke-width: 0.5;
+}
+
+.cerclee {
+  border: 2px solid var(--encre);
+}
+
 @media (max-width: 820px) {
   .carte {
     grid-template-columns: minmax(0, 1fr);

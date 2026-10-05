@@ -30,19 +30,28 @@ function hexagone(q: number, r: number): string {
 /**
  * La Couronne vue d'en haut (US-0151), pour vérifier la répartition des Biomes : une forme par
  * Biome, dans sa couleur de la palette, et la légende avec la part de chacun. Un point marque
- * chaque emplacement où un Foyer pourrait encore naître (US-0152).
+ * chaque emplacement où un Foyer pourrait encore naître (US-0152) ; une Case possédée est cerclée
+ * d'Encre, avec le nom de son chef au survol (US-0153).
  */
 export function CarteCouronne({ couronne, noms, emplacements }: { couronne: CouronneEnBase; noms: Record<string, string>; emplacements: Coordonnees[] }) {
   const parBiome = new Map<string, { q: number; r: number }[]>();
   for (const c of couronne.cases) parBiome.set(c.biome, [...(parBiome.get(c.biome) ?? []), c]);
   const etendue = Math.max(...couronne.cases.map((c) => Math.abs(centre(c).x)), ...couronne.cases.map((c) => Math.abs(centre(c).y))) + 2;
   const biomes = [...parBiome.entries()].sort((a, b) => b[1].length - a[1].length);
+  const possedees = couronne.cases.filter((c) => c.chef !== null);
   return (
     <div className={styles.carte}>
       <svg viewBox={`${-etendue} ${-etendue} ${2 * etendue} ${2 * etendue}`} role="img" aria-label={`La Couronne de ${couronne.monde}, ${couronne.cases.length} Cases`}>
         {biomes.map(([biome, cases]) => (
           <path key={biome} data-biome={biome} d={cases.map((c) => hexagone(c.q, c.r)).join("")} style={{ fill: couleur(biome) }} />
         ))}
+        <g className={styles.possedees}>
+          {possedees.map((c) => (
+            <path key={`${c.q},${c.r}`} d={hexagone(c.q, c.r)}>
+              <title>{c.chef}</title>
+            </path>
+          ))}
+        </g>
         <g className={styles.emplacements}>
           {emplacements.map((e) => {
             const { x, y } = centre(e);
@@ -51,6 +60,11 @@ export function CarteCouronne({ couronne, noms, emplacements }: { couronne: Cour
         </g>
       </svg>
       <ul className={styles.legende}>
+        <li>
+          <span className={`${styles.pastille} ${styles.cerclee}`} aria-hidden="true" />
+          Cases possédées
+          <span className={styles.note}>{possedees.length}</span>
+        </li>
         <li>
           <span className={`${styles.pastille} ${styles.point}`} aria-hidden="true" />
           Emplacements de Foyer

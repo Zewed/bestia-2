@@ -85,7 +85,10 @@ export default async function Controle() {
             <CarteCouronne
               couronne={couronne}
               noms={Object.fromEntries(biomes.map((b) => [b.id, b.nom]))}
-              emplacements={emplacementsDeFoyers(couronne.cases, [])}
+              emplacements={emplacementsDeFoyers(
+                couronne.cases,
+                couronne.cases.filter((c) => c.chef !== null),
+              )}
             />
           ) : (
             <p className={styles.note}>Aucune Case de la Couronne en base : lancez npm run monde:couronne.</p>

@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { enregistrerNomDeChef, nomDejaPris, nomInterdit } from "@/chefs/chef";
-import { NOM_DEJA_PRIS, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "@/chefs/nom";
+import { mondeComplet, NOM_DEJA_PRIS, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "@/chefs/nom";
 import { exigerCompteSansChef } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
@@ -23,7 +23,8 @@ export async function verifierNomLibre(saisie: string): Promise<string | null> {
 }
 
 /**
- * Valider le nom de chef (US-0139) : enregistré, le joueur passe à la suite de son arrivée (la
+ * Valider le nom de chef (US-0139) : enregistré, avec sa Case sur la Couronne (US-0153), le
+ * joueur passe à la suite de son arrivée (la
  * page du jeu, en attendant la naissance sur la carte de l'étape 9) ;
  * sinon, il reste sur l'écran avec la raison. Un deuxième envoi du même joueur trouve son chef
  * déjà créé et passe à la suite lui aussi.
@@ -35,6 +36,7 @@ export async function validerNomDeChef(_precedent: EtatValidation, donnees: Form
   const resultat = await enregistrerNomDeChef(getPool(), compte.id, nom);
   if (resultat.statut === "refuse") return { nom, erreur: resultat.erreur };
   if (resultat.statut === "pris") return { nom, pris: true };
+  if (resultat.statut === "complet") return { nom, erreur: mondeComplet(resultat.monde) };
   redirect("/jeu");
 }
 

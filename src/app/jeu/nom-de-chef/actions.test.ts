@@ -70,6 +70,11 @@ describe("valider le nom de chef (US-0139)", () => {
     expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: NOM_NON_AUTORISE });
   });
 
+  it("dit que le Monde est complet quand il n'y a plus de place pour un Foyer (US-0153)", async () => {
+    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "complet", monde: "Aube" });
+    expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: "Aube est complet" });
+  });
+
   it("dit qu'un nom est pris, le message étant choisi par l'écran", async () => {
     chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "pris" });
     expect(await valider("Ourse")).toEqual({ nom: "Ourse", pris: true });

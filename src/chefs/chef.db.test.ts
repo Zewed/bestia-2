@@ -1,7 +1,8 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { creerCompte } from "@/comptes/compte";
-import { poolDeTest, URL_TEST } from "@/test/base";
+import { distance } from "@/monde/hex";
+import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
 import { caractereRefuse, cleDuNom, NOM_NON_AUTORISE, NOM_TROP_COURT } from "./nom";
 
@@ -11,8 +12,9 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = poolDeTest();
+    await preparerMondeDeTest(pool);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -153,6 +155,64 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const compte = await nouveauCompte();
       expect(await enregistrerNomDeChef(pool, compte.id, "Connard42")).toEqual({ statut: "refuse", erreur: NOM_NON_AUTORISE });
       expect(await chefDuCompte(pool, compte.id)).toBeNull();
+    });
+  });
+
+  describe("naître sur la Couronne (US-0153)", () => {
+    /** La Case possédée par le chef d'un compte. */
+    const caseDu = async (compteId: number) => {
+      const { rows } = await pool.query(
+        `select c.q, c.r, c.couronne, c.biome_id as biome from case_du_monde c join chef ch on ch.id = c.chef_id where ch.compte_id = $1`,
+        [compteId],
+      );
+      return rows;
+    };
+
+    it("donne au nouveau chef une Case libre de la Couronne, en prairie, à lui seul", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Naissance"));
+      const cases = await caseDu(compte.id);
+      expect(cases).toHaveLength(1);
+      expect(cases[0]).toMatchObject({ couronne: true, biome: "prairie" });
+    });
+
+    it("fait naître le chef suivant tout près du dernier arrivé, à 4 Cases au moins", async () => {
+      const premier = await nouveauCompte();
+      const second = await nouveauCompte();
+      await enregistrerNomDeChef(pool, premier.id, nomUnique("Aîné"));
+      await enregistrerNomDeChef(pool, second.id, nomUnique("Cadet"));
+      const [a] = await caseDu(premier.id);
+      const [b] = await caseDu(second.id);
+      expect(distance(a, b)).toBeGreaterThanOrEqual(4);
+      expect(distance(a, b)).toBeLessThanOrEqual(15);
+    });
+
+    it("ne donne qu'une Case pour un double appui, et aucune à qui n'obtient pas le nom", async () => {
+      const compte = await nouveauCompte();
+      const autre = await nouveauCompte();
+      const nom = nomUnique("Unique");
+      await Promise.all([enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, autre.id, nom)]);
+      expect(await caseDu(compte.id)).toHaveLength(1);
+      expect(await caseDu(autre.id)).toHaveLength(0);
+    });
+
+    it("donne des Cases différentes, bien espacées, à des chefs qui naissent au même instant", async () => {
+      const comptes = await Promise.all(Array.from({ length: 8 }, () => nouveauCompte()));
+      await Promise.all(Array.from({ length: 10 }, () => pool.query("select pg_sleep(0.2)")));
+      const noms = ["Abeille", "Bison", "Castor", "Daim", "Écureuil", "Faon", "Gerboise", "Hérisson"];
+      await Promise.all(comptes.map((compte, i) => enregistrerNomDeChef(pool, compte.id, nomUnique(noms[i]))));
+      const cases = (await Promise.all(comptes.map((compte) => caseDu(compte.id)))).map((c) => c[0]);
+      expect(cases.every(Boolean)).toBe(true);
+      for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
+    });
+
+    it("libère la Case d'un compte supprimé", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Passant"));
+      const [c] = await caseDu(compte.id);
+      await pool.query("delete from compte where id = $1", [compte.id]);
+      const { rows } = await pool.query("select chef_id from case_du_monde where q = $1 and r = $2 and monde_id = (select id from monde order by id limit 1)", [c.q, c.r]);
+      expect(rows[0].chef_id).toBeNull();
     });
   });
 });

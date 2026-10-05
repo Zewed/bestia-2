@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ECART_ENTRE_FOYERS } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
-import { emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
+import { choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
 import { distance } from "./hex";
 
 describe("Cases où un Foyer peut naître (US-0152)", () => {
@@ -41,3 +41,33 @@ describe("Cases où un Foyer peut naître (US-0152)", () => {
     expect(apres.length).toBe(libres.length - 10);
   });
 });
+
+describe("Case où naît un nouveau chef (US-0153)", () => {
+  const couronne = casesDeLaCouronne({ rayon: 60, anneaux: 6, graine: graineDuMonde("Aube") });
+  const libres = couronne.filter((c) => peutAccueillirUnFoyer(c, []));
+
+  it("fait naître le premier chef d'un Monde sur une Case libre tirée au hasard", () => {
+    expect(choisirCaseDeNaissance(couronne, [], null, () => 0)).toEqual(libres[0]);
+    expect(choisirCaseDeNaissance(couronne, [], null, () => 0.9999)).toEqual(libres[libres.length - 1]);
+  });
+
+  it("fait naître les suivants au hasard parmi les 5 emplacements libres les plus proches du dernier arrivé", () => {
+    const dernier = choisirCaseDeNaissance(couronne, [], null, () => 0.5)!;
+    const tires = new Set<string>();
+    for (let i = 0; i < 50; i++) {
+      const c = choisirCaseDeNaissance(couronne, [dernier], dernier, () => i / 50)!;
+      expect(peutAccueillirUnFoyer(c, [dernier])).toBe(true);
+      tires.add(`${c.q},${c.r}`);
+    }
+    expect(tires.size).toBe(5);
+    const plusLoinTire = Math.max(...[...tires].map((t) => distance(dernier, { q: Number(t.split(",")[0]), r: Number(t.split(",")[1]) })));
+    const libresApres = couronne.filter((c) => peutAccueillirUnFoyer(c, [dernier]));
+    expect(libresApres.filter((c) => distance(c, dernier) < plusLoinTire).length).toBeLessThan(5);
+  });
+
+  it("ne trouve rien quand la Couronne est pleine", () => {
+    const pleine = emplacementsDeFoyers(couronne, []);
+    expect(choisirCaseDeNaissance(couronne, pleine, pleine[0], () => 0)).toBeNull();
+  });
+});
+

@@ -330,10 +330,13 @@ export const caseDuMonde = pgTable(
       .notNull()
       .references(() => biome.id),
     varianteId: text("variante_id").references(() => varianteBiome.id),
+    /** US-0153 : le chef à qui la Case appartient, un seul ; null tant qu'elle est libre. */
+    chefId: integer("chef_id").references(() => chef.id, { onDelete: "set null" }),
   },
   (t) => [
     unique("case_unique_dans_le_monde").on(t.mondeId, t.q, t.r),
     index("case_par_anneau").on(t.mondeId, t.anneau),
+    index("case_par_chef").on(t.chefId),
     check("case_anneau_exact", sql`${t.anneau} = greatest(abs(${t.q}), abs(${t.r}), abs(${t.q} + ${t.r}))`),
   ],
 );

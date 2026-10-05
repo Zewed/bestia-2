@@ -1,5 +1,5 @@
 // Où un Foyer peut naître (US-0152) : la règle qu'utilisera la naissance d'un nouveau joueur.
-import { ECART_ENTRE_FOYERS } from "@/reglages";
+import { ECART_ENTRE_FOYERS, NAISSANCE_PARMI_LES_PLUS_PROCHES } from "@/reglages";
 import { distance, type Coordonnees } from "./hex";
 
 export type CaseCandidate = Coordonnees & { biome: string; possedee?: boolean };
@@ -27,3 +27,23 @@ export function emplacementsDeFoyers(cases: CaseCandidate[], foyers: Coordonnees
   }
   return emplacements;
 }
+
+/**
+ * La Case où naît un nouveau chef (US-0153), ou null si la Couronne est pleine. Le premier chef
+ * d'un Monde naît sur une Case libre tirée au hasard ; les suivants, au hasard parmi les
+ * emplacements libres les plus proches du dernier arrivé : les voisins arrivent en même temps.
+ */
+export function choisirCaseDeNaissance<C extends CaseCandidate>(
+  cases: C[],
+  foyers: Coordonnees[],
+  dernier: Coordonnees | null,
+  hasard: () => number = Math.random,
+): C | null {
+  const libres = cases.filter((c) => peutAccueillirUnFoyer(c, foyers));
+  if (libres.length === 0) return null;
+  const parmi = dernier
+    ? [...libres].sort((a, b) => distance(a, dernier) - distance(b, dernier) || a.q - b.q || a.r - b.r).slice(0, NAISSANCE_PARMI_LES_PLUS_PROCHES)
+    : libres;
+  return parmi[Math.min(parmi.length - 1, Math.floor(hasard() * parmi.length))];
+}
+

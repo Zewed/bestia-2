@@ -447,11 +447,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0153 · Recevoir une Case libre sur la Couronne
 **En tant que** nouveau joueur, **je veux** recevoir une Case de la Couronne juste après avoir validé mon nom de chef, **afin de** commencer ma vie de chef quelque part dans le Monde.
 
+- **Statut** : Livrée le 2026-10-05. Le chef et sa Case naissent ensemble, dans le même enregistrement que le nom, ou pas du tout ; les naissances d'un Monde passent l'une après l'autre. Monde plein : « Aube est complet ». La page de contrôle cercle les Cases possédées, avec le nom du chef au survol.
 - **Débloquée par** : US-0139, US-0152
 - **Critères d'acceptation** :
   - Juste après la validation du nom de chef, le jeu attribue au joueur une Case libre de la Couronne, sans lui demander de choisir.
   - La Case appartient désormais à ce joueur, et à lui seul.
-  - La façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés (à décider).
+  - Près des derniers arrivés : le nouveau chef naît au hasard parmi les 5 emplacements libres les plus proches du dernier chef né ; le tout premier d'un Monde, sur un emplacement tiré au hasard. Les voisins arrivent ainsi en même temps.
 
 ### US-0154 · Ne jamais donner la même Case à deux joueurs
 **En tant que** nouveau joueur, **je veux** être sûr que ma Case n'est donnée qu'à moi, **afin de** ne jamais partager mon Foyer avec un inconnu.
