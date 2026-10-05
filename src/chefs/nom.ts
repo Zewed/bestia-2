@@ -1,4 +1,4 @@
-// Les règles du nom de chef (US-0132 à US-0134), les mêmes dans le navigateur et sur le serveur.
+// Les règles du nom de chef (US-0132 à US-0135), les mêmes dans le navigateur et sur le serveur.
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_MIN } from "@/reglages";
 
 export const NOM_TROP_COURT = `${NOM_DE_CHEF_MIN} caractères minimum`;
@@ -7,6 +7,7 @@ export const CARACTERE_INVISIBLE = "Caractère invisible non autorisé";
 export const COMMENCER_PAR_UNE_LETTRE = "Commencez par une lettre";
 export const DEUX_SIGNES_A_LA_SUITE = "Pas deux signes à la suite";
 export const caractereRefuse = (caractere: string) => `« ${caractere} » n'est pas autorisé`;
+export const NOM_DEJA_PRIS = "Ce nom est déjà pris";
 
 const segmenteur = new Intl.Segmenter("fr", { granularity: "grapheme" });
 const caracteres = (texte: string) => [...segmenteur.segment(texte)].map((s) => s.segment);
@@ -86,3 +87,21 @@ export function verifierCaracteresDuNom(nom: string): string | null {
 export function verifierNomDeChef(nom: string): string | null {
   return verifierCaracteresDuNom(nom) ?? verifierLongueurDuNom(nom);
 }
+
+// Les lettres latines qu'aucune décomposition ne ramène à une lettre simple.
+const LETTRES_A_PLAT: Record<string, string> = { ß: "ss", æ: "ae", œ: "oe", ø: "o", ð: "d", đ: "d", þ: "th", ħ: "h", ı: "i", ĸ: "k", ł: "l", ŋ: "n", ŧ: "t" };
+
+/**
+ * La forme sous laquelle deux noms se comparent (US-0135) : en minuscules, sans accents ni
+ * espaces, traits d'union ou apostrophes. « Élan », « elan » et « É-lan » sont le même nom, comme
+ * « Cœur » et « Coeur » : personne ne peut porter presque le nom d'un autre chef.
+ */
+export function cleDuNom(nom: string): string {
+  return nettoyerNom(nom)
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[ßæœøðđþħıĸłŋŧ]/g, (lettre) => LETTRES_A_PLAT[lettre])
+    .replace(/[^a-z0-9]/g, "");
+}
+

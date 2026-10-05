@@ -344,11 +344,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0135 · Refuser un nom déjà pris dans le Monde
 **En tant que** nouveau joueur, **je veux** apprendre que mon nom est déjà porté par un autre chef, **afin de** choisir un nom qui soit bien à moi.
 
+- **Statut** : Livrée le 2026-10-05. La vérification part quand on quitte le champ, pour un nom par ailleurs correct. Chaque chef garde en base, à côté de son nom, sa forme de comparaison (minuscules, sans accents ni signes), unique dans le Monde : la base refuse deux noms jugés identiques.
 - **Débloquée par** : US-0131
 - **Critères d'acceptation** :
   - Un nom déjà porté dans le Monde est refusé avec « Ce nom est déjà pris ».
   - La comparaison ignore les majuscules : « Loup » et « loup » sont le même nom.
-  - La prise en compte des accents dans la comparaison, « Élan » contre « Elan » (à décider).
+  - Elle ignore aussi les accents et les signes : « Élan » et « Elan », « Cœur » et « Coeur », « Ours Brun » et « Ours-Brun » sont le même nom.
   - Le nom s'affiche avec les majuscules choisies par le joueur.
 
 ### US-0136 · Voir si le nom est libre pendant la saisie

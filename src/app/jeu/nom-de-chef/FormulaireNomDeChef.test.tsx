@@ -1,12 +1,20 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
-import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_TROP_COURT } from "@/chefs/nom";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_TROP_COURT } from "@/chefs/nom";
+
+const actions = vi.hoisted(() => ({ verifierNomLibre: vi.fn(async (): Promise<string | null> => null) }));
+vi.mock("./actions", () => actions);
+
 import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
 
-describe("champ du nom de chef (US-0132 à US-0134)", () => {
-  afterEach(cleanup);
+describe("champ du nom de chef (US-0132 à US-0135)", () => {
+  afterEach(() => {
+    cleanup();
+    actions.verifierNomLibre.mockReset();
+    actions.verifierNomLibre.mockResolvedValue(null);
+  });
   const champ = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Nom de chef" });
 
   it("montre le compteur dès qu'on écrit, pas avant", async () => {
@@ -116,4 +124,37 @@ describe("champ du nom de chef (US-0132 à US-0134)", () => {
     expect(champ().value).toBe("Ours BBrun");
     expect(champ().selectionStart).toBe(6);
   });
+
+  it("dit qu'un nom est déjà pris en quittant le champ, et l'oublie dès qu'on le change", async () => {
+    actions.verifierNomLibre.mockResolvedValue(NOM_DEJA_PRIS);
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ours Brun ");
+    await u.tab();
+    expect(actions.verifierNomLibre).toHaveBeenCalledWith("Ours Brun");
+    expect((await screen.findByRole("alert")).textContent).toBe(NOM_DEJA_PRIS);
+    expect(champ().getAttribute("aria-invalid")).toBe("true");
+    await u.type(champ(), "e");
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("ne cherche pas un nom déjà refusé par une autre règle", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ou");
+    await u.tab();
+    expect(screen.getByRole("alert").textContent).toBe(NOM_TROP_COURT);
+    expect(actions.verifierNomLibre).not.toHaveBeenCalled();
+  });
+
+  it("ne dit rien si le jeu ne répond pas", async () => {
+    actions.verifierNomLibre.mockRejectedValue(new Error("injoignable"));
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await u.tab();
+    await new Promise((fin) => setTimeout(fin, 0));
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
 });
+

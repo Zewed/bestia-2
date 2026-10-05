@@ -3,6 +3,7 @@ import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_MIN } from "@/reglages";
 import {
   CARACTERE_INVISIBLE,
   caractereRefuse,
+  cleDuNom,
   COMMENCER_PAR_UNE_LETTRE,
   couperNom,
   DEUX_SIGNES_A_LA_SUITE,
@@ -117,6 +118,25 @@ describe("espaces du nom de chef (US-0134)", () => {
   it("réduit un nom fait d'espaces à rien, refusé comme trop court", () => {
     expect(nettoyerNom("     ")).toBe("");
     expect(verifierNomDeChef(nettoyerNom("     "))).toBe(NOM_TROP_COURT);
+  });
+});
+
+describe("comparaison des noms de chef (US-0135)", () => {
+  it.each([
+    ["Élan", "Elan", "élan", "ÉLAN", " E-lan "],
+    ["Cœur", "Coeur", "COEUR"],
+    ["Straße", "Strasse"],
+    ["Ægir", "Aegir"],
+    ["Łukasz", "Lukasz"],
+    ["Ours Brun", "Ours-Brun", "OursBrun", "ours brun"],
+    ["L'Ourse", "L\u2019Ourse", "Lourse"],
+  ])("tient « %s » pour le même nom que les autres", (...noms) => {
+    expect(new Set(noms.map(cleDuNom)).size).toBe(1);
+  });
+
+  it("garde les chiffres et distingue les vrais noms différents", () => {
+    expect(cleDuNom("Loup42")).toBe("loup42");
+    expect(cleDuNom("Loup")).not.toBe(cleDuNom("Loupe"));
   });
 });
 

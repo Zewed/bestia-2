@@ -141,6 +141,13 @@
       "when": 1791137042325,
       "tag": "0019_chefs",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791188918554,
+      "tag": "0020_nom_de_chef_unique",
+      "breakpoints": true
     }
   ]
 }

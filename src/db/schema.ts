@@ -259,7 +259,8 @@ export const lienReinitialisation = pgTable(
 
 /**
  * Le Chef d'un compte dans un Monde (US-0131), sous le nom que voient les autres joueurs. Un
- * compte a au plus un Chef par Monde ; tant qu'il n'en a pas, il ne peut que choisir son nom.
+ * compte a au plus un Chef par Monde ; tant qu'il n'en a pas, il ne peut que choisir son nom. Deux
+ * Chefs d'un même Monde ne portent jamais des noms jugés identiques (US-0135).
  */
 export const chef = pgTable(
   "chef",
@@ -271,8 +272,15 @@ export const chef = pgTable(
     mondeId: integer("monde_id")
       .notNull()
       .references(() => monde.id),
+    /** Le nom tel que le joueur l'a choisi, majuscules comprises. */
     nom: text("nom").notNull(),
+    /** US-0135 : sa forme de comparaison (src/chefs/nom.ts, cleDuNom), unique dans le Monde. */
+    cleNom: text("cle_nom").notNull(),
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [unique("chef_un_par_monde").on(t.compteId, t.mondeId)],
+  (t) => [
+    unique("chef_un_par_monde").on(t.compteId, t.mondeId),
+    unique("chef_nom_unique_dans_le_monde").on(t.mondeId, t.cleNom),
+    check("chef_cle_nom_a_plat", sql`${t.cleNom} ~ '^[a-z0-9]+$'`),
+  ],
 );

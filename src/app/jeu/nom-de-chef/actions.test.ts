@@ -1,0 +1,42 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const garde = vi.hoisted(() => ({ exigerCompteSansChef: vi.fn(async () => ({ id: 7, email: "nom@exemple.fr" })) }));
+vi.mock("@/comptes/garde", () => garde);
+const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn() }));
+vi.mock("@/chefs/chef", () => chefs);
+vi.mock("@/db", () => ({ getPool: () => ({}) }));
+
+import { NOM_DEJA_PRIS } from "@/chefs/nom";
+import { verifierNomLibre } from "./actions";
+
+describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    chefs.nomDejaPris.mockReset();
+    garde.exigerCompteSansChef.mockClear();
+  });
+
+  it("dit qu'un nom est déjà pris, nettoyé comme il sera enregistré", async () => {
+    chefs.nomDejaPris.mockResolvedValue(true);
+    expect(await verifierNomLibre("  Ours   Brun ")).toBe(NOM_DEJA_PRIS);
+    expect(chefs.nomDejaPris).toHaveBeenCalledWith(expect.anything(), "Ours Brun");
+    expect(garde.exigerCompteSansChef).toHaveBeenCalled();
+  });
+
+  it("ne dit rien d'un nom libre", async () => {
+    chefs.nomDejaPris.mockResolvedValue(false);
+    expect(await verifierNomLibre("Ourse")).toBeNull();
+  });
+
+  it("ne cherche pas un nom qui enfreint une autre règle", async () => {
+    expect(await verifierNomLibre("Ou")).toBeNull();
+    expect(await verifierNomLibre("Loup@")).toBeNull();
+    expect(chefs.nomDejaPris).not.toHaveBeenCalled();
+  });
+
+  it("ne fait rien en production tant que l'entrée du jeu est fermée", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(await verifierNomLibre("Ourse")).toBeNull();
+    expect(garde.exigerCompteSansChef).not.toHaveBeenCalled();
+  });
+});
