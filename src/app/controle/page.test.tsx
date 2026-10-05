@@ -73,6 +73,18 @@ vi.mock("@/donnees/en-base", () => ({
   rolesEnBase: async () => [{ id: "eclaireur", nom: "Éclaireur", phrase: "Voit loin." }],
 }));
 
+const monde = vi.hoisted(() => ({ couronneEnBase: vi.fn() }));
+vi.mock("@/monde/en-base", () => monde);
+const COURONNE = {
+  monde: "Aube",
+  cases: [
+    { q: 0, r: -2, biome: "prairie" },
+    { q: 1, r: -2, biome: "prairie" },
+    { q: 2, r: -2, biome: "prairie" },
+    { q: 2, r: -1, biome: "eau" },
+  ],
+};
+
 import Controle from "./page";
 
 const MOT_DE_PASSE = "mot-de-passe-d-essai";
@@ -144,4 +156,23 @@ describe("page de contrôle", () => {
     expect(html).toContain("Rôles en base · 1");
     expect(html).toContain("Voit loin.");
   });
+
+  it("montre la Couronne vue d'en haut, une forme par Biome, et la part de chacun (US-0151)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    monde.couronneEnBase.mockResolvedValue(COURONNE);
+    const html = renderToStaticMarkup(await Controle());
+    expect(html).toContain("Couronne de Aube · 4 Cases");
+    expect(html).toMatch(/<svg[^>]*aria-label="La Couronne de Aube, 4 Cases"/);
+    expect(html.match(/<path data-biome="([a-z]+)"/g)).toEqual(['<path data-biome="prairie"', '<path data-biome="eau"']);
+    expect(html).toContain("fill:var(--biome-prairie)");
+    expect(html).toMatch(/Prairie<span[^>]*>3 · 75 %<\/span>/);
+    expect(html).toMatch(/Eau<span[^>]*>1 · 25 %<\/span>/);
+  });
+
+  it("dit comment préparer la Couronne quand elle n'est pas encore en base", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    monde.couronneEnBase.mockResolvedValue({ monde: "Aube", cases: [] });
+    expect(renderToStaticMarkup(await Controle())).toContain("lancez npm run monde:couronne");
+  });
 });
+

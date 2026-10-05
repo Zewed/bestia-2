@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-270 points au total.
+269 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 
-- [US-0151](01-entrer-dans-le-jeu.md) · Préparer les Cases de la Couronne : la façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire.
 - [US-0153](01-entrer-dans-le-jeu.md) · Recevoir une Case libre sur la Couronne : la façon de choisir la Case parmi les libres, au hasard ou près des derniers arrivés.
 - [US-0158](01-entrer-dans-le-jeu.md) · Lire le récit d'arrivée : le texte du récit.
 - [US-0159](01-entrer-dans-le-jeu.md) · Prévenir quand la Couronne est pleine : ce qui est proposé au joueur en attendant ; l'ouverture d'un autre Monde viendra plus tard.

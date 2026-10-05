@@ -155,6 +155,13 @@
       "when": 1791191388361,
       "tag": "0021_mots_interdits",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791209779713,
+      "tag": "0022_couronne",
+      "breakpoints": true
     }
   ]
 }

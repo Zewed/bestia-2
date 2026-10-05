@@ -425,12 +425,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0151 · Préparer les Cases de la Couronne
 **En tant que** développeur, **je veux** un premier ensemble de Cases de la Couronne en base, chacune avec son Biome, **afin de** faire naître des joueurs avant que le Monde entier soit généré (étape 18).
 
+- **Statut** : Livrée le 2026-10-05. Le Monde est un disque d'hexagones de 60 anneaux autour du Cœur sauvage ; ses 3 anneaux extérieurs forment la Couronne, soit 1 062 Cases, toutes préparées d'un coup à la mise en ligne (`npm run monde:couronne`). Les Biomes y forment des régions d'un seul tenant, tirées de la graine du Monde ; la prairie en couvre environ 40 %. Une mini-carte de la Couronne est sur la page de contrôle.
 - **Débloquée par** : Étape 3, Étape 4
 - **Critères d'acceptation** :
   - La base contient des Cases hexagonales, chacune repérée de façon unique dans le Monde et marquée comme faisant partie de la Couronne.
   - Chaque Case a un Biome parmi ceux en base.
-  - Le nombre de Cases préparées (chiffre à régler).
-  - La façon dont la génération complète du Monde reprendra ces Cases sans changer leur Biome ni leur propriétaire (à décider).
+  - Toute la Couronne est préparée : les 3 anneaux extérieurs d'un Monde de 60 anneaux (réglables, fixés sur le Monde une fois la Couronne préparée).
+  - La génération complète du Monde (étape 18) n'ajoutera que les Cases manquantes : une Case déjà en base ne change jamais de Biome ni de propriétaire.
 
 ### US-0152 · Définir les Cases où un Foyer peut naître
 **En tant que** développeur, **je veux** une règle claire qui dit sur quelles Cases un Foyer peut naître, **afin de** donner à chaque nouveau joueur un départ qui se tient.

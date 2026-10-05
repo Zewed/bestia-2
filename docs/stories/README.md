@@ -4,14 +4,14 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0140** · Afficher le nom de chef dans la barre du haut. US-0141, livrée le même jour, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0151** · Préparer les Cases de la Couronne.
+Dernière story livrée : **US-0151** · Préparer les Cases de la Couronne. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0152** · Définir les Cases où un Foyer peut naître.
 
 ## Sommaire
 
 | Jalon | Étapes | Stories | À décider |
 |---|---|---:|---:|
 | [0 · Les fondations](00-fondations.md) | 1 à 4 | 52 | 1 |
-| [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9, sans la 8 | 54 | 5 |
+| [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9, sans la 8 | 54 | 4 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 6 |
 | [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 14 |
 | [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 9 |
@@ -28,9 +28,9 @@ Dernière story livrée : **US-0140** · Afficher le nom de chef dans la barre d
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **65 étapes** | **748** | **270** |
+| **Total** | **65 étapes** | **748** | **269** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (183 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (182 au total).
 
 ## Lire une story
 

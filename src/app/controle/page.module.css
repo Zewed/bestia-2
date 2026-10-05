@@ -197,3 +197,48 @@
     gap: 8px 12px;
   }
 }
+
+/* US-0151 : la Couronne vue d'en haut, et la légende des Biomes à côté. */
+.carte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+}
+
+.carte svg {
+  width: 100%;
+  max-width: 560px;
+  height: auto;
+}
+
+.legende {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.legende li {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+}
+
+.legende .note {
+  margin-top: 0;
+}
+
+.pastille {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+@media (max-width: 820px) {
+  .carte {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+

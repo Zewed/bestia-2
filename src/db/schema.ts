@@ -12,6 +12,9 @@ export const monde = pgTable("monde", {
   neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
   /** Le marque-page du temps : l'instant jusqu'auquel le Monde a été calculé. Il ne recule jamais. */
   calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
+  /** US-0151 : sa taille en anneaux, et combien d'anneaux extérieurs forment sa Couronne. Fixées à la préparation de la Couronne, elles ne changent plus. */
+  rayon: integer("rayon"),
+  anneauxCouronne: integer("anneaux_couronne"),
 });
 
 /**
@@ -303,5 +306,35 @@ export const motInterdit = pgTable(
     creeLe: timestamp("cree_le", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [check("mot_interdit_a_plat", sql`${t.mot} ~ '^[a-z0-9]+$'`)],
+);
+
+/**
+ * Une Case du Monde (US-0151) : un hexagone repéré par (q, r), le Cœur sauvage en (0, 0), avec son
+ * Biome. Une Case créée ne change plus de Biome : la génération du reste du Monde ne fait qu'ajouter
+ * les Cases qui manquent.
+ */
+export const caseDuMonde = pgTable(
+  "case_du_monde",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    mondeId: integer("monde_id")
+      .notNull()
+      .references(() => monde.id),
+    q: integer("q").notNull(),
+    r: integer("r").notNull(),
+    /** La distance au Cœur sauvage, en Cases. */
+    anneau: integer("anneau").notNull(),
+    /** Si la Case fait partie de la Couronne, où naissent les joueurs. */
+    couronne: boolean("couronne").notNull(),
+    biomeId: text("biome_id")
+      .notNull()
+      .references(() => biome.id),
+    varianteId: text("variante_id").references(() => varianteBiome.id),
+  },
+  (t) => [
+    unique("case_unique_dans_le_monde").on(t.mondeId, t.q, t.r),
+    index("case_par_anneau").on(t.mondeId, t.anneau),
+    check("case_anneau_exact", sql`${t.anneau} = greatest(abs(${t.q}), abs(${t.r}), abs(${t.q} + ${t.r}))`),
+  ],
 );
 

@@ -8,10 +8,12 @@ import { PastilleRarete } from "@/components/PastilleRarete";
 import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
+import { couronneEnBase } from "@/monde/en-base";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
 import { maintenant, vitesse } from "@/temps/horloge";
+import { CarteCouronne } from "./CarteCouronne";
 import { FicheEspece } from "./FicheEspece";
 import styles from "./page.module.css";
 
@@ -25,12 +27,13 @@ export default async function Controle() {
   // Le proxy demande déjà le mot de passe ; la page vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) notFound();
   const pool = getPool();
-  const [passages, biomes, especes, raretes, roles] = await Promise.all([
+  const [passages, biomes, especes, raretes, roles, couronne] = await Promise.all([
     derniersPassages(pool),
     biomesEnBase(pool),
     especesEnBase(pool),
     raretesEnBase(pool),
     rolesEnBase(pool),
+    couronneEnBase(pool),
   ]);
   const facteur = vitesse();
 
@@ -74,6 +77,13 @@ export default async function Controle() {
                 </tbody>
               </table>
             </div>
+          )}
+        </Bloc>
+        <Bloc titre={`Couronne${couronne ? ` de ${couronne.monde} · ${couronne.cases.length} Cases` : ""}`}>
+          {couronne && couronne.cases.length > 0 ? (
+            <CarteCouronne couronne={couronne} noms={Object.fromEntries(biomes.map((b) => [b.id, b.nom]))} />
+          ) : (
+            <p className={styles.note}>Aucune Case de la Couronne en base : lancez npm run monde:couronne.</p>
           )}
         </Bloc>
         <Bloc titre={`Biomes en base · ${biomes.length}`}>

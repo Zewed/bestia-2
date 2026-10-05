@@ -47,3 +47,16 @@ export const NOM_DE_CHEF_MIN = 3;
 export const NOM_DE_CHEF_MAX = 16;
 /** US-0136 : la disponibilité du nom est cherchée après une demi-seconde sans frappe. */
 export const NOM_DE_CHEF_PAUSE_MS = 500;
+
+/** US-0151 : le Monde est un disque d'hexagones de 60 anneaux autour du Cœur sauvage… */
+export const MONDE_RAYON = 60;
+/** … dont les 3 anneaux extérieurs forment la Couronne, où naissent les joueurs. */
+export const COURONNE_ANNEAUX = 3;
+/**
+ * La part de chaque Biome sur la Couronne, en régions d'un seul tenant. La prairie domine : les
+ * Foyers n'y naissent que là. L'eau de la Couronne est faite de lacs.
+ */
+export const BIOMES_DE_LA_COURONNE = { prairie: 0.4, foret: 0.25, montagne: 0.1, savane: 0.1, eau: 0.1, desert: 0.05 } as const;
+/** La taille des régions de Biome, en Cases à peu près : plus le nombre est grand, plus elles s'étendent. */
+export const TAILLE_DES_REGIONS = 16;
+

@@ -82,6 +82,17 @@
   --violet: oklch(0.5 0.16 300);
   --or: oklch(0.56 0.14 80);
 
+  /* Les Biomes, sur la carte : des tons de paysage, assez distincts pour se lire de loin */
+  --biome-prairie: oklch(0.83 0.12 128);
+  --biome-foret: oklch(0.56 0.1 150);
+  --biome-jungle: oklch(0.47 0.12 162);
+  --biome-savane: oklch(0.8 0.11 88);
+  --biome-desert: oklch(0.88 0.07 78);
+  --biome-montagne: oklch(0.62 0.025 60);
+  --biome-toundra: oklch(0.84 0.03 195);
+  --biome-banquise: oklch(0.95 0.02 225);
+  --biome-eau: oklch(0.66 0.1 238);
+
   /* Ombres */
   --ombre: 0 1px 2px oklch(0.22 0.02 270 / 0.06), 0 14px 36px oklch(0.22 0.02 270 / 0.12);
   --ombre-forte: 0 2px 4px oklch(0.22 0.02 270 / 0.08), 0 24px 60px oklch(0.22 0.02 270 / 0.18);

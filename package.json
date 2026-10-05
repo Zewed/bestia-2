@@ -25,6 +25,7 @@
     "emails": "tsx scripts/generate-emails.ts",
     "db:test-setup": "tsx scripts/db-dev-setup.ts --test",
     "db:donnees": "tsx scripts/db-donnees.ts",
+    "monde:couronne": "tsx scripts/monde-couronne.ts",
     "attendre-en-ligne": "sh scripts/attendre-mise-en-ligne.sh"
   },
   "dependencies": {
