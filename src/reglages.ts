@@ -45,3 +45,5 @@ export const REINITIALISATIONS_PAR_HEURE_MAX = 5;
 /** US-0132 : un nom de chef compte de 3 à 16 caractères, tels qu'on les voit (« É » en vaut un). */
 export const NOM_DE_CHEF_MIN = 3;
 export const NOM_DE_CHEF_MAX = 16;
+/** US-0136 : la disponibilité du nom est cherchée après une demi-seconde sans frappe. */
+export const NOM_DE_CHEF_PAUSE_MS = 500;

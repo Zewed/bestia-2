@@ -1,15 +1,16 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_TROP_COURT } from "@/chefs/nom";
+import { NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
 
 const actions = vi.hoisted(() => ({ verifierNomLibre: vi.fn(async (): Promise<string | null> => null) }));
 vi.mock("./actions", () => actions);
 
 import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
 
-describe("champ du nom de chef (US-0132 à US-0135)", () => {
+describe("champ du nom de chef (US-0132 à US-0136)", () => {
   afterEach(() => {
     cleanup();
     actions.verifierNomLibre.mockReset();
@@ -155,6 +156,86 @@ describe("champ du nom de chef (US-0132 à US-0135)", () => {
     await u.tab();
     await new Promise((fin) => setTimeout(fin, 0));
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+});
+
+describe("disponibilité du nom pendant la saisie (US-0136)", () => {
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+    actions.verifierNomLibre.mockReset();
+    actions.verifierNomLibre.mockResolvedValue(null);
+  });
+
+  const champ = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Nom de chef" });
+  /** Une horloge simulée : la pause d'une demi-seconde passe d'un coup. */
+  function horloge() {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    return userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  }
+  const attendre = async (ms: number) => {
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(ms);
+    });
+  };
+
+  it("cherche le nom quand le joueur s'arrête de taper, pas à chaque lettre", async () => {
+    expect(NOM_DE_CHEF_PAUSE_MS).toBe(500);
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await attendre(NOM_DE_CHEF_PAUSE_MS - 100);
+    expect(actions.verifierNomLibre).not.toHaveBeenCalled();
+    await attendre(100);
+    expect(actions.verifierNomLibre).toHaveBeenCalledTimes(1);
+    expect(actions.verifierNomLibre).toHaveBeenCalledWith("Ourse");
+  });
+
+  it("montre « disponible » sans rien réserver, et « déjà pris » sans attendre qu'on quitte le champ", async () => {
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    expect(screen.getByRole("status").textContent).toBe("Disponible");
+    actions.verifierNomLibre.mockResolvedValue(NOM_DEJA_PRIS);
+    await u.type(champ(), "s");
+    expect(screen.getByRole("status").textContent).toBe("");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    expect(screen.getByRole("alert").textContent).toBe(NOM_DEJA_PRIS);
+    expect(screen.getByRole("status").textContent).toBe("");
+  });
+
+  it("ne redemande pas un nom déjà cherché", async () => {
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    await u.type(champ(), "x{Backspace}");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    await u.tab();
+    expect(actions.verifierNomLibre).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole("status").textContent).toBe("Disponible");
+  });
+
+  it("cherche tout de suite si le joueur quitte le champ avant la fin de la pause, une seule fois", async () => {
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await u.tab();
+    expect(actions.verifierNomLibre).toHaveBeenCalledTimes(1);
+    await attendre(NOM_DE_CHEF_PAUSE_MS * 2);
+    expect(actions.verifierNomLibre).toHaveBeenCalledTimes(1);
+  });
+
+  it("ne cherche pas un nom refusé par une autre règle", async () => {
+    const u = horloge();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ou");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    await u.clear(champ());
+    await u.type(champ(), "Loup@");
+    await attendre(NOM_DE_CHEF_PAUSE_MS);
+    expect(actions.verifierNomLibre).not.toHaveBeenCalled();
   });
 });
 

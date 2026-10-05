@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type ChangeEvent } from "react";
-import { couperNom, longueurDuNom, NOM_DEJA_PRIS, nettoyerNom, nettoyerSaisie, verifierCaracteresDuNom, verifierNomDeChef } from "@/chefs/nom";
-import { NOM_DE_CHEF_MAX } from "@/reglages";
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
+import { cleDuNom, couperNom, longueurDuNom, NOM_DEJA_PRIS, nettoyerNom, nettoyerSaisie, verifierCaracteresDuNom, verifierNomDeChef } from "@/chefs/nom";
+import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
 import styles from "../../entree.module.css";
 import { verifierNomLibre } from "./actions";
 
@@ -12,59 +12,96 @@ import { verifierNomLibre } from "./actions";
  * la frappe. US-0133 : un caractère refusé se signale dès qu'il est tapé, pour qu'on voie lequel
  * retirer. US-0134 : le champ montre le nom tel qu'il sera enregistré ; un espace en tête ou un
  * deuxième espace de suite ne s'écrivent pas, l'espace de fin disparaît quand on quitte le champ.
- * US-0135 : en quittant le champ, un nom par ailleurs correct est cherché parmi ceux du Monde.
+ * US-0135, US-0136 : un nom par ailleurs correct est cherché parmi ceux du Monde dès que le joueur
+ * s'arrête de taper (ou quitte le champ) ; libre, une coche le dit, sans rien réserver.
  * « Valider » s'activera avec l'enregistrement du nom (US-0139).
  */
 export function FormulaireNomDeChef() {
   const [nom, setNom] = useState("");
   const [erreurEnQuittant, setErreurEnQuittant] = useState<string | null>(null);
-  // Le dernier nom trouvé déjà pris : le message ne vaut que tant que le champ le porte encore.
-  const [nomPris, setNomPris] = useState<string | null>(null);
-  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? (nomPris === nom ? NOM_DEJA_PRIS : null);
+  // Les réponses du jeu, par forme de comparaison : true si le nom est pris. Un nom déjà demandé
+  // (ou en cours de demande) ne repart pas au serveur.
+  const [verdicts, setVerdicts] = useState<Record<string, boolean>>({});
+  const demandes = useRef(new Set<string>());
+
+  const propre = nettoyerNom(nom);
+  const valable = propre !== "" && !verifierNomDeChef(propre);
+  const pris = valable ? verdicts[cleDuNom(propre)] : undefined;
+  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? (pris ? NOM_DEJA_PRIS : null);
+  const libre = pris === false && !erreur;
   const decrit = [erreur ? "nom-erreur" : null, nom ? "nom-compteur" : null].filter(Boolean).join(" ");
+
+  const chercher = useCallback(async (candidat: string) => {
+    const cle = cleDuNom(candidat);
+    if (demandes.current.has(cle)) return;
+    demandes.current.add(cle);
+    try {
+      const refus = await verifierNomLibre(candidat);
+      setVerdicts((precedents) => ({ ...precedents, [cle]: refus !== null }));
+    } catch {
+      // Sans réponse du jeu, rien n'est affiché ; une prochaine pause redemandera.
+      demandes.current.delete(cle);
+    }
+  }, []);
+
+  // US-0136 : la recherche part quand le joueur s'arrête de taper, pas à chaque lettre.
+  useEffect(() => {
+    if (!valable || demandes.current.has(cleDuNom(propre))) return;
+    const minuterie = setTimeout(() => void chercher(propre), NOM_DE_CHEF_PAUSE_MS);
+    return () => clearTimeout(minuterie);
+  }, [propre, valable, chercher]);
 
   function saisir(e: ChangeEvent<HTMLInputElement>) {
     const champ = e.target;
-    const propre = couperNom(nettoyerSaisie(champ.value));
+    const nettoye = couperNom(nettoyerSaisie(champ.value));
     // Un espace retiré ne doit pas renvoyer le curseur en fin de champ : le champ est corrigé sur
     // place, et le curseur reste où l'on tapait, avant que la lettre suivante n'arrive.
-    if (propre !== champ.value && champ.selectionStart !== null) {
-      const curseur = Math.min(nettoyerSaisie(champ.value.slice(0, champ.selectionStart)).length, propre.length);
-      champ.value = propre;
+    if (nettoye !== champ.value && champ.selectionStart !== null) {
+      const curseur = Math.min(nettoyerSaisie(champ.value.slice(0, champ.selectionStart)).length, nettoye.length);
+      champ.value = nettoye;
       champ.setSelectionRange(curseur, curseur);
     }
-    setNom(propre);
+    setNom(nettoye);
     setErreurEnQuittant(null);
   }
 
-  async function quitter() {
-    const propre = nettoyerNom(nom);
+  function quitter() {
     setNom(propre);
     const refus = propre ? verifierNomDeChef(propre) : null;
     setErreurEnQuittant(refus);
-    if (!propre || refus) return;
-    try {
-      if (await verifierNomLibre(propre)) setNomPris(propre);
-    } catch {
-      // Sans réponse du jeu, rien n'est affiché : l'enregistrement vérifiera de toute façon.
-    }
+    // Parti avant la fin de la pause : la recherche part tout de suite.
+    if (propre && !refus) void chercher(propre);
   }
+
   return (
     <form className={styles.formulaire} noValidate>
       <div className={styles.champ}>
-        <input
-          id="nom-de-chef"
-          type="text"
-          name="nom"
-          aria-label="Nom de chef"
-          autoComplete="off"
-          spellCheck={false}
-          value={nom}
-          onChange={saisir}
-          onBlur={quitter}
-          aria-invalid={erreur ? true : undefined}
-          aria-describedby={decrit || undefined}
-        />
+        <div className={styles.saisie}>
+          <input
+            id="nom-de-chef"
+            type="text"
+            name="nom"
+            aria-label="Nom de chef"
+            autoComplete="off"
+            spellCheck={false}
+            value={nom}
+            onChange={saisir}
+            onBlur={quitter}
+            aria-invalid={erreur ? true : undefined}
+            aria-describedby={decrit || undefined}
+          />
+          {libre ? (
+            <span className={styles.coche} aria-hidden="true">
+              <svg viewBox="0 0 52 52">
+                <path d="M15 27.5 22.5 35 37.5 18.5" />
+              </svg>
+            </span>
+          ) : null}
+        </div>
+        {/* La coche se voit ; ceci la dit aux lecteurs d'écran. */}
+        <span className={styles.annonce} role="status">
+          {libre ? "Disponible" : ""}
+        </span>
         {erreur || nom ? (
           <div className={styles.sousLeChamp}>
             {erreur ? (

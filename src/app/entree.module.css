@@ -103,6 +103,49 @@
   align-items: baseline;
 }
 
+/* US-0136 : le nom est libre. La pastille verte de la validation, en petit, au bout du champ. */
+.coche {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: var(--menthe-fonce);
+  color: var(--blanc-chaud);
+  transform: translateY(-50%);
+  animation: fondu 200ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.coche svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Un fondu seul : la coche est déjà placée par transform. */
+@keyframes fondu {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Un texte pour les lecteurs d'écran seulement. */
+.annonce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 .compteur {
   margin-left: auto;
   color: var(--texte-discret);
@@ -327,6 +370,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .coche,
   .validation,
   .pastilleValidation,
   .bienvenue > :not(.validation) {

@@ -355,6 +355,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0136 · Voir si le nom est libre pendant la saisie
 **En tant que** nouveau joueur, **je veux** voir si mon nom est libre avant de valider, **afin de** chercher un autre nom sans aller-retour.
 
+- **Statut** : Livrée le 2026-10-05. La recherche part après une demi-seconde sans frappe (`NOM_DE_CHEF_PAUSE_MS`), ou tout de suite si l'on quitte le champ avant. Libre : une petite coche verte au bout du champ, annoncée « Disponible » aux lecteurs d'écran. Pris : « Ce nom est déjà pris » sous le champ. Un nom déjà cherché ne repart pas au serveur ; un nom refusé par une autre règle n'y part jamais.
 - **Débloquée par** : US-0135
 - **Critères d'acceptation** :
   - Quand le joueur s'arrête de taper, un signe indique « disponible » ou « déjà pris ».
