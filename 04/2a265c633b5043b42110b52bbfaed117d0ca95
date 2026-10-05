@@ -1,0 +1,49 @@
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_95e4b220770db4 11-13
+  s_97a431cfa65ca7::t_df16588dd31e1e 9-10
+src/monde/preparer-couronne.db.test.ts
+  s_97a431cfa65ca7::t_6362f50a4b7c44 32-33,40,47,52,54,56-65
+src/app/controle/CarteCouronne.tsx
+  s_97a431cfa65ca7::t_20a58bcd6d2818 2,32-33,35,46-51,54-58
+docs/stories/01-entrer-dans-le-jeu.md
+  s_97a431cfa65ca7::t_c31414fb3d2119 428,433,439,444
+src/monde/couronne.test.ts
+  s_97a431cfa65ca7::t_a01b7ef9e110dc 3-4,12-14,16,19-27,29,49,54,67-68
+src/app/controle/page.test.tsx
+  s_97a431cfa65ca7::t_20a58bcd6d2818 172-180
+README.md
+  s_97a431cfa65ca7::t_c31414fb3d2119 65
+src/monde/foyers.ts
+  s_97a431cfa65ca7::t_95e4b220770db4 1-29
+docs/stories/README.md
+  s_97a431cfa65ca7::t_c31414fb3d2119 7,33
+src/monde/preparer-couronne.ts
+  s_97a431cfa65ca7::t_cb8067d9832103 8-10,19-21
+src/reglages.ts
+  s_97a431cfa65ca7::t_cb8067d9832103 53-59
+src/app/controle/page.module.css
+  s_97a431cfa65ca7::t_20a58bcd6d2818 239-248
+src/monde/foyers.test.ts
+  s_97a431cfa65ca7::t_95e4b220770db4 1-43
+src/app/controle/page.tsx
+  s_97a431cfa65ca7::t_20a58bcd6d2818 12,85-89
+src/monde/couronne.ts
+  s_97a431cfa65ca7::t_cb8067d9832103 65-70,77-83
+  s_97a431cfa65ca7::t_dd6a294ebf1318 64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "042a265c633b5043b42110b52bbfaed117d0ca95",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
