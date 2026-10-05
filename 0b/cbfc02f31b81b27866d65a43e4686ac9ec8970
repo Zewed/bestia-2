@@ -1,0 +1,52 @@
+src/chefs/nom.ts
+  s_d0f4332113d26c::t_1cf87bdf71e2ac 1,10,90-107
+src/app/jeu/nom-de-chef/FormulaireNomDeChef.test.tsx
+  s_d0f4332113d26c::t_12d0c9ce9e8c88 4-9,12-17,127-158,160
+src/app/jeu/nom-de-chef/FormulaireNomDeChef.tsx
+  s_d0f4332113d26c::t_dd8c7970d8405f 4,7,15,21-22,40,43,45-50
+  s_d0f4332113d26c::t_3d59563399026f 20,23,37,44
+src/chefs/nom.test.ts
+  s_d0f4332113d26c::t_12d0c9ce9e8c88 6,124-140
+  s_d0f4332113d26c::t_5b205f95de1a16 141-142
+src/app/jeu/nom-de-chef/actions.ts
+  s_d0f4332113d26c::t_dd8c7970d8405f 1-20
+docs/stories/README.md
+  s_d0f4332113d26c::t_f3a704f3029d4e 7,14,31
+drizzle/0020_nom_de_chef_unique.sql
+  s_d0f4332113d26c::t_1cf87bdf71e2ac 1-3
+src/app/jeu/garde.test.ts
+  s_d0f4332113d26c::t_a2822e33c071a8 8-9,36
+docs/stories/01-entrer-dans-le-jeu.md
+  s_d0f4332113d26c::t_f3a704f3029d4e 347,352
+src/chefs/chef.ts
+  s_d0f4332113d26c::t_c9a0a5959c38e9 5,15-26
+docs/stories/a-decider.md
+  s_d0f4332113d26c::t_f3a704f3029d4e 5
+src/app/jeu/nom-de-chef/actions.test.ts
+  s_d0f4332113d26c::t_12d0c9ce9e8c88 1-42
+src/db/schema.ts
+  s_d0f4332113d26c::t_c9a0a5959c38e9 262-263
+  s_d0f4332113d26c::t_1cf87bdf71e2ac 275,277-278,281-285
+src/chefs/chef.db.test.ts
+  s_d0f4332113d26c::t_12d0c9ce9e8c88 5-6,29,36,43-47,51-83,85
+drizzle/meta/0020_snapshot.json
+  s_d0f4332113d26c::t_3d46804235280b 1-1289
+drizzle/meta/_journal.json
+  s_d0f4332113d26c::t_ad0f4b5cfa5cce 144-150
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0bcbfc02f31b81b27866d65a43e4686ac9ec8970",
+  "prompts": {},
+  "sessions": {
+    "s_d0f4332113d26c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2ab9f098-cebe-4f31-b417-52258c563e67",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
