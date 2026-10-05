@@ -19,11 +19,12 @@ export const metadata: Metadata = {
 // La barre du navigateur sur mobile prend la couleur Encre de la barre du haut.
 export const viewport: Viewport = { themeColor: couleurs.encre };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+// `actions` : ce que la barre du haut montre à droite, rempli par chaque page (src/app/@actions).
+export default function RootLayout({ children, actions }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={jakarta.variable}>
       <body>
-        <BarreHaut />
+        <BarreHaut actions={actions} />
         {children}
       </body>
     </html>

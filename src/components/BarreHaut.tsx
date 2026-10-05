@@ -1,13 +1,17 @@
-import { ActionsJoueur } from "./ActionsJoueur";
+import type { ReactNode } from "react";
 import { Logo } from "./Logo";
 import styles from "./BarreHaut.module.css";
 
-/** La barre du haut, sur chaque page : le logo à gauche, les actions du joueur à droite sur les pages du jeu. */
-export function BarreHaut() {
+/**
+ * La barre du haut, sur chaque page : le logo à gauche, et à droite les actions du joueur, que
+ * chaque page fournit (l'emplacement @actions de la mise en page) : rien hors du jeu, le nom de
+ * chef et son menu dans le jeu (US-0140).
+ */
+export function BarreHaut({ actions }: { actions?: ReactNode }) {
   return (
     <header className={styles.barre}>
       <Logo />
-      <ActionsJoueur />
+      {actions}
     </header>
   );
 }

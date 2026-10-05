@@ -8,7 +8,7 @@ const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn() }));
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 
-import { exigerCompte, exigerCompteSansChef } from "./garde";
+import { exigerCompte, exigerCompteSansChef, joueurConnecte } from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string } | null) => {
@@ -51,4 +51,14 @@ describe("garde du jeu", () => {
       digest: expect.stringContaining(";/connexion?suite=%2Fjeu%2Fterritoire&expiree=1;"),
     });
   });
+
+  it("lit le joueur connecté sans jamais rediriger, pour la barre du haut (US-0140)", async () => {
+    connecte({ nom: "Ourse" });
+    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: "Ourse" });
+    connecte(null);
+    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: null });
+    cookie.jetonDeSession.mockResolvedValue(undefined);
+    expect(await joueurConnecte()).toBeNull();
+  });
 });
+

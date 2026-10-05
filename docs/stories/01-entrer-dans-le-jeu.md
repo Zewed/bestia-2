@@ -398,6 +398,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0140 · Afficher le nom de chef dans la barre du haut
 **En tant que** joueur, **je veux** voir mon nom de chef dans la barre du haut, **afin de** me sentir chez moi sur chaque page.
 
+- **Statut** : Livrée le 2026-10-05. Le nom remplace « Se déconnecter » dans la pastille de droite, avec une petite flèche ; le menu montre le nom en entier en tête, puis « Se déconnecter ». Il se referme d'un clic ailleurs, avec Échap ou d'un nouveau clic, et se pilote au clavier. Tant que le joueur n'a pas de nom, « Se déconnecter » reste seul.
 - **Débloquée par** : US-0120, US-0139
 - **Critères d'acceptation** :
   - Le nom de chef s'affiche dans la barre du haut, sur toutes les pages du jeu.

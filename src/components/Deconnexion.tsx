@@ -1,21 +1,13 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import { useTransition } from "react";
 import { seDeconnecter } from "@/comptes/deconnexion";
 import styles from "./BarreHaut.module.css";
 import { rechargerVers } from "./recharger";
 
-/**
- * Les actions du joueur dans la barre du haut, sur les pages du jeu seulement : elles exigent
- * d'être connecté, et la page d'accueil reste ainsi statique et rapide. Pour l'instant :
- * « Se déconnecter » (US-0120).
- */
-export function ActionsJoueur() {
-  const chemin = usePathname();
+/** Se déconnecter (US-0120) : la session est fermée côté jeu, puis la page d'accueil se recharge. */
+export function useDeconnexion() {
   const [enCours, demarrer] = useTransition();
-  if (!chemin?.startsWith("/jeu")) return null;
-
   function deconnecter() {
     demarrer(async () => {
       await seDeconnecter();
@@ -24,7 +16,12 @@ export function ActionsJoueur() {
       rechargerVers("/");
     });
   }
+  return { enCours, deconnecter };
+}
 
+/** « Se déconnecter », seul dans la barre : pour un joueur qui n'a pas encore de nom de chef. */
+export function BoutonDeconnexion() {
+  const { enCours, deconnecter } = useDeconnexion();
   return (
     <button type="button" className={styles.action} onClick={deconnecter} disabled={enCours}>
       {enCours ? "Déconnexion…" : "Se déconnecter"}

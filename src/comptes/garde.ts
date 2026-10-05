@@ -4,6 +4,7 @@
 // actions du jeu l'appellent. Côté serveur uniquement.
 import "server-only";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 import { chefDuCompte } from "@/chefs/chef";
 import { getPool } from "@/db";
 import { jetonDeSession } from "./cookie-session";
@@ -44,3 +45,17 @@ async function exigerSession(chemin: string): Promise<CompteConnecte> {
   if (!compte) redirect(connexionPuis(chemin, { expiree: Boolean(jeton) }));
   return compte;
 }
+
+/**
+ * Le joueur connecté et son nom de chef (null tant qu'il ne l'a pas choisi), ou null sans session.
+ * Sans redirection : pour la barre du haut, qui ne fait que montrer ; les pages et les actions du
+ * jeu, elles, passent par exigerCompte.
+ */
+export const joueurConnecte = cache(async (): Promise<{ compte: CompteConnecte; nomDeChef: string | null } | null> => {
+  const jeton = await jetonDeSession();
+  const compte = jeton ? await compteDeLaSession(getPool(), jeton) : null;
+  if (!compte) return null;
+  const chef = await chefDuCompte(getPool(), compte.id);
+  return { compte, nomDeChef: chef?.nom ?? null };
+});
+

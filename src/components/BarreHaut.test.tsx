@@ -7,8 +7,13 @@ describe("barre du haut", () => {
     expect(renderToStaticMarkup(<BarreHaut />)).toMatch(/^<header[^>]*>/);
   });
 
-  it("n'affiche encore aucune information de joueur, seulement le nom du jeu", () => {
+  it("sans actions, n'affiche que le nom du jeu", () => {
     const text = renderToStaticMarkup(<BarreHaut />).replace(/<[^>]*>/g, "");
     expect(text).toBe("Bestia");
+  });
+
+  it("montre à droite les actions que la page lui donne", () => {
+    const html = renderToStaticMarkup(<BarreHaut actions={<button type="button">Ourse</button>} />);
+    expect(html).toMatch(/Bestia.*<button type="button">Ourse<\/button><\/header>$/);
   });
 });
