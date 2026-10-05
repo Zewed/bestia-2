@@ -457,6 +457,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0154 · Ne jamais donner la même Case à deux joueurs
 **En tant que** nouveau joueur, **je veux** être sûr que ma Case n'est donnée qu'à moi, **afin de** ne jamais partager mon Foyer avec un inconnu.
 
+- **Statut** : Livrée le 2026-10-05. Tenue par US-0153 : les naissances d'un Monde passent l'une après l'autre, et une Case n'a qu'un champ « chef ». Un test fait naître 30 chefs au même instant : 30 Cases différentes, toutes à 4 Cases au moins les unes des autres.
 - **Débloquée par** : US-0153
 - **Critères d'acceptation** :
   - Deux joueurs qui naissent au même instant reçoivent deux Cases différentes.

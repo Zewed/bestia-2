@@ -206,6 +206,16 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
     });
 
+    it("donne 30 Cases différentes, toutes bien espacées, à 30 chefs qui naissent au même instant (US-0154)", async () => {
+      const comptes = await Promise.all(Array.from({ length: 30 }, () => nouveauCompte()));
+      await Promise.all(Array.from({ length: 10 }, () => pool.query("select pg_sleep(0.2)")));
+      const resultats = await Promise.all(comptes.map((compte, i) => enregistrerNomDeChef(pool, compte.id, nomUnique(`Rafale${String.fromCharCode(97 + i % 26)}${i >= 26 ? "z" : ""}`))));
+      expect(resultats.every((r) => r.statut === "enregistre")).toBe(true);
+      const cases = (await Promise.all(comptes.map((compte) => caseDu(compte.id)))).map((c) => c[0]);
+      expect(new Set(cases.map((c) => `${c.q},${c.r}`)).size).toBe(30);
+      for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
+    }, 30_000);
+
     it("libère la Case d'un compte supprimé", async () => {
       const compte = await nouveauCompte();
       await enregistrerNomDeChef(pool, compte.id, nomUnique("Passant"));
