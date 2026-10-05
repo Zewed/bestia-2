@@ -2,8 +2,8 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, URL_TEST } from "@/test/base";
-import { chefDuCompte, nomDejaPris } from "./chef";
-import { cleDuNom } from "./nom";
+import { chefDuCompte, enregistrerNomDeChef, nomDejaPris } from "./chef";
+import { caractereRefuse, cleDuNom, NOM_TROP_COURT } from "./nom";
 
 describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   let pool: Pool;
@@ -80,6 +80,61 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
     await expect(
       pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), 'Élan', 'Élan')", [compte.id]),
     ).rejects.toMatchObject({ constraint: "chef_cle_nom_a_plat" });
+  });
+
+  describe("enregistrer le nom (US-0137)", () => {
+    it("enregistre le nom nettoyé, avec sa forme de comparaison", async () => {
+      const compte = await nouveauCompte();
+      const nom = nomUnique("Ours Brun");
+      expect(await enregistrerNomDeChef(pool, compte.id, `  ${nom.replace(" ", "   ")} `)).toEqual({ statut: "enregistre", nom });
+      expect(await chefDuCompte(pool, compte.id)).toEqual({ nom });
+      const { rows } = await pool.query("select cle_nom from chef where compte_id = $1", [compte.id]);
+      expect(rows[0].cle_nom).toBe(cleDuNom(nom));
+    });
+
+    it("refait toutes les règles, sans rien enregistrer d'un nom refusé", async () => {
+      const compte = await nouveauCompte();
+      expect(await enregistrerNomDeChef(pool, compte.id, "Ou")).toEqual({ statut: "refuse", erreur: NOM_TROP_COURT });
+      expect(await enregistrerNomDeChef(pool, compte.id, "Loup@")).toEqual({ statut: "refuse", erreur: caractereRefuse("@") });
+      expect(await enregistrerNomDeChef(pool, compte.id, "    ")).toEqual({ statut: "refuse", erreur: NOM_TROP_COURT });
+      expect(await chefDuCompte(pool, compte.id)).toBeNull();
+    });
+
+    it("dit qu'un nom est pris, majuscules, accents et signes mis à part", async () => {
+      const premier = await nouveauCompte();
+      const second = await nouveauCompte();
+      const nom = nomUnique("Élan");
+      await enregistrerNomDeChef(pool, premier.id, nom.replace("Élan", "Elan"));
+      expect(await enregistrerNomDeChef(pool, second.id, nom.toUpperCase())).toEqual({ statut: "pris" });
+      expect(await chefDuCompte(pool, second.id)).toBeNull();
+    });
+
+    /** Des connexions déjà ouvertes : sinon leur ouverture, une à une, étalerait la rafale. */
+    const chaufferLePool = () => Promise.all(Array.from({ length: 10 }, () => pool.query("select pg_sleep(0.2)")));
+
+    it("ne donne le nom qu'à un seul des chefs qui le veulent au même instant", async () => {
+      const comptes = await Promise.all(Array.from({ length: 10 }, () => nouveauCompte()));
+      const nom = nomUnique("Rafale");
+      await chaufferLePool();
+      const resultats = await Promise.all(comptes.map((compte) => enregistrerNomDeChef(pool, compte.id, nom)));
+      expect(resultats.filter((r) => r.statut === "enregistre")).toHaveLength(1);
+      expect(resultats.filter((r) => r.statut === "pris")).toHaveLength(9);
+      const { rows } = await pool.query("select count(*)::int as n from chef where cle_nom = $1", [cleDuNom(nom)]);
+      expect(rows[0].n).toBe(1);
+    });
+
+    it("traite un double appui du même joueur comme un seul", async () => {
+      const compte = await nouveauCompte();
+      const nom = nomUnique("Double");
+      await chaufferLePool();
+      const resultats = await Promise.all([enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, compte.id, nom)]);
+      expect(resultats).toEqual([
+        { statut: "enregistre", nom },
+        { statut: "enregistre", nom },
+      ]);
+      const { rows } = await pool.query("select count(*)::int as n from chef where compte_id = $1", [compte.id]);
+      expect(rows[0].n).toBe(1);
+    });
   });
 });
 

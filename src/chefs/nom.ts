@@ -8,6 +8,8 @@ export const COMMENCER_PAR_UNE_LETTRE = "Commencez par une lettre";
 export const DEUX_SIGNES_A_LA_SUITE = "Pas deux signes à la suite";
 export const caractereRefuse = (caractere: string) => `« ${caractere} » n'est pas autorisé`;
 export const NOM_DEJA_PRIS = "Ce nom est déjà pris";
+/** US-0137 : pris entre la coche « disponible » et la validation. */
+export const NOM_VIENT_D_ETRE_PRIS = "Ce nom vient d'être pris";
 
 const segmenteur = new Intl.Segmenter("fr", { granularity: "grapheme" });
 const caracteres = (texte: string) => [...segmenteur.segment(texte)].map((s) => s.segment);

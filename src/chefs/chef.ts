@@ -2,7 +2,8 @@
 // Côté serveur uniquement.
 import "server-only";
 import type { Pool } from "pg";
-import { cleDuNom } from "./nom";
+import { DatabaseError } from "pg";
+import { cleDuNom, nettoyerNom, verifierNomDeChef } from "./nom";
 
 /** Le Monde du jeu : le seul pour l'instant, le premier ouvert. */
 const MONDE_DU_JEU = "(select id from monde order by id limit 1)";
@@ -22,5 +23,30 @@ export async function nomDejaPris(pool: Pool, nom: string): Promise<boolean> {
     [cle],
   );
   return rows[0].pris;
+}
+
+export type Enregistrement = { statut: "enregistre"; nom: string } | { statut: "refuse"; erreur: string } | { statut: "pris" };
+
+/**
+ * Donne au compte son nom de chef dans le Monde du jeu (US-0137) : la saisie est nettoyée et
+ * repasse par toutes les règles, puis la base tranche. Si deux joueurs veulent le même nom au
+ * même instant, un seul l'obtient ; l'autre reçoit « pris ». Un double appui du même joueur n'est
+ * pas un conflit : il retrouve le chef créé par le premier.
+ */
+export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie: string): Promise<Enregistrement> {
+  const nom = nettoyerNom(saisie);
+  const erreur = verifierNomDeChef(nom);
+  if (erreur) return { statut: "refuse", erreur };
+  try {
+    await pool.query(`insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, ${MONDE_DU_JEU}, $2, $3)`, [compteId, nom, cleDuNom(nom)]);
+    return { statut: "enregistre", nom };
+  } catch (refus) {
+    if (!(refus instanceof DatabaseError) || refus.code !== "23505") throw refus;
+    // Le compte a peut-être déjà son chef (double appui) ; sinon, le nom vient d'être pris.
+    const chef = await chefDuCompte(pool, compteId);
+    if (chef) return { statut: "enregistre", nom: chef.nom };
+    if (refus.constraint === "chef_nom_unique_dans_le_monde") return { statut: "pris" };
+    throw refus;
+  }
 }
 

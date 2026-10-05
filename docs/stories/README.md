@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0136** · Voir si le nom est libre pendant la saisie ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0137** · Départager deux chefs qui veulent le même nom au même instant.
+Dernière story livrée : **US-0137** · Départager deux chefs qui veulent le même nom au même instant ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0138** · Refuser les noms interdits.
 
 ## Sommaire
 

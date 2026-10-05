@@ -365,6 +365,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0137 · Départager deux chefs qui veulent le même nom au même instant
 **En tant que** nouveau joueur, **je veux** un message clair si quelqu'un a pris mon nom juste avant moi, **afin de** comprendre pourquoi il est refusé alors qu'il était libre.
 
+- **Statut** : Livrée côté serveur le 2026-10-05. L'enregistrement (`enregistrerNomDeChef`) nettoie le nom, refait toutes les règles, puis laisse la base trancher : sur dix comptes qui enregistrent le même nom au même instant, un seul l'obtient. Un double appui du même joueur ne crée qu'un chef. Le message et la saisie conservée paraissent avec le bouton « Valider » (US-0139).
 - **Débloquée par** : US-0135
 - **Critères d'acceptation** :
   - Si deux joueurs valident le même nom au même instant, un seul l'obtient.
@@ -389,6 +390,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
   - Le bouton « Valider » n'est actif que si le nom respecte toutes les règles.
   - Le nom est enregistré pour ce compte et pour ce Monde.
   - Le joueur passe à l'étape suivante de l'entrée dans le jeu.
+  - Un nom pris au moment de valider affiche « Ce nom vient d'être pris » si la coche « disponible » était affichée, sinon « Ce nom est déjà pris » ; le joueur reste sur l'écran, sa saisie conservée (US-0137).
   - La possibilité de changer de nom plus tard, et l'avertissement à montrer avant de valider (à décider).
 
 ### US-0140 · Afficher le nom de chef dans la barre du haut
