@@ -16,3 +16,12 @@ export async function couronneEnBase(pool: Pool): Promise<CouronneEnBase | null>
   );
   return { monde: mondes[0].nom, cases: rows };
 }
+
+/** US-0156 : combien de Territoires le temps fait vivre, et le marque-page le plus en retard. */
+export async function territoiresSuivis(pool: Pool): Promise<{ nombre: number; plusAncien: Date | null }> {
+  const { rows } = await pool.query<{ nombre: number; plusAncien: Date | null }>(
+    `select count(*)::int as nombre, min(calcule_jusqu_a) as "plusAncien" from territoire`,
+  );
+  return rows[0];
+}
+

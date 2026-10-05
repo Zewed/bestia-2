@@ -72,7 +72,7 @@ describe.skipIf(!URL_TEST)("ne jamais compter deux fois le même temps (sur base
     await programmerEvenement(pool, "monde", id, heures(4), "attaque");
     // La tâche passe à H+9 pendant qu'un joueur ouvre la page à H+10, au même moment.
     await Promise.all([
-      rattraperLesAbsents({ pool, maintenant: heures(9), parmi: [id], regles }),
+      rattraperLesAbsents({ pool, maintenant: heures(9), parmi: { monde: [id] }, regles }),
       rattraper("monde", id, { pool, regles, jusqua: heures(10) }),
     ]);
     expect(compte).toEqual({ heures: 10, attaques: 1 });

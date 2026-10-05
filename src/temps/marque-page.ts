@@ -3,8 +3,8 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 
 // Les éléments qui vivent dans le temps, et la table qui garde leur marque-page
-// « calculé jusqu'à ». Les Territoires s'ajouteront ici.
-const TABLES = { monde: "monde" } as const;
+// « calculé jusqu'à » : le Monde, et chaque Territoire depuis sa naissance (US-0156).
+const TABLES = { monde: "monde", territoire: "territoire" } as const;
 
 export type ElementSuivi = keyof typeof TABLES;
 

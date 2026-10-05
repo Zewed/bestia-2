@@ -10,8 +10,8 @@ import { maintenant } from "./horloge";
 import type { ElementSuivi } from "./marque-page";
 import { rattraper } from "./rattraper";
 
-// Les éléments que la tâche fait vivre, avec leur table. Les Territoires s'ajouteront ici.
-const SUIVIS: Record<ElementSuivi, string> = { monde: "monde" };
+// Les éléments que la tâche fait vivre, avec leur table : le Monde et les Territoires (US-0156).
+const SUIVIS: Record<ElementSuivi, string> = { monde: "monde", territoire: "territoire" };
 
 export type ErreurDePassage = { element: string; id: number | null; raison: string };
 export type Passage = { rattrapes: number; echecs: number; restants: number; dureeMs: number; erreurs: ErreurDePassage[] };
@@ -29,8 +29,8 @@ export async function rattraperLesAbsents(
     maintenant?: Date;
     tailleLot?: number;
     budgetMs?: number;
-    /** Pour les tests : se limiter à ces éléments, et à ces règles. */
-    parmi?: number[];
+    /** Pour les tests : se limiter à ces éléments (par sorte d'élément, les autres sortes sont laissées), et à ces règles. */
+    parmi?: Partial<Record<ElementSuivi, number[]>>;
     regles?: Regles;
   } = {},
 ): Promise<Passage> {
@@ -42,9 +42,11 @@ export async function rattraperLesAbsents(
   const passage: Passage = { rattrapes: 0, echecs: 0, restants: 0, dureeMs: 0, erreurs: [] };
 
   for (const [element, table] of Object.entries(SUIVIS) as [ElementSuivi, string][]) {
-    const filtre = options.parmi ? "and id = any($3)" : "";
+    const parmi = options.parmi ? (options.parmi[element] ?? []) : null;
+    if (parmi && parmi.length === 0) continue;
+    const filtre = parmi ? "and id = any($3)" : "";
     const parametres: unknown[] = [limite, options.tailleLot ?? TAILLE_LOT];
-    if (options.parmi) parametres.push(options.parmi);
+    if (parmi) parametres.push(parmi);
     const { rows } = await pool.query<{ id: number }>(
       `select id from ${table} where calcule_jusqu_a < $1 ${filtre} order by calcule_jusqu_a limit $2`,
       parametres,
@@ -61,8 +63,8 @@ export async function rattraperLesAbsents(
       }
     }
     const reste = await pool.query<{ n: number }>(
-      `select count(*)::int as n from ${table} where calcule_jusqu_a < $1 ${options.parmi ? "and id = any($2)" : ""}`,
-      options.parmi ? [limite, options.parmi] : [limite],
+      `select count(*)::int as n from ${table} where calcule_jusqu_a < $1 ${parmi ? "and id = any($2)" : ""}`,
+      parmi ? [limite, parmi] : [limite],
     );
     passage.restants += reste.rows[0].n;
   }

@@ -477,6 +477,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0156 · Faire démarrer le temps du Territoire à la naissance
 **En tant que** développeur, **je veux** que le Territoire soit suivi par le mécanisme du temps dès sa naissance, **afin de** préparer la production et tout ce qui avancera ensuite.
 
+- **Statut** : Livrée le 2026-10-05. Le Territoire est le deuxième élément suivi par le temps, après le Monde : son marque-page part de sa naissance, à l'heure du jeu, et la base refuse qu'il recule. Toute page ou action du jeu met d'abord le Territoire du joueur à l'heure ; la tâche planifiée rattrape ceux que personne n'a regardés depuis 5 minutes. Il n'y a encore rien à calculer : avancer, c'est déplacer le marque-page. La page de contrôle compte les Territoires suivis et le retard du plus en retard.
 - **Débloquée par** : US-0155, Étape 3
 - **Critères d'acceptation** :
   - Le Territoire porte un instant « calculé jusqu'à » égal à l'heure de sa naissance.

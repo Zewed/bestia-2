@@ -4,6 +4,7 @@ import { creerCompte } from "@/comptes/compte";
 import { calculerEmpreinte } from "@/comptes/empreinte";
 import { choisirCaseDeNaissance } from "@/monde/foyers";
 import { distance } from "@/monde/hex";
+import { maintenant } from "@/temps/horloge";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
 import { caractereRefuse, cleDuNom, NOM_NON_AUTORISE, NOM_TROP_COURT } from "./nom";
@@ -31,7 +32,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   it("porte le nom choisi dans le Monde du jeu", async () => {
     const compte = await nouveauCompte();
     await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), 'Ourse', $2)", [compte.id, `ourse${numero}${lancement.replace(/[^a-z0-9]/g, "")}`]);
-    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse" });
+    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse", territoireId: null });
   });
 
   it("n'est pas celui d'un autre Monde", async () => {
@@ -91,7 +92,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const compte = await nouveauCompte();
       const nom = nomUnique("Ours Brun");
       expect(await enregistrerNomDeChef(pool, compte.id, `  ${nom.replace(" ", "   ")} `)).toEqual({ statut: "enregistre", nom });
-      expect(await chefDuCompte(pool, compte.id)).toEqual({ nom });
+      expect(await chefDuCompte(pool, compte.id)).toMatchObject({ nom, territoireId: expect.any(Number) });
       const { rows } = await pool.query("select cle_nom from chef where compte_id = $1", [compte.id]);
       expect(rows[0].cle_nom).toBe(cleDuNom(nom));
     });
@@ -217,8 +218,9 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const autre = await nouveauCompte();
       const nom = nomUnique("Unique");
       await Promise.all([enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, autre.id, nom)]);
-      expect(await caseDu(compte.id)).toHaveLength(1);
-      expect(await caseDu(autre.id)).toHaveLength(0);
+      // Le premier arrivé, l'un ou l'autre, obtient le nom et une seule Case ; l'autre aucune.
+      const cases = [(await caseDu(compte.id)).length, (await caseDu(autre.id)).length].sort();
+      expect(cases).toEqual([0, 1]);
     });
 
     it("donne des Cases différentes, bien espacées, à des chefs qui naissent au même instant", async () => {
@@ -253,6 +255,20 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
       // Depuis un poste loin de la base, une naissance prend près d'une demi-seconde : trente à la suite, une quinzaine.
     }, 90_000);
+
+    it("règle le marque-page du temps du Territoire sur sa naissance, à l'heure du jeu (US-0156)", async () => {
+      const compte = await nouveauCompte();
+      const avant = maintenant();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Horloge"));
+      const apres = maintenant();
+      const { rows } = await pool.query(
+        "select t.ne_le, t.calcule_jusqu_a from territoire t join chef ch on ch.id = t.chef_id where ch.compte_id = $1",
+        [compte.id],
+      );
+      expect(rows[0].calcule_jusqu_a).toEqual(rows[0].ne_le);
+      expect(rows[0].ne_le.getTime()).toBeGreaterThanOrEqual(avant.getTime());
+      expect(rows[0].ne_le.getTime()).toBeLessThanOrEqual(apres.getTime());
+    });
 
     it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {
       const compte = await nouveauCompte();

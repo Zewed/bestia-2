@@ -4,15 +4,23 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { choisirCaseDeNaissance } from "@/monde/foyers";
+import { maintenant } from "@/temps/horloge";
 import { nomInterditPar, type MotInterdit } from "./interdits";
 import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./nom";
 
 /** Le Monde du jeu : le seul pour l'instant, le premier ouvert. */
 const MONDE_DU_JEU = "(select id from monde order by id limit 1)";
 
-/** Le Chef du compte dans le Monde du jeu, ou null tant qu'il n'a pas choisi son nom. */
-export async function chefDuCompte(pool: Pool, compteId: number): Promise<{ nom: string } | null> {
-  const { rows } = await pool.query<{ nom: string }>(`select nom from chef where compte_id = $1 and monde_id = ${MONDE_DU_JEU}`, [compteId]);
+/**
+ * Le Chef du compte dans le Monde du jeu, avec son Territoire (null pour un chef né avant les
+ * Territoires), ou null tant qu'il n'a pas choisi son nom.
+ */
+export async function chefDuCompte(pool: Pool, compteId: number): Promise<{ nom: string; territoireId: number | null } | null> {
+  const { rows } = await pool.query<{ nom: string; territoireId: number | null }>(
+    `select ch.nom, t.id as "territoireId" from chef ch left join territoire t on t.chef_id = ch.id
+     where ch.compte_id = $1 and ch.monde_id = ${MONDE_DU_JEU}`,
+    [compteId],
+  );
   return rows[0] ?? null;
 }
 
@@ -83,7 +91,8 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
       await client.query("rollback");
       return { statut: "complet", monde: monde.nom };
     }
-    // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête.
+    // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête. Le marque-page
+    // du temps du Territoire part de sa naissance, à l'heure du jeu (US-0156).
     const { rowCount } = await client.query(
       `with nouveau as (
          insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $2, $3, $4) returning id
@@ -91,8 +100,8 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
          update case_du_monde set chef_id = (select id from nouveau), imprenable = true
          where id = $5 and chef_id is null returning id
        )
-       insert into territoire (chef_id, foyer_case_id) select nouveau.id, prise.id from nouveau, prise`,
-      [compteId, monde.id, nom, cleDuNom(nom), naissance.id],
+       insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select nouveau.id, prise.id, $6, $6 from nouveau, prise`,
+      [compteId, monde.id, nom, cleDuNom(nom), naissance.id, maintenant()],
     );
     if (rowCount !== 1) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
     await client.query("commit");

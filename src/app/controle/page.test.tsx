@@ -73,7 +73,7 @@ vi.mock("@/donnees/en-base", () => ({
   rolesEnBase: async () => [{ id: "eclaireur", nom: "Éclaireur", phrase: "Voit loin." }],
 }));
 
-const monde = vi.hoisted(() => ({ couronneEnBase: vi.fn() }));
+const monde = vi.hoisted(() => ({ couronneEnBase: vi.fn(), territoiresSuivis: vi.fn(async (): Promise<{ nombre: number; plusAncien: Date | null }> => ({ nombre: 0, plusAncien: null })) }));
 vi.mock("@/monde/en-base", () => monde);
 const COURONNE = {
   monde: "Aube",
@@ -193,6 +193,19 @@ describe("page de contrôle", () => {
     expect(html).toMatch(/Foyers<span[^>]*>1<\/span>/);
     expect(html).toMatch(/<path class="[^"]*foyers[^"]*" d="M[^"]+Z"/);
     expect(html).toMatch(/Emplacements de Foyer<span[^>]*>0<\/span>/);
+  });
+
+  it("compte les Territoires suivis par le temps, et dit le retard du plus en retard (US-0156)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    monde.territoiresSuivis.mockResolvedValueOnce({ nombre: 2, plusAncien: new Date(Date.now() - 3 * 60_000) });
+    const html = renderToStaticMarkup(await Controle());
+    expect(html).toContain("Territoires suivis par le temps");
+    expect(html).toMatch(/Le plus en retard a été calculé il y a 3 min\./);
+  });
+
+  it("dit qu'il n'y a encore aucun Territoire", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    expect(renderToStaticMarkup(await Controle())).toContain("Aucun Territoire pour l&#x27;instant.");
   });
 });
 

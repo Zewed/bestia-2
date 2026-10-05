@@ -7,13 +7,14 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte } from "@/chefs/chef";
 import { getPool } from "@/db";
+import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
 import { compteDeLaSession } from "./session";
 import { connexionPuis } from "./suite";
 
 export type CompteConnecte = { id: number; email: string };
-/** Un joueur dans le jeu : son compte et son nom de chef. */
-export type ChefConnecte = CompteConnecte & { nomDeChef: string };
+/** Un joueur dans le jeu : son compte, son nom de chef et son Territoire (null pour un chef né avant les Territoires). */
+export type ChefConnecte = CompteConnecte & { nomDeChef: string; territoireId: number | null };
 
 /** L'écran où le joueur choisit son nom de chef (US-0131). */
 export const PAGE_NOM_DE_CHEF = "/jeu/nom-de-chef";
@@ -23,13 +24,17 @@ export const PAGE_NOM_DE_CHEF = "/jeu/nom-de-chef";
  * connecté (une action, qui n'a pas de page à elle, mène à l'accueil du jeu). Une action
  * envoyée avec une session expirée s'arrête ici, sans rien appliquer ; la connexion dit alors
  * que la session a expiré (US-0125). Tant que le joueur n'a pas de nom de chef, toute page et
- * toute action mènent à l'écran qui le demande (US-0131).
+ * toute action mènent à l'écran qui le demande (US-0131). Sinon, son Territoire est d'abord mis
+ * à l'heure (US-0156).
  */
 export async function exigerCompte(chemin = "/jeu"): Promise<ChefConnecte> {
   const compte = await exigerSession(chemin);
   const chef = await chefDuCompte(getPool(), compte.id);
   if (!chef) redirect(PAGE_NOM_DE_CHEF);
-  return { ...compte, nomDeChef: chef.nom };
+  // US-0156 : le Territoire du joueur est mis à l'heure avant toute page ou action du jeu.
+  const territoireId = chef.territoireId ?? null;
+  if (territoireId !== null) await rattraper("territoire", territoireId);
+  return { ...compte, nomDeChef: chef.nom, territoireId };
 }
 
 /** Pour l'écran du nom de chef seulement : le compte connecté encore sans nom ; avec un nom, le jeu. */

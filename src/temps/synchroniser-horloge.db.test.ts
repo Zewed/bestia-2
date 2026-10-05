@@ -70,7 +70,7 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
     }
     vi.setSystemTime(R0 + MINUTE);
     await rattraper("monde", ids[0], { pool });
-    await rattraperLesAbsents({ pool, parmi: [ids[1]] });
+    await rattraperLesAbsents({ pool, parmi: { monde: [ids[1]] } });
     for (const id of ids) expect(await lireMarquePage(pool, "monde", id)).toEqual(new Date(R0 + 100 * MINUTE));
   });
 });

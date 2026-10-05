@@ -33,7 +33,7 @@ describe.skipIf(!URL_TEST)("tâche planifiée pour les absents (sur base)", () =
 
   it("avance ce qui n'a pas été calculé depuis plus de 5 minutes, et rien d'autre", async () => {
     const [vieux, recent] = await mondes(T0, ilYA(2));
-    const passage = await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: [vieux, recent] });
+    const passage = await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: { monde: [vieux, recent] } });
     expect(passage).toMatchObject({ rattrapes: 1, echecs: 0, restants: 0 });
     expect(await lireMarquePage(pool, "monde", vieux)).toEqual(INSTANT);
     expect(await lireMarquePage(pool, "monde", recent)).toEqual(ilYA(2));
@@ -41,11 +41,11 @@ describe.skipIf(!URL_TEST)("tâche planifiée pour les absents (sur base)", () =
 
   it("travaille par lots et reprend la suite au passage suivant", async () => {
     const ids = await mondes(T0, T0, T0);
-    expect(await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: ids, tailleLot: 2 })).toMatchObject({
+    expect(await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: { monde: ids }, tailleLot: 2 })).toMatchObject({
       rattrapes: 2,
       restants: 1,
     });
-    expect(await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: ids, tailleLot: 2 })).toMatchObject({
+    expect(await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: { monde: ids }, tailleLot: 2 })).toMatchObject({
       rattrapes: 1,
       restants: 0,
     });
@@ -53,7 +53,7 @@ describe.skipIf(!URL_TEST)("tâche planifiée pour les absents (sur base)", () =
 
   it("s'arrête quand son budget de temps est épuisé", async () => {
     const ids = await mondes(T0, T0);
-    const passage = await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: ids, budgetMs: -1 });
+    const passage = await rattraperLesAbsents({ pool, maintenant: INSTANT, parmi: { monde: ids }, budgetMs: -1 });
     expect(passage).toMatchObject({ rattrapes: 0, restants: 2 });
   });
 
@@ -62,7 +62,7 @@ describe.skipIf(!URL_TEST)("tâche planifiée pour les absents (sur base)", () =
     const passage = await rattraperLesAbsents({
       pool,
       maintenant: INSTANT,
-      parmi: [enPanne, sain],
+      parmi: { monde: [enPanne, sain] },
       regles: {
         evoluer: async (_c, id) => {
           if (id === enPanne) throw new Error("panne");

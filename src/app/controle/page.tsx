@@ -8,7 +8,7 @@ import { PastilleRarete } from "@/components/PastilleRarete";
 import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
-import { couronneEnBase } from "@/monde/en-base";
+import { couronneEnBase, territoiresSuivis } from "@/monde/en-base";
 import { emplacementsDeFoyers } from "@/monde/foyers";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
@@ -28,13 +28,14 @@ export default async function Controle() {
   // Le proxy demande déjà le mot de passe ; la page vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) notFound();
   const pool = getPool();
-  const [passages, biomes, especes, raretes, roles, couronne] = await Promise.all([
+  const [passages, biomes, especes, raretes, roles, couronne, territoires] = await Promise.all([
     derniersPassages(pool),
     biomesEnBase(pool),
     especesEnBase(pool),
     raretesEnBase(pool),
     rolesEnBase(pool),
     couronneEnBase(pool),
+    territoiresSuivis(pool),
   ]);
   const facteur = vitesse();
 
@@ -49,6 +50,14 @@ export default async function Controle() {
         <Bloc titre="Vitesse du temps" largeur={6} teinte={facteur === 1 ? undefined : "citron"}>
           <p className={styles.valeur}>×{facteur}</p>
           <p className={styles.note}>{facteur === 1 ? "Vitesse normale." : "Temps accéléré."}</p>
+        </Bloc>
+        <Bloc titre="Territoires suivis par le temps" largeur={6}>
+          <p className={styles.valeur}>{territoires.nombre}</p>
+          <p className={styles.note}>
+            {territoires.plusAncien === null
+              ? "Aucun Territoire pour l'instant."
+              : `Le plus en retard a été calculé ${retard(maintenant().getTime() - territoires.plusAncien.getTime())}.`}
+          </p>
         </Bloc>
         <Bloc titre="Derniers passages de la tâche planifiée">
           {passages.length === 0 ? (
@@ -155,3 +164,12 @@ function resultat(p: PassageNote): string {
   const raison = p.erreurs[0]?.raison;
   return `${p.echecs} échec${p.echecs > 1 ? "s" : ""}${raison ? ` : ${raison}` : ""}`;
 }
+
+/** Il y a combien de temps, en mots : « il y a 3 min », « à l'instant ». */
+function retard(ms: number): string {
+  const minutes = Math.round(ms / 60_000);
+  if (minutes < 1) return "à l'instant";
+  if (minutes < 120) return `il y a ${minutes} min`;
+  return `il y a ${Math.round(minutes / 60)} h`;
+}
+

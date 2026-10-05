@@ -7,6 +7,8 @@ vi.mock("./session", () => sessions);
 const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn() }));
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
+const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
+vi.mock("@/temps/rattraper", () => temps);
 
 import { exigerCompte, exigerCompteSansChef, joueurConnecte } from "./garde";
 
@@ -19,7 +21,7 @@ describe("garde du jeu", () => {
 
   it("rend le compte connecté qui a son nom de chef", async () => {
     connecte({ nom: "Ourse" });
-    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse" });
+    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: null });
     expect(chefs.chefDuCompte).toHaveBeenCalledWith(expect.anything(), 7);
   });
 
@@ -59,6 +61,15 @@ describe("garde du jeu", () => {
     expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: null });
     cookie.jetonDeSession.mockResolvedValue(undefined);
     expect(await joueurConnecte()).toBeNull();
+  });
+
+  it("met le Territoire du joueur à l'heure avant de rendre la main à la page (US-0156)", async () => {
+    temps.rattraper.mockClear();
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    sessions.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+    chefs.chefDuCompte.mockResolvedValue({ nom: "Ourse", territoireId: 12 });
+    expect(await exigerCompte("/jeu")).toMatchObject({ nomDeChef: "Ourse", territoireId: 12 });
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
   });
 });
 

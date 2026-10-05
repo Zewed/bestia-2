@@ -359,5 +359,7 @@ export const territoire = pgTable("territoire", {
     .unique()
     .references(() => caseDuMonde.id),
   neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
+  /** US-0156 : le marque-page du temps, réglé sur sa naissance ; il ne recule jamais. */
+  calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
 });
 
