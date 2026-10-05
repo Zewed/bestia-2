@@ -1,0 +1,63 @@
+/* Le choix du Couple de départ : le titre, puis les trois cartes côte à côte, dans le style Bento. */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.titre {
+  margin-bottom: 24px;
+  font-size: clamp(30px, 3vw, 40px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.cartes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--ecart);
+  padding: 0;
+  list-style: none;
+}
+
+.carte {
+  height: 100%;
+  overflow: hidden;
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+}
+
+.corps {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  padding: 18px 20px 22px;
+}
+
+.nom {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* Mobile : les cartes s'empilent, l'illustration en vignette à gauche, sans défilement de côté. */
+@media (max-width: 820px) {
+  .page {
+    padding: 20px 12px 32px;
+  }
+  .titre {
+    margin-bottom: 16px;
+  }
+  .cartes {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--ecart-mobile);
+  }
+  .carte {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    align-items: center;
+  }
+  .corps {
+    padding: 14px 16px;
+  }
+}

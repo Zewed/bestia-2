@@ -23,7 +23,8 @@ export async function verifierNomLibre(saisie: string): Promise<string | null> {
 }
 
 /**
- * Valider le nom de chef (US-0139) : enregistré, le joueur passe à la suite de son arrivée ;
+ * Valider le nom de chef (US-0139) : enregistré, le joueur passe à la suite de son arrivée, le
+ * choix de son Couple de départ (US-0141) ;
  * sinon, il reste sur l'écran avec la raison. Un deuxième envoi du même joueur trouve son chef
  * déjà créé et passe à la suite lui aussi.
  */
@@ -34,6 +35,6 @@ export async function validerNomDeChef(_precedent: EtatValidation, donnees: Form
   const resultat = await enregistrerNomDeChef(getPool(), compte.id, nom);
   if (resultat.statut === "refuse") return { nom, erreur: resultat.erreur };
   if (resultat.statut === "pris") return { nom, pris: true };
-  redirect("/jeu");
+  redirect("/jeu/couple-de-depart");
 }
 

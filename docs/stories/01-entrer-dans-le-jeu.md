@@ -410,12 +410,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0141 · Présenter les trois cartes de Couple de départ
 **En tant que** nouveau joueur, **je veux** voir côte à côte trois cartes illustrées, souris, poule et pigeon, **afin de** comparer mes trois choix d'un seul regard.
 
+- **Statut** : Livrée le 2026-10-05. Valider son nom mène à `/jeu/couple-de-depart` ; les cartes viennent de la liste des Couples de départ en base. Sur mobile, elles s'empilent, l'illustration en vignette à gauche. Le renvoi de toutes les pages du jeu vers cet écran, tant que le Couple n'est pas choisi, viendra avec l'enregistrement du choix (US-0147).
 - **Débloquée par** : US-0139, Étape 4
 - **Critères d'acceptation** :
   - Après le nom de chef, l'écran « Votre Couple de départ » montre trois cartes, dans l'ordre souris, poule, pigeon.
   - Chaque carte montre l'illustration de l'Espèce, son nom et sa Rareté.
   - Aucune autre Espèce n'est proposée.
-  - L'écran rappelle en une phrase qu'un Couple, c'est un mâle et une femelle, qui permettront d'élever ses premières Bêtes.
+  - Aucune phrase d'explication : le titre et les cartes suffisent (README, « Textes à l'écran » ; et pas de « mâle et femelle » mis en avant).
 
 ### US-0142 · Lire le style de jeu de chaque Espèce
 **En tant que** nouveau joueur, **je veux** lire sur chaque carte le style de jeu qu'elle propose, **afin de** choisir selon ma façon de jouer.

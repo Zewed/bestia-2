@@ -2,7 +2,7 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
 import { chargerJeu } from "./charger";
-import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "./en-base";
+import { biomesEnBase, couplesDeDepartEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "./en-base";
 import { lireDonnees } from "./jeux";
 
 describe.skipIf(!URL_TEST)("données de référence lues en base", () => {
@@ -84,4 +84,14 @@ describe.skipIf(!URL_TEST)("données de référence lues en base", () => {
     ]);
     expect((await rolesEnBase(client)).map((r) => r.id)).toEqual(["porteur", "eclaireur", "nourricier", "batisseur"]);
   });
+
+  it("donne les trois Couples de départ dans leur ordre, avec l'Espèce et sa Rareté (US-0141)", async () => {
+    const couples = await couplesDeDepartEnBase(client);
+    expect(couples.map((c) => c.espece.id)).toEqual(["souris", "poule", "pigeon"]);
+    expect(couples[0]).toEqual({
+      espece: { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp" },
+      rarete: { id: "commune", nom: "Commune" },
+    });
+  });
 });
+
