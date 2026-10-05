@@ -334,10 +334,11 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0134 · Nettoyer les espaces du nom
 **En tant que** nouveau joueur, **je veux** que les espaces en trop soient retirés de mon nom, **afin de** ne pas porter par erreur un nom mal présenté.
 
+- **Statut** : Livrée le 2026-10-05. Le champ montre le nom tel qu'il sera enregistré : un espace en tête ou un deuxième espace de suite ne s'écrivent pas, l'espace de fin disparaît quand on quitte le champ, et le curseur reste où l'on tape. Le serveur fera le même nettoyage (`nettoyerNom`) à l'enregistrement (US-0139).
 - **Débloquée par** : US-0133
 - **Critères d'acceptation** :
   - Les espaces au début et à la fin sont retirés avant l'enregistrement.
-  - Si les espaces sont autorisés dans le nom, plusieurs espaces de suite sont réduits à un seul.
+  - Plusieurs espaces de suite sont réduits à un seul.
   - Un nom fait uniquement d'espaces est refusé comme vide.
 
 ### US-0135 · Refuser un nom déjà pris dans le Monde

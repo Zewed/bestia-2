@@ -1,4 +1,4 @@
-// Les règles du nom de chef (US-0132, US-0133), les mêmes dans le navigateur et sur le serveur.
+// Les règles du nom de chef (US-0132 à US-0134), les mêmes dans le navigateur et sur le serveur.
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_MIN } from "@/reglages";
 
 export const NOM_TROP_COURT = `${NOM_DE_CHEF_MIN} caractères minimum`;
@@ -43,6 +43,19 @@ export function preparerNom(saisie: string): string {
   return saisie.replace(/[\u2018\u2019\u02BC]/g, "'").replace(/[\u2010\u2011]/g, "-").replace(/\p{Zs}/gu, " ").normalize("NFC");
 }
 
+/**
+ * La saisie pendant la frappe (US-0134) : mise au propre, sans espace en tête ni deux espaces de
+ * suite. L'espace de fin reste, le temps de taper le mot suivant.
+ */
+export function nettoyerSaisie(saisie: string): string {
+  return preparerNom(saisie).replace(/^ +/, "").replace(/ {2,}/g, " ");
+}
+
+/** Le nom tel qu'il sera enregistré : nettoyé, sans espace au début ni à la fin (US-0134). */
+export function nettoyerNom(saisie: string): string {
+  return nettoyerSaisie(saisie).trimEnd();
+}
+
 // L'alphabet latin et ses accents (é, ç, œ, ß, ș…), sans les lettres qui en imitent d'autres
 // (ſ, ŉ) ; les autres alphabets permettraient de se faire passer pour un autre chef (« О » cyrillique).
 const LETTRE = /^[A-Za-z\u00C0-\u00D6\u00D8-\u00F6\u00F8-\u0148\u014A-\u017E\u0218-\u021B]$/;
@@ -65,7 +78,11 @@ export function verifierCaracteresDuNom(nom: string): string | null {
   return null;
 }
 
-/** Toutes les règles du nom, dans l'ordre où le joueur les rencontre ; le serveur les refait à l'enregistrement. */
+/**
+ * Toutes les règles du nom, dans l'ordre où le joueur les rencontre. À l'enregistrement, le
+ * serveur nettoie la saisie (nettoyerNom) puis les refait : un nom fait d'espaces devient vide,
+ * et se voit refuser comme trop court.
+ */
 export function verifierNomDeChef(nom: string): string | null {
   return verifierCaracteresDuNom(nom) ?? verifierLongueurDuNom(nom);
 }

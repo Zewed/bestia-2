@@ -9,6 +9,8 @@ import {
   longueurDuNom,
   NOM_TROP_COURT,
   NOM_TROP_LONG,
+  nettoyerNom,
+  nettoyerSaisie,
   preparerNom,
   verifierCaracteresDuNom,
   verifierLongueurDuNom,
@@ -99,3 +101,22 @@ describe("caractères du nom de chef (US-0133)", () => {
     expect(verifierNomDeChef("Ourse")).toBeNull();
   });
 });
+
+describe("espaces du nom de chef (US-0134)", () => {
+  it("n'écrit ni espace en tête ni deux espaces de suite, et garde l'espace de fin pendant la frappe", () => {
+    expect(nettoyerSaisie("  Ours   Brun  ")).toBe("Ours Brun ");
+    expect(nettoyerSaisie("Ours ")).toBe("Ours ");
+    expect(nettoyerSaisie("Ours\u00A0\u00A0Brun")).toBe("Ours Brun");
+  });
+
+  it("enregistre le nom sans espace au début ni à la fin", () => {
+    expect(nettoyerNom("  Ours   Brun  ")).toBe("Ours Brun");
+    expect(nettoyerNom("L\u2019Ourse ")).toBe("L'Ourse");
+  });
+
+  it("réduit un nom fait d'espaces à rien, refusé comme trop court", () => {
+    expect(nettoyerNom("     ")).toBe("");
+    expect(verifierNomDeChef(nettoyerNom("     "))).toBe(NOM_TROP_COURT);
+  });
+});
+
