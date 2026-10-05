@@ -169,6 +169,15 @@ describe("page de contrôle", () => {
     expect(html).toMatch(/Eau<span[^>]*>1 · 25 %<\/span>/);
   });
 
+  it("marque d'un point chaque emplacement où un Foyer pourrait naître, et les compte (US-0152)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    monde.couronneEnBase.mockResolvedValue(COURONNE);
+    const html = renderToStaticMarkup(await Controle());
+    // Trois prairies voisines : une seule peut accueillir un Foyer, les autres sont trop près.
+    expect(html.match(/<circle /g)).toHaveLength(1);
+    expect(html).toMatch(/Emplacements de Foyer<span[^>]*>1<\/span>/);
+  });
+
   it("dit comment préparer la Couronne quand elle n'est pas encore en base", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue({ monde: "Aube", cases: [] });

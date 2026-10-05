@@ -236,6 +236,16 @@
   border-radius: 3px;
 }
 
+/* US-0152 : un emplacement de Foyer, un point d'Encre sur la carte. */
+.emplacements {
+  fill: var(--encre);
+}
+
+.point {
+  border-radius: 999px;
+  background: var(--encre);
+}
+
 @media (max-width: 820px) {
   .carte {
     grid-template-columns: minmax(0, 1fr);

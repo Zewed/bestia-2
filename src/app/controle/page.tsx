@@ -9,6 +9,7 @@ import { motDePasseAccepte } from "@/controle/acces";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
 import { couronneEnBase } from "@/monde/en-base";
+import { emplacementsDeFoyers } from "@/monde/foyers";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
@@ -81,7 +82,11 @@ export default async function Controle() {
         </Bloc>
         <Bloc titre={`Couronne${couronne ? ` de ${couronne.monde} · ${couronne.cases.length} Cases` : ""}`}>
           {couronne && couronne.cases.length > 0 ? (
-            <CarteCouronne couronne={couronne} noms={Object.fromEntries(biomes.map((b) => [b.id, b.nom]))} />
+            <CarteCouronne
+              couronne={couronne}
+              noms={Object.fromEntries(biomes.map((b) => [b.id, b.nom]))}
+              emplacements={emplacementsDeFoyers(couronne.cases, [])}
+            />
           ) : (
             <p className={styles.note}>Aucune Case de la Couronne en base : lancez npm run monde:couronne.</p>
           )}

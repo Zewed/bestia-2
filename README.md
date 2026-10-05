@@ -62,7 +62,7 @@ Toutes les illustrations sont rangées dans le projet, sous `public/illustration
 
 ## Le Monde
 
-Le Monde est un disque d'hexagones autour du Cœur sauvage, repérés par deux coordonnées (`src/monde/hex.ts`). Ses 3 anneaux extérieurs forment la Couronne, où naissent les joueurs : `npm run monde:couronne` crée ses Cases en base, avec leur Biome, en régions tirées de la graine du Monde (`src/monde/couronne.ts`) ; la mise en ligne le lance toute seule, après les données de référence. Il ne fait qu'ajouter les Cases qui manquent : une Case déjà en base ne change jamais. La taille du Monde et les parts de chaque Biome sont dans `src/reglages.ts` ; elles sont fixées sur le Monde dès que sa Couronne est préparée. La page de contrôle montre la Couronne vue d'en haut.
+Le Monde est un disque d'hexagones autour du Cœur sauvage, repérés par deux coordonnées (`src/monde/hex.ts`). Ses 6 anneaux extérieurs forment la Couronne, où naissent les joueurs, en prairie et à 4 Cases au moins les uns des autres (`src/monde/foyers.ts`) : `npm run monde:couronne` crée ses Cases en base, avec leur Biome, en régions tirées de la graine du Monde (`src/monde/couronne.ts`) ; la mise en ligne le lance toute seule, après les données de référence. Il ne fait qu'ajouter les Cases qui manquent : une Case déjà en base ne change jamais. La taille du Monde et les parts de chaque Biome sont dans `src/reglages.ts`. Le rayon est fixé sur le Monde dès que sa Couronne est préparée ; la Couronne peut ensuite s'élargir vers l'intérieur, jamais rétrécir, et comme les Biomes sont calculés sur une bande fixe de 10 anneaux, l'élargir ne change aucune Case. La page de contrôle montre la Couronne vue d'en haut, avec les emplacements de Foyer encore libres.
 
 ## Le temps du jeu
 

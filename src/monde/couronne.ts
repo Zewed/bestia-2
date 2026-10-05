@@ -62,12 +62,25 @@ function repartir<T extends string>(total: number, parts: Record<T, number>): Re
 }
 
 /**
+ * La largeur sur laquelle les Biomes de la Couronne sont calculés, toujours la même : une Case a
+ * le même Biome quelle que soit la largeur de la Couronne, qu'on peut donc élargir vers
+ * l'intérieur sans créer de raccord avec les Cases déjà là (US-0152).
+ */
+export const BANDE_DE_CALCUL = 10;
+
+/**
  * Les Cases de la Couronne : les `anneaux` anneaux extérieurs d'un Monde de `rayon` anneaux. La
  * prairie prend les régions où un premier relief est le plus haut ; les autres Biomes se
  * partagent le reste en bandes d'un second relief (lacs, forêts, montagnes, savanes, déserts).
  */
 export function casesDeLaCouronne({ rayon, anneaux, graine }: { rayon: number; anneaux: number; graine: number }): CaseDeCouronne[] {
-  const cases = casesDesAnneaux(rayon - anneaux + 1, rayon);
+  if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
+  return biomesDeLaBande(rayon, graine).filter((c) => c.anneau > rayon - anneaux);
+}
+
+/** Les Biomes de toute la bande de calcul, du bord du Monde vers l'intérieur. */
+function biomesDeLaBande(rayon: number, graine: number): CaseDeCouronne[] {
+  const cases = casesDesAnneaux(rayon - BANDE_DE_CALCUL + 1, rayon);
   const releve = (graineDuRelief: number) =>
     cases.map((c) => {
       const { x, y } = centre(c);

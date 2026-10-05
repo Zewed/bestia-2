@@ -1,5 +1,5 @@
 import type { CouronneEnBase } from "@/monde/en-base";
-import { centre } from "@/monde/hex";
+import { centre, type Coordonnees } from "@/monde/hex";
 import styles from "./page.module.css";
 
 /** La couleur de chaque Biome, prise dans la palette ; un Biome inconnu reste en gris galet. */
@@ -29,9 +29,10 @@ function hexagone(q: number, r: number): string {
 
 /**
  * La Couronne vue d'en haut (US-0151), pour vérifier la répartition des Biomes : une forme par
- * Biome, dans sa couleur de la palette, et la légende avec la part de chacun.
+ * Biome, dans sa couleur de la palette, et la légende avec la part de chacun. Un point marque
+ * chaque emplacement où un Foyer pourrait encore naître (US-0152).
  */
-export function CarteCouronne({ couronne, noms }: { couronne: CouronneEnBase; noms: Record<string, string> }) {
+export function CarteCouronne({ couronne, noms, emplacements }: { couronne: CouronneEnBase; noms: Record<string, string>; emplacements: Coordonnees[] }) {
   const parBiome = new Map<string, { q: number; r: number }[]>();
   for (const c of couronne.cases) parBiome.set(c.biome, [...(parBiome.get(c.biome) ?? []), c]);
   const etendue = Math.max(...couronne.cases.map((c) => Math.abs(centre(c).x)), ...couronne.cases.map((c) => Math.abs(centre(c).y))) + 2;
@@ -42,8 +43,19 @@ export function CarteCouronne({ couronne, noms }: { couronne: CouronneEnBase; no
         {biomes.map(([biome, cases]) => (
           <path key={biome} data-biome={biome} d={cases.map((c) => hexagone(c.q, c.r)).join("")} style={{ fill: couleur(biome) }} />
         ))}
+        <g className={styles.emplacements}>
+          {emplacements.map((e) => {
+            const { x, y } = centre(e);
+            return <circle key={`${e.q},${e.r}`} cx={x.toFixed(2)} cy={y.toFixed(2)} r="0.6" />;
+          })}
+        </g>
       </svg>
       <ul className={styles.legende}>
+        <li>
+          <span className={`${styles.pastille} ${styles.point}`} aria-hidden="true" />
+          Emplacements de Foyer
+          <span className={styles.note}>{emplacements.length}</span>
+        </li>
         {biomes.map(([biome, cases]) => (
           <li key={biome}>
             <span className={styles.pastille} style={{ background: couleur(biome) }} aria-hidden="true" />

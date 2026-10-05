@@ -5,8 +5,9 @@ import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 
 /**
  * Crée les Cases de la Couronne du Monde qui n'existent pas encore, dans la transaction de
- * l'appelant. La première fois, la taille du Monde est fixée sur sa fiche et ne change plus ;
- * une Case déjà en base n'est jamais touchée. Rend le nombre de Cases ajoutées et leur total.
+ * l'appelant. La première fois, la taille du Monde est fixée sur sa fiche et son rayon ne change
+ * plus ; la Couronne peut s'élargir vers l'intérieur si les réglages le demandent, jamais
+ * rétrécir. Une Case déjà en base n'est jamais touchée. Rend le nombre de Cases ajoutées et leur total.
  */
 export async function preparerCouronne(client: PoolClient, mondeId: number): Promise<{ ajoutees: number; total: number }> {
   const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null }>(
@@ -15,9 +16,9 @@ export async function preparerCouronne(client: PoolClient, mondeId: number): Pro
   );
   if (!rows[0]) throw new Error(`Monde ${mondeId} introuvable.`);
   let { rayon, anneaux } = rows[0];
-  if (rayon === null || anneaux === null) {
-    rayon = MONDE_RAYON;
-    anneaux = COURONNE_ANNEAUX;
+  if (rayon === null || anneaux === null || anneaux < COURONNE_ANNEAUX) {
+    rayon ??= MONDE_RAYON;
+    anneaux = Math.max(anneaux ?? 0, COURONNE_ANNEAUX);
     await client.query("update monde set rayon = $2, anneaux_couronne = $3 where id = $1", [mondeId, rayon, anneaux]);
   }
   const cases = casesDeLaCouronne({ rayon, anneaux, graine: graineDuMonde(rows[0].nom) });

@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0151** · Préparer les Cases de la Couronne. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0152** · Définir les Cases où un Foyer peut naître.
+Dernière story livrée : **US-0152** · Définir les Cases où un Foyer peut naître. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0153** · Recevoir une Case libre sur la Couronne.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0151** · Préparer les Cases de la Couronne. US-
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **65 étapes** | **748** | **269** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (182 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (181 au total).
 
 ## Lire une story
 

@@ -425,22 +425,23 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0151 · Préparer les Cases de la Couronne
 **En tant que** développeur, **je veux** un premier ensemble de Cases de la Couronne en base, chacune avec son Biome, **afin de** faire naître des joueurs avant que le Monde entier soit généré (étape 18).
 
-- **Statut** : Livrée le 2026-10-05. Le Monde est un disque d'hexagones de 60 anneaux autour du Cœur sauvage ; ses 3 anneaux extérieurs forment la Couronne, soit 1 062 Cases, toutes préparées d'un coup à la mise en ligne (`npm run monde:couronne`). Les Biomes y forment des régions d'un seul tenant, tirées de la graine du Monde ; la prairie en couvre environ 40 %. Une mini-carte de la Couronne est sur la page de contrôle.
+- **Statut** : Livrée le 2026-10-05. Le Monde est un disque d'hexagones de 60 anneaux autour du Cœur sauvage ; ses anneaux extérieurs forment la Couronne (3 au départ, 6 depuis US-0152, soit 2 070 Cases), toutes préparées d'un coup à la mise en ligne (`npm run monde:couronne`). Les Biomes y forment des régions d'un seul tenant, tirées de la graine du Monde ; la prairie en couvre environ 40 %. Une mini-carte de la Couronne est sur la page de contrôle.
 - **Débloquée par** : Étape 3, Étape 4
 - **Critères d'acceptation** :
   - La base contient des Cases hexagonales, chacune repérée de façon unique dans le Monde et marquée comme faisant partie de la Couronne.
   - Chaque Case a un Biome parmi ceux en base.
-  - Toute la Couronne est préparée : les 3 anneaux extérieurs d'un Monde de 60 anneaux (réglables, fixés sur le Monde une fois la Couronne préparée).
+  - Toute la Couronne est préparée : les anneaux extérieurs d'un Monde de 60 anneaux (réglables ; le rayon est fixé sur le Monde, la Couronne ne peut que s'élargir vers l'intérieur).
   - La génération complète du Monde (étape 18) n'ajoutera que les Cases manquantes : une Case déjà en base ne change jamais de Biome ni de propriétaire.
 
 ### US-0152 · Définir les Cases où un Foyer peut naître
 **En tant que** développeur, **je veux** une règle claire qui dit sur quelles Cases un Foyer peut naître, **afin de** donner à chaque nouveau joueur un départ qui se tient.
 
+- **Statut** : Livrée le 2026-10-05. La règle (`peutAccueillirUnFoyer`) attend la naissance (US-0153). Pour loger plus de chefs, la Couronne passe de 3 à 6 anneaux : environ 90 Foyers dans Aube. Les Biomes sont calculés sur une bande fixe de 10 anneaux, si bien qu'élargir la Couronne ne change aucune Case. La page de contrôle marque d'un point les emplacements de Foyer possibles.
 - **Débloquée par** : US-0151
 - **Critères d'acceptation** :
   - Une Case déjà possédée n'est jamais proposée.
   - Une Case de mer, de lac ou de rivière n'accueille jamais de Foyer.
-  - Deux Foyers sont séparés d'au moins (chiffre à régler) Cases.
+  - Deux Foyers sont séparés d'au moins 4 Cases.
   - Le Foyer naît toujours sur une Case de prairie : tous les départs se valent (ADR 0008).
 
 ### US-0153 · Recevoir une Case libre sur la Couronne

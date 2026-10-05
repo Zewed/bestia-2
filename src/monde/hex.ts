@@ -8,6 +8,11 @@ export function anneau({ q, r }: Coordonnees): number {
   return Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
 }
 
+/** La distance entre deux Cases, en Cases. */
+export function distance(a: Coordonnees, b: Coordonnees): number {
+  return anneau({ q: a.q - b.q, r: a.r - b.r });
+}
+
 /** Les six directions d'une Case vers ses voisines. */
 export const DIRECTIONS: readonly Coordonnees[] = [
   { q: 1, r: 0 },
