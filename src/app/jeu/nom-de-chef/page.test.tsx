@@ -31,9 +31,10 @@ describe("écran du nom de chef", () => {
     expect(html).toMatch(/<h1[^>]*>Votre nom de chef<\/h1>/);
     expect(html).toMatch(/<input [^>]*name="nom"/);
     expect(html).toMatch(/<button [^>]*disabled=""[^>]*>Valider<\/button>/);
-    // Ni phrase d'explication ni étiquette visible : le titre suffit (README, « Textes à l'écran »).
+    // Pas d'étiquette visible : le titre suffit. Une seule ligne de texte, la règle qu'on ne devinerait pas (US-0139).
     const formulaire = html.slice(html.indexOf("<form"), html.indexOf("</form>"));
-    expect(formulaire).not.toMatch(/<(p|label)[ >]/);
+    expect(formulaire).not.toMatch(/<label[ >]/);
+    expect(formulaire.match(/<p[ >][^<]*/g)).toEqual([expect.stringContaining("Ce nom ne pourra plus être changé")]);
   });
 
   it("envoie au jeu un joueur qui a déjà son nom", async () => {

@@ -386,13 +386,14 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef et u
 ### US-0139 · Valider son nom de chef
 **En tant que** nouveau joueur, **je veux** valider mon nom une fois toutes les règles respectées, **afin de** passer à la suite de mon arrivée.
 
+- **Statut** : Livrée le 2026-10-05. « Valider » s'active dès que le nom respecte les règles du champ, tant que le jeu ne l'a pas dit pris ou interdit ; pendant l'envoi, « Validation… ». L'étape du Couple de départ n'existant pas encore, le joueur arrive sur la page provisoire du jeu, qui l'accueille par son nom (« Bienvenue, Ourse »).
 - **Débloquée par** : US-0132, US-0134, US-0136, US-0137, US-0138
 - **Critères d'acceptation** :
   - Le bouton « Valider » n'est actif que si le nom respecte toutes les règles.
   - Le nom est enregistré pour ce compte et pour ce Monde.
   - Le joueur passe à l'étape suivante de l'entrée dans le jeu.
   - Un nom pris au moment de valider affiche « Ce nom vient d'être pris » si la coche « disponible » était affichée, sinon « Ce nom est déjà pris » ; le joueur reste sur l'écran, sa saisie conservée (US-0137).
-  - La possibilité de changer de nom plus tard, et l'avertissement à montrer avant de valider (à décider).
+  - Le nom est définitif : une ligne discrète sous le bouton le dit, « Ce nom ne pourra plus être changé », sans fenêtre de confirmation.
 
 ### US-0140 · Afficher le nom de chef dans la barre du haut
 **En tant que** joueur, **je veux** voir mon nom de chef dans la barre du haut, **afin de** me sentir chez moi sur chaque page.

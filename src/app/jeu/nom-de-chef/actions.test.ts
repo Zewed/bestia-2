@@ -2,12 +2,12 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const garde = vi.hoisted(() => ({ exigerCompteSansChef: vi.fn(async () => ({ id: 7, email: "nom@exemple.fr" })) }));
 vi.mock("@/comptes/garde", () => garde);
-const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn(), nomInterdit: vi.fn(async () => false) }));
+const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn(), nomInterdit: vi.fn(async () => false), enregistrerNomDeChef: vi.fn() }));
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 
 import { NOM_DEJA_PRIS, NOM_NON_AUTORISE } from "@/chefs/nom";
-import { verifierNomLibre } from "./actions";
+import { validerNomDeChef, verifierNomLibre } from "./actions";
 
 describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
   afterEach(() => {
@@ -46,3 +46,39 @@ describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
     expect(garde.exigerCompteSansChef).not.toHaveBeenCalled();
   });
 });
+
+describe("valider le nom de chef (US-0139)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    chefs.enregistrerNomDeChef.mockReset();
+  });
+
+  const valider = (nom: string) => {
+    const donnees = new FormData();
+    donnees.set("nom", nom);
+    return validerNomDeChef({ nom: "" }, donnees);
+  };
+
+  it("enregistre le nom nettoyé, puis mène à la suite de l'arrivée", async () => {
+    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "enregistre", nom: "Ours Brun" });
+    await expect(valider("  Ours   Brun ")).rejects.toMatchObject({ digest: expect.stringMatching(/;\/jeu;/) });
+    expect(chefs.enregistrerNomDeChef).toHaveBeenCalledWith(expect.anything(), 7, "Ours Brun");
+  });
+
+  it("rend la raison d'un refus, pour le nom envoyé", async () => {
+    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "refuse", erreur: NOM_NON_AUTORISE });
+    expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: NOM_NON_AUTORISE });
+  });
+
+  it("dit qu'un nom est pris, le message étant choisi par l'écran", async () => {
+    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "pris" });
+    expect(await valider("Ourse")).toEqual({ nom: "Ourse", pris: true });
+  });
+
+  it("ne fait rien en production tant que l'entrée du jeu est fermée", async () => {
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(await valider("Ourse")).toEqual({ nom: "" });
+    expect(chefs.enregistrerNomDeChef).not.toHaveBeenCalled();
+  });
+});
+

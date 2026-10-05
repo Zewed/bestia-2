@@ -20,12 +20,12 @@ describe("page du jeu", () => {
     cookie.jetonDeSession.mockReset();
   });
 
-  it("accueille le joueur connecté", async () => {
+  it("accueille le chef par son nom (US-0139)", async () => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
     const html = renderToStaticMarkup(await Jeu());
-    expect(html).toMatch(/<h1[^>]*>Bienvenue dans Bestia<\/h1>/);
-    expect(html).toContain("<strong>nom@exemple.fr</strong>");
+    expect(html).toMatch(/<h1[^>]*>Bienvenue, Ourse<\/h1>/);
+    expect(html).not.toContain("nom@exemple.fr");
   });
 
   it("renvoie vers la connexion sans session", async () => {

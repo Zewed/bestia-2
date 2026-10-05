@@ -96,6 +96,15 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0139 : une règle à connaître avant de valider, discrète sous le bouton. */
+.definitif {
+  margin-top: -6px;
+  color: var(--texte-discret);
+  font-size: 13.5px;
+  font-weight: var(--graisse-texte);
+  text-align: center;
+}
+
 /* Sous un champ : le message à gauche, le compteur à droite (US-0132). */
 .sousLeChamp {
   display: flex;

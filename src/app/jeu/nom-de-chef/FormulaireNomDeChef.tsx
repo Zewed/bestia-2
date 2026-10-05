@@ -1,10 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ChangeEvent } from "react";
-import { couperNom, longueurDuNom, nettoyerNom, nettoyerSaisie, verifierCaracteresDuNom, verifierNomDeChef } from "@/chefs/nom";
+import { startTransition, useActionState, useCallback, useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import {
+  couperNom,
+  longueurDuNom,
+  NOM_DEJA_PRIS,
+  NOM_VIENT_D_ETRE_PRIS,
+  nettoyerNom,
+  nettoyerSaisie,
+  verifierCaracteresDuNom,
+  verifierNomDeChef,
+} from "@/chefs/nom";
 import { NOM_DE_CHEF_MAX, NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
 import styles from "../../entree.module.css";
-import { verifierNomLibre } from "./actions";
+import { validerNomDeChef, verifierNomLibre } from "./actions";
+import { ETAT_VALIDATION_INITIAL, NOM_DEFINITIF } from "./etat";
 
 /**
  * Le champ du nom de chef. US-0132 : le compteur paraît dès qu'on écrit, le champ ne prend pas
@@ -14,8 +24,8 @@ import { verifierNomLibre } from "./actions";
  * deuxième espace de suite ne s'écrivent pas, l'espace de fin disparaît quand on quitte le champ.
  * US-0135, US-0136 : un nom par ailleurs correct est cherché parmi ceux du Monde dès que le joueur
  * s'arrête de taper (ou quitte le champ) ; libre, une coche le dit, sans rien réserver. US-0138 :
- * la même recherche refuse un nom interdit.
- * « Valider » s'activera avec l'enregistrement du nom (US-0139).
+ * la même recherche refuse un nom interdit. US-0139 : « Valider » s'active dès que le nom respecte
+ * les règles du champ et n'est pas connu pris ou interdit ; le serveur tranche à l'enregistrement.
  */
 export function FormulaireNomDeChef() {
   const [nom, setNom] = useState("");
@@ -24,12 +34,23 @@ export function FormulaireNomDeChef() {
   // Un nom déjà demandé (ou en cours de demande) ne repart pas au serveur.
   const [verdicts, setVerdicts] = useState<Record<string, string | null>>({});
   const demandes = useRef(new Set<string>());
+  const [validation, envoyer, enAttente] = useActionState(validerNomDeChef, ETAT_VALIDATION_INITIAL);
 
   const propre = nettoyerNom(nom);
   const valable = propre !== "" && !verifierNomDeChef(propre);
   const verdict = valable ? verdicts[propre] : undefined;
-  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? verdict ?? null;
+  // US-0137 : pris au moment de valider. Si la coche l'avait dit libre, il vient d'être pris.
+  const refusValidation =
+    validation.nom !== "" && validation.nom === propre
+      ? validation.pris
+        ? verdict === null
+          ? NOM_VIENT_D_ETRE_PRIS
+          : NOM_DEJA_PRIS
+        : (validation.erreur ?? null)
+      : null;
+  const erreur = verifierCaracteresDuNom(nom) ?? erreurEnQuittant ?? refusValidation ?? verdict ?? null;
   const libre = verdict === null && !erreur;
+  const peutValider = valable && !erreur && !enAttente;
   const decrit = [erreur ? "nom-erreur" : null, nom ? "nom-compteur" : null].filter(Boolean).join(" ");
 
   const chercher = useCallback(async (candidat: string) => {
@@ -73,8 +94,18 @@ export function FormulaireNomDeChef() {
     if (propre && !refus) void chercher(propre);
   }
 
+  function valider(evenement: FormEvent<HTMLFormElement>) {
+    // Envoyé à la main, pas par l'action du formulaire : React viderait le champ après l'envoi,
+    // alors qu'un nom refusé doit rester sous les yeux du joueur.
+    evenement.preventDefault();
+    if (!peutValider) return;
+    const donnees = new FormData();
+    donnees.set("nom", propre);
+    startTransition(() => envoyer(donnees));
+  }
+
   return (
-    <form className={styles.formulaire} noValidate>
+    <form className={styles.formulaire} onSubmit={valider} noValidate>
       <div className={styles.champ}>
         <div className={styles.saisie}>
           <input
@@ -117,9 +148,17 @@ export function FormulaireNomDeChef() {
           </div>
         ) : null}
       </div>
-      <button type="submit" className={styles.envoyer} disabled>
-        Valider
+      <button type="submit" className={styles.envoyer} disabled={!peutValider}>
+        {enAttente ? (
+          <>
+            <span className={styles.roue} aria-hidden="true" />
+            Validation…
+          </>
+        ) : (
+          "Valider"
+        )}
       </button>
+      <p className={styles.definitif}>{NOM_DEFINITIF}</p>
     </form>
   );
 }

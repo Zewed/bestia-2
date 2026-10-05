@@ -19,7 +19,7 @@ describe("garde du jeu", () => {
 
   it("rend le compte connecté qui a son nom de chef", async () => {
     connecte({ nom: "Ourse" });
-    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr" });
+    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse" });
     expect(chefs.chefDuCompte).toHaveBeenCalledWith(expect.anything(), 7);
   });
 

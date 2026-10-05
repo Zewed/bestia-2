@@ -4,14 +4,14 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 753 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0138** · Refuser les noms interdits ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0139** · Valider son nom de chef.
+Dernière story livrée : **US-0139** · Valider son nom de chef ; les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production (jalon 0 terminé, seule US-0038 reste reportée). Prochaine : **US-0140** · Afficher le nom de chef dans la barre du haut.
 
 ## Sommaire
 
 | Jalon | Étapes | Stories | À décider |
 |---|---|---:|---:|
 | [0 · Les fondations](00-fondations.md) | 1 à 4 | 52 | 1 |
-| [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9 | 64 | 8 |
+| [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9 | 64 | 7 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 6 |
 | [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 14 |
 | [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 11 |
@@ -28,7 +28,7 @@ Dernière story livrée : **US-0138** · Refuser les noms interdits ; les e-mail
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **66 étapes** | **753** | **281** |
+| **Total** | **66 étapes** | **753** | **280** |
 
 Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (181 au total).
 

@@ -11,6 +11,8 @@ import { compteDeLaSession } from "./session";
 import { connexionPuis } from "./suite";
 
 export type CompteConnecte = { id: number; email: string };
+/** Un joueur dans le jeu : son compte et son nom de chef. */
+export type ChefConnecte = CompteConnecte & { nomDeChef: string };
 
 /** L'écran où le joueur choisit son nom de chef (US-0131). */
 export const PAGE_NOM_DE_CHEF = "/jeu/nom-de-chef";
@@ -22,10 +24,11 @@ export const PAGE_NOM_DE_CHEF = "/jeu/nom-de-chef";
  * que la session a expiré (US-0125). Tant que le joueur n'a pas de nom de chef, toute page et
  * toute action mènent à l'écran qui le demande (US-0131).
  */
-export async function exigerCompte(chemin = "/jeu"): Promise<CompteConnecte> {
+export async function exigerCompte(chemin = "/jeu"): Promise<ChefConnecte> {
   const compte = await exigerSession(chemin);
-  if (!(await chefDuCompte(getPool(), compte.id))) redirect(PAGE_NOM_DE_CHEF);
-  return compte;
+  const chef = await chefDuCompte(getPool(), compte.id);
+  if (!chef) redirect(PAGE_NOM_DE_CHEF);
+  return { ...compte, nomDeChef: chef.nom };
 }
 
 /** Pour l'écran du nom de chef seulement : le compte connecté encore sans nom ; avec un nom, le jeu. */

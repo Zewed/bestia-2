@@ -9,18 +9,15 @@ import styles from "../entree.module.css";
 export const metadata: Metadata = { title: "Le jeu" };
 
 /**
- * La page du jeu (US-0116), provisoire : elle accueille le joueur connecté, en attendant les
- * premières Bêtes. Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
+ * La page du jeu (US-0116), provisoire : elle accueille le chef par son nom (US-0139), en attendant
+ * les premières Bêtes. Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
  */
 export default async function Jeu() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
-  const compte = await exigerCompte("/jeu");
+  const { nomDeChef } = await exigerCompte("/jeu");
   return (
-    <PageEntree titre="Bienvenue dans Bestia" illustration={{ chemin: "accueil/plateau.webp", alt: "Le monde de Bestia, sculpté comme un plateau de jeu" }}>
-      <p className={styles.texte}>
-        Vous êtes connecté avec <strong>{compte.email}</strong>.
-      </p>
+    <PageEntree titre={`Bienvenue, ${nomDeChef}`} illustration={{ chemin: "accueil/plateau.webp", alt: "Le monde de Bestia, sculpté comme un plateau de jeu" }}>
       <p className={styles.texte}>Vos premières Bêtes arrivent bientôt.</p>
     </PageEntree>
   );

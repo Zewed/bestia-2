@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_NON_AUTORISE, NOM_TROP_COURT } from "@/chefs/nom";
+import { caractereRefuse, COMMENCER_PAR_UNE_LETTRE, NOM_DEJA_PRIS, NOM_NON_AUTORISE, NOM_TROP_COURT, NOM_VIENT_D_ETRE_PRIS } from "@/chefs/nom";
 import { NOM_DE_CHEF_PAUSE_MS } from "@/reglages";
+import { NOM_DEFINITIF, type EtatValidation } from "./etat";
 
-const actions = vi.hoisted(() => ({ verifierNomLibre: vi.fn<(nom: string) => Promise<string | null>>(async () => null) }));
+const actions = vi.hoisted(() => ({
+  verifierNomLibre: vi.fn<(nom: string) => Promise<string | null>>(async () => null),
+  validerNomDeChef: vi.fn<(precedent: EtatValidation, donnees: FormData) => Promise<EtatValidation>>(async () => ({ nom: "" })),
+}));
 vi.mock("./actions", () => actions);
 
 import { FormulaireNomDeChef } from "./FormulaireNomDeChef";
@@ -56,13 +60,6 @@ describe("champ du nom de chef (US-0132 à US-0136)", () => {
     await u.click(champ());
     await u.tab();
     expect(screen.queryByRole("alert")).toBeNull();
-  });
-
-  it("garde « Valider » grisé jusqu'à l'enregistrement du nom (US-0139)", async () => {
-    const u = userEvent.setup();
-    render(<FormulaireNomDeChef />);
-    await u.type(champ(), "Ourse");
-    expect(screen.getByRole<HTMLButtonElement>("button", { name: "Valider" }).disabled).toBe(true);
   });
 
   it("signale un caractère refusé dès qu'il est tapé, et l'oublie dès qu'il est retiré", async () => {
@@ -260,6 +257,103 @@ describe("disponibilité du nom pendant la saisie (US-0136)", () => {
     expect(actions.verifierNomLibre).toHaveBeenCalledTimes(2);
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByRole("status").textContent).toBe("Disponible");
+  });
+});
+
+describe("valider le nom de chef (US-0139)", () => {
+  // Un envoi laissé en suspens retiendrait les mises à jour des tests suivants : React lie entre
+  // elles toutes les actions en cours. Chacun est libéré à la fin de son test.
+  const liberations: (() => void)[] = [];
+  const enSuspens = () => new Promise<never>((_, refus) => liberations.push(() => refus(new Error("fin du test"))));
+
+  afterEach(() => {
+    liberations.splice(0).forEach((liberer) => liberer());
+    cleanup();
+    actions.verifierNomLibre.mockReset();
+    actions.verifierNomLibre.mockResolvedValue(null);
+    actions.validerNomDeChef.mockReset();
+    actions.validerNomDeChef.mockResolvedValue({ nom: "" });
+  });
+
+  const champ = () => screen.getByRole<HTMLInputElement>("textbox", { name: "Nom de chef" });
+  const bouton = () => screen.getByRole<HTMLButtonElement>("button");
+
+  it("n'active « Valider » que pour un nom qui respecte les règles du champ", async () => {
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    expect(bouton().disabled).toBe(true);
+    await u.type(champ(), "Ou");
+    expect(bouton().disabled).toBe(true);
+    await u.type(champ(), "@");
+    expect(bouton().disabled).toBe(true);
+    await u.type(champ(), "{Backspace}rse");
+    expect(bouton().disabled).toBe(false);
+  });
+
+  it("le grise pour un nom que le jeu a dit pris ou interdit", async () => {
+    actions.verifierNomLibre.mockResolvedValue(NOM_NON_AUTORISE);
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await u.tab();
+    await screen.findByRole("alert");
+    expect(bouton().disabled).toBe(true);
+  });
+
+  it("envoie le nom tel qu'il sera enregistré", async () => {
+    actions.validerNomDeChef.mockImplementation(enSuspens);
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ours Brun ");
+    await u.click(bouton());
+    expect(actions.validerNomDeChef).toHaveBeenCalledTimes(1);
+    expect(actions.validerNomDeChef.mock.calls[0][1].get("nom")).toBe("Ours Brun");
+  });
+
+  it("montre « Validation… » pendant l'envoi, bouton grisé", async () => {
+    actions.validerNomDeChef.mockImplementation(enSuspens);
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse{Enter}");
+    expect(bouton().textContent).toBe("Validation…");
+    expect(bouton().disabled).toBe(true);
+  });
+
+  it("dit « Ce nom vient d'être pris » si la coche était affichée, et garde la saisie (US-0137)", async () => {
+    actions.validerNomDeChef.mockImplementation(async (_precedent, donnees) => ({ nom: String(donnees.get("nom")), pris: true }));
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse");
+    await u.tab();
+    await waitFor(() => expect(screen.getByRole("status").textContent).toBe("Disponible"));
+    await u.click(bouton());
+    expect((await screen.findByRole("alert")).textContent).toBe(NOM_VIENT_D_ETRE_PRIS);
+    expect(champ().value).toBe("Ourse");
+    expect(bouton().disabled).toBe(true);
+  });
+
+  it("dit « Ce nom est déjà pris » si le joueur a validé sans attendre la coche", async () => {
+    actions.verifierNomLibre.mockImplementation(enSuspens);
+    actions.validerNomDeChef.mockImplementation(async (_precedent, donnees) => ({ nom: String(donnees.get("nom")), pris: true }));
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse{Enter}");
+    expect((await screen.findByRole("alert")).textContent).toBe(NOM_DEJA_PRIS);
+    expect(champ().value).toBe("Ourse");
+  });
+
+  it("montre le refus du serveur sous le champ", async () => {
+    actions.validerNomDeChef.mockImplementation(async (_precedent, donnees) => ({ nom: String(donnees.get("nom")), erreur: NOM_NON_AUTORISE }));
+    const u = userEvent.setup();
+    render(<FormulaireNomDeChef />);
+    await u.type(champ(), "Ourse{Enter}");
+    expect((await screen.findByRole("alert")).textContent).toBe(NOM_NON_AUTORISE);
+  });
+
+  it("prévient, d'une ligne, que le nom est définitif", () => {
+    render(<FormulaireNomDeChef />);
+    expect(screen.getByText(NOM_DEFINITIF)).toBeTruthy();
+    expect(NOM_DEFINITIF).toBe("Ce nom ne pourra plus être changé");
   });
 });
 
