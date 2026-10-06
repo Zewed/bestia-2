@@ -3,22 +3,38 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { PageEntree } from "@/components/PageEntree";
-import styles from "../entree.module.css";
+import { Illustration } from "@/components/Illustration";
+import { getPool } from "@/db";
+import { foyerDuTerritoire } from "@/monde/territoire";
+import styles from "./page.module.css";
 
-export const metadata: Metadata = { title: "Le jeu" };
+export const metadata: Metadata = { title: "Foyer" };
+
+/** Tous les Foyers naissent en prairie (US-0152) : une seule illustration sert à tous. */
+export const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hutte du chef, au toit de chaume et à la tête de loup, dans la prairie au petit matin" };
 
 /**
- * La page du jeu (US-0116), provisoire : elle accueille le chef par son nom (US-0139), en attendant
- * les premières Bêtes. Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
+ * L'écran du Foyer (US-0157) : la hutte du chef en grand, et le Biome du Foyer posé dessus. Rien
+ * d'autre : le nom du chef est dans la barre du haut. Sans session, la garde mène à la connexion ;
+ * sans nom de chef, à son choix.
  */
-export default async function Jeu() {
+export default async function Foyer() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
-  const { nomDeChef } = await exigerCompte("/jeu");
+  const { territoireId } = await exigerCompte("/jeu");
+  const foyer = territoireId === null ? null : await foyerDuTerritoire(getPool(), territoireId);
   return (
-    <PageEntree titre={`Bienvenue, ${nomDeChef}`} illustration={{ chemin: "accueil/plateau.webp", alt: "Le monde de Bestia, sculpté comme un plateau de jeu" }}>
-      <p className={styles.texte}>Vos premières Bêtes arrivent bientôt.</p>
-    </PageEntree>
+    <main className={styles.page}>
+      <section className={styles.foyer}>
+        <Illustration
+          chemin={ILLUSTRATION_DU_FOYER.chemin}
+          alt={ILLUSTRATION_DU_FOYER.alt}
+          sizes="(max-width: 1180px) 100vw, 1180px"
+          prioritaire
+          className={styles.remplir}
+        />
+        <h1 className={styles.legende}>{foyer ? `Foyer · ${foyer.biome.nom.toLocaleLowerCase("fr")}` : "Foyer"}</h1>
+      </section>
+    </main>
   );
 }

@@ -1,0 +1,48 @@
+/* L'écran du Foyer : la hutte du chef en grand, dans un bloc Bento qui tient dans l'écran. */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.foyer {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  max-height: calc(100dvh - var(--hauteur-barre) - 48px);
+  min-height: 320px;
+  overflow: hidden;
+  border-radius: var(--arrondi);
+}
+
+/* Sélecteur double pour passer devant le cadre du composant Illustration. */
+.foyer .remplir {
+  position: absolute;
+  inset: 0;
+}
+
+/* Le Biome du Foyer, posé en bas de l'image sur un voile qui le rend lisible, comme la devise des pages d'entrée. */
+.legende {
+  position: absolute;
+  inset: auto 0 0;
+  padding: 72px 32px 28px;
+  background: linear-gradient(to top, color-mix(in oklch, var(--voile) 72%, transparent), transparent);
+  color: var(--blanc-chaud);
+  font-size: clamp(22px, 2.4vw, 32px);
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* Mobile : l'image plus haute que large, recadrée autour de la hutte. */
+@media (max-width: 820px) {
+  .page {
+    padding: 12px;
+  }
+  .foyer {
+    aspect-ratio: 4 / 5;
+    max-height: calc(100dvh - var(--hauteur-barre) - 24px);
+  }
+  .legende {
+    padding: 56px 20px 20px;
+  }
+}

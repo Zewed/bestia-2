@@ -487,6 +487,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0157 · Voir l'illustration de son Foyer
 **En tant que** nouveau joueur, **je veux** voir une belle illustration de mon Foyer et de la hutte du chef, **afin de** me sentir chez moi dès la première seconde.
 
+- **Statut** : Livrée le 2026-10-06. La page du jeu (`/jeu`) devient l'écran du Foyer : la hutte du chef au petit matin, choisie parmi trois propositions générées dans le style des illustrations validées (`public/illustrations/foyer/prairie.webp`), et « Foyer · prairie » posé en bas de l'image. Plus d'accueil ni de phrase : le nom du chef est dans la barre du haut. Sur mobile, l'image est recadrée en hauteur autour de la hutte.
 - **Débloquée par** : US-0155, Étape 2
 - **Critères d'acceptation** :
   - L'écran du Foyer montre une grande illustration de la hutte du chef dans la prairie, dans la direction artistique du prototype.

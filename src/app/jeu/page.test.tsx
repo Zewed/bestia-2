@@ -6,36 +6,58 @@ const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
 vi.mock("@/comptes/cookie-session", () => cookie);
 const session = vi.hoisted(() => ({ compteDeLaSession: vi.fn() }));
 vi.mock("@/comptes/session", () => session);
-const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn(async () => ({ nom: "Ourse" })) }));
+const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn<() => Promise<{ nom: string; territoireId: number | null }>>(async () => ({ nom: "Ourse", territoireId: 12 })) }));
 vi.mock("@/chefs/chef", () => chefs);
+const territoire = vi.hoisted(() => ({ foyerDuTerritoire: vi.fn(async () => ({ biome: { id: "prairie", nom: "Prairie" } })) }));
+vi.mock("@/monde/territoire", () => territoire);
+vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
-import Jeu from "./page";
+import Foyer from "./page";
 
-describe("page du jeu", () => {
+describe("écran du Foyer (US-0157)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
     cookie.jetonDeSession.mockReset();
   });
 
-  it("accueille le chef par son nom (US-0139)", async () => {
+  const connecte = () => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
-    const html = renderToStaticMarkup(await Jeu());
-    expect(html).toMatch(/<h1[^>]*>Bienvenue, Ourse<\/h1>/);
-    expect(html).not.toContain("nom@exemple.fr");
+  };
+
+  it("montre la hutte du chef en grand, et le Biome du Foyer posé dessus", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Foyer());
+    expect(html).toMatch(/<img[^>]*alt="La hutte du chef, au toit de chaume et à la tête de loup, dans la prairie au petit matin"/);
+    expect(html).toContain("foyer%2Fprairie.webp");
+    expect(html).toMatch(/<h1[^>]*>Foyer · prairie<\/h1>/);
+    expect(territoire.foyerDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
+  });
+
+  it("n'ajoute rien d'autre : ni accueil ni phrase, le nom du chef est dans la barre du haut", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Foyer());
+    expect(html).not.toContain("Bienvenue");
+    expect(html).not.toMatch(/<p[ >]/);
+  });
+
+  it("montre « Foyer » seul pour un chef né avant les Territoires", async () => {
+    connecte();
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null });
+    expect(renderToStaticMarkup(await Foyer())).toMatch(/<h1[^>]*>Foyer<\/h1>/);
   });
 
   it("renvoie vers la connexion sans session", async () => {
     cookie.jetonDeSession.mockResolvedValue(undefined);
-    await expect(Jeu()).rejects.toMatchObject({ digest: expect.stringContaining("/connexion") });
+    await expect(Foyer()).rejects.toMatchObject({ digest: expect.stringContaining("/connexion") });
   });
 
   it("reste introuvable en production tant que l'entrée du jeu est fermée", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    await expect(Jeu()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+    await expect(Foyer()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
     expect(cookie.jetonDeSession).not.toHaveBeenCalled();
   });
 });

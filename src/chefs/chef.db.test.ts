@@ -4,6 +4,7 @@ import { creerCompte } from "@/comptes/compte";
 import { calculerEmpreinte } from "@/comptes/empreinte";
 import { choisirCaseDeNaissance } from "@/monde/foyers";
 import { distance } from "@/monde/hex";
+import { foyerDuTerritoire } from "@/monde/territoire";
 import { maintenant } from "@/temps/horloge";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
@@ -268,6 +269,14 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       expect(rows[0].calcule_jusqu_a).toEqual(rows[0].ne_le);
       expect(rows[0].ne_le.getTime()).toBeGreaterThanOrEqual(avant.getTime());
       expect(rows[0].ne_le.getTime()).toBeLessThanOrEqual(apres.getTime());
+    });
+
+    it("dit le Biome du Foyer de son Territoire : la prairie (US-0157)", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Prairial"));
+      const chef = await chefDuCompte(pool, compte.id);
+      expect(await foyerDuTerritoire(pool, chef!.territoireId!)).toEqual({ biome: { id: "prairie", nom: "Prairie" } });
+      expect(await foyerDuTerritoire(pool, -1)).toBeNull();
     });
 
     it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {
