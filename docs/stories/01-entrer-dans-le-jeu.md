@@ -546,11 +546,12 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0163 · Garder un premier écran simple
 **En tant que** nouveau joueur, **je veux** un premier écran qui ne montre que ce que j'ai déjà, **afin de** ne pas me perdre dans des menus vides.
 
+- **Statut** : Livrée le 2026-10-06. L'écran était déjà dans cet état depuis US-0157 ; des tests le gardent ainsi : l'écran du Foyer n'a ni lien, ni bouton, ni menu, et le menu du chef ne propose que « Se déconnecter ». Décidé : pas de phrase à la place des blocs absents, l'écran se comprend sans elle (voir « Textes à l'écran » dans le [README](../../README.md)).
 - **Débloquée par** : US-0157
 - **Critères d'acceptation** :
   - Le Foyer ne montre que la barre du haut et l'illustration du Foyer.
   - Aucun menu, bouton ou bloc ne mène à une fonction qui n'existe pas encore.
-  - Une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte (à décider).
+  - Aucune phrase ne tient lieu des blocs encore absents.
 
 ### US-0164 · Voir son Foyer sur mobile
 **En tant que** joueur, **je veux** un Foyer qui se lit bien sur mon téléphone, **afin de** jouer au pouce autant que sur ordinateur.

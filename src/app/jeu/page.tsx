@@ -15,7 +15,8 @@ export const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hu
 
 /**
  * L'écran du Foyer (US-0157) : la hutte du chef en grand, et le Biome du Foyer posé dessus. Rien
- * d'autre : le nom du chef est dans la barre du haut. Sans session, la garde mène à la connexion ;
+ * d'autre : le nom du chef est dans la barre du haut, et rien ne mène à une fonction qui n'existe
+ * pas encore (US-0163). Sans session, la garde mène à la connexion ;
  * sans nom de chef, à son choix.
  */
 export default async function Foyer() {

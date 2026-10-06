@@ -47,6 +47,13 @@ describe("écran du Foyer (US-0157)", () => {
     expect(html).not.toMatch(/<p[ >]/);
   });
 
+  it("ne mène à aucune fonction qui n'existe pas encore : ni lien, ni bouton, ni menu (US-0163)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Foyer());
+    expect(html).not.toMatch(/<(a|button|form|nav|input|select)[ >]/);
+    expect(html.match(/<(img|h1)[ >]/g)).toEqual(["<img ", "<h1 "]);
+  });
+
   it("montre « Foyer » seul pour un chef toujours sans Foyer (Monde complet)", async () => {
     connecte();
     chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: false });

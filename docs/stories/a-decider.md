@@ -2,15 +2,11 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-266 points au total.
+265 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
 - [US-0005](00-fondations.md) · Mettre le projet en ligne sur Vercel : le nom de domaine du jeu (en attendant : bestia-2.vercel.app).
-
-## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
-
-- [US-0163](01-entrer-dans-le-jeu.md) · Garder un premier écran simple : une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte.
 
 ## [Jalon 2 · Le territoire respire](02-le-territoire-respire.md)
 

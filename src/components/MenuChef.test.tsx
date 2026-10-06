@@ -37,6 +37,14 @@ describe("nom de chef dans la barre du haut (US-0140)", () => {
     expect(document.activeElement).toBe(screen.getByRole("menuitem", { name: "Se déconnecter" }));
   });
 
+  it("ne propose rien d'autre que « Se déconnecter » tant que le jeu n'a pas d'autre page (US-0163)", async () => {
+    const u = userEvent.setup();
+    render(<MenuChef nom="Ourse" />);
+    await u.click(screen.getByRole("button", { name: "Ourse" }));
+    expect(screen.getAllByRole("menuitem").map((choix) => choix.textContent)).toEqual(["Se déconnecter"]);
+    expect(screen.getByRole("menu").querySelectorAll("a")).toHaveLength(0);
+  });
+
   it("se referme d'un nouveau clic sur le nom", async () => {
     const u = userEvent.setup();
     render(<MenuChef nom="Ourse" />);
