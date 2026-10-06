@@ -1,7 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const garde = vi.hoisted(() => ({ joueurConnecte: vi.fn() }));
+const garde = vi.hoisted(() => ({
+  joueurConnecte: vi.fn(),
+  stocksALHeure: vi.fn(async () => [
+    { id: "viande", nom: "Viande", quantite: "100.000000" },
+    { id: "vegetaux", nom: "Végétaux", quantite: "1999.800000" },
+    { id: "bois", nom: "Bois", quantite: "12500.400000" },
+    { id: "pierre", nom: "Pierre", quantite: "0.999999" },
+  ]),
+}));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -12,7 +20,10 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     garde.joueurConnecte.mockReset();
+    garde.stocksALHeure.mockClear();
   });
+  const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
+    garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, territoireId: null, recitLu: false, ...chef });
 
   const rendu = async () => {
     const element = await ActionsDuJeu();
@@ -20,15 +31,38 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
   };
 
   it("montre le nom de chef, qui ouvre le menu (US-0140)", async () => {
-    garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: "Ourse" });
+    joueur({ nomDeChef: "Ourse" });
     const html = await rendu();
     expect(html).toMatch(/<button[^>]*aria-haspopup="menu"[^>]*>.*Ourse/);
     expect(html).not.toContain("nom@exemple.fr");
   });
 
   it("garde « Se déconnecter » seul tant que le joueur n'a pas de nom", async () => {
-    garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: null });
+    joueur({ nomDeChef: null });
     expect(await rendu()).toMatch(/<button[^>]*>Se déconnecter<\/button>/);
+  });
+
+  it("montre ses quatre ressources, dans l'ordre, avant son nom, une fois entré dans son Foyer (US-0203)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    const html = await rendu();
+    expect(garde.stocksALHeure).toHaveBeenCalledWith(12);
+    const ressources = [...html.matchAll(/<li[^>]*><span[^>]*>([^<]+)<\/span><span[^>]*>([^<]+)<\/span><\/li>/g)].map((m) => [m[1], m[2]]);
+    expect(ressources).toEqual([
+      ["Viande", "100"],
+      ["Végétaux", "1\u00a0999"],
+      ["Bois", "12\u00a0500"],
+      ["Pierre", "0"],
+    ]);
+    expect(html).toMatch(/<ul[^>]*aria-label="Ressources"/);
+    expect(html.indexOf("Ressources")).toBeLessThan(html.indexOf("Ourse"));
+  });
+
+  it("ne les montre pas avant le récit d'arrivée, ni sans Territoire", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    expect(await rendu()).not.toContain("Ressources");
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: false });
+    expect(await rendu()).not.toContain("Ressources");
+    expect(garde.stocksALHeure).not.toHaveBeenCalled();
   });
 
   it("ne montre rien sans session", async () => {

@@ -9,8 +9,10 @@ vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
+const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async () => [{ id: "viande", nom: "Viande", quantite: "100.000000" }]) }));
+vi.mock("@/monde/stocks", () => stocks);
 
-import { exigerCompte, exigerCompteSansChef, joueurConnecte } from "./garde";
+import { exigerCompte, exigerCompteSansChef, joueurConnecte, stocksALHeure } from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
@@ -55,10 +57,10 @@ describe("garde du jeu", () => {
   });
 
   it("lit le joueur connecté sans jamais rediriger, pour la barre du haut (US-0140)", async () => {
-    connecte({ nom: "Ourse" });
-    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: "Ourse" });
+    connecte({ nom: "Ourse", territoireId: 12, recitLu: true });
+    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: "Ourse", territoireId: 12, recitLu: true });
     connecte(null);
-    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: null });
+    expect(await joueurConnecte()).toEqual({ compte: { id: 7, email: "nom@exemple.fr" }, nomDeChef: null, territoireId: null, recitLu: false });
     cookie.jetonDeSession.mockResolvedValue(undefined);
     expect(await joueurConnecte()).toBeNull();
   });
@@ -70,6 +72,16 @@ describe("garde du jeu", () => {
     chefs.chefDuCompte.mockResolvedValue({ nom: "Ourse", territoireId: 12, recitLu: true });
     expect(await exigerCompte("/jeu")).toMatchObject({ nomDeChef: "Ourse", territoireId: 12 });
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+  });
+
+  it("lit les Stocks de la barre du haut après avoir mis le Territoire à l'heure (US-0203)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    stocks.stocksDuTerritoire.mockImplementationOnce(async () => (ordre.push("lecture"), []));
+    await stocksALHeure(12);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+    expect(ordre).toEqual(["rattrapage", "lecture"]);
   });
 
   describe("reprendre l'arrivée là où elle s'était arrêtée (US-0160)", () => {

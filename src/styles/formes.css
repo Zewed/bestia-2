@@ -12,7 +12,10 @@
   --bord-droit: env(safe-area-inset-right, 0px);
   --bord-bas: env(safe-area-inset-bottom, 0px);
   --bord-gauche: env(safe-area-inset-left, 0px);
-  --hauteur-barre: calc(64px + var(--bord-haut));
+  /* La barre du haut : sa ligne, la bande des ressources sous elle sur mobile (US-0203), et l'encoche. */
+  --hauteur-ligne: 64px;
+  --hauteur-bande: 0px;
+  --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--bord-haut));
   /* La hauteur de l'écran sous la barre du haut. */
   --hauteur-utile: calc(100dvh - var(--hauteur-barre) - var(--bord-bas));
 }
@@ -20,6 +23,13 @@
 /* Sur mobile, en portrait comme en paysage, la barre du haut reste basse pour laisser la place au jeu. */
 @media (max-width: 820px), (max-height: 500px) {
   :root {
-    --hauteur-barre: calc(48px + var(--bord-haut));
+    --hauteur-ligne: 48px;
+  }
+}
+
+/* Sur un téléphone en portrait, les ressources passent en bande sous la barre : elle grandit d'autant. */
+@media (max-width: 820px) {
+  :root:has([data-bande-ressources]) {
+    --hauteur-bande: 44px;
   }
 }

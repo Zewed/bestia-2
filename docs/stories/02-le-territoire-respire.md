@@ -28,6 +28,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0203 · Voir ses quatre ressources dans la barre du haut
 **En tant que** joueur, **je veux** voir mes quantités de Viande, de Végétaux, de Bois et de Pierre en haut de chaque page, **afin de** connaître d'un coup d'œil ce que je possède.
 
+- **Statut** : Livrée le 2026-10-06. Chaque ressource s'écrit en texte, son nom en petites capitales au-dessus de la quantité, en attendant les icônes (US-0204). Sur ordinateur et sur un téléphone couché, elles sont au milieu de la barre, entre le logo et le nom du chef ; sur un téléphone en portrait, elles forment une bande de quatre colonnes juste sous la barre, comptée dans sa hauteur, sans débordement de 320 px de large à l'écran d'ordinateur. Elles apparaissent une fois le joueur entré dans son Foyer : ni sur le choix du nom, ni sur le récit d'arrivée. La barre met le Territoire à l'heure avant de lire ses Stocks, une seule fois par page avec la page elle-même. Les nombres sont déjà entiers, arrondis vers le bas, les milliers séparés par une espace insécable (l'espace fine du français ne se voit pas dans la police du jeu) : les deux premiers critères d'US-0206.
 - **Débloquée par** : US-0202, Étape 7
 - **Critères d'acceptation** :
   - La barre du haut montre les quatre ressources, toujours dans l'ordre Viande, Végétaux, Bois, Pierre.

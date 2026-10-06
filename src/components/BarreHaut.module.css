@@ -6,7 +6,12 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  display: flex;
+  /* Le logo à gauche, les ressources au milieu, le nom du chef à droite ; la bande des ressources en dessous sur mobile. */
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: var(--hauteur-ligne);
+  grid-auto-rows: var(--hauteur-bande);
+  column-gap: 16px;
   align-items: center;
   height: var(--hauteur-barre);
   /* Toute la largeur de l'écran, jusque sous l'encoche ; le logo et le nom restent à l'écart des bords. */
@@ -17,6 +22,11 @@
 }
 
 /* Une action du joueur, à droite : un bouton discret sur l'Encre, assez haut pour le pouce. */
+.barre > .action,
+.chef {
+  grid-column: 3;
+}
+
 .action {
   min-height: 44px;
   margin-left: auto;
@@ -127,6 +137,37 @@
   opacity: 0.75;
 }
 
+/* US-0203 : les quatre ressources, leur nom en petites capitales, la quantité en chiffres de même largeur. */
+.ressources {
+  grid-column: 2;
+  justify-self: center;
+  display: flex;
+  gap: 20px;
+  padding: 0;
+  list-style: none;
+}
+
+.ressource {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 56px;
+  line-height: 1.2;
+}
+
+.nomRessource {
+  color: var(--sur-encre-pale);
+  font-size: 11px;
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+}
+
+.quantite {
+  font-size: 15px;
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .fleche {
     transition: none;
@@ -137,5 +178,19 @@
   .barre {
     padding-right: max(12px, var(--bord-droit));
     padding-left: max(12px, var(--bord-gauche));
+  }
+
+  /* La bande des ressources : toute la largeur de l'écran, quatre colonnes égales, sous un filet. */
+  .ressources {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+    align-self: stretch;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    gap: 0;
+    margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
+    border-top: 1px solid var(--sur-encre-trait);
   }
 }

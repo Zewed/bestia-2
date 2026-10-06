@@ -4,6 +4,7 @@ import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { stocksDuTerritoire } from "./stocks";
 
 describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", () => {
   let pool: Pool;
@@ -116,6 +117,17 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
     await expect(ajouter(territoireId, "viande", "-2.000001")).rejects.toMatchObject({ constraint: "stock_jamais_negatif" });
     await ajouter(territoireId, "viande", "-2");
     expect((await stocks(territoireId))[0]).toEqual(["viande", "0.000000"]);
+  });
+
+  it("se lisent dans l'ordre des Ressources, avec leur nom et leur quantité exacte (US-0203)", async () => {
+    const { territoireId } = await naitre();
+    await ajouter(territoireId, "bois", "0.4");
+    expect(await stocksDuTerritoire(pool, territoireId)).toEqual([
+      { id: "viande", nom: "Viande", quantite: (await auDepart())[0][1] },
+      { id: "vegetaux", nom: "Végétaux", quantite: (await auDepart())[1][1] },
+      { id: "bois", nom: "Bois", quantite: (Number((await auDepart())[2][1]) + 0.4).toFixed(6) },
+      { id: "pierre", nom: "Pierre", quantite: (await auDepart())[3][1] },
+    ]);
   });
 
   it("disparaissent avec leur Territoire", async () => {

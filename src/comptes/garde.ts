@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
+import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
 import { compteDeLaSession } from "./session";
@@ -37,7 +38,7 @@ export async function exigerCompte(chemin = "/jeu"): Promise<ChefConnecte> {
   // Un chef né avant les Foyers (avant US-0153) reçoit le sien à son retour.
   const territoireId = chef.territoireId ?? (await naitreSurLaCouronne(getPool(), compte.id));
   // US-0156 : le Territoire du joueur est mis à l'heure avant toute page ou action du jeu.
-  if (territoireId !== null) await rattraper("territoire", territoireId);
+  if (territoireId !== null) await mettreALHeure(territoireId);
   if (territoireId !== null && !chef.recitLu && chemin !== PAGE_ARRIVEE) redirect(PAGE_ARRIVEE);
   return { ...compte, nomDeChef: chef.nom, territoireId, recitLu: Boolean(chef.recitLu) };
 }
@@ -57,15 +58,29 @@ async function exigerSession(chemin: string): Promise<CompteConnecte> {
 }
 
 /**
- * Le joueur connecté et son nom de chef (null tant qu'il ne l'a pas choisi), ou null sans session.
- * Sans redirection : pour la barre du haut, qui ne fait que montrer ; les pages et les actions du
- * jeu, elles, passent par exigerCompte.
+ * Le Territoire mis à l'heure une seule fois par page, même quand la page et la barre du haut, qui
+ * s'affichent côte à côte, le demandent toutes les deux.
  */
-export const joueurConnecte = cache(async (): Promise<{ compte: CompteConnecte; nomDeChef: string | null } | null> => {
+const mettreALHeure = cache((territoireId: number) => rattraper("territoire", territoireId));
+
+export type JoueurConnecte = { compte: CompteConnecte; nomDeChef: string | null; territoireId: number | null; recitLu: boolean };
+
+/**
+ * Le joueur connecté, son nom de chef (null tant qu'il ne l'a pas choisi) et son Territoire, ou null
+ * sans session. Sans redirection : pour la barre du haut, qui ne fait que montrer ; les pages et les
+ * actions du jeu, elles, passent par exigerCompte.
+ */
+export const joueurConnecte = cache(async (): Promise<JoueurConnecte | null> => {
   const jeton = await jetonDeSession();
   const compte = jeton ? await compteDeLaSession(getPool(), jeton) : null;
   if (!compte) return null;
   const chef = await chefDuCompte(getPool(), compte.id);
-  return { compte, nomDeChef: chef?.nom ?? null };
+  return { compte, nomDeChef: chef?.nom ?? null, territoireId: chef?.territoireId ?? null, recitLu: Boolean(chef?.recitLu) };
 });
+
+/** Les Stocks du Territoire pour la barre du haut (US-0203), lus après sa mise à l'heure. */
+export async function stocksALHeure(territoireId: number): Promise<Stock[]> {
+  await mettreALHeure(territoireId);
+  return stocksDuTerritoire(getPool(), territoireId);
+}
 

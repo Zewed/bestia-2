@@ -45,8 +45,7 @@ describe("icônes et titre d'onglet", () => {
     expect(metadata.appleWebApp).toMatchObject({ capable: true, statusBarStyle: "black-translucent" });
     expect(viewport.viewportFit).toBe("cover");
     const formes = readFileSync(join(root, "src/styles/formes.css"), "utf8");
-    expect(formes).toContain("--hauteur-barre: calc(64px + var(--bord-haut));");
-    expect(formes).toContain("--hauteur-barre: calc(48px + var(--bord-haut));");
+    expect(formes).toContain("--hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--bord-haut));");
   });
 
   it("titre l'onglet « Bestia », que chaque page peut compléter", () => {
