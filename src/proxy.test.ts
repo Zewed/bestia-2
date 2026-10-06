@@ -61,7 +61,7 @@ describe("cookie de session en ligne", () => {
   });
 });
 
-describe("joueur déjà connecté qui ouvre l'inscription ou la connexion", () => {
+describe("joueur déjà connecté qui ouvre l'accueil, l'inscription ou la connexion", () => {
   const ouvrir = (chemin: string, options: { cookie?: string; methode?: string; action?: boolean } = {}) =>
     new NextRequest(`https://bestia.test${chemin}`, {
       method: options.methode ?? "GET",
@@ -73,6 +73,8 @@ describe("joueur déjà connecté qui ouvre l'inscription ou la connexion", () =
   });
 
   it.each([
+    // US-0161 : ouvrir le site, ou toucher le logo, mène au Foyer.
+    ["/", "https://bestia.test/jeu"],
     ["/inscription", "https://bestia.test/jeu"],
     ["/connexion", "https://bestia.test/jeu"],
     ["/connexion?suite=%2Fjeu%2Fterritoire", "https://bestia.test/jeu/territoire"],
@@ -87,8 +89,10 @@ describe("joueur déjà connecté qui ouvre l'inscription ou la connexion", () =
     expect(await proxy(ouvrir("/inscription", { cookie: "bestia_session=jeton-de-session", methode: "POST", action: true }))).toBeUndefined();
   });
 
-  it("laisse passer un visiteur", async () => {
+  it("laisse passer un visiteur, sans aller en base : l'accueil reste rapide", async () => {
     expect(await proxy(ouvrir("/inscription"))).toBeUndefined();
+    expect(await proxy(ouvrir("/"))).toBeUndefined();
+    expect(sessions.compteDeLaSession).not.toHaveBeenCalled();
   });
 
   it("laisse passer une session expirée, en effaçant ses cookies périmés (US-0125)", async () => {

@@ -531,6 +531,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0161 · Arriver sur son Foyer à chaque visite
 **En tant que** joueur, **je veux** arriver directement sur mon Foyer quand j'ouvre le jeu, **afin de** reprendre ma session en un geste.
 
+- **Statut** : Livrée le 2026-10-06. Le Foyer a pour adresse `/jeu`. Un joueur connecté qui ouvre le site, ou touche le logo du loup, y est envoyé tout droit, comme après la connexion ; la garde du jeu fait passer avant les étapes d'arrivée qui manquent (US-0160).
 - **Débloquée par** : US-0157, US-0160
 - **Critères d'acceptation** :
   - Un joueur qui a son Foyer arrive dessus après la connexion et à chaque ouverture du jeu.

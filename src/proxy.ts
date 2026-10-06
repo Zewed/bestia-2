@@ -2,7 +2,8 @@
 // - les pages de contrôle : sans le mot de passe de contrôle, le navigateur le demande ;
 // - les pages du jeu : la session est prolongée, au plus une fois par jour (US-0119) ; expirée,
 //   elle mène à la connexion, qui le dit, et ramène ensuite à la même page (US-0125) ;
-// - l'inscription et la connexion : un joueur déjà connecté qui les ouvre va droit au jeu (US-0122).
+// - l'inscription et la connexion : un joueur déjà connecté qui les ouvre va droit au jeu (US-0122) ;
+// - l'accueil : un joueur connecté qui ouvre le site, ou touche le logo, arrive sur son Foyer (US-0161).
 import { NextResponse, type NextRequest } from "next/server";
 import { DEMANDE_MOT_DE_PASSE, motDePasseAccepte } from "./controle/acces";
 import { nomDuCookie, nomDuTemoin, reglagesDuCookie, reglagesDuTemoin } from "./comptes/cookie-session";
@@ -10,12 +11,12 @@ import { compteDeLaSession, etatDeLaSession } from "./comptes/session";
 import { connexionPuis, suiteSure } from "./comptes/suite";
 import { getPool } from "./db";
 
-export const config = { matcher: ["/controle", "/controle/:path*", "/jeu", "/jeu/:path*", "/inscription", "/connexion"] };
+export const config = { matcher: ["/", "/controle", "/controle/:path*", "/jeu", "/jeu/:path*", "/inscription", "/connexion"] };
 
 export async function proxy(request: NextRequest) {
   const chemin = request.nextUrl.pathname;
   if (chemin.startsWith("/controle")) return protegerControle(request);
-  if (chemin === "/inscription" || chemin === "/connexion") return envoyerAuJeuSiConnecte(request);
+  if (chemin === "/" || chemin === "/inscription" || chemin === "/connexion") return envoyerAuJeuSiConnecte(request);
   return suivreLaSession(request);
 }
 
