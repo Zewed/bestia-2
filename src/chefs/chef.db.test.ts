@@ -7,7 +7,7 @@ import { distance } from "@/monde/hex";
 import { foyerDuTerritoire, marquerRecitLu } from "@/monde/territoire";
 import { maintenant } from "@/temps/horloge";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
+import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne, nomDejaPris, nomInterdit } from "./chef";
 import { caractereRefuse, cleDuNom, NOM_NON_AUTORISE, NOM_TROP_COURT } from "./nom";
 
 describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
@@ -33,7 +33,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   it("porte le nom choisi dans le Monde du jeu", async () => {
     const compte = await nouveauCompte();
     await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), 'Ourse', $2)", [compte.id, `ourse${numero}${lancement.replace(/[^a-z0-9]/g, "")}`]);
-    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse", territoireId: null });
+    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse", territoireId: null, recitLu: false });
   });
 
   it("n'est pas celui d'un autre Monde", async () => {
@@ -275,7 +275,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const compte = await nouveauCompte();
       await enregistrerNomDeChef(pool, compte.id, nomUnique("Prairial"));
       const chef = await chefDuCompte(pool, compte.id);
-      expect(await foyerDuTerritoire(pool, chef!.territoireId!)).toEqual({ biome: { id: "prairie", nom: "Prairie" } });
+      expect(await foyerDuTerritoire(pool, chef!.territoireId!)).toEqual({ biome: { id: "prairie", nom: "Prairie" }, monde: "Aube" });
       expect(await foyerDuTerritoire(pool, -1)).toBeNull();
     });
 
@@ -283,8 +283,27 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const compte = await nouveauCompte();
       await enregistrerNomDeChef(pool, compte.id, nomUnique("Conteur"));
       const { territoireId } = (await chefDuCompte(pool, compte.id))!;
-      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toEqual({ monde: "Aube" });
-      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toBeNull();
+      expect(await foyerDuTerritoire(pool, territoireId!)).toMatchObject({ monde: "Aube" });
+      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toBe(true);
+      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toBe(false);
+      expect(await chefDuCompte(pool, compte.id)).toMatchObject({ recitLu: true });
+    });
+
+    it("donne un Foyer à un chef qui n'en avait pas, une seule fois (US-0160)", async () => {
+      const compte = await nouveauCompte();
+      const nom = nomUnique("Ancien");
+      // Un chef d'avant les Foyers : son nom, sans Case ni Territoire.
+      await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), $2, $3)", [
+        compte.id,
+        nom,
+        cleDuNom(nom),
+      ]);
+      const territoireId = await naitreSurLaCouronne(pool, compte.id);
+      expect(territoireId).toEqual(expect.any(Number));
+      expect(await chefDuCompte(pool, compte.id)).toEqual({ nom, territoireId, recitLu: false });
+      expect(await caseDu(compte.id)).toHaveLength(1);
+      expect(await naitreSurLaCouronne(pool, compte.id)).toBe(territoireId);
+      expect(await caseDu(compte.id)).toHaveLength(1);
     });
 
     it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {

@@ -6,7 +6,10 @@ const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
 vi.mock("@/comptes/cookie-session", () => cookie);
 const session = vi.hoisted(() => ({ compteDeLaSession: vi.fn() }));
 vi.mock("@/comptes/session", () => session);
-const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn<() => Promise<{ nom: string; territoireId: number | null }>>(async () => ({ nom: "Ourse", territoireId: 12 })) }));
+const chefs = vi.hoisted(() => ({
+  chefDuCompte: vi.fn<() => Promise<{ nom: string; territoireId: number | null; recitLu: boolean }>>(async () => ({ nom: "Ourse", territoireId: 12, recitLu: true })),
+  naitreSurLaCouronne: vi.fn(async (): Promise<number | null> => null),
+}));
 vi.mock("@/chefs/chef", () => chefs);
 const territoire = vi.hoisted(() => ({ foyerDuTerritoire: vi.fn(async () => ({ biome: { id: "prairie", nom: "Prairie" } })) }));
 vi.mock("@/monde/territoire", () => territoire);
@@ -44,10 +47,16 @@ describe("écran du Foyer (US-0157)", () => {
     expect(html).not.toMatch(/<p[ >]/);
   });
 
-  it("montre « Foyer » seul pour un chef né avant les Territoires", async () => {
+  it("montre « Foyer » seul pour un chef toujours sans Foyer (Monde complet)", async () => {
     connecte();
-    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null });
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: false });
     expect(renderToStaticMarkup(await Foyer())).toMatch(/<h1[^>]*>Foyer<\/h1>/);
+  });
+
+  it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {
+    connecte();
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: 12, recitLu: false });
+    await expect(Foyer()).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
   });
 
   it("renvoie vers la connexion sans session", async () => {

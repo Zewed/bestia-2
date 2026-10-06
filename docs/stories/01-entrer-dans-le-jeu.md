@@ -498,7 +498,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0158 · Lire le récit d'arrivée
 **En tant que** nouveau joueur, **je veux** un court récit entre mon nom de chef et mon Foyer, **afin de** savoir où j'arrive avant d'y entrer.
 
-- **Statut** : Livrée le 2026-10-06. Valider son nom mène à `/jeu/arrivee`, dans l'habillage des pages d'entrée, avec l'illustration du Monde en plateau. Le récit est noté comme lu dès qu'il s'affiche : y revenir mène droit au Foyer.
+- **Statut** : Livrée le 2026-10-06. Valider son nom mène à `/jeu/arrivee`, dans l'habillage des pages d'entrée, avec l'illustration du Monde en plateau. Le récit est noté comme lu quand le joueur appuie sur « Entrer dans mon Foyer » (et non dès l'affichage, ce qui le perdait quand Next calculait la page deux fois, corrigé avec US-0160) : y revenir ensuite mène droit au Foyer.
 - **Débloquée par** : US-0157
 - **Critères d'acceptation** :
   - À la première arrivée, juste après le nom de chef, un court récit dit en quelques lignes : le nom du chef, la prairie où naît son Foyer, la Couronne au bord du Monde.
@@ -520,6 +520,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0160 · Reprendre l'entrée dans le jeu là où on l'a laissée
 **En tant que** nouveau joueur, **je veux** retrouver l'étape où je m'étais arrêté si je ferme l'onglet en plein milieu, **afin de** ne rien refaire ni rien perdre.
 
+- **Statut** : Livrée le 2026-10-06. La garde du jeu reprend l'arrivée à la bonne étape sur toute page du jeu. Depuis US-0153, un nom sans Foyer n'arrive plus ; un chef né avant reçoit le sien à son retour, comme à une naissance ordinaire. Le récit passe avant toute page tant que le joueur n'est pas entré dans son Foyer.
 - **Débloquée par** : US-0139, US-0158, US-0159
 - **Critères d'acceptation** :
   - Sans nom de chef, le joueur revient sur le choix du nom.

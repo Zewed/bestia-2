@@ -4,7 +4,7 @@ const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
 vi.mock("./cookie-session", () => cookie);
 const sessions = vi.hoisted(() => ({ compteDeLaSession: vi.fn() }));
 vi.mock("./session", () => sessions);
-const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn() }));
+const chefs = vi.hoisted(() => ({ chefDuCompte: vi.fn(), naitreSurLaCouronne: vi.fn(async (): Promise<number | null> => null) }));
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
@@ -13,15 +13,15 @@ vi.mock("@/temps/rattraper", () => temps);
 import { exigerCompte, exigerCompteSansChef, joueurConnecte } from "./garde";
 
 describe("garde du jeu", () => {
-  const connecte = (chef: { nom: string } | null) => {
+  const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     sessions.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
     chefs.chefDuCompte.mockResolvedValue(chef);
   };
 
   it("rend le compte connecté qui a son nom de chef", async () => {
-    connecte({ nom: "Ourse" });
-    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: null });
+    connecte({ nom: "Ourse", territoireId: null, recitLu: false });
+    expect(await exigerCompte("/jeu/territoire")).toEqual({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: null, recitLu: false });
     expect(chefs.chefDuCompte).toHaveBeenCalledWith(expect.anything(), 7);
   });
 
@@ -67,9 +67,39 @@ describe("garde du jeu", () => {
     temps.rattraper.mockClear();
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     sessions.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
-    chefs.chefDuCompte.mockResolvedValue({ nom: "Ourse", territoireId: 12 });
+    chefs.chefDuCompte.mockResolvedValue({ nom: "Ourse", territoireId: 12, recitLu: true });
     expect(await exigerCompte("/jeu")).toMatchObject({ nomDeChef: "Ourse", territoireId: 12 });
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+  });
+
+  describe("reprendre l'arrivée là où elle s'était arrêtée (US-0160)", () => {
+    it("montre d'abord le récit d'arrivée tant qu'il ne l'a pas été, quelle que soit la page", async () => {
+      connecte({ nom: "Ourse", territoireId: 12, recitLu: false });
+      await expect(exigerCompte("/jeu")).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
+      await expect(exigerCompte("/jeu/territoire")).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
+    });
+
+    it("laisse la page du récit s'afficher, et les autres une fois le récit montré", async () => {
+      connecte({ nom: "Ourse", territoireId: 12, recitLu: false });
+      expect(await exigerCompte("/jeu/arrivee")).toMatchObject({ territoireId: 12 });
+      connecte({ nom: "Ourse", territoireId: 12, recitLu: true });
+      expect(await exigerCompte("/jeu")).toMatchObject({ territoireId: 12 });
+    });
+
+    it("donne un Foyer à un chef qui n'en a pas, puis lui montre le récit", async () => {
+      temps.rattraper.mockClear();
+      chefs.naitreSurLaCouronne.mockResolvedValueOnce(21);
+      connecte({ nom: "Ourse", territoireId: null, recitLu: false });
+      await expect(exigerCompte("/jeu")).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
+      expect(chefs.naitreSurLaCouronne).toHaveBeenCalledWith(expect.anything(), 7);
+      expect(temps.rattraper).toHaveBeenCalledWith("territoire", 21);
+    });
+
+    it("laisse passer un chef toujours sans Foyer quand le Monde est complet", async () => {
+      chefs.naitreSurLaCouronne.mockResolvedValueOnce(null);
+      connecte({ nom: "Ourse", territoireId: null, recitLu: false });
+      expect(await exigerCompte("/jeu")).toMatchObject({ territoireId: null });
+    });
   });
 });
 

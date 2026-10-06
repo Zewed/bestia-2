@@ -239,6 +239,11 @@
   line-height: 1.5;
 }
 
+/* Le bouton seul d'un formulaire hors grille, sur toute la largeur. */
+.action {
+  display: grid;
+}
+
 /* L'autre chemin (se connecter, créer un compte), séparé du formulaire par un trait. */
 .autre {
   margin-top: 24px;

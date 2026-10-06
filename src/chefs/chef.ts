@@ -11,13 +11,16 @@ import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./no
 /** Le Monde du jeu : le seul pour l'instant, le premier ouvert. */
 const MONDE_DU_JEU = "(select id from monde order by id limit 1)";
 
+export type ChefDuCompte = { nom: string; territoireId: number | null; recitLu: boolean };
+
 /**
  * Le Chef du compte dans le Monde du jeu, avec son Territoire (null pour un chef né avant les
- * Territoires), ou null tant qu'il n'a pas choisi son nom.
+ * Territoires) et si son récit d'arrivée a été montré, ou null tant qu'il n'a pas choisi son nom.
  */
-export async function chefDuCompte(pool: Pool, compteId: number): Promise<{ nom: string; territoireId: number | null } | null> {
-  const { rows } = await pool.query<{ nom: string; territoireId: number | null }>(
-    `select ch.nom, t.id as "territoireId" from chef ch left join territoire t on t.chef_id = ch.id
+export async function chefDuCompte(pool: Pool, compteId: number): Promise<ChefDuCompte | null> {
+  const { rows } = await pool.query<ChefDuCompte>(
+    `select ch.nom, t.id as "territoireId", coalesce(t.recit_lu_le is not null, false) as "recitLu"
+     from chef ch left join territoire t on t.chef_id = ch.id
      where ch.compte_id = $1 and ch.monde_id = ${MONDE_DU_JEU}`,
     [compteId],
   );
@@ -118,6 +121,55 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
       if (refus.constraint === "chef_nom_unique_dans_le_monde") return { statut: "pris" };
     }
     throw refus;
+  } finally {
+    client.release();
+  }
+}
+
+/**
+ * Donne un Foyer à un chef qui n'en a pas (US-0160) : depuis US-0153, le nom et le Foyer naissent
+ * ensemble, mais un chef né avant reçoit le sien à son retour, comme à une naissance ordinaire.
+ * Rend le Territoire du chef (déjà là ou tout juste né), ou null si le Monde est complet.
+ */
+export async function naitreSurLaCouronne(pool: Pool, compteId: number, hasard: () => number = Math.random): Promise<number | null> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const { rows: mondes } = await client.query<{ id: number; nom: string }>(
+      `select id, nom, pg_advisory_xact_lock($1, id) from monde where id = ${MONDE_DU_JEU}`,
+      [VERROU_NAISSANCE],
+    );
+    const monde = mondes[0];
+    const { rows: chefs } = await client.query<{ id: number; territoireId: number | null }>(
+      `select ch.id, t.id as "territoireId" from chef ch left join territoire t on t.chef_id = ch.id
+       where ch.compte_id = $1 and ch.monde_id = $2`,
+      [compteId, monde.id],
+    );
+    const chef = chefs[0];
+    if (!chef || chef.territoireId !== null) {
+      await client.query("commit");
+      return chef?.territoireId ?? null;
+    }
+    const naissance = await caseDeNaissance(client, monde.id, hasard);
+    const alerte = alerteDePlaces(monde.nom, naissance?.restantes ?? 0);
+    if (alerte) console.error(alerte);
+    if (!naissance) {
+      await client.query("rollback");
+      return null;
+    }
+    const { rows } = await client.query<{ id: number }>(
+      `with prise as (
+         update case_du_monde set chef_id = $1, imprenable = true where id = $2 and chef_id is null returning id
+       )
+       insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select $1, prise.id, $3, $3 from prise returning id`,
+      [chef.id, naissance.id, maintenant()],
+    );
+    if (!rows[0]) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
+    await client.query("commit");
+    return rows[0].id;
+  } catch (erreur) {
+    await client.query("rollback").catch(() => {});
+    throw erreur;
   } finally {
     client.release();
   }
