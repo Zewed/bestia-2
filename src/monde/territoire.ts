@@ -12,3 +12,19 @@ export async function foyerDuTerritoire(pool: Pool, territoireId: number): Promi
   );
   return rows[0] ?? null;
 }
+
+/**
+ * Note le récit d'arrivée comme lu (US-0158) et rend le nom du Monde du Territoire, la première
+ * fois seulement ; ensuite, null : le récit ne s'affiche qu'une fois.
+ */
+export async function marquerRecitLu(pool: Pool, territoireId: number, instant: Date): Promise<{ monde: string } | null> {
+  const { rows } = await pool.query<{ monde: string }>(
+    `update territoire t set recit_lu_le = $2
+     from case_du_monde c join monde m on m.id = c.monde_id
+     where t.id = $1 and t.recit_lu_le is null and c.id = t.foyer_case_id
+     returning m.nom as monde`,
+    [territoireId, instant],
+  );
+  return rows[0] ?? null;
+}
+

@@ -361,5 +361,7 @@ export const territoire = pgTable("territoire", {
   neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
   /** US-0156 : le marque-page du temps, réglé sur sa naissance ; il ne recule jamais. */
   calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
+  /** US-0158 : quand le récit d'arrivée a été montré ; null tant qu'il ne l'a pas été. Il ne l'est qu'une fois. */
+  recitLuLe: timestamp("recit_lu_le", { withTimezone: true }),
 });
 

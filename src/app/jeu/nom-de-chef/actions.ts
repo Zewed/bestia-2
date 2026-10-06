@@ -24,7 +24,7 @@ export async function verifierNomLibre(saisie: string): Promise<string | null> {
 
 /**
  * Valider le nom de chef (US-0139) : enregistré, avec sa Case sur la Couronne (US-0153), le
- * joueur passe à la suite de son arrivée (la
+ * joueur passe au récit de son arrivée (US-0158), puis à son Foyer (la
  * page du jeu, en attendant la naissance sur la carte de l'étape 9) ;
  * sinon, il reste sur l'écran avec la raison. Un deuxième envoi du même joueur trouve son chef
  * déjà créé et passe à la suite lui aussi.
@@ -37,6 +37,6 @@ export async function validerNomDeChef(_precedent: EtatValidation, donnees: Form
   if (resultat.statut === "refuse") return { nom, erreur: resultat.erreur };
   if (resultat.statut === "pris") return { nom, pris: true };
   if (resultat.statut === "complet") return { nom, erreur: mondeComplet(resultat.monde) };
-  redirect("/jeu");
+  redirect("/jeu/arrivee");
 }
 

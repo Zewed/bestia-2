@@ -4,7 +4,7 @@ import { creerCompte } from "@/comptes/compte";
 import { calculerEmpreinte } from "@/comptes/empreinte";
 import { choisirCaseDeNaissance } from "@/monde/foyers";
 import { distance } from "@/monde/hex";
-import { foyerDuTerritoire } from "@/monde/territoire";
+import { foyerDuTerritoire, marquerRecitLu } from "@/monde/territoire";
 import { maintenant } from "@/temps/horloge";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, nomDejaPris, nomInterdit } from "./chef";
@@ -277,6 +277,14 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const chef = await chefDuCompte(pool, compte.id);
       expect(await foyerDuTerritoire(pool, chef!.territoireId!)).toEqual({ biome: { id: "prairie", nom: "Prairie" } });
       expect(await foyerDuTerritoire(pool, -1)).toBeNull();
+    });
+
+    it("ne donne le récit d'arrivée qu'une fois, avec le nom du Monde (US-0158)", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Conteur"));
+      const { territoireId } = (await chefDuCompte(pool, compte.id))!;
+      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toEqual({ monde: "Aube" });
+      expect(await marquerRecitLu(pool, territoireId!, maintenant())).toBeNull();
     });
 
     it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {

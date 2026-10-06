@@ -1,0 +1,1 @@
+ALTER TABLE "territoire" ADD COLUMN "recit_lu_le" timestamp with time zone;

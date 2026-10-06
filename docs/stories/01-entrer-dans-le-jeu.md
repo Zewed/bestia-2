@@ -498,12 +498,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0158 · Lire le récit d'arrivée
 **En tant que** nouveau joueur, **je veux** un court récit entre mon nom de chef et mon Foyer, **afin de** savoir où j'arrive avant d'y entrer.
 
+- **Statut** : Livrée le 2026-10-06. Valider son nom mène à `/jeu/arrivee`, dans l'habillage des pages d'entrée, avec l'illustration du Monde en plateau. Le récit est noté comme lu dès qu'il s'affiche : y revenir mène droit au Foyer.
 - **Débloquée par** : US-0157
 - **Critères d'acceptation** :
   - À la première arrivée, juste après le nom de chef, un court récit dit en quelques lignes : le nom du chef, la prairie où naît son Foyer, la Couronne au bord du Monde.
   - Ni consigne ni explication du jeu : le récit et un bouton qui mène au Foyer, rien d'autre (README, « Textes à l'écran »).
   - Le récit ne s'affiche qu'une fois.
-  - Le texte du récit (à décider).
+  - Le texte : le nom du chef en titre (« Ourse Brune. »), puis « Une prairie au bord du Monde, sur la Couronne d'Aube. C'est ici que naît votre Foyer. », et le bouton « Entrer dans mon Foyer ».
 
 ### US-0159 · Prévenir quand la Couronne est pleine
 **En tant que** nouveau joueur, **je veux** un message clair s'il n'y a plus de place sur la Couronne, **afin de** ne pas rester devant une erreur incompréhensible.

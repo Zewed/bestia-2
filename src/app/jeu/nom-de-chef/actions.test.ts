@@ -59,9 +59,9 @@ describe("valider le nom de chef (US-0139)", () => {
     return validerNomDeChef({ nom: "" }, donnees);
   };
 
-  it("enregistre le nom nettoyé, puis mène à la page du jeu", async () => {
+  it("enregistre le nom nettoyé, puis mène au récit d'arrivée (US-0158)", async () => {
     chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "enregistre", nom: "Ours Brun" });
-    await expect(valider("  Ours   Brun ")).rejects.toMatchObject({ digest: expect.stringMatching(/;\/jeu;/) });
+    await expect(valider("  Ours   Brun ")).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
     expect(chefs.enregistrerNomDeChef).toHaveBeenCalledWith(expect.anything(), 7, "Ours Brun");
   });
 

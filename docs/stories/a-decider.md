@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-268 points au total.
+267 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md)
 
-- [US-0158](01-entrer-dans-le-jeu.md) · Lire le récit d'arrivée : le texte du récit.
 - [US-0159](01-entrer-dans-le-jeu.md) · Prévenir quand la Couronne est pleine : ce qui est proposé au joueur en attendant ; l'ouverture d'un autre Monde viendra plus tard.
 - [US-0163](01-entrer-dans-le-jeu.md) · Garder un premier écran simple : une courte phrase tient lieu des blocs encore absents et dit ce qui vient ensuite ; son texte.
 

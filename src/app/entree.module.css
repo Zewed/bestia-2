@@ -231,6 +231,14 @@
   color: var(--texte-2);
 }
 
+/* US-0158 : le récit d'arrivée, sous le nom du chef, avant le bouton vers le Foyer. */
+.recit {
+  margin: 16px 0 28px;
+  color: var(--texte-2);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
 /* L'autre chemin (se connecter, créer un compte), séparé du formulaire par un trait. */
 .autre {
   margin-top: 24px;
