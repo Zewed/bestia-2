@@ -24,8 +24,18 @@ describe("Ressources (US-0201)", () => {
   });
 
   it("refusent une famille inconnue, en disant laquelle", () => {
-    expect(() => valider(RESSOURCES, [{ id: "or", nom: "Or", famille: "tresor", ordre: 1 }])).toThrow(
+    expect(() => valider(RESSOURCES, [{ id: "or", nom: "Or", famille: "tresor", au_depart: 0, ordre: 1 }])).toThrow(
       "entrée n° 1 (famille) : famille : nourriture ou materiaux",
+    );
+  });
+
+  it("donnent chacune un peu au départ, pour ne pas partir de rien (US-0202)", () => {
+    for (const r of ressources) expect(r.au_depart).toBeGreaterThan(0);
+  });
+
+  it("refusent une quantité de départ négative", () => {
+    expect(() => valider(RESSOURCES, [{ id: "bois", nom: "Bois", famille: "materiaux", au_depart: -5, ordre: 1 }])).toThrow(
+      "entrée n° 1 (au_depart) : au_depart ne peut pas être négatif",
     );
   });
 });

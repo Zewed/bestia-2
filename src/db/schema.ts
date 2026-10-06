@@ -106,12 +106,18 @@ export const familleDeRessource = pgEnum("famille_de_ressource", ["nourriture", 
  * Une Ressource (US-0201) : la Viande et les Végétaux sont de la Nourriture, le Bois et la Pierre
  * des Matériaux. L'ordre est celui de l'affichage.
  */
-export const ressource = pgTable("ressource", {
-  id: text("id").primaryKey(),
-  nom: text("nom").notNull(),
-  famille: familleDeRessource("famille").notNull(),
-  ordre: integer("ordre").notNull(),
-});
+export const ressource = pgTable(
+  "ressource",
+  {
+    id: text("id").primaryKey(),
+    nom: text("nom").notNull(),
+    famille: familleDeRessource("famille").notNull(),
+    ordre: integer("ordre").notNull(),
+    /** US-0202 : ce que reçoit un Territoire à sa naissance. */
+    auDepart: numeric("au_depart", { precision: 24, scale: 6 }).notNull().default("0"),
+  },
+  (t) => [check("ressource_au_depart_positif", sql`${t.auDepart} >= 0`)],
+);
 
 /**
  * Une Espèce : la fiche commune à toutes ses Bêtes, qui sont identiques. Ses chiffres
@@ -380,7 +386,7 @@ export const territoire = pgTable("territoire", {
 
 /**
  * Le Stock d'une Ressource dans un Territoire (US-0201). Chaque Territoire en a un par Ressource,
- * créé par la base à sa naissance. La quantité garde ses fractions au millionième, sans arrondi
+ * créé par la base à sa naissance avec la quantité de départ de la Ressource (US-0202). La quantité garde ses fractions au millionième, sans arrondi
  * flottant, et la base la refuse négative.
  */
 export const stock = pgTable(

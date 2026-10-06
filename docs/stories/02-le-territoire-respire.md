@@ -18,9 +18,10 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0202 · Recevoir des quantités de départ
 **En tant que** nouveau joueur, **je veux** commencer avec un peu de chaque ressource, **afin de** ne pas partir de rien.
 
+- **Statut** : Livrée le 2026-10-06. Les quantités sont le champ `au_depart` de chaque Ressource dans `donnees/ressources.yaml`, à régler en jouant quand la production et les constructions donneront une échelle ; les changer ne touche que les Territoires qui naissent ensuite. La base les verse dans les Stocks à la naissance ; les Territoires déjà nés les ont reçues avec la migration, qui ne passe qu'une fois.
 - **Débloquée par** : US-0201
 - **Critères d'acceptation** :
-  - À la naissance, le Territoire reçoit (chiffre à régler) Viande, (chiffre à régler) Végétaux, (chiffre à régler) Bois et (chiffre à régler) Pierre.
+  - À la naissance, le Territoire reçoit 100 Viande, 100 Végétaux, 100 Bois et 100 Pierre (provisoire, décidé le 2026-10-06).
   - Ces quantités se règlent dans les données de référence, pas dans le code.
   - Les joueurs nés avant cette story reçoivent ces quantités, une seule fois.
 

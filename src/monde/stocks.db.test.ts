@@ -5,7 +5,7 @@ import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 
-describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, sur base)", () => {
+describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", () => {
   let pool: Pool;
   const lancement = `stocks-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -26,6 +26,9 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, sur base)", () => {
         [territoireId],
       )
     ).rows.map((s) => [s.ressource, s.quantite]);
+  /** Les quantités de départ, telles que la base les tient de donnees/ressources.yaml. */
+  const auDepart = async () =>
+    (await pool.query<{ id: string; au_depart: string }>("select id, au_depart from ressource order by ordre")).rows.map((r) => [r.id, r.au_depart]);
   const ajouter = (territoireId: number, ressource: string, quantite: string) =>
     pool.query("update stock set quantite = quantite + $3 where territoire_id = $1 and ressource_id = $2", [territoireId, ressource, quantite]);
 
@@ -48,14 +51,37 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, sur base)", () => {
     ]);
   });
 
-  it("donne à un Territoire, dès sa naissance, un Stock vide de chacune des quatre Ressources", async () => {
+  it("donne à un Territoire, dès sa naissance, un Stock de chacune des quatre Ressources, garni de sa quantité de départ (US-0202)", async () => {
     const { territoireId } = await naitre();
-    expect(await stocks(territoireId)).toEqual([
-      ["viande", "0.000000"],
-      ["vegetaux", "0.000000"],
-      ["bois", "0.000000"],
-      ["pierre", "0.000000"],
-    ]);
+    expect((await stocks(territoireId)).map(([ressource]) => ressource)).toEqual(["viande", "vegetaux", "bois", "pierre"]);
+    expect(await stocks(territoireId)).toEqual(await auDepart());
+  });
+
+  it("verse les quantités de départ réglées dans les données de référence, sans toucher au code", async () => {
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      await client.query("update ressource set au_depart = 250.5 where id = 'pierre'");
+      const compte = (await creerCompte(client, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+      const nom = nomUnique();
+      await client.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), $2, $3)", [
+        compte.id,
+        nom,
+        cleDuNom(nom),
+      ]);
+      const { rows } = await client.query<{ id: number }>(
+        `insert into territoire (chef_id, foyer_case_id)
+         select (select id from chef where compte_id = $1),
+           (select id from case_du_monde where chef_id is null and not imprenable order by id limit 1)
+         returning id`,
+        [compte.id],
+      );
+      const { rows: pierre } = await client.query("select quantite from stock where territoire_id = $1 and ressource_id = 'pierre'", [rows[0].id]);
+      expect(pierre).toEqual([{ quantite: "250.500000" }]);
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
   });
 
   it("les donne aussi au chef né avant la Couronne, quand il reçoit son Foyer", async () => {
@@ -73,6 +99,7 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, sur base)", () => {
 
   it("garde les fractions : trois fois 0,4 Bois font 1,2 Bois, sans rien perdre", async () => {
     const { territoireId } = await naitre();
+    await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
     for (let i = 0; i < 3; i++) await ajouter(territoireId, "bois", "0.4");
     await ajouter(territoireId, "pierre", "0.000001");
     expect(await stocks(territoireId)).toEqual([
@@ -85,7 +112,7 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, sur base)", () => {
 
   it("refuse un Stock négatif, même d'un millionième", async () => {
     const { territoireId } = await naitre();
-    await ajouter(territoireId, "viande", "2");
+    await pool.query("update stock set quantite = 2 where territoire_id = $1", [territoireId]);
     await expect(ajouter(territoireId, "viande", "-2.000001")).rejects.toMatchObject({ constraint: "stock_jamais_negatif" });
     await ajouter(territoireId, "viande", "-2");
     expect((await stocks(territoireId))[0]).toEqual(["viande", "0.000000"]);
