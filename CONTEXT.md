@@ -152,6 +152,14 @@ Le lieu protégé du Territoire où vivent les Couples.
 Le fait de produire, à la demande du joueur, des Bêtes d'une Espèce dont il a réuni un Couple, grâce à un Habitant éleveur qui ne s'occupe que d'un Élevage à la fois ; il reste acquis pour toujours.
 _Avoid_: Reproduction, dressage, entraînement
 
+**Ressource**:
+La Viande, les Végétaux, le Bois ou la Pierre : ce que produit et dépense un Territoire, rangé en Nourriture et en Matériaux.
+_Avoid_: Matière première, bien
+
+**Stock**:
+La quantité d'une Ressource que garde un Territoire ; elle n'est jamais négative.
+_Avoid_: Inventaire, réserve (la Réserve est le lieu des Couples)
+
 **Nourriture**:
 La Viande et les Végétaux, que mangent les Bêtes (selon leur régime) et les Habitants.
 _Avoid_: Vivres, ration

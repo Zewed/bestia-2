@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, boolean, check, doublePrecision, index, integer, jsonb, pgEnum, pgTable, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -99,6 +99,19 @@ export const role = pgTable("role", {
 });
 
 export const regime = pgEnum("regime", ["carnivore", "herbivore", "omnivore"]);
+
+export const familleDeRessource = pgEnum("famille_de_ressource", ["nourriture", "materiaux"]);
+
+/**
+ * Une Ressource (US-0201) : la Viande et les Végétaux sont de la Nourriture, le Bois et la Pierre
+ * des Matériaux. L'ordre est celui de l'affichage.
+ */
+export const ressource = pgTable("ressource", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  famille: familleDeRessource("famille").notNull(),
+  ordre: integer("ordre").notNull(),
+});
 
 /**
  * Une Espèce : la fiche commune à toutes ses Bêtes, qui sont identiques. Ses chiffres
@@ -365,3 +378,21 @@ export const territoire = pgTable("territoire", {
   recitLuLe: timestamp("recit_lu_le", { withTimezone: true }),
 });
 
+/**
+ * Le Stock d'une Ressource dans un Territoire (US-0201). Chaque Territoire en a un par Ressource,
+ * créé par la base à sa naissance. La quantité garde ses fractions au millionième, sans arrondi
+ * flottant, et la base la refuse négative.
+ */
+export const stock = pgTable(
+  "stock",
+  {
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    ressourceId: text("ressource_id")
+      .notNull()
+      .references(() => ressource.id),
+    quantite: numeric("quantite", { precision: 24, scale: 6 }).notNull().default("0"),
+  },
+  (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
+);

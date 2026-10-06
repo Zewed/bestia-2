@@ -1,5 +1,5 @@
 // Les jeux de données de référence, chargés dans cet ordre (les Espèces renvoient aux
-// Biomes, aux Raretés et aux Rôles). Chaque story de l'étape 4 ajoute le sien.
+// Biomes, aux Raretés et aux Rôles). Chaque story qui en a besoin ajoute le sien.
 import { z } from "zod";
 import { appliquerBareme, BAREME } from "./bareme";
 import { lireJeu, type Jeu } from "./charger";
@@ -63,6 +63,24 @@ export const ROLES: Jeu<z.infer<typeof entreeRole>> = {
   extraire: (brut) => brut.map((r, i) => ({ ...(r as object), ordre: i + 1 })),
   schema: entreeRole,
   colonnes: (r) => ({ id: r.id, nom: r.nom, phrase: r.phrase, ordre: r.ordre }),
+};
+
+const entreeRessource = z.object({
+  id: identifiant,
+  nom,
+  famille: z.enum(["nourriture", "materiaux"], { error: "famille : nourriture ou materiaux" }),
+  ordre: z.number().int(),
+});
+
+export const RESSOURCES: Jeu<z.infer<typeof entreeRessource>> = {
+  nom: "Ressources",
+  fichier: "ressources.yaml",
+  table: "ressource",
+  cle: "id",
+  // L'ordre d'affichage suit l'ordre du fichier.
+  extraire: (brut) => brut.map((r, i) => ({ ...(r as object), ordre: i + 1 })),
+  schema: entreeRessource,
+  colonnes: (r) => ({ id: r.id, nom: r.nom, famille: r.famille, ordre: r.ordre }),
 };
 
 const positif = (champ: string) => z.number({ error: `${champ} doit être un nombre` }).positive(`${champ} doit être positif`);
@@ -131,7 +149,7 @@ export function verifierReferences(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES];
 
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en

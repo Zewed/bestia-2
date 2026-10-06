@@ -7,6 +7,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0201 · Enregistrer les quatre stocks du Territoire
 **En tant que** développeur, **je veux** que chaque Territoire garde un stock de Viande, de Végétaux, de Bois et de Pierre, **afin de** porter toute l'économie du jeu.
 
+- **Statut** : Livrée le 2026-10-06. Les quatre Ressources, leur famille et leur ordre sont des données de référence (`donnees/ressources.yaml`). La base donne à chaque Territoire, à sa naissance, un Stock vide de chaque Ressource ; les Territoires déjà nés ont reçu les leurs avec la migration. Un Stock garde ses fractions au millionième, sans arrondi flottant, et la base le refuse négatif.
 - **Débloquée par** : Étape 9
 - **Critères d'acceptation** :
   - Chaque Territoire a quatre stocks : Viande, Végétaux, Bois, Pierre.

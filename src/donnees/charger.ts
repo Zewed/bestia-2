@@ -1,4 +1,4 @@
-// Le chargement des données de référence (Biomes, Raretés, Rôles, Espèces) : des fichiers
+// Le chargement des données de référence (Biomes, Raretés, Rôles, Espèces, Ressources) : des fichiers
 // YAML lisibles sans connaître le code, validés, puis écrits en base sans doublon.
 import { readFileSync } from "node:fs";
 import type { PoolClient } from "pg";
