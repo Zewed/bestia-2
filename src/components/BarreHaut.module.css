@@ -9,14 +9,16 @@
   display: flex;
   align-items: center;
   height: var(--hauteur-barre);
-  padding: 0 20px;
+  /* Toute la largeur de l'écran, jusque sous l'encoche ; le logo et le nom restent à l'écart des bords. */
+  margin: 0 calc(-1 * var(--bord-droit)) 0 calc(-1 * var(--bord-gauche));
+  padding: var(--bord-haut) max(20px, var(--bord-droit)) 0 max(20px, var(--bord-gauche));
   background: var(--encre);
   color: var(--ivoire);
 }
 
-/* Une action du joueur, à droite : un bouton discret sur l'Encre. */
+/* Une action du joueur, à droite : un bouton discret sur l'Encre, assez haut pour le pouce. */
 .action {
-  min-height: 40px;
+  min-height: 44px;
   margin-left: auto;
   padding: 0 14px;
   border: 1px solid var(--sur-encre-trait);
@@ -133,6 +135,7 @@
 
 @media (max-width: 820px) {
   .barre {
-    padding: 0 12px;
+    padding-right: max(12px, var(--bord-droit));
+    padding-left: max(12px, var(--bord-gauche));
   }
 }

@@ -5,7 +5,7 @@
   gap: 48px;
   align-items: center;
   max-width: 1360px;
-  min-height: calc(100dvh - var(--hauteur-barre));
+  min-height: var(--hauteur-utile);
   margin: 0 auto;
   padding: 56px 40px;
 }

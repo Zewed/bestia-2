@@ -4,7 +4,7 @@
   place-content: center;
   gap: 14px;
   max-width: 560px;
-  min-height: calc(100dvh - var(--hauteur-barre));
+  min-height: var(--hauteur-utile);
   margin: 0 auto;
   padding: 40px 16px;
   text-align: center;

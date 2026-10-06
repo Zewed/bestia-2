@@ -4,7 +4,7 @@
   grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
   gap: var(--ecart);
   max-width: 1180px;
-  min-height: calc(100dvh - var(--hauteur-barre));
+  min-height: var(--hauteur-utile);
   margin: 0 auto;
   padding: 24px;
 }

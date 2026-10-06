@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { paletteHex } from "../../scripts/lib/couleurs";
 import couleurs from "./couleurs-app.json";
 import manifest from "./manifest";
-import { metadata } from "./layout";
+import { metadata, viewport } from "./layout";
 
 // next/font ne tourne qu'avec Next : ici, une police factice suffit pour lire les métadonnées.
 vi.mock("@/styles/fonts", () => ({ jakarta: { variable: "police" } }));
@@ -39,6 +39,14 @@ describe("icônes et titre d'onglet", () => {
     expect(m.name).toBe("Bestia");
     expect(m.display).toBe("standalone");
     expect(m.icons?.map((i) => i.sizes)).toEqual(["192x192", "512x512", "512x512"]);
+  });
+
+  it("passe sous l'heure et l'encoche d'un iPhone, et la barre du haut descend d'autant (US-0164)", () => {
+    expect(metadata.appleWebApp).toMatchObject({ capable: true, statusBarStyle: "black-translucent" });
+    expect(viewport.viewportFit).toBe("cover");
+    const formes = readFileSync(join(root, "src/styles/formes.css"), "utf8");
+    expect(formes).toContain("--hauteur-barre: calc(64px + var(--bord-haut));");
+    expect(formes).toContain("--hauteur-barre: calc(48px + var(--bord-haut));");
   });
 
   it("titre l'onglet « Bestia », que chaque page peut compléter", () => {

@@ -16,8 +16,9 @@ export const metadata: Metadata = {
   other: { "bestia-version": process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local" },
 };
 
-// La barre du navigateur sur mobile prend la couleur Encre de la barre du haut.
-export const viewport: Viewport = { themeColor: couleurs.encre };
+// La barre du navigateur sur mobile prend la couleur Encre de la barre du haut. La page s'étend
+// sous l'encoche, et en laisse les bords libres (US-0164).
+export const viewport: Viewport = { themeColor: couleurs.encre, viewportFit: "cover" };
 
 // `actions` : ce que la barre du haut montre à droite, rempli par chaque page (src/app/@actions).
 export default function RootLayout({ children, actions }: LayoutProps<"/">) {

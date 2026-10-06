@@ -1,4 +1,4 @@
-/* L'écran du Foyer : la hutte du chef en grand, dans un bloc Bento qui tient dans l'écran. */
+/* L'écran du Foyer : la hutte du chef en grand, dans un bloc Bento qui tient dans l'écran, sans défiler. */
 .page {
   max-width: 1180px;
   margin: 0 auto;
@@ -9,7 +9,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 2;
-  max-height: calc(100dvh - var(--hauteur-barre) - 48px);
+  max-height: calc(var(--hauteur-utile) - 48px);
   min-height: 320px;
   overflow: hidden;
   border-radius: var(--arrondi);
@@ -40,7 +40,25 @@
   }
   .foyer {
     aspect-ratio: 4 / 5;
-    max-height: calc(100dvh - var(--hauteur-barre) - 24px);
+    max-height: calc(var(--hauteur-utile) - 24px);
+  }
+  .legende {
+    padding: 56px 20px 20px;
+  }
+}
+
+/* Téléphone couché : l'écran est bas, l'image s'aplatit pour tenir sous la barre (US-0164), en
+   gardant le toit de la hutte et ses cornes plutôt que l'herbe du premier plan. */
+@media (max-height: 500px) {
+  .page {
+    padding: 12px;
+  }
+  .foyer {
+    min-height: 0;
+    max-height: calc(var(--hauteur-utile) - 24px);
+  }
+  .foyer img {
+    object-position: 50% 25%;
   }
   .legende {
     padding: 56px 20px 20px;

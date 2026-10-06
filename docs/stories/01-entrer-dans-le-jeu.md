@@ -556,6 +556,7 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0164 · Voir son Foyer sur mobile
 **En tant que** joueur, **je veux** un Foyer qui se lit bien sur mon téléphone, **afin de** jouer au pouce autant que sur ordinateur.
 
+- **Statut** : Livrée le 2026-10-06. Essayé de 320×568 à 390×844 et couché (844×390) : rien ne défile de côté, le récit et son bouton de 52 px tiennent dans le plus petit écran, et le Foyer couché tient sous la barre sans défiler, recadré sur le toit de la hutte. Le nom du chef est un bouton de 44 px ; coupé s'il est long, il se lit en entier dans son menu. Ouvert depuis l'écran d'accueil d'un iPhone, le jeu passe sous l'heure et l'encoche : la barre du haut descend d'autant, son Encre derrière l'heure, et la page laisse libres les bords de l'écran. Décidé : sur un grand téléphone, l'illustration garde son format, et la place libre en dessous accueillera les blocs du jalon 2.
 - **Débloquée par** : US-0158, US-0163
 - **Critères d'acceptation** :
   - Sur mobile, le Foyer se lit de haut en bas sans zoom ni défilement de côté : barre du haut, puis illustration.
