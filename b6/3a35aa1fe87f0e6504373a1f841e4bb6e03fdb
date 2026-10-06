@@ -1,0 +1,46 @@
+src/donnees/ressources.test.ts
+  s_97a431cfa65ca7::t_4887706d2d7f52 1-31
+donnees/ressources.yaml
+  s_97a431cfa65ca7::t_d0740ba74cb23c 1-15
+src/monde/stocks.db.test.ts
+  s_97a431cfa65ca7::t_4887706d2d7f52 1-99
+CONTEXT.md
+  s_97a431cfa65ca7::t_d0740ba74cb23c 155-162
+src/db/schema.ts
+  s_97a431cfa65ca7::t_59aa7a361638bb 5,103-115,381-398
+donnees/LISEZMOI.md
+  s_97a431cfa65ca7::t_d0740ba74cb23c 3
+src/donnees/charger.ts
+  s_97a431cfa65ca7::t_d0740ba74cb23c 1
+src/donnees/jeux.ts
+  s_97a431cfa65ca7::t_d0740ba74cb23c 2,68-85,152
+docs/stories/README.md
+  s_97a431cfa65ca7::t_cf7772497a860e 7
+README.md
+  s_97a431cfa65ca7::t_6e5dcf6a91338e 73
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_cf7772497a860e 10
+drizzle/0027_stocks.sql
+  s_97a431cfa65ca7::t_59aa7a361638bb 1-17
+  s_97a431cfa65ca7::t_d0740ba74cb23c 18-41
+drizzle/meta/0027_snapshot.json
+  s_97a431cfa65ca7::t_3f723eca770a07 1-1776
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_39c0c9c315cb79 193-199
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b63a35aa1fe87f0e6504373a1f841e4bb6e03fdb",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
