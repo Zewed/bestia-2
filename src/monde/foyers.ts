@@ -1,5 +1,5 @@
 // Où un Foyer peut naître (US-0152) : la règle qu'utilisera la naissance d'un nouveau joueur.
-import { ECART_ENTRE_FOYERS, NAISSANCE_PARMI_LES_PLUS_PROCHES } from "@/reglages";
+import { ALERTE_PLACES_DE_FOYER, ECART_ENTRE_FOYERS, NAISSANCE_PARMI_LES_PLUS_PROCHES } from "@/reglages";
 import { distance, type Coordonnees } from "./hex";
 
 export type CaseCandidate = Coordonnees & { biome: string; possedee?: boolean };
@@ -45,5 +45,15 @@ export function choisirCaseDeNaissance<C extends CaseCandidate>(
     ? [...libres].sort((a, b) => distance(a, dernier) - distance(b, dernier) || a.q - b.q || a.r - b.r).slice(0, NAISSANCE_PARMI_LES_PLUS_PROCHES)
     : libres;
   return parmi[Math.min(parmi.length - 1, Math.floor(hasard() * parmi.length))];
+}
+
+/**
+ * L'alerte pour l'équipe (US-0159), ou null : un Monde plein, ou bientôt plein, sous
+ * ALERTE_PLACES_DE_FOYER places restantes. Ouvrir un nouveau Monde reste une décision humaine.
+ */
+export function alerteDePlaces(monde: string, restantes: number): string | null {
+  if (restantes === 0) return `Alerte : ${monde} est complet, aucun nouveau chef ne peut y naître.`;
+  if (restantes < ALERTE_PLACES_DE_FOYER) return `Alerte : plus que ${restantes} place${restantes > 1 ? "s" : ""} de Foyer dans ${monde}.`;
+  return null;
 }
 

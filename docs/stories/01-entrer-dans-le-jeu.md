@@ -509,12 +509,13 @@ Le visiteur devient joueur : il crée son compte, se choisit un nom de chef, pui
 ### US-0159 · Prévenir quand la Couronne est pleine
 **En tant que** nouveau joueur, **je veux** un message clair s'il n'y a plus de place sur la Couronne, **afin de** ne pas rester devant une erreur incompréhensible.
 
+- **Statut** : Livrée le 2026-10-06. Le nom et la Case naissent ensemble ou pas du tout (US-0153) : un Monde plein n'enregistre rien. Sous 10 places, chaque naissance écrit une alerte dans le journal de Vercel, et la page de contrôle affiche le nombre de places en couleur d'alerte. Une alerte par e-mail viendra avec l'envoi réel des e-mails (Zewed/bestia-2#1).
 - **Débloquée par** : US-0153
 - **Critères d'acceptation** :
-  - S'il ne reste aucune Case où naître, la naissance n'a pas lieu et le joueur voit un message clair.
-  - Son nom de chef reste enregistré ; la naissance sera retentée à sa prochaine visite.
-  - Les développeurs sont alertés quand il reste moins de (chiffre à régler) Cases libres.
-  - Ce qui est proposé au joueur en attendant (à décider) ; l'ouverture d'un autre Monde viendra plus tard.
+  - S'il ne reste aucune Case où naître, la naissance n'a pas lieu et le joueur voit sous le champ du nom : « Aube est complet. Un nouveau Monde ouvre bientôt. »
+  - Rien n'est enregistré : le joueur reviendra choisir son nom quand un autre Monde sera ouvert, sans jamais être un chef sans Foyer.
+  - L'équipe est alertée quand il reste moins de 10 places de Foyer dans le Monde.
+  - L'ouverture d'un autre Monde est une décision d'Antoine, et une story à part.
 
 ### US-0160 · Reprendre l'entrée dans le jeu là où on l'a laissée
 **En tant que** nouveau joueur, **je veux** retrouver l'étape où je m'étais arrêté si je ferme l'onglet en plein milieu, **afin de** ne rien refaire ni rien perdre.

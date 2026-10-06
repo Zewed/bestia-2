@@ -272,3 +272,9 @@
   }
 }
 
+/* US-0159 : plus assez de places de Foyer, il est temps d'ouvrir un nouveau Monde. */
+.legende .alerte {
+  color: var(--mauvais);
+  font-weight: var(--graisse-titre);
+}
+

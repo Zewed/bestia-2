@@ -1,5 +1,6 @@
 import type { CouronneEnBase } from "@/monde/en-base";
 import { centre, type Coordonnees } from "@/monde/hex";
+import { ALERTE_PLACES_DE_FOYER } from "@/reglages";
 import styles from "./page.module.css";
 
 /** La couleur de chaque Biome, prise dans la palette ; un Biome inconnu reste en gris galet. */
@@ -76,7 +77,8 @@ export function CarteCouronne({ couronne, noms, emplacements }: { couronne: Cour
         <li>
           <span className={`${styles.pastille} ${styles.point}`} aria-hidden="true" />
           Emplacements de Foyer
-          <span className={styles.note}>{emplacements.length}</span>
+          {/* US-0159 : sous le seuil d'alerte, le nombre passe en couleur de danger. */}
+          <span className={[styles.note, emplacements.length < ALERTE_PLACES_DE_FOYER && styles.alerte].filter(Boolean).join(" ")}>{emplacements.length}</span>
         </li>
         {biomes.map(([biome, cases]) => (
           <li key={biome}>

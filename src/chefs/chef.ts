@@ -3,7 +3,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
-import { choisirCaseDeNaissance } from "@/monde/foyers";
+import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers } from "@/monde/foyers";
 import { maintenant } from "@/temps/horloge";
 import { nomInterditPar, type MotInterdit } from "./interdits";
 import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./nom";
@@ -87,6 +87,9 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
       return { statut: "pris" };
     }
     const naissance = await caseDeNaissance(client, monde.id, hasard);
+    // US-0159 : l'équipe est prévenue dans le journal quand le Monde se remplit.
+    const alerte = alerteDePlaces(monde.nom, naissance?.restantes ?? 0);
+    if (alerte) console.error(alerte);
     if (!naissance) {
       await client.query("rollback");
       return { statut: "complet", monde: monde.nom };
@@ -122,9 +125,10 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
 
 /**
  * La Case libre de la Couronne où naît le nouveau chef (US-0153), ou null si elle est pleine,
- * loin des Foyers des Territoires déjà nés et près du dernier arrivé.
+ * loin des Foyers des Territoires déjà nés et près du dernier arrivé ; avec le nombre de places
+ * de Foyer qui resteront ensuite (US-0159).
  */
-async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () => number): Promise<{ id: number } | null> {
+async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () => number): Promise<{ id: number; restantes: number } | null> {
   // Seules les prairies libres peuvent accueillir un Foyer : inutile de lire le reste de la Couronne.
   const { rows } = await client.query<{ libres: { id: number; q: number; r: number; biome: string }[] | null; foyers: { q: number; r: number }[] | null }>(
     `select
@@ -136,5 +140,10 @@ async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () =
     [mondeId],
   );
   const foyers = rows[0].foyers ?? [];
-  return choisirCaseDeNaissance(rows[0].libres ?? [], foyers, foyers[0] ?? null, hasard);
+  const libres = rows[0].libres ?? [];
+  const choisie = choisirCaseDeNaissance(libres, foyers, foyers[0] ?? null, hasard);
+  if (!choisie) return null;
+  // Les places qui resteront après cette naissance, estimées comme sur la page de contrôle.
+  const restantes = emplacementsDeFoyers(libres.filter((c) => c.id !== choisie.id), [choisie, ...foyers]).length;
+  return { id: choisie.id, restantes };
 }

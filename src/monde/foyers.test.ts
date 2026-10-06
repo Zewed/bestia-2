@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ECART_ENTRE_FOYERS } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
-import { choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
+import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
 import { distance } from "./hex";
 
 describe("Cases où un Foyer peut naître (US-0152)", () => {
@@ -68,6 +68,19 @@ describe("Case où naît un nouveau chef (US-0153)", () => {
   it("ne trouve rien quand la Couronne est pleine", () => {
     const pleine = emplacementsDeFoyers(couronne, []);
     expect(choisirCaseDeNaissance(couronne, pleine, pleine[0], () => 0)).toBeNull();
+  });
+});
+
+describe("alerte quand la Couronne se remplit (US-0159)", () => {
+  it("se tait tant qu'il reste au moins 10 places", () => {
+    expect(alerteDePlaces("Aube", 10)).toBeNull();
+    expect(alerteDePlaces("Aube", 90)).toBeNull();
+  });
+
+  it("prévient sous 10 places, et quand le Monde est complet", () => {
+    expect(alerteDePlaces("Aube", 9)).toBe("Alerte : plus que 9 places de Foyer dans Aube.");
+    expect(alerteDePlaces("Aube", 1)).toBe("Alerte : plus que 1 place de Foyer dans Aube.");
+    expect(alerteDePlaces("Aube", 0)).toBe("Alerte : Aube est complet, aucun nouveau chef ne peut y naître.");
   });
 });
 

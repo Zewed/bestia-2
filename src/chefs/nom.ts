@@ -12,8 +12,8 @@ export const NOM_DEJA_PRIS = "Ce nom est déjà pris";
 export const NOM_VIENT_D_ETRE_PRIS = "Ce nom vient d'être pris";
 /** US-0138 : un nom injurieux ou qui se fait passer pour l'équipe du jeu, sans citer le mot. */
 export const NOM_NON_AUTORISE = "Ce nom n'est pas autorisé";
-/** US-0153 : le Monde n'a plus de place pour un nouveau Foyer. */
-export const mondeComplet = (monde: string) => `${monde} est complet`;
+/** US-0153, US-0159 : le Monde n'a plus de place pour un nouveau Foyer ; rien n'est enregistré. */
+export const mondeComplet = (monde: string) => `${monde} est complet. Un nouveau Monde ouvre bientôt.`;
 
 const segmenteur = new Intl.Segmenter("fr", { granularity: "grapheme" });
 const caracteres = (texte: string) => [...segmenteur.segment(texte)].map((s) => s.segment);

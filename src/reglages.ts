@@ -59,6 +59,8 @@ export const COURONNE_ANNEAUX = 6;
 export const ECART_ENTRE_FOYERS = 4;
 /** US-0153 : un nouveau chef naît au hasard parmi les 5 emplacements libres les plus proches du dernier arrivé. */
 export const NAISSANCE_PARMI_LES_PLUS_PROCHES = 5;
+/** US-0159 : sous 10 places de Foyer restantes dans un Monde, chaque naissance donne l'alerte. */
+export const ALERTE_PLACES_DE_FOYER = 10;
 /**
  * La part de chaque Biome sur la Couronne, en régions d'un seul tenant. La prairie domine : les
  * Foyers n'y naissent que là. L'eau de la Couronne est faite de lacs.

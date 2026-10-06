@@ -176,6 +176,8 @@ describe("page de contrôle", () => {
     // Trois prairies voisines : une seule peut accueillir un Foyer, les autres sont trop près.
     expect(html.match(/<circle /g)).toHaveLength(1);
     expect(html).toMatch(/Emplacements de Foyer<span[^>]*>1<\/span>/);
+    // Une seule place : sous le seuil d'alerte, le nombre passe en couleur de danger (US-0159).
+    expect(html).toMatch(/Emplacements de Foyer<span class="[^"]*alerte[^"]*">1<\/span>/);
   });
 
   it("dit comment préparer la Couronne quand elle n'est pas encore en base", async () => {
