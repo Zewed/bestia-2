@@ -1,0 +1,44 @@
+src/components/BarreHaut.module.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 12-14,19,21,138-139
+docs/stories/01-entrer-dans-le-jeu.md
+  s_97a431cfa65ca7::t_3b16becdeacbe5 559
+src/app/page.module.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 8
+docs/stories/README.md
+  s_97a431cfa65ca7::t_3b16becdeacbe5 7
+src/app/not-found.module.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 8
+src/components/PageEntree.module.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 7
+src/app/jeu/page.module.css
+  s_97a431cfa65ca7::t_984dffa868d8e3 50-51,59-61
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 1,12,43-49,52-58
+src/app/layout.tsx
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 19-21
+src/styles/formes.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 9-17,23
+src/app/error.module.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 7
+src/app/icones.test.ts
+  s_97a431cfa65ca7::t_5b303173b92d42 44
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 8,45-49
+  s_97a431cfa65ca7::t_b1758543f35d06 50-51
+src/app/globals.css
+  s_97a431cfa65ca7::t_87d8b2e8b41ba2 9
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f74eb1f580d2fda88532fb9ffc5047c253556602",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
