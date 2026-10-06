@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0204** · Reconnaître chaque ressource à son icône. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés, seule US-0038 reste reportée). Prochaine : **US-0205** · Distinguer la Nourriture des Matériaux.
+Dernière story livrée : **US-0205** · Distinguer la Nourriture des Matériaux. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés, seule US-0038 reste reportée). Prochaine : **US-0206** · Lire des quantités simples.
 
 ## Sommaire
 

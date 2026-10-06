@@ -137,14 +137,38 @@
   opacity: 0.75;
 }
 
-/* US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même largeur. */
+/*
+ * US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même
+ * largeur, en deux groupes séparés d'un fin trait : la Nourriture, puis les Matériaux (US-0205).
+ */
 .ressources {
   grid-column: 2;
   justify-self: center;
   display: flex;
+  align-items: center;
+}
+
+.groupe {
+  display: flex;
   gap: 8px;
   padding: 0;
   list-style: none;
+}
+
+.groupe + .groupe {
+  position: relative;
+  margin-left: 12px;
+  padding-left: 12px;
+}
+
+.groupe + .groupe::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 24px;
+  border-left: 1px solid var(--sur-encre-eteint);
+  transform: translateY(-50%);
 }
 
 .ressource {
@@ -184,7 +208,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Le nom de la ressource, dans une bulle sous elle : au survol, au clavier ou au toucher. */
+/* Le nom de la ressource et de son groupe, dans une bulle sous elle : au survol, au clavier ou au toucher. */
 .bulle {
   position: absolute;
   top: calc(100% + 4px);
@@ -198,6 +222,7 @@
   color: var(--encre);
   font-size: 13px;
   font-weight: var(--graisse-titre);
+  text-align: center;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
@@ -205,6 +230,13 @@
   transition:
     opacity 120ms cubic-bezier(0.22, 1, 0.36, 1),
     transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.groupeBulle {
+  display: block;
+  color: var(--texte-discret);
+  font-size: 12px;
+  font-weight: var(--graisse-texte);
 }
 
 .ressource[data-ouverte] .bulle,
@@ -240,10 +272,22 @@
     justify-self: stretch;
     align-self: stretch;
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
     margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
     border-top: 1px solid var(--sur-encre-trait);
+  }
+
+  /* Deux colonnes par groupe : quatre colonnes égales, le trait entre la 2e et la 3e. */
+  .groupe {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+  }
+
+  .groupe + .groupe {
+    margin-left: 0;
+    padding-left: 0;
   }
 
   /* Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px. */

@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const garde = vi.hoisted(() => ({
   joueurConnecte: vi.fn(),
   stocksALHeure: vi.fn(async () => [
-    { id: "viande", nom: "Viande", quantite: "100.000000" },
-    { id: "vegetaux", nom: "Végétaux", quantite: "1999.800000" },
-    { id: "bois", nom: "Bois", quantite: "12500.400000" },
-    { id: "pierre", nom: "Pierre", quantite: "0.999999" },
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000" },
+    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "1999.800000" },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "12500.400000" },
+    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "0.999999" },
   ]),
 }));
 vi.mock("@/comptes/garde", () => garde);
@@ -53,7 +53,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       ["Bois", "12\u00a0500"],
       ["Pierre", "0"],
     ]);
-    expect(html).toMatch(/<ul[^>]*aria-label="Ressources"/);
+    expect(html).toMatch(/<div[^>]*aria-label="Ressources"/);
     expect(html.indexOf("Ressources")).toBeLessThan(html.indexOf("Ourse"));
   });
 

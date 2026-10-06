@@ -49,6 +49,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0205 · Distinguer la Nourriture des Matériaux
 **En tant que** joueur, **je veux** voir d'un coup d'œil ce qui se mange et ce qui sert à construire, **afin de** comprendre à quoi sert chaque ressource.
 
+- **Statut** : Livrée le 2026-10-06. Les deux groupes sont séparés d'un fin trait vertical, sans titre écrit ; sur mobile, le trait passe entre la 2e et la 3e colonne de la bande. La bulle donne le nom de la ressource, et dessous, plus pâle, celui de son groupe. Le groupe vient de la famille rangée dans `donnees/ressources.yaml` ; pour un lecteur d'écran, chaque groupe est une liste nommée « Nourriture » ou « Matériaux ».
 - **Débloquée par** : US-0203
 - **Critères d'acceptation** :
   - Viande et Végétaux forment le groupe « Nourriture », Bois et Pierre le groupe « Matériaux », séparés visuellement.

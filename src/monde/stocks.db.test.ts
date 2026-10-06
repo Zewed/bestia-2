@@ -119,14 +119,14 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
     expect((await stocks(territoireId))[0]).toEqual(["viande", "0.000000"]);
   });
 
-  it("se lisent dans l'ordre des Ressources, avec leur nom et leur quantité exacte (US-0203)", async () => {
+  it("se lisent dans l'ordre des Ressources, avec leur nom, leur famille (US-0205) et leur quantité exacte (US-0203)", async () => {
     const { territoireId } = await naitre();
     await ajouter(territoireId, "bois", "0.4");
     expect(await stocksDuTerritoire(pool, territoireId)).toEqual([
-      { id: "viande", nom: "Viande", quantite: (await auDepart())[0][1] },
-      { id: "vegetaux", nom: "Végétaux", quantite: (await auDepart())[1][1] },
-      { id: "bois", nom: "Bois", quantite: (Number((await auDepart())[2][1]) + 0.4).toFixed(6) },
-      { id: "pierre", nom: "Pierre", quantite: (await auDepart())[3][1] },
+      { id: "viande", nom: "Viande", famille: "nourriture", quantite: (await auDepart())[0][1] },
+      { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: (await auDepart())[1][1] },
+      { id: "bois", nom: "Bois", famille: "materiaux", quantite: (Number((await auDepart())[2][1]) + 0.4).toFixed(6) },
+      { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: (await auDepart())[3][1] },
     ]);
   });
 
