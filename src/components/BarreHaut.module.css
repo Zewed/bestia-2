@@ -137,29 +137,45 @@
   opacity: 0.75;
 }
 
-/* US-0203 : les quatre ressources, leur nom en petites capitales, la quantité en chiffres de même largeur. */
+/* US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même largeur. */
 .ressources {
   grid-column: 2;
   justify-self: center;
   display: flex;
-  gap: 20px;
+  gap: 8px;
   padding: 0;
   list-style: none;
 }
 
 .ressource {
+  position: relative;
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-width: 56px;
-  line-height: 1.2;
+  justify-content: center;
 }
 
-.nomRessource {
-  color: var(--sur-encre-pale);
-  font-size: 11px;
-  letter-spacing: var(--espacement-etiquette);
-  text-transform: uppercase;
+.boutonRessource {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: transparent;
+  color: var(--ivoire);
+  font: inherit;
+  cursor: default;
+}
+
+.boutonRessource:focus-visible {
+  outline: 2px solid var(--ivoire);
+  outline-offset: -2px;
+}
+
+.icone {
+  flex: none;
+  width: 22px;
+  height: 22px;
 }
 
 .quantite {
@@ -168,8 +184,45 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Le nom de la ressource, dans une bulle sous elle : au survol, au clavier ou au toucher. */
+.bulle {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  z-index: 1;
+  padding: 6px 10px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -4px);
+  transition:
+    opacity 120ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 120ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ressource[data-ouverte] .bulle,
+.boutonRessource:focus-visible + .bulle {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (hover: hover) {
+  .boutonRessource:hover + .bulle {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .fleche {
+  .fleche,
+  .bulle {
     transition: none;
   }
 }
@@ -187,10 +240,24 @@
     justify-self: stretch;
     align-self: stretch;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    align-items: center;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
     border-top: 1px solid var(--sur-encre-trait);
+  }
+
+  /* Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px. */
+  .boutonRessource {
+    flex-direction: column;
+    gap: 2px;
+    justify-content: center;
+    width: 100%;
+    min-height: 0;
+    padding: 0 4px;
+  }
+
+  .icone {
+    width: 18px;
+    height: 18px;
   }
 }

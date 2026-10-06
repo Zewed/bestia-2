@@ -1,3 +1,5 @@
+import { join } from "node:path";
+import sharp from "sharp";
 import { describe, expect, it } from "vitest";
 import { lireJeu, valider } from "./charger";
 import { RESSOURCES } from "./jeux";
@@ -37,5 +39,11 @@ describe("Ressources (US-0201)", () => {
     expect(() => valider(RESSOURCES, [{ id: "bois", nom: "Bois", famille: "materiaux", au_depart: -5, ordre: 1 }])).toThrow(
       "entrée n° 1 (au_depart) : au_depart ne peut pas être négatif",
     );
+  });
+  it("ont chacune leur icône, carrée, rangée sous le nom de leur identifiant (US-0204)", async () => {
+    for (const r of ressources) {
+      const { width, height, format, hasAlpha } = await sharp(join(process.cwd(), "public/illustrations/ressources", `${r.id}.webp`)).metadata();
+      expect({ id: r.id, width, height, format, hasAlpha }).toEqual({ id: r.id, width: 128, height: 128, format: "webp", hasAlpha: true });
+    }
   });
 });

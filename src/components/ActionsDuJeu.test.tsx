@@ -46,7 +46,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
     const html = await rendu();
     expect(garde.stocksALHeure).toHaveBeenCalledWith(12);
-    const ressources = [...html.matchAll(/<li[^>]*><span[^>]*>([^<]+)<\/span><span[^>]*>([^<]+)<\/span><\/li>/g)].map((m) => [m[1], m[2]]);
+    const ressources = [...html.matchAll(/<img[^>]*alt="([^"]+)"[^>]*\/> <span[^>]*>([^<]+)<\/span>/g)].map((m) => [m[1], m[2]]);
     expect(ressources).toEqual([
       ["Viande", "100"],
       ["Végétaux", "1\u00a0999"],

@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-265 points au total.
+264 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 2 · Le territoire respire](02-le-territoire-respire.md)
 
-- [US-0204](02-le-territoire-respire.md) · Reconnaître chaque ressource à son icône : reprendre des icônes du prototype ou en dessiner de nouvelles.
 - [US-0206](02-le-territoire-respire.md) · Lire des quantités simples : au-delà de (chiffre à régler), les grands nombres s'abrègent (12,5 k) ; le format exact des abréviations.
 - [US-0208](02-le-territoire-respire.md) · Consulter et ajuster les stocks depuis la page de contrôle : cet outil existe en local et sur les prévisualisations ; sa présence en production.
 - [US-0209](02-le-territoire-respire.md) · Régler la production de chaque Biome : le Foyer produit comme une Case ordinaire de son Biome, ou davantage grâce à la hutte du chef.

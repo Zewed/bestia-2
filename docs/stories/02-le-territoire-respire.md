@@ -38,10 +38,11 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0204 · Reconnaître chaque ressource à son icône
 **En tant que** joueur, **je veux** une icône distincte pour chaque ressource, **afin de** les reconnaître sans lire.
 
+- **Statut** : Livrée le 2026-10-06. Les icônes sont dans `public/illustrations/ressources`, nommées d'après l'identifiant de la Ressource ; l'icône précède la quantité, et sur un téléphone en portrait elle passe au-dessus, pour tenir six chiffres sur 320 px. Le nom paraît dans une bulle au survol (souris), au clavier et au toucher ; toucher ailleurs ou Échap la referme.
 - **Débloquée par** : US-0203
 - **Critères d'acceptation** :
   - Chaque ressource a une icône distincte, dans le style du prototype.
-  - Reprendre des icônes du prototype ou en dessiner de nouvelles (à décider).
+  - Décidé le 2026-10-06 : le Bois et la Pierre reprennent les icônes du prototype (le fagot de bûches et les blocs de pierre) ; la Viande (une cuisse rôtie sur l'os) et les Végétaux (carottes, pomme et baies) sont peints avec elles en références de style.
   - Le nom de la ressource apparaît au survol et au toucher, et sert de texte de remplacement.
   - Les icônes restent reconnaissables en petite taille sur mobile.
 
