@@ -317,6 +317,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0231 · Voir les stocks pleins sur mobile
 **En tant que** joueur, **je veux** repérer mes stocks pleins sur mon téléphone aussi vite que sur ordinateur, **afin de** réagir pendant une session de quelques minutes.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot), sans code nouveau : les signaux d'US-0224 et d'US-0225 tenaient déjà. Vérifié en vrai avec les quatre Stocks pleins à la fois, à 320, 375 et 390 px : chaque colonne garde son étiquette « PLEIN » à côté de l'icône, sans débordement ; le détail au toucher montre « 1 000 / 1 000 », la jauge rouge et « Stock plein : la production de Viande est perdue. », dans l'écran.
 - **Débloquée par** : US-0215, US-0224
 - **Critères d'acceptation** :
   - Sur mobile, chaque stock plein garde son signal dans la barre du haut, sans ouvrir de détail.
