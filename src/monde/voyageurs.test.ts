@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
-import { departDuVoyageur, ecartAvantVoyageur, recitDAccueil } from "./voyageurs";
+import { departDuVoyageur, ecartAvantVoyageur, recitDAccueil, recitDeDepart } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -93,5 +93,30 @@ describe("le Récit d'un Voyageur accueilli (US-0334)", () => {
     [11 * HEURE + 59 * MINUTE, "11 h"],
   ])("compte l'attente comme la ligne aux portes : %i ms, « %s »", (ms, attente) => {
     expect(recitDAccueil("Joran", arriveIlYa(ms), ACCUEIL).texte).toBe(`Joran, qui attendait aux portes depuis ${attente}, vit désormais au Foyer.`);
+  });
+});
+
+describe("le Récit des Voyageurs repartis sans avoir été accueillis (US-0337)", () => {
+  /** L'heure du jeu du dernier départ. */
+  const DEPART = new Date("2026-10-07T18:00:00Z");
+
+  it("dit, pour un seul Voyageur, qu'il a repris la route, sans lui donner de genre, daté de son départ", () => {
+    expect(recitDeDepart(["Ines"], DEPART)).toEqual({
+      titre: "Ines a repris la route",
+      texte: "Ines a attendu aux portes sans qu'on l'accueille.",
+      survenuLe: DEPART,
+    });
+  });
+
+  it("regroupe ceux repartis ensemble : leur nombre en titre, leurs prénoms dans le texte, dans l'ordre de leurs départs", () => {
+    expect(recitDeDepart(["Ines", "Joran"], DEPART)).toEqual({
+      titre: "2 Voyageurs ont repris la route",
+      texte: "Ines et Joran ont attendu aux portes sans qu'on les accueille.",
+      survenuLe: DEPART,
+    });
+    expect(recitDeDepart(["Ines", "Joran", "Ilda", "Arno"], DEPART)).toMatchObject({
+      titre: "4 Voyageurs ont repris la route",
+      texte: "Ines, Joran, Ilda et Arno ont attendu aux portes sans qu'on les accueille.",
+    });
   });
 });

@@ -5,7 +5,7 @@ import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { stocksDuTerritoire } from "@/monde/stocks";
 import { ecartAvantVoyageur } from "@/monde/voyageurs";
-import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { definirAncre, maintenant } from "./horloge";
@@ -372,10 +372,17 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
         v.arrive_le.getTime(),
       ),
     });
-    /** Ce que le Territoire né à R0 doit avoir vu arriver au bout d'une journée de jeu. */
+    /**
+     * Ce que le Territoire né à R0 doit avoir vu arriver au bout d'une journée de jeu : un Voyageur à chaque arrivée qui
+     * trouve de la place aux portes, celle des Voyageurs repartis au bout de leur attente libérée (US-0337).
+     */
     const uneJournee = (territoireId: number) => {
       const traitees = prevues(territoireId, R0, R0 + JOUR);
-      return { traitees, venus: traitees.slice(0, VOYAGEURS_EN_ATTENTE_MAX).map(([, instant]) => instant) };
+      const venus: number[] = [];
+      for (const [, instant] of traitees) {
+        if (venus.filter((v) => v + VOYAGEUR_ATTEND_HEURES * HEURE > instant).length < VOYAGEURS_EN_ATTENTE_MAX) venus.push(instant);
+      }
+      return { traitees, venus };
     };
 
     beforeAll(async () => {

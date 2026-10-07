@@ -104,6 +104,17 @@
   color: var(--texte-discret);
 }
 
+/* US-0337 : en tête de la partie, pourquoi un Voyageur n'a pas été accueilli : il était déjà reparti. */
+.annonce {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--rose);
+  color: var(--rose-fonce);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+}
+
 /*
  * Sur ordinateur, en tête de la colonne, à côté de la liste. Dès que la colonne passe sous la liste, ses
  * blocs se rangent dans la grille de la page (page.module.css) : celui-ci remonte au-dessus de la liste.

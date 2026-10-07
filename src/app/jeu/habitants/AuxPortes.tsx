@@ -36,11 +36,13 @@ function depuisQuand(ms: number): string {
  *
  * US-0334 : sous chaque ligne, « Accueillir » : la ligne disparaît aussitôt, le temps que l'action serveur fasse
  * du Voyageur un Habitant et relise la page, qui fait alors foi. US-0336 : à côté, « Refuser », qui le fait
- * repartir de même.
+ * repartir de même. US-0337 : un Voyageur déjà reparti de lui-même n'est pas accueilli ; la partie le dit, en
+ * tête, jusqu'au choix suivant.
  */
 export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: VoyageurAffiche[]; maintenant: Date; vitesse?: number }) {
   const [affiches, retirer] = useOptimistic(voyageurs, (actuels, parti: number) => actuels.filter((v) => v.id !== parti));
   const [, demarrer] = useTransition();
+  const [annonce, setAnnonce] = useState<string | null>(null);
   const base = maintenant.getTime();
   // Le temps écoulé depuis l'affichage, mesuré pour cette heure du jeu-là : celui d'une heure déjà dépassée ne compte plus.
   const [ecoule, setEcoule] = useState<{ base: number; ms: number } | null>(null);
@@ -52,16 +54,22 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
   }, [base]);
 
   /** Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. */
-  function decider(voyageur: VoyageurAffiche, action: (voyageurId: number) => Promise<void>) {
+  function decider(voyageur: VoyageurAffiche, action: (voyageurId: number) => Promise<unknown>) {
+    setAnnonce(null);
     demarrer(async () => {
       retirer(voyageur.id);
-      await action(voyageur.id);
+      if ((await action(voyageur.id)) === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
     });
   }
 
   const instant = base + (ecoule?.base === base ? vitesse * ecoule.ms : 0);
   return (
     <Bloc titre="Aux portes" className={styles.auxPortes}>
+      {annonce ? (
+        <p className={styles.annonce} role="alert">
+          {annonce}
+        </p>
+      ) : null}
       {affiches.length > 0 ? (
         <ul className={styles.voyageurs}>
           {affiches.map((v) => {

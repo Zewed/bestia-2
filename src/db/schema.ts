@@ -524,7 +524,8 @@ export const recit = pgTable(
 /**
  * Un Voyageur (US-0331) : un humain de passage qui attend aux portes du Territoire. Il se présente de temps
  * en temps (événement arrivee_voyageur, src/monde/voyageurs.ts), avec un prénom tiré comme ceux des
- * Habitants ; pour l'instant, il attend sans fin.
+ * Habitants. US-0337 : il ne s'efface plus une fois parti ; son sort le dit, et les portes ne comptent que
+ * ceux qui n'en ont pas encore.
  */
 export const voyageur = pgTable(
   "voyageur",
@@ -536,6 +537,21 @@ export const voyageur = pgTable(
     prenom: text("prenom").notNull(),
     /** L'heure du jeu où il s'est présenté. */
     arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull(),
+    /**
+     * US-0337 : ce qu'il est devenu : null tant qu'il attend aux portes ; « accueilli » (US-0334), « refuse »
+     * (US-0336) ou « reparti » de lui-même au bout de son attente (événement depart_voyageur).
+     */
+    sort: text("sort"),
+    /** US-0337 : l'heure du jeu de son sort, donnée dès qu'il en a un. */
+    sortLe: timestamp("sort_le", { withTimezone: true }),
   },
-  (t) => [index("voyageur_par_territoire").on(t.territoireId)],
+  (t) => [
+    index("voyageur_par_territoire").on(t.territoireId),
+    // US-0337 : ceux qui attendent aux portes, que le jeu lit et compte à chaque page et à chaque arrivée.
+    index("voyageur_aux_portes")
+      .on(t.territoireId)
+      .where(sql`${t.sort} is null`),
+    check("voyageur_sort_connu", sql`${t.sort} in ('accueilli', 'refuse', 'reparti')`),
+    check("voyageur_sort_date", sql`(${t.sort} is null) = (${t.sortLe} is null)`),
+  ],
 );

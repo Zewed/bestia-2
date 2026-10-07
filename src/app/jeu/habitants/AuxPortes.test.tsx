@@ -4,13 +4,13 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { VOYAGEUR_ALERTE_MINUTES, VOYAGEUR_ATTEND_HEURES } from "@/reglages";
 
-/** Les actions serveur, tenues en suspens jusqu'à ce que le test les laisse finir. */
+/** Les actions serveur, tenues en suspens jusqu'à ce que le test les laisse finir, avec ce qu'elles rendent. */
 const actions = vi.hoisted(() => {
-  const enCours: Array<() => void> = [];
+  const enCours: Array<(rendu?: unknown) => void> = [];
   return {
     enCours,
-    accueillirUnVoyageur: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
-    refuserUnVoyageur: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+    accueillirUnVoyageur: vi.fn(() => new Promise<unknown>((finir) => enCours.push(finir))),
+    refuserUnVoyageur: vi.fn(() => new Promise<unknown>((finir) => enCours.push(finir))),
   };
 });
 vi.mock("./actions-aux-portes", () => actions);
@@ -43,8 +43,11 @@ const prenoms = () => morceaux().map((m) => m[0].textContent);
 /** US-0334 : la ligne d'un Voyageur, trouvée par son prénom. */
 const ligne = (prenom: string) => within(partie()).getByText(prenom).closest("li")!;
 
-/** Laisse finir les actions en suspens : React attend qu'elles aient toutes fini pour clore leurs transitions. */
-const finirLesActions = () => act(async () => actions.enCours.splice(0).forEach((finir) => finir()));
+/**
+ * Laisse finir les actions en suspens, chacune rendant `rendu` : React attend qu'elles aient toutes fini pour clore
+ * leurs transitions.
+ */
+const finirLesActions = (rendu?: unknown) => act(async () => actions.enCours.splice(0).forEach((finir) => finir(rendu)));
 
 afterEach(async () => {
   await finirLesActions();
@@ -183,6 +186,50 @@ describe("refuser un Voyageur (US-0336)", () => {
     expect(prenoms()).toEqual(["Ines", "Joran"]);
     await finirLesActions();
     expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
+  });
+});
+
+describe("accueillir un Voyageur déjà reparti (US-0337)", () => {
+  /** Les messages d'alerte de la partie « Aux portes ». */
+  const alertes = () => within(partie()).queryAllByRole("alert").map((a) => a.textContent);
+
+  it("dit « Ce Voyageur est déjà reparti. » dans la partie, et la page relue ne le montre plus aux portes", async () => {
+    const { rerender } = render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(alertes()).toEqual([]);
+    // La page relue ne compte plus Ines aux portes ; l'accueil revient : elle était déjà repartie.
+    rerender(<AuxPortes voyageurs={TROIS.slice(1)} maintenant={new Date(MAINTENANT.getTime() + 2_000)} />);
+    await finirLesActions("reparti");
+    expect(alertes()).toEqual(["Ce Voyageur est déjà reparti."]);
+    expect(prenoms()).toEqual(["Joran", "Ilda"]);
+  });
+
+  it("le dit aussi quand plus personne n'attend", async () => {
+    const { rerender } = render(<AuxPortes voyageurs={[TROIS[0]]} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Accueillir Ines" }));
+    rerender(<AuxPortes voyageurs={[]} maintenant={new Date(MAINTENANT.getTime() + 2_000)} />);
+    await finirLesActions("reparti");
+    expect(alertes()).toEqual(["Ce Voyageur est déjà reparti."]);
+    expect(within(partie()).getByText("Personne aux portes pour l'instant.")).toBeTruthy();
+  });
+
+  it.each([["accueilli"], ["absent"], [undefined]])("ne dit rien quand l'accueil revient autrement : %s", async (rendu) => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    await finirLesActions(rendu);
+    expect(alertes()).toEqual([]);
+  });
+
+  it("efface le message au choix suivant", async () => {
+    const { rerender } = render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    rerender(<AuxPortes voyageurs={TROIS.slice(1)} maintenant={new Date(MAINTENANT.getTime() + 2_000)} />);
+    await finirLesActions("reparti");
+    expect(alertes()).toEqual(["Ce Voyageur est déjà reparti."]);
+
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Refuser Joran" }));
+    expect(alertes()).toEqual([]);
   });
 });
 

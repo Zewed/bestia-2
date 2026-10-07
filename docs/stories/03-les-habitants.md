@@ -388,6 +388,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0337 · Laisser repartir un Voyageur ignoré
 **En tant que** joueur, **je veux** qu'un Voyageur que je n'ai pas accueilli reparte à la fin de son attente, **afin de** ne pas garder à mes portes des Voyageurs oubliés.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Un Voyageur ne s'efface plus : il garde son sort (accueilli, refusé ou reparti) et son heure, pour l'historique à venir (US-0342). À son arrivée, son départ est programmé 12 h plus tard ; s'il attend encore à cet instant, il repart, aussi pendant l'absence, à l'heure exacte du rattrapage. Les départs sont racontés dans un Récit « Ines a repris la route » ; tant que le joueur ne l'a pas lu, les départs suivants le rejoignent (« 2 Voyageurs ont repris la route ») : une absence donne un seul Récit, même découpée par la tâche planifiée. Tenter d'accueillir un Voyageur déjà reparti affiche « Ce Voyageur est déjà reparti. ». Les Voyageurs déjà aux portes ont reçu leur départ à la mise en ligne. Vérifié en vrai.
 - **Débloquée par** : US-0333
 - **Critères d'acceptation** :
   - À la fin du compte à rebours, le Voyageur repart seul.

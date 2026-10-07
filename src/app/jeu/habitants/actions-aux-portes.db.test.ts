@@ -4,7 +4,9 @@ import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { habitantsDuTerritoire } from "@/monde/habitants";
 import { recitsDuTerritoire } from "@/monde/recits";
-import { voyageursAuxPortes } from "@/monde/voyageurs";
+import { DEPART_VOYAGEUR, departDuVoyageur, voyageursAuxPortes } from "@/monde/voyageurs";
+import { programmerEvenement } from "@/temps/avancer";
+import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; l'action écrit pour de bon dans la base de test.
@@ -78,6 +80,23 @@ describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis ou refusés, su
     await accueillirUnVoyageur(ines);
     expect(await prenoms(joueur)).toEqual({ portes: [], habitants: [...siens.habitants, "Ines"] });
     expect(await prenoms(voisin)).toEqual(autres);
+  });
+
+  it("rend « reparti » pour un Voyageur parti de lui-même au bout de son attente, sans en faire un Habitant (US-0337)", async () => {
+    const joueur = await naitre();
+    const { rows } = await pool.query<{ id: number; arrive_le: Date }>(
+      "insert into voyageur (territoire_id, prenom, arrive_le) values ($1, 'Ines', now() - interval '13 hours') returning id, arrive_le",
+      [joueur],
+    );
+    await programmerEvenement(pool, "territoire", joueur, departDuVoyageur(rows[0].arrive_le), DEPART_VOYAGEUR, { voyageur: rows[0].id });
+    const avant = await prenoms(joueur);
+    connecter(joueur);
+
+    // La garde met le Territoire à l'heure : son départ, passé, y est appliqué.
+    await rattraper("territoire", joueur, { pool });
+    expect(await accueillirUnVoyageur(rows[0].id)).toBe("reparti");
+    expect(await prenoms(joueur)).toEqual({ portes: [], habitants: avant.habitants });
+    expect((await recitsDuTerritoire(pool, joueur)).map((r) => r.titre)).toEqual(["Ines a repris la route"]);
   });
 
   it("accueilli deux fois en même temps (deux onglets), le Voyageur ne devient qu'un seul Habitant", async () => {

@@ -180,4 +180,91 @@ describe.skipIf(!URL_TEST)("mécanisme unique du temps (sur base)", () => {
       expect(await instants(a)).toEqual(await instants(b));
     });
   });
+
+  describe("la conclusion d'une avancée (US-0337 : un seul Récit pour plusieurs départs)", () => {
+    /** Les règles du compteur, et chaque conclusion : les événements appliqués, type et heure de leur instant. */
+    function conclusions() {
+      const essai = compteurDEssai();
+      const conclues: { id: number; appliques: [string, number][]; stock: number }[] = [];
+      const regles: Regles = {
+        ...essai.regles,
+        evenements: {
+          ...essai.regles.evenements,
+          // Programme un « noter » une heure plus tard, que la même avancée applique si elle va jusque-là.
+          relancer: async (client, id, evenement) => {
+            await programmerEvenement(client, "monde", id, new Date(evenement.survientLe.getTime() + 3_600_000), "noter");
+          },
+        },
+        conclure: async (_client, id, appliques) => {
+          conclues.push({ id, appliques: appliques.map((e) => [e.type, duree(T0, e.survientLe)]), stock: essai.stock.get(id) ?? 0 });
+        },
+      };
+      return { ...essai, regles, conclues };
+    }
+
+    it("vient une fois, à la fin de l'avancée, avec tous les événements qu'elle a appliqués, dans leur ordre et à leur instant", async () => {
+      const { regles, conclues } = conclusions();
+      const id = await mondeDEssai();
+      for (const [h, type] of [[5, "noter"], [2, "relancer"], [7, "prelevement"], [12, "noter"]] as const) await programmerEvenement(pool, "monde", id, heures(h), type);
+
+      await avancer(pool, "monde", id, regles, heures(10));
+      // Le « noter » programmé en chemin, à 3 h, en fait partie ; celui de 12 h, au-delà de la fin, attend.
+      expect(conclues).toEqual([
+        {
+          id,
+          appliques: [
+            ["relancer", 2],
+            ["noter", 3],
+            ["noter", 5],
+            ["prelevement", 7],
+          ],
+          // L'évolution jusqu'à la fin est faite : 70, divisé par deux à 7 h, puis 30 de plus.
+          stock: 65,
+        },
+      ]);
+    });
+
+    it("vient à chaque avancée, avec ses seuls événements : aucun n'est conclu deux fois", async () => {
+      const { regles, conclues } = conclusions();
+      const id = await mondeDEssai();
+      for (const h of [1, 4, 9]) await programmerEvenement(pool, "monde", id, heures(h), "noter");
+
+      for (const h of [4, 6, 10]) await avancer(pool, "monde", id, regles, heures(h));
+      expect(conclues.map((c) => c.appliques)).toEqual([
+        [
+          ["noter", 1],
+          ["noter", 4],
+        ],
+        [],
+        [["noter", 9]],
+      ]);
+    });
+
+    it("donne à un événement d'avant le marque-page l'instant où il a été appliqué : celui du marque-page", async () => {
+      const { regles, conclues } = conclusions();
+      const id = await mondeDEssai();
+      await pool.query("update monde set calcule_jusqu_a = $2 where id = $1", [id, heures(3)]);
+      await programmerEvenement(pool, "monde", id, heures(1), "noter");
+
+      await avancer(pool, "monde", id, regles, heures(5));
+      expect(conclues.map((c) => c.appliques)).toEqual([[["noter", 3]]]);
+    });
+
+    it("n'enregistre rien si la conclusion échoue : ni les événements, ni le marque-page", async () => {
+      const { regles } = conclusions();
+      const id = await mondeDEssai();
+      const evenement = await programmerEvenement(pool, "monde", id, heures(2), "noter");
+      const echoue: Regles = {
+        ...regles,
+        conclure: async () => {
+          throw new Error("Conclusion impossible.");
+        },
+      };
+
+      await expect(avancer(pool, "monde", id, echoue, heures(4))).rejects.toThrow("Conclusion impossible.");
+      expect(await lireMarquePage(pool, "monde", id)).toEqual(T0);
+      const { rows } = await pool.query("select traite_le from evenement where id = $1", [evenement]);
+      expect(rows[0].traite_le).toBeNull();
+    });
+  });
 });

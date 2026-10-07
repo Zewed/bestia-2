@@ -3,7 +3,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
-const voyageurs = vi.hoisted(() => ({ accueillirLeVoyageur: vi.fn(async () => true), refuserLeVoyageur: vi.fn(async () => true) }));
+const voyageurs = vi.hoisted(() => ({
+  accueillirLeVoyageur: vi.fn(async (): Promise<unknown> => "accueilli"),
+  refuserLeVoyageur: vi.fn(async (): Promise<unknown> => true),
+}));
 vi.mock("@/monde/voyageurs", () => voyageurs);
 const cache = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/cache", () => cache);
@@ -25,7 +28,7 @@ describe("accueillir un Voyageur (US-0334)", () => {
   it("passe par la garde, puis accueille le Voyageur aux portes du Territoire du joueur, à l'heure du jeu, et relit la page", async () => {
     garde.exigerCompte.mockResolvedValue(CONNECTE);
     const avant = Date.now();
-    await accueillirUnVoyageur(70);
+    expect(await accueillirUnVoyageur(70)).toBe("accueilli");
     expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/habitants");
     expect(voyageurs.accueillirLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70, expect.any(Date));
     const instant = (voyageurs.accueillirLeVoyageur.mock.lastCall as unknown as [unknown, number, number, Date])[3].getTime();
@@ -34,26 +37,38 @@ describe("accueillir un Voyageur (US-0334)", () => {
     expect(voyageurs.refuserLeVoyageur).not.toHaveBeenCalled();
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
+
+  it("rend, après avoir relu la page, qu'un Voyageur est déjà reparti, pour que la page le dise (US-0337)", async () => {
+    garde.exigerCompte.mockResolvedValue(CONNECTE);
+    voyageurs.accueillirLeVoyageur.mockResolvedValueOnce("reparti");
+    expect(await accueillirUnVoyageur(70)).toBe("reparti");
+    expect(cache.refresh).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("refuser un Voyageur (US-0336)", () => {
-  it("passe par la garde, puis fait repartir le Voyageur aux portes du Territoire du joueur, et relit la page", async () => {
+  it("passe par la garde, puis fait repartir le Voyageur aux portes du Territoire du joueur, à l'heure du jeu, et relit la page", async () => {
     garde.exigerCompte.mockResolvedValue(CONNECTE);
+    const avant = Date.now();
     await refuserUnVoyageur(70);
     expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/habitants");
-    expect(voyageurs.refuserLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70);
+    // US-0337 : le refus garde son heure.
+    expect(voyageurs.refuserLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70, expect.any(Date));
+    const instant = (voyageurs.refuserLeVoyageur.mock.lastCall as unknown as [unknown, number, number, Date])[3].getTime();
+    expect(instant).toBeGreaterThanOrEqual(avant);
+    expect(instant).toBeLessThanOrEqual(Date.now());
     expect(voyageurs.accueillirLeVoyageur).not.toHaveBeenCalled();
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
 });
 
 describe.each([
-  { action: "accueillir", faire: accueillirUnVoyageur, ecrire: voyageurs.accueillirLeVoyageur },
-  { action: "refuser", faire: refuserUnVoyageur, ecrire: voyageurs.refuserLeVoyageur },
-])("$action un Voyageur, comme tout ce qui se fait aux portes (US-0334, US-0336)", ({ faire, ecrire }) => {
+  { action: "accueillir", faire: accueillirUnVoyageur, ecrire: voyageurs.accueillirLeVoyageur, nAttendPlus: "absent" },
+  { action: "refuser", faire: refuserUnVoyageur, ecrire: voyageurs.refuserLeVoyageur, nAttendPlus: false },
+])("$action un Voyageur, comme tout ce qui se fait aux portes (US-0334, US-0336)", ({ faire, ecrire, nAttendPlus }) => {
   it("relit la page même quand le Voyageur n'attend plus (accueilli, refusé ailleurs, ou pas à ce joueur) : la page relue fait foi", async () => {
     garde.exigerCompte.mockResolvedValue(CONNECTE);
-    ecrire.mockResolvedValueOnce(false);
+    ecrire.mockResolvedValueOnce(nAttendPlus);
     await faire(71);
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
