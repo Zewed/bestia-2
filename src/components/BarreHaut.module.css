@@ -7,12 +7,11 @@
   top: 0;
   z-index: 40;
   /* Le logo à gauche, puis la navigation (US-0302), les ressources au milieu, le nom du chef à droite ;
-     la bande des ressources en dessous sur mobile. Le logo, la navigation et les ressources gardent
-     leur largeur : à l'étroit, c'est le nom du chef qui se coupe. */
+     la bande des ressources en dessous sur mobile, et l'avertissement de famine au pied (US-0321). Le
+     logo, la navigation et les ressources gardent leur largeur : à l'étroit, c'est le nom du chef qui se coupe. */
   display: grid;
   grid-template-columns: max-content max-content 1fr minmax(0, max-content);
-  grid-template-rows: var(--hauteur-ligne);
-  grid-auto-rows: var(--hauteur-bande);
+  grid-template-rows: var(--hauteur-ligne) var(--hauteur-bande) var(--hauteur-alerte);
   column-gap: 16px;
   align-items: center;
   height: var(--hauteur-barre);
@@ -512,6 +511,80 @@
 }
 
 /*
+ * US-0321 : l'avertissement « famine imminente », une fine bande toute la largeur au pied de la barre, sous la
+ * ligne et sous la bande des ressources quand il y en a une ; toute la bande mène à la page Habitants. Dans la
+ * couleur d'alerte, son texte clair en gras dit l'alerte : jamais la couleur seule, et rien qui clignote.
+ */
+.famine {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  align-self: stretch;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  margin: 0 calc(-1 * max(20px, var(--bord-droit))) 0 calc(-1 * max(20px, var(--bord-gauche)));
+  padding: 0 max(20px, var(--bord-droit)) 0 max(20px, var(--bord-gauche));
+  background: var(--mauvais);
+  color: var(--blanc-chaud);
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.famine:focus-visible {
+  outline: 2px solid var(--ivoire);
+  outline-offset: -4px;
+}
+
+.titreFamine {
+  font-weight: var(--graisse-titre);
+}
+
+/* Le point entre l'alerte et le temps qui reste ne sert qu'aux yeux : un lecteur d'écran ne le dit pas. */
+.tenueFamine::before {
+  content: "·" / "";
+  margin-right: 8px;
+}
+
+.voirFamine {
+  margin-left: auto;
+  font-weight: var(--graisse-titre);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .famine:hover .voirFamine {
+    text-decoration-thickness: 2px;
+  }
+}
+
+/* Sur un téléphone, sur deux lignes : « Famine imminente », puis le temps qui reste ; « Voir » à droite des deux. */
+@media (max-width: 540px) {
+  .famine {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-content: center;
+    gap: 0 12px;
+    font-size: 13px;
+    line-height: 18px;
+  }
+
+  .tenueFamine {
+    grid-row: 2;
+  }
+
+  .tenueFamine::before {
+    content: none;
+  }
+
+  .voirFamine {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+  }
+}
+
+/*
  * US-0324 : sous 1280 px, la navigation à trois entrées ne laisse plus la place à coup sûr aux
  * ressources sur la ligne (quatre Stocks pleins, ou de grands nombres avec leur production) : elles passent
  * en bande sous la barre, centrées, toute la largeur sous un filet.
@@ -532,6 +605,12 @@
   .barre {
     padding-right: max(12px, var(--bord-droit));
     padding-left: max(12px, var(--bord-gauche));
+  }
+
+  /* US-0321 : l'avertissement de famine, toujours de bord à bord. */
+  .famine {
+    margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
+    padding: 0 max(12px, var(--bord-droit)) 0 max(12px, var(--bord-gauche));
   }
 
   /*

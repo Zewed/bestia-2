@@ -125,3 +125,9 @@ export const COEUR_SAUVAGE_RAYON = 8;
  * ECART_ENTRE_FOYERS Cases des autres (valeur provisoire, à régler en jouant).
  */
 export const JOUEURS_PAR_MONDE = 90;
+
+/**
+ * US-0321 : l'avertissement « famine imminente » paraît dans la barre du haut quand la Nourriture ne couvre
+ * plus que 12 heures d'Entretien (valeur provisoire, à régler en jouant).
+ */
+export const FAMINE_IMMINENTE_HEURES = 12;

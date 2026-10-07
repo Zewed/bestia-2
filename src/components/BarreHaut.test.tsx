@@ -64,6 +64,42 @@ describe("barre du haut", () => {
     expect(readFileSync(join(process.cwd(), "src/styles/formes.css"), "utf8")).toMatch(/@media \(max-width: 820px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 56px;/);
   });
 
+  describe("l'avertissement « famine imminente » (US-0321)", () => {
+    const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
+    const css = lire("src/components/BarreHaut.module.css");
+    const formes = lire("src/styles/formes.css");
+    /** Les déclarations d'une règle, dans `texte` (toute la feuille de la barre par défaut). */
+    const regle = (selecteur: string, texte = css) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+
+    it("est une bande toute la largeur au bas de la barre, sous la ligne et sous la bande des ressources", () => {
+      expect(regle(".barre")).toContain("grid-template-rows: var(--hauteur-ligne) var(--hauteur-bande) var(--hauteur-alerte);");
+      const famine = regle(".famine");
+      expect(famine).toContain("grid-column: 1 / -1;");
+      expect(famine).toContain("grid-row: 3;");
+      // Collée aux bords de l'écran, comme la bande des ressources ; son texte reste à l'écart de l'encoche.
+      expect(famine).toMatch(/margin: 0 calc\(-1 \* max\(20px, var\(--bord-droit\)\)\) 0 calc\(-1 \* max\(20px, var\(--bord-gauche\)\)\);/);
+      expect(regle(".famine", css.slice(css.indexOf("@media (max-width: 820px)")))).toMatch(/margin: 0 calc\(-1 \* max\(12px, var\(--bord-droit\)\)\)/);
+    });
+
+    it("fait grandir la barre de sa hauteur, pour que la page et les en-têtes collés restent justes dessous", () => {
+      expect(formes).toMatch(/:root \{[^}]*--hauteur-alerte: 0px;/);
+      expect(formes).toContain("--hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--hauteur-alerte) + var(--bord-haut));");
+      expect(formes).toMatch(/\n:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 36px;/);
+      // Sur un téléphone, sur deux lignes : la bande grandit d'autant.
+      expect(formes).toMatch(/@media \(max-width: 540px\) \{\s*:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 52px;/);
+    });
+
+    it("prend la couleur d'alerte, un texte clair et lisible, sans clignoter, sur ordinateur comme sur mobile", () => {
+      const famine = regle(".famine");
+      expect(famine).toContain("background: var(--mauvais);");
+      expect(famine).toContain("color: var(--blanc-chaud);");
+      expect(regle(".titreFamine")).toContain("font-weight: var(--graisse-titre);");
+      expect(css).not.toMatch(/animation|@keyframes/);
+      expect(css).not.toMatch(/\.famine[^{]*\{[^}]*display: none/);
+      expect(regle(".famine:focus-visible")).toContain("outline: 2px solid var(--ivoire);");
+    });
+  });
+
   it("sur mobile, ouvre le détail d'une ressource dans un panneau en bas de l'écran, au-dessus des onglets, avec un bouton « Fermer » de 44 px (US-0319)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
     const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));

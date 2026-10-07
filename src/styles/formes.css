@@ -12,10 +12,12 @@
   --bord-droit: env(safe-area-inset-right, 0px);
   --bord-bas: env(safe-area-inset-bottom, 0px);
   --bord-gauche: env(safe-area-inset-left, 0px);
-  /* La barre du haut : sa ligne, la bande des ressources sous elle sur mobile (US-0203), et l'encoche. */
+  /* La barre du haut : sa ligne, la bande des ressources sous elle sur mobile (US-0203), l'avertissement de
+     famine à son pied (US-0321), et l'encoche. */
   --hauteur-ligne: 64px;
   --hauteur-bande: 0px;
-  --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--bord-haut));
+  --hauteur-alerte: 0px;
+  --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--hauteur-alerte) + var(--bord-haut));
   /* Les onglets de la navigation, en bas de l'écran sur mobile (US-0302), au-dessus de l'encoche du bas. */
   --hauteur-onglets: 0px;
   /* La hauteur de l'écran entre la barre du haut et le bas de l'écran (ou ses onglets). */
@@ -49,5 +51,17 @@
 @media (max-width: 820px) {
   :root:has([data-onglets]) {
     --hauteur-onglets: 52px;
+  }
+}
+
+/* US-0321 : l'avertissement « famine imminente », au pied de la barre du haut, qui grandit d'autant. */
+:root:has([data-alerte-famine]) {
+  --hauteur-alerte: 36px;
+}
+
+/* Sur un téléphone, il passe sur deux lignes : « Famine imminente », puis le temps qui reste. */
+@media (max-width: 540px) {
+  :root:has([data-alerte-famine]) {
+    --hauteur-alerte: 52px;
   }
 }

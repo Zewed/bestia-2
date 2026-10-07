@@ -11,14 +11,18 @@ const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async () => [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000" }]) }));
 vi.mock("@/monde/stocks", () => stocks);
-const habitants = vi.hoisted(() => ({ nombreDHabitants: vi.fn(async () => 3), nombreSansMetier: vi.fn(async () => 0) }));
+const habitants = vi.hoisted(() => ({
+  nombreDHabitants: vi.fn(async () => 3),
+  nombreSansMetier: vi.fn(async () => 0),
+  entretienDesHabitants: vi.fn(async () => ({ habitants: 3, parHabitant: 2, parHeure: "6.000000" })),
+}));
 vi.mock("@/monde/habitants", () => habitants);
 const recits = vi.hoisted(() => ({ nombreDeRecitsNonLus: vi.fn(async () => 0) }));
 vi.mock("@/monde/recits", () => recits);
 const voyageurs = vi.hoisted(() => ({ nombreDeVoyageurs: vi.fn(async () => 0) }));
 vi.mock("@/monde/voyageurs", () => voyageurs);
 
-import { exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, sansMetierALHeure, stocksALHeure, voyageursALHeure } from "./garde";
+import { entretienALHeure, exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, sansMetierALHeure, stocksALHeure, voyageursALHeure } from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
@@ -132,6 +136,17 @@ describe("garde du jeu", () => {
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 16);
     expect(habitants.nombreSansMetier).toHaveBeenCalledWith(expect.anything(), 16);
     expect(ordre).toEqual(["rattrapage", "comptage"]);
+  });
+
+  it("lit l'Entretien des Habitants pour l'avertissement de famine après avoir mis le Territoire à l'heure (US-0321)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    habitants.entretienDesHabitants.mockImplementationOnce(async () => (ordre.push("lecture"), { habitants: 12, parHabitant: 2, parHeure: "24.000000" }));
+    expect(await entretienALHeure(17)).toBe("24.000000");
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 17);
+    expect(habitants.entretienDesHabitants).toHaveBeenCalledWith(expect.anything(), 17);
+    expect(ordre).toEqual(["rattrapage", "lecture"]);
   });
 
   describe("reprendre l'arrivée là où elle s'était arrêtée (US-0160)", () => {

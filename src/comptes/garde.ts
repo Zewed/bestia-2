@@ -7,7 +7,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
-import { nombreDHabitants, nombreSansMetier } from "@/monde/habitants";
+import { entretienDesHabitants, nombreDHabitants, nombreSansMetier } from "@/monde/habitants";
 import { nombreDeRecitsNonLus } from "@/monde/recits";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { nombreDeVoyageurs } from "@/monde/voyageurs";
@@ -121,4 +121,14 @@ export async function voyageursALHeure(territoireId: number): Promise<number> {
 export async function sansMetierALHeure(territoireId: number): Promise<number> {
   await mettreALHeure(territoireId);
   return nombreSansMetier(getPool(), territoireId);
+}
+
+/**
+ * US-0321 : l'Entretien des Habitants par heure, en Nourriture (numeric de Postgres, en texte), pour
+ * l'avertissement « famine imminente » de la barre du haut, lu après la mise à l'heure du Territoire, comme
+ * les Stocks avec lesquels il se compte : le total même que le calcul du jeu prélève (US-0316).
+ */
+export async function entretienALHeure(territoireId: number): Promise<string> {
+  await mettreALHeure(territoireId);
+  return (await entretienDesHabitants(getPool(), territoireId)).parHeure;
 }

@@ -223,9 +223,10 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0321 · Recevoir l'avertissement « famine imminente »
 **En tant que** joueur, **je veux** être prévenu à l'avance qu'une Famine approche, **afin de** garder le temps de réagir.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Quand la Nourriture ne couvre plus que 12 h d'Entretien ou moins, une bande rouge s'ajoute au bas de la barre du haut, sur toutes les pages du jeu, sur ordinateur comme sur mobile : « Famine imminente · Nourriture pour encore 7 h », toute la bande menant à la page Habitants. Le temps restant diminue en direct au rythme du jeu, et la bande paraît page ouverte à l'instant exact où le seuil est franchi, en ×100 compris. La barre grandit d'autant : l'en-tête collé de la page Habitants reste juste dessous. Vérifié en vrai avec 12 Habitants et peu de Nourriture, de 320 à 1 440 px.
 - **Débloquée par** : US-0320
 - **Critères d'acceptation** :
-  - L'avertissement « famine imminente » apparaît quand la Nourriture ne couvre plus que (chiffre à régler) heures d'Entretien.
+  - L'avertissement « famine imminente » apparaît quand la Nourriture ne couvre plus que 12 heures (provisoire, `FAMINE_IMMINENTE_HEURES`) d'Entretien.
   - Il s'affiche dans la barre du haut, sur toutes les pages, sur ordinateur comme sur mobile.
   - Il dit combien de temps il reste et mène à la page Habitants.
   - En vitesse accélérée, il apparaît exactement au moment prévu.

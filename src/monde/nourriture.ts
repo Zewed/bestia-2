@@ -1,4 +1,5 @@
 // Combien de temps la Nourriture d'un Territoire tiendra (US-0320) : un calcul pur, sans base.
+import { FAMINE_IMMINENTE_HEURES } from "@/reglages";
 
 /** US-0320 : un Stock de Nourriture tel que le calcul le prend : sa quantité, sa production par heure et sa limite. */
 export type StockDeNourriture = { quantite: number; parHeure: number; limite: number };
@@ -41,6 +42,38 @@ export function nourriturePourEncore(viande: StockDeNourriture, vegetaux: StockD
   const vide = heuresAvantVide(premier, moitie);
   const ensuite = { ...autre, quantite: quantiteApres(autre, moitie, vide) };
   return vide + heuresAvantVide(ensuite, entretienParHeure - premier.parHeure);
+}
+
+/** US-0321 : un Stock tel que la base le lit, en texte (stocksDuTerritoire) : sa famille, sa quantité, sa production par heure et sa limite. */
+type StockLu = { famille: string; quantite: string; parHeure: string; limite: string };
+
+/**
+ * US-0321 : nourriturePourEncore sur les Stocks tels que la base les lit, la Viande puis les Végétaux, et
+ * l'Entretien total en texte ; null quand la Nourriture est assurée, ou sans Stock de Nourriture.
+ */
+export function nourriturePourEncoreDesStocks(stocks: StockLu[], entretienParHeure: string): number | null {
+  const [viande, vegetaux] = stocks
+    .filter((s) => s.famille === "nourriture")
+    .map((s) => ({ quantite: Number(s.quantite), parHeure: Number(s.parHeure), limite: Number(s.limite) }));
+  if (!viande || !vegetaux) return null;
+  return nourriturePourEncore(viande, vegetaux, Number(entretienParHeure));
+}
+
+/** Une heure, en millisecondes. */
+const HEURE_MS = 3_600_000;
+
+/**
+ * US-0321 : dans combien de millisecondes réelles, après la lecture des Stocks, la famine devient imminente, au
+ * rythme du jeu (`vitesse`) : quand la Nourriture ne couvre plus que FAMINE_IMMINENTE_HEURES heures d'Entretien,
+ * ou moins ; 0 si elle l'est déjà.
+ */
+export function avantFamineImminente(heures: number, vitesse: number): number {
+  return Math.max(0, ((heures - FAMINE_IMMINENTE_HEURES) * HEURE_MS) / vitesse);
+}
+
+/** US-0321 : les heures que la Nourriture tiendra encore `ecoule` millisecondes réelles après la lecture des Stocks, au rythme du jeu ; jamais moins de zéro. */
+export function nourritureRestante(heures: number, ecoule: number, vitesse: number): number {
+  return Math.max(0, heures - (vitesse * ecoule) / HEURE_MS);
 }
 
 /** La plus petite durée du jeu, la microseconde, en heures : en deçà, l'écart n'est qu'une erreur d'arrondi du calcul. */

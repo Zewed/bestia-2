@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { nourriturePourEncore, type StockDeNourriture, tenueDeLaNourriture } from "./nourriture";
+import { FAMINE_IMMINENTE_HEURES } from "@/reglages";
+import {
+  avantFamineImminente,
+  nourriturePourEncore,
+  nourriturePourEncoreDesStocks,
+  nourritureRestante,
+  type StockDeNourriture,
+  tenueDeLaNourriture,
+} from "./nourriture";
 
 /** Un Stock de Nourriture : sa quantité, sa production par heure, et sa limite (1 000 au départ). */
 const stock = (quantite: number, parHeure: number, limite = 1000): StockDeNourriture => ({ quantite, parHeure, limite });
@@ -134,5 +142,36 @@ describe("dire combien de temps tiendra la Nourriture (US-0320)", () => {
     expect(tenueDeLaNourriture(77.5)).toBe(`Nourriture pour encore 3${_}j${_}5${_}h`);
     expect(tenueDeLaNourriture(100)).toBe(`Nourriture pour encore 4${_}j${_}4${_}h`);
     expect(tenueDeLaNourriture(72)).toBe(`Nourriture pour encore 3${_}j`);
+  });
+});
+
+describe("la famine imminente (US-0321)", () => {
+  const HEURE = 3_600_000;
+
+  it("compte la tenue de la Nourriture sur les Stocks tels que la base les lit : la Viande et les Végétaux, en texte", () => {
+    /** Un Stock lu en base, en texte. */
+    const lu = (id: string, famille: "nourriture" | "materiaux", quantite: string, parHeure: string) => ({ id, famille, quantite, parHeure, limite: "1000.000000" });
+    const stocks = [lu("viande", "nourriture", "20.000000", "8.000000"), lu("vegetaux", "nourriture", "7.500000", "14.000000"), lu("bois", "materiaux", "0.000000", "4.000000")];
+    // Douze Habitants en prairie : la Viande se vide en 5 h, puis les Végétaux, à 17,5, en 8 h 45.
+    expect(nourriturePourEncoreDesStocks(stocks, "24.000000")).toBeCloseTo(13.75, 9);
+    expect(nourriturePourEncoreDesStocks(stocks, "22.000000")).toBeNull();
+    // Sans Stock de Nourriture, rien à compter.
+    expect(nourriturePourEncoreDesStocks(stocks.slice(2), "24.000000")).toBeNull();
+  });
+
+  it("devient imminente quand la Nourriture ne couvre plus que 12 heures d'Entretien : dit dans combien de temps réel, au rythme du jeu, aussitôt si elle l'est déjà", () => {
+    expect(FAMINE_IMMINENTE_HEURES).toBe(12);
+    expect(avantFamineImminente(13, 1)).toBe(HEURE);
+    expect(avantFamineImminente(13, 100)).toBe(HEURE / 100);
+    expect(avantFamineImminente(12.01, 100)).toBeCloseTo(360, 6);
+    expect(avantFamineImminente(12, 100)).toBe(0);
+    expect(avantFamineImminente(7, 1)).toBe(0);
+  });
+
+  it("fait baisser le temps qui reste au rythme du jeu, sans passer sous zéro", () => {
+    expect(nourritureRestante(7.5, HEURE, 1)).toBe(6.5);
+    expect(nourritureRestante(7.5, HEURE / 100, 100)).toBe(6.5);
+    expect(nourritureRestante(7.5, 0, 100)).toBe(7.5);
+    expect(nourritureRestante(0.5, HEURE, 1)).toBe(0);
   });
 });
