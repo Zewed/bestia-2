@@ -1,0 +1,40 @@
+src/components/Ressources.test.tsx
+  s_97a431cfa65ca7::t_b38556c1dde009 97,101-115
+  s_97a431cfa65ca7::t_4469005218d10c 116-117
+src/components/BarreHaut.module.css
+  s_97a431cfa65ca7::t_ac72f08341c4a6 392,394,397-401
+  s_97a431cfa65ca7::t_d038760076395c 331-336
+  s_97a431cfa65ca7::t_2b3e258bc4c1ea 425-441
+  s_97a431cfa65ca7::t_ad6d323d4cd226 324-330,337-339
+src/components/Ressources.tsx
+  s_97a431cfa65ca7::t_ad6d323d4cd226 120-128,145-149,151-153
+  s_97a431cfa65ca7::t_d038760076395c 150
+docs/stories/02-le-territoire-respire.md
+  s_c21c70c5aa40f0::t_1da700998b8dd4 262
+docs/stories/README.md
+  s_c21c70c5aa40f0::t_2a31a925b438a3 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3c73340c9eae3b2d941eeadf6a2a7da87632bf4a",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_c21c70c5aa40f0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d7ba6728-4733-4f44-999c-61c2a093bb10",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
