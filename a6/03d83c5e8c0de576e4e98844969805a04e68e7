@@ -1,0 +1,32 @@
+src/components/Ressources.tsx
+  s_97a431cfa65ca7::t_98441864baac83 8,154-164
+  s_97a431cfa65ca7::t_598245ecb68aa3 165
+src/temps/affichage.test.ts
+  s_97a431cfa65ca7::t_e73603e2a4164f 11
+  s_97a431cfa65ca7::t_f33e5ae663ac9e 1-10,12-17
+src/components/Ressources.test.tsx
+  s_97a431cfa65ca7::t_e73603e2a4164f 79-80,93-102
+  s_97a431cfa65ca7::t_528dac6ef85f7a 103-104
+src/temps/affichage.ts
+  s_97a431cfa65ca7::t_98441864baac83 14-29
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_2c22c55dcc8edb 272
+docs/stories/README.md
+  s_97a431cfa65ca7::t_12aab02d7421a2 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a603d83c5e8c0de576e4e98844969805a04e68e7",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
