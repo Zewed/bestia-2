@@ -1,0 +1,50 @@
+src/app/jeu/page.tsx
+  s_97a431cfa65ca7::t_0c5f53f6537df5 33,45
+src/monde/absence.db.test.ts
+  s_97a431cfa65ca7::t_27542c655fdbad 73,75,85,88,90,125-153
+  s_97a431cfa65ca7::t_7fe5801c99abc3 154
+src/monde/absence.ts
+  s_97a431cfa65ca7::t_0c5f53f6537df5 5,9-11,16-17,19-21,23,27-32
+src/app/jeu/RecapAbsence.tsx
+  s_97a431cfa65ca7::t_0c5f53f6537df5 4,9-11,13,15,18-27
+drizzle/0033_plein_depuis.sql
+  s_97a431cfa65ca7::t_d9d35d580449b4 1-4
+src/db/schema.ts
+  s_97a431cfa65ca7::t_ab89551cd05605 433-434
+src/app/jeu/page.test.tsx
+  s_97a431cfa65ca7::t_27542c655fdbad 16-18,82-88,91
+src/monde/production.ts
+  s_97a431cfa65ca7::t_d9d35d580449b4 25,29-33,36,38,41-49
+src/app/jeu/page.module.css
+  s_97a431cfa65ca7::t_0c5f53f6537df5 89-93
+  s_97a431cfa65ca7::t_27542c655fdbad 71-72
+src/monde/stocks.ts
+  s_97a431cfa65ca7::t_0c5f53f6537df5 67
+src/app/jeu/RecapAbsence.test.tsx
+  s_97a431cfa65ca7::t_27542c655fdbad 11,17-22,25-26,28
+  s_97a431cfa65ca7::t_b7fec9afd60b55 23-24
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_11fa581e7330dd 292
+docs/stories/README.md
+  s_97a431cfa65ca7::t_19e9c7798b86d3 7
+drizzle/meta/0033_snapshot.json
+  s_97a431cfa65ca7::t_874ebc02c26703 1-1902
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_f53ddd5c9dfe73 235-241
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d7bb2ca9178616a8b4afdeb8d7298efed21f4180",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
