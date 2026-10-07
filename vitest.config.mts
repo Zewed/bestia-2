@@ -18,6 +18,9 @@ export default defineConfig({
     // Chaque fichier de test démarre sans VERCEL_ENV (voir src/test/environnement.ts).
     setupFiles: ["./src/test/environnement.ts"],
     testTimeout: 20_000,
+    // La préparation de la base de test passe un fichier à la fois (src/test/base.ts) : sous charge,
+    // l'attente dépasse les 10 s par défaut d'un beforeAll.
+    hookTimeout: 30_000,
     // Les tests tournent toujours en mode test, même quand Vercel construit avec NODE_ENV=production :
     // sinon React charge sa version de production, sans l'outil act des tests de formulaires.
     env: { NODE_ENV: "test" },

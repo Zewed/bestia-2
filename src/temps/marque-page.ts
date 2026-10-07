@@ -40,7 +40,8 @@ export async function avancerMarquePage(
   try {
     await client.query("begin");
     const { rows } = await client.query<{ calcule_jusqu_a: Date }>(
-      `select calcule_jusqu_a from ${table} where id = $1 for update`,
+      // « for no key update » suffit à ne rattraper qu'une fois, sans bloquer ce qui renvoie à l'élément (une naissance, un Stock).
+      `select calcule_jusqu_a from ${table} where id = $1 for no key update`,
       [id],
     );
     if (!rows[0]) throw new Error(`${element} ${id} introuvable.`);

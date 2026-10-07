@@ -10,8 +10,11 @@ import { casesDeLaCouronne, graineDuMonde } from "./couronne";
  * rétrécir. Une Case déjà en base n'est jamais touchée. Rend le nombre de Cases ajoutées et leur total.
  */
 export async function preparerCouronne(client: PoolClient, mondeId: number): Promise<{ ajoutees: number; total: number }> {
+  // « for no key update » et non « for update » : il suffit pour passer une préparation à la fois, et
+  // laisse naître les chefs pendant ce temps (leur fiche renvoie au Monde, ce qu'un « for update »
+  // bloquerait, alors que la préparation attend la Case que la naissance est en train de prendre).
   const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null }>(
-    "select nom, rayon, anneaux_couronne as anneaux from monde where id = $1 for update",
+    "select nom, rayon, anneaux_couronne as anneaux from monde where id = $1 for no key update",
     [mondeId],
   );
   if (!rows[0]) throw new Error(`Monde ${mondeId} introuvable.`);

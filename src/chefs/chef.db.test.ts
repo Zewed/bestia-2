@@ -194,24 +194,36 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
     });
 
     it("fait naître le chef suivant parmi les 5 emplacements libres les plus proches du dernier arrivé", async () => {
-      const premier = await nouveauCompte();
-      const second = await nouveauCompte();
-      await enregistrerNomDeChef(pool, premier.id, nomUnique("Aîné"));
-      // Les 5 emplacements possibles juste avant la naissance du second, selon la règle elle-même.
-      const { rows: libres } = await pool.query(
-        "select q, r, biome_id as biome from case_du_monde where monde_id = (select id from monde order by id limit 1) and couronne and chef_id is null",
-      );
-      const { rows: foyers } = await pool.query(
-        `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
-         where c.monde_id = (select id from monde order by id limit 1) order by ch.cree_le desc, ch.id desc`,
-      );
-      const possibles = new Set([0, 1, 2, 3, 4].map((i) => choisirCaseDeNaissance(libres, foyers, foyers[0], () => i / 5)).map((c) => `${c?.q},${c?.r}`));
-      await enregistrerNomDeChef(pool, second.id, nomUnique("Cadet"));
-      const [a] = await caseDu(premier.id);
-      const [b] = await caseDu(second.id);
-      expect(foyers[0]).toEqual({ q: a.q, r: a.r });
-      expect(possibles.has(`${b.q},${b.r}`)).toBe(true);
-      expect(distance(a, b)).toBeGreaterThanOrEqual(4);
+      // Un autre fichier de test peut faire naître un chef entre les deux : l'essai est alors recommencé.
+      for (const essai of "abcde") {
+        const premier = await nouveauCompte();
+        const second = await nouveauCompte();
+        await enregistrerNomDeChef(pool, premier.id, nomUnique(`Aîné${essai}`));
+        // Les 5 emplacements possibles juste avant la naissance du second, selon la règle elle-même.
+        const { rows: libres } = await pool.query(
+          "select q, r, biome_id as biome from case_du_monde where monde_id = (select id from monde order by id limit 1) and couronne and chef_id is null",
+        );
+        const { rows: foyers } = await pool.query(
+          `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
+           where c.monde_id = (select id from monde order by id limit 1) order by ch.cree_le desc, ch.id desc`,
+        );
+        const possibles = new Set([0, 1, 2, 3, 4].map((i) => choisirCaseDeNaissance(libres, foyers, foyers[0], () => i / 5)).map((c) => `${c?.q},${c?.r}`));
+        await enregistrerNomDeChef(pool, second.id, nomUnique(`Cadet${essai}`));
+        const { rows: entreDeux } = await pool.query<{ nombre: number }>(
+          `select count(*)::int as nombre from chef ch, chef a, chef b
+           where a.compte_id = $1 and b.compte_id = $2 and ch.monde_id = a.monde_id
+             and (ch.cree_le, ch.id) > (a.cree_le, a.id) and (ch.cree_le, ch.id) < (b.cree_le, b.id)`,
+          [premier.id, second.id],
+        );
+        const [a] = await caseDu(premier.id);
+        const [b] = await caseDu(second.id);
+        const intercale = entreDeux[0].nombre > 0 || foyers[0].q !== a.q || foyers[0].r !== a.r;
+        if (intercale && essai !== "e") continue;
+        expect(foyers[0]).toEqual({ q: a.q, r: a.r });
+        expect(possibles.has(`${b.q},${b.r}`)).toBe(true);
+        expect(distance(a, b)).toBeGreaterThanOrEqual(4);
+        return;
+      }
     });
 
     it("ne donne qu'une Case pour un double appui, et aucune à qui n'obtient pas le nom", async () => {
