@@ -102,6 +102,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0210 · Faire produire le Foyer en continu
 **En tant que** joueur, **je veux** que mon Foyer produise un peu de ressources en permanence, selon son Biome, **afin de** voir mon Territoire grandir même quand je ne fais rien.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). La règle `evoluer` des Territoires (`src/temps/regles.ts`) ajoute aux Stocks la production de toutes les Cases portant le chef, Biome par Biome, au prorata exact du temps écoulé ; toute mise à l'heure (page, barre du haut, tâche planifiée) la déclenche. Vérifié en vrai : après 0,30 h, le Foyer en prairie avait produit 2,4 Viande, 4,2 Végétaux, 1,2 Bois et 1,2 Pierre, au millionième près.
 - **Débloquée par** : US-0209, Étape 3
 - **Critères d'acceptation** :
   - Le Foyer ajoute à chaque stock la production horaire de son Biome, au prorata du temps écoulé : trente minutes donnent la moitié d'une heure.

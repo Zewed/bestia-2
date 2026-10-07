@@ -1,0 +1,95 @@
+import type { Pool } from "pg";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { creerCompte } from "@/comptes/compte";
+import { lireMarquePage } from "@/temps/marque-page";
+import { rattraper } from "@/temps/rattraper";
+import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { produire } from "./production";
+
+describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", () => {
+  let pool: Pool;
+  const lancement = `production-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let numero = 0;
+  const HEURE = 3_600_000;
+
+  /** Un Territoire tout neuf, aux Stocks remis à zéro pour lire la production seule. */
+  const naitre = async () => {
+    const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+    const nom = `Prod${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[numero % 10]}`;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
+    return territoireId;
+  };
+  const stocks = async (territoireId: number) =>
+    Object.fromEntries(
+      (await pool.query<{ id: string; quantite: string }>("select ressource_id as id, quantite from stock where territoire_id = $1", [territoireId])).rows.map(
+        (s) => [s.id, Number(s.quantite)],
+      ),
+    );
+  /** Ce qu'une Case de prairie produit par heure, tel que la base le tient de donnees/biomes.yaml. */
+  const prairie = async () =>
+    Object.fromEntries(
+      (await pool.query<{ id: string; par_heure: string }>("select ressource_id as id, par_heure from production_biome where biome_id = 'prairie'")).rows.map(
+        (p) => [p.id, Number(p.par_heure)],
+      ),
+    );
+  const dans = async (territoireId: number, ms: number) => new Date((await lireMarquePage(pool, "territoire", territoireId)).getTime() + ms);
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    await preparerMondeDeTest(pool);
+  });
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    await pool.end();
+  });
+
+  it("ajoute la production horaire du Biome du Foyer, au prorata : trente minutes donnent la moitié d'une heure", async () => {
+    const territoireId = await naitre();
+    await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE / 2) });
+    const parHeure = await prairie();
+    expect(await stocks(territoireId)).toEqual({ viande: parHeure.viande / 2, vegetaux: parHeure.vegetaux / 2, bois: parHeure.bois / 2, pierre: parHeure.pierre / 2 });
+  });
+
+  it("donne le même total en dix heures d'un coup qu'en dix rattrapages d'une heure", async () => {
+    const dUnCoup = await naitre();
+    const parPas = await naitre();
+    await rattraper("territoire", dUnCoup, { pool, jusqua: await dans(dUnCoup, 10 * HEURE) });
+    for (let i = 0; i < 10; i++) await rattraper("territoire", parPas, { pool, jusqua: await dans(parPas, HEURE) });
+    const parHeure = await prairie();
+    expect(await stocks(dUnCoup)).toEqual({ viande: parHeure.viande * 10, vegetaux: parHeure.vegetaux * 10, bois: parHeure.bois * 10, pierre: parHeure.pierre * 10 });
+    expect(await stocks(parPas)).toEqual(await stocks(dUnCoup));
+  });
+
+  it("additionne la production de toutes les Cases du Territoire, et laisse telle quelle une Ressource que rien ne produit", async () => {
+    const territoireId = await naitre();
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      // Une seconde Case, de forêt, rejoint le Territoire ; la prairie cesse de produire de la Pierre.
+      await client.query(
+        `update case_du_monde set chef_id = (select chef_id from territoire where id = $1)
+         where id = (select id from case_du_monde where chef_id is null and biome_id = 'foret' order by id limit 1)`,
+        [territoireId],
+      );
+      await client.query("update production_biome set par_heure = 0 where biome_id in ('prairie', 'foret') and ressource_id = 'pierre'");
+      const depuis = new Date("2026-01-01T00:00:00Z");
+      await produire(client, territoireId, depuis, new Date(depuis.getTime() + 2 * HEURE));
+      const { rows } = await client.query<{ id: string; total: string }>(
+        `select s.ressource_id as id, s.quantite as total from stock s where s.territoire_id = $1`,
+        [territoireId],
+      );
+      const { rows: parHeure } = await client.query<{ id: string; somme: string }>(
+        "select ressource_id as id, sum(par_heure) as somme from production_biome where biome_id in ('prairie', 'foret') group by ressource_id",
+      );
+      const attendu = Object.fromEntries(parHeure.map((p) => [p.id, Number(p.somme) * 2]));
+      expect(Object.fromEntries(rows.map((r) => [r.id, Number(r.total)]))).toEqual(attendu);
+      expect(attendu.pierre).toBe(0);
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
+  });
+});
