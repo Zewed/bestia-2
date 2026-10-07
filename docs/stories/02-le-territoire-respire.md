@@ -175,6 +175,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0217 · Voir la production sur l'écran du Foyer
 **En tant que** joueur, **je veux** un bloc « Production » sur l'écran de mon Foyer, **afin de** relier ce que je gagne au Biome de ma Case.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Le bloc « Production · prairie » se tient à droite de l'illustration sur ordinateur (280 px), dessous sur mobile, sans défilement de 390 à 1 440 px de large : l'icône, le nom et « +8/h » de chaque Ressource, ou « Ce Biome ne donne pas de Pierre. » pour une Ressource à zéro. Les chiffres viennent de la même requête que le calcul. L'écran du Foyer garde US-0163 : aucun lien ni bouton qui mène à une fonction absente.
 - **Débloquée par** : US-0212, Étape 9
 - **Critères d'acceptation** :
   - L'écran du Foyer gagne un bloc « Production » avec les quatre productions horaires et le Biome qui les explique.

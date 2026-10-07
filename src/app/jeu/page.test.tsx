@@ -15,6 +15,15 @@ const territoire = vi.hoisted(() => ({ foyerDuTerritoire: vi.fn(async () => ({ b
 vi.mock("@/monde/territoire", () => territoire);
 const absence = vi.hoisted(() => ({ recapitulatifDAbsence: vi.fn(async (): Promise<{ id: string; nom: string; gain: string }[]> => []) }));
 vi.mock("@/monde/absence", () => absence);
+const stocks = vi.hoisted(() => ({
+  stocksDuTerritoire: vi.fn(async () => [
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000", sources: [] },
+    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "100.000000", parHeure: "14.500000", sources: [] },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "100.000000", parHeure: "4.000000", sources: [] },
+    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "100.000000", parHeure: "0.000000", sources: [] },
+  ]),
+}));
+vi.mock("@/monde/stocks", () => stocks);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -49,11 +58,21 @@ describe("écran du Foyer (US-0157)", () => {
     expect(html).not.toMatch(/<p[ >]/);
   });
 
+  it("montre à côté sa production horaire et le Biome qui l'explique, et dit ce que le Biome ne donne pas (US-0217)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Foyer());
+    expect(stocks.stocksDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(html).toMatch(/<h2[^>]*>Production · prairie<\/h2>/);
+    const lignes = [...html.matchAll(/<li(?: [^>]*)?>(.*?)<\/li>/g)].map((m) => m[1].replace(/<img[^>]*\/>/g, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim());
+    expect(lignes).toEqual(["Viande +8/h", "Végétaux +14,5/h", "Bois +4/h", "Ce Biome ne donne pas de Pierre."]);
+  });
+
   it("ne mène à aucune fonction qui n'existe pas encore : ni lien, ni bouton, ni menu (US-0163)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Foyer());
     expect(html).not.toMatch(/<(a|button|form|nav|input|select)[ >]/);
-    expect(html.match(/<(img|h1)[ >]/g)).toEqual(["<img ", "<h1 "]);
+    // L'illustration, son titre, et le bloc Production (US-0217) avec l'icône de chaque Ressource.
+    expect(html.match(/<(img|h1|h2)[ >]/g)).toEqual(["<img ", "<h1 ", "<h2 ", "<img ", "<img ", "<img ", "<img "]);
   });
 
   it("pose sur l'illustration ce que le Foyer a produit pendant l'absence (US-0216)", async () => {

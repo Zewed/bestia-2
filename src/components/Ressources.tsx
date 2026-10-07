@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
 import { RECALER_LA_BARRE_MINUTES } from "@/reglages";
+import { iconeDeRessource } from "./icone-de-ressource";
 import styles from "./BarreHaut.module.css";
 
 type Famille = "nourriture" | "materiaux";
@@ -21,9 +22,6 @@ export type RessourceDeLaBarre = {
 
 /** US-0205 : les deux groupes de Ressources, sous les mots du glossaire. */
 const NOM_DE_FAMILLE: Record<Famille, string> = { nourriture: "Nourriture", materiaux: "Matériaux" };
-
-/** US-0204 : l'icône d'une Ressource, rangée sous le nom de son identifiant. */
-export const iconeDeRessource = (id: string) => `/illustrations/ressources/${id}.webp`;
 
 /** Les Ressources rangées par famille, dans leur ordre : la Nourriture, puis les Matériaux. */
 function parFamille(stocks: RessourceDeLaBarre[]): { famille: Famille; stocks: RessourceDeLaBarre[] }[] {

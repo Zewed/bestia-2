@@ -6,9 +6,11 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
 import { getPool } from "@/db";
 import { recapitulatifDAbsence } from "@/monde/absence";
+import { stocksDuTerritoire } from "@/monde/stocks";
 import { foyerDuTerritoire } from "@/monde/territoire";
 import { maintenant } from "@/temps/horloge";
 import styles from "./page.module.css";
+import { BlocProduction } from "./BlocProduction";
 import { RecapAbsence } from "./RecapAbsence";
 
 export const metadata: Metadata = { title: "Foyer" };
@@ -19,8 +21,9 @@ export const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hu
 /**
  * L'écran du Foyer (US-0157) : la hutte du chef en grand, et le Biome du Foyer posé dessus. Rien
  * d'autre : le nom du chef est dans la barre du haut, et rien ne mène à une fonction qui n'existe
- * pas encore (US-0163) ; seulement, au retour d'une absence, ce que le Foyer a produit entre-temps
- * (US-0216). Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
+ * pas encore (US-0163) ; au retour d'une absence, ce que le Foyer a produit entre-temps (US-0216) ;
+ * à côté, ou dessous sur mobile, sa production horaire (US-0217). Sans session, la garde mène à la
+ * connexion ; sans nom de chef, à son choix.
  */
 export default async function Foyer() {
   await connection();
@@ -28,8 +31,9 @@ export default async function Foyer() {
   const { territoireId } = await exigerCompte("/jeu");
   const foyer = territoireId === null ? null : await foyerDuTerritoire(getPool(), territoireId);
   const gains = territoireId === null ? [] : await recapitulatifDAbsence(getPool(), territoireId, maintenant());
+  const stocks = territoireId === null ? [] : await stocksDuTerritoire(getPool(), territoireId);
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${foyer ? styles.avecProduction : ""}`}>
       <section className={styles.foyer}>
         <Illustration
           chemin={ILLUSTRATION_DU_FOYER.chemin}
@@ -41,6 +45,7 @@ export default async function Foyer() {
         <RecapAbsence gains={gains} />
         <h1 className={styles.legende}>{foyer ? `Foyer · ${foyer.biome.nom.toLocaleLowerCase("fr")}` : "Foyer"}</h1>
       </section>
+      {foyer ? <BlocProduction biome={foyer.biome.nom} productions={stocks} /> : null}
     </main>
   );
 }
