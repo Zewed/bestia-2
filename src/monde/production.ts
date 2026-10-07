@@ -14,17 +14,33 @@ export const PRODUCTION_DU_TERRITOIRE = `
   group by pb.ressource_id`;
 
 /**
+ * US-0219 : l'ajout de la production du Territoire $1 entre les instants $2 et $3, en décimaux exacts.
+ * La production d'une Ressource vaut par_heure × durée en microsecondes ÷ 3 600 000 000 ; le Stock
+ * reçoit le nombre entier de millionièmes qu'elle contient (div, sans arrondi), et le reste de la
+ * division, exact lui aussi, attend le calcul suivant. Mille rattrapages d'une minute donnent donc
+ * exactement un rattrapage de mille minutes ; l'arrondi n'intervient qu'à l'affichage.
+ */
+export const PRODUIRE = `
+  with p as (${PRODUCTION_DU_TERRITOIRE}),
+  ajout as (
+    select s.ressource_id,
+      p.par_heure * (extract(epoch from ($3::timestamptz - $2::timestamptz)) * 1000000) + s.reste as total
+    from stock s join p on p.ressource_id = s.ressource_id
+    where s.territoire_id = $1 and p.par_heure > 0
+  )
+  update stock s set
+    quantite = s.quantite + div(a.total, 3600) / 1000000,
+    produit_depuis_visite = s.produit_depuis_visite + div(a.total, 3600) / 1000000,
+    reste = a.total - div(a.total, 3600) * 3600
+  from ajout a
+  where s.territoire_id = $1 and s.ressource_id = a.ressource_id`;
+
+/**
  * Ajoute aux Stocks du Territoire ce que toutes ses Cases produisent, chacune selon son Biome
  * (donnees/biomes.yaml), au prorata du temps écoulé : trente minutes donnent la moitié d'une heure.
  * Le Foyer produit comme une Case ordinaire ; une Ressource que rien ne produit ne bouge pas. Ce qui
  * est produit est aussi compté à part depuis la dernière visite du joueur (US-0216).
  */
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
-  await client.query(
-    `update stock s set quantite = s.quantite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600,
-       produit_depuis_visite = s.produit_depuis_visite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600
-     from (${PRODUCTION_DU_TERRITOIRE}) p
-     where s.territoire_id = $1 and s.ressource_id = p.ressource_id and p.par_heure > 0`,
-    [territoireId, depuis, jusqua],
-  );
+  await client.query(PRODUIRE, [territoireId, depuis, jusqua]);
 }

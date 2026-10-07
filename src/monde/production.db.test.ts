@@ -5,7 +5,7 @@ import { creerCompte } from "@/comptes/compte";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { produire } from "./production";
+import { produire, PRODUIRE } from "./production";
 import { stocksDuTerritoire } from "./stocks";
 
 describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", () => {
@@ -60,6 +60,29 @@ describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", (
     await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE) });
     expect(await stocks(territoireId)).toEqual(affichee);
     expect(affichee).toEqual(await prairie());
+  });
+
+  it("donne exactement le même total en mille rattrapages d'une minute qu'en un de mille minutes (US-0219)", async () => {
+    const parMinute = await naitre();
+    const dUnCoup = await naitre();
+    const debut = new Date("2026-01-01T00:00:00Z");
+    // Le calcul même du jeu, mille fois de suite côté base : mille minutes une à une.
+    await pool.query(
+      `do $do$ begin
+         for i in 0..999 loop
+           execute $calcul$${PRODUIRE}$calcul$
+             using ${parMinute}, timestamptz '${debut.toISOString()}' + make_interval(mins => i), timestamptz '${debut.toISOString()}' + make_interval(mins => i + 1);
+         end loop;
+       end $do$`,
+    );
+    await pool.query(PRODUIRE, [dUnCoup, debut, new Date(debut.getTime() + 1000 * 60_000)]);
+    const comptes = async (id: number) =>
+      (await pool.query("select ressource_id, quantite::text, reste::text, produit_depuis_visite::text from stock where territoire_id = $1 order by ressource_id", [id])).rows;
+    expect(await comptes(parMinute)).toEqual(await comptes(dUnCoup));
+    // 8 Viande par heure pendant mille minutes : 133,333333… ; le Stock garde ses six décimales exactes, le reste attend.
+    const viande = (await comptes(dUnCoup)).find((s) => s.ressource_id === "viande");
+    const parHeure = (await prairie()).viande;
+    expect(viande.quantite).toBe((Math.floor((parHeure * 1000 * 1_000_000) / 60) / 1_000_000).toFixed(6));
   });
 
   it("donne le même total en dix heures d'un coup qu'en dix rattrapages d'une heure", async () => {

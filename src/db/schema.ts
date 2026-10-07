@@ -421,6 +421,11 @@ export const stock = pgTable(
     quantite: numeric("quantite", { precision: 24, scale: 6 }).notNull().default("0"),
     /** US-0216 : ce que le Territoire a produit de cette Ressource depuis la dernière visite du joueur. */
     produitDepuisVisite: numeric("produit_depuis_visite", { precision: 24, scale: 6 }).notNull().default("0"),
+    /**
+     * US-0219 : la part de production pas encore assez grande pour un millionième, gardée exacte
+     * (en unités × microsecondes par heure, de 0 à 3 600) pour le calcul suivant : rien ne se perd.
+     */
+    reste: numeric("reste", { precision: 30, scale: 6 }).notNull().default("0"),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
 );

@@ -195,6 +195,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0219 · Garder des comptes exacts malgré les fractions
 **En tant que** développeur, **je veux** calculer les stocks sans erreur d'arrondi qui s'accumule, **afin de** garantir qu'aucun joueur ne gagne ni ne perd rien au fil des rattrapages.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Jusque-là, chaque rattrapage arrondissait au millionième : mille rattrapages d'une minute laissaient filer 0,0003 Viande. Désormais la production vaut par_heure × microsecondes, en décimaux exacts ; le Stock en reçoit le nombre entier de millionièmes (division entière) et garde le reste exact (`stock.reste`) pour le calcul suivant. Un test sur base rejoue mille fois le calcul même du jeu, minute par minute, et retrouve au millionième près, reste compris, le résultat d'un seul calcul de mille minutes.
 - **Débloquée par** : US-0210
 - **Critères d'acceptation** :
   - Les quantités sont calculées en nombres décimaux exacts, jamais en nombres à virgule flottante.

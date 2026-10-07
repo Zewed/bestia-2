@@ -1,0 +1,1 @@
+ALTER TABLE "stock" ADD COLUMN "reste" numeric(30, 6) DEFAULT '0' NOT NULL;
