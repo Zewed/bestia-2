@@ -377,3 +377,23 @@
     font-size: 13px;
   }
 }
+
+/*
+ * US-0332 : dès que la colonne passe sous la liste, ses blocs se rangent dans la grille de la page, chacun à
+ * la place qu'elle leur donnait : une demi-ligne sur tablette, toute la largeur sur mobile. « Aux portes »
+ * peut ainsi remonter au-dessus de la liste (AuxPortes.module.css).
+ */
+@media (max-width: 1100px) {
+  .colonne {
+    display: contents;
+  }
+  .colonne > * {
+    grid-column: 1 / span 6;
+  }
+}
+
+@media (max-width: 820px) {
+  .colonne > * {
+    grid-column: 1 / -1;
+  }
+}

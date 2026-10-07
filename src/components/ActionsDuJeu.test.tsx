@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -11,6 +13,7 @@ const garde = vi.hoisted(() => ({
   ]),
   habitantsALHeure: vi.fn(async () => 3),
   recitsNonLusALHeure: vi.fn(async () => 0),
+  voyageursALHeure: vi.fn(async () => 0),
 }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
@@ -26,6 +29,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     garde.stocksALHeure.mockClear();
     garde.habitantsALHeure.mockClear();
     garde.recitsNonLusALHeure.mockClear();
+    garde.voyageursALHeure.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
     garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, territoireId: null, recitLu: false, ...chef });
@@ -122,6 +126,42 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: null });
     await rendu();
     expect(garde.recitsNonLusALHeure).not.toHaveBeenCalled();
+  });
+
+  it("signale sur l'entrée « Habitants » de la navigation les Voyageurs qui attendent aux portes (US-0332)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    garde.voyageursALHeure.mockResolvedValueOnce(2);
+    const html = await rendu();
+    expect(garde.voyageursALHeure).toHaveBeenCalledWith(12);
+    const habitants = html.match(/<a ([^>]*href="\/jeu\/habitants"[^>]*)>(.*?)<\/a>/);
+    expect(habitants?.[1]).toMatch(/aria-label="Habitants, 2 Voyageurs attendent"/);
+    expect(habitants?.[2]).toMatch(/^<span[^>]*>Habitants<\/span><span[^>]*aria-hidden="true"[^>]*><\/span>$/);
+  });
+
+  it("dessine le repère en petit point citron, le même dans la barre sur ordinateur et dans l'onglet sur mobile (US-0332)", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const repere = css.match(/\n\.repere \{([^}]*)\}/)?.[1] ?? "";
+    expect(repere).toContain("background: var(--citron);");
+    expect(repere).toContain("border-radius: 999px;");
+    expect(repere).toMatch(/width: 8px;[^}]*height: 8px;/);
+    // Rien ne le cache ni ne le change sur mobile : il suit le nom de l'onglet.
+    expect(css.slice(css.indexOf("@media (max-width: 820px)"))).not.toContain(".repere");
+  });
+
+  it("ne met pas de repère quand personne n'attend aux portes (US-0332)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    const html = await rendu();
+    expect(html.match(/<a ([^>]*href="\/jeu\/habitants"[^>]*)>(.*?)<\/a>/)?.[2]).toMatch(/^<span[^>]*>Habitants<\/span>$/);
+  });
+
+  it("ne compte pas les Voyageurs avant le récit d'arrivée, ni sans Territoire (US-0332)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    await rendu();
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: true });
+    await rendu();
+    joueur({ nomDeChef: null });
+    await rendu();
+    expect(garde.voyageursALHeure).not.toHaveBeenCalled();
   });
 
   it("n'a pas de navigation sans Territoire, avant le récit d'arrivée, ni sans nom de chef (US-0302)", async () => {

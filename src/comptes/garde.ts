@@ -10,6 +10,7 @@ import { getPool } from "@/db";
 import { nombreDHabitants } from "@/monde/habitants";
 import { nombreDeRecitsNonLus } from "@/monde/recits";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
+import { nombreDeVoyageurs } from "@/monde/voyageurs";
 import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
 import { compteDeLaSession } from "./session";
@@ -102,4 +103,13 @@ export async function habitantsALHeure(territoireId: number): Promise<number> {
 export async function recitsNonLusALHeure(territoireId: number): Promise<number> {
   await mettreALHeure(territoireId);
   return nombreDeRecitsNonLus(getPool(), territoireId);
+}
+
+/**
+ * Le nombre de Voyageurs aux portes pour le repère de l'entrée « Habitants » de la navigation (US-0332),
+ * lu après la mise à l'heure du Territoire : un Voyageur arrivé pendant l'absence compte dès cet affichage.
+ */
+export async function voyageursALHeure(territoireId: number): Promise<number> {
+  await mettreALHeure(territoireId);
+  return nombreDeVoyageurs(getPool(), territoireId);
 }

@@ -336,6 +336,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0332 · Voir les Voyageurs qui attendent aux portes
 **En tant que** joueur, **je veux** voir les Voyageurs qui attendent aux portes, **afin de** décider de leur sort.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sur la page Habitants, un bloc « Aux portes » en tête de la colonne de droite sur ordinateur, au-dessus de la liste quand la colonne passe dessous (sous 1 100 px) : une ligne par Voyageur, du premier arrivé au dernier, son prénom et depuis quand il attend ; « Personne aux portes pour l'instant. » sinon. Un point citron sur l'entrée « Habitants » de la navigation signale qu'un Voyageur attend (« Habitants, un Voyageur attend » pour un lecteur d'écran). Vérifié en vrai.
 - **Débloquée par** : US-0331
 - **Critères d'acceptation** :
   - Une partie « Aux portes » de la page Habitants montre chaque Voyageur qui attend.

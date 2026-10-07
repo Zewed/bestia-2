@@ -15,8 +15,10 @@ const habitants = vi.hoisted(() => ({ nombreDHabitants: vi.fn(async () => 3) }))
 vi.mock("@/monde/habitants", () => habitants);
 const recits = vi.hoisted(() => ({ nombreDeRecitsNonLus: vi.fn(async () => 0) }));
 vi.mock("@/monde/recits", () => recits);
+const voyageurs = vi.hoisted(() => ({ nombreDeVoyageurs: vi.fn(async () => 0) }));
+vi.mock("@/monde/voyageurs", () => voyageurs);
 
-import { exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, stocksALHeure } from "./garde";
+import { exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, stocksALHeure, voyageursALHeure } from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
@@ -107,6 +109,17 @@ describe("garde du jeu", () => {
     expect(await recitsNonLusALHeure(14)).toBe(2);
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 14);
     expect(recits.nombreDeRecitsNonLus).toHaveBeenCalledWith(expect.anything(), 14);
+    expect(ordre).toEqual(["rattrapage", "comptage"]);
+  });
+
+  it("compte les Voyageurs aux portes pour la navigation après avoir mis le Territoire à l'heure (US-0332)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    voyageurs.nombreDeVoyageurs.mockImplementationOnce(async () => (ordre.push("comptage"), 2));
+    expect(await voyageursALHeure(15)).toBe(2);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 15);
+    expect(voyageurs.nombreDeVoyageurs).toHaveBeenCalledWith(expect.anything(), 15);
     expect(ordre).toEqual(["rattrapage", "comptage"]);
   });
 

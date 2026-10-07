@@ -52,6 +52,35 @@ describe("navigation du jeu (US-0302)", () => {
     expect(screen.getByRole("link", { name: "Récits, 140 non lus" }).textContent).toBe("Récits99+");
   });
 
+  it("signale d'un repère sur l'entrée « Habitants » qu'un Voyageur attend aux portes, et le dit dans son nom (US-0332)", () => {
+    render(<Navigation voyageurs={1} />);
+    const habitants = screen.getByRole("link", { name: "Habitants, un Voyageur attend" });
+    expect(habitants.getAttribute("href")).toBe("/jeu/habitants");
+    // Un point, sans chiffre, que le lecteur d'écran ne lit pas : le nom le dit déjà.
+    const repere = habitants.querySelector("[aria-hidden='true']");
+    expect(repere?.textContent).toBe("");
+    expect(habitants.textContent).toBe("Habitants");
+    // Les autres entrées n'en portent pas.
+    expect(entrees().filter((lien) => lien.querySelector("[aria-hidden='true']")).map((lien) => lien.textContent)).toEqual(["Habitants"]);
+  });
+
+  it("accorde le nom au nombre de Voyageurs, sans le montrer en chiffres : « Habitants, 2 Voyageurs attendent » (US-0332)", () => {
+    render(<Navigation voyageurs={2} />);
+    expect(screen.getByRole("link", { name: "Habitants, 2 Voyageurs attendent" }).textContent).toBe("Habitants");
+  });
+
+  it("n'a pas de repère quand personne n'attend aux portes (US-0332)", () => {
+    render(<Navigation voyageurs={0} />);
+    const habitants = screen.getByRole("link", { name: "Habitants" });
+    expect(habitants.querySelector("[aria-hidden='true']")).toBeNull();
+    expect(habitants.hasAttribute("aria-label")).toBe(false);
+  });
+
+  it("porte à la fois le repère des Voyageurs et la pastille des Récits non lus (US-0332)", () => {
+    render(<Navigation voyageurs={3} recitsNonLus={2} />);
+    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, "Habitants, 3 Voyageurs attendent", "Récits, 2 non lus"]);
+  });
+
   it("marque l'entrée de la page affichée, et elle seule", () => {
     render(<Navigation />);
     expect(marquees()).toEqual(["Foyer"]);

@@ -13,6 +13,9 @@ import { iconeDeMetier, lesMetiers, type Metier } from "@/monde/metiers";
 import { nourriturePourEncore, tenueDeLaNourriture } from "@/monde/nourriture";
 import { quantiteExacte } from "@/monde/quantite";
 import type { Stock } from "@/monde/stocks";
+import { voyageursAuxPortes } from "@/monde/voyageurs";
+import { maintenant } from "@/temps/horloge";
+import { AuxPortes } from "./AuxPortes";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
 
@@ -95,12 +98,13 @@ export default async function Habitants() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  const [habitants, places, entretien, metiers, stocks] = await Promise.all([
+  const [habitants, places, entretien, metiers, stocks, voyageurs] = await Promise.all([
     territoireId === null ? [] : habitantsDuTerritoire(getPool(), territoireId),
     territoireId === null ? 0 : placesDuTerritoire(getPool(), territoireId),
     territoireId === null ? null : entretienDesHabitants(getPool(), territoireId),
     lesMetiers(getPool()),
     territoireId === null ? [] : stocksALHeure(territoireId),
+    territoireId === null ? [] : voyageursAuxPortes(getPool(), territoireId),
   ]);
   return (
     <main className={styles.page}>
@@ -119,6 +123,8 @@ export default async function Habitants() {
           ) : null}
         </Bloc>
         <div className={styles.colonne} style={COLONNE} data-etroit="">
+          {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
+          <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} />
           {entretien ? (
             <Bloc titre="Entretien">
               <LigneEntretien entretien={entretien} />

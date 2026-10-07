@@ -2,7 +2,7 @@
 // Territoire, et y attendent. Côté serveur uniquement.
 import "server-only";
 import { createHash } from "node:crypto";
-import type { PoolClient } from "pg";
+import type { Pool, PoolClient } from "pg";
 import { VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { programmerEvenement, type Evenement } from "@/temps/avancer";
 
@@ -54,4 +54,22 @@ export async function arriveeDUnVoyageur(client: PoolClient, territoireId: numbe
   await client.query(FAIRE_ENTRER, [territoireId, evenement.survientLe, VOYAGEURS_EN_ATTENTE_MAX]);
   const suivante = new Date(evenement.survientLe.getTime() + ecartAvantVoyageur(territoireId, numero + 1));
   await programmerEvenement(client, "territoire", territoireId, suivante, ARRIVEE_VOYAGEUR, { numero: numero + 1 });
+}
+
+/** US-0332 : un Voyageur qui attend aux portes : son prénom et l'heure du jeu de son arrivée. */
+export type VoyageurAuxPortes = { id: number; prenom: string; arriveLe: Date };
+
+/** US-0332 : les Voyageurs qui attendent aux portes du Territoire, du premier arrivé au dernier. */
+export async function voyageursAuxPortes(base: Pool | PoolClient, territoireId: number): Promise<VoyageurAuxPortes[]> {
+  const { rows } = await base.query<VoyageurAuxPortes>(
+    `select id, prenom, arrive_le as "arriveLe" from voyageur where territoire_id = $1 order by arrive_le, id`,
+    [territoireId],
+  );
+  return rows;
+}
+
+/** US-0332 : le nombre de Voyageurs qui attendent aux portes, pour le repère de l'entrée « Habitants ». */
+export async function nombreDeVoyageurs(base: Pool | PoolClient, territoireId: number): Promise<number> {
+  const { rows } = await base.query<{ nombre: number }>("select count(*)::int as nombre from voyageur where territoire_id = $1", [territoireId]);
+  return rows[0].nombre;
 }

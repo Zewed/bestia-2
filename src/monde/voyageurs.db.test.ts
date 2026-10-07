@@ -13,7 +13,7 @@ import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { ecartAvantVoyageur } from "./voyageurs";
+import { ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -238,5 +238,42 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, heures * HEURE) });
       expect(await etat(territoireId)).toEqual(attendu(territoireId, ne, apres(ne, heures * HEURE)));
     }, 60_000);
+  });
+
+  describe("les Voyageurs aux portes (US-0332)", () => {
+    /** Fait se présenter un Voyageur au Territoire, à l'instant donné, sans passer par le temps. */
+    const presenter = async (territoireId: number, prenom: string, arriveLe: Date) =>
+      (await pool.query<{ id: number }>("insert into voyageur (territoire_id, prenom, arrive_le) values ($1, $2, $3) returning id", [territoireId, prenom, arriveLe])).rows[0].id;
+
+    it("lit ceux qui attendent aux portes du Territoire, du premier arrivé au dernier, et eux seuls", async () => {
+      const { territoireId, ne } = await naitre();
+      const voisin = await naitre();
+      const cael = await presenter(territoireId, "Cael", apres(ne, 5 * HEURE));
+      const arno = await presenter(territoireId, "Arno", apres(ne, HEURE));
+      await presenter(voisin.territoireId, "Brune", apres(ne, 2 * HEURE));
+      // Deux arrivées au même instant : la première enregistrée d'abord.
+      const dara = await presenter(territoireId, "Dara", apres(ne, 5 * HEURE));
+      expect(await voyageursAuxPortes(pool, territoireId)).toEqual([
+        { id: arno, prenom: "Arno", arriveLe: apres(ne, HEURE) },
+        { id: cael, prenom: "Cael", arriveLe: apres(ne, 5 * HEURE) },
+        { id: dara, prenom: "Dara", arriveLe: apres(ne, 5 * HEURE) },
+      ]);
+      expect(await nombreDeVoyageurs(pool, territoireId)).toBe(3);
+      expect(await nombreDeVoyageurs(pool, voisin.territoireId)).toBe(1);
+    });
+
+    it("ne lit personne quand personne n'attend", async () => {
+      const { territoireId } = await naitre();
+      expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
+      expect(await nombreDeVoyageurs(pool, territoireId)).toBe(0);
+    });
+
+    it("lit ceux que le temps a fait venir, à l'heure de leur arrivée", async () => {
+      const { territoireId, ne } = await naitre();
+      const { arrivees: prevu } = prevues(territoireId, ne, apres(ne, 1000 * HEURE));
+      await rattraper("territoire", territoireId, { pool, jusqua: new Date(prevu[1].instant) });
+      expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.arriveLe.getTime())).toEqual([prevu[0].instant, prevu[1].instant]);
+      expect(await nombreDeVoyageurs(pool, territoireId)).toBe(2);
+    });
   });
 });

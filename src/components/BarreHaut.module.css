@@ -212,6 +212,16 @@
   text-align: center;
 }
 
+/* US-0332 : un Voyageur attend aux portes : un point citron sur l'entrée « Habitants », sans chiffre. */
+.repere {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  border-radius: 999px;
+  background: var(--citron);
+}
+
 /*
  * US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même
  * largeur, en deux groupes séparés d'un fin trait : la Nourriture, puis les Matériaux (US-0205).

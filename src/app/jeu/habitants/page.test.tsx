@@ -223,6 +223,9 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       ...["Tous", "Sans Métier ", "3"],
       ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.flatMap((prenom) => [prenom, "Choisir un Métier", "libre"]),
+      // US-0332 : la partie « Aux portes », quand personne n'attend.
+      "Aux portes",
+      "Personne aux portes pour l'instant.",
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
       "6 Nourriture par heure",
@@ -344,7 +347,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   it("met l'Entretien à côté de la liste sur ordinateur, dessous sur mobile, dans un bloc à lui (US-0318)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Entretien<\/h2>/);
+    // US-0332 : sous « Aux portes », en tête de la colonne.
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>/);
   });
 
   it("relit l'Entretien à chaque affichage : il suit chaque arrivée et chaque départ (US-0318)", async () => {
@@ -451,7 +455,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     connecte();
     const html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(
-      /<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Entretien<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Métiers<\/h2><ul[^>]*>(<li[^>]*>.*?<\/li>){8}<\/ul><\/section><\/div><\/div><\/main>$/,
+      // US-0332 : sous « Aux portes » et l'Entretien.
+      /<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Métiers<\/h2><ul[^>]*>(<li[^>]*>.*?<\/li>){8}<\/ul><\/section><\/div><\/div><\/main>$/,
     );
   });
 });
@@ -548,5 +553,69 @@ describe("page Habitants au pouce (US-0306)", () => {
     const bloc = regle(".bloc", lire("src/components/Bloc.module.css"));
     expect(bloc).toContain("background: var(--bloc);");
     expect(bloc).not.toContain("overflow:");
+  });
+});
+
+// US-0332 : les Voyageurs aux portes, lus pour la page (vitest remonte ces deux appels en tête du fichier).
+type Voyageur = { id: number; prenom: string; arriveLe: Date };
+const voyageurs = vi.hoisted(() => ({ voyageursAuxPortes: vi.fn(async (): Promise<Voyageur[]> => []) }));
+vi.mock("@/monde/voyageurs", async (original) => ({ ...(await original<object>()), ...voyageurs }));
+
+describe("page Habitants, les Voyageurs aux portes (US-0332)", () => {
+  afterEach(() => {
+    voyageurs.voyageursAuxPortes.mockReset();
+    metiers.lesMetiers.mockReset();
+  });
+
+  const HEURE = 3_600_000;
+  /** Un joueur connecté, ses trois Habitants, les huit Métiers et ces Voyageurs aux portes, arrivés il y a tant d'heures. */
+  const connecte = (...attentes: [prenom: string, heures: number][]) => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+    habitants.habitantsDuTerritoire.mockResolvedValue(PRENOMS.map((prenom, i) => ({ id: 40 + i, prenom, ...UN_HABITANT })));
+    habitants.placesDuTerritoire.mockResolvedValue(5);
+    habitants.entretienDesHabitants.mockResolvedValue({ habitants: 3, parHabitant: 2, parHeure: "6" });
+    metiers.lesMetiers.mockResolvedValue(HUIT_METIERS);
+    // Une demi-minute de plus : le temps du test passe sans changer l'heure entière affichée.
+    voyageurs.voyageursAuxPortes.mockResolvedValue(
+      attentes.map(([prenom, heures], i) => ({ id: 70 + i, prenom, arriveLe: new Date(Date.now() - heures * HEURE - 30_000) })),
+    );
+  };
+  /** La partie « Aux portes », telle qu'elle est écrite. */
+  const auxPortes = (html: string) => html.match(/<section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section>/)?.[0] ?? "";
+  /** Le texte de chaque ligne de la partie « Aux portes », ses morceaux séparés par « · ». */
+  const lignesAuxPortes = (html: string) =>
+    [...auxPortes(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
+
+  it("montre chaque Voyageur qui attend aux portes du Territoire du joueur, dans l'ordre de la lecture, et depuis quand il attend", async () => {
+    connecte(["Joran", 5], ["Ilda", 2]);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(voyageurs.voyageursAuxPortes).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(lignesAuxPortes(html)).toEqual(["Joran · arrivé il y a 5 h", "Ilda · arrivé il y a 2 h"]);
+  });
+
+  it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {
+    connecte();
+    expect(auxPortes(renderToStaticMarkup(await Habitants()))).toMatch(/<h2[^>]*>Aux portes<\/h2><p[^>]*>Personne aux portes pour l&#x27;instant\.<\/p><\/section>$/);
+  });
+
+  it("met « Aux portes » en tête de la colonne, avant l'Entretien et les Métiers, à côté de la liste sur ordinateur", async () => {
+    connecte(["Joran", 5]);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>/);
+  });
+
+  it("fait remonter « Aux portes » au-dessus de la liste dès que la colonne passe dessous, sous 1 100 px", () => {
+    const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
+    const [css, page] = [lire("src/app/jeu/habitants/AuxPortes.module.css"), lire("src/app/jeu/habitants/page.module.css")];
+    /** Les déclarations de la règle `selecteur` dans `texte`, à partir du bloc @media `media`. */
+    const dans = (texte: string, media: string, selecteur: string) =>
+      texte.slice(texte.indexOf(media)).match(new RegExp(`\\n\\s*${selecteur.replace(/[.*+?^${}()|[\]\\>]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+    expect(dans(css, "@media (max-width: 1100px)", ".auxPortes")).toContain("order: -1;");
+    // Les blocs de la colonne se rangent alors dans la grille de la page, chacun à la place que la colonne
+    // leur donnait : une demi-ligne sur tablette, toute la largeur sur mobile.
+    expect(dans(page, "@media (max-width: 1100px)", ".colonne")).toContain("display: contents;");
+    expect(dans(page, "@media (max-width: 1100px)", ".colonne > *")).toContain("grid-column: 1 / span 6;");
+    expect(dans(page, "@media (max-width: 820px) {\n  .colonne > *", ".colonne > *")).toContain("grid-column: 1 / -1;");
   });
 });

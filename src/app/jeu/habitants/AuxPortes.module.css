@@ -1,0 +1,46 @@
+/*
+ * US-0332 : la partie « Aux portes » de la page Habitants, une ligne par Voyageur qui attend : son prénom,
+ * et dessous, en discret, depuis quand il attend.
+ */
+.voyageurs {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.voyageur {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+}
+
+.prenom {
+  font-weight: var(--graisse-titre);
+}
+
+.arrivee {
+  grid-row: 2;
+  color: var(--texte-discret);
+  font-size: 13px;
+}
+
+/* Quand personne n'attend. */
+.personne {
+  color: var(--texte-discret);
+}
+
+/*
+ * Sur ordinateur, en tête de la colonne, à côté de la liste. Dès que la colonne passe sous la liste, ses
+ * blocs se rangent dans la grille de la page (page.module.css) : celui-ci remonte au-dessus de la liste.
+ */
+@media (max-width: 1100px) {
+  .auxPortes {
+    order: -1;
+  }
+}
