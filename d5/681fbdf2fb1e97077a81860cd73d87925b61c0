@@ -1,0 +1,30 @@
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_403ae986e946ec 731
+  s_97a431cfa65ca7::t_2b81cf5be914e1 658
+  s_97a431cfa65ca7::t_d6774a8a625ce4 613-620,622
+  s_97a431cfa65ca7::t_71520ac150e73b 672-730,732-743
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_548dbf874011ed 311-340
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_5f9a2cd75eb2dc 65-66
+  s_97a431cfa65ca7::t_576939e31e35f4 79-82,84-85,88-94
+  s_97a431cfa65ca7::t_65ffb9d4d53c93 3
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_46c29bf6c66d4f 116-140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d5681fbdf2fb1e97077a81860cd73d87925b61c0",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
