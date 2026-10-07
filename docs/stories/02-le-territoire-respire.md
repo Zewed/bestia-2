@@ -218,6 +218,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0221 · Arrêter la production à la limite
 **En tant que** joueur, **je veux** qu'un stock arrivé à sa limite cesse de monter, **afin de** comprendre qu'il est temps de dépenser cette ressource.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Le calcul de production plafonne chaque Stock à sa limite et remet son reste exact à zéro : le surplus est perdu. Un Stock déjà à sa limite ne gagne plus rien, les autres continuent. Vérifié en vrai : 999,5 Bois s'arrêtent à 1 000 pile, et y restent après un saut d'un jour, pendant que la Viande gagne ses 192.
 - **Débloquée par** : US-0210, US-0220
 - **Critères d'acceptation** :
   - Un stock qui atteint sa limite s'arrête exactement à la limite, jamais au-dessus.

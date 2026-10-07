@@ -19,21 +19,29 @@ export const PRODUCTION_DU_TERRITOIRE = `
  * reçoit le nombre entier de millionièmes qu'elle contient (div, sans arrondi), et le reste de la
  * division, exact lui aussi, attend le calcul suivant. Mille rattrapages d'une minute donnent donc
  * exactement un rattrapage de mille minutes ; l'arrondi n'intervient qu'à l'affichage.
+ *
+ * US-0221 : un Stock s'arrête exactement à sa limite ; ce qui la dépasse est perdu, reste compris, et
+ * un Stock déjà à sa limite (ou au-dessus) ne gagne plus rien. Les autres continuent de monter.
  */
 export const PRODUIRE = `
   with p as (${PRODUCTION_DU_TERRITOIRE}),
   ajout as (
-    select s.ressource_id,
+    select s.ressource_id, s.quantite, s.limite,
       p.par_heure * (extract(epoch from ($3::timestamptz - $2::timestamptz)) * 1000000) + s.reste as total
     from stock s join p on p.ressource_id = s.ressource_id
-    where s.territoire_id = $1 and p.par_heure > 0
+    where s.territoire_id = $1 and p.par_heure > 0 and s.quantite < s.limite
+  ),
+  calcul as (
+    select ressource_id, quantite, limite, total, quantite + div(total, 3600) / 1000000 >= limite as plein,
+      least(limite, quantite + div(total, 3600) / 1000000) as nouvelle
+    from ajout
   )
   update stock s set
-    quantite = s.quantite + div(a.total, 3600) / 1000000,
-    produit_depuis_visite = s.produit_depuis_visite + div(a.total, 3600) / 1000000,
-    reste = a.total - div(a.total, 3600) * 3600
-  from ajout a
-  where s.territoire_id = $1 and s.ressource_id = a.ressource_id`;
+    quantite = c.nouvelle,
+    produit_depuis_visite = s.produit_depuis_visite + (c.nouvelle - c.quantite),
+    reste = case when c.plein then 0 else c.total - div(c.total, 3600) * 3600 end
+  from calcul c
+  where s.territoire_id = $1 and s.ressource_id = c.ressource_id`;
 
 /**
  * Ajoute aux Stocks du Territoire ce que toutes ses Cases produisent, chacune selon son Biome

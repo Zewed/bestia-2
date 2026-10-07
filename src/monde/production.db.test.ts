@@ -85,6 +85,24 @@ describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", (
     expect(viande.quantite).toBe((Math.floor((parHeure * 1000 * 1_000_000) / 60) / 1_000_000).toFixed(6));
   });
 
+  it("arrête un Stock exactement à sa limite, perd ce qui la dépasse, et laisse les autres monter (US-0221)", async () => {
+    const territoireId = await naitre();
+    const parHeure = await prairie();
+    // Le Bois à un rien de sa limite ; une heure de production le ferait déborder.
+    await pool.query("update stock set quantite = limite - 1, produit_depuis_visite = 0 where territoire_id = $1 and ressource_id = 'bois'", [territoireId]);
+    const limite = Number((await pool.query("select limite from stock where territoire_id = $1 and ressource_id = 'bois'", [territoireId])).rows[0].limite);
+    await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE) });
+    const apres = async () =>
+      (await pool.query("select ressource_id, quantite::float as q, reste::float as reste, produit_depuis_visite::float as produit from stock where territoire_id = $1", [territoireId])).rows;
+    const bois = (await apres()).find((s) => s.ressource_id === "bois");
+    expect(bois).toMatchObject({ q: limite, reste: 0, produit: 1 });
+    expect((await apres()).find((s) => s.ressource_id === "viande").q).toBe(parHeure.viande);
+    // Une heure de plus : le Bois ne bouge plus, la Viande continue.
+    await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE) });
+    expect((await apres()).find((s) => s.ressource_id === "bois")).toMatchObject({ q: limite, reste: 0, produit: 1 });
+    expect((await apres()).find((s) => s.ressource_id === "viande").q).toBe(parHeure.viande * 2);
+  });
+
   it("donne le même total en dix heures d'un coup qu'en dix rattrapages d'une heure", async () => {
     const dUnCoup = await naitre();
     const parPas = await naitre();
