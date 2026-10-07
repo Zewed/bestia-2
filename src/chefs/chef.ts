@@ -33,6 +33,21 @@ export async function nomInterdit(pool: Pool, nom: string): Promise<boolean> {
   return nomInterditPar(nom, rows);
 }
 
+/**
+ * US-0208 : le chef d'un nom dans le Monde du jeu, majuscules, accents et signes mis à part (comme
+ * pour les noms en double), avec son Territoire (null s'il n'en a pas encore) ; null si personne.
+ */
+export async function chefParNom(pool: Pool, saisie: string): Promise<{ nom: string; territoireId: number | null } | null> {
+  const cle = cleDuNom(nettoyerNom(saisie));
+  if (!cle) return null;
+  const { rows } = await pool.query<{ nom: string; territoireId: number | null }>(
+    `select ch.nom, t.id as "territoireId" from chef ch left join territoire t on t.chef_id = ch.id
+     where ch.monde_id = ${MONDE_DU_JEU} and ch.cle_nom = $1`,
+    [cle],
+  );
+  return rows[0] ?? null;
+}
+
 /** Si un Chef du Monde du jeu porte déjà ce nom, majuscules, accents et signes mis à part (US-0135). */
 export async function nomDejaPris(pool: Pool, nom: string): Promise<boolean> {
   const cle = cleDuNom(nom);

@@ -85,7 +85,23 @@ const COURONNE = {
   ],
 };
 
+const chefs = vi.hoisted(() => ({ chefParNom: vi.fn(async (): Promise<{ nom: string; territoireId: number | null } | null> => null) }));
+vi.mock("@/chefs/chef", () => chefs);
+const stocks = vi.hoisted(() => ({
+  stocksDuTerritoire: vi.fn(async () => [
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000" },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "1234.400000" },
+  ]),
+}));
+vi.mock("@/monde/stocks", () => stocks);
+const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
+vi.mock("@/temps/rattraper", () => temps);
+vi.mock("./actions", () => ({ fixerUnStock: vi.fn() }));
+
 import Controle from "./page";
+
+const ouvrir = (recherche: Record<string, string> = {}) =>
+  Controle({ params: Promise.resolve({}), searchParams: Promise.resolve(recherche) } as PageProps<"/controle">);
 
 const MOT_DE_PASSE = "mot-de-passe-d-essai";
 
@@ -99,12 +115,12 @@ describe("page de contrôle", () => {
   });
 
   it("répond « page introuvable » sans le mot de passe, même si le proxy était contourné", async () => {
-    await expect(Controle()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+    await expect(ouvrir()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
   });
 
   it("montre l'heure du jeu, la vitesse du temps et les derniers passages de la tâche", async () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Heure du jeu");
     expect(html).toContain("×1");
     expect(html).toContain("Vitesse normale.");
@@ -116,7 +132,7 @@ describe("page de contrôle", () => {
 
   it("liste les Biomes en base, avec leur nom, leur identifiant et les quatre formes de l'eau", async () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Biomes en base · 2");
     expect(html).toMatch(/Prairie<\/span> <code[^>]*>prairie<\/code>/);
     expect(html).toContain('aria-label="Les 4 formes : Eau"');
@@ -125,7 +141,7 @@ describe("page de contrôle", () => {
 
   it("montre chaque Espèce avec sa vignette, sa Rareté, son Rôle et toutes ses caractéristiques", async () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Espèces en base · 2");
     expect(html).toMatch(/srcSet="\/_next\/image\?url=%2Fillustrations%2Fespeces%2Fpoule\.webp/);
     expect(html).toContain('sizes="96px"');
@@ -138,7 +154,7 @@ describe("page de contrôle", () => {
 
   it("signale en couleur chaque champ vide, et met la tête de loup à la place d'une illustration absente", async () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     const essai = html.slice(html.indexOf("Bête d&#x27;essai"));
     // L'illustration, la masse, l'arme et la source : quatre champs vides.
     expect(essai.match(/class="[^"]*vide[^"]*"( title="[^"]*")?>vide</g)).toHaveLength(4);
@@ -150,7 +166,7 @@ describe("page de contrôle", () => {
 
   it("liste aussi les Raretés et les Rôles en base", async () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Raretés en base · 2");
     expect(html).toContain("rang 6 · ne s&#x27;élèvent pas");
     expect(html).toContain("Rôles en base · 1");
@@ -160,7 +176,7 @@ describe("page de contrôle", () => {
   it("montre la Couronne vue d'en haut, une forme par Biome, et la part de chacun (US-0151)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue(COURONNE);
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Couronne de Aube · 4 Cases");
     expect(html).toMatch(/<svg[^>]*aria-label="La Couronne de Aube, 4 Cases"/);
     expect(html.match(/<path data-biome="([a-z]+)"/g)).toEqual(['<path data-biome="prairie"', '<path data-biome="eau"']);
@@ -172,7 +188,7 @@ describe("page de contrôle", () => {
   it("marque d'un point chaque emplacement où un Foyer pourrait naître, et les compte (US-0152)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue(COURONNE);
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     // Trois prairies voisines : une seule peut accueillir un Foyer, les autres sont trop près.
     expect(html.match(/<circle /g)).toHaveLength(1);
     expect(html).toMatch(/Emplacements de Foyer<span[^>]*>1<\/span>/);
@@ -183,13 +199,13 @@ describe("page de contrôle", () => {
   it("dit comment préparer la Couronne quand elle n'est pas encore en base", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue({ monde: "Aube", cases: [] });
-    expect(renderToStaticMarkup(await Controle())).toContain("lancez npm run monde:couronne");
+    expect(renderToStaticMarkup(await ouvrir())).toContain("lancez npm run monde:couronne");
   });
 
   it("cercle chaque Case possédée, avec le nom de son chef au survol, et en tient compte pour les emplacements (US-0153)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue({ ...COURONNE, cases: COURONNE.cases.map((c, i) => (i === 0 ? { ...c, chef: "Ourse", foyer: true } : c)) });
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toMatch(/<path d="[^"]+"><title>Ourse<\/title><\/path>/);
     expect(html).toMatch(/Cases possédées<span[^>]*>1<\/span>/);
     expect(html).toMatch(/Foyers<span[^>]*>1<\/span>/);
@@ -200,14 +216,58 @@ describe("page de contrôle", () => {
   it("compte les Territoires suivis par le temps, et dit le retard du plus en retard (US-0156)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.territoiresSuivis.mockResolvedValueOnce({ nombre: 2, plusAncien: new Date(Date.now() - 3 * 60_000) });
-    const html = renderToStaticMarkup(await Controle());
+    const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("Territoires suivis par le temps");
     expect(html).toMatch(/Le plus en retard a été calculé il y a 3 min\./);
   });
 
   it("dit qu'il n'y a encore aucun Territoire", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
-    expect(renderToStaticMarkup(await Controle())).toContain("Aucun Territoire pour l&#x27;instant.");
+    expect(renderToStaticMarkup(await ouvrir())).toContain("Aucun Territoire pour l&#x27;instant.");
+  });
+
+  describe("stocks d'un joueur (US-0208)", () => {
+    const connecte = () => {
+      entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    };
+
+    it("montre ses Stocks exacts, après la mise à l'heure de son Territoire, avec de quoi les fixer", async () => {
+      connecte();
+      chefs.chefParNom.mockResolvedValueOnce({ nom: "Ourse Brune", territoireId: 12 });
+      temps.rattraper.mockClear();
+      const html = renderToStaticMarkup(await ouvrir({ chef: "ourse brune" }));
+      expect(chefs.chefParNom).toHaveBeenCalledWith(expect.anything(), "ourse brune");
+      expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+      expect(html).toContain("Ourse Brune · Territoire 12");
+      expect(html).toMatch(/<td>Viande<\/td><td>100<\/td>/);
+      expect(html).toMatch(/<td>Bois<\/td><td>1\u00a0234,4<\/td>/);
+      expect(html.match(/>Fixer<\/button>/g)).toHaveLength(2);
+    });
+
+    it("les montre sans pouvoir les fixer en production", async () => {
+      connecte();
+      vi.stubEnv("VERCEL_ENV", "production");
+      chefs.chefParNom.mockResolvedValueOnce({ nom: "Ourse Brune", territoireId: 12 });
+      const html = renderToStaticMarkup(await ouvrir({ chef: "Ourse Brune" }));
+      expect(html).toMatch(/<td>Bois<\/td><td>1\u00a0234,4<\/td>/);
+      expect(html).not.toContain("Fixer");
+    });
+
+    it("dit quand personne ne porte ce nom, ou quand le chef n'a pas encore de Territoire", async () => {
+      connecte();
+      chefs.chefParNom.mockResolvedValueOnce(null);
+      expect(renderToStaticMarkup(await ouvrir({ chef: "Personne" }))).toContain("Aucun chef de ce nom.");
+      chefs.chefParNom.mockResolvedValueOnce({ nom: "Lynx", territoireId: null });
+      expect(renderToStaticMarkup(await ouvrir({ chef: "Lynx" }))).toContain("Lynx n&#x27;a pas encore de Territoire.");
+    });
+
+    it("ne cherche personne sans nom", async () => {
+      connecte();
+      chefs.chefParNom.mockClear();
+      const html = renderToStaticMarkup(await ouvrir());
+      expect(chefs.chefParNom).not.toHaveBeenCalled();
+      expect(html).toMatch(/<input[^>]*name="chef"/);
+    });
   });
 });
 

@@ -1,10 +1,10 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
+import { chefDuCompte, chefParNom, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { stocksDuTerritoire } from "./stocks";
+import { fixerStock, stocksDuTerritoire } from "./stocks";
 
 describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", () => {
   let pool: Pool;
@@ -128,6 +128,24 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
       { id: "bois", nom: "Bois", famille: "materiaux", quantite: (Number((await auDepart())[2][1]) + 0.4).toFixed(6) },
       { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: (await auDepart())[3][1] },
     ]);
+  });
+
+  it("se fixent à la main, au millionième, en rendant l'ancienne et la nouvelle quantité (US-0208)", async () => {
+    const { territoireId } = await naitre();
+    const nom = (await pool.query("select ch.nom from chef ch join territoire t on t.chef_id = ch.id where t.id = $1", [territoireId])).rows[0].nom;
+    await pool.query("update stock set quantite = 100 where territoire_id = $1", [territoireId]);
+    expect(await fixerStock(pool, territoireId, "bois", "5000.1234567")).toEqual({ chef: nom, ressource: "Bois", avant: "100.000000", apres: "5000.123457" });
+    expect((await stocks(territoireId))[2]).toEqual(["bois", "5000.123457"]);
+    expect(await fixerStock(pool, territoireId, "or", "5")).toBeNull();
+    await expect(fixerStock(pool, territoireId, "bois", "-1")).rejects.toMatchObject({ constraint: "stock_jamais_negatif" });
+  });
+
+  it("retrouvent leur chef par son nom, majuscules, accents et signes mis à part (US-0208)", async () => {
+    const { territoireId } = await naitre();
+    const nom: string = (await pool.query("select ch.nom from chef ch join territoire t on t.chef_id = ch.id where t.id = $1", [territoireId])).rows[0].nom;
+    expect(await chefParNom(pool, `  ${nom.toUpperCase()} `)).toEqual({ nom, territoireId });
+    expect(await chefParNom(pool, "Personne Ici Zz")).toBeNull();
+    expect(await chefParNom(pool, "!!!")).toBeNull();
   });
 
   it("disparaissent avec leur Territoire", async () => {

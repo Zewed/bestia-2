@@ -278,3 +278,78 @@
   font-weight: var(--graisse-titre);
 }
 
+
+/* US-0208 : chercher un joueur par son nom de chef, puis fixer ses Stocks. */
+.recherche,
+.fixer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.recherche {
+  margin-bottom: 12px;
+}
+
+/* 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page à la saisie. */
+.champ {
+  width: 12em;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-moyen);
+  background: var(--bloc-2);
+  color: var(--encre);
+  font: inherit;
+  font-size: 16px;
+}
+
+.champ:focus-visible {
+  border-color: var(--encre);
+  background: var(--bloc);
+  outline: 2px solid var(--encre-douce);
+  outline-offset: 2px;
+}
+
+.champ[aria-invalid="true"] {
+  border-color: var(--rose-fonce);
+}
+
+.bouton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.bouton:hover {
+  background: var(--encre-survol);
+}
+
+.bouton:disabled {
+  cursor: progress;
+  opacity: 0.75;
+}
+
+.bouton:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.erreurChamp {
+  flex-basis: 100%;
+  color: var(--rose-fonce);
+  font-size: 13px;
+  white-space: normal;
+}
+
+.tableau caption {
+  padding-bottom: 6px;
+  text-align: left;
+}

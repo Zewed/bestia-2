@@ -19,3 +19,14 @@ export function quantiteAffichee(quantite: string | number): string {
   const abrege = enDixiemes < 100 ? dixiemes.format(enDixiemes / 10) : entiers.format(Math.floor(n / unite));
   return insecable(`${abrege} ${lettre}`);
 }
+
+/**
+ * Une quantité exacte, fractions comprises, pour la page de contrôle (US-0208) : la valeur en base,
+ * sans les zéros inutiles, à la française (1 234,4).
+ */
+export function quantiteExacte(quantite: string): string {
+  const [entiers, decimales = ""] = quantite.split(".");
+  const partieEntiere = insecable(BigInt(entiers).toLocaleString("fr-FR"));
+  const fraction = decimales.replace(/0+$/, "");
+  return fraction ? `${partieEntiere},${fraction}` : partieEntiere;
+}

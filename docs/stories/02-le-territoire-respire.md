@@ -79,11 +79,12 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0208 · Consulter et ajuster les stocks depuis la page de contrôle
 **En tant que** développeur, **je veux** voir et modifier les stocks d'un joueur depuis la page de contrôle interne, **afin de** tester chaque situation sans attendre.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Un bloc « Stocks d'un joueur » sur `/controle` : la recherche ignore majuscules, accents et signes, comme la règle des noms en double ; les Stocks sont lus après la mise à l'heure du Territoire, sans les zéros inutiles (1 234,4). Chaque ressource a un champ et un bouton « Fixer » (virgule ou point, nombre positif) ; le Territoire est mis à l'heure avant le changement, et le journal de Vercel note « Contrôle : Bois de Ourse Brune (Territoire 7) fixé de 100.000000 à 5000.500000. ».
 - **Débloquée par** : US-0201, Étape 3
 - **Critères d'acceptation** :
   - La page de contrôle retrouve un joueur par son nom de chef et montre ses quatre stocks exacts, fractions comprises.
   - Un développeur peut fixer la valeur d'un stock ; chaque changement est noté dans le journal.
-  - Cet outil existe en local et sur les prévisualisations ; sa présence en production (à décider).
+  - Cet outil existe en local et sur les prévisualisations ; en production, les stocks se consultent mais ne se modifient pas (décidé le 2026-10-07).
 
 ## Étape 11 · La production continue
 

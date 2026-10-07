@@ -5,17 +5,23 @@ import { connection } from "next/server";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { PastilleRarete } from "@/components/PastilleRarete";
+import { chefParNom } from "@/chefs/chef";
 import { motDePasseAccepte } from "@/controle/acces";
+import { stocksModifiables } from "@/controle/stocks";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
 import { couronneEnBase, territoiresSuivis } from "@/monde/en-base";
 import { emplacementsDeFoyers } from "@/monde/foyers";
+import { quantiteExacte } from "@/monde/quantite";
+import { stocksDuTerritoire } from "@/monde/stocks";
 import { JOURNAL_TACHE_JOURS } from "@/reglages";
 import { derniersPassages, type PassageNote } from "@/temps/absents";
 import { formaterInstant } from "@/temps/affichage";
 import { maintenant, vitesse } from "@/temps/horloge";
+import { rattraper } from "@/temps/rattraper";
 import { CarteCouronne } from "./CarteCouronne";
 import { FicheEspece } from "./FicheEspece";
+import { FixerStock } from "./FixerStock";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Contrôle", robots: { index: false, follow: false } };
@@ -23,7 +29,7 @@ export const metadata: Metadata = { title: "Contrôle", robots: { index: false, 
 const FUSEAU = "Europe/Paris";
 
 /** La page de contrôle interne (US-0034) : le temps du jeu et les données en base. Aucun lien n'y mène. */
-export default async function Controle() {
+export default async function Controle({ searchParams }: PageProps<"/controle">) {
   await connection();
   // Le proxy demande déjà le mot de passe ; la page vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) notFound();
@@ -38,6 +44,8 @@ export default async function Controle() {
     territoiresSuivis(pool),
   ]);
   const facteur = vitesse();
+  const { chef: cherche } = await searchParams;
+  const joueur = typeof cherche === "string" && cherche.trim() ? await stocksDuJoueur(cherche) : null;
 
   return (
     <main className={styles.page}>
@@ -58,6 +66,47 @@ export default async function Controle() {
               ? "Aucun Territoire pour l'instant."
               : `Le plus en retard a été calculé ${retard(maintenant().getTime() - territoires.plusAncien.getTime())}.`}
           </p>
+        </Bloc>
+        <Bloc titre="Stocks d'un joueur">
+          <form className={styles.recherche}>
+            <input id="chef" name="chef" defaultValue={typeof cherche === "string" ? cherche : ""} aria-label="Nom de chef" className={styles.champ} required />
+            <button type="submit" className={styles.bouton}>
+              Chercher
+            </button>
+          </form>
+          {joueur === null ? null : joueur.chef === null ? (
+            <p className={styles.note}>Aucun chef de ce nom.</p>
+          ) : joueur.stocks === null ? (
+            <p className={styles.note}>{joueur.chef.nom} n&apos;a pas encore de Territoire.</p>
+          ) : (
+            <div className={styles.defilement}>
+              <table className={styles.tableau}>
+                <caption className={styles.note}>
+                  {joueur.chef.nom} · Territoire {joueur.chef.territoireId}
+                </caption>
+                <thead>
+                  <tr>
+                    <th>Ressource</th>
+                    <th>Stock</th>
+                    {stocksModifiables() ? <th>Fixer à</th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {joueur.stocks.map((s) => (
+                    <tr key={s.id}>
+                      <td>{s.nom}</td>
+                      <td>{quantiteExacte(s.quantite)}</td>
+                      {stocksModifiables() ? (
+                        <td>
+                          <FixerStock territoireId={joueur.chef.territoireId!} ressourceId={s.id} nom={s.nom} />
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </Bloc>
         <Bloc titre="Derniers passages de la tâche planifiée">
           {passages.length === 0 ? (
@@ -157,6 +206,14 @@ export default async function Controle() {
       </Grille>
     </main>
   );
+}
+
+/** US-0208 : le chef cherché par son nom, et ses Stocks après la mise à l'heure de son Territoire. */
+async function stocksDuJoueur(nom: string) {
+  const chef = await chefParNom(getPool(), nom);
+  if (!chef || chef.territoireId === null) return { chef, stocks: null };
+  await rattraper("territoire", chef.territoireId);
+  return { chef, stocks: await stocksDuTerritoire(getPool(), chef.territoireId) };
 }
 
 function resultat(p: PassageNote): string {
