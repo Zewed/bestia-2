@@ -1,0 +1,31 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_bfdc26cbb737b8 93
+docs/stories/README.md
+  s_97a431cfa65ca7::t_cbbbf139c0c1af 7,17,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_492e27040ae63f 5
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_67ddfaea21e99d 363-365,372,375,377,383-384,393,397-431
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_6ede4e5c26df3b 9-10,18-23,28,45-47,73,79
+src/monde/mer.ts
+  s_97a431cfa65ca7::t_d9ac639d11a440 2-4,79-87
+src/monde/regions.ts
+  s_97a431cfa65ca7::t_840b275f0e70c5 14-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "08f61244430519d235232de9a6521e2448427d49",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
