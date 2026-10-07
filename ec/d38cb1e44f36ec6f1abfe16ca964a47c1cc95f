@@ -1,25 +1,46 @@
 src/app/jeu/habitants/AuxPortes.test.tsx
   s_97a431cfa65ca7::t_4a806ec8f046fa 13,54,92-93,95,148-186
   s_97a431cfa65ca7::t_05ff18744fa377 187-188
+  s_97a431cfa65ca7::t_b8018faf56d163 13
+  s_97a431cfa65ca7::t_0234e4ba60af67 54
+  s_97a431cfa65ca7::t_7d45086a815b73 92-93,95
+  s_97a431cfa65ca7::t_7d83699804d79c 148-188
 src/app/jeu/habitants/actions-aux-portes.db.test.ts
   s_97a431cfa65ca7::t_4a806ec8f046fa 17,19,93-131
+  s_97a431cfa65ca7::t_a64bddf32a8a23 93-131
+  s_97a431cfa65ca7::t_7096c1dbdfc3d9 17,19
 src/app/jeu/habitants/actions-aux-portes.test.ts
   s_97a431cfa65ca7::t_4a806ec8f046fa 6,11,16-22,24,34,37,39-40,42-45,48,50-61,63-64,71-72,79-80,85,87
+  s_97a431cfa65ca7::t_4d42747661537a 6,11,16-22,24,34,37,39-40,42-45,48,50-61,63-64,71-72,79-80,85,87
 src/app/jeu/habitants/AuxPortes.tsx
   s_97a431cfa65ca7::t_4a806ec8f046fa 7,38-39,54-55,58,79-80,83-84
   s_97a431cfa65ca7::t_38b3a52594028a 85
+  s_97a431cfa65ca7::t_b0b52315bc8500 54-55,58
+  s_97a431cfa65ca7::t_aee825ce83e9c7 38-39
+  s_97a431cfa65ca7::t_e396f6099bc488 79-80,83-84
+  s_97a431cfa65ca7::t_3bc3e05f3223cc 7
+  s_97a431cfa65ca7::t_bfbcd7fd761946 85
 src/app/jeu/habitants/actions-aux-portes.ts
   s_97a431cfa65ca7::t_4a806ec8f046fa 7,32-42
   s_97a431cfa65ca7::t_ef6a9d7d77bc65 43-44
+  s_97a431cfa65ca7::t_927446fa07ec2c 32-44
+  s_97a431cfa65ca7::t_f30a68cd90897e 7
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_4a806ec8f046fa 19,367-445,447
   s_97a431cfa65ca7::t_ff598c0fdeb38a 446,448
+  s_97a431cfa65ca7::t_85d66583b031b4 367-388,397,403-406,409,412,415,417-448
+  s_97a431cfa65ca7::t_5504d9e5f533d4 389-396,398-402,407-408,410-411,413-414,416
+  s_97a431cfa65ca7::t_a69a737efdeb10 19
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_4a806ec8f046fa 138-148
+  s_97a431cfa65ca7::t_68088286823894 138-148
 src/app/jeu/habitants/AuxPortes.module.css
   s_97a431cfa65ca7::t_4a806ec8f046fa 51-53,58,62-63,75-85,90-93,96-97
+  s_97a431cfa65ca7::t_690061e6cb70a4 51-53,58,62-63,75-85,90-93,96-97
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_4a806ec8f046fa 605-609,659,661-662
+  s_97a431cfa65ca7::t_9e5e172f056110 659,661-662
+  s_97a431cfa65ca7::t_b2fc083f172f9f 605-609
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_a03865b29ab790 379
 docs/stories/README.md
