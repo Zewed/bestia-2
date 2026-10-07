@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { rattraperLesAbsents } from "@/temps/absents";
+import { noterLaPresence, recapitulatifDAbsence } from "./absence";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
@@ -63,4 +64,31 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
     await Promise.all([1, 2, 3].map(() => rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 2) })));
     expect(await stocks(territoireId)).toEqual(await nFois(2));
   });
+
+  describe("le récapitulatif de ce que le Foyer a produit pendant l'absence (US-0216)", () => {
+    it("compte ce qui est produit depuis la dernière visite, et le donne après deux heures d'absence au moins", async () => {
+      const { territoireId, ne } = await naitre();
+      await noterLaPresence(pool, territoireId, ne);
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 1) });
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 1))).toEqual([]);
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 3) });
+      const gains = await recapitulatifDAbsence(pool, territoireId, apres(ne, 3));
+      const attendus = (await nFois(3)).filter((p) => Number(p.quantite) >= 1);
+      expect(gains.map((g) => [g.id, g.gain])).toEqual(
+        ["viande", "vegetaux", "bois", "pierre"].flatMap((id) => attendus.filter((a) => a.id === id).map((a) => [a.id, a.quantite])),
+      );
+    });
+
+    it("repart de zéro quand le joueur revient, et ne dit rien avant sa première visite notée", async () => {
+      const { territoireId, ne } = await naitre();
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 5) });
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 5))).toEqual([]);
+      await noterLaPresence(pool, territoireId, apres(ne, 5));
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 8) });
+      expect((await recapitulatifDAbsence(pool, territoireId, apres(ne, 8))).length).toBeGreaterThan(0);
+      await noterLaPresence(pool, territoireId, apres(ne, 8));
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 11))).toEqual([]);
+    });
+  });
 });
+

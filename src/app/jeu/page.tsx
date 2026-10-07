@@ -5,8 +5,11 @@ import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
 import { getPool } from "@/db";
+import { recapitulatifDAbsence } from "@/monde/absence";
 import { foyerDuTerritoire } from "@/monde/territoire";
+import { maintenant } from "@/temps/horloge";
 import styles from "./page.module.css";
+import { RecapAbsence } from "./RecapAbsence";
 
 export const metadata: Metadata = { title: "Foyer" };
 
@@ -16,14 +19,15 @@ export const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hu
 /**
  * L'écran du Foyer (US-0157) : la hutte du chef en grand, et le Biome du Foyer posé dessus. Rien
  * d'autre : le nom du chef est dans la barre du haut, et rien ne mène à une fonction qui n'existe
- * pas encore (US-0163). Sans session, la garde mène à la connexion ;
- * sans nom de chef, à son choix.
+ * pas encore (US-0163) ; seulement, au retour d'une absence, ce que le Foyer a produit entre-temps
+ * (US-0216). Sans session, la garde mène à la connexion ; sans nom de chef, à son choix.
  */
 export default async function Foyer() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu");
   const foyer = territoireId === null ? null : await foyerDuTerritoire(getPool(), territoireId);
+  const gains = territoireId === null ? [] : await recapitulatifDAbsence(getPool(), territoireId, maintenant());
   return (
     <main className={styles.page}>
       <section className={styles.foyer}>
@@ -34,6 +38,7 @@ export default async function Foyer() {
           prioritaire
           className={styles.remplir}
         />
+        <RecapAbsence gains={gains} />
         <h1 className={styles.legende}>{foyer ? `Foyer · ${foyer.biome.nom.toLocaleLowerCase("fr")}` : "Foyer"}</h1>
       </section>
     </main>

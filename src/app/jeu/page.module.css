@@ -33,6 +33,30 @@
   line-height: 1.15;
 }
 
+/* US-0216 : ce que le Foyer a produit pendant l'absence, posé en haut de l'illustration ; un toucher le ferme. */
+.recap {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+  max-width: calc(100% - 32px);
+  padding: 10px 14px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-moyen);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  text-align: left;
+  cursor: pointer;
+}
+
+.recap:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* Mobile : l'image plus haute que large, recadrée autour de la hutte. */
 @media (max-width: 820px) {
   .page {

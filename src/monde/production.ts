@@ -16,11 +16,13 @@ export const PRODUCTION_DU_TERRITOIRE = `
 /**
  * Ajoute aux Stocks du Territoire ce que toutes ses Cases produisent, chacune selon son Biome
  * (donnees/biomes.yaml), au prorata du temps écoulé : trente minutes donnent la moitié d'une heure.
- * Le Foyer produit comme une Case ordinaire ; une Ressource que rien ne produit ne bouge pas.
+ * Le Foyer produit comme une Case ordinaire ; une Ressource que rien ne produit ne bouge pas. Ce qui
+ * est produit est aussi compté à part depuis la dernière visite du joueur (US-0216).
  */
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
   await client.query(
-    `update stock s set quantite = s.quantite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600
+    `update stock s set quantite = s.quantite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600,
+       produit_depuis_visite = s.produit_depuis_visite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600
      from (${PRODUCTION_DU_TERRITOIRE}) p
      where s.territoire_id = $1 and s.ressource_id = p.ressource_id and p.par_heure > 0`,
     [territoireId, depuis, jusqua],

@@ -400,6 +400,8 @@ export const territoire = pgTable("territoire", {
   calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
   /** US-0158 : quand le récit d'arrivée a été montré ; null tant qu'il ne l'a pas été. Il ne l'est qu'une fois. */
   recitLuLe: timestamp("recit_lu_le", { withTimezone: true }),
+  /** US-0216 : la dernière fois que le joueur avait une page du jeu ouverte ; null avant sa première visite notée. */
+  vuLe: timestamp("vu_le", { withTimezone: true }),
 });
 
 /**
@@ -417,6 +419,8 @@ export const stock = pgTable(
       .notNull()
       .references(() => ressource.id),
     quantite: numeric("quantite", { precision: 24, scale: 6 }).notNull().default("0"),
+    /** US-0216 : ce que le Territoire a produit de cette Ressource depuis la dernière visite du joueur. */
+    produitDepuisVisite: numeric("produit_depuis_visite", { precision: 24, scale: 6 }).notNull().default("0"),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
 );

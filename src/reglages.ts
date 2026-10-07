@@ -73,3 +73,5 @@ export const TAILLE_DES_REGIONS = 16;
 export const ABREGER_A_PARTIR_DE = 100_000;
 /** US-0213 : page ouverte, la barre du haut se recale sur les quantités exactes du jeu toutes les 5 minutes. */
 export const RECALER_LA_BARRE_MINUTES = 5;
+/** US-0216 : après au moins 2 heures d'absence, le Foyer résume ce qu'il a produit entre-temps. */
+export const RECAP_ABSENCE_HEURES = 2;

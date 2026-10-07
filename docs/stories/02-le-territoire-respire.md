@@ -165,9 +165,10 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0216 · Résumer ce que le Foyer a produit pendant l'absence
 **En tant que** joueur, **je veux** un court récapitulatif de ce que mon Foyer a produit depuis ma dernière visite, **afin de** mesurer ce que j'ai gagné en mon absence.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). La production est aussi comptée à part depuis la dernière visite (`stock.produit_depuis_visite`). Le message se pose en haut de l'illustration du Foyer. La présence (`territoire.vu_le`) est notée par le navigateur une fois la page affichée, puis à chaque recalage de la barre : une page ouverte compte comme une présence, et un calcul de page en double ne perd pas le message. Vérifié en vrai : après dix heures simulées, « Pendant votre absence : +80 Viande, +140 Végétaux, +40 Bois » (la Pierre, à 0,4, n'y est pas), puis plus rien après un toucher ou au rechargement.
 - **Débloquée par** : US-0211
 - **Critères d'acceptation** :
-  - Après une absence d'au moins (chiffre à régler) heures, un message « Pendant votre absence : +40 Viande, +25 Végétaux… » s'affiche à l'arrivée.
+  - Après une absence d'au moins 2 heures (provisoire, `RECAP_ABSENCE_HEURES`), un message « Pendant votre absence : +40 Viande, +25 Végétaux… » s'affiche à l'arrivée.
   - Les ressources qui n'ont pas bougé n'y figurent pas.
   - Le message ne s'affiche qu'une fois par retour et se ferme d'un toucher.
 

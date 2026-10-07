@@ -13,6 +13,8 @@ const chefs = vi.hoisted(() => ({
 vi.mock("@/chefs/chef", () => chefs);
 const territoire = vi.hoisted(() => ({ foyerDuTerritoire: vi.fn(async () => ({ biome: { id: "prairie", nom: "Prairie" } })) }));
 vi.mock("@/monde/territoire", () => territoire);
+const absence = vi.hoisted(() => ({ recapitulatifDAbsence: vi.fn(async (): Promise<{ id: string; nom: string; gain: string }[]> => []) }));
+vi.mock("@/monde/absence", () => absence);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -52,6 +54,17 @@ describe("écran du Foyer (US-0157)", () => {
     const html = renderToStaticMarkup(await Foyer());
     expect(html).not.toMatch(/<(a|button|form|nav|input|select)[ >]/);
     expect(html.match(/<(img|h1)[ >]/g)).toEqual(["<img ", "<h1 "]);
+  });
+
+  it("pose sur l'illustration ce que le Foyer a produit pendant l'absence (US-0216)", async () => {
+    connecte();
+    absence.recapitulatifDAbsence.mockResolvedValueOnce([
+      { id: "viande", nom: "Viande", gain: "40.250000" },
+      { id: "vegetaux", nom: "Végétaux", gain: "25.000000" },
+    ]);
+    const html = renderToStaticMarkup(await Foyer());
+    expect(absence.recapitulatifDAbsence).toHaveBeenCalledWith(expect.anything(), 12, expect.any(Date));
+    expect(html).toMatch(/<button[^>]*>Pendant votre absence : \+40 Viande, \+25 Végétaux<\/button>/);
   });
 
   it("montre « Foyer » seul pour un chef toujours sans Foyer (Monde complet)", async () => {
