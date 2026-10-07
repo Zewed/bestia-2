@@ -185,6 +185,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0218 · Tester la production en vitesse accélérée
 **En tant que** développeur, **je veux** vérifier la production avec le temps accéléré, **afin de** valider des heures de production en quelques minutes.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot), avec US-0038 (le saut dans le temps, reporté jusque-là). Tests sur base : à ×100, 36 secondes réelles ajoutent une heure de production ; un saut d'un jour en ajoute exactement 24. La production affichée (« +4/h ») reste en heures de jeu, et la barre monte à la vitesse du jeu (US-0213). Vérifié en vrai : « +1 jour » fait passer l'heure du jeu du 7 au 8 octobre, et les Stocks d'Ourse Brune gagnent 192 Viande, 336 Végétaux, 96 Bois et 96 Pierre.
 - **Débloquée par** : US-0210, Étape 3
 - **Critères d'acceptation** :
   - À ×100, une production de +12 Bois/h ajoute 12 Bois toutes les 36 secondes réelles.

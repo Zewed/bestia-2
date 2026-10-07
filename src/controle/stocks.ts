@@ -1,7 +1,11 @@
 // US-0208 : ajuster les Stocks d'un joueur depuis la page de contrôle, pour tester sans attendre.
 
-/** En production, les Stocks se consultent mais ne se modifient pas (décidé le 2026-10-07). */
-export function stocksModifiables(env: Record<string, string | undefined> = process.env): boolean {
+/**
+ * En production, les Stocks se consultent mais ne se modifient pas (décidé le 2026-10-07), et le
+ * temps ne se saute pas (US-0038) : les outils qui changent le jeu n'existent qu'en local et sur
+ * les prévisualisations.
+ */
+export function modificationsPermises(env: Record<string, string | undefined> = process.env): boolean {
   return env.VERCEL_ENV !== "production";
 }
 

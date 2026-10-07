@@ -12,8 +12,10 @@ const stocks = vi.hoisted(() => ({ fixerStock: vi.fn() }));
 vi.mock("@/monde/stocks", () => stocks);
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => (ordre.push("rattrapage"), new Date())) }));
 vi.mock("@/temps/rattraper", () => temps);
+const saut = vi.hoisted(() => ({ SAUTS: { heure: 3_600_000, jour: 86_400_000, semaine: 604_800_000 }, sauterDansLeTemps: vi.fn(async () => ({ facteur: 1, reel: 0, jeu: 0 })) }));
+vi.mock("@/temps/sauter", () => saut);
 
-import { fixerUnStock } from "./actions";
+import { fixerUnStock, sauter } from "./actions";
 
 const MOT_DE_PASSE = "mot-de-passe-d-essai";
 const formulaire = (champs: Record<string, string>) => {
@@ -75,3 +77,36 @@ describe("fixer un Stock depuis la page de contrôle (US-0208)", () => {
     expect(temps.rattraper).not.toHaveBeenCalled();
   });
 });
+
+describe("sauter dans le temps depuis la page de contrôle (US-0038)", () => {
+  beforeEach(() => {
+    vi.stubEnv("CONTROLE_MOT_DE_PASSE", MOT_DE_PASSE);
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    saut.sauterDansLeTemps.mockClear();
+    cache.refresh.mockClear();
+  });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+  });
+  const sauterDe = (duree: string) => sauter(formulaire({ saut: duree }));
+
+  it("avance l'heure du jeu de la durée choisie, le note dans le journal et rafraîchit la page", async () => {
+    const journal = vi.spyOn(console, "info").mockImplementation(() => {});
+    await sauterDe("jour");
+    expect(saut.sauterDansLeTemps).toHaveBeenCalledWith({}, 86_400_000);
+    expect(journal).toHaveBeenCalledWith(expect.stringContaining("saut dans le temps d'une journée"));
+    expect(cache.refresh).toHaveBeenCalled();
+  });
+
+  it("ne saute ni d'une durée inconnue, ni sans le mot de passe, ni en production", async () => {
+    await sauterDe("siecle");
+    entetes.authorization = null;
+    await sauterDe("heure");
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    vi.stubEnv("VERCEL_ENV", "production");
+    await sauterDe("heure");
+    expect(saut.sauterDansLeTemps).not.toHaveBeenCalled();
+  });
+});
+

@@ -7,7 +7,7 @@ import { Grille } from "@/components/Grille";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { chefParNom } from "@/chefs/chef";
 import { motDePasseAccepte } from "@/controle/acces";
-import { stocksModifiables } from "@/controle/stocks";
+import { modificationsPermises } from "@/controle/stocks";
 import { getPool } from "@/db";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "@/donnees/en-base";
 import { couronneEnBase, territoiresSuivis } from "@/monde/en-base";
@@ -21,6 +21,7 @@ import { maintenant, vitesse } from "@/temps/horloge";
 import { rattraper } from "@/temps/rattraper";
 import { CarteCouronne } from "./CarteCouronne";
 import { FicheEspece } from "./FicheEspece";
+import { sauter } from "./actions";
 import { FixerStock } from "./FixerStock";
 import styles from "./page.module.css";
 
@@ -54,6 +55,20 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
         <Bloc titre="Heure du jeu" largeur={6}>
           <p className={styles.valeur}>{formaterInstant(maintenant(), FUSEAU)}</p>
           <p className={styles.note}>Heure de Paris.</p>
+          {/* US-0038 : un saut dans le temps, hors production. */}
+          {modificationsPermises() ? (
+            <form action={sauter} className={styles.sauts}>
+              <button type="submit" name="saut" value="heure" className={styles.bouton}>
+                +1 heure
+              </button>
+              <button type="submit" name="saut" value="jour" className={styles.bouton}>
+                +1 jour
+              </button>
+              <button type="submit" name="saut" value="semaine" className={styles.bouton}>
+                +1 semaine
+              </button>
+            </form>
+          ) : null}
         </Bloc>
         <Bloc titre="Vitesse du temps" largeur={6} teinte={facteur === 1 ? undefined : "citron"}>
           <p className={styles.valeur}>×{facteur}</p>
@@ -88,7 +103,7 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
                   <tr>
                     <th>Ressource</th>
                     <th>Stock</th>
-                    {stocksModifiables() ? <th>Fixer à</th> : null}
+                    {modificationsPermises() ? <th>Fixer à</th> : null}
                   </tr>
                 </thead>
                 <tbody>
@@ -96,7 +111,7 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
                     <tr key={s.id}>
                       <td>{s.nom}</td>
                       <td>{quantiteExacte(s.quantite)}</td>
-                      {stocksModifiables() ? (
+                      {modificationsPermises() ? (
                         <td>
                           <FixerStock territoireId={joueur.chef.territoireId!} ressourceId={s.id} nom={s.nom} />
                         </td>

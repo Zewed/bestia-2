@@ -353,3 +353,11 @@
   padding-bottom: 6px;
   text-align: left;
 }
+
+/* US-0038 : les sauts dans le temps, sous l'heure du jeu. */
+.sauts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}

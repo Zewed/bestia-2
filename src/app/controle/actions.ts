@@ -3,10 +3,11 @@
 import { refresh } from "next/cache";
 import { headers } from "next/headers";
 import { motDePasseAccepte } from "@/controle/acces";
-import { lireQuantite, stocksModifiables } from "@/controle/stocks";
+import { lireQuantite, modificationsPermises } from "@/controle/stocks";
 import { getPool } from "@/db";
 import { fixerStock } from "@/monde/stocks";
 import { rattraper } from "@/temps/rattraper";
+import { SAUTS, sauterDansLeTemps, type Saut } from "@/temps/sauter";
 
 export type EtatFixation = { erreur: string | null };
 
@@ -18,7 +19,7 @@ export type EtatFixation = { erreur: string | null };
 export async function fixerUnStock(_avant: EtatFixation, donnees: FormData): Promise<EtatFixation> {
   // Le proxy demande déjà le mot de passe ; l'action vérifie à nouveau, au cas où il serait contourné.
   if (!motDePasseAccepte((await headers()).get("authorization"))) return { erreur: "Accès refusé." };
-  if (!stocksModifiables()) return { erreur: "Les stocks ne se modifient pas en production." };
+  if (!modificationsPermises()) return { erreur: "Les stocks ne se modifient pas en production." };
   const territoireId = Number(donnees.get("territoire"));
   const ressourceId = String(donnees.get("ressource") ?? "");
   const quantite = lireQuantite(String(donnees.get("quantite") ?? ""));
@@ -30,4 +31,15 @@ export async function fixerUnStock(_avant: EtatFixation, donnees: FormData): Pro
   console.info(`Contrôle : ${fixe.ressource} de ${fixe.chef} (Territoire ${territoireId}) fixé de ${fixe.avant} à ${fixe.apres}.`);
   refresh();
   return { erreur: null };
+}
+
+/** US-0038 : avance l'heure du jeu d'une heure, d'un jour ou d'une semaine, hors production. */
+export async function sauter(donnees: FormData): Promise<void> {
+  if (!motDePasseAccepte((await headers()).get("authorization"))) return;
+  if (!modificationsPermises()) return;
+  const saut = String(donnees.get("saut") ?? "");
+  if (!(saut in SAUTS)) return;
+  const ancre = await sauterDansLeTemps(getPool(), SAUTS[saut as Saut]);
+  console.info(`Contrôle : saut dans le temps d'une ${saut === "jour" ? "journée" : saut}, l'heure du jeu est maintenant ${new Date(ancre.jeu).toISOString()}.`);
+  refresh();
 }

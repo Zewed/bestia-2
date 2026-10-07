@@ -107,7 +107,7 @@ const stocks = vi.hoisted(() => ({
 vi.mock("@/monde/stocks", () => stocks);
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
-vi.mock("./actions", () => ({ fixerUnStock: vi.fn() }));
+vi.mock("./actions", () => ({ fixerUnStock: vi.fn(), sauter: vi.fn() }));
 
 import Controle from "./page";
 
@@ -285,6 +285,18 @@ describe("page de contrôle", () => {
     entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
     const html = renderToStaticMarkup(await ouvrir());
     expect(html).toContain("8 Viande · 14,5 Végétaux · 4 Bois · 0 Pierre par heure");
+  });
+
+  it("propose de sauter d'une heure, d'un jour ou d'une semaine, sauf en production (US-0038)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const boutons = (html: string) => [...html.matchAll(/<button(?=[^>]*name="saut")[^>]*value="([a-z]+)"[^>]*>([^<]+)<\/button>/g)].map((m) => [m[1], m[2]]);
+    expect(boutons(renderToStaticMarkup(await ouvrir()))).toEqual([
+      ["heure", "+1 heure"],
+      ["jour", "+1 jour"],
+      ["semaine", "+1 semaine"],
+    ]);
+    vi.stubEnv("VERCEL_ENV", "production");
+    expect(boutons(renderToStaticMarkup(await ouvrir()))).toEqual([]);
   });
 });
 

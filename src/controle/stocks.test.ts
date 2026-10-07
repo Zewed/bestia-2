@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lireQuantite, stocksModifiables } from "./stocks";
+import { lireQuantite, modificationsPermises } from "./stocks";
 
 describe("ajuster un Stock depuis la page de contrôle (US-0208)", () => {
   it.each([
@@ -17,8 +17,8 @@ describe("ajuster un Stock depuis la page de contrôle (US-0208)", () => {
   });
 
   it("se modifie en local et sur les prévisualisations, jamais en production", () => {
-    expect(stocksModifiables({})).toBe(true);
-    expect(stocksModifiables({ VERCEL_ENV: "preview" })).toBe(true);
-    expect(stocksModifiables({ VERCEL_ENV: "production" })).toBe(false);
+    expect(modificationsPermises({})).toBe(true);
+    expect(modificationsPermises({ VERCEL_ENV: "preview" })).toBe(true);
+    expect(modificationsPermises({ VERCEL_ENV: "production" })).toBe(false);
   });
 });

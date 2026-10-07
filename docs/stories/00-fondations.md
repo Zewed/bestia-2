@@ -366,7 +366,7 @@ Rien de visible pour le joueur, mais tout le reste en dépend : le jeu est en li
 ### US-0038 · Faire un saut dans le temps en développement
 **En tant que** développeur, **je veux** avancer l'heure du jeu d'un bloc depuis la page de contrôle, **afin de** tester une longue absence sans attendre.
 
-- **Statut** : Reportée : utile quand il y aura de vraies Récoltes à tester.
+- **Statut** : Livrée le 2026-10-07 (autopilot), reprise pour US-0218 maintenant que le Foyer produit. Trois boutons sous l'heure du jeu de `/controle` : « +1 heure », « +1 jour », « +1 semaine ». Le saut déplace l'ancre de l'horloge en base et dans le serveur, à la même vitesse ; un autre serveur déjà démarré le retrouve à son prochain démarrage. Chaque saut est noté dans le journal. Ni les boutons ni l'action n'existent en production.
 - **Débloquée par** : US-0031, US-0034
 - **Critères d'acceptation** :
   - Un bouton avance l'heure du jeu d'une durée choisie : une heure, un jour, une semaine.
