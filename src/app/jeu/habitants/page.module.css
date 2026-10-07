@@ -92,6 +92,21 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0318 : l'Entretien, à côté de la liste sur ordinateur, à sa propre hauteur ; le total en gras. */
+.entretien {
+  align-self: start;
+}
+
+.ligneEntretien {
+  color: var(--texte-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.totalEntretien {
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+}
+
 /* US-0306 : sur mobile, une seule colonne dans la largeur de l'écran, sans défilement de côté. */
 @media (max-width: 820px), (max-height: 500px) {
   .page {

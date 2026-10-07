@@ -187,6 +187,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0318 · Voir l'Entretien des Habitants
 **En tant que** joueur, **je veux** voir combien de Nourriture mes Habitants mangent par heure, **afin de** connaître ce que mon Territoire doit produire.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Un bloc « Entretien » à côté de la liste (dessous sur mobile) : « 3 Habitants × 2 Nourriture = **6 Nourriture par heure** ». Le total vient de la requête même où le calcul du jeu le prélève, relue à chaque affichage. Vérifié en vrai sur ordinateur et à 320 px.
 - **Débloquée par** : US-0316
 - **Critères d'acceptation** :
   - La page Habitants affiche l'Entretien total par heure.

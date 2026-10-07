@@ -8,9 +8,12 @@ import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
-import { PLACES_DU_FOYER } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
+import { lireMarquePage } from "@/temps/marque-page";
+import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
+import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
+import { stocksDuTerritoire } from "./stocks";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
 function nommerLesHabitantsDejaLa(): string {
@@ -20,7 +23,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0318, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -194,5 +197,46 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, s
     expect(await placesDuTerritoire(pool, tb)).toBe(PLACES_DU_FOYER);
     // Sans Territoire, aucune place.
     expect(await placesDuTerritoire(pool, -1)).toBe(0);
+  });
+
+  /** L'Entretien lu pour la page, son total en nombre. */
+  const entretien = async (territoireId: number) => {
+    const lu = await entretienDesHabitants(pool, territoireId);
+    return { ...lu, parHeure: Number(lu.parHeure) };
+  };
+
+  it("rend l'Entretien des Habitants, et le suit à chaque arrivée et à chaque départ, avec ou sans Métier (US-0318)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    const e = ENTRETIEN_HABITANT_PAR_HEURE;
+    expect(await entretien(ta)).toEqual({ habitants: 3, parHabitant: e, parHeure: 3 * e });
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Arno', null), ($1, 'Dara', 'chasseur')", [ta]);
+    expect(await entretien(ta)).toEqual({ habitants: 5, parHabitant: e, parHeure: 5 * e });
+    await pool.query("delete from habitant where id in (select id from habitant where territoire_id = $1 order by id limit 4)", [ta]);
+    expect(await entretien(ta)).toEqual({ habitants: 1, parHabitant: e, parHeure: e });
+    expect(await entretien(tb)).toEqual({ habitants: 3, parHabitant: e, parHeure: 3 * e });
+    expect(await entretien(-1)).toEqual({ habitants: 0, parHabitant: e, parHeure: 0 });
+  });
+
+  it("rend l'Entretien même que le calcul du jeu prélève chaque heure sur la Nourriture (US-0318)", async () => {
+    const compte = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno')", [t]);
+    const lu = await entretien(t);
+    expect(lu).toMatchObject({ habitants: 4, parHeure: 4 * ENTRETIEN_HABITANT_PAR_HEURE });
+    // Une heure de jeu, la Nourriture loin de zéro comme de sa limite : elle baisse de l'Entretien affiché, sa production ajoutée.
+    await pool.query("update stock set quantite = 100, reste = 0, plein_depuis = null where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')", [t]);
+    const nourriture = async () => (await stocksDuTerritoire(pool, t)).filter((s) => s.famille === "nourriture");
+    const avant = await nourriture();
+    expect(avant).toHaveLength(2);
+    const production = avant.reduce((somme, s) => somme + Number(s.parHeure), 0);
+    const debut = await lireMarquePage(pool, "territoire", t);
+    await rattraper("territoire", t, { pool, jusqua: new Date(debut.getTime() + 3_600_000) });
+    const apres = (await nourriture()).reduce((somme, s) => somme + Number(s.quantite), 0);
+    expect(apres).toBeCloseTo(200 + production - lu.parHeure, 6);
   });
 });

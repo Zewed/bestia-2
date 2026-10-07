@@ -19,6 +19,7 @@ const UN_HABITANT = { metier: null, arriveLe: new Date("2026-10-07T08:00:00Z"), 
 const habitants = vi.hoisted(() => ({
   habitantsDuTerritoire: vi.fn(async (): Promise<Habitant[]> => []),
   placesDuTerritoire: vi.fn(async (): Promise<number> => 0),
+  entretienDesHabitants: vi.fn(async (): Promise<{ habitants: number; parHabitant: number; parHeure: string }> => ({ habitants: 0, parHabitant: 2, parHeure: "0" })),
 }));
 vi.mock("@/monde/habitants", () => habitants);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
@@ -27,25 +28,32 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
     cookie.jetonDeSession.mockReset();
     habitants.habitantsDuTerritoire.mockReset();
     habitants.placesDuTerritoire.mockReset();
+    habitants.entretienDesHabitants.mockReset();
   });
 
-  /** Un joueur connecté, ses `nombre` Habitants, et la place de son Territoire : 5 par défaut, celle du Foyer. */
+  /**
+   * Un joueur connecté, ses `nombre` Habitants, la place de son Territoire (5 par défaut, celle du Foyer)
+   * et leur Entretien, 2 Nourriture par heure chacun.
+   */
   const connecte = (nombre = 3, places = 5) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
     habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, prenom: PRENOMS[i % 3], ...UN_HABITANT })));
     habitants.placesDuTerritoire.mockResolvedValue(places);
+    habitants.entretienDesHabitants.mockResolvedValue({ habitants: nombre, parHabitant: 2, parHeure: String(2 * nombre) });
   };
   /** Le texte de chaque ligne d'Habitant, ses morceaux séparés par « · ». */
   const lignes = (html: string) =>
     [...html.matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
+  /** US-0318 : la ligne du bloc Entretien, telle qu'on la lit. */
+  const ligneEntretien = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>(.*?)<\/p><\/section>/)?.[1].replace(/<[^>]+>/g, "");
 
   it("titre la page « Habitants », dans l'onglet comme sur la page", async () => {
     connecte();
@@ -127,6 +135,9 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306)", () => {
       "Habitants",
       "3 Habitants sur 5 places",
       ...PRENOMS.flatMap((prenom) => [prenom, "sans Métier", "libre"]),
+      "Entretien",
+      "3 Habitants × 2 Nourriture = ",
+      "6 Nourriture par heure",
     ]);
     expect(html).not.toMatch(/<(a|button|form|input|select)[ >]/);
   });
@@ -158,6 +169,37 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306)", () => {
     connecte(5, 5);
     const html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(/<section[^>]*><div[^>]*><p[^>]*>5 Habitants sur 5 places<\/p><p[^>]*>Plus de place<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){5}<\/ul><\/section>/);
+  });
+
+  it("affiche l'Entretien total par heure, détaillé en une ligne : « 3 Habitants × 2 Nourriture = 6 Nourriture par heure » (US-0318)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(habitants.entretienDesHabitants).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(ligneEntretien(html)).toBe("3 Habitants × 2 Nourriture = 6 Nourriture par heure");
+    // Le total ressort de la ligne.
+    expect(html).toMatch(/= <strong[^>]*>6 Nourriture par heure<\/strong><\/p>/);
+  });
+
+  it("met l'Entretien à côté de la liste sur ordinateur, dessous sur mobile, dans un bloc à lui (US-0318)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><section[^>]*--largeur:4[^>]*><h2[^>]*>Entretien<\/h2>/);
+  });
+
+  it("relit l'Entretien à chaque affichage : il suit chaque arrivée et chaque départ (US-0318)", async () => {
+    connecte(4);
+    expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("4 Habitants × 2 Nourriture = 8 Nourriture par heure");
+    connecte(1);
+    expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("1 Habitant × 2 Nourriture = 2 Nourriture par heure");
+    connecte(0);
+    expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("0 Habitant × 2 Nourriture = 0 Nourriture par heure");
+    expect(habitants.entretienDesHabitants).toHaveBeenCalledTimes(3);
+  });
+
+  it("montre le total que rend la lecture, celle du calcul, exact et à la française (US-0318)", async () => {
+    connecte();
+    habitants.entretienDesHabitants.mockResolvedValue({ habitants: 3, parHabitant: 1.5, parHeure: "4.500000" });
+    expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("3 Habitants × 1,5 Nourriture = 4,5 Nourriture par heure");
   });
 });
 

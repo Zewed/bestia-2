@@ -1,7 +1,8 @@
 // Les Habitants d'un Territoire tels que le jeu les montre. Côté serveur uniquement.
 import "server-only";
 import type { Pool } from "pg";
-import { PLACES_DU_FOYER } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
+import { ENTRETIEN_DU_TERRITOIRE } from "./production";
 
 /**
  * Ce que fait un Habitant (US-0303). À ce stade, il est toujours libre : au Foyer et disponible.
@@ -39,4 +40,24 @@ const SOURCES_DE_PLACE = `
 export async function placesDuTerritoire(pool: Pool, territoireId: number): Promise<number> {
   const { rows } = await pool.query<{ places: number }>(`select coalesce(sum(places), 0)::int as places from (${SOURCES_DE_PLACE}) source`, [territoireId]);
   return rows[0].places;
+}
+
+/**
+ * US-0318 : l'Entretien des Habitants tel que la page le détaille : leur nombre, l'Entretien de chacun
+ * et le total, en Nourriture par heure (numeric de Postgres, en texte).
+ */
+export type EntretienDesHabitants = { habitants: number; parHabitant: number; parHeure: string };
+
+/**
+ * US-0318 : l'Entretien des Habitants du Territoire, lu à chaque affichage. Le total vient de
+ * ENTRETIEN_DU_TERRITOIRE, la requête même d'où le calcul du jeu le prélève (US-0316) : la page montre
+ * exactement ce que le calcul prend.
+ */
+export async function entretienDesHabitants(pool: Pool, territoireId: number): Promise<EntretienDesHabitants> {
+  const { rows } = await pool.query<{ habitants: number; parHeure: string }>(
+    `select (select count(*)::int from habitant where territoire_id = $1) as habitants, entretien.par_heure::text as "parHeure"
+     from (${ENTRETIEN_DU_TERRITOIRE}) entretien`,
+    [territoireId],
+  );
+  return { habitants: rows[0].habitants, parHabitant: ENTRETIEN_HABITANT_PAR_HEURE, parHeure: rows[0].parHeure };
 }
