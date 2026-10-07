@@ -3,31 +3,49 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_ae1d9d4a705701 33
 src/temps/avancer.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 23-29,44-46,53-55,66,74-81,83-96
+  s_97a431cfa65ca7::t_f654767ad7e645 53-55
+  s_97a431cfa65ca7::t_7e8313432c586f 23-29,44-46,66,74-81,83-96
 src/temps/regles.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 2-3,7,13
+  s_97a431cfa65ca7::t_f0cc8c1a95cc05 2-3,7,13
 src/db/schema.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 498-516
+  s_97a431cfa65ca7::t_aa257d016b524a 498-516
 drizzle/0038_voyageurs.sql
   s_97a431cfa65ca7::t_196c7a5b7f3472 1-33
+  s_97a431cfa65ca7::t_aa257d016b524a 1-8
+  s_97a431cfa65ca7::t_9afe32abe7cb4a 9-33
 src/monde/voyageurs.test.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 1-56
+  s_97a431cfa65ca7::t_0ea0173ac297f1 55
+  s_97a431cfa65ca7::t_30f14215f84112 1-54
+  s_97a431cfa65ca7::t_4a8bfa3ea50bce 56
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 1-242
+  s_97a431cfa65ca7::t_a16ff819617ed1 1-208,212-217,220-242
+  s_97a431cfa65ca7::t_2c9a417d15a89b 209-211,218-219
 src/temps/synchroniser-horloge.db.test.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 7-8,339-441
   s_97a431cfa65ca7::t_c851d2021da681 442-443
+  s_97a431cfa65ca7::t_8441eb5524dcde 339-443
+  s_97a431cfa65ca7::t_50fe55f8aea4fb 7-8
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_ae1d9d4a705701 325,328,330
 src/temps/avancer.db.test.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 110-182
+  s_97a431cfa65ca7::t_d16000af1bb201 110-182
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 1-57
+  s_97a431cfa65ca7::t_4837cdaad476eb 1-57
 src/reglages.ts
   s_97a431cfa65ca7::t_196c7a5b7f3472 93-102
+  s_97a431cfa65ca7::t_6087cb354c38d3 93-102
 drizzle/meta/0038_snapshot.json
   s_97a431cfa65ca7::t_3cb133c731e75f 1-2242
+  s_97a431cfa65ca7::t_7107a0ea04941a 1-2242
 drizzle/meta/_journal.json
   s_97a431cfa65ca7::t_58ef0ea46927e1 270-276
+  s_97a431cfa65ca7::t_14225dcd358999 270-276
 ---
 {
   "schema_version": "authorship/3.0.0",
