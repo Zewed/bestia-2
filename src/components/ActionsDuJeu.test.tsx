@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const garde = vi.hoisted(() => ({
   joueurConnecte: vi.fn(),
   stocksALHeure: vi.fn(async () => [
-    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000" },
-    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "1999.800000" },
-    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "12500.400000" },
-    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "0.999999" },
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000" },
+    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "1999.800000", parHeure: "14.000000" },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "12500.400000", parHeure: "4.000000" },
+    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "0.999999", parHeure: "4.000000" },
   ]),
 }));
 vi.mock("@/comptes/garde", () => garde);

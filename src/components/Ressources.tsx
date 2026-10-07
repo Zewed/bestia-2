@@ -2,13 +2,13 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { quantiteAffichee } from "@/monde/quantite";
+import { productionAffichee, productionHoraire, quantiteAffichee } from "@/monde/quantite";
 import styles from "./BarreHaut.module.css";
 
 type Famille = "nourriture" | "materiaux";
 
-/** Ce que la barre montre d'un Stock : la Ressource, sa famille et sa quantité exacte, en texte. */
-export type RessourceDeLaBarre = { id: string; nom: string; famille: Famille; quantite: string };
+/** Ce que la barre montre d'un Stock : la Ressource, sa famille, sa quantité exacte et sa production horaire, en texte. */
+export type RessourceDeLaBarre = { id: string; nom: string; famille: Famille; quantite: string; parHeure: string };
 
 /** US-0205 : les deux groupes de Ressources, sous les mots du glossaire. */
 const NOM_DE_FAMILLE: Record<Famille, string> = { nourriture: "Nourriture", materiaux: "Matériaux" };
@@ -64,6 +64,11 @@ export function Ressources({ stocks }: { stocks: RessourceDeLaBarre[] }) {
                 <Image src={iconeDeRessource(stock.id)} alt={stock.nom} width={22} height={22} className={styles.icone} />
                 {/* Une espace entre le nom et la quantité, pour qu'un lecteur d'écran dise « Pierre 42 ». */}{" "}
                 <span className={styles.quantite}>{quantiteAffichee(stock.quantite)}</span>
+                {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. */}
+                <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
+                  <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
+                  <span className={styles.annonce}>, {productionHoraire(stock.parHeure)} par heure</span>
+                </span>
               </button>
               {/* Le nom et le groupe sont déjà dits par l'icône et la liste : la bulle ne sert qu'aux yeux. */}
               <span className={styles.bulle} aria-hidden="true">

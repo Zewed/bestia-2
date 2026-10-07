@@ -6,6 +6,7 @@ import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { produire } from "./production";
+import { stocksDuTerritoire } from "./stocks";
 
 describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", () => {
   let pool: Pool;
@@ -51,6 +52,14 @@ describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", (
     await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE / 2) });
     const parHeure = await prairie();
     expect(await stocks(territoireId)).toEqual({ viande: parHeure.viande / 2, vegetaux: parHeure.vegetaux / 2, bois: parHeure.bois / 2, pierre: parHeure.pierre / 2 });
+  });
+
+  it("affiche exactement la production horaire qu'utilise le calcul (US-0212)", async () => {
+    const territoireId = await naitre();
+    const affichee = Object.fromEntries((await stocksDuTerritoire(pool, territoireId)).map((s) => [s.id, Number(s.parHeure)]));
+    await rattraper("territoire", territoireId, { pool, jusqua: await dans(territoireId, HEURE) });
+    expect(await stocks(territoireId)).toEqual(affichee);
+    expect(affichee).toEqual(await prairie());
   });
 
   it("donne le même total en dix heures d'un coup qu'en dix rattrapages d'une heure", async () => {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { quantiteAffichee, quantiteExacte } from "./quantite";
+import { productionAffichee, quantiteAffichee, quantiteExacte } from "./quantite";
 
 describe("quantité affichée (US-0203)", () => {
   it.each([
@@ -34,5 +34,14 @@ describe("quantité affichée (US-0203)", () => {
     ["123456789.120000", "123\u00a0456\u00a0789,12"],
   ])("%s se lit exactement « %s » sur la page de contrôle (US-0208)", (quantite, lue) => {
     expect(quantiteExacte(quantite)).toBe(lue);
+  });
+
+  it.each([
+    ["8.000000", "+8/h"],
+    ["14.560000", "+14,5/h"],
+    ["0.000000", "+0/h"],
+    ["12345.670000", "+12\u00a0345,6/h"],
+  ])("la production %s s'affiche « %s » (US-0212)", (parHeure, affichee) => {
+    expect(productionAffichee(parHeure)).toBe(affichee);
   });
 });

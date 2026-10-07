@@ -1,14 +1,20 @@
 // Les Stocks d'un Territoire (US-0201), tels qu'ils sont en base.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
+import { PRODUCTION_DU_TERRITOIRE } from "./production";
 
-/** Le Stock d'une Ressource, avec sa famille (US-0205) et sa quantité exacte, fractions comprises, en texte (numeric de Postgres). */
-export type Stock = { id: string; nom: string; famille: "nourriture" | "materiaux"; quantite: string };
+/**
+ * Le Stock d'une Ressource, avec sa famille (US-0205), sa quantité exacte, fractions comprises, et ce
+ * que le Territoire en produit par heure (US-0212), en texte (numeric de Postgres).
+ */
+export type Stock = { id: string; nom: string; famille: "nourriture" | "materiaux"; quantite: string; parHeure: string };
 
 /** Les quatre Stocks du Territoire, dans l'ordre des Ressources : Viande, Végétaux, Bois, Pierre. */
 export async function stocksDuTerritoire(base: Pool | PoolClient, territoireId: number): Promise<Stock[]> {
   const { rows } = await base.query<Stock>(
-    `select r.id, r.nom, r.famille, s.quantite from stock s join ressource r on r.id = s.ressource_id
+    `select r.id, r.nom, r.famille, s.quantite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure"
+     from stock s join ressource r on r.id = s.ressource_id
+       left join (${PRODUCTION_DU_TERRITOIRE}) p on p.ressource_id = s.ressource_id
      where s.territoire_id = $1 order by r.ordre`,
     [territoireId],
   );

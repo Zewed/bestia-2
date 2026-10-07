@@ -3,6 +3,17 @@ import "server-only";
 import type { PoolClient } from "pg";
 
 /**
+ * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
+ * chacune selon son Biome. La même requête sert au calcul et à l'affichage (US-0212).
+ */
+export const PRODUCTION_DU_TERRITOIRE = `
+  select pb.ressource_id, sum(pb.par_heure) as par_heure
+  from territoire t join case_du_monde c on c.chef_id = t.chef_id
+    join production_biome pb on pb.biome_id = c.biome_id
+  where t.id = $1
+  group by pb.ressource_id`;
+
+/**
  * Ajoute aux Stocks du Territoire ce que toutes ses Cases produisent, chacune selon son Biome
  * (donnees/biomes.yaml), au prorata du temps écoulé : trente minutes donnent la moitié d'une heure.
  * Le Foyer produit comme une Case ordinaire ; une Ressource que rien ne produit ne bouge pas.
@@ -10,13 +21,7 @@ import type { PoolClient } from "pg";
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
   await client.query(
     `update stock s set quantite = s.quantite + p.par_heure * extract(epoch from ($3::timestamptz - $2::timestamptz)) / 3600
-     from (
-       select pb.ressource_id, sum(pb.par_heure) as par_heure
-       from territoire t join case_du_monde c on c.chef_id = t.chef_id
-         join production_biome pb on pb.biome_id = c.biome_id
-       where t.id = $1
-       group by pb.ressource_id
-     ) p
+     from (${PRODUCTION_DU_TERRITOIRE}) p
      where s.territoire_id = $1 and s.ressource_id = p.ressource_id and p.par_heure > 0`,
     [territoireId, depuis, jusqua],
   );

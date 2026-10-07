@@ -122,7 +122,7 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
   it("se lisent dans l'ordre des Ressources, avec leur nom, leur famille (US-0205) et leur quantité exacte (US-0203)", async () => {
     const { territoireId } = await naitre();
     await ajouter(territoireId, "bois", "0.4");
-    expect(await stocksDuTerritoire(pool, territoireId)).toEqual([
+    expect((await stocksDuTerritoire(pool, territoireId)).map((s) => ({ id: s.id, nom: s.nom, famille: s.famille, quantite: s.quantite }))).toEqual([
       { id: "viande", nom: "Viande", famille: "nourriture", quantite: (await auDepart())[0][1] },
       { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: (await auDepart())[1][1] },
       { id: "bois", nom: "Bois", famille: "materiaux", quantite: (Number((await auDepart())[2][1]) + 0.4).toFixed(6) },

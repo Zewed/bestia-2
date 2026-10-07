@@ -208,6 +208,34 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* US-0212 : la production horaire, à côté de la quantité, seulement là où la barre a la place. */
+.production {
+  display: none;
+  color: var(--sur-encre-pale);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.production[data-nulle] {
+  color: var(--sur-encre-eteint);
+}
+
+@media (min-width: 1100px) {
+  .production {
+    display: inline;
+  }
+}
+
+/* Un texte pour les lecteurs d'écran seulement. */
+.annonce {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Le nom de la ressource et de son groupe, dans une bulle sous elle : au survol, au clavier ou au toucher. */
 .bulle {
   position: absolute;

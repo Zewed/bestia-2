@@ -123,6 +123,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0212 · Voir la production horaire de chaque ressource
 **En tant que** joueur, **je veux** voir combien je gagne par heure pour chaque ressource, **afin de** prévoir quand j'aurai de quoi agir.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). « +8/h » s'affiche en petit à droite de chaque quantité, arrondi vers le bas au dixième, à partir de 1 100 px de large (en dessous, la place manque : la bulle d'US-0214 et US-0215 la donnera) ; une production nulle est plus pâle. L'affichage et le calcul lisent la même requête (`PRODUCTION_DU_TERRITOIRE`). Un lecteur d'écran entend « Viande 104, 8 par heure ».
 - **Débloquée par** : US-0203, US-0210
 - **Critères d'acceptation** :
   - Sur ordinateur, la production horaire s'affiche près de chaque quantité : « +12/h ».

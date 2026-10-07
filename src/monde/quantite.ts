@@ -30,3 +30,11 @@ export function quantiteExacte(quantite: string): string {
   const fraction = decimales.replace(/0+$/, "");
   return fraction ? `${partieEntiere},${fraction}` : partieEntiere;
 }
+
+/** US-0212 : une production horaire, arrondie vers le bas au dixième : « 14,5 ». */
+export function productionHoraire(parHeure: string | number): string {
+  return insecable(dixiemes.format(Math.floor(Number(parHeure) * 10) / 10));
+}
+
+/** US-0212 : la production horaire telle que la barre l'affiche : « +14,5/h ». */
+export const productionAffichee = (parHeure: string | number) => `+${productionHoraire(parHeure)}/h`;
