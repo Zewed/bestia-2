@@ -2,14 +2,26 @@ docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_b0a84bf7798351 190
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_7c05e39c5fe8b3 95-109
+  s_97a431cfa65ca7::t_8041bbf995202a 95-109
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_c61e3400ac4a50 22,31,38,41-44,50,55-56,138-140,173-203
+  s_97a431cfa65ca7::t_17c4ecd940b29a 138-140
+  s_97a431cfa65ca7::t_4acd00fa3d81e6 173-203
+  s_97a431cfa65ca7::t_f33bc7d3b325a5 31
+  s_97a431cfa65ca7::t_95cf597ec90bd3 22
+  s_97a431cfa65ca7::t_1e5e3e6dbf0ab4 38,41-44,50,55-56
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_864010fa9bb449 7,9-10,25-34,38-40,46,49,54-77,79
+  s_97a431cfa65ca7::t_e8c41c8c8fabc3 7,9-10,25-34,38-40,46,49,54-77,79
 src/monde/habitants.db.test.ts
   s_97a431cfa65ca7::t_7fd6dab3f1a79b 11-13,15-16,26,201-241
+  s_97a431cfa65ca7::t_6789ccd800bac1 201-241
+  s_97a431cfa65ca7::t_0c8f28f5f7d683 11-13,15-16
+  s_97a431cfa65ca7::t_54f303e85ed940 26
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_b9184545c6a8ca 4-5,44-63
+  s_97a431cfa65ca7::t_bc3ed39a62f8e7 44-63
+  s_97a431cfa65ca7::t_0f561016defcd5 4-5
 ---
 {
   "schema_version": "authorship/3.0.0",
