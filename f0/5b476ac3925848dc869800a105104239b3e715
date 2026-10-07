@@ -1,13 +1,19 @@
 src/reglages.ts
   s_97a431cfa65ca7::t_37878ae597b5c5 57-59,122-127
+  s_97a431cfa65ca7::t_7ad63897de6bf4 57-59,122-127
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_37878ae597b5c5 2,5,148-172
   s_97a431cfa65ca7::t_81d84a400cf6cb 173
+  s_97a431cfa65ca7::t_a5e071e0b4d5c7 2,5,148-172
+  s_97a431cfa65ca7::t_5ef56f3b6979d3 173
 src/monde/preparer-couronne.db.test.ts
   s_97a431cfa65ca7::t_37878ae597b5c5 5,8-9,149-164
   s_97a431cfa65ca7::t_e49e9a61f5dae8 165
+  s_97a431cfa65ca7::t_00bf50bec01350 5,8-9,149-164
+  s_97a431cfa65ca7::t_31a38353b25e49 165
 src/monde/foyers.test.ts
   s_97a431cfa65ca7::t_37878ae597b5c5 2,29,32
+  s_97a431cfa65ca7::t_00bf50bec01350 2,29,32
 docs/stories/04-la-carte-du-monde.md
   s_97a431cfa65ca7::t_cba4342778e528 42,45,47
 docs/stories/README.md
