@@ -495,3 +495,22 @@ export const recit = pgTable(
   },
   (t) => [index("recit_par_territoire").on(t.territoireId, t.survenuLe)],
 );
+
+/**
+ * Un Voyageur (US-0331) : un humain de passage qui attend aux portes du Territoire. Il se présente de temps
+ * en temps (événement arrivee_voyageur, src/monde/voyageurs.ts), avec un prénom tiré comme ceux des
+ * Habitants ; pour l'instant, il attend sans fin.
+ */
+export const voyageur = pgTable(
+  "voyageur",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    prenom: text("prenom").notNull(),
+    /** L'heure du jeu où il s'est présenté. */
+    arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull(),
+  },
+  (t) => [index("voyageur_par_territoire").on(t.territoireId)],
+);

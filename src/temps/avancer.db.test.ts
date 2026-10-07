@@ -107,4 +107,77 @@ describe.skipIf(!URL_TEST)("mécanisme unique du temps (sur base)", () => {
     const { rows } = await pool.query("select traite_le from evenement where id = $1", [evenement]);
     expect(rows[0].traite_le).toBeNull();
   });
+
+  describe("un événement qui en programme un autre (US-0331 : une arrivée programme la suivante)", () => {
+    // « relancer » relève son instant et programme le suivant trois heures plus tard, sur le même élément ;
+    // il programme aussi, au même instant, un « noter » sur un autre élément, qui n'a pas à suivre.
+    function relances(autre: number) {
+      const essai = compteurDEssai();
+      const regles: Regles = {
+        ...essai.regles,
+        evenements: {
+          ...essai.regles.evenements,
+          relancer: async (client, id, evenement) => {
+            await essai.regles.evenements!.noter(client, id, evenement);
+            const suivant = new Date(evenement.survientLe.getTime() + 3 * 3_600_000);
+            await programmerEvenement(client, "monde", id, suivant, "relancer");
+            await programmerEvenement(client, "monde", autre, suivant, "noter");
+          },
+        },
+      };
+      return { ...essai, regles };
+    }
+    const instants = async (id: number) =>
+      (await pool.query<{ type: string; survient_le: Date; traite_le: Date | null }>(
+        "select type, survient_le, traite_le from evenement where element = 'monde' and element_id = $1 order by survient_le, id",
+        [id],
+      )).rows.map((e) => [e.type, duree(T0, e.survient_le), e.traite_le && duree(T0, e.traite_le)]);
+
+    it("l'applique dans la même avancée, à son instant exact et à son rang parmi les autres", async () => {
+      const autre = await mondeDEssai();
+      const { releves, regles } = relances(autre);
+      const id = await mondeDEssai();
+      await programmerEvenement(pool, "monde", id, heures(1), "relancer");
+      await programmerEvenement(pool, "monde", id, heures(5), "noter");
+
+      const resultat = await avancer(pool, "monde", id, regles, heures(10));
+      expect(resultat?.evenements).toBe(5);
+      // Relancé à 1 h, puis à 4 h, avant le relevé de 5 h déjà programmé, puis à 7 h et à 10 h, la fin comprise.
+      expect(releves.filter((r) => r.id === id).map((r) => [r.heure, Math.round(r.stock)])).toEqual([
+        [1, 10],
+        [4, 40],
+        [5, 50],
+        [7, 70],
+        [10, 100],
+      ]);
+      expect(await instants(id)).toEqual([
+        ["relancer", 1, 1],
+        ["relancer", 4, 4],
+        ["noter", 5, 5],
+        ["relancer", 7, 7],
+        ["relancer", 10, 10],
+        ["relancer", 13, null],
+      ]);
+      // Ce qui est programmé sur un autre élément attend que celui-ci avance à son tour.
+      expect(releves.filter((r) => r.id === autre)).toEqual([]);
+      expect((await instants(autre)).map(([, , traite]) => traite)).toEqual([null, null, null, null]);
+    });
+
+    it("donne la même suite en une avancée qu'en avançant d'heure en heure", async () => {
+      const autre = await mondeDEssai();
+      const dUnCoup = relances(autre);
+      const parHeure = relances(autre);
+      const [a, b] = [await mondeDEssai(), await mondeDEssai()];
+      for (const id of [a, b]) await programmerEvenement(pool, "monde", id, heures(1), "relancer");
+
+      await avancer(pool, "monde", a, dUnCoup.regles, heures(10));
+      for (let h = 1; h <= 10; h++) await avancer(pool, "monde", b, parHeure.regles, heures(h));
+
+      expect(dUnCoup.releves.map((r) => r.heure)).toEqual([1, 4, 7, 10]);
+      expect(parHeure.releves.map((r) => r.heure)).toEqual([1, 4, 7, 10]);
+      expect(dUnCoup.stock.get(a)).toBeCloseTo(100, 9);
+      expect(parHeure.stock.get(b)).toBeCloseTo(100, 9);
+      expect(await instants(a)).toEqual(await instants(b));
+    });
+  });
 });

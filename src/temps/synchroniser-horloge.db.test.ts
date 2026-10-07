@@ -4,7 +4,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { stocksDuTerritoire } from "@/monde/stocks";
-import { ENTRETIEN_HABITANT_PAR_HEURE } from "@/reglages";
+import { ecartAvantVoyageur } from "@/monde/voyageurs";
+import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { definirAncre, maintenant } from "./horloge";
@@ -333,6 +334,111 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
       expect(fin.vegetaux.plein).toBeNull();
       expect(fin.bois.q).toBe(fin.bois.limite);
       expect(fin.pierre.q).toBe((123.456789 + 24 * p.pierre).toFixed(6));
+    }, 60_000);
+  });
+
+  describe("les Voyageurs en temps accéléré (US-0331)", () => {
+    const lancement = `voyageurs-vite-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let numero = 0;
+    const HEURE = 60 * MINUTE;
+    const JOUR = 24 * HEURE;
+
+    /** Un Foyer né à l'heure du jeu. */
+    const naitre = async () => {
+      const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+      expect(await enregistrerNomDeChef(pool, compte.id, `Voya${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
+      return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    };
+    /** Les arrivées prévues sans base, de la naissance `ne` jusqu'à `jusqua` compris : numéro et instant de jeu. */
+    const prevues = (territoireId: number, ne: number, jusqua: number) => {
+      const liste: number[][] = [];
+      let instant = ne + ecartAvantVoyageur(territoireId, 1);
+      while (instant <= jusqua) {
+        liste.push([liste.length + 1, instant]);
+        instant += ecartAvantVoyageur(territoireId, liste.length + 1);
+      }
+      return liste;
+    };
+    /** Les arrivées traitées du Territoire, numéro et instant de jeu, et les instants de jeu où ses Voyageurs se sont présentés. */
+    const arrivees = async (territoireId: number) => ({
+      traitees: (
+        await pool.query<{ numero: number; traite_le: Date }>(
+          `select (donnees->>'numero')::int as numero, traite_le from evenement
+           where element = 'territoire' and element_id = $1 and type = 'arrivee_voyageur' and traite_le is not null order by traite_le, id`,
+          [territoireId],
+        )
+      ).rows.map((e) => [e.numero, e.traite_le.getTime()]),
+      venus: (await pool.query<{ arrive_le: Date }>("select arrive_le from voyageur where territoire_id = $1 order by arrive_le, id", [territoireId])).rows.map((v) =>
+        v.arrive_le.getTime(),
+      ),
+    });
+    /** Ce que le Territoire né à R0 doit avoir vu arriver au bout d'une journée de jeu. */
+    const uneJournee = (territoireId: number) => {
+      const traitees = prevues(territoireId, R0, R0 + JOUR);
+      return { traitees, venus: traitees.slice(0, VOYAGEURS_EN_ATTENTE_MAX).map(([, instant]) => instant) };
+    };
+
+    beforeAll(async () => {
+      await preparerMondeDeTest(pool);
+    });
+    afterAll(async () => {
+      await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    });
+
+    it("à ×100, le premier Voyageur se présente cent fois plus tôt en temps réel, à son instant de jeu exact", async () => {
+      await synchroniserHorloge(pool, 100);
+      const territoireId = await naitre();
+      expect(await lireMarquePage(pool, "territoire", territoireId)).toEqual(new Date(R0));
+      const ecart = ecartAvantVoyageur(territoireId, 1);
+
+      // Une seconde réelle avant (cent secondes de jeu) : personne encore.
+      vi.setSystemTime(R0 + Math.floor(ecart / 100) - 1000);
+      await rattraper("territoire", territoireId, { pool });
+      expect((await arrivees(territoireId)).venus).toEqual([]);
+
+      // Une seconde réelle après : il s'est présenté à l'instant de jeu prévu.
+      vi.setSystemTime(R0 + Math.floor(ecart / 100) + 1000);
+      await rattraper("territoire", territoireId, { pool });
+      expect(await arrivees(territoireId)).toEqual({ traitees: [[1, R0 + ecart]], venus: [R0 + ecart] });
+    });
+
+    it("à ×100, une journée de jeu (864 secondes réelles) donne les arrivées prévues, comme une journée réelle à vitesse normale", async () => {
+      // Une journée réelle, à vitesse normale : la page ouverte toutes les trois heures, la tâche planifiée entre deux.
+      await synchroniserHorloge(pool, 1);
+      const normal = await naitre();
+      for (const h of [3, 6, 9, 10.5, 12, 15, 16, 18, 21]) {
+        vi.setSystemTime(R0 + h * HEURE);
+        if (h % 3) expect(await rattraperLesAbsents({ pool, parmi: { territoire: [normal] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+        else await rattraper("territoire", normal, { pool });
+      }
+      vi.setSystemTime(R0 + JOUR);
+      await rattraper("territoire", normal, { pool });
+
+      // La même journée à ×100, sur une horloge neuve partie du même instant : la page ouverte toutes les 37 secondes
+      // réelles, la tâche planifiée deux fois entre deux.
+      await pool.query("delete from horloge");
+      definirAncre(null);
+      vi.setSystemTime(R0);
+      await synchroniserHorloge(pool, 100);
+      const accelere = await naitre();
+      for (let s = 37; s < 864; s += 37) {
+        vi.setSystemTime(R0 + s * 1000);
+        await rattraper("territoire", accelere, { pool });
+        if (s === 296 || s === 592) {
+          vi.setSystemTime(R0 + (s + 18) * 1000);
+          expect(await rattraperLesAbsents({ pool, parmi: { territoire: [accelere] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+        }
+      }
+      vi.setSystemTime(R0 + JOUR / 100);
+      await rattraper("territoire", accelere, { pool });
+
+      for (const territoireId of [normal, accelere]) {
+        expect(await lireMarquePage(pool, "territoire", territoireId)).toEqual(new Date(R0 + JOUR));
+        // Chaque arrivée traitée à son instant de jeu, chaque Voyageur venu au sien, rien de perdu ni d'inventé.
+        expect(await arrivees(territoireId)).toEqual(uneJournee(territoireId));
+        // Une journée de jeu voit passer au moins deux arrivées, de quatre à douze heures d'écart.
+        expect(uneJournee(territoireId).traitees.length).toBeGreaterThanOrEqual(2);
+      }
     }, 60_000);
   });
 });

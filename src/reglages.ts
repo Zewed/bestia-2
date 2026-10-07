@@ -90,3 +90,13 @@ export const ENTRETIEN_HABITANT_PAR_HEURE = 2;
  * l'instant la seule source de place du Territoire ; les huttes en ajouteront à l'étape 25.
  */
 export const PLACES_DU_FOYER = 5;
+
+/**
+ * US-0331 : un Voyageur se présente en moyenne toutes les 8 heures de jeu (valeur provisoire, à régler en
+ * jouant), à des moments irréguliers : l'écart entre deux arrivées va de la moitié à une fois et demie la
+ * moyenne. La base tire la première arrivée d'un Territoire avec la même moyenne (fonction
+ * ecart_avant_voyageur) : la changer demande une migration qui la change aussi.
+ */
+export const VOYAGEUR_TOUTES_LES_HEURES = 8;
+/** US-0331 : au plus 3 Voyageurs attendent aux portes en même temps (valeur provisoire, à régler en jouant). */
+export const VOYAGEURS_EN_ATTENTE_MAX = 3;

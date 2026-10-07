@@ -322,11 +322,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0331 · Voir arriver des Voyageurs de temps en temps
 **En tant que** joueur, **je veux** qu'un Voyageur se présente de temps en temps à mes portes, **afin de** voir mon Territoire grandir.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Chaque arrivée est un événement daté du Territoire : à son instant, un Voyageur se présente (prénom tiré comme ceux des Habitants) s'il en attend moins de trois, sinon personne ne vient ; puis l'arrivée suivante est programmée. L'écart entre deux arrivées va de 4 à 12 h de jeu, tiré par un hachage du Territoire et du numéro d'arrivée : la même suite quel que soit le découpage du rattrapage. Le mécanisme du temps applique désormais, dans la même avancée, un événement programmé en chemin. Un Territoire naît avec sa première arrivée programmée ; ceux qui existaient l'ont reçue à la mise en ligne, comptée depuis elle. Rien de visible encore : les Voyageurs aux portes viennent avec US-0332. Vérifié en vrai en base de dev.
 - **Débloquée par** : US-0305
 - **Critères d'acceptation** :
-  - Un Voyageur arrive en moyenne toutes les (chiffre à régler) heures, à des moments irréguliers.
+  - Un Voyageur arrive en moyenne toutes les 8 heures (provisoire, `VOYAGEUR_TOUTES_LES_HEURES`), à des moments irréguliers.
   - Les arrivées sont calculées aussi pendant l'absence du joueur, sans en perdre ni en inventer au rattrapage.
-  - Au plus (chiffre à régler) Voyageurs attendent en même temps ; au-delà, aucun nouveau ne se présente.
+  - Au plus 3 Voyageurs (provisoire, `VOYAGEURS_EN_ATTENTE_MAX`) attendent en même temps ; au-delà, aucun nouveau ne se présente.
   - En vitesse accélérée, les arrivées suivent le même rythme, cent fois plus vite.
 
 ### US-0332 · Voir les Voyageurs qui attendent aux portes

@@ -267,6 +267,13 @@
       "when": 1791395145564,
       "tag": "0037_metiers",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791396799637,
+      "tag": "0038_voyageurs",
+      "breakpoints": true
     }
   ]
 }

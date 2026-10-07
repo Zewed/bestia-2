@@ -20,6 +20,13 @@ export type Regles = {
   evenements?: Record<string, (client: PoolClient, id: number, evenement: Evenement) => Promise<void>>;
 };
 
+/**
+ * US-0331 : les avancées en cours, par transaction. Un événement programmé par la transaction d'une avancée
+ * (une arrivée qui programme la suivante) lui est remis aussitôt : s'il touche l'élément qui avance et tombe
+ * avant la fin de l'intervalle, il est appliqué dans la même avancée, à son rang. Sans requête de plus.
+ */
+const avanceesEnCours = new WeakMap<Pool | PoolClient, (element: ElementSuivi, id: number, evenement: Evenement) => void>();
+
 /** Programme un événement daté sur un élément. */
 export async function programmerEvenement(
   db: Pool | PoolClient,
@@ -34,15 +41,18 @@ export async function programmerEvenement(
      values ($1, $2, $3, $4, $5) returning id`,
     [element, id, survientLe, type, JSON.stringify(donnees)],
   );
-  return Number(rows[0].id);
+  const evenementId = Number(rows[0].id);
+  avanceesEnCours.get(db)?.(element, id, { id: evenementId, type, survientLe, donnees });
+  return evenementId;
 }
 
 /**
  * Avance un élément de son marque-page jusqu'à `jusqua` (maintenant par défaut).
  * Le temps est découpé aux instants exacts des événements : l'élément évolue jusqu'au
  * premier, l'événement est appliqué, puis l'évolution reprend jusqu'au suivant, et ainsi
- * de suite. Tout se fait dans une seule transaction : en cas d'échec, rien n'est enregistré.
- * Avancer de dix heures d'un coup donne donc le même résultat qu'avancer dix fois d'une heure.
+ * de suite. Un événement programmé en chemin par un autre est appliqué dans la même avancée s'il
+ * tombe avant la fin (US-0331). Tout se fait dans une seule transaction : en cas d'échec, rien n'est
+ * enregistré. Avancer de dix heures d'un coup donne donc le même résultat qu'avancer dix fois d'une heure.
  */
 export async function avancer(
   pool: Pool,
@@ -53,7 +63,7 @@ export async function avancer(
 ): Promise<{ depuis: Date; jusqua: Date; evenements: number } | null> {
   let traites = 0;
   const intervalle = await avancerMarquePage(pool, element, id, jusqua, async (client, depuis, fin) => {
-    const appliques: { id: string; instant: Date }[] = [];
+    const appliques: { id: number; instant: Date }[] = [];
     const { rows } = await client.query<{ id: string; type: string; survient_le: Date; donnees: Record<string, unknown> }>(
       `select id, type, survient_le, donnees from evenement
        where element = $1 and element_id = $2 and traite_le is null and survient_le <= $3
@@ -61,17 +71,29 @@ export async function avancer(
        for update`,
       [element, id, fin],
     );
+    const file: Evenement[] = rows.map((e) => ({ id: Number(e.id), type: e.type, survientLe: e.survient_le, donnees: e.donnees }));
+    // US-0331 : un événement programmé en chemin sur cet élément, avant la fin, prend son rang dans la file :
+    // après ceux de même instant, déjà programmés avant lui.
+    avanceesEnCours.set(client, (pour, elementId, evenement) => {
+      if (pour !== element || elementId !== id || evenement.survientLe.getTime() > fin.getTime()) return;
+      const rang = file.findIndex((e) => e.survientLe.getTime() > evenement.survientLe.getTime());
+      file.splice(rang === -1 ? file.length : rang, 0, evenement);
+    });
     let curseur = depuis;
-    for (const ligne of rows) {
-      // Un événement daté d'avant le marque-page s'applique au marque-page : le temps ne recule pas.
-      const instant = ligne.survient_le.getTime() > curseur.getTime() ? ligne.survient_le : curseur;
-      if (instant.getTime() > curseur.getTime()) await regles.evoluer?.(client, id, curseur, instant);
-      curseur = instant;
-      const appliquer = regles.evenements?.[ligne.type];
-      if (!appliquer) throw new Error(`Événement inconnu pour ${element} : « ${ligne.type} ».`);
-      await appliquer(client, id, { id: Number(ligne.id), type: ligne.type, survientLe: instant, donnees: ligne.donnees });
-      appliques.push({ id: ligne.id, instant });
-      traites += 1;
+    try {
+      for (let suivant = file.shift(); suivant; suivant = file.shift()) {
+        // Un événement daté d'avant le marque-page s'applique au marque-page : le temps ne recule pas.
+        const instant = suivant.survientLe.getTime() > curseur.getTime() ? suivant.survientLe : curseur;
+        if (instant.getTime() > curseur.getTime()) await regles.evoluer?.(client, id, curseur, instant);
+        curseur = instant;
+        const appliquer = regles.evenements?.[suivant.type];
+        if (!appliquer) throw new Error(`Événement inconnu pour ${element} : « ${suivant.type} ».`);
+        await appliquer(client, id, { ...suivant, survientLe: instant });
+        appliques.push({ id: suivant.id, instant });
+        traites += 1;
+      }
+    } finally {
+      avanceesEnCours.delete(client);
     }
     if (fin.getTime() > curseur.getTime()) await regles.evoluer?.(client, id, curseur, fin);
     // Une seule requête pour marquer tous les événements traités, quel que soit leur nombre.
