@@ -170,3 +170,11 @@ export const LACS_PAR_MONDE = 8;
 /** … chacun de 3 à 12 Cases d'un seul tenant (valeurs provisoires). */
 export const LAC_MIN_CASES = 3;
 export const LAC_MAX_CASES = 12;
+
+/**
+ * US-0411 : un Monde généré compte 12 rivières (valeur provisoire, à régler en jouant ; jamais moins de 8
+ * quand la place manque)…
+ */
+export const RIVIERES_PAR_MONDE = 12;
+/** … chacune coulant seule au moins 5 Cases depuis sa source, avant de finir ou d'en rejoindre une autre (valeur provisoire). */
+export const RIVIERE_MIN_CASES = 5;

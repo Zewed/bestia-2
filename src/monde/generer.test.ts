@@ -17,6 +17,8 @@ import {
   PART_BIOME_MAX,
   PART_BIOME_MIN,
   REGION_BIOME_MIN_CASES,
+  RIVIERE_MIN_CASES,
+  RIVIERES_PAR_MONDE,
 } from "@/reglages";
 import { BANDE_DE_CALCUL, graineDuMonde } from "./couronne";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine, type CaseGeneree } from "./generer";
@@ -479,4 +481,95 @@ describe("lacs (US-0410)", () => {
       }
     },
   );
+});
+
+describe("rivières (US-0411)", () => {
+  const riviere = (c: CaseGeneree) => c.variante === "riviere";
+  /** L'eau où une rivière finit : une côte ou un lac. */
+  const arrivee = (c: CaseGeneree) => c.variante === "cote" || c.variante === "lac";
+  /** Les réseaux de rivières d'un Monde : leurs Cases d'un seul tenant, une rivière et ses affluents. */
+  const reseauxDe = (cases: CaseGeneree[]) => regionsDe(cases.filter(riviere));
+  /** Les sources : les Cases où une rivière commence, qui n'ont qu'une voisine de rivière et ne touchent ni côte ni lac. */
+  const sourcesDe = (cases: CaseGeneree[]) => {
+    const autour = autourDans(cases);
+    return cases.filter((c) => riviere(c) && autour(c).filter(riviere).length === 1 && !autour(c).some(arrivee));
+  };
+
+  it("fixe les réglages des rivières : 12 rivières par Monde, chacune d'au moins 5 Cases", () => {
+    expect([RIVIERES_PAR_MONDE, RIVIERE_MIN_CASES]).toEqual([12, 5]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("en trace 12 par Monde, des suites de Cases d'eau voisines, d'un seul tenant (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    expect(sourcesDe(cases)).toHaveLength(RIVIERES_PAR_MONDE);
+    for (const c of cases.filter(riviere)) expect(c.biome).toBe("eau");
+    // Chaque rivière part de sa source et descend de proche en proche jusqu'au bout de son réseau.
+    for (const reseau of reseauxDe(cases)) expect(reseau.length).toBeGreaterThanOrEqual(RIVIERE_MIN_CASES);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "fait partir chaque rivière du pied d'une montagne et la fait couler seule au moins 5 Cases, avant de finir ou d'en rejoindre une autre (graine %i)",
+    (graine) => {
+      const cases = mondeDe(graine);
+      const autour = autourDans(cases);
+      for (const source of sourcesDe(cases)) {
+        expect(autour(source).some((v) => v.biome === "montagne"), cle(source)).toBe(true);
+        // De la source, on suit la rivière tant qu'elle coule seule : jusqu'à la Case où elle finit, ou où une autre la touche.
+        let avant = source;
+        let ici = autour(source).find(riviere)!;
+        let longueur = 2;
+        while (autour(ici).filter(riviere).length === 2 && !autour(ici).some(arrivee)) {
+          [avant, ici] = [ici, autour(ici).find((v) => riviere(v) && cle(v) !== cle(avant))!];
+          longueur++;
+        }
+        expect(longueur, cle(source)).toBeGreaterThanOrEqual(RIVIERE_MIN_CASES);
+      }
+    },
+  );
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("la fait finir sur une côte ou dans un lac : chaque réseau s'y jette par une seule Case, jamais dans la mer du large (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    for (const reseau of reseauxDe(cases)) expect(reseau.filter((c) => autour(c).some(arrivee)).map(cle), cle(reseau[0])).toHaveLength(1);
+    for (const c of cases.filter(riviere)) expect(autour(c).some((v) => v.variante === "mer"), cle(c)).toBe(false);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("ne forme jamais de boucle : du bord du Monde, on atteint toute autre Case sans franchir de rivière (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    const file = cases.filter((c) => c.anneau === MONDE_RAYON && !riviere(c));
+    const atteintes = new Set(file.map(cle));
+    for (let k = 0; k < file.length; k++) {
+      for (const v of autour(file[k])) {
+        if (riviere(v) || atteintes.has(cle(v))) continue;
+        atteintes.add(cle(v));
+        file.push(v);
+      }
+    }
+    expect(cases.filter((c) => !riviere(c) && !atteintes.has(cle(c))).map(cle)).toEqual([]);
+  });
+
+  it("laisse deux rivières se rejoindre : l'affluent s'arrête là, et leur réseau n'a qu'une embouchure", () => {
+    const affluents = GRAINES.flatMap((graine) => {
+      const cases = mondeDe(graine);
+      const deSource = new Set(sourcesDe(cases).map(cle));
+      return reseauxDe(cases).filter((reseau) => reseau.filter((c) => deSource.has(cle(c))).length > 1);
+    });
+    expect(affluents.length).toBeGreaterThan(0);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("ne la fait jamais entrer dans le Cœur sauvage (graine %i)", (graine) => {
+    expect(mondeDe(graine).filter((c) => c.coeur && riviere(c))).toEqual([]);
+  });
+
+  it("la laisse traverser la Couronne", () => {
+    expect(GRAINES.some((graine) => mondeDe(graine).some((c) => c.couronne && riviere(c)))).toBe(true);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("garde de part et d'autre de chaque rivière des régions d'au moins 6 Cases d'un seul tenant (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    const tailleDe = new Map(regionsDe(cases).flatMap((region) => region.map((c) => [cle(c), region.length])));
+    for (const c of cases.filter(riviere)) for (const v of autour(c).filter(terre)) expect(tailleDe.get(cle(v)), cle(v)).toBeGreaterThanOrEqual(REGION_BIOME_MIN_CASES);
+  });
 });

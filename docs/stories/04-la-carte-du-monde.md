@@ -110,13 +110,14 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0411 · Tracer des rivières
 **En tant que** joueur, **je veux** voir des rivières couler des montagnes vers l'eau, **afin de** lire le paysage comme un vrai relief.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Douze rivières (variante « rivière ») partent du pied d'une chaîne de montagnes et serpentent jusqu'à une côte ou un lac, sans boucle, sur 12 à 90 Cases ; un affluent peut rejoindre une autre rivière ; elles peuvent traverser la Couronne, jamais le Cœur sauvage. Une rivière coupe la terre : un tracé qui laisserait une région de moins de 6 Cases est abandonné pour la source suivante. Prouvé sur 21 graines, tenu sur 600. Rien de visible.
 - **Débloquée par** : US-0407, US-0409, US-0410
 - **Critères d'acceptation** :
   - Une rivière est une suite de Cases voisines, d'un seul tenant.
   - Elle part d'une montagne et finit sur une côte ou dans un lac.
   - Elle ne forme jamais de boucle.
-  - Deux rivières peuvent se rejoindre (à décider).
-  - Le Monde compte (chiffre à régler) rivières.
+  - Deux rivières peuvent se rejoindre (décidé le 2026-10-07).
+  - Le Monde compte 12 rivières (provisoire, `RIVIERES_PAR_MONDE`).
 
 ### US-0412 · Contrôler le Monde généré sur une page interne
 **En tant que** développeur, **je veux** voir le Monde entier sur une page de contrôle, **afin de** juger d'un coup d'œil si ses Biomes sont crédibles.

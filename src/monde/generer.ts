@@ -9,6 +9,7 @@ import { anneau, dansLeCoeur, eloignementDuCoeur, type Coordonnees } from "./hex
 import { lacsDuMonde } from "./lacs";
 import { cotesDeLaMer, merDuMonde } from "./mer";
 import { biomesDesProvinces, fondreLesPetitesRegions, grilleDuMonde, provinces, regionsDuCoeur, type Biome, type Grille, type Variante } from "./regions";
+import { rivieresDuMonde } from "./rivieres";
 
 export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante: string | null; couronne: boolean; coeur: boolean; eloignement: number };
 
@@ -21,7 +22,8 @@ export const GRAINE_MAX = 2 ** 32 - 1;
  * dressent leurs chaînes (US-0407) ; tout le reste, Couronne comprise, est fait de provinces qui reçoivent
  * chacune un Biome de terre selon leur climat (US-0406), un côté du Monde froid et l'autre chaud
  * (US-0407). Les voisinages interdits sont ensuite ôtés, puis les petites régions fondues. Enfin, la mer
- * qui touche la terre devient sa côte (US-0409), et des lacs sont semés à l'intérieur des terres (US-0410).
+ * qui touche la terre devient sa côte (US-0409), des lacs sont semés à l'intérieur des terres (US-0410), et
+ * des rivières descendent des montagnes vers les côtes et les lacs (US-0411).
  */
 function biomesDuMonde(
   grille: Grille,
@@ -53,6 +55,9 @@ function biomesDuMonde(
   const variantes = grille.cases.map((_, i): Variante | null => (cote[i] ? "cote" : mer[i] ? "mer" : null));
   for (const lac of lacsDuMonde(grille, biomes, { rayon, anneaux, rayonCoeur, graine })) {
     for (const i of lac) [biomes[i], variantes[i]] = ["eau", "lac"];
+  }
+  for (const riviere of rivieresDuMonde(grille, biomes, variantes, { rayonCoeur, graine })) {
+    for (const i of riviere) [biomes[i], variantes[i]] = ["eau", "riviere"];
   }
   return { biomes, variantes };
 }
