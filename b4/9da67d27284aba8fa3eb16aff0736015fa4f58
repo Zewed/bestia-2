@@ -1,0 +1,43 @@
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 2,5,17,255-356
+  s_97a431cfa65ca7::t_ddb3434c0659a5 357
+src/monde/climat.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 1-147
+donnees/biomes.yaml
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 6-8,19,23,27,34,38
+src/donnees/biomes.test.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 3,63-96
+  s_97a431cfa65ca7::t_7206820019a104 97-98
+src/donnees/jeux.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 5,169-209,288
+src/monde/regions.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 8,15-17,188-195,198-202,204-205,210,215,231-238,240-242,244-245,248-249,251-254,259-261,263,269-273
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 4,6,9,16-42,45-49,51-63,66
+src/reglages.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 147-153
+src/donnees/coherence.test.ts
+  s_97a431cfa65ca7::t_27ae13bbbd1e7b 44-55
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_6fc4a89616fa9d 73,76-77
+docs/stories/README.md
+  s_97a431cfa65ca7::t_a156785f5e9684 7,17,31
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_223fb0123ef8a0 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b49da67d27284aba8fa3eb16aff0736015fa4f58",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
