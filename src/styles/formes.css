@@ -16,8 +16,10 @@
   --hauteur-ligne: 64px;
   --hauteur-bande: 0px;
   --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--bord-haut));
-  /* La hauteur de l'écran sous la barre du haut. */
-  --hauteur-utile: calc(100dvh - var(--hauteur-barre) - var(--bord-bas));
+  /* Les onglets de la navigation, en bas de l'écran sur mobile (US-0302), au-dessus de l'encoche du bas. */
+  --hauteur-onglets: 0px;
+  /* La hauteur de l'écran entre la barre du haut et le bas de l'écran (ou ses onglets). */
+  --hauteur-utile: calc(100dvh - var(--hauteur-barre) - var(--hauteur-onglets) - var(--bord-bas));
 }
 
 /* Sur mobile, en portrait comme en paysage, la barre du haut reste basse pour laisser la place au jeu. */
@@ -27,9 +29,13 @@
   }
 }
 
-/* Sur un téléphone en portrait, les ressources passent en bande sous la barre : elle grandit d'autant. */
+/* Sur un téléphone en portrait, les ressources passent en bande sous la barre : elle grandit d'autant.
+   La navigation passe en onglets en bas de l'écran : la page s'arrête au-dessus (voir globals.css). */
 @media (max-width: 820px) {
   :root:has([data-bande-ressources]) {
     --hauteur-bande: 44px;
+  }
+  :root:has([data-onglets]) {
+    --hauteur-onglets: 52px;
   }
 }

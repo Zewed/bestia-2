@@ -4,6 +4,7 @@ import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { habitantsDuTerritoire } from "./habitants";
 
 describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, sur base)", () => {
   let pool: Pool;
@@ -52,5 +53,21 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, sur base)", () => {
     expect(ha.some((h) => hb.some((x) => x.id === h.id))).toBe(false);
     await pool.query("delete from compte where id = $1", [a.id]);
     expect(await habitants(ta)).toEqual([]);
+  });
+
+  it("rend à la page Habitants ceux du Territoire, du premier arrivé au dernier, et aucun autre (US-0302)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    const siens = await habitantsDuTerritoire(pool, ta);
+    expect(siens.map((h) => h.id)).toEqual((await habitants(ta)).map((h) => h.id));
+    expect(siens.map((h) => h.id)).toEqual([...siens.map((h) => h.id)].sort((x, y) => x - y));
+    expect(siens.map((h) => h.metier)).toEqual([null, null, null]);
+    expect(siens.every((h) => h.arriveLe instanceof Date)).toBe(true);
+    const autres = new Set((await habitantsDuTerritoire(pool, tb)).map((h) => h.id));
+    expect(siens.some((h) => autres.has(h.id))).toBe(false);
+    expect(await habitantsDuTerritoire(pool, -1)).toEqual([]);
   });
 });

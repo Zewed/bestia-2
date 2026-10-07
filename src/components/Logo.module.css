@@ -49,3 +49,11 @@
     font-size: 15px;
   }
 }
+
+/* US-0302 : sur un petit écran d'ordinateur ou un téléphone couché, la navigation du jeu se place à
+   côté du logo : la tête du loup suffit, le lien garde son nom « Bestia ». */
+@media (min-width: 821px) and (max-width: 960px) {
+  :root:has([data-onglets]) .nom {
+    display: none;
+  }
+}

@@ -12,7 +12,7 @@ const garde = vi.hoisted(() => ({
 }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }), usePathname: () => "/jeu/habitants" }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
 import { ActionsDuJeu } from "./ActionsDuJeu";
@@ -64,6 +64,27 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: false });
     expect(await rendu()).not.toContain("Ressources");
     expect(garde.stocksALHeure).not.toHaveBeenCalled();
+  });
+
+  it("pose la navigation du jeu, à côté du logo, une fois entré dans son Foyer (US-0302)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    const html = await rendu();
+    const nav = html.match(/<nav[^>]*>(.*?)<\/nav>/)?.[1] ?? "";
+    const liens = [...nav.matchAll(/<a ([^>]*)>([^<]+)<\/a>/g)].map((m) => [m[2], m[1].match(/href="([^"]+)"/)?.[1], /aria-current="page"/.test(m[1])]);
+    expect(liens).toEqual([
+      ["Foyer", "/jeu", false],
+      ["Habitants", "/jeu/habitants", true],
+    ]);
+    expect(html.indexOf("<nav")).toBeLessThan(html.indexOf("Ressources"));
+  });
+
+  it("n'a pas de navigation sans Territoire, avant le récit d'arrivée, ni sans nom de chef (US-0302)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    expect(await rendu()).not.toContain("<nav");
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: false });
+    expect(await rendu()).not.toContain("<nav");
+    joueur({ nomDeChef: null });
+    expect(await rendu()).not.toContain("<nav");
   });
 
   it("ne montre rien sans session", async () => {

@@ -6,7 +6,8 @@
 
 body {
   min-height: 100dvh;
-  padding: 0 var(--bord-droit) var(--bord-bas) var(--bord-gauche);
+  /* En bas, l'encoche, et les onglets de la navigation quand ils sont là (US-0302). */
+  padding: 0 var(--bord-droit) calc(var(--hauteur-onglets) + var(--bord-bas)) var(--bord-gauche);
   background: var(--fond);
   color: var(--encre);
   font-family: var(--police);

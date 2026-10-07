@@ -6,9 +6,11 @@
   position: sticky;
   top: 0;
   z-index: 40;
-  /* Le logo à gauche, les ressources au milieu, le nom du chef à droite ; la bande des ressources en dessous sur mobile. */
+  /* Le logo à gauche, puis la navigation (US-0302), les ressources au milieu, le nom du chef à droite ;
+     la bande des ressources en dessous sur mobile. Le logo, la navigation et les ressources gardent
+     leur largeur : à l'étroit, c'est le nom du chef qui se coupe. */
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: max-content max-content 1fr minmax(0, max-content);
   grid-template-rows: var(--hauteur-ligne);
   grid-auto-rows: var(--hauteur-bande);
   column-gap: 16px;
@@ -24,7 +26,7 @@
 /* Une action du joueur, à droite : un bouton discret sur l'Encre, assez haut pour le pouce. */
 .barre > .action,
 .chef {
-  grid-column: 3;
+  grid-column: 4;
 }
 
 .action {
@@ -57,13 +59,17 @@
 /* US-0140 : le nom de chef, dans la même pastille, avec une flèche ; il ouvre le menu juste en dessous. */
 .chef {
   position: relative;
-  margin-left: auto;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
 }
 
 .nom {
   display: flex;
   gap: 8px;
   align-items: center;
+  min-width: 0;
   max-width: min(44vw, 260px);
   margin-left: 0;
 }
@@ -138,11 +144,59 @@
 }
 
 /*
+ * US-0302 : la navigation du jeu, juste à droite du logo : du texte sur l'Encre, comme les actions de
+ * la barre. L'entrée de la page affichée passe en clair et se souligne : jamais la couleur seule.
+ */
+.navigation {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.entrees {
+  display: flex;
+  gap: 4px;
+  padding: 0;
+  list-style: none;
+}
+
+.entree {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--arrondi-moyen);
+  color: var(--sur-encre-discret);
+  font-weight: var(--graisse-titre);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+@media (hover: hover) {
+  .entree:hover {
+    background: var(--sur-encre-survol);
+    color: var(--ivoire);
+  }
+}
+
+.entree:focus-visible {
+  outline: 2px solid var(--ivoire);
+  outline-offset: 2px;
+}
+
+.entree[aria-current="page"] {
+  color: var(--ivoire);
+  text-decoration: underline 2px var(--citron);
+  text-decoration-skip-ink: none;
+  text-underline-offset: 7px;
+}
+
+/*
  * US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même
  * largeur, en deux groupes séparés d'un fin trait : la Nourriture, puis les Matériaux (US-0205).
  */
 .ressources {
-  grid-column: 2;
+  grid-column: 3;
   justify-self: center;
   display: flex;
   align-items: center;
@@ -372,6 +426,35 @@
   .barre {
     padding-right: max(12px, var(--bord-droit));
     padding-left: max(12px, var(--bord-gauche));
+  }
+
+  /*
+   * La navigation en onglets fixés en bas de l'écran, au pouce : deux onglets égaux, sur l'Encre de
+   * la barre, au-dessus de l'encoche du bas. La page s'arrête au-dessus (--hauteur-onglets, formes.css).
+   */
+  .navigation {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    padding: 0 var(--bord-droit) var(--bord-bas) var(--bord-gauche);
+    background: var(--encre);
+  }
+
+  .entrees {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+    height: var(--hauteur-onglets);
+  }
+
+  .entree {
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .entree:focus-visible {
+    outline-offset: -4px;
   }
 
   /* La bande des ressources : toute la largeur de l'écran, quatre colonnes égales, sous un filet. */

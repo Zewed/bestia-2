@@ -18,6 +18,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0302 · Ouvrir la page Habitants
 **En tant que** joueur, **je veux** ouvrir une page Habitants depuis la navigation, **afin de** voir qui vit sur mon Territoire.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). La navigation du jeu a deux entrées, « Foyer » et « Habitants » : dans la barre du haut à droite du logo sur ordinateur (l'entrée affichée en clair et soulignée de citron), en onglets fixés en bas de l'écran sur téléphone, au pouce, au-dessus de l'encoche ; la page s'arrête au-dessus des onglets. Elle n'apparaît qu'une fois le joueur entré dans son Foyer. Entre 821 et 960 px, pour laisser la place à la navigation, le mot « BESTIA » s'efface et la tête du loup reste. La page `/jeu/habitants` montre pour l'instant le nombre d'Habitants (« 3 Habitants ») ; la liste vient avec US-0303. Vérifié en vrai de 320 à 1 440 px et en paysage : aucun défilement de côté, rechargement sur place, connexion puis retour sur la page sans session.
 - **Débloquée par** : US-0301
 - **Critères d'acceptation** :
   - Une entrée « Habitants » figure dans la navigation, sur ordinateur comme sur mobile.

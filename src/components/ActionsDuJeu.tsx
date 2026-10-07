@@ -4,15 +4,16 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { vitesse } from "@/temps/horloge";
 import { BoutonDeconnexion } from "./Deconnexion";
 import { MenuChef } from "./MenuChef";
+import { Navigation } from "./Navigation";
 import { Presence } from "./Presence";
 import { Ressources } from "./Ressources";
 
 /**
  * Les actions du joueur dans la barre du haut, sur les pages du jeu : son nom de chef et son menu
- * (US-0140), ou « Se déconnecter » seul tant qu'il n'a pas de nom ; ses ressources une fois entré
- * dans son Foyer (US-0203), pas avant son récit d'arrivée. Posées par l'emplacement @actions de la
- * mise en page (src/app/@actions/jeu). Elles ne font que montrer : la page du jeu, à côté, exige la
- * session et le nom.
+ * (US-0140), ou « Se déconnecter » seul tant qu'il n'a pas de nom ; la navigation du jeu (US-0302) et
+ * ses ressources une fois entré dans son Foyer (US-0203), pas avant son récit d'arrivée. Posées par
+ * l'emplacement @actions de la mise en page (src/app/@actions/jeu). Elles ne font que montrer : la
+ * page du jeu, à côté, exige la session et le nom.
  */
 export async function ActionsDuJeu() {
   await connection();
@@ -23,6 +24,7 @@ export async function ActionsDuJeu() {
   const stocks = joueur.territoireId !== null && joueur.recitLu ? await stocksALHeure(joueur.territoireId) : null;
   return (
     <>
+      {stocks ? <Navigation /> : null}
       {/* US-0213 : la clé change avec les quantités, pour que la barre reparte des nouvelles après un recalage. */}
       {stocks ? <Ressources key={stocks.map((s) => s.quantite).join("|")} stocks={stocks} vitesse={vitesse()} /> : null}
       {stocks ? <Presence key={`presence-${stocks.map((s) => s.quantite).join("|")}`} /> : null}
