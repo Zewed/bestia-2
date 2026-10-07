@@ -1,0 +1,45 @@
+src/monde/absence.db.test.ts
+  s_97a431cfa65ca7::t_b2fc32543c5283 20
+src/monde/production.db.test.ts
+  s_97a431cfa65ca7::t_b2fc32543c5283 20
+donnees/ressources.yaml
+  s_97a431cfa65ca7::t_40badb45fb620c 5-6,12,17,22,27
+src/db/schema.ts
+  s_97a431cfa65ca7::t_0baf9f8aa46854 118-119,121,431-432
+src/monde/stocks.db.test.ts
+  s_97a431cfa65ca7::t_b2fc32543c5283 15
+  s_97a431cfa65ca7::t_9bfc14bfc52945 61-75
+src/donnees/ressources.test.ts
+  s_97a431cfa65ca7::t_9bfc14bfc52945 29,39,43-55
+src/donnees/jeux.ts
+  s_97a431cfa65ca7::t_40badb45fb620c 73,85
+drizzle/0032_limites.sql
+  s_97a431cfa65ca7::t_0baf9f8aa46854 1
+  s_97a431cfa65ca7::t_40badb45fb620c 2-16
+src/temps/synchroniser-horloge.db.test.ts
+  s_97a431cfa65ca7::t_b2fc32543c5283 88
+drizzle/meta/0032_snapshot.json
+  s_97a431cfa65ca7::t_4995e6ba939356 1-1896
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_705b4ca0fbe30d 228-234
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_a71893c4337f7c 210,213
+docs/stories/README.md
+  s_97a431cfa65ca7::t_07502f9f332ac7 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "90ce315ebdb473ddb2fb1ba03c71a4a65007c02c",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
