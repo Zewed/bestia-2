@@ -6,12 +6,21 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_492e27040ae63f 5
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_67ddfaea21e99d 363-365,372,375,377,383-384,393,397-431
+  s_97a431cfa65ca7::t_5bc0227a672924 363-365,372,375,377,383-384,393,397-430
+  s_97a431cfa65ca7::t_3706141da01d38 431
 src/monde/generer.ts
   s_97a431cfa65ca7::t_6ede4e5c26df3b 9-10,18-23,28,45-47,73,79
+  s_97a431cfa65ca7::t_4644151cb3c8ba 18-23,28
+  s_97a431cfa65ca7::t_e3138ba9e3937c 9-10
+  s_97a431cfa65ca7::t_bd8b79dedbf4e2 45-47
+  s_97a431cfa65ca7::t_0d0c1b14449f12 73,79
 src/monde/mer.ts
   s_97a431cfa65ca7::t_d9ac639d11a440 2-4,79-87
+  s_97a431cfa65ca7::t_747980ad4415e8 79-87
+  s_97a431cfa65ca7::t_fbc9553f093ffd 2-4
 src/monde/regions.ts
   s_97a431cfa65ca7::t_840b275f0e70c5 14-15
+  s_97a431cfa65ca7::t_2486ef917c45fd 14-15
 ---
 {
   "schema_version": "authorship/3.0.0",
