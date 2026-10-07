@@ -47,6 +47,42 @@
   font-weight: var(--graisse-titre);
 }
 
+/*
+ * US-0334 : sous la ligne, sur toute sa largeur, ce qu'on peut faire du Voyageur, en boutons d'au moins 44 px
+ * de haut qui se partagent la place ; « Accueillir », le principal, en Encre.
+ */
+.choix {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.accueillir {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--arrondi-petit);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .accueillir:hover {
+    background: var(--encre-survol);
+  }
+}
+
+.accueillir:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* Quand personne n'attend. */
 .personne {
   color: var(--texte-discret);

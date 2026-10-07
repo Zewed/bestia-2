@@ -1,7 +1,19 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { VOYAGEUR_ALERTE_MINUTES, VOYAGEUR_ATTEND_HEURES } from "@/reglages";
+
+/** Les actions serveur, tenues en suspens jusqu'à ce que le test les laisse finir. */
+const actions = vi.hoisted(() => {
+  const enCours: Array<() => void> = [];
+  return {
+    enCours,
+    accueillirUnVoyageur: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+  };
+});
+vi.mock("./actions-aux-portes", () => actions);
+
 import { AuxPortes, type VoyageurAffiche } from "./AuxPortes";
 
 const MINUTE = 60_000;
@@ -17,18 +29,27 @@ const voyageur = (id: number, prenom: string, ms: number): VoyageurAffiche => {
 const partantDans = (id: number, prenom: string, ms: number) => voyageur(id, prenom, VOYAGEUR_ATTEND_HEURES * HEURE - ms);
 
 const partie = () => screen.getByRole("heading", { name: "Aux portes" }).closest("section")!;
-/** Les morceaux de chaque ligne, le prénom, depuis quand, puis le compte à rebours. */
-const morceaux = () => within(partie()).queryAllByRole("listitem").map((li) => [...li.children]);
+/** Les morceaux de chaque ligne, le prénom, depuis quand, puis le compte à rebours, sans ses boutons (US-0334). */
+const morceaux = () => within(partie()).queryAllByRole("listitem").map((li) => [...li.querySelectorAll(":scope > span")]);
 /** Le texte de chaque ligne, ses morceaux séparés par « · ». */
 const lignes = () => morceaux().map((m) => m.map((e) => e.textContent).join(" · "));
 /** Le compte à rebours de chaque ligne. */
 const comptes = () => morceaux().map((m) => m[2].textContent);
 /** Les comptes à rebours dans la couleur d'alerte. */
 const enAlerte = () => morceaux().map((m) => m[2].hasAttribute("data-alerte"));
+/** Les prénoms aux portes, dans l'ordre des lignes. */
+const prenoms = () => morceaux().map((m) => m[0].textContent);
+/** US-0334 : la ligne d'un Voyageur, trouvée par son prénom. */
+const ligne = (prenom: string) => within(partie()).getByText(prenom).closest("li")!;
 
-afterEach(() => {
+/** Laisse finir les actions en suspens : React attend qu'elles aient toutes fini pour clore leurs transitions. */
+const finirLesActions = () => act(async () => actions.enCours.splice(0).forEach((finir) => finir()));
+
+afterEach(async () => {
+  await finirLesActions();
   cleanup();
   vi.useRealTimers();
+  actions.accueillirUnVoyageur.mockClear();
 });
 
 describe("les Voyageurs aux portes (US-0332)", () => {
@@ -64,10 +85,60 @@ describe("les Voyageurs aux portes (US-0332)", () => {
     ]);
   });
 
-  it("n'offrent encore aucun bouton : accueillir et refuser viendront ensuite", () => {
-    render(<AuxPortes voyageurs={[voyageur(1, "Arno", HEURE)]} maintenant={MAINTENANT} />);
-    expect(within(partie()).queryAllByRole("button")).toEqual([]);
-    expect(within(partie()).queryAllByRole("link")).toEqual([]);
+});
+
+describe("accueillir un Voyageur (US-0334)", () => {
+  const TROIS = [voyageur(70, "Ines", 3 * HEURE), voyageur(71, "Joran", 2 * HEURE), voyageur(72, "Ilda", 20 * MINUTE)];
+
+  it("met sur la ligne de chaque Voyageur un bouton « Accueillir », qui dit pour un lecteur d'écran qui il accueille", () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    for (const { prenom } of TROIS) {
+      const bouton = within(ligne(prenom)).getByRole("button", { name: `Accueillir ${prenom}` });
+      expect(bouton.textContent).toBe("Accueillir");
+      expect(bouton.getAttribute("type")).toBe("button");
+    }
+    expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+  });
+
+  it("toucher « Accueillir » retire aussitôt la ligne, sans attendre l'action, qui reçoit le Voyageur", async () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    // L'action n'a pas encore répondu : la ligne est déjà partie, les autres restent dans leur ordre.
+    expect(prenoms()).toEqual(["Ines", "Ilda"]);
+  });
+
+  it("laisse « Personne aux portes pour l'instant. » dès que le dernier Voyageur est accueilli", async () => {
+    render(<AuxPortes voyageurs={[TROIS[0]]} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Accueillir Ines" }));
+    expect(within(partie()).queryByRole("list")).toBeNull();
+    expect(within(partie()).getByText("Personne aux portes pour l'instant.")).toBeTruthy();
+  });
+
+  it("ne remontre pas la ligne une fois la page relue, qui ne compte plus le Voyageur aux portes", async () => {
+    const { rerender } = render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    rerender(<AuxPortes voyageurs={TROIS.slice(1)} maintenant={new Date(MAINTENANT.getTime() + 2_000)} />);
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Joran", "Ilda"]);
+  });
+
+  it("laisse la page relue faire foi quand le Voyageur n'a pas été accueilli", async () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(prenoms()).toEqual(["Joran", "Ilda"]);
+    // L'action s'achève sans que la page ait changé : Ines attend toujours.
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
+  });
+
+  it("accueille plusieurs Voyageurs à la suite, sans attendre que le premier accueil réponde", async () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Accueillir Ilda" }));
+    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [72]]);
+    expect(prenoms()).toEqual(["Joran"]);
   });
 });
 

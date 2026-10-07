@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
-import { departDuVoyageur, ecartAvantVoyageur } from "./voyageurs";
+import { departDuVoyageur, ecartAvantVoyageur, recitDAccueil } from "./voyageurs";
 
 const HEURE = 3_600_000;
+const MINUTE = 60_000;
 const MOYENNE = VOYAGEUR_TOUTES_LES_HEURES * HEURE;
 
 /** Les écarts de 200 Territoires sur leurs 500 premières arrivées : 100 000 tirages. */
@@ -67,5 +68,30 @@ describe("le départ d'un Voyageur (US-0333)", () => {
     expect(Number.isInteger(VOYAGEUR_ATTEND_HEURES)).toBe(true);
     expect(VOYAGEUR_ATTEND_HEURES).toBeGreaterThan(0);
     expect(VOYAGEUR_ATTEND_HEURES).toBeLessThanOrEqual(48);
+  });
+});
+
+describe("le Récit d'un Voyageur accueilli (US-0334)", () => {
+  /** L'heure du jeu de l'accueil. */
+  const ACCUEIL = new Date("2026-10-07T18:00:00Z");
+  /** Un Voyageur arrivé `ms` millisecondes de jeu avant l'accueil. */
+  const arriveIlYa = (ms: number) => new Date(ACCUEIL.getTime() - ms);
+
+  it("annonce le nouvel Habitant, et dit en une phrase depuis quand il attendait, à l'heure de l'accueil", () => {
+    expect(recitDAccueil("Ines", arriveIlYa(3 * HEURE + 20 * MINUTE), ACCUEIL)).toEqual({
+      titre: "Ines a rejoint le Territoire",
+      texte: "Ines, qui attendait aux portes depuis 3 h, vit désormais au Foyer.",
+      survenuLe: ACCUEIL,
+    });
+  });
+
+  it.each([
+    [30_000, "moins d'une minute"],
+    [MINUTE, "1 min"],
+    [59 * MINUTE + 59_000, "59 min"],
+    [HEURE, "1 h"],
+    [11 * HEURE + 59 * MINUTE, "11 h"],
+  ])("compte l'attente comme la ligne aux portes : %i ms, « %s »", (ms, attente) => {
+    expect(recitDAccueil("Joran", arriveIlYa(ms), ACCUEIL).texte).toBe(`Joran, qui attendait aux portes depuis ${attente}, vit désormais au Foyer.`);
   });
 });

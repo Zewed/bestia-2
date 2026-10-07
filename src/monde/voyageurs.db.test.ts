@@ -8,12 +8,15 @@ import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
-import { VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { departDuVoyageur, ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
+import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
+import { recitsDuTerritoire } from "./recits";
+import { stocksDuTerritoire } from "./stocks";
+import { accueillirLeVoyageur, departDuVoyageur, ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -82,6 +85,9 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
     voyageurs: (await voyageurs(territoireId)).map((v) => v.arrive_le.getTime()),
   });
   const apres = (ne: Date, ms: number) => new Date(ne.getTime() + ms);
+  /** Fait se présenter un Voyageur au Territoire, à l'instant donné, sans passer par le temps. */
+  const presenter = async (territoireId: number, prenom: string, arriveLe: Date) =>
+    (await pool.query<{ id: number }>("insert into voyageur (territoire_id, prenom, arrive_le) values ($1, $2, $3) returning id", [territoireId, prenom, arriveLe])).rows[0].id;
 
   beforeAll(async () => {
     pool = poolDeTest();
@@ -241,10 +247,6 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
   });
 
   describe("les Voyageurs aux portes (US-0332)", () => {
-    /** Fait se présenter un Voyageur au Territoire, à l'instant donné, sans passer par le temps. */
-    const presenter = async (territoireId: number, prenom: string, arriveLe: Date) =>
-      (await pool.query<{ id: number }>("insert into voyageur (territoire_id, prenom, arrive_le) values ($1, $2, $3) returning id", [territoireId, prenom, arriveLe])).rows[0].id;
-
     it("lit ceux qui attendent aux portes du Territoire, du premier arrivé au dernier, et eux seuls", async () => {
       const { territoireId, ne } = await naitre();
       const voisin = await naitre();
@@ -275,6 +277,91 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       await rattraper("territoire", territoireId, { pool, jusqua: new Date(prevu[1].instant) });
       expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.arriveLe.getTime())).toEqual([prevu[0].instant, prevu[1].instant]);
       expect(await nombreDeVoyageurs(pool, territoireId)).toBe(2);
+    });
+  });
+
+  describe("accueillir un Voyageur (US-0334)", () => {
+    /** Les Habitants du Territoire, du premier arrivé au dernier : prénom, Métier, heure d'arrivée. */
+    const habitants = async (territoireId: number) =>
+      (await habitantsDuTerritoire(pool, territoireId)).sort((a, b) => a.id - b.id).map((h) => [h.prenom, h.metier, h.arriveLe]);
+    /** Les quantités des Stocks du Territoire. */
+    const stocks = async (territoireId: number) => (await stocksDuTerritoire(pool, territoireId)).map((s) => [s.id, s.quantite]);
+    /** Tout ce qu'un accueil peut changer au Territoire : ses Voyageurs, ses Habitants, ses Récits et ses Stocks. */
+    const tout = async (territoireId: number) => ({
+      voyageurs: await voyageursAuxPortes(pool, territoireId),
+      habitants: await habitants(territoireId),
+      recits: await recitsDuTerritoire(pool, territoireId),
+      stocks: await stocks(territoireId),
+    });
+
+    it("fait du Voyageur un Habitant sans Métier, du même prénom, arrivé à l'heure de l'accueil, et le retire des portes", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const joran = await presenter(territoireId, "Joran", apres(ne, 2 * HEURE));
+      const avant = await habitants(territoireId);
+
+      expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))).toBe(true);
+      expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.id)).toEqual([joran]);
+      expect(await habitants(territoireId)).toEqual([...avant, ["Ines", null, apres(ne, 4 * HEURE)]]);
+    });
+
+    it("fait monter aussitôt le nombre d'Habitants et l'Entretien, sans rien coûter", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const [nombre, entretien, quantites] = [await nombreDHabitants(pool, territoireId), await entretienDesHabitants(pool, territoireId), await stocks(territoireId)];
+
+      await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE));
+      expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + 1);
+      const { habitants: compte, parHeure } = await entretienDesHabitants(pool, territoireId);
+      expect([compte, Number(parHeure)]).toEqual([nombre + 1, Number(entretien.parHeure) + ENTRETIEN_HABITANT_PAR_HEURE]);
+      expect(await stocks(territoireId)).toEqual(quantites);
+    });
+
+    it("écrit un Récit court de l'arrivée du nouvel Habitant, non lu, daté de l'accueil", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE + 20 * MINUTE));
+      expect((await recitsDuTerritoire(pool, territoireId)).map(({ titre, texte, survenuLe, luLe }) => ({ titre, texte, survenuLe, luLe }))).toEqual([
+        {
+          titre: "Ines a rejoint le Territoire",
+          texte: "Ines, qui attendait aux portes depuis 3 h, vit désormais au Foyer.",
+          survenuLe: apres(ne, 4 * HEURE + 20 * MINUTE),
+          luLe: null,
+        },
+      ]);
+    });
+
+    it("ne touche jamais au Voyageur d'un autre Territoire, quel que soit l'identifiant envoyé", async () => {
+      const [joueur, voisin] = [await naitre(), await naitre()];
+      await presenter(joueur.territoireId, "Ines", apres(joueur.ne, HEURE));
+      const brune = await presenter(voisin.territoireId, "Brune", apres(voisin.ne, HEURE));
+      const [siens, autres] = [await tout(joueur.territoireId), await tout(voisin.territoireId)];
+
+      expect(await accueillirLeVoyageur(pool, joueur.territoireId, brune, apres(joueur.ne, 4 * HEURE))).toBe(false);
+      expect(await tout(joueur.territoireId)).toEqual(siens);
+      expect(await tout(voisin.territoireId)).toEqual(autres);
+    });
+
+    it("ne fait rien pour un Voyageur qui n'attend plus aux portes", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))).toBe(true);
+      const accueillie = await tout(territoireId);
+
+      expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 5 * HEURE))).toBe(false);
+      expect(await tout(territoireId)).toEqual(accueillie);
+    });
+
+    it("accueilli plusieurs fois en même temps, il ne devient qu'un seul Habitant, d'un seul Récit", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const nombre = await nombreDHabitants(pool, territoireId);
+
+      const accueils = await Promise.all(Array.from({ length: 5 }, () => accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))));
+      expect(accueils.filter(Boolean)).toHaveLength(1);
+      expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + 1);
+      expect(await recitsDuTerritoire(pool, territoireId)).toHaveLength(1);
+      expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
     });
   });
 });

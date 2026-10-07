@@ -5,6 +5,8 @@ import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { programmerEvenement, type Evenement } from "@/temps/avancer";
+import { ajouterUnHabitant } from "./habitants";
+import { ecrireUnRecit, type NouveauRecit } from "./recits";
 
 /** US-0331 : l'événement d'une arrivée ; ses données portent son numéro, 1 pour la première du Territoire. */
 export const ARRIVEE_VOYAGEUR = "arrivee_voyageur";
@@ -78,6 +80,59 @@ export async function voyageursAuxPortes(base: Pool | PoolClient, territoireId: 
     [territoireId],
   );
   return rows.map((v) => ({ ...v, departLe: departDuVoyageur(v.arriveLe) }));
+}
+
+/** US-0334 : depuis quand un Voyageur attendait, compté comme sur sa ligne aux portes : « moins d'une minute », « 12 min », « 3 h ». */
+function attente(ms: number): string {
+  const minutes = Math.floor(ms / 60_000);
+  if (minutes < 1) return "moins d'une minute";
+  if (minutes < 60) return `${minutes} min`;
+  return `${Math.floor(minutes / 60)} h`;
+}
+
+/**
+ * US-0334 : le Récit court de l'accueil d'un Voyageur arrivé aux portes à `arriveLe`, daté de l'accueil. Les
+ * prénoms n'ont pas de genre : la phrase n'en donne pas non plus.
+ */
+export function recitDAccueil(prenom: string, arriveLe: Date, instant: Date): NouveauRecit {
+  return {
+    titre: `${prenom} a rejoint le Territoire`,
+    texte: `${prenom}, qui attendait aux portes depuis ${attente(instant.getTime() - arriveLe.getTime())}, vit désormais au Foyer.`,
+    survenuLe: instant,
+  };
+}
+
+/**
+ * US-0334 : le Voyageur `voyageurId` qui attend aux portes du Territoire devient, à l'instant `instant` (l'heure
+ * du jeu), un Habitant sans Métier du même prénom, gratuitement, et un Récit court le dit ; le tout en une
+ * transaction. Rend false sans rien changer pour un Voyageur qui n'attend plus (déjà accueilli, ou refusé), ou
+ * qui attend aux portes d'un autre Territoire. Le Voyageur est retiré avant tout le reste : deux accueils du
+ * même Voyageur en même temps, ou un accueil et un refus, se suivent sur sa ligne, et seul le premier le
+ * trouve encore. Un seul Habitant, jamais deux.
+ */
+export async function accueillirLeVoyageur(pool: Pool, territoireId: number, voyageurId: number, instant: Date): Promise<boolean> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    const { rows } = await client.query<{ prenom: string; arriveLe: Date }>(
+      `delete from voyageur where id = $2 and territoire_id = $1 returning prenom, arrive_le as "arriveLe"`,
+      [territoireId, voyageurId],
+    );
+    const voyageur = rows[0];
+    if (!voyageur) {
+      await client.query("rollback");
+      return false;
+    }
+    await ajouterUnHabitant(client, territoireId, voyageur.prenom, instant);
+    await ecrireUnRecit(client, territoireId, recitDAccueil(voyageur.prenom, voyageur.arriveLe, instant));
+    await client.query("commit");
+    return true;
+  } catch (erreur) {
+    await client.query("rollback").catch(() => {});
+    throw erreur;
+  } finally {
+    client.release();
+  }
 }
 
 /** US-0332 : le nombre de Voyageurs qui attendent aux portes, pour le repère de l'entrée « Habitants ». */

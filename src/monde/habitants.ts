@@ -52,6 +52,20 @@ export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId:
   }
 }
 
+/**
+ * US-0334 : un nouvel Habitant au Territoire, sans Métier, du prénom donné, arrivé à `arriveLe`, l'heure du
+ * jeu ; rend son identifiant. Il compte aussitôt dans le nombre d'Habitants et dans l'Entretien. Appelée avec
+ * le client d'une transaction, elle tient dedans.
+ */
+export async function ajouterUnHabitant(base: Pool | PoolClient, territoireId: number, prenom: string, arriveLe: Date): Promise<number> {
+  const { rows } = await base.query<{ id: number }>("insert into habitant (territoire_id, prenom, arrive_le) values ($1, $2, $3) returning id", [
+    territoireId,
+    prenom,
+    arriveLe,
+  ]);
+  return rows[0].id;
+}
+
 /** Le nombre d'Habitants d'un Territoire, pour le compteur de la barre du haut (US-0304). */
 export async function nombreDHabitants(pool: Pool, territoireId: number): Promise<number> {
   const { rows } = await pool.query<{ nombre: number }>(`select count(*)::int as nombre from habitant where territoire_id = $1`, [territoireId]);

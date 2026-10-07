@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
 import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
+import { accueillirUnVoyageur } from "./actions-aux-portes";
 import styles from "./AuxPortes.module.css";
 
 /**
@@ -32,8 +33,13 @@ function depuisQuand(ms: number): string {
  * navigateur comme la barre des ressources ; sous VOYAGEUR_ALERTE_MINUTES minutes, dans la couleur d'alerte, et
  * « sur le départ » une fois le compte à zéro. Aucune zone annoncée : un lecteur d'écran lit le compte quand on
  * y passe, sans qu'il soit répété à chaque minute. Quand la page est relue, tout repart de la nouvelle heure.
+ *
+ * US-0334 : sous chaque ligne, « Accueillir » : la ligne disparaît aussitôt, le temps que l'action serveur fasse
+ * du Voyageur un Habitant et relise la page, qui fait alors foi.
  */
 export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: VoyageurAffiche[]; maintenant: Date; vitesse?: number }) {
+  const [affiches, retirer] = useOptimistic(voyageurs, (actuels, parti: number) => actuels.filter((v) => v.id !== parti));
+  const [, demarrer] = useTransition();
   const base = maintenant.getTime();
   // Le temps écoulé depuis l'affichage, mesuré pour cette heure du jeu-là : celui d'une heure déjà dépassée ne compte plus.
   const [ecoule, setEcoule] = useState<{ base: number; ms: number } | null>(null);
@@ -44,12 +50,19 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
     return () => clearInterval(battement);
   }, [base]);
 
+  function accueillir(voyageur: VoyageurAffiche) {
+    demarrer(async () => {
+      retirer(voyageur.id);
+      await accueillirUnVoyageur(voyageur.id);
+    });
+  }
+
   const instant = base + (ecoule?.base === base ? vitesse * ecoule.ms : 0);
   return (
     <Bloc titre="Aux portes" className={styles.auxPortes}>
-      {voyageurs.length > 0 ? (
+      {affiches.length > 0 ? (
         <ul className={styles.voyageurs}>
-          {voyageurs.map((v) => {
+          {affiches.map((v) => {
             const reste = v.departLe.getTime() - instant;
             // L'alerte vient avec le premier compte affiché sous le seuil (« 59 min »), à la minute supérieure comme lui.
             const alerte = Math.ceil(reste / 60_000) < VOYAGEUR_ALERTE_MINUTES;
@@ -60,6 +73,12 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
                 <span className={styles.depart} data-alerte={alerte ? "" : undefined}>
                   {reste > 0 ? `repart dans ${formaterDuree(reste / 3_600_000)}` : "sur le départ"}
                 </span>
+                <div className={styles.choix}>
+                  {/* Un bouton par ligne : un lecteur d'écran entend aussi qui il accueille. */}
+                  <button type="button" className={styles.accueillir} aria-label={`Accueillir ${v.prenom}`} onClick={() => accueillir(v)}>
+                    Accueillir
+                  </button>
+                </div>
               </li>
             );
           })}

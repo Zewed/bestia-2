@@ -356,12 +356,13 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0334 · Accueillir un Voyageur
 **En tant que** joueur, **je veux** accueillir un Voyageur, **afin de** gagner un nouvel Habitant.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sous chaque Voyageur aux portes, « Accueillir » et « Refuser ». Accueillir en fait aussitôt un Habitant sans Métier du même prénom, gratuitement, en une seule transaction : le nombre d'Habitants, les effectifs, l'Entretien et la barre montent, et un Récit « Ines a rejoint le Territoire » le raconte. La place ne bloque pas encore l'accueil (US-0338). Deux accueils du même Voyageur en même temps ne donnent jamais deux Habitants. Vérifié en vrai.
 - **Débloquée par** : US-0332
 - **Critères d'acceptation** :
   - Le bouton « Accueillir » fait du Voyageur un Habitant sans Métier, et le retire des portes.
   - Le nombre d'Habitants, les effectifs et l'Entretien montent aussitôt.
   - Un récit court signale l'arrivée du nouvel Habitant.
-  - Accueillir un Voyageur ne coûte rien (à décider).
+  - Accueillir un Voyageur ne coûte rien (décidé le 2026-10-07).
 
 ### US-0335 · Donner un Métier dès l'accueil
 **En tant que** joueur, **je veux** choisir le Métier d'un Voyageur au moment où je l'accueille, **afin de** mettre le nouvel Habitant au travail tout de suite.
