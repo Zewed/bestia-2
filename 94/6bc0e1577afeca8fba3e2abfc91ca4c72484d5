@@ -1,0 +1,47 @@
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_147d6e7a4319c6 11,22,76-77,120-121
+src/app/jeu/habitants/actions.test.ts
+  s_97a431cfa65ca7::t_147d6e7a4319c6 6-10,15,124-190
+  s_97a431cfa65ca7::t_e7dda3edb51bd2 191
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_147d6e7a4319c6 373-375,386-388,396-399,409-461,515-527
+  s_97a431cfa65ca7::t_0461557fddfbe3 528
+src/app/jeu/habitants/RepartitionDesMetiers.tsx
+  s_97a431cfa65ca7::t_147d6e7a4319c6 1-90
+src/app/jeu/habitants/RepartitionDesMetiers.test.tsx
+  s_97a431cfa65ca7::t_147d6e7a4319c6 1-141
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_147d6e7a4319c6 15-22,24-25,36,253-304
+  s_97a431cfa65ca7::t_5ffa5d1f290b4a 23
+  s_97a431cfa65ca7::t_5f054287ff5ac0 305
+src/app/jeu/habitants/actions.ts
+  s_97a431cfa65ca7::t_147d6e7a4319c6 7,20-24,35,52-76
+src/app/jeu/habitants/actions.db.test.ts
+  s_97a431cfa65ca7::t_147d6e7a4319c6 15,17,85-95
+  s_97a431cfa65ca7::t_bced357b287399 96-97
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_147d6e7a4319c6 55-89
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_147d6e7a4319c6 40,73,118-123,242-243,250-251,257,465,474-492,563-566,570-587
+  s_97a431cfa65ca7::t_a4c2773fa978e6 588
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_4996626e4628a8 132
+docs/stories/README.md
+  s_97a431cfa65ca7::t_74000e47933424 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "946bc0e1577afeca8fba3e2abfc91ca4c72484d5",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
