@@ -1,32 +1,48 @@
 src/monde/generer.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 6,8,16-18,22-27,60-63,71
+  s_97a431cfa65ca7::t_3487dcec1afdd5 60-63,71
+  s_97a431cfa65ca7::t_59944067824523 6,8,16-18,22-27
 src/monde/hex.test.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 5,109-122
   s_97a431cfa65ca7::t_46dc13248a79de 123-124
+  s_97a431cfa65ca7::t_980eb8cac1333e 5,109-122
+  s_97a431cfa65ca7::t_38247081bd4966 123-124
 src/monde/preparer-couronne.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 5,10-12,35-37,45
+  s_97a431cfa65ca7::t_3487dcec1afdd5 5,10-12,35-37,45
 src/monde/generer.db.test.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 33,49-51
+  s_97a431cfa65ca7::t_dce0d4c870e8fc 33,49-51
 drizzle/0040_coeur_sauvage.sql
   s_97a431cfa65ca7::t_aa9c72a4e0626e 1-16
+  s_97a431cfa65ca7::t_437015e7d3f977 1-16
 src/monde/preparer-couronne.db.test.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 46,51,54,58-63,86,119,123,127-141,170-175
   s_97a431cfa65ca7::t_98c9d5d1bab35e 176-177
+  s_97a431cfa65ca7::t_dce0d4c870e8fc 46,51,54,58-63,86,119,123,127-141,170-175
+  s_97a431cfa65ca7::t_5d840ba3c8d47b 176-177
 src/db/schema.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 385-389,405-406
+  s_97a431cfa65ca7::t_32f90e392e394e 385-389
+  s_97a431cfa65ca7::t_d1924a74249b79 405-406
 src/monde/hex.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 51-58
+  s_97a431cfa65ca7::t_4e45500e39d076 51-58
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_aa9c72a4e0626e 5,38,174-203
   s_97a431cfa65ca7::t_b2c14b0de93f12 204
+  s_97a431cfa65ca7::t_980eb8cac1333e 5,38,174-203
+  s_97a431cfa65ca7::t_a532e9572c93b2 204
 docs/stories/04-la-carte-du-monde.md
   s_97a431cfa65ca7::t_56e3fed8d53e08 52
 docs/stories/README.md
   s_97a431cfa65ca7::t_752bd84a85eba7 7
 drizzle/meta/0040_snapshot.json
   s_97a431cfa65ca7::t_529f474eddaaf3 2,96-101,237-240
+  s_97a431cfa65ca7::t_18804e7a53fd38 2,96-101,237-240
 drizzle/meta/_journal.json
   s_97a431cfa65ca7::t_4c0f4622d7c656 288
+  s_97a431cfa65ca7::t_75c10925421538 288
 ---
 {
   "schema_version": "authorship/3.0.0",
