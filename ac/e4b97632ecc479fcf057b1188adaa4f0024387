@@ -1,0 +1,80 @@
+src/app/jeu/habitants/actions-aux-portes.ts
+  s_97a431cfa65ca7::t_f845a32a5a02a6 7,21-25,27,31,33,37-39,45
+src/monde/voyageurs.test.ts
+  s_97a431cfa65ca7::t_d1b0512377306a 98-122
+  s_97a431cfa65ca7::t_4e50180c3925a4 3
+src/temps/avancer.db.test.ts
+  s_97a431cfa65ca7::t_e57b1052fa6936 183-269
+src/temps/avancer.ts
+  s_97a431cfa65ca7::t_743d082a2f0b80 21-26
+  s_97a431cfa65ca7::t_3aead23fe99ef8 73
+  s_97a431cfa65ca7::t_fca24e0cf372e4 98-100,107-108,115
+  s_97a431cfa65ca7::t_ef36cfa8d0bc13 60-61
+src/app/jeu/habitants/actions-aux-portes.test.ts
+  s_97a431cfa65ca7::t_0a4590c35aef1a 31
+  s_97a431cfa65ca7::t_1b3ed00eb6179e 7-8
+  s_97a431cfa65ca7::t_360c4b8084fa9f 6,9
+  s_97a431cfa65ca7::t_3201495fd882a9 40-46,50,52,55-59,66-68,71
+src/db/schema.ts
+  s_97a431cfa65ca7::t_698bd56e31249b 527-528,540-546,548-556
+drizzle/0041_sort_des_voyageurs.sql
+  s_97a431cfa65ca7::t_fe6fbd75e8c222 1-4
+  s_97a431cfa65ca7::t_6721b6642e9d3a 5-12
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_939892f33f45c3 7-9
+  s_97a431cfa65ca7::t_1049e60f8fe74a 85-101
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_153f7a83de41b3 57-58,61,68-72
+  s_97a431cfa65ca7::t_8db9a5fc55a58f 39-40,45
+src/temps/regles.ts
+  s_97a431cfa65ca7::t_838f2d183c6eaa 3-5,8,14-18
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_ac1693872ee38e 107-117
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_b12196fcfd7727 192-235
+  s_97a431cfa65ca7::t_ce708c09b24785 7,9,12-13
+  s_97a431cfa65ca7::t_7962c62bedaaba 46-50
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_3ee873b34f2627 273-285,287,293-301
+  s_97a431cfa65ca7::t_b05236a84ec7c7 51-55,57,59-65,70-71,74-76,80-87
+  s_97a431cfa65ca7::t_5bc09a54bac5fe 320-325,327-334,337,339,343,346-351,354,361-364,368-416,419-490
+  s_97a431cfa65ca7::t_c6b273be8b9065 417-418
+  s_97a431cfa65ca7::t_1ce6aba8eef93f 88,98-105
+  s_97a431cfa65ca7::t_e2a10f3a125ee9 547,586,594,597,607,628,646,658,664,673,685,687,689
+  s_97a431cfa65ca7::t_73b02a38b3c55f 129,131-152,156-157,159-171,173,176-184
+  s_97a431cfa65ca7::t_1867ed483642e8 11
+  s_97a431cfa65ca7::t_f584f8db178bd6 550-551
+  s_97a431cfa65ca7::t_c445c47c3c5a18 631-632
+  s_97a431cfa65ca7::t_1693abb73c3abf 66-69
+  s_97a431cfa65ca7::t_37b50904a691f8 13,20-29,33-34
+  s_97a431cfa65ca7::t_7614dd2d8ae73f 89,491-492
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_c99f23b2a64aaa 2-3,15-16
+  s_97a431cfa65ca7::t_d27879f8ca1736 152,155
+  s_97a431cfa65ca7::t_95de069e307ace 37-38,46,49-50,56-57,64-67,75-76,82-144,181
+  s_97a431cfa65ca7::t_83ad87a9df2bba 182-186,190-193,195,200-202,206-207,209,214,224-228,230-235,239,241-243
+  s_97a431cfa65ca7::t_a720a61765c7d3 17,145
+src/temps/synchroniser-horloge.db.test.ts
+  s_97a431cfa65ca7::t_480d50dd4f066e 375-378,381-385
+  s_97a431cfa65ca7::t_5e5ec45e5c37a6 8
+drizzle/meta/0041_snapshot.json
+  s_97a431cfa65ca7::t_1007eb91c6885b 1-2313
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_b1d4a71dab00ae 291-297
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ace4b97632ecc479fcf057b1188adaa4f0024387",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
