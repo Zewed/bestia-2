@@ -133,10 +133,11 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0213 · Voir les stocks monter sans recharger la page
 **En tant que** joueur, **je veux** voir mes quantités monter pendant que je joue, **afin de** sentir mon Territoire vivre sous mes yeux.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Chaque seconde, la barre ajoute la production écoulée depuis l'arrivée des quantités, mesurée sur l'horloge du navigateur (aucun écart possible avec celle du serveur) et accélérée comme le temps du jeu. Le recalage recharge les quantités du serveur ; une action recharge déjà la page. Vérifié en vrai : 106,99 Végétaux passent à 107 en cinq secondes sans recharger, et revenir sur l'onglet recale aussitôt.
 - **Débloquée par** : US-0212
 - **Critères d'acceptation** :
   - Page ouverte, les quantités de la barre du haut montent d'elles-mêmes au rythme de la production.
-  - L'affichage se recale sur les quantités exactes du jeu toutes les (chiffre à régler) minutes et après chaque action.
+  - L'affichage se recale sur les quantités exactes du jeu toutes les 5 minutes (provisoire, `RECALER_LA_BARRE_MINUTES`) et après chaque action.
   - Revenir sur un onglet resté en arrière-plan affiche aussitôt les bonnes quantités.
 
 ### US-0214 · Détailler une ressource au survol

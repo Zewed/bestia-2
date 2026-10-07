@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { joueurConnecte, stocksALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
+import { vitesse } from "@/temps/horloge";
 import { BoutonDeconnexion } from "./Deconnexion";
 import { MenuChef } from "./MenuChef";
 import { Ressources } from "./Ressources";
@@ -21,7 +22,8 @@ export async function ActionsDuJeu() {
   const stocks = joueur.territoireId !== null && joueur.recitLu ? await stocksALHeure(joueur.territoireId) : null;
   return (
     <>
-      {stocks ? <Ressources stocks={stocks} /> : null}
+      {/* US-0213 : la clé change avec les quantités, pour que la barre reparte des nouvelles après un recalage. */}
+      {stocks ? <Ressources key={stocks.map((s) => s.quantite).join("|")} stocks={stocks} vitesse={vitesse()} /> : null}
       <MenuChef nom={joueur.nomDeChef} />
     </>
   );

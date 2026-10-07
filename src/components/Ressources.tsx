@@ -1,8 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { productionAffichee, productionHoraire, quantiteAffichee } from "@/monde/quantite";
+import { RECALER_LA_BARRE_MINUTES } from "@/reglages";
 import styles from "./BarreHaut.module.css";
 
 type Famille = "nourriture" | "materiaux";
@@ -28,15 +30,46 @@ function parFamille(stocks: RessourceDeLaBarre[]): { famille: Famille; stocks: R
 }
 
 /**
+ * US-0213 : la quantité d'un Stock `ecoule` millisecondes réelles après sa lecture, montée depuis au
+ * rythme de sa production, accélérée comme le temps du jeu.
+ */
+export function quantiteMontee(stock: RessourceDeLaBarre, ecoule: number, vitesse: number): number {
+  return Number(stock.quantite) + (Number(stock.parHeure) * vitesse * Math.max(0, ecoule)) / 3_600_000;
+}
+
+/**
  * Les quatre ressources du joueur dans la barre du haut (US-0203), toujours dans l'ordre Viande,
  * Végétaux, Bois, Pierre : leur icône, puis la quantité (US-0204), en deux groupes séparés d'un
  * trait, la Nourriture et les Matériaux (US-0205). Le nom de la ressource est le texte de l'icône ;
  * avec celui de son groupe, il paraît dans une bulle au survol ou au toucher, que toucher ailleurs
  * ou Échap referme. Au milieu de la barre ; sur mobile, en bande juste en dessous (voir formes.css).
+ *
+ * US-0213 : page ouverte, les quantités montent d'elles-mêmes au rythme de la production, depuis leur
+ * arrivée dans la page ; la barre se recale sur les quantités exactes du jeu toutes les
+ * RECALER_LA_BARRE_MINUTES minutes et dès qu'on revient sur l'onglet (une action, elle, recharge déjà
+ * la page). De nouvelles quantités arrivent avec une nouvelle clé (ActionsDuJeu) : tout repart d'elles.
  */
-export function Ressources({ stocks }: { stocks: RessourceDeLaBarre[] }) {
+export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre[]; vitesse?: number }) {
   const [ouverte, setOuverte] = useState<string | null>(null);
+  const [ecoule, setEcoule] = useState<number | null>(null);
   const racine = useRef<HTMLDivElement>(null);
+  const routeur = useRouter();
+
+  useEffect(() => {
+    // Le temps écoulé depuis l'arrivée des quantités, sur l'horloge du navigateur : sans écart possible avec celle du serveur.
+    const depart = performance.now();
+    const battement = setInterval(() => setEcoule(performance.now() - depart), 1000);
+    const recalage = setInterval(() => routeur.refresh(), RECALER_LA_BARRE_MINUTES * 60_000);
+    const retour = () => {
+      if (document.visibilityState === "visible") routeur.refresh();
+    };
+    document.addEventListener("visibilitychange", retour);
+    return () => {
+      clearInterval(battement);
+      clearInterval(recalage);
+      document.removeEventListener("visibilitychange", retour);
+    };
+  }, [routeur]);
 
   useEffect(() => {
     if (!ouverte) return;
@@ -63,7 +96,7 @@ export function Ressources({ stocks }: { stocks: RessourceDeLaBarre[] }) {
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
                 <Image src={iconeDeRessource(stock.id)} alt={stock.nom} width={22} height={22} className={styles.icone} />
                 {/* Une espace entre le nom et la quantité, pour qu'un lecteur d'écran dise « Pierre 42 ». */}{" "}
-                <span className={styles.quantite}>{quantiteAffichee(stock.quantite)}</span>
+                <span className={styles.quantite}>{quantiteAffichee(ecoule === null ? stock.quantite : quantiteMontee(stock, ecoule, vitesse))}</span>
                 {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. */}
                 <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
                   <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>

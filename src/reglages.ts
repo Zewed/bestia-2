@@ -71,3 +71,5 @@ export const TAILLE_DES_REGIONS = 16;
 
 /** US-0206 : à partir de cette quantité, la barre du haut abrège les nombres (123 k, 1,2 M). */
 export const ABREGER_A_PARTIR_DE = 100_000;
+/** US-0213 : page ouverte, la barre du haut se recale sur les quantités exactes du jeu toutes les 5 minutes. */
+export const RECALER_LA_BARRE_MINUTES = 5;

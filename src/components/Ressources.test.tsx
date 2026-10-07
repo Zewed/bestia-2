@@ -1,7 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { act } from "react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
+
 import { Ressources } from "./Ressources";
 
 const STOCKS = [
@@ -80,4 +84,43 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     await u.keyboard("{Escape}");
     expect(ouvertes()).toEqual([]);
   });
+
+  describe("les quantités qui montent page ouverte (US-0213)", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+      routeur.refresh.mockClear();
+    });
+    const quantites = () => [...document.querySelectorAll("button > span:first-of-type")].map((q) => q.textContent);
+    // Une production d'une unité par seconde, pour voir la quantité monter à chaque battement.
+    const VITE = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "3600.000000" }] as const;
+
+    it("montrent d'abord les quantités exactes du jeu, puis montent d'elles-mêmes au rythme de la production", async () => {
+      vi.useFakeTimers();
+      render(<Ressources stocks={[...VITE]} />);
+      expect(quantites()).toEqual(["100"]);
+      await act(async () => vi.advanceTimersByTime(5_000));
+      expect(quantites()).toEqual(["105"]);
+    });
+
+    it("montent plus vite quand le temps du jeu est accéléré", async () => {
+      vi.useFakeTimers();
+      render(<Ressources stocks={[...VITE]} vitesse={10} />);
+      await act(async () => vi.advanceTimersByTime(3_000));
+      expect(quantites()).toEqual(["130"]);
+    });
+
+    it("se recalent sur le jeu toutes les 5 minutes, et dès le retour sur l'onglet", async () => {
+      vi.useFakeTimers();
+      render(<Ressources stocks={[...VITE]} />);
+      await act(async () => vi.advanceTimersByTime(5 * 60_000));
+      expect(routeur.refresh).toHaveBeenCalledTimes(1);
+      Object.defineProperty(document, "visibilityState", { value: "hidden", configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+      expect(routeur.refresh).toHaveBeenCalledTimes(1);
+      Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+      expect(routeur.refresh).toHaveBeenCalledTimes(2);
+    });
+  });
 });
+
