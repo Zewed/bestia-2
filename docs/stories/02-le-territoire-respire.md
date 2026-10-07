@@ -113,6 +113,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0211 · Retrouver ses stocks montés après une absence
 **En tant que** joueur, **je veux** retrouver en revenant tout ce que mon Foyer a produit pendant mon absence, **afin de** jouer par courtes sessions sans rien perdre.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot), sans code nouveau : le mécanisme unique du temps d'US-0210 suffisait. Des tests sur base le gardent : six heures d'absence donnent exactement six fois la production ; le résultat est identique page fermée, avec la tâche planifiée passée entre-temps, ou page ouverte plusieurs fois ; trois mises à l'heure simultanées ne comptent la production qu'une fois. Vérifié en vrai avec deux onglets ouverts au même moment : mêmes quantités. L'exactitude sur des durées quelconques (arrondi au millionième à chaque pas) reste l'affaire d'US-0219.
 - **Débloquée par** : US-0210
 - **Critères d'acceptation** :
   - Après une absence de N heures, chaque stock a monté exactement de N fois sa production horaire.
