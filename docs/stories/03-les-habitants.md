@@ -62,10 +62,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0306 · Utiliser la page Habitants au pouce
 **En tant que** joueur, **je veux** gérer mes Habitants d'une seule main sur mon téléphone, **afin de** jouer en quelques secondes où que je sois.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Une seule colonne sur mobile, sans défilement de côté ; chaque bouton de la page fait au moins 44 px de côté ; le nombre d'Habitants et la place restent collés sous la barre du haut quand la liste défile. Vérifié en vrai à 320 px.
 - **Débloquée par** : US-0303
 - **Critères d'acceptation** :
   - Sur mobile, la page tient sur une seule colonne, sans défilement de côté.
-  - Chaque bouton offre une surface de toucher d'au moins (chiffre à régler) pixels de côté.
+  - Chaque bouton offre une surface de toucher d'au moins 44 pixels (provisoire, dans le CSS de la page) de côté.
   - Le nombre d'Habitants et la place restent visibles en haut de la page quand on fait défiler la liste.
 
 ## Étape 14 · Donner un Métier

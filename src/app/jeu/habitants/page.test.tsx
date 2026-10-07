@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -25,7 +27,7 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -150,5 +152,52 @@ describe("page Habitants (US-0302, US-0303, US-0305)", () => {
     vi.stubEnv("VERCEL_ENV", "production");
     await expect(Habitants()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
     expect(cookie.jetonDeSession).not.toHaveBeenCalled();
+  });
+
+  it("rassemble le nombre, la place et « Plus de place » dans l'en-tête du bloc, la liste à part, dessous (US-0306)", async () => {
+    connecte(5, 5);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<section[^>]*><div[^>]*><p[^>]*>5 Habitants sur 5 places<\/p><p[^>]*>Plus de place<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){5}<\/ul><\/section>/);
+  });
+});
+
+describe("page Habitants au pouce (US-0306)", () => {
+  const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
+  const css = lire("src/app/jeu/habitants/page.module.css");
+  /** Les déclarations d'une règle, dans `texte` (toute la feuille par défaut). */
+  const regle = (selecteur: string, texte = css) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+  const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+
+  it("sur mobile, tient sur une seule colonne, sans défilement de côté", () => {
+    // Chaque ligne se resserre : le prénom et le Métier l'un sous l'autre, l'état à droite, rien qui impose sa largeur.
+    expect(css).toContain("@media (max-width: 820px)");
+    expect(regle(".habitant", mobile)).toContain("grid-template-columns: minmax(0, 1fr) auto;");
+    for (const [, colonnes] of css.matchAll(/grid-template-columns: ([^;]+);/g)) {
+      expect(colonnes.split(/ (?![^(]*\))/).every((c) => c === "auto" || c.startsWith("minmax(0,")), colonnes).toBe(true);
+    }
+    // Aucune largeur fixe plus grande qu'une surface de toucher, aucun texte qui refuse d'aller à la ligne.
+    for (const [, largeur] of css.matchAll(/(?<![\w-])(?:min-)?width: (\d+)px/g)) expect(Number(largeur)).toBeLessThanOrEqual(44);
+    expect(css).not.toContain("nowrap");
+    expect(regle(".entete")).toContain("flex-wrap: wrap;");
+  });
+
+  it("donne à chaque bouton une surface de toucher d'au moins 44 px de côté, sur tous les écrans", () => {
+    const bouton = regle(".page button");
+    expect(bouton).toContain("min-width: 44px;");
+    expect(bouton).toContain("min-height: 44px;");
+    expect(css.indexOf(".page button {")).toBeLessThan(css.indexOf("@media"));
+  });
+
+  it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {
+    const entete = regle(".entete");
+    expect(entete).toContain("position: sticky;");
+    // La barre du haut, bande des ressources et encoche comprises sur mobile (formes.css).
+    expect(entete).toContain("top: var(--hauteur-barre);");
+    // La liste passe dessous sans se voir au travers.
+    expect(entete).toContain("background: var(--bloc);");
+    // Rien ne coupe le bloc qui le porte : un bloc qui rognerait son contenu le décollerait.
+    const bloc = regle(".bloc", lire("src/components/Bloc.module.css"));
+    expect(bloc).toContain("background: var(--bloc);");
+    expect(bloc).not.toContain("overflow:");
   });
 });

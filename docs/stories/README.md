@@ -30,7 +30,7 @@ Dernière story livrée : **US-0324** · Lire les récits du Territoire ; le jal
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **65 étapes** | **748** | **257** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (167 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (166 au total).
 
 ## Lire une story
 
