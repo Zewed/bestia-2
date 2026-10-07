@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-260 points au total.
+259 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -10,7 +10,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 2 · Le territoire respire](02-le-territoire-respire.md)
 
-- [US-0230](02-le-territoire-respire.md) · Traiter un stock au-dessus de sa limite : le surplus est gardé ou retiré.
 
 ## [Jalon 3 · Les Habitants](03-les-habitants.md)
 

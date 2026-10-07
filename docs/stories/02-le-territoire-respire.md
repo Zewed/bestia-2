@@ -309,10 +309,11 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0230 · Traiter un stock au-dessus de sa limite
 **En tant que** joueur, **je veux** un comportement clair si un stock dépasse sa limite, **afin de** ne pas voir mes ressources disparaître sans explication.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle), sans changement de calcul. Tests sur base (`src/monde/surplus.db.test.ts`) : un Bois à 800 dont la limite passe à 500 garde exactement ses 800 sur des heures, sans produire, pendant que la Viande produit ; ramené sous sa limite (limite remontée ou quantité baissée), il reproduit jusqu'à la limite et s'y arrête. Test d'affichage : 1 200 pour une limite de 1 000 s'affiche « 1 200 », plein, et ne monte pas.
 - **Débloquée par** : US-0221
 - **Critères d'acceptation** :
   - Un stock au-dessus de sa limite (limite baissée, réglage de test) ne produit plus rien tant qu'il n'est pas repassé sous la limite.
-  - Le surplus est gardé ou retiré (à décider).
+  - Le surplus est gardé (décidé le 2026-10-07) : rien ne retire de ressources sans que le joueur l'ait voulu.
   - Tant que le surplus existe, l'affichage montre la vraie quantité, avec le signal « plein ».
 
 ### US-0231 · Voir les stocks pleins sur mobile

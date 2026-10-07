@@ -201,5 +201,25 @@ describe("ressources dans la barre du haut (US-0204)", () => {
       expect(routeur.refresh).toHaveBeenCalledTimes(2);
     });
   });
+
+  it("montre la vraie quantité d'un Stock au-dessus de sa limite, plein, sans la faire monter (US-0230)", async () => {
+    vi.useFakeTimers();
+    try {
+      // Assez de production pour qu'une minute se voie, si le Stock montait.
+      render(<Ressources stocks={[{ ...STOCKS[2], quantite: "1200.000000", limite: "1000.000000", parHeure: "3600.000000" }]} />);
+      const montre = () => [
+        document.querySelector("button > span")?.textContent,
+        document.querySelector("li > [aria-hidden]")!.children[2].textContent,
+        document.querySelector("li[data-plein]") !== null,
+        screen.queryByRole("button", { name: /^Bois 1\s200 plein, production perdue$/ }) !== null,
+      ];
+      expect(montre()).toEqual(["1 200", "1 200 / 1 000", true, true]);
+      await act(async () => vi.advanceTimersByTime(60_000));
+      expect(montre()).toEqual(["1 200", "1 200 / 1 000", true, true]);
+    } finally {
+      vi.useRealTimers();
+      routeur.refresh.mockClear();
+    }
+  });
 });
 

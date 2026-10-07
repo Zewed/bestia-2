@@ -23,6 +23,8 @@ export const PRODUCTION_DU_TERRITOIRE = `
  * US-0221 : un Stock s'arrête exactement à sa limite ; ce qui la dépasse est perdu, reste compris, et
  * un Stock déjà à sa limite (ou au-dessus) ne gagne plus rien. Les autres continuent de monter.
  * US-0228 : le calcul note l'instant où un Stock atteint sa limite.
+ * US-0230 : le surplus d'un Stock au-dessus de sa limite (limite baissée) est gardé, rien ne le retire ;
+ * le Stock ne produit plus tant qu'il n'est pas repassé sous sa limite.
  */
 export const PRODUIRE = `
   with p as (${PRODUCTION_DU_TERRITOIRE}),
