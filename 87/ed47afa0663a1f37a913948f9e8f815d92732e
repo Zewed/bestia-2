@@ -1,0 +1,60 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_48ec6ef50bab36 186
+  s_97a431cfa65ca7::t_a885c7b4603f7d 181-182,185
+  s_97a431cfa65ca7::t_521d4d1f9a9b0b 62
+  s_97a431cfa65ca7::t_601d959d839620 183-184,187-188
+src/monde/generer.db.test.ts
+  s_97a431cfa65ca7::t_e094980368a151 4,42,53-55
+scripts/monde-generer.ts
+  s_97a431cfa65ca7::t_e094980368a151 37,39
+src/monde/foyers.test.ts
+  s_97a431cfa65ca7::t_ff28da27ba3729 4,6,104-131
+  s_97a431cfa65ca7::t_7160c23e8fdaef 132-133
+src/monde/foyers.ts
+  s_97a431cfa65ca7::t_0a8206c3f29570 32-45
+src/monde/poches.ts
+  s_97a431cfa65ca7::t_ca113f8a9e4d8a 1-27,30-31,35-52
+  s_97a431cfa65ca7::t_5484cc66dde7b5 28-29,32-34
+src/monde/regions.ts
+  s_97a431cfa65ca7::t_10501499954203 249,251-254,256-257,260,262
+  s_97a431cfa65ca7::t_f3332dbe9b631f 231-233
+  s_97a431cfa65ca7::t_42b08dc9169439 229-230,235-238,241,248,250,255,258-259,261
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_eb322cadc090f5 5,125-138
+  s_97a431cfa65ca7::t_e72478a19ad195 139
+src/monde/mer.ts
+  s_97a431cfa65ca7::t_10501499954203 27-28
+  s_97a431cfa65ca7::t_23b6242d236ec4 30-33,35
+src/monde/poches.test.ts
+  s_97a431cfa65ca7::t_464cc2ed60d920 1-44
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_24690d11974468 76-92
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_e88fe6137095c1 28-29,620-627,633
+  s_97a431cfa65ca7::t_c740e8d909c9a0 19-21,27,582-619,628-632
+  s_97a431cfa65ca7::t_f3d3ad09c7285a 634
+src/monde/rivieres.ts
+  s_97a431cfa65ca7::t_10501499954203 30-31
+  s_97a431cfa65ca7::t_23b6242d236ec4 37,41
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_23b6242d236ec4 12,47-49,51,54,64
+  s_97a431cfa65ca7::t_42b08dc9169439 13,55
+  s_97a431cfa65ca7::t_e094980368a151 8,117,128,152
+  s_97a431cfa65ca7::t_321f032cb008c0 23-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "87ed47afa0663a1f37a913948f9e8f815d92732e",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
