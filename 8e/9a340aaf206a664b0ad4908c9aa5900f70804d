@@ -1,29 +1,52 @@
 src/app/jeu/habitants/actions-aux-portes.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 1-31
+  s_97a431cfa65ca7::t_e0ae2f3aca2630 1-31
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_448a0e7aa15139 605-606,655-659
   s_97a431cfa65ca7::t_8b715ada8428b7 660
+  s_97a431cfa65ca7::t_55ca7cc720789d 605-606
+  s_97a431cfa65ca7::t_e5a175f7330a71 655-660
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 11,16-19,88-90,282-365
   s_97a431cfa65ca7::t_a0622911bec876 366
+  s_97a431cfa65ca7::t_d2471645917f4d 16-19
+  s_97a431cfa65ca7::t_28b6f4062def59 11
+  s_97a431cfa65ca7::t_87473263bc890e 88-90
+  s_97a431cfa65ca7::t_3a69c9c83b4b63 282-366
 src/app/jeu/habitants/actions-aux-portes.test.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 1-71
+  s_97a431cfa65ca7::t_fe932fbdde4f1f 1-71
 src/app/jeu/habitants/AuxPortes.tsx
   s_97a431cfa65ca7::t_448a0e7aa15139 3,7,36-38,41-42,53-59,63,65,76-81
+  s_97a431cfa65ca7::t_5af2781ec0eaa3 36-38,41-42
+  s_97a431cfa65ca7::t_84a4eff46fae2e 76-81
+  s_97a431cfa65ca7::t_6db05ac1f35743 53-59,63,65
+  s_97a431cfa65ca7::t_79e60de59a1691 3,7
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 8-9,85-136
   s_97a431cfa65ca7::t_f23a1746619a60 137
+  s_97a431cfa65ca7::t_97c1fbc44184c1 8-9
+  s_97a431cfa65ca7::t_0dd92353f7df7e 85-104
+  s_97a431cfa65ca7::t_9fc4f44ae917f4 105-137
 src/app/jeu/habitants/actions-aux-portes.db.test.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 1-93
+  s_97a431cfa65ca7::t_932a6bddf792c7 1-93
 src/monde/voyageurs.test.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 3,6,73-96
   s_97a431cfa65ca7::t_830664818e03cc 97
+  s_97a431cfa65ca7::t_8f2270649cc6da 3,6,73-96
+  s_97a431cfa65ca7::t_49ae9bc52de546 97
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_448a0e7aa15139 55-68
+  s_97a431cfa65ca7::t_eb9fc1ad51353d 55-68
 src/app/jeu/habitants/AuxPortes.test.tsx
   s_97a431cfa65ca7::t_448a0e7aa15139 3,6-16,32-33,40-43,45-49,52,88-141
+  s_97a431cfa65ca7::t_38918454024fbd 3,6-16
+  s_97a431cfa65ca7::t_0cc1f61d1cd37f 32-33,40-43,45-49,52
+  s_97a431cfa65ca7::t_9678a6d45b0ad0 88-141
 src/app/jeu/habitants/AuxPortes.module.css
   s_97a431cfa65ca7::t_448a0e7aa15139 50-85
+  s_97a431cfa65ca7::t_5d75a0e9dc95c0 50-85
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_8fa16ecef9847e 359,365
 docs/stories/README.md
