@@ -248,6 +248,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0224 · Signaler un stock plein dans la barre du haut
 **En tant que** joueur, **je veux** voir tout de suite qu'un stock est plein, **afin de** ne pas perdre de production sans m'en rendre compte.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Un Stock plein montre sa quantité en rose et une étiquette rouge « PLEIN » : à droite de la quantité sur ordinateur, à côté de l'icône dans la bande mobile (tient à 320 px). Le signal suit la quantité qui monte page ouverte : il apparaît à l'instant où le Stock atteint sa limite, et disparaît dès qu'il repasse dessous. Un lecteur d'écran entend « Bois 1 000 plein ».
 - **Débloquée par** : US-0203, US-0221
 - **Critères d'acceptation** :
   - Un stock plein change d'apparence dans la barre du haut, avec une couleur d'alerte de la palette et la mention « plein ».

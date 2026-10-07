@@ -208,6 +208,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* US-0224 : un Stock plein, en couleur d'alerte et avec le mot « plein » : jamais la couleur seule. */
+.ressource[data-plein] .quantite {
+  color: var(--rose);
+}
+
+.plein {
+  padding: 1px 6px;
+  border-radius: var(--arrondi-petit);
+  background: var(--mauvais);
+  color: var(--blanc-chaud);
+  font-size: 11px;
+  font-weight: var(--graisse-titre);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+}
+
 /* US-0212 : la production horaire, à côté de la quantité, seulement là où la barre a la place. */
 .production {
   display: none;
@@ -364,12 +380,34 @@
 
   /* Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px. */
   .boutonRessource {
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-areas: "icone" "quantite";
+    gap: 2px 4px;
+    align-content: center;
     justify-content: center;
+    justify-items: center;
     width: 100%;
     min-height: 0;
     padding: 0 4px;
+  }
+
+  .boutonRessource .icone {
+    grid-area: icone;
+  }
+
+  .boutonRessource .quantite {
+    grid-area: quantite;
+  }
+
+  /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous. */
+  .ressource[data-plein] .boutonRessource {
+    grid-template-areas: "icone plein" "quantite quantite";
+  }
+
+  .plein {
+    grid-area: plein;
+    padding: 0 4px;
+    font-size: 9px;
   }
 
   .icone {

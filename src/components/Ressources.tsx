@@ -103,12 +103,20 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
         <ul key={groupe.famille} className={styles.groupe} aria-label={NOM_DE_FAMILLE[groupe.famille]}>
           {groupe.stocks.map((stock) => {
             const quantite = ecoule === null ? Number(stock.quantite) : quantiteMontee(stock, ecoule, vitesse);
+            // US-0224 : un Stock plein se signale dans la barre, par la couleur et par le mot « plein ».
+            const plein = quantite >= Number(stock.limite);
             return (
-            <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined}>
+            <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined} data-plein={plein ? "" : undefined}>
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
                 <Image src={iconeDeRessource(stock.id)} alt={stock.nom} width={22} height={22} className={styles.icone} />
                 {/* Une espace entre le nom et la quantité, pour qu'un lecteur d'écran dise « Pierre 42 ». */}{" "}
                 <span className={styles.quantite}>{quantiteAffichee(quantite)}</span>
+                {plein ? (
+                  <>
+                    {" "}
+                    <span className={styles.plein}>plein</span>
+                  </>
+                ) : null}
                 {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. */}
                 <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
                   <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
