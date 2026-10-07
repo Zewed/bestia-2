@@ -321,6 +321,22 @@
   background: var(--encre);
 }
 
+.ressource[data-plein] .remplissage {
+  background: var(--mauvais);
+}
+
+.perdue {
+  color: var(--mauvais);
+  font-size: 12px;
+}
+
+/* Les phrases du détail d'un Stock plein vont à la ligne, la bulle ne dépasse jamais l'écran. */
+.perdue,
+.reprise {
+  width: min(220px, calc(100vw - 40px));
+  white-space: normal;
+}
+
 .sourceBulle {
   color: var(--texte-2);
   font-size: 12px;
@@ -373,9 +389,16 @@
     gap: 0;
   }
 
+  /* Le trait entre les groupes, dessiné en fond : le groupe reste sans position propre, et la bulle se centre sous toute la bande. */
   .groupe + .groupe {
+    position: static;
     margin-left: 0;
     padding-left: 0;
+    background: linear-gradient(var(--sur-encre-eteint), var(--sur-encre-eteint)) left center / 1px 24px no-repeat;
+  }
+
+  .groupe + .groupe::before {
+    display: none;
   }
 
   /* Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px. */
@@ -397,6 +420,23 @@
 
   .boutonRessource .quantite {
     grid-area: quantite;
+  }
+
+  /* Le détail d'une ressource s'ouvre centré sous toute la bande, quelle que soit sa colonne : jamais hors de l'écran. */
+  .ressources {
+    position: relative;
+  }
+
+  .ressource {
+    position: static;
+  }
+
+  .bulle,
+  .groupe:first-child .ressource:first-child .bulle,
+  .groupe:last-child .ressource:last-child .bulle {
+    --decalage: -50%;
+    left: 50%;
+    max-width: calc(100vw - 24px);
   }
 
   /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous. */

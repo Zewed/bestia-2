@@ -94,8 +94,25 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     render(<Ressources stocks={[{ ...STOCKS[2], quantite: "1000.000000" }, STOCKS[3]]} />);
     const pleins = [...document.querySelectorAll("li[data-plein]")].map((li) => li.querySelector("img")?.alt);
     expect(pleins).toEqual(["Bois"]);
-    expect(screen.getByRole("button", { name: /^Bois 1\s000 plein, 4 par heure$/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /^Bois 1\s000 plein, production perdue$/ })).toBeTruthy();
     expect(screen.getByRole("button", { name: /^Pierre 42,/ })).toBeTruthy();
+  });
+
+  it("dit qu'un Stock plein perd sa production, et à quel rythme elle reprendra (US-0225)", async () => {
+    const u = userEvent.setup();
+    render(<Ressources stocks={[{ ...STOCKS[2], quantite: "1000.000000" }]} />);
+    const bouton = screen.getByRole("button", { name: /^Bois/ });
+    expect(bouton.querySelector("[aria-hidden]")).toBeNull(); // plus de « +4/h » : « PLEIN » en tient lieu
+    await u.click(bouton);
+    const lignes = [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((l) => l.textContent);
+    expect(lignes).toEqual([
+      "Bois",
+      "Matériaux",
+      "1\u00a0000 / 1\u00a0000",
+      "",
+      "Stock plein : la production de Bois est perdue.",
+      "Elle reprendra à +4/h dès qu'il y aura de la place.",
+    ]);
   });
 
   it("referme la bulle d'un toucher ailleurs ou avec Échap", async () => {

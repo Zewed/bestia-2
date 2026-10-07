@@ -259,6 +259,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0225 · Expliquer que la production est perdue
 **En tant que** joueur, **je veux** un message qui dit clairement que la production d'un stock plein est perdue, **afin de** comprendre ce que me coûte l'attente.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Dans la barre, l'étiquette « PLEIN » prend la place du « +4/h » (« stock plein » en double aurait alourdi la barre) ; un lecteur d'écran entend « Bois 1 000 plein, production perdue ». Le détail d'un Stock plein montre la jauge en rouge, « Stock plein : la production de Bois est perdue. » puis « Elle reprendra à +4/h dès qu'il y aura de la place. ». Sur mobile, le détail s'ouvre désormais centré sous toute la bande, pour ne jamais sortir de l'écran, même avec ces phrases plus longues (vérifié à 320 et 390 px).
 - **Débloquée par** : US-0223, US-0224
 - **Critères d'acceptation** :
   - Le détail d'un stock plein dit : « Stock plein : la production de Bois est perdue. »

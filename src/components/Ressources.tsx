@@ -117,11 +117,15 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
                     <span className={styles.plein}>plein</span>
                   </>
                 ) : null}
-                {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. */}
-                <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
-                  <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
-                  <span className={styles.annonce}>, {productionHoraire(stock.parHeure)} par heure</span>
-                </span>
+                {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. Un Stock plein n'en a plus : « PLEIN » en tient lieu (US-0225). */}
+                {plein ? (
+                  <span className={styles.annonce}>, production perdue</span>
+                ) : (
+                  <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
+                    <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
+                    <span className={styles.annonce}>, {productionHoraire(stock.parHeure)} par heure</span>
+                  </span>
+                )}
               </button>
               {/*
                 US-0214 : le détail de la ressource, au survol, au clavier ou au toucher : son nom et son groupe,
@@ -138,7 +142,15 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
                 <span className={styles.jauge}>
                   <span className={styles.remplissage} style={{ width: `${Math.min(100, (quantite / Number(stock.limite)) * 100)}%` }} />
                 </span>
-                {stock.sources.length === 0 ? (
+                {plein ? (
+                  <>
+                    {/* US-0225 : ce que coûte l'attente, et ce qui reprendra. */}
+                    <span className={styles.perdue}>Stock plein : la production de {stock.nom} est perdue.</span>
+                    {Number(stock.parHeure) > 0 ? (
+                      <span className={`${styles.sourceBulle} ${styles.reprise}`}>Elle reprendra à {productionAffichee(stock.parHeure)} dès qu&apos;il y aura de la place.</span>
+                    ) : null}
+                  </>
+                ) : stock.sources.length === 0 ? (
                   <span className={styles.sourceBulle}>{productionAffichee(0)}</span>
                 ) : (
                   stock.sources.map((source) => (
