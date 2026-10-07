@@ -3,14 +3,16 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { CSSProperties } from "react";
-import { exigerCompte } from "@/comptes/garde";
+import { exigerCompte, stocksALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { getPool } from "@/db";
 import { type EntretienDesHabitants, entretienDesHabitants, habitantsDuTerritoire, placesDuTerritoire } from "@/monde/habitants";
 import { iconeDeMetier, lesMetiers, type Metier } from "@/monde/metiers";
+import { nourriturePourEncore, tenueDeLaNourriture } from "@/monde/nourriture";
 import { quantiteExacte } from "@/monde/quantite";
+import type { Stock } from "@/monde/stocks";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
 
@@ -32,6 +34,23 @@ function LigneEntretien({ entretien }: { entretien: EntretienDesHabitants }) {
     <p className={styles.ligneEntretien}>
       {`${nombreDHabitants(entretien.habitants)} × ${quantiteExacte(String(entretien.parHabitant))} Nourriture = `}
       <strong className={styles.totalEntretien}>{`${quantiteExacte(entretien.parHeure)} Nourriture par heure`}</strong>
+    </p>
+  );
+}
+
+/**
+ * US-0320 : sous l'Entretien, combien de temps la Viande et les Végétaux le paieront encore, au rythme du
+ * moment : « Nourriture assurée », ou « Nourriture pour encore 7 h », en alerte.
+ */
+function TenueDeLaNourriture({ stocks, entretien }: { stocks: Stock[]; entretien: EntretienDesHabitants }) {
+  const [viande, vegetaux] = stocks
+    .filter((s) => s.famille === "nourriture")
+    .map((s) => ({ quantite: Number(s.quantite), parHeure: Number(s.parHeure), limite: Number(s.limite) }));
+  if (!viande || !vegetaux) return null;
+  const heures = nourriturePourEncore(viande, vegetaux, Number(entretien.parHeure));
+  return (
+    <p className={styles.tenue} data-baisse={heures === null ? undefined : ""}>
+      {tenueDeLaNourriture(heures)}
     </p>
   );
 }
@@ -67,19 +86,21 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
  * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), qui
  * filtrent la liste (US-0314), puis une ligne par Habitant avec son prénom, son Métier et son état, dans
  * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308) ; à côté,
- * ou dessous sur mobile, leur Entretien par heure (US-0318), puis les huit Métiers (US-0307). Tout est lu
- * à chaque affichage.
+ * ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
+ * (US-0320), d'après les Stocks lus une fois le Territoire mis à l'heure, puis les huit Métiers (US-0307).
+ * Tout est lu à chaque affichage.
  * Sans session, la garde mène à la connexion, qui ramène ici.
  */
 export default async function Habitants() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  const [habitants, places, entretien, metiers] = await Promise.all([
+  const [habitants, places, entretien, metiers, stocks] = await Promise.all([
     territoireId === null ? [] : habitantsDuTerritoire(getPool(), territoireId),
     territoireId === null ? 0 : placesDuTerritoire(getPool(), territoireId),
     territoireId === null ? null : entretienDesHabitants(getPool(), territoireId),
     lesMetiers(getPool()),
+    territoireId === null ? [] : stocksALHeure(territoireId),
   ]);
   return (
     <main className={styles.page}>
@@ -101,6 +122,7 @@ export default async function Habitants() {
           {entretien ? (
             <Bloc titre="Entretien">
               <LigneEntretien entretien={entretien} />
+              <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
             </Bloc>
           ) : null}
           {metiers.length > 0 ? (

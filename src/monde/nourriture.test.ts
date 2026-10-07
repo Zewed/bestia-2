@@ -1,0 +1,138 @@
+import { describe, expect, it } from "vitest";
+import { nourriturePourEncore, type StockDeNourriture, tenueDeLaNourriture } from "./nourriture";
+
+/** Un Stock de Nourriture : sa quantité, sa production par heure, et sa limite (1 000 au départ). */
+const stock = (quantite: number, parHeure: number, limite = 1000): StockDeNourriture => ({ quantite, parHeure, limite });
+
+/**
+ * La règle de l'Entretien (US-0316) déroulée pas à pas, telle que PRODUIRE la décrit : à chaque pas, la
+ * Viande et les Végétaux paient chacun la moitié de l'Entretien ; celui qui ne le peut pas donne tout ce
+ * qu'il a, et l'autre paie le reste s'il le peut. Un Stock au-dessus de sa limite ne produit plus, et sa
+ * production ne le pousse jamais au-delà. Rend les heures écoulées avant le premier pas où l'Entretien
+ * n'est plus payé en entier ; null s'il l'est encore au bout de `jusqua` heures.
+ */
+function deroulement(viande: StockDeNourriture, vegetaux: StockDeNourriture, entretien: number, pas: number, jusqua = 3000): number | null {
+  const unPas = (s: number, p: number, c: number, l: number) => Math.max(s - c, Math.min(s + p - c, l));
+  const [e, pv, pg] = [entretien * pas, viande.parHeure * pas, vegetaux.parHeure * pas];
+  let [v, g] = [viande.quantite, vegetaux.quantite];
+  for (let n = 0; n * pas < jusqua; n++) {
+    const [dv, dg] = [v + pv, g + pg];
+    let [cv, cg] = [e / 2, e / 2];
+    if (dv < e / 2) [cv, cg] = [dv, Math.min(dg, e - dv)];
+    else if (dg < e / 2) [cv, cg] = [Math.min(dv, e - dg), dg];
+    if (cv + cg < e - 1e-9) return n * pas;
+    [v, g] = [unPas(v, pv, cv, viande.limite), unPas(g, pg, cg, vegetaux.limite)];
+  }
+  return null;
+}
+
+/** Une suite de nombres au hasard, toujours la même d'un lancement à l'autre. */
+function hasard(graine: number) {
+  let etat = graine;
+  return () => {
+    etat = (etat * 1103515245 + 12345) % 2147483648;
+    return etat / 2147483648;
+  };
+}
+
+describe("combien de temps tiendra la Nourriture (US-0320)", () => {
+  it("rend null quand la production couvre l'Entretien : la Nourriture est assurée, solde nul compris", () => {
+    // Trois Habitants en prairie : +8 et +14 pour 6 d'Entretien.
+    expect(nourriturePourEncore(stock(100, 8), stock(100, 14), 6)).toBeNull();
+    expect(nourriturePourEncore(stock(100, 3), stock(100, 3), 6)).toBeNull();
+    expect(nourriturePourEncore(stock(0, 0), stock(0, 0), 0)).toBeNull();
+  });
+
+  it("rend null même quand un Stock baisse, si l'autre suffit seul ensuite", () => {
+    // La Viande se vide en 50 h ; les Végétaux paient alors 10 − 1 = 9 par heure, et en produisent 9.
+    expect(nourriturePourEncore(stock(200, 1), stock(100, 9), 10)).toBeNull();
+    expect(deroulement(stock(200, 1), stock(100, 9), 10, 1 / 60)).toBeNull();
+  });
+
+  it("compte les deux Stocks qui baissent ensemble : 100 de chaque à −4 par heure tiennent 25 h", () => {
+    expect(nourriturePourEncore(stock(100, 8), stock(100, 8), 24)).toBeCloseTo(25, 9);
+  });
+
+  it("ne divise pas le stock total par le solde quand un seul Stock baisse : douze Habitants en prairie tiennent 100 h, pas 50", () => {
+    // Viande 8 − 12 = −4 par heure, Végétaux 14 − 12 = +2 : solde −2 pour 200 en stock.
+    // La Viande se vide en 25 h ; les Végétaux, montés à 150, paient alors 24 − 8 = 16 et en produisent 14 : 75 h de plus.
+    expect(nourriturePourEncore(stock(100, 8), stock(100, 14), 24)).toBeCloseTo(100, 9);
+    expect(nourriturePourEncore(stock(100, 14), stock(100, 8), 24)).toBeCloseTo(100, 9);
+  });
+
+  it("arrête le Stock qui monte à sa limite, comme le calcul du jeu", () => {
+    // Les Végétaux plafonnent à 1 000 au bout de 5 h ; la Viande se vide en 25 h ; puis 1 000 à −2 par heure.
+    expect(nourriturePourEncore(stock(100, 8), stock(990, 14), 24)).toBeCloseTo(525, 9);
+  });
+
+  it("ne fait plus produire un Stock au-dessus de sa limite : il paie sa part sans rien recevoir jusqu'à elle", () => {
+    // Les Végétaux, à 2 000 pour 1 000, paient 12 par heure sans produire : 1 700 quand la Viande se vide, au bout
+    // de 25 h ; puis 16 par heure jusqu'à 1 000 (43,75 h), et enfin −2 par heure (500 h).
+    expect(nourriturePourEncore(stock(100, 8), stock(2000, 14), 24)).toBeCloseTo(568.75, 9);
+  });
+
+  it("compte un Stock sans production qui se vide le premier, l'autre montant en attendant", () => {
+    // La Viande paie 6 par heure : vide en 8 h 20 ; les Végétaux montent de 4 par heure jusqu'à 43,33, puis baissent de 2.
+    expect(nourriturePourEncore(stock(50, 0), stock(10, 10), 12)).toBeCloseTo(30, 9);
+  });
+
+  it("part d'un Stock déjà vide : l'autre paie tout le reste dès maintenant", () => {
+    expect(nourriturePourEncore(stock(0, 8), stock(100, 14), 24)).toBeCloseTo(50, 9);
+    expect(nourriturePourEncore(stock(0, 8), stock(0, 14), 24)).toBe(0);
+  });
+
+  it("donne le temps d'un déroulement pas à pas, à un pas près, quels que soient les Stocks, au-dessus de leur limite compris", () => {
+    const tirer = hasard(320);
+    const pas = 1 / 60;
+    const entier = (max: number) => Math.round(tirer() * max);
+    for (let essai = 0; essai < 60; essai++) {
+      const viande = stock(entier(2500), entier(20), 200 + entier(1800));
+      const vegetaux = stock(entier(2500), entier(20), 200 + entier(1800));
+      const production = viande.parHeure + vegetaux.parHeure;
+      // Deux fois sur trois, la Nourriture baisse d'au moins 2 par heure (elle tient alors moins de 2 500 h) ; sinon, elle est assurée.
+      const entretien = essai % 3 ? production + 2 + 2 * entier(10) : Math.max(0, production - 2 * entier(5));
+      const calcule = nourriturePourEncore(viande, vegetaux, entretien);
+      const deroule = deroulement(viande, vegetaux, entretien, pas);
+      const cas = JSON.stringify({ viande, vegetaux, entretien });
+      if (essai % 3) {
+        expect(deroule, cas).not.toBeNull();
+        expect(calcule, cas).not.toBeNull();
+        expect(Math.abs(calcule! - deroule!), cas).toBeLessThanOrEqual(2 * pas);
+      } else {
+        expect(calcule, cas).toBeNull();
+        expect(deroule, cas).toBeNull();
+      }
+    }
+  });
+});
+
+describe("dire combien de temps tiendra la Nourriture (US-0320)", () => {
+  /** Une espace insécable entre un nombre et son unité, pour qu'ils ne se séparent jamais. */
+  const _ = " ";
+
+  it("dit « Nourriture assurée » quand le solde est positif ou nul", () => {
+    expect(tenueDeLaNourriture(null)).toBe("Nourriture assurée");
+  });
+
+  it("dit les heures, arrondies vers le bas : « Nourriture pour encore 7 h »", () => {
+    expect(tenueDeLaNourriture(7)).toBe(`Nourriture pour encore 7${_}h`);
+    expect(tenueDeLaNourriture(7.99)).toBe(`Nourriture pour encore 7${_}h`);
+    expect(tenueDeLaNourriture(1)).toBe(`Nourriture pour encore 1${_}h`);
+    expect(tenueDeLaNourriture(48.9)).toBe(`Nourriture pour encore 48${_}h`);
+    // Une erreur d'arrondi du calcul, sous la microseconde, ne fait pas perdre une heure.
+    expect(tenueDeLaNourriture(29.999999999999996)).toBe(`Nourriture pour encore 30${_}h`);
+    expect(tenueDeLaNourriture(29.9999)).toBe(`Nourriture pour encore 29${_}h`);
+  });
+
+  it("dit « moins d'une heure » sous une heure", () => {
+    expect(tenueDeLaNourriture(0.99)).toBe("Nourriture pour encore moins d'une heure");
+    expect(tenueDeLaNourriture(0)).toBe("Nourriture pour encore moins d'une heure");
+  });
+
+  it("passe aux jours au-delà de 48 h : « 3 j 5 h », « 3 j »", () => {
+    expect(tenueDeLaNourriture(49)).toBe(`Nourriture pour encore 2${_}j${_}1${_}h`);
+    expect(tenueDeLaNourriture(77.5)).toBe(`Nourriture pour encore 3${_}j${_}5${_}h`);
+    expect(tenueDeLaNourriture(100)).toBe(`Nourriture pour encore 4${_}j${_}4${_}h`);
+    expect(tenueDeLaNourriture(72)).toBe(`Nourriture pour encore 3${_}j`);
+  });
+});

@@ -212,6 +212,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0320 · Voir combien de temps tiendra la Nourriture
 **En tant que** joueur, **je veux** voir pendant combien d'heures ma Nourriture peut encore payer l'Entretien, **afin de** planifier ma prochaine visite.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Dans le bloc Entretien de la page Habitants, « Nourriture assurée » quand la production couvre l'Entretien, sinon « Nourriture pour encore 7 h » (« 4 j 4 h » au-delà de 48 h), en alerte. Le temps suit la règle même du calcul du jeu : chaque Stock paie la moitié de l'Entretien, le premier vide ne donne plus que sa production et l'autre paie le reste ; prouvé contre le vrai calcul (encore de la Nourriture une minute avant, plus du tout une minute après). Vérifié en vrai avec 3 puis 12 Habitants.
 - **Débloquée par** : US-0319
 - **Critères d'acceptation** :
   - Quand le solde de Nourriture est négatif, la page Habitants affiche « Nourriture pour encore X h ».

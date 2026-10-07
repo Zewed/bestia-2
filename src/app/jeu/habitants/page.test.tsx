@@ -29,7 +29,12 @@ type Metier = { id: string; nom: string; phrase: string; servira: string | null 
 const HUIT_METIERS: Metier[] = lireJeu(METIERS).map((m) => ({ id: m.id, nom: m.nom, phrase: m.phrase, servira: m.servira ?? null }));
 const metiers = vi.hoisted(() => ({ lesMetiers: vi.fn(async (): Promise<Metier[]> => []) }));
 vi.mock("@/monde/metiers", async (original) => ({ ...(await original<object>()), ...metiers }));
-vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
+// US-0320 : les Stocks du Territoire, que la vraie garde lit après l'avoir mis à l'heure.
+type Stock = import("@/monde/stocks").Stock;
+const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async (): Promise<Stock[]> => []) }));
+vi.mock("@/monde/stocks", () => stocks);
+const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
+vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 vi.mock("./actions", () => ({ donnerUnMetier: vi.fn() }));
@@ -46,7 +51,26 @@ vi.mock("./ListeDesHabitants", async (original) => {
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0314, US-0318)", () => {
+/** US-0320 : un Stock tel que stocksDuTerritoire le lit, en texte, sans Entretien pris sur lui. */
+const unStock = (id: string, famille: Stock["famille"], quantite: string, parHeure: string, limite = "1000.000000"): Stock => ({
+  id,
+  nom: id,
+  famille,
+  quantite,
+  limite,
+  parHeure,
+  entretienParHeure: "0.000000",
+  sources: [],
+});
+/** US-0320 : les quatre Stocks d'un Foyer en prairie (+8 Viande, +14 Végétaux, +4 Bois et Pierre), 100 de chaque. */
+const STOCKS_DE_PRAIRIE: Stock[] = [
+  unStock("viande", "nourriture", "100.000000", "8.000000"),
+  unStock("vegetaux", "nourriture", "100.000000", "14.000000"),
+  unStock("bois", "materiaux", "100.000000", "4.000000"),
+  unStock("pierre", "materiaux", "100.000000", "4.000000"),
+];
+
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0314, US-0318, US-0320)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     adresse.recherche = "";
@@ -56,11 +80,13 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     habitants.placesDuTerritoire.mockReset();
     habitants.entretienDesHabitants.mockReset();
     metiers.lesMetiers.mockReset();
+    stocks.stocksDuTerritoire.mockReset();
+    temps.rattraper.mockClear();
   });
 
   /**
    * Un joueur connecté, ses `nombre` Habitants, la place de son Territoire (5 par défaut, celle du Foyer),
-   * leur Entretien, 2 Nourriture par heure chacun, et les huit Métiers.
+   * leur Entretien, 2 Nourriture par heure chacun, les huit Métiers, et les Stocks d'un Foyer en prairie.
    */
   const connecte = (nombre = 3, places = 5) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
@@ -69,6 +95,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     habitants.placesDuTerritoire.mockResolvedValue(places);
     habitants.entretienDesHabitants.mockResolvedValue({ habitants: nombre, parHabitant: 2, parHeure: String(2 * nombre) });
     metiers.lesMetiers.mockResolvedValue(HUIT_METIERS);
+    stocks.stocksDuTerritoire.mockResolvedValue(STOCKS_DE_PRAIRIE);
   };
   /** US-0309 : la rangée des compteurs, la première liste de la page, telle qu'elle est écrite. */
   const rangeeDesEffectifs = (html: string) => html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul>/)?.[0] ?? "";
@@ -90,7 +117,9 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   const lignesMetiers = (html: string) =>
     [...blocMetiers(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => morceaux(ligne).map((t) => t.trim()));
   /** US-0318 : la ligne du bloc Entretien, telle qu'on la lit. */
-  const ligneEntretien = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>(.*?)<\/p><\/section>/)?.[1].replace(/<[^>]+>/g, "");
+  const ligneEntretien = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>(.*?)<\/p>/)?.[1].replace(/<[^>]+>/g, "");
+  /** US-0320 : la ligne qui suit celle de l'Entretien, dans son bloc, telle qu'elle est écrite. */
+  const tenue = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>.*?<\/p>(<p[^>]*>.*?<\/p>)<\/section>/)?.[1];
 
   it("titre la page « Habitants », dans l'onglet comme sur la page", async () => {
     connecte();
@@ -197,6 +226,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
       "6 Nourriture par heure",
+      // US-0320
+      "Nourriture assurée",
       "Métiers",
       ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
     ]);
@@ -332,6 +363,45 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("3 Habitants × 1,5 Nourriture = 4,5 Nourriture par heure");
   });
 
+  it("dit « Nourriture assurée » sous la ligne d'Entretien quand la production la couvre, ou tout juste (US-0320)", async () => {
+    connecte();
+    expect(tenue(renderToStaticMarkup(await Habitants()))).toMatch(/^<p[^>]*>Nourriture assurée<\/p>$/);
+    // 11 Habitants : 22 d'Entretien pour 8 + 14 de production, un solde nul.
+    connecte(11);
+    expect(tenue(renderToStaticMarkup(await Habitants()))).toMatch(/>Nourriture assurée</);
+  });
+
+  it("dit combien de temps la Nourriture tiendra quand elle baisse : douze Habitants en prairie, « Nourriture pour encore 4 j 4 h » (US-0320)", async () => {
+    // La Viande baisse de 4 par heure, les Végétaux montent de 2 : la Viande se vide en 25 h, puis les Végétaux, à 150, en 75 h.
+    connecte(12);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(tenue(html)).toMatch(/^<p[^>]*data-baisse=""[^>]*>Nourriture pour encore 4 j 4 h<\/p>$/);
+  });
+
+  it("compte avec les Stocks, la production et l'Entretien du moment, lus pour le Territoire du joueur une fois mis à l'heure (US-0320)", async () => {
+    connecte(12);
+    stocks.stocksDuTerritoire.mockResolvedValue([
+      unStock("viande", "nourriture", "20.000000", "8.000000"),
+      unStock("vegetaux", "nourriture", "7.500000", "14.000000"),
+      ...STOCKS_DE_PRAIRIE.slice(2),
+    ]);
+    // La Viande se vide en 5 h ; les Végétaux, à 17,5, baissent alors de 2 par heure : 8 h 45 de plus.
+    expect(tenue(renderToStaticMarkup(await Habitants()))).toContain(">Nourriture pour encore 13 h<");
+    expect(stocks.stocksDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+    expect(temps.rattraper.mock.invocationCallOrder[0]).toBeLessThan(stocks.stocksDuTerritoire.mock.invocationCallOrder[0]);
+  });
+
+  it("dit « moins d'une heure » quand la Nourriture est presque épuisée (US-0320)", async () => {
+    connecte(12);
+    stocks.stocksDuTerritoire.mockResolvedValue([
+      unStock("viande", "nourriture", "0.000000", "8.000000"),
+      unStock("vegetaux", "nourriture", "1.500000", "14.000000"),
+      ...STOCKS_DE_PRAIRIE.slice(2),
+    ]);
+    expect(tenue(renderToStaticMarkup(await Habitants()))).toContain(">Nourriture pour encore moins d&#x27;une heure<");
+  });
+
   it("liste les huit Métiers dans un bloc « Métiers », une ligne chacun : son icône, son nom, sa phrase et quand il servira (US-0307)", async () => {
     connecte();
     const lus = lignesMetiers(renderToStaticMarkup(await Habitants()));
@@ -458,6 +528,13 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".effectif:focus-visible")).toContain("outline: 2px solid var(--encre);");
     // Un filtre sans personne : la phrase à la place de la liste, en discret.
     expect(regle(".personne")).toContain("color: var(--texte-discret);");
+  });
+
+  it("met la tenue de la Nourriture en gras, dans la couleur d'alerte quand elle baisse (US-0320)", () => {
+    const tenue = regle(".tenue");
+    expect(tenue).toContain("font-weight: var(--graisse-titre);");
+    expect(tenue).toContain("color: var(--bon);");
+    expect(regle(".tenue[data-baisse]")).toContain("color: var(--mauvais);");
   });
 
   it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {

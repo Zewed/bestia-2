@@ -282,6 +282,17 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0320 : dessous, combien de temps la Nourriture tiendra : assurée, ou dans la couleur d'alerte quand elle baisse. */
+.tenue {
+  margin-top: 6px;
+  color: var(--bon);
+  font-weight: var(--graisse-titre);
+}
+
+.tenue[data-baisse] {
+  color: var(--mauvais);
+}
+
 /*
  * US-0307 : une ligne par Métier : son icône peinte, puis son nom en gras suivi de sa phrase, et dessous,
  * en discret, quand il servira.
