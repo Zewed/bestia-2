@@ -4,16 +4,27 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_6ddcebe9db423a 33
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_1898640c1725ba 15-22,29-37
+  s_97a431cfa65ca7::t_72adf9dc9bb13f 15-22,29-36
+  s_00c131376e16bb::t_fd3516cbf3a718 37
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_aaea2f906e512e 19,28,34,37-38,41-42,58-80,86,116,118,126
+  s_97a431cfa65ca7::t_b4bbc78b493b7f 19,28,34,37-38,42,58-80,86,116,118,126
+  s_97a431cfa65ca7::t_be00aa5be9276e 41
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_b0564d6bc687cd 8,18-22,24-27,33-36,41-44
+  s_97a431cfa65ca7::t_ec21e8c798ea9b 33-36
+  s_97a431cfa65ca7::t_3cb4818f812bdf 8,18-22,24-27,41-44
 src/monde/habitants.db.test.ts
   s_97a431cfa65ca7::t_022e35301cf6eb 11,13,23,179-197
+  s_97a431cfa65ca7::t_0314cfe79fcba8 11,13,23,179-196
+  s_97a431cfa65ca7::t_8f828b41abf796 197
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_db4c5eacd3d4f5 4,30-42
+  s_97a431cfa65ca7::t_a7b0fb6d9ead8d 4,30-41
+  s_97a431cfa65ca7::t_703cb8e796cfbf 42
 src/reglages.ts
   s_97a431cfa65ca7::t_1625b0e2bd85ef 87-92
+  s_97a431cfa65ca7::t_016e0dd65da33c 87-92
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -21,6 +32,14 @@ src/reglages.ts
   "base_commit_sha": "cd64e1405922d0374f7a4e605ac2f564fa361d86",
   "prompts": {},
   "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
     "s_97a431cfa65ca7": {
       "agent_id": {
         "tool": "claude",
