@@ -90,6 +90,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0409 · Border la mer de côtes
 **En tant que** joueur, **je veux** que la mer soit bordée de côtes, **afin de** voir où la terre rencontre l'eau.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Les Cases de mer voisines de la terre passent en côte (Biome eau, variante « côte ») : la côte suit tout le rivage sans trou, et la mer du large ne touche que de la mer ou de la côte ; mer et côte font ensemble 15 % du Monde. Prouvé sur 21 graines, tenu sur 600. Rien de visible.
 - **Débloquée par** : US-0408
 - **Critères d'acceptation** :
   - Toute Case de mer qui touche la terre devient une Case de côte.

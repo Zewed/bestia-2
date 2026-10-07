@@ -360,26 +360,28 @@ describe("Biomes enchaînés de façon naturelle (US-0407)", () => {
 });
 
 describe("mer (US-0408)", () => {
-  const mersDe = (cases: CaseGeneree[]) => regionsDe(cases.filter((c) => c.variante === "mer"));
+  /** US-0409 : une mer compte sa côte : la mer du large et la côte qui la borde. */
+  const deMer = (c: CaseGeneree) => c.variante === "mer" || c.variante === "cote";
+  const mersDe = (cases: CaseGeneree[]) => regionsDe(cases.filter(deMer));
 
   it("fixe les réglages de la mer : 15 % des Cases du Monde, en une à trois mers d'au moins 300 Cases", () => {
     expect([MER_PART, MERS_MAX, MER_MIN_CASES]).toEqual([0.15, 3, 300]);
   });
 
   it.each([...GRAINES, graineDuMonde("Aube")])(
-    "couvre 15 % des Cases du Monde, à 2 points près, en une à trois grandes étendues d'un seul tenant, sans Case de mer isolée (graine %i)",
+    "couvre 15 % des Cases du Monde, côtes comprises, à 2 points près, en une à trois grandes étendues d'un seul tenant, sans Case de mer isolée (graine %i)",
     (graine) => {
       const cases = mondeDe(graine);
-      const mer = cases.filter((c) => c.variante === "mer");
+      const mer = cases.filter(deMer);
       expect(Math.abs(mer.length / cases.length - MER_PART)).toBeLessThanOrEqual(0.02);
-      // L'eau du Monde est toute de la mer, pour l'instant : les côtes, lacs et rivières viennent après.
+      // L'eau du Monde est toute de la mer, côtes comprises, pour l'instant : les lacs et rivières viennent après.
       expect(cases.filter((c) => c.biome === "eau")).toEqual(mer);
       const mers = mersDe(cases);
       expect(mers.length).toBeGreaterThanOrEqual(1);
       expect(mers.length).toBeLessThanOrEqual(MERS_MAX);
       for (const etendue of mers) expect(etendue.length).toBeGreaterThanOrEqual(MER_MIN_CASES);
-      const deMer = new Set(mer.map(cle));
-      expect(mer.filter((c) => voisines(c).every((v) => !deMer.has(cle(v))))).toEqual([]);
+      const salee = new Set(mer.map(cle));
+      expect(mer.filter((c) => voisines(c).every((v) => !salee.has(cle(v))))).toEqual([]);
     },
   );
 
@@ -388,7 +390,42 @@ describe("mer (US-0408)", () => {
   });
 
   it("peut toucher la Couronne, et change d'un Monde à l'autre : une, deux ou trois mers selon la graine", () => {
-    expect(GRAINES.some((graine) => mondeDe(graine).some((c) => c.couronne && c.variante === "mer"))).toBe(true);
+    expect(GRAINES.some((graine) => mondeDe(graine).some((c) => c.couronne && deMer(c)))).toBe(true);
     expect(new Set(GRAINES.map((graine) => mersDe(mondeDe(graine)).length))).toEqual(new Set([1, 2, 3]));
+  });
+});
+
+describe("côtes (US-0409)", () => {
+  /** Les Cases voisines d'une Case, dans le Monde. */
+  const autourDans = (cases: CaseGeneree[]) => {
+    const parCle = new Map(cases.map((c) => [cle(c), c]));
+    return (c: Coordonnees) => voisinesDansLeMonde(c, MONDE_RAYON).map((v) => parCle.get(cle(v))!);
+  };
+  const terre = (c: CaseGeneree) => c.biome !== "eau";
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("change en côte toute Case de mer qui touche la terre, et elles seules : la côte est de l'eau (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    const cotes = cases.filter((c) => c.variante === "cote");
+    expect(cotes.length).toBeGreaterThan(100);
+    for (const c of cotes) expect(c.biome).toBe("eau");
+    // La côte est le rivage même, sur une Case d'épaisseur : chacune de ses Cases borde la terre.
+    for (const c of cotes) expect(autour(c).some(terre), cle(c)).toBe(true);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("suit tout le rivage, sans trou : de la terre, on ne voit de la mer que sa côte, d'un trait continu (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    for (const c of cases.filter(terre)) expect(autour(c).filter((v) => v.variante === "mer").map(cle), cle(c)).toEqual([]);
+    // Aucune Case de côte seule : chacune se prolonge par une autre le long du rivage.
+    for (const c of cases.filter((c) => c.variante === "cote")) expect(autour(c).some((v) => v.variante === "cote"), cle(c)).toBe(true);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("ne laisse jamais la mer toucher directement la terre : autour d'elle, rien que de la mer ou de la côte (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    const mer = cases.filter((c) => c.variante === "mer");
+    expect(mer.length).toBeGreaterThan(0);
+    for (const c of mer) expect(autour(c).every((v) => v.variante === "mer" || v.variante === "cote"), cle(c)).toBe(true);
   });
 });

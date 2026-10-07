@@ -6,8 +6,8 @@ import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
 import { chainesDeMontagnes, climatDuMonde, eviterLesVoisinagesInterdits } from "./climat";
 import { BANDE_DE_CALCUL } from "./couronne";
 import { anneau, dansLeCoeur, eloignementDuCoeur, type Coordonnees } from "./hex";
-import { merDuMonde } from "./mer";
-import { biomesDesProvinces, fondreLesPetitesRegions, grilleDuMonde, provinces, regionsDuCoeur, type Biome, type Grille } from "./regions";
+import { cotesDeLaMer, merDuMonde } from "./mer";
+import { biomesDesProvinces, fondreLesPetitesRegions, grilleDuMonde, provinces, regionsDuCoeur, type Biome, type Grille, type Variante } from "./regions";
 
 export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante: string | null; couronne: boolean; coeur: boolean; eloignement: number };
 
@@ -15,16 +15,17 @@ export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante
 export const GRAINE_MAX = 2 ** 32 - 1;
 
 /**
- * Le Biome de chaque Case d'un Monde, dans l'ordre de la grille. Le Cœur sauvage mêle ses petites régions
- * (US-0403) ; la mer s'étend loin de lui (US-0408) ; sur la terre, les montagnes dressent leurs chaînes
- * (US-0407) ; tout le reste, Couronne comprise, est fait de provinces qui reçoivent chacune un Biome de
- * terre selon leur climat (US-0406), un côté du Monde froid et l'autre chaud (US-0407). Les voisinages
- * interdits sont ensuite ôtés, puis les petites régions fondues.
+ * Le Biome de chaque Case d'un Monde, dans l'ordre de la grille, et la variante de son eau. Le Cœur sauvage
+ * mêle ses petites régions (US-0403) ; la mer s'étend loin de lui (US-0408) ; sur la terre, les montagnes
+ * dressent leurs chaînes (US-0407) ; tout le reste, Couronne comprise, est fait de provinces qui reçoivent
+ * chacune un Biome de terre selon leur climat (US-0406), un côté du Monde froid et l'autre chaud
+ * (US-0407). Les voisinages interdits sont ensuite ôtés, puis les petites régions fondues. Enfin, la mer
+ * qui touche la terre devient sa côte (US-0409).
  */
 function biomesDuMonde(
   grille: Grille,
   { rayon, rayonCoeur, graine, voisinagesInterdits }: { rayon: number; rayonCoeur: number; graine: number; voisinagesInterdits: [string, string][] },
-): Biome[] {
+): { biomes: Biome[]; variantes: (Variante | null)[] } {
   const interdites = new Set(voisinagesInterdits.flatMap(([a, b]) => [`${a}|${b}`, `${b}|${a}`]));
   const interdit = (a: Biome, b: Biome) => interdites.has(`${a}|${b}`);
   const coeur = grille.cases.map((c) => dansLeCoeur(c, rayonCoeur));
@@ -41,7 +42,9 @@ function biomesDuMonde(
   const unites = [...membres, ...duCoeur.membres];
   eviterLesVoisinagesInterdits(grille, biomes, { unites, duCoeur: (u) => u >= membres.length, climat, interdit });
   fondreLesPetitesRegions(grille, biomes, interdit);
-  return biomes;
+  const cote = cotesDeLaMer(grille, mer);
+  const variantes = grille.cases.map((_, i): Variante | null => (cote[i] ? "cote" : mer[i] ? "mer" : null));
+  return { biomes, variantes };
 }
 
 /**
@@ -67,14 +70,13 @@ export function genererLeMonde({
 }): CaseGeneree[] {
   if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
   const grille = grilleDuMonde(rayon);
-  const biomes = biomesDuMonde(grille, { rayon, rayonCoeur, graine, voisinagesInterdits });
+  const { biomes, variantes } = biomesDuMonde(grille, { rayon, rayonCoeur, graine, voisinagesInterdits });
   return grille.cases.map((c, i) => ({
     q: c.q,
     r: c.r,
     anneau: anneau(c),
     biome: biomes[i],
-    // US-0408 : l'eau d'un Monde généré est toute de la mer, en attendant ses côtes, lacs et rivières.
-    variante: biomes[i] === "eau" ? "mer" : null,
+    variante: variantes[i],
     couronne: anneau(c) > rayon - anneaux,
     coeur: dansLeCoeur(c, rayonCoeur),
     eloignement: eloignementDuCoeur(c, rayonCoeur),

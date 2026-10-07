@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-249 points au total.
+248 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -24,7 +24,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
 
-- [US-0411](04-la-carte-du-monde.md) · Tracer des rivières : deux rivières peuvent se rejoindre.
 - [US-0426](04-la-carte-du-monde.md) · Revenir au Foyer sur la carte : quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction.
 - [US-0427](04-la-carte-du-monde.md) · Retrouver la carte là où on l'a laissée : à une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée.
 - [US-0435](04-la-carte-du-monde.md) · Garder la carte fluide sur mobile : déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir.

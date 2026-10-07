@@ -11,6 +11,8 @@ import { casesDesAnneaux, centre, distance, voisinesDansLeMonde, type Coordonnee
 export const BIOMES_DE_TERRE = ["prairie", "foret", "jungle", "savane", "desert", "montagne", "toundra", "banquise"] as const;
 export type BiomeDeTerre = (typeof BIOMES_DE_TERRE)[number];
 export type Biome = BiomeDeTerre | "eau";
+/** Les variantes de l'eau, comme biomes.yaml les nomme : la mer et sa côte (US-0408, US-0409), les lacs, les rivières. */
+export type Variante = "cote" | "lac" | "riviere" | "mer";
 
 /** US-0407 : si deux Biomes ne peuvent jamais être voisins, d'après les données du jeu. */
 export type Interdit = (a: Biome, b: Biome) => boolean;

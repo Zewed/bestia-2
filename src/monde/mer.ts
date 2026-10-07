@@ -1,6 +1,7 @@
 // US-0408 : la mer d'un Monde généré : une à trois grandes étendues d'eau d'un seul tenant, qui couvrent
-// MER_PART des Cases du Monde, jamais dans le Cœur sauvage. Elle peut toucher la Couronne. Les côtes, les
-// lacs et les rivières viendront ensuite (US-0409 à US-0411). Côté serveur et scripts uniquement.
+// MER_PART des Cases du Monde, jamais dans le Cœur sauvage. Elle peut toucher la Couronne. US-0409 : ses
+// Cases qui touchent la terre sont sa côte. Les lacs et les rivières viendront ensuite (US-0410, US-0411).
+// Côté serveur et scripts uniquement.
 import { MER_MIN_CASES, MER_PART, MERS_MAX, REGION_BIOME_MIN_CASES } from "@/reglages";
 import { hacher } from "./couronne";
 import { anneau, distance, eloignementDuCoeur } from "./hex";
@@ -74,4 +75,13 @@ export function merDuMonde(grille: Grille, { rayon, rayonCoeur, graine }: { rayo
     if (voisine !== undefined) for (const i of poche) mer[i] = mer[voisine];
   }
   return [...mer].map((k) => k >= 0);
+}
+
+/**
+ * US-0409 : les Cases de côte d'un Monde : celles de la mer qui touchent la terre. La côte suit ainsi tout
+ * le rivage, sans trou, sur une Case d'épaisseur ; elle compte dans sa mer, dont elle est le bord : la mer
+ * du large ne touche jamais la terre.
+ */
+export function cotesDeLaMer(grille: Grille, mer: boolean[]): boolean[] {
+  return mer.map((salee, i) => salee && grille.autour[i].some((v) => !mer[v]));
 }
