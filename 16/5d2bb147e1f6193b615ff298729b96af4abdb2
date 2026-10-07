@@ -1,23 +1,41 @@
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_ee4ec27a0e8831 16,256,258-260
+  s_97a431cfa65ca7::t_efa9a6bc3eba53 256,258-260
+  s_97a431cfa65ca7::t_a7e641007754c0 16
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_ee4ec27a0e8831 6,59-72,76,80
+  s_97a431cfa65ca7::t_f67a69bef68764 6
+  s_97a431cfa65ca7::t_15ea41f4c77010 68-72,76,80
+  s_97a431cfa65ca7::t_3bd1d293abae80 59-67
 src/app/jeu/habitants/AuxPortes.module.css
   s_97a431cfa65ca7::t_ee4ec27a0e8831 3,33-48
   s_97a431cfa65ca7::t_f5eb530b94e8b8 49
+  s_97a431cfa65ca7::t_582e06437a553b 33-49
+  s_97a431cfa65ca7::t_aaa289199f94de 3
 src/app/jeu/habitants/AuxPortes.test.tsx
   s_97a431cfa65ca7::t_ee4ec27a0e8831 2-4,11-17,19-27,29-36,45,56,73-143
+  s_97a431cfa65ca7::t_7d974f3d2ecee0 2-4,11-17,19-27,29-36,45,56,73-143
 src/app/jeu/habitants/AuxPortes.tsx
   s_97a431cfa65ca7::t_ee4ec27a0e8831 1-3,5-6,9-13,29-34,36-47,52-65
+  s_97a431cfa65ca7::t_849441bebdd99c 1-3,5-6,9-13,29-34,36-47,52-65
 src/monde/voyageurs.test.ts
   s_97a431cfa65ca7::t_ee4ec27a0e8831 2-3,57-71
+  s_97a431cfa65ca7::t_f4a35debe627bb 57-71
+  s_97a431cfa65ca7::t_b2293ed627e135 2-3
 src/reglages.ts
   s_97a431cfa65ca7::t_ee4ec27a0e8831 106-113
+  s_97a431cfa65ca7::t_e4068b26b6525d 106-113
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_ee4ec27a0e8831 17,127-128
+  s_97a431cfa65ca7::t_501c6d2059bb4d 128
+  s_97a431cfa65ca7::t_9dfa0159d395a3 17
+  s_97a431cfa65ca7::t_0144faf72e6f04 127
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_ee4ec27a0e8831 559-561,564-569,571-572,575,579-584,592-593,601-602,605-618,622,627,645-652
   s_97a431cfa65ca7::t_aa13cfc4dc9c63 653
+  s_97a431cfa65ca7::t_1bf365d6e6a52a 601-602,605-618,622,627
+  s_97a431cfa65ca7::t_e3c17cc83db751 559-561,564-569,571-572,575,579-584,592-593
+  s_97a431cfa65ca7::t_a89b728ce4bf5d 645-653
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_2a5f67f3f03122 349,352,354
 docs/stories/README.md
