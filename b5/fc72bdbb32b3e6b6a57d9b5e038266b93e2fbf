@@ -1,0 +1,44 @@
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_6ecfc88562971a 7,10,12
+  s_97a431cfa65ca7::t_07ea499758a389 294-305
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_d2b444a95e8c2c 359-515
+  s_97a431cfa65ca7::t_90d69a9228bf97 5
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_48d1d31d22c6a1 781-798
+  s_97a431cfa65ca7::t_50b5478fd5df03 719
+  s_97a431cfa65ca7::t_c259e9572677a8 750,752-753
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_9fb3f37c2dc6ce 15
+  s_97a431cfa65ca7::t_97e3fea3d8132d 113-120
+src/monde/voyageurs.test.ts
+  s_97a431cfa65ca7::t_6c78b6b2d2510a 2-4
+  s_97a431cfa65ca7::t_537048059f090e 124-164
+src/app/jeu/habitants/AuxPortes.css.test.ts
+  s_97a431cfa65ca7::t_7071d69d323d1f 78-102
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_013247492b82ad 112-117,123-126,138-151
+  s_97a431cfa65ca7::t_6c93a4ff0f5a0d 152
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_17177bdb6d7391 174-175,186,189-190,193,195,201-207
+  s_97a431cfa65ca7::t_f39f357c1591bd 4,6-7,12-16
+  s_97a431cfa65ca7::t_25e4d9ef0e03c2 58-64,71,77
+  s_97a431cfa65ca7::t_13701f8bd215df 92-95,102-130,136
+  s_97a431cfa65ca7::t_6e6cc2173a427b 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b5fc72bdbb32b3e6b6a57d9b5e038266b93e2fbf",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
