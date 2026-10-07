@@ -1,0 +1,33 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_046b1d95ff3904 215
+docs/stories/README.md
+  s_97a431cfa65ca7::t_89bfa382b9396f 7
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_78885696e3acbf 285-295
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_505e81addf4e4a 32-37,54-73,83-84,89,98,120-122,229-230,366-404,533-539
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_4438797a721543 6,13,15,41-57,89-91,98,103,125
+src/monde/nourriture.db.test.ts
+  s_97a431cfa65ca7::t_79315ec2ea369c 1-109
+src/monde/nourriture.test.ts
+  s_97a431cfa65ca7::t_bebe5b9798b26e 1-138
+src/monde/nourriture.ts
+  s_97a431cfa65ca7::t_2c3ad26b10acb0 1-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c7b9ae08cafebaf2aaf5acf3010d7d0861e0b05c",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
