@@ -4,14 +4,36 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_71e8c347e181d7 7
 src/app/jeu/habitants/ListeDesHabitants.test.tsx
   s_97a431cfa65ca7::t_3d7a021ace05c0 16-34,37-39,64,69-82,196,224-226,275-379
+  s_97a431cfa65ca7::t_f19d3fc5f773a9 275-379
+  s_97a431cfa65ca7::t_570bf0a6986e69 64,69-82
+  s_97a431cfa65ca7::t_789aa11408c2ea 224-226
+  s_97a431cfa65ca7::t_9399d101a19838 16-34,37-38
+  s_97a431cfa65ca7::t_ae48e3315e3eff 196
+  s_97a431cfa65ca7::t_eab23a0848f8c7 39
 src/app/jeu/habitants/ListeDesHabitants.tsx
   s_97a431cfa65ca7::t_881468cb9ec842 4,15-23,32-35,46-49,55-58,85-96,100-117,121-167
+  s_97a431cfa65ca7::t_fcba72b82ff773 85-96,100-117,121-123
+  s_97a431cfa65ca7::t_623dcb35cb49e3 124-166
+  s_97a431cfa65ca7::t_3531aa648adc5e 4,15-23,32-35,46-49,55-58
+  s_97a431cfa65ca7::t_f2f5c1db5a10da 167
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_5de7eee0a16a0d 58,73-74,78,80-98,117-129
+  s_97a431cfa65ca7::t_b2417989c9b49f 117-129
+  s_97a431cfa65ca7::t_c31ece36d7908d 58,73-74,78,80-98
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_6e1a4e81797b06 36-38,49,52,75-77,79,146,193-194,204-210,248,250-251,263,270-303,449-462
+  s_97a431cfa65ca7::t_3cb917f09a8528 248,250-251
+  s_97a431cfa65ca7::t_faa44bdddfebc2 36-38
+  s_97a431cfa65ca7::t_c610dc157bd70f 49,52
+  s_97a431cfa65ca7::t_8c12e7afd08982 75-77,79
+  s_97a431cfa65ca7::t_3c54a0d1bab3af 146
+  s_97a431cfa65ca7::t_0709d60b5e5af0 302,449-462
+  s_97a431cfa65ca7::t_d06064c53203ec 193-194,204-210
+  s_97a431cfa65ca7::t_ec311d83dfb556 263,270-301
+  s_97a431cfa65ca7::t_53cc9f038634e2 303
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_a58fccbad8e017 67-71
+  s_97a431cfa65ca7::t_f6b828036c45e5 67-71
 ---
 {
   "schema_version": "authorship/3.0.0",
