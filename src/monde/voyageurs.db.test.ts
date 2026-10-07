@@ -8,7 +8,7 @@ import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
-import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, HISTORIQUE_VOYAGEURS_JOURS, PLACES_DU_FOYER, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { programmerEvenement } from "@/temps/avancer";
 import { lireMarquePage } from "@/temps/marque-page";
@@ -26,6 +26,7 @@ import {
   recitDeDepart,
   refuserLeVoyageur,
   voyageursAuxPortes,
+  voyageursPasses,
 } from "./voyageurs";
 
 const HEURE = 3_600_000;
@@ -863,6 +864,65 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       const accueils = (await recitsDuTerritoire(pool, territoireId)).length;
       expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + accueils);
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
+    });
+  });
+
+  describe("l'historique des Voyageurs (US-0342)", () => {
+    const JOUR = 24 * HEURE;
+    /** Donne au Voyageur son sort à l'heure du jeu `instant`, comme un accueil, un refus ou son départ le feraient. */
+    const donnerUnSort = (voyageurId: number, valeur: string, instant: Date) =>
+      pool.query("update voyageur set sort = $2, sort_le = $3 where id = $1", [voyageurId, valeur, instant]);
+
+    it("lit les Voyageurs passés du Territoire, accueillis, refusés ou repartis, chacun avec son arrivée et son sort, du plus récent sort au plus ancien", async () => {
+      const { territoireId, ne } = await naitre();
+      const voisin = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const joran = await presenter(territoireId, "Joran", apres(ne, 2 * HEURE));
+      const ilda = await presenter(territoireId, "Ilda", apres(ne, 3 * HEURE));
+      // Maëlle attend toujours aux portes ; Brune est passée chez le voisin.
+      await presenter(territoireId, "Maëlle", apres(ne, 4 * HEURE));
+      const brune = await presenter(voisin.territoireId, "Brune", apres(ne, HEURE));
+      expect(await accueillirLeVoyageur(pool, territoireId, joran, apres(ne, 5 * HEURE))).toBe("accueilli");
+      expect(await refuserLeVoyageur(pool, territoireId, ilda, apres(ne, 4 * HEURE))).toBe(true);
+      expect(await refuserLeVoyageur(pool, voisin.territoireId, brune, apres(ne, 2 * HEURE))).toBe(true);
+      await donnerUnSort(ines, "reparti", apres(ne, 13 * HEURE));
+
+      expect(await voyageursPasses(pool, territoireId, apres(ne, 20 * HEURE))).toEqual([
+        { id: ines, prenom: "Ines", arriveLe: apres(ne, HEURE), sort: "reparti", sortLe: apres(ne, 13 * HEURE) },
+        { id: joran, prenom: "Joran", arriveLe: apres(ne, 2 * HEURE), sort: "accueilli", sortLe: apres(ne, 5 * HEURE) },
+        { id: ilda, prenom: "Ilda", arriveLe: apres(ne, 3 * HEURE), sort: "refuse", sortLe: apres(ne, 4 * HEURE) },
+      ]);
+    });
+
+    it("met d'abord, de deux sorts tombés au même instant, celui du dernier arrivé", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const joran = await presenter(territoireId, "Joran", apres(ne, HEURE));
+      await donnerUnSort(ines, "reparti", apres(ne, 13 * HEURE));
+      await donnerUnSort(joran, "reparti", apres(ne, 13 * HEURE));
+      expect((await voyageursPasses(pool, territoireId, apres(ne, 14 * HEURE))).map((v) => v.prenom)).toEqual(["Joran", "Ines"]);
+    });
+
+    it(`ne garde que ceux dont le sort est tombé dans les ${HISTORIQUE_VOYAGEURS_JOURS} derniers jours de jeu`, async () => {
+      const { territoireId, ne } = await naitre();
+      const instant = apres(ne, 30 * JOUR);
+      const limite = new Date(instant.getTime() - HISTORIQUE_VOYAGEURS_JOURS * JOUR);
+      const [ines, joran, ilda] = [
+        await presenter(territoireId, "Ines", new Date(limite.getTime() - 2 * HEURE)),
+        await presenter(territoireId, "Joran", new Date(limite.getTime() - 2 * HEURE)),
+        await presenter(territoireId, "Ilda", new Date(instant.getTime() - HEURE)),
+      ];
+      // Ines est repartie juste avant la limite ; Joran a été refusé à la limite même ; Ilda vient d'être accueillie.
+      await donnerUnSort(ines, "reparti", new Date(limite.getTime() - 1));
+      await donnerUnSort(joran, "refuse", limite);
+      await donnerUnSort(ilda, "accueilli", instant);
+      expect((await voyageursPasses(pool, territoireId, instant)).map((v) => v.prenom)).toEqual(["Ilda", "Joran"]);
+    });
+
+    it("ne lit personne quand aucun Voyageur n'est encore passé, même quand un Voyageur attend aux portes", async () => {
+      const { territoireId, ne } = await naitre();
+      await presenter(territoireId, "Ines", apres(ne, HEURE));
+      expect(await voyageursPasses(pool, territoireId, apres(ne, 2 * HEURE))).toEqual([]);
     });
   });
 });

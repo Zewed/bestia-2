@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
 import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
@@ -45,6 +46,8 @@ function depuisQuand(ms: number): string {
  * US-0338 : quand les `placesLibres` du Territoire sont toutes prises, comptée d'avance celle de chaque accueil en
  * cours, « Accueillir » est grisé, et une phrase, une seule fois en tête de la partie, dit pourquoi ; un lecteur
  * d'écran l'entend avec chaque bouton grisé. Les Voyageurs attendent toujours, et « Refuser » reste possible.
+ *
+ * US-0342 : en tête de la partie, « Historique » mène aux Voyageurs passés, que quelqu'un attende ou non.
  */
 export function AuxPortes({
   voyageurs,
@@ -98,6 +101,10 @@ export function AuxPortes({
   const instant = base + (ecoule?.base === base ? vitesse * ecoule.ms : 0);
   return (
     <Bloc titre="Aux portes" className={styles.auxPortes}>
+      {/* US-0342 : les Voyageurs passés, à droite du titre. */}
+      <Link href="/jeu/habitants/voyageurs" className={styles.historique}>
+        Historique
+      </Link>
       {annonce ? (
         <p className={styles.annonce} role="alert">
           {annonce}

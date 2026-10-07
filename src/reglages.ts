@@ -178,3 +178,9 @@ export const LAC_MAX_CASES = 12;
 export const RIVIERES_PAR_MONDE = 12;
 /** … chacune coulant seule au moins 5 Cases depuis sa source, avant de finir ou d'en rejoindre une autre (valeur provisoire). */
 export const RIVIERE_MIN_CASES = 5;
+
+/**
+ * US-0342 : l'historique des Voyageurs montre ceux dont le sort est tombé dans les 7 derniers jours de jeu
+ * (valeur provisoire, à régler en jouant).
+ */
+export const HISTORIQUE_VOYAGEURS_JOURS = 7;

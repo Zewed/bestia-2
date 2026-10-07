@@ -4,7 +4,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { HISTORIQUE_VOYAGEURS_JOURS, VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { programmerEvenement, type Evenement } from "@/temps/avancer";
 import { ajouterUnHabitant, plusDePlace } from "./habitants";
 import { ecrireUnRecit, type NouveauRecit } from "./recits";
@@ -176,6 +176,28 @@ export async function voyageursAuxPortes(base: Pool | PoolClient, territoireId: 
     [territoireId],
   );
   return rows.map((v) => ({ ...v, departLe: departDuVoyageur(v.arriveLe) }));
+}
+
+/** US-0337 : ce qu'un Voyageur est devenu une fois parti des portes : accueilli, refusé, ou reparti de lui-même. */
+export type SortDuVoyageur = "accueilli" | "refuse" | "reparti";
+
+/** US-0342 : un Voyageur passé aux portes : son prénom, l'heure du jeu de son arrivée, son sort et l'heure de son sort. */
+export type VoyageurPasse = { id: number; prenom: string; arriveLe: Date; sort: SortDuVoyageur; sortLe: Date };
+
+/**
+ * US-0342 : l'historique des Voyageurs du Territoire à l'heure du jeu `instant` : ceux dont le sort est tombé dans
+ * les HISTORIQUE_VOYAGEURS_JOURS derniers jours, du plus récent sort au plus ancien ; de deux sorts du même instant,
+ * celui du dernier arrivé d'abord. Ceux qui attendent encore aux portes n'y sont pas.
+ */
+export async function voyageursPasses(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<VoyageurPasse[]> {
+  const depuis = new Date(instant.getTime() - HISTORIQUE_VOYAGEURS_JOURS * 24 * 3_600_000);
+  const { rows } = await base.query<VoyageurPasse>(
+    `select id, prenom, arrive_le as "arriveLe", sort, sort_le as "sortLe" from voyageur
+     where territoire_id = $1 and sort is not null and sort_le >= $2
+     order by sort_le desc, id desc`,
+    [territoireId, depuis],
+  );
+  return rows;
 }
 
 /** US-0334 : depuis quand un Voyageur attendait, compté comme sur sa ligne aux portes : « moins d'une minute », « 12 min », « 3 h ». */

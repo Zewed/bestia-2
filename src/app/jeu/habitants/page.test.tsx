@@ -230,8 +230,9 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       ...["Tous", "Sans Métier ", "3"],
       ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.flatMap((prenom) => [prenom, "Choisir un Métier", "libre"]),
-      // US-0332 : la partie « Aux portes », quand personne n'attend.
+      // US-0332 : la partie « Aux portes », quand personne n'attend ; US-0342 : son lien vers l'historique.
       "Aux portes",
+      "Historique",
       "Personne aux portes pour l'instant.",
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
@@ -243,9 +244,10 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, `Servira ${m.servira}.`]),
     ]);
     expect(html).not.toMatch(/<(form|input|select)[ >]/);
-    // Le seul lien : le raccourci du bandeau vers les Habitants sans Métier (US-0313).
+    // Les seuls liens : le raccourci du bandeau vers les Habitants sans Métier (US-0313), puis l'historique des Voyageurs (US-0342).
     expect([...html.matchAll(/<a ([^>]*)>(.*?)<\/a>/g)].map(([, attributs, texte]) => [attributs.match(/href="([^"]*)"/)?.[1], texte])).toEqual([
       ["/jeu/habitants?metier=sans", "Voir"],
+      ["/jeu/habitants/voyageurs", "Historique"],
     ]);
     // Les seuls boutons : ceux qui filtrent la liste (US-0314), ceux qui donnent un Métier (US-0308), puis « − » et
     // « + » de chaque Métier (US-0312).
@@ -285,7 +287,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     ]);
     let html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div/);
-    expect(html).not.toContain("<a ");
+    // Le seul lien qui reste : l'historique des Voyageurs (US-0342).
+    expect([...html.matchAll(/<a [^>]*>(.*?)<\/a>/g)].map(([, texte]) => texte)).toEqual(["Historique"]);
     connecte(0);
     html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div/);
@@ -776,7 +779,10 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
 
   it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {
     await connecte();
-    expect(auxPortes(renderToStaticMarkup(await Habitants()))).toMatch(/<h2[^>]*>Aux portes<\/h2><p[^>]*>Personne aux portes pour l&#x27;instant\.<\/p><\/section>$/);
+    // US-0342 : entre le titre et la phrase, le lien vers l'historique.
+    expect(auxPortes(renderToStaticMarkup(await Habitants()))).toMatch(
+      /<h2[^>]*>Aux portes<\/h2><a[^>]*href="\/jeu\/habitants\/voyageurs"[^>]*>Historique<\/a><p[^>]*>Personne aux portes pour l&#x27;instant\.<\/p><\/section>$/,
+    );
   });
 
   it("met « Aux portes » en tête de la colonne, avant l'Entretien et les Métiers, à côté de la liste sur ordinateur", async () => {

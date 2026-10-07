@@ -88,10 +88,28 @@ describe("les Voyageurs aux portes (US-0332)", () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={[]} maintenant={MAINTENANT} />);
     expect([...partie().children].map((e) => [e.tagName, e.textContent])).toEqual([
       ["H2", "Aux portes"],
+      // US-0342 : le lien vers l'historique, en tête de la partie.
+      ["A", "Historique"],
       ["P", "Personne aux portes pour l'instant."],
     ]);
   });
 
+});
+
+describe("l'historique des Voyageurs (US-0342)", () => {
+  it("s'ouvre par un lien « Historique », en tête de la partie, juste après son titre, qui mène aux Voyageurs passés", () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    const lien = within(partie()).getByRole("link", { name: "Historique" });
+    expect(lien.getAttribute("href")).toBe("/jeu/habitants/voyageurs");
+    expect([...partie().children].slice(0, 2)).toEqual([within(partie()).getByRole("heading", { name: "Aux portes" }), lien]);
+  });
+
+  it("garde le lien quand personne n'attend, et quand la place manque", () => {
+    const { rerender } = render(<AuxPortes placesLibres={LIBRES} voyageurs={[]} maintenant={MAINTENANT} />);
+    expect(within(partie()).getByRole("link", { name: "Historique" })).toBeTruthy();
+    rerender(<AuxPortes placesLibres={0} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    expect(within(partie()).getByRole("link", { name: "Historique" })).toBeTruthy();
+  });
 });
 
 /** Trois Voyageurs aux portes, du premier arrivé au dernier. */

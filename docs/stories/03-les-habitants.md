@@ -442,10 +442,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0342 · Consulter l'historique des Voyageurs
 **En tant que** joueur, **je veux** voir les Voyageurs passés et ce qu'ils sont devenus, **afin de** voir si j'en laisse trop repartir.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Un lien « Historique » dans l'en-tête du bloc « Aux portes » mène à la page /jeu/habitants/voyageurs : en tête, les Voyageurs « Accueillis » et « Perdus » (refusés et repartis) des 7 derniers jours de jeu, puis une ligne par Voyageur, du sort le plus récent au plus ancien : prénom, arrivée (date et heure de Paris) et sort (accueilli, refusé, reparti). Sans Voyageur passé : « Aucun Voyageur n'est encore passé. » Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0336, US-0337
 - **Critères d'acceptation** :
   - Un historique liste les Voyageurs passés, avec leur heure d'arrivée et leur sort : accueilli, refusé ou reparti.
-  - Les plus récents viennent en premier, sur les (chiffre à régler) derniers jours.
+  - Les plus récents viennent en premier, sur les 7 derniers jours (provisoire, `HISTORIQUE_VOYAGEURS_JOURS`).
   - En tête, deux compteurs : Voyageurs accueillis et Voyageurs perdus.
   - Sans historique, il affiche « Aucun Voyageur n'est encore passé. »
 

@@ -1,0 +1,106 @@
+/* La page Voyageurs (US-0342) : un titre, puis un bloc Bento, dans la largeur de l'écran du Foyer. */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.titre {
+  margin-bottom: 16px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+/* En tête du bloc, côte à côte, les Voyageurs accueillis et les Voyageurs perdus : un nom discret, un nombre en gras. */
+.compteurs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.compteur {
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+  color: var(--texte-discret);
+  font-size: 13px;
+}
+
+.nombre {
+  color: var(--encre);
+  font-size: 24px;
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
+.vide {
+  color: var(--texte-discret);
+}
+
+/* Une ligne par Voyageur passé : son prénom et son sort, puis dessous, en discret, l'heure de son arrivée. */
+.voyageurs {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.voyageur {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+}
+
+.prenom {
+  font-weight: var(--graisse-titre);
+}
+
+.arrivee {
+  grid-row: 2;
+  grid-column: 1 / -1;
+  color: var(--texte-discret);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Le sort, à droite du prénom : une pastille sobre, toujours avec son mot, jamais la couleur seule. */
+.sort {
+  grid-row: 1;
+  grid-column: 2;
+  padding: 1px 8px;
+  border-radius: var(--arrondi-petit);
+  font-size: 12px;
+  font-weight: var(--graisse-titre);
+}
+
+.voyageur[data-sort="accueilli"] .sort {
+  background: var(--menthe);
+  color: var(--menthe-fonce);
+}
+
+.voyageur[data-sort="refuse"] .sort {
+  background: var(--bloc-3);
+  color: var(--texte-2);
+}
+
+.voyageur[data-sort="reparti"] .sort {
+  background: var(--rose);
+  color: var(--rose-fonce);
+}
+
+@media (max-width: 820px), (max-height: 500px) {
+  .page {
+    padding: 12px;
+  }
+  .titre {
+    margin: 8px 0 12px;
+    font-size: 24px;
+  }
+}

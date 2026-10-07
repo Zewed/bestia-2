@@ -57,3 +57,21 @@ describe("la partie « Aux portes », quand la place manque (US-0338)", () => {
     expect(regle(".plusDePlace")).toMatch(/background: var\(--sable\);[^}]*color: var\(--sable-fonce\);/);
   });
 });
+
+describe("la partie « Aux portes », son lien vers l'historique (US-0342)", () => {
+  it("pose « Historique » à droite du titre de la partie, sur sa ligne ; tout le reste prend toute la largeur, dessous", () => {
+    expect(regle(".auxPortes")).toMatch(/display: grid;[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/);
+    expect(regle(".auxPortes > *")).toContain("grid-column: 1 / -1;");
+    expect(regle(".auxPortes > h2")).toContain("grid-column: 1;");
+    expect(regle(".historique")).toMatch(/grid-row: 1;[^}]*grid-column: 2;/);
+  });
+
+  it("en fait un lien discret, souligné, au pouce : au moins 44 px de haut, sans grandir la ligne du titre", () => {
+    const historique = regle(".historique");
+    expect(historique).toContain("color: var(--texte-discret);");
+    expect(historique).toContain("text-decoration: underline;");
+    expect(pixels(".historique", "min-height")).toBeGreaterThanOrEqual(44);
+    expect(historique).toMatch(/margin: -\d+px/);
+    expect(regle(".historique:focus-visible")).toContain("outline: 2px solid var(--encre);");
+  });
+});
