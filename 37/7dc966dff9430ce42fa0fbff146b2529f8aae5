@@ -1,0 +1,32 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_352493305a0b6e 164-172
+src/monde/regions.ts
+  s_97a431cfa65ca7::t_c8c09c357a1585 51-74
+src/monde/lacs.ts
+  s_97a431cfa65ca7::t_0bd5148a9ed40b 23-25
+  s_97a431cfa65ca7::t_6b492d046e1c10 15-16,22,58
+  s_97a431cfa65ca7::t_c9370aa9ab48a0 1-14,17-21,26-57,59-67
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_87189624dd472c 387-388
+  s_97a431cfa65ca7::t_e17d650f08dc24 62-68
+  s_97a431cfa65ca7::t_3f2adb96e12584 435-482
+  s_97a431cfa65ca7::t_d51c40223ccae3 10-12
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_2607a2c429b185 9,24,28-34,54-56,83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "377dc966dff9430ce42fa0fbff146b2529f8aae5",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
