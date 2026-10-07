@@ -4,14 +4,24 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_92c182e5c0c031 7
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_9ddc6e3b3ecbb3 10-12,62-68,387-388,435-482
+  s_97a431cfa65ca7::t_87189624dd472c 387-388
+  s_97a431cfa65ca7::t_e17d650f08dc24 62-68
+  s_97a431cfa65ca7::t_3f2adb96e12584 435-482
+  s_97a431cfa65ca7::t_d51c40223ccae3 10-12
 src/monde/generer.ts
   s_97a431cfa65ca7::t_f2050b76c6ef6b 9,24,28-34,54-56,83
+  s_97a431cfa65ca7::t_2607a2c429b185 9,24,28-34,54-56,83
 src/monde/lacs.ts
   s_97a431cfa65ca7::t_ebc2ff661c4b56 1-67
+  s_97a431cfa65ca7::t_0bd5148a9ed40b 23-25
+  s_97a431cfa65ca7::t_6b492d046e1c10 15-16,22,58
+  s_97a431cfa65ca7::t_c9370aa9ab48a0 1-14,17-21,26-57,59-67
 src/monde/regions.ts
   s_97a431cfa65ca7::t_0318bf9f465201 51-74
+  s_97a431cfa65ca7::t_c8c09c357a1585 51-74
 src/reglages.ts
   s_97a431cfa65ca7::t_74a4843ce819f4 164-172
+  s_97a431cfa65ca7::t_352493305a0b6e 164-172
 ---
 {
   "schema_version": "authorship/3.0.0",
