@@ -1,0 +1,52 @@
+src/app/jeu/habitants/actions.ts
+  s_97a431cfa65ca7::t_273462969ffbe5 1-28
+src/app/jeu/habitants/ListeDesHabitants.test.tsx
+  s_97a431cfa65ca7::t_380736d0b05eb0 2
+  s_97a431cfa65ca7::t_2ff2bc3ecac51d 36-40
+  s_97a431cfa65ca7::t_6c57f69acf2d96 108-109
+  s_97a431cfa65ca7::t_a07878e48c7db7 1,3-35,41-95,98-107,110-149
+  s_97a431cfa65ca7::t_296946e3cbe764 96-97
+src/app/jeu/habitants/actions.db.test.ts
+  s_97a431cfa65ca7::t_38b81295230b03 1-62
+src/app/jeu/habitants/actions.test.ts
+  s_97a431cfa65ca7::t_7fe805fa1ec7f7 1-71
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_7476e81933ccf2 273-279
+  s_97a431cfa65ca7::t_d6536a4017d9ea 95-183
+  s_97a431cfa65ca7::t_39bdc1e46a89ee 260,264-265
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_e89a9ee037ec34 14
+  s_97a431cfa65ca7::t_7c298bf3b01794 68-70
+  s_97a431cfa65ca7::t_d37ff962407356 93-96
+src/app/jeu/habitants/ListeDesHabitants.tsx
+  s_97a431cfa65ca7::t_05874af2bfc55a 1-95
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_621078c1530c67 186,193-195
+  s_97a431cfa65ca7::t_a9c58d994ff491 124,128,131,137-155
+  s_97a431cfa65ca7::t_689da392dbe74c 35-42,46
+  s_97a431cfa65ca7::t_40d089d432324a 351-361
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_ab8e983b5fd953 14-17,20-23,26-29
+  s_97a431cfa65ca7::t_760e72fc4286a0 3-4
+  s_97a431cfa65ca7::t_99df260b4214cf 35-54
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_fa033c0af8352d 15,26
+  s_97a431cfa65ca7::t_634540d16c711a 140,151,155,160-163
+  s_97a431cfa65ca7::t_a51f2d9589b8e7 170-209
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c36cd1375c570763cd08a8e2121e72633ea47d19",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
