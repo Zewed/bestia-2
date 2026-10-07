@@ -77,3 +77,10 @@ export const RECALER_LA_BARRE_MINUTES = 5;
 export const RECAP_ABSENCE_HEURES = 2;
 /** US-0227 : à partir de 90 % de sa limite, un Stock se signale comme presque plein. */
 export const PRESQUE_PLEIN_POURCENT = 90;
+
+/**
+ * US-0316 : chaque Habitant, qu'il ait un Métier ou non, prend 2 Nourriture par heure dans les Stocks
+ * (valeur provisoire, à régler en jouant), à parts égales sur la Viande et les Végétaux tant que les
+ * deux en ont ; quand l'un est vide, tout l'Entretien est pris sur l'autre.
+ */
+export const ENTRETIEN_HABITANT_PAR_HEURE = 2;

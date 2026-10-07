@@ -11,7 +11,10 @@ import styles from "./BarreHaut.module.css";
 
 type Famille = "nourriture" | "materiaux";
 
-/** Ce que la barre montre d'un Stock : la Ressource, sa famille, sa quantité exacte, sa production horaire et ses sources, en texte. */
+/**
+ * Ce que la barre montre d'un Stock : la Ressource, sa famille, sa quantité exacte, sa production horaire,
+ * l'Entretien pris sur lui par heure (US-0316) et ses sources, en texte.
+ */
 export type RessourceDeLaBarre = {
   id: string;
   nom: string;
@@ -19,6 +22,7 @@ export type RessourceDeLaBarre = {
   quantite: string;
   limite: string;
   parHeure: string;
+  entretienParHeure: string;
   sources: { libelle: string; parHeure: string }[];
 };
 
@@ -37,15 +41,23 @@ function parFamille(stocks: RessourceDeLaBarre[]): { famille: Famille; stocks: R
 }
 
 /**
- * US-0213 : la quantité d'un Stock `ecoule` millisecondes réelles après sa lecture, montée depuis au
- * rythme de sa production, accélérée comme le temps du jeu ; elle s'arrête à la limite (US-0221), et
- * un Stock déjà au-dessus ne bouge pas.
+ * US-0213 : la quantité d'un Stock `ecoule` millisecondes réelles après sa lecture, au rythme du jeu
+ * (accéléré comme lui) : elle monte de sa production et descend de l'Entretien pris sur lui (US-0316),
+ * sans passer sous zéro ni dépasser la limite (US-0221). Au-dessus de sa limite (US-0230), le Stock ne
+ * produit plus : seul l'Entretien le fait descendre, jusqu'à elle ; sans Entretien, il ne bouge pas.
  */
 export function quantiteMontee(stock: RessourceDeLaBarre, ecoule: number, vitesse: number): number {
   const quantite = Number(stock.quantite);
   const limite = Number(stock.limite);
-  if (quantite >= limite) return quantite;
-  return Math.min(limite, quantite + (Number(stock.parHeure) * vitesse * Math.max(0, ecoule)) / 3_600_000);
+  const entretien = Number(stock.entretienParHeure);
+  let heures = (vitesse * Math.max(0, ecoule)) / 3_600_000;
+  let depart = quantite;
+  if (quantite > limite) {
+    if (entretien * heures <= quantite - limite) return quantite - entretien * heures;
+    heures -= (quantite - limite) / entretien;
+    depart = limite;
+  }
+  return Math.min(limite, Math.max(0, depart + (Number(stock.parHeure) - entretien) * heures));
 }
 
 /**
@@ -108,6 +120,8 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
             const plein = quantite >= Number(stock.limite);
             // US-0227 : avant d'être plein, le Stock prévient, d'une autre couleur.
             const presquePlein = !plein && quantite >= (Number(stock.limite) * PRESQUE_PLEIN_POURCENT) / 100;
+            // US-0316 : ce que le Stock gagne par heure, Entretien payé.
+            const montee = Number(stock.parHeure) - Number(stock.entretienParHeure);
             return (
             <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined} data-plein={plein ? "" : undefined} data-presque-plein={presquePlein ? "" : undefined}>
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
@@ -156,10 +170,10 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
                   </>
                 ) : Number(stock.parHeure) > 0 ? (
                   <>
-                    {/* US-0226 : dans combien de temps, au rythme du jeu, ce Stock sera plein. */}
-                    <span className={styles.sourceBulle}>
-                      plein dans {formaterDuree((Number(stock.limite) - quantite) / (Number(stock.parHeure) * vitesse))}
-                    </span>
+                    {/* US-0226 : dans combien de temps, au rythme du jeu, ce Stock sera plein ; US-0316 : s'il monte encore, Entretien payé. */}
+                    {montee > 0 ? (
+                      <span className={styles.sourceBulle}>plein dans {formaterDuree((Number(stock.limite) - quantite) / (montee * vitesse))}</span>
+                    ) : null}
                     {stock.sources.map((source) => (
                       <span key={source.libelle} className={styles.sourceBulle}>
                         {source.libelle} : {productionAffichee(source.parHeure)}

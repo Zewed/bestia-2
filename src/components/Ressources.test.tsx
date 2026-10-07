@@ -6,13 +6,13 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
 
-import { Ressources, type RessourceDeLaBarre } from "./Ressources";
+import { quantiteMontee, Ressources, type RessourceDeLaBarre } from "./Ressources";
 
 const STOCKS: RessourceDeLaBarre[] = [
-  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "8.000000" }] },
-  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", limite: "20000.000000", parHeure: "14.500000", sources: [{ libelle: "Foyer · prairie", parHeure: "14.500000" }] },
-  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", limite: "1000.000000", parHeure: "4.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "4.000000" }] },
-  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", limite: "1000.000000", parHeure: "0.000000", sources: [] },
+  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000", entretienParHeure: "0.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "8.000000" }] },
+  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", limite: "20000.000000", parHeure: "14.500000", entretienParHeure: "0.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "14.500000" }] },
+  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", limite: "1000.000000", parHeure: "4.000000", entretienParHeure: "0.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "4.000000" }] },
+  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", limite: "1000.000000", parHeure: "0.000000", entretienParHeure: "0.000000", sources: [] },
 ];
 
 describe("ressources dans la barre du haut (US-0204)", () => {
@@ -102,6 +102,27 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     expect((await detail("Pierre")).some((ligne) => ligne?.startsWith("plein dans"))).toBe(false);
   });
 
+  it("compte le temps avant d'être plein au rythme net, Entretien payé, et ne promet rien à un Stock qui ne monte plus (US-0316)", async () => {
+    const u = userEvent.setup();
+    render(
+      <Ressources
+        stocks={[
+          { ...STOCKS[0], quantite: "986.666667", parHeure: "4.000000", entretienParHeure: "2.000000" },
+          { ...STOCKS[1], entretienParHeure: "14.500000" },
+        ]}
+        vitesse={2}
+      />,
+    );
+    const detail = async (nom: string) => {
+      await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
+      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+    };
+    // 13,33 Viande à 4 - 2 par heure de jeu, le jeu allant deux fois plus vite : 3 h 20.
+    expect(await detail("Viande")).toContain("plein dans 3 h 20");
+    // Les Végétaux produisent autant qu'on en mange : la source reste dite, sans promesse.
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12 500,4 / 20 000", "", "Foyer · prairie : +14,5/h"]);
+  });
+
   it("prévient d'un Stock presque plein, à partir de 90 % de sa limite, autrement que d'un Stock plein (US-0227)", () => {
     render(<Ressources stocks={[{ ...STOCKS[0], quantite: "899.000000" }, { ...STOCKS[2], quantite: "900.000000" }, { ...STOCKS[3], quantite: "1000.000000" }]} />);
     const etat = (nom: string) => {
@@ -162,7 +183,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     });
     const quantites = () => [...document.querySelectorAll("button > span:first-of-type")].map((q) => q.textContent);
     // Une production d'une unité par seconde, pour voir la quantité monter à chaque battement.
-    const VITE: RessourceDeLaBarre[] = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "3600.000000", sources: [] }];
+    const VITE: RessourceDeLaBarre[] = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "3600.000000", entretienParHeure: "0.000000", sources: [] }];
 
     it("montrent d'abord les quantités exactes du jeu, puis montent d'elles-mêmes au rythme de la production", async () => {
       vi.useFakeTimers();
@@ -186,6 +207,24 @@ describe("ressources dans la barre du haut (US-0204)", () => {
       render(<Ressources stocks={[...VITE]} vitesse={10} />);
       await act(async () => vi.advanceTimersByTime(3_000));
       expect(quantites()).toEqual(["130"]);
+    });
+
+    it("descendent au rythme net quand l'Entretien dépasse la production, sans passer sous zéro (US-0316)", async () => {
+      vi.useFakeTimers();
+      // Trois unités mangées par seconde pour une produite : deux de moins à chaque seconde.
+      render(<Ressources stocks={[{ ...VITE[0], quantite: "5.000000", entretienParHeure: "10800.000000" }]} />);
+      await act(async () => vi.advanceTimersByTime(2_000));
+      expect(quantites()).toEqual(["1"]);
+      await act(async () => vi.advanceTimersByTime(3_000));
+      expect(quantites()).toEqual(["0"]);
+    });
+
+    it("font descendre jusqu'à sa limite, sans production, un Stock au-dessus d'elle que les Habitants mangent (US-0230, US-0316)", () => {
+      const surplus = { ...VITE[0], quantite: "1010.000000", parHeure: "8.000000", entretienParHeure: "10.000000" };
+      expect(quantiteMontee(surplus, 0.5 * 3_600_000, 1)).toBe(1005);
+      // Une heure pour revenir à sa limite, puis une heure à 8 - 10 par heure.
+      expect(quantiteMontee(surplus, 2 * 3_600_000, 1)).toBe(998);
+      expect(quantiteMontee(surplus, 3_600_000, 2)).toBe(998);
     });
 
     it("se recalent sur le jeu toutes les 5 minutes, et dès le retour sur l'onglet", async () => {

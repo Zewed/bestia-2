@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-259 points au total.
+258 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -17,7 +17,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0307](03-les-habitants.md) · Découvrir les huit Métiers : un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve.
 - [US-0308](03-les-habitants.md) · Donner un Métier à un Habitant : donner un Métier est gratuit et immédiat.
 - [US-0310](03-les-habitants.md) · Changer le Métier d'un Habitant : changer de Métier est gratuit et immédiat, sans temps d'apprentissage.
-- [US-0316](03-les-habitants.md) · Faire manger les Habitants chaque heure : l'Entretien est pris sur la Viande et les Végétaux, à parts égales ou d'abord sur le stock le plus fourni.
 - [US-0323](03-les-habitants.md) · Retirer l'avertissement quand le danger est passé : tant que le danger est là, le joueur ne peut pas le masquer.
 - [US-0325](03-les-habitants.md) · Entrer en Famine : un Habitant mange indifféremment de la Viande ou des Végétaux : la Famine ne commence que quand les deux ensemble ne suffisent plus.
 - [US-0326](03-les-habitants.md) · Voir des Habitants s'en aller : le nombre de départs suit une seule règle : autant qu'il faut pour que l'Entretien restant soit payé, ou (chiffre à régler) Habitants par heure de Famine.

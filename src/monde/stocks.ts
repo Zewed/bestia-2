@@ -1,7 +1,7 @@
 // Les Stocks d'un Territoire (US-0201), tels qu'ils sont en base.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import { PRODUCTION_DU_TERRITOIRE } from "./production";
+import { ENTRETIEN_DU_TERRITOIRE, PRODUCTION_DU_TERRITOIRE } from "./production";
 
 /** US-0214 : d'où vient une production : le Foyer et son Biome, ou des Cases d'un Biome. */
 export type SourceDeProduction = { libelle: string; parHeure: string };
@@ -18,13 +18,34 @@ export type Stock = {
   /** US-0220 : la limite du Stock, celle qu'utilise le calcul de production. */
   limite: string;
   parHeure: string;
+  /** US-0316 : l'Entretien que les Habitants prennent sur ce Stock par heure, au rythme du moment. */
+  entretienParHeure: string;
   sources: SourceDeProduction[];
 };
 
 /** Les quatre Stocks du Territoire, dans l'ordre des Ressources : Viande, Végétaux, Bois, Pierre. */
 export async function stocksDuTerritoire(base: Pool | PoolClient, territoireId: number): Promise<Stock[]> {
   const { rows } = await base.query<Stock>(
-    `select r.id, r.nom, r.famille, s.quantite, s.limite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure",
+    `with entretien as (${ENTRETIEN_DU_TERRITOIRE}),
+     -- US-0316 : un Stock de Nourriture est vide quand il ne peut plus payer sa moitié de l'Entretien (voir PRODUIRE).
+     nourriture as (
+       select s.ressource_id, coalesce(p.par_heure, 0) as p,
+         s.quantite * 3600000000 + s.reste + coalesce(p.par_heure, 0) < e.par_heure / 2 as vide
+       from stock s join ressource r on r.id = s.ressource_id
+         left join (${PRODUCTION_DU_TERRITOIRE}) p on p.ressource_id = s.ressource_id cross join entretien e
+       where s.territoire_id = $1 and r.famille = 'nourriture'
+     ),
+     -- Chacun paie la moitié ; un Stock vide ne donne que sa production, et l'autre paie tout le reste.
+     part as (
+       select n.ressource_id, case
+           when n.vide then n.p
+           when autre.vide then e.par_heure - autre.p
+           else e.par_heure / 2
+         end as par_heure
+       from nourriture n join nourriture autre on autre.ressource_id <> n.ressource_id cross join entretien e
+     )
+     select r.id, r.nom, r.famille, s.quantite, s.limite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure",
+       coalesce(part.par_heure, 0)::numeric(24, 6)::text as "entretienParHeure",
        coalesce((
          select json_agg(json_build_object(
                   'libelle', case when source.foyer then 'Foyer · ' || lower(source.biome)
@@ -42,6 +63,7 @@ export async function stocksDuTerritoire(base: Pool | PoolClient, territoireId: 
        ), '[]') as sources
      from stock s join ressource r on r.id = s.ressource_id
        left join (${PRODUCTION_DU_TERRITOIRE}) p on p.ressource_id = s.ressource_id
+       left join part on part.ressource_id = s.ressource_id
      where s.territoire_id = $1 order by r.ordre`,
     [territoireId],
   );

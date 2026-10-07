@@ -161,10 +161,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0316 · Faire manger les Habitants chaque heure
 **En tant que** joueur, **je veux** que chaque Habitant prenne son Entretien dans mes stocks chaque heure, **afin de** sentir ce que coûte chaque bouche en plus.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Production et Entretien se calculent ensemble, dans la même mise à l'heure, en entiers exacts au pas d'une microseconde : un calcul ou mille donnent exactement les mêmes Stocks, même quand un Stock se vide, se remplit ou que le partage bascule (prouvé aussi contre un déroulement microseconde par microseconde). Un Stock de Nourriture vide continue de donner sa production à mesure, et l'autre paie le reste ; quand les deux sont vides, l'Entretien qui manque n'est pas payé (la Famine viendra avec US-0325). L'Entretien mange aussi le surplus d'un Stock au-dessus de sa limite, comme une dépense. Le nombre d'Habitants est celui du moment du calcul : une arrivée ou un départ devra d'abord mettre le Territoire à l'heure. La barre monte ou descend au rythme net entre deux recalages. Vérifié en vrai : avec trois Habitants, une heure donne +5 Viande et +11 Végétaux (8 − 3 et 14 − 3), le Bois et la Pierre gardent leurs +4.
 - **Débloquée par** : US-0301, Étape 11, Étape 12
 - **Critères d'acceptation** :
-  - Chaque Habitant a un Entretien de (chiffre à régler) Nourriture par heure, qu'il ait un Métier ou non.
-  - L'Entretien est pris sur la Viande et les Végétaux, à parts égales ou d'abord sur le stock le plus fourni (à décider).
+  - Chaque Habitant a un Entretien de 2 Nourriture par heure (provisoire, `ENTRETIEN_HABITANT_PAR_HEURE`), qu'il ait un Métier ou non.
+  - L'Entretien est pris sur la Viande et les Végétaux à parts égales ; quand l'un est vide, tout est pris sur l'autre (décidé le 2026-10-07).
   - Les stocks de Nourriture baissent de l'Entretien total pendant que la production continue les fait monter.
   - Un stock ne descend jamais sous zéro.
 

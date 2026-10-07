@@ -14,13 +14,14 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
   let numero = 0;
   const HEURE = 3_600_000;
 
-  /** Un Territoire tout neuf, ses Stocks remis à zéro, et l'instant de sa naissance. */
+  /** Un Territoire tout neuf, ses Stocks remis à zéro et sans Habitants (la production seule, sans Entretien), et l'instant de sa naissance. */
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Abs${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
     await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
+    await pool.query("delete from habitant where territoire_id = $1", [territoireId]);
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
   const stocks = async (territoireId: number) =>

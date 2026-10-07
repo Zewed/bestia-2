@@ -83,12 +83,13 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
     let numero = 0;
     const HEURE = 60 * MINUTE;
 
-    /** Un Foyer né à l'heure du jeu, ses Stocks remis à zéro. */
+    /** Un Foyer né à l'heure du jeu, ses Stocks remis à zéro et sans Habitants : la production seule, sans Entretien (US-0316). */
     const naitre = async () => {
       const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
       expect(await enregistrerNomDeChef(pool, compte.id, `Vite${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
       const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
       await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
+      await pool.query("delete from habitant where territoire_id = $1", [territoireId]);
       return territoireId;
     };
     const stocks = async (territoireId: number) =>

@@ -14,13 +14,14 @@ describe.skipIf(!URL_TEST)("production continue du Foyer (US-0210, sur base)", (
   let numero = 0;
   const HEURE = 3_600_000;
 
-  /** Un Territoire tout neuf, aux Stocks remis à zéro pour lire la production seule. */
+  /** Un Territoire tout neuf, aux Stocks remis à zéro et sans Habitants pour lire la production seule, sans Entretien (US-0316). */
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Prod${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
     await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
+    await pool.query("delete from habitant where territoire_id = $1", [territoireId]);
     return territoireId;
   };
   const stocks = async (territoireId: number) =>
