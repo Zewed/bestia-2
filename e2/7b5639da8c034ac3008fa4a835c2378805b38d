@@ -1,0 +1,38 @@
+src/components/BarreHaut.module.css
+  s_97a431cfa65ca7::t_0dea9f1efb02a4 293-307
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_867c737cb31628 7-10
+src/components/Ressources.test.tsx
+  s_97a431cfa65ca7::t_867c737cb31628 12-15,79-90,116,126-130
+  s_97a431cfa65ca7::t_419f7dac5d723f 131-132
+src/comptes/garde.test.ts
+  s_97a431cfa65ca7::t_867c737cb31628 12
+src/app/jeu/page.test.tsx
+  s_97a431cfa65ca7::t_867c737cb31628 20-23
+src/components/Ressources.tsx
+  s_97a431cfa65ca7::t_0dea9f1efb02a4 19,40-41,44-47,126-132
+src/app/controle/page.test.tsx
+  s_97a431cfa65ca7::t_867c737cb31628 103-104
+src/monde/stocks.ts
+  s_97a431cfa65ca7::t_0dea9f1efb02a4 13-22,27
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_72cacf92cf1365 241
+docs/stories/README.md
+  s_97a431cfa65ca7::t_1b9777617d63d2 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e27b5639da8c034ac3008fa4a835c2378805b38d",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
