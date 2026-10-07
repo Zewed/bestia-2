@@ -1,16 +1,26 @@
 src/monde/mer.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 1-77
+  s_97a431cfa65ca7::t_3d131ac62920b4 1-77
 src/monde/regions.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 58
+  s_97a431cfa65ca7::t_e14d19178e3544 58
 src/reglages.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 154-163
+  s_97a431cfa65ca7::t_4b69f9d542e620 154-163
 src/monde/climat.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 14
+  s_97a431cfa65ca7::t_e744075324f3d1 14
 src/monde/generer.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 9,19-22,34-36,39,76-77
+  s_97a431cfa65ca7::t_4a3a3162fc66f6 9
+  s_97a431cfa65ca7::t_b8d9c207a7cb74 34-36,39
+  s_97a431cfa65ca7::t_86fa9e8c333119 19-22
+  s_97a431cfa65ca7::t_60c3cd76a273c5 76-77
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_b571cff30e2ace 10-12,361-393
   s_97a431cfa65ca7::t_fd8fcde7949c3d 394
+  s_97a431cfa65ca7::t_8d8c01a435aad0 10-12
+  s_97a431cfa65ca7::t_d2c47d4adb9a9b 361-394
 docs/stories/04-la-carte-du-monde.md
   s_97a431cfa65ca7::t_7ec38f3838c904 83,87
 docs/stories/README.md
