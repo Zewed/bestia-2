@@ -1,0 +1,58 @@
+src/db/schema.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 527-528,540-546,548-556
+src/temps/avancer.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 21-26,60-61,73,98-100,107-108,115
+src/app/jeu/habitants/actions-aux-portes.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 6-9,31,40-46,50,52,55-59,66-68,71
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 7-9,85-99
+  s_97a431cfa65ca7::t_36f167cb956fd2 100-101
+src/temps/synchroniser-horloge.db.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 8,375-378,381-385
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 11,13,20-29,33-34,51-55,57,59-71,74-76,80-89,98-105,129,131-152,156-157,159-171,173,176-184,273-285,287,293-301,320-325,327-334,337,339,343,346-351,354,361-364,368-492,547,550-551,586,594,597,607,628,631-632,646,658,664,673,685,687,689
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_70c995f973aacc 39-40,45,57-58,61,68-72
+src/temps/avancer.db.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 183-269
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_70c995f973aacc 7,9,12-13,46-50,192-233
+  s_97a431cfa65ca7::t_a4d45050ebc452 234-235
+src/monde/voyageurs.test.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 3,98-121
+  s_97a431cfa65ca7::t_c79c8d7aff74d1 122
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 2-3,15-17,37-38,46,49-50,56-57,64-67,75-76,82-145,152,155,181-186,190-193,195,200-202,206-207,209,214,224-228,230-235,239,241-243
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_70c995f973aacc 107-117
+src/temps/regles.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 3-5,8,14-18
+drizzle/0041_sort_des_voyageurs.sql
+  s_97a431cfa65ca7::t_70c995f973aacc 1-12
+src/app/jeu/habitants/actions-aux-portes.ts
+  s_97a431cfa65ca7::t_70c995f973aacc 7,21-25,27,31,33,37-39,45
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_5fb7c9651a4003 391
+docs/stories/README.md
+  s_97a431cfa65ca7::t_bd5cde0f588e1f 7
+drizzle/meta/0041_snapshot.json
+  s_97a431cfa65ca7::t_90086db08256ea 1-2313
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_172ebd1488b3b5 291-297
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "95a59ca46cd4d5e7d18c4902a9b15116dde19a2e",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
