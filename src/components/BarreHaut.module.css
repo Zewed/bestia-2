@@ -328,22 +328,25 @@
   text-transform: uppercase;
 }
 
-/* US-0212 : la production horaire, à côté de la quantité, seulement là où la barre a la place. */
-.production {
-  display: none;
+/*
+ * US-0212 : la production horaire, à côté de la quantité. US-0319 : c'est le solde, production moins
+ * Entretien, partout : à côté de la quantité dès 821 px, dessous sur mobile. Négatif, il passe dans la
+ * couleur d'alerte d'un Stock plein, avec son signe moins : jamais la couleur seule.
+ */
+.solde {
   color: var(--sur-encre-pale);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.production[data-nulle] {
+.solde[data-nulle] {
   color: var(--sur-encre-eteint);
 }
 
-@media (min-width: 1180px) {
-  .production {
-    display: inline;
-  }
+.solde[data-negatif] {
+  color: var(--rose);
+  font-weight: var(--graisse-titre);
 }
 
 /* Un texte pour les lecteurs d'écran seulement. */
@@ -445,6 +448,37 @@
   color: var(--texte-2);
   font-size: 12px;
   font-weight: var(--graisse-texte);
+}
+
+/* US-0319 : la production, l'Entretien et le solde de la Nourriture : le libellé d'un côté, la valeur de l'autre. */
+.ligneBilan {
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  color: var(--texte-2);
+  font-size: 12px;
+  font-weight: var(--graisse-texte);
+}
+
+.valeurBilan {
+  font-variant-numeric: tabular-nums;
+}
+
+.soldeBilan {
+  margin-bottom: 4px;
+  padding-top: 3px;
+  border-top: 1px solid var(--trait-doux);
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+}
+
+.valeurBilan[data-negatif] {
+  color: var(--mauvais);
+}
+
+/* Le bouton qui ferme le détail, dans le panneau du mobile seulement. */
+.fermer {
+  display: none;
 }
 
 .ressource[data-ouverte] .bulle,
@@ -554,7 +588,7 @@
     gap: 0;
   }
 
-  /* Le trait entre les groupes, et avant le compteur, dessiné en fond : le groupe reste sans position propre, et la bulle se centre sous toute la bande. */
+  /* Le trait entre les groupes, et avant le compteur, dessiné en fond : le groupe reste sans position propre. */
   .groupe + .groupe,
   .groupes + .habitants {
     position: static;
@@ -568,11 +602,15 @@
     display: none;
   }
 
-  /* Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px. */
+  /*
+   * Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px.
+   * US-0319 : le solde dessous, sur une troisième ligne gardée partout, pour que les quantités restent alignées.
+   */
   .boutonRessource {
     display: grid;
-    grid-template-areas: "icone" "quantite";
-    gap: 2px 4px;
+    grid-template-areas: "icone" "quantite" "solde";
+    grid-template-rows: auto auto 12px;
+    gap: 1px 4px;
     align-content: center;
     justify-content: center;
     justify-items: center;
@@ -587,28 +625,89 @@
 
   .boutonRessource .quantite {
     grid-area: quantite;
+    line-height: 18px;
   }
 
-  /* Le détail d'une ressource s'ouvre centré sous toute la bande, quelle que soit sa colonne : jamais hors de l'écran. */
-  .ressources {
-    position: relative;
+  /* « −1 234/h » tient dans une colonne de 64 px. */
+  .solde {
+    grid-area: solde;
+    font-size: 10px;
+    line-height: 12px;
   }
 
-  .ressource {
-    position: static;
-  }
-
+  /*
+   * US-0319 : le détail d'une ressource s'ouvre dans un panneau en bas de l'écran, toute la largeur,
+   * juste au-dessus des onglets ; son contenu reste en colonne sur un écran plus large. Pas de voile : la
+   * page reste là, et la toucher le referme, comme Échap ou son bouton « Fermer ».
+   */
   .bulle,
   .groupe:first-child .ressource:first-child .bulle,
   .groupe:last-child .ressource:last-child .bulle {
-    --decalage: -50%;
-    left: 50%;
-    max-width: calc(100vw - 24px);
+    --decalage: 0%;
+    --marge-panneau: max(16px, calc((100vw - 480px) / 2));
+    position: fixed;
+    top: auto;
+    right: 0;
+    bottom: calc(var(--hauteur-onglets) + var(--bord-bas));
+    left: 0;
+    max-height: var(--hauteur-utile);
+    overflow-y: auto;
+    gap: 4px;
+    padding: 16px max(var(--marge-panneau), var(--bord-droit)) 16px max(var(--marge-panneau), var(--bord-gauche));
+    border-width: 1px 0 0;
+    border-radius: var(--arrondi) var(--arrondi) 0 0;
+    font-size: 14px;
+    text-align: left;
+    white-space: normal;
+  }
+
+  /* Seul un toucher l'ouvre : ni le survol ni le clavier ne font monter le panneau. */
+  .ressource:not([data-ouverte]) .bulle {
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  .ressource[data-ouverte] .bulle {
+    pointer-events: auto;
+  }
+
+  .nomBulle {
+    font-size: 16px;
+  }
+
+  .groupeBulle,
+  .ligneBilan,
+  .sourceBulle,
+  .perdue {
+    font-size: 13px;
+  }
+
+  .perdue,
+  .reprise {
+    width: auto;
+  }
+
+  .fermer {
+    position: absolute;
+    top: 8px;
+    right: max(var(--marge-panneau), var(--bord-droit));
+    display: block;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--trait);
+    border-radius: var(--arrondi-moyen);
+    background: var(--bloc);
+    color: var(--encre);
+    font: inherit;
+    font-size: 14px;
+    font-weight: var(--graisse-titre);
+    cursor: pointer;
   }
 
   /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous ; serrés, pour tenir dans une colonne de 64 px (US-0304). */
   .ressource[data-plein] .boutonRessource {
-    grid-template-areas: "icone plein" "quantite quantite";
+    grid-template-areas: "icone plein" "quantite quantite" "solde solde";
     column-gap: 2px;
   }
 

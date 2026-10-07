@@ -37,6 +37,13 @@
   }
 }
 
+/* US-0319 : sur mobile, le solde horaire passe sous la quantité, sur une troisième ligne : la bande grandit d'autant. */
+@media (max-width: 820px) {
+  :root:has([data-bande-ressources]) {
+    --hauteur-bande: 56px;
+  }
+}
+
 /* Sur un téléphone en portrait, la navigation passe en onglets en bas de l'écran : la page s'arrête
    au-dessus (voir globals.css). */
 @media (max-width: 820px) {

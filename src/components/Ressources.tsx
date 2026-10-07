@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
-import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
+import { productionAffichee, quantiteAffichee, quantiteDetaillee, soldeAffiche, soldeEnMots, soldeHoraire } from "@/monde/quantite";
 import { PRESQUE_PLEIN_POURCENT, RECALER_LA_BARRE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
 import { iconeDeRessource } from "./icone-de-ressource";
@@ -72,6 +72,10 @@ export function quantiteMontee(stock: RessourceDeLaBarre, ecoule: number, vitess
  * RECALER_LA_BARRE_MINUTES minutes et dès qu'on revient sur l'onglet (une action, elle, recharge déjà
  * la page). De nouvelles quantités arrivent avec une nouvelle clé (ActionsDuJeu) : tout repart d'elles.
  *
+ * US-0319 : à côté de chaque quantité, son solde horaire, production moins Entretien ; le détail de la
+ * Nourriture met la production d'un côté, l'Entretien de l'autre. Sur mobile, le détail s'ouvre dans un
+ * panneau en bas de l'écran, au-dessus des onglets.
+ *
  * `children` : ce qui suit les ressources dans la même bande, hors de leur groupe : le compteur
  * d'Habitants (US-0304).
  */
@@ -124,8 +128,11 @@ export function Ressources({ stocks, vitesse = 1, children }: { stocks: Ressourc
             const plein = quantite >= Number(stock.limite);
             // US-0227 : avant d'être plein, le Stock prévient, d'une autre couleur.
             const presquePlein = !plein && quantite >= (Number(stock.limite) * PRESQUE_PLEIN_POURCENT) / 100;
-            // US-0316 : ce que le Stock gagne par heure, Entretien payé.
-            const montee = Number(stock.parHeure) - Number(stock.entretienParHeure);
+            // US-0316 : ce que le Stock gagne par heure, Entretien payé ; US-0319 : son solde horaire, dans la barre.
+            const montee = soldeHoraire(stock.parHeure, stock.entretienParHeure);
+            // US-0319 : un Stock plein dont l'Entretien mange plus que la production ne perd rien : il baisse, et la barre le montre.
+            const productionPerdue = plein && montee >= 0;
+            const solde = soldeAffiche(montee);
             return (
             <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined} data-plein={plein ? "" : undefined} data-presque-plein={presquePlein ? "" : undefined}>
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
@@ -139,13 +146,16 @@ export function Ressources({ stocks, vitesse = 1, children }: { stocks: Ressourc
                     <span className={styles.plein}>plein</span>
                   </>
                 ) : null}
-                {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. Un Stock plein n'en a plus : « PLEIN » en tient lieu (US-0225). */}
-                {plein ? (
+                {/*
+                  US-0212 : la production horaire ; plus discrète quand elle est nulle. Un Stock plein n'en a plus : « PLEIN » en tient lieu (US-0225).
+                  US-0319 : c'est le solde, production moins Entretien ; négatif, il prend la couleur d'alerte.
+                */}
+                {productionPerdue ? (
                   <span className={styles.annonce}>, production perdue</span>
                 ) : (
-                  <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
-                    <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
-                    <span className={styles.annonce}>, {productionHoraire(stock.parHeure)} par heure</span>
+                  <span className={styles.solde} data-nulle={solde === "0/h" ? "" : undefined} data-negatif={montee < 0 ? "" : undefined}>
+                    <span aria-hidden="true">{solde}</span>
+                    <span className={styles.annonce}>, {soldeEnMots(montee)}</span>
                   </span>
                 )}
               </button>
@@ -164,7 +174,24 @@ export function Ressources({ stocks, vitesse = 1, children }: { stocks: Ressourc
                 <span className={styles.jauge}>
                   <span className={styles.remplissage} style={{ width: `${Math.min(100, (quantite / Number(stock.limite)) * 100)}%` }} />
                 </span>
-                {plein ? (
+                {/* US-0319 : pour la Nourriture, la production d'un côté, l'Entretien de l'autre, puis le solde. */}
+                {stock.famille === "nourriture" ? (
+                  <>
+                    <span className={styles.ligneBilan}>
+                      <span>Production</span> <span className={styles.valeurBilan}>{soldeAffiche(Number(stock.parHeure))}</span>
+                    </span>
+                    <span className={styles.ligneBilan}>
+                      <span>Entretien</span> <span className={styles.valeurBilan}>{soldeAffiche(-Number(stock.entretienParHeure))}</span>
+                    </span>
+                    <span className={`${styles.ligneBilan} ${styles.soldeBilan}`}>
+                      <span>Solde</span>{" "}
+                      <span className={styles.valeurBilan} data-negatif={montee < 0 ? "" : undefined}>
+                        {solde}
+                      </span>
+                    </span>
+                  </>
+                ) : null}
+                {productionPerdue ? (
                   <>
                     {/* US-0225 : ce que coûte l'attente, et ce qui reprendra. */}
                     <span className={styles.perdue}>Stock plein : la production de {stock.nom} est perdue.</span>
@@ -193,6 +220,10 @@ export function Ressources({ stocks, vitesse = 1, children }: { stocks: Ressourc
                     </span>
                   ))
                 )}
+                {/* US-0319 : sur mobile, le détail est un panneau en bas de l'écran, qui se ferme aussi d'un bouton ; Échap et le bouton de la ressource le font au clavier. */}
+                <button type="button" className={styles.fermer} tabIndex={-1} onClick={() => setOuverte(null)}>
+                  Fermer
+                </button>
               </span>
             </li>
             );

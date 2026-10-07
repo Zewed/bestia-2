@@ -19,6 +19,8 @@ describe("ressources dans la barre du haut (US-0204)", () => {
   afterEach(cleanup);
 
   const ouvertes = () => [...document.querySelectorAll("li[data-ouverte]")].map((li) => li.querySelector("img")?.getAttribute("alt"));
+  // Les lignes du détail ouvert, sans son bouton « Fermer » (US-0319).
+  const lignesDuDetail = () => [...document.querySelectorAll("li[data-ouverte] > [aria-hidden] > :not(button)")].map((ligne) => ligne.textContent);
 
   it("montre l'icône de chaque ressource, son nom pour texte, puis la quantité", () => {
     render(<Ressources stocks={[...STOCKS]} />);
@@ -33,9 +35,78 @@ describe("ressources dans la barre du haut (US-0204)", () => {
   it("montre la production horaire de chaque ressource, plus discrète quand elle est nulle (US-0212)", () => {
     render(<Ressources stocks={[...STOCKS]} />);
     const productions = screen.getAllByRole("button").map((b) => b.querySelector("[aria-hidden]")?.textContent);
-    expect(productions).toEqual(["+8/h", "+14,5/h", "+4/h", "+0/h"]);
+    // US-0319 : un solde nul s'écrit sans signe.
+    expect(productions).toEqual(["+8/h", "+14,5/h", "+4/h", "0/h"]);
     expect([...document.querySelectorAll("[data-nulle]")].map((e) => e.closest("li")?.querySelector("img")?.alt)).toEqual(["Pierre"]);
     expect(screen.getByRole("button", { name: "Végétaux 12\u00a0500, 14,5 par heure" })).toBeTruthy();
+  });
+
+  describe("le solde horaire (US-0319)", () => {
+    const soldes = () => screen.getAllByRole("button").map((b) => b.querySelector("[aria-hidden]")?.textContent ?? null);
+    const negatifs = () => [...document.querySelectorAll("button [data-negatif]")].map((e) => e.closest("li")?.querySelector("img")?.alt);
+
+    it("montre à côté de chaque ressource sa production moins l'Entretien pris sur elle", () => {
+      // Trois Habitants : 6 Nourriture par heure, moitié sur la Viande, moitié sur les Végétaux.
+      render(<Ressources stocks={[{ ...STOCKS[0], entretienParHeure: "3.000000" }, { ...STOCKS[1], parHeure: "14.000000", entretienParHeure: "3.000000" }, STOCKS[2], STOCKS[3]]} />);
+      expect(soldes()).toEqual(["+5/h", "+11/h", "+4/h", "0/h"]);
+      expect(negatifs()).toEqual([]);
+      expect(screen.getByRole("button", { name: "Viande 100, 5 par heure" })).toBeTruthy();
+    });
+
+    it("montre un solde négatif avec un vrai signe moins, dans la couleur d'alerte, et le dit « moins »", () => {
+      // Douze Habitants en prairie : 12 Viande mangées par heure pour 8 produites.
+      render(<Ressources stocks={[{ ...STOCKS[0], entretienParHeure: "12.000000" }, { ...STOCKS[1], parHeure: "14.000000", entretienParHeure: "12.000000" }]} />);
+      expect(soldes()).toEqual(["−4/h", "+2/h"]);
+      expect(negatifs()).toEqual(["Viande"]);
+      expect(screen.getByRole("button", { name: "Viande 100, moins 4 par heure" })).toBeTruthy();
+    });
+
+    it("montre le solde d'un Stock plein qui baisse quand même, à la place de sa production perdue", () => {
+      render(<Ressources stocks={[{ ...STOCKS[0], quantite: "1000.000000", entretienParHeure: "12.000000" }, { ...STOCKS[2], quantite: "1000.000000" }]} />);
+      expect(soldes()).toEqual(["−4/h", null]);
+      expect(negatifs()).toEqual(["Viande"]);
+      expect(screen.getByRole("button", { name: /^Viande 1\s000 plein, moins 4 par heure$/ })).toBeTruthy();
+      expect(screen.getByRole("button", { name: /^Bois 1\s000 plein, production perdue$/ })).toBeTruthy();
+    });
+
+    const detail = async (u: ReturnType<typeof userEvent.setup>, nom: string) => {
+      await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
+      return lignesDuDetail();
+    };
+
+    it("détaille la Nourriture au toucher : la production d'un côté, l'Entretien de l'autre, puis le solde", async () => {
+      const u = userEvent.setup();
+      render(<Ressources stocks={[{ ...STOCKS[0], entretienParHeure: "3.000000" }, { ...STOCKS[1], parHeure: "14.000000", entretienParHeure: "12.000000" }, STOCKS[2]]} />);
+      expect(await detail(u, "Viande")).toEqual(["Viande", "Nourriture", "100 / 1 000", "", "Production +8/h", "Entretien −3/h", "Solde +5/h", "plein dans 7 j 12 h", "Foyer · prairie : +8/h"]);
+      expect(document.querySelector("li[data-ouverte] [data-negatif]")).toBeNull();
+      expect(await detail(u, "Végétaux")).toEqual(["Végétaux", "Nourriture", "12 500,4 / 20 000", "", "Production +14/h", "Entretien −12/h", "Solde +2/h", "plein dans 156 j 5 h", "Foyer · prairie : +14,5/h"]);
+      // Le Bois n'a pas d'Entretien : son détail ne change pas.
+      expect(await detail(u, "Bois")).toEqual(["Bois", "Matériaux", "0,99 / 1 000", "", "plein dans 10 j 9 h", "Foyer · prairie : +4/h"]);
+    });
+
+    it("détaille un solde négatif dans la couleur d'alerte, sans promettre de plein", async () => {
+      const u = userEvent.setup();
+      render(<Ressources stocks={[{ ...STOCKS[0], entretienParHeure: "12.000000" }]} />);
+      expect(await detail(u, "Viande")).toEqual(["Viande", "Nourriture", "100 / 1 000", "", "Production +8/h", "Entretien −12/h", "Solde −4/h", "Foyer · prairie : +8/h"]);
+      expect(document.querySelector("li[data-ouverte] > [aria-hidden] [data-negatif]")?.textContent).toBe("−4/h");
+    });
+
+    it("ne dit plus perdue la production d'un Stock plein qui baisse quand même", async () => {
+      const u = userEvent.setup();
+      render(<Ressources stocks={[{ ...STOCKS[0], quantite: "1000.000000", entretienParHeure: "12.000000" }, { ...STOCKS[1], quantite: "20000.000000", entretienParHeure: "3.000000" }]} />);
+      expect(await detail(u, "Viande")).toEqual(["Viande", "Nourriture", "1 000 / 1 000", "", "Production +8/h", "Entretien −12/h", "Solde −4/h", "Foyer · prairie : +8/h"]);
+      expect(await detail(u, "Végétaux")).toEqual([
+        "Végétaux",
+        "Nourriture",
+        "20 000 / 20 000",
+        "",
+        "Production +14,5/h",
+        "Entretien −3/h",
+        "Solde +11,5/h",
+        "Stock plein : la production de Végétaux est perdue.",
+        "Elle reprendra à +14,5/h dès qu'il y aura de la place.",
+      ]);
+    });
   });
 
   it("montre le nom dans une bulle au toucher, une seule à la fois, et la referme d'un second toucher", async () => {
@@ -74,9 +145,10 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     render(<Ressources stocks={STOCKS} />);
     const detail = async (nom: string) => {
       await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
-      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+      return lignesDuDetail();
     };
-    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4 / 20\u00a0000", "", "plein dans 21 j 13 h", "Foyer · prairie : +14,5/h"]);
+    // US-0319 : la Nourriture détaille sa production, son Entretien et son solde.
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4 / 20\u00a0000", "", "Production +14,5/h", "Entretien 0/h", "Solde +14,5/h", "plein dans 21 j 13 h", "Foyer · prairie : +14,5/h"]);
     expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99 / 1\u00a0000", "", "plein dans 10 j 9 h", "Foyer · prairie : +4/h"]);
     expect(await detail("Pierre")).toEqual(["Pierre", "Matériaux", "42 / 1\u00a0000", "", "+0/h"]);
   });
@@ -95,7 +167,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     render(<Ressources stocks={[{ ...STOCKS[2], quantite: "986.666667" }, STOCKS[3]]} vitesse={2} />);
     const detail = async (nom: string) => {
       await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
-      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+      return lignesDuDetail();
     };
     // 13,33 Bois à 4 par heure de jeu, le jeu allant deux fois plus vite : 1 h 40.
     expect(await detail("Bois")).toContain("plein dans 1 h 40");
@@ -115,12 +187,12 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     );
     const detail = async (nom: string) => {
       await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
-      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+      return lignesDuDetail();
     };
     // 13,33 Viande à 4 - 2 par heure de jeu, le jeu allant deux fois plus vite : 3 h 20.
     expect(await detail("Viande")).toContain("plein dans 3 h 20");
     // Les Végétaux produisent autant qu'on en mange : la source reste dite, sans promesse.
-    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12 500,4 / 20 000", "", "Foyer · prairie : +14,5/h"]);
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12 500,4 / 20 000", "", "Production +14,5/h", "Entretien \u221214,5/h", "Solde 0/h", "Foyer · prairie : +14,5/h"]);
   });
 
   it("prévient d'un Stock presque plein, à partir de 90 % de sa limite, autrement que d'un Stock plein (US-0227)", () => {
@@ -149,8 +221,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     const bouton = screen.getByRole("button", { name: /^Bois/ });
     expect(bouton.querySelector("[aria-hidden]")).toBeNull(); // plus de « +4/h » : « PLEIN » en tient lieu
     await u.click(bouton);
-    const lignes = [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((l) => l.textContent);
-    expect(lignes).toEqual([
+    expect(lignesDuDetail()).toEqual([
       "Bois",
       "Matériaux",
       "1\u00a0000 / 1\u00a0000",
@@ -173,6 +244,18 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     expect(ouvertes()).toEqual([]);
     await u.click(screen.getByRole("button", { name: /^Pierre/ }));
     await u.keyboard("{Escape}");
+    expect(ouvertes()).toEqual([]);
+  });
+
+  it("ferme aussi le détail par son bouton « Fermer », celui du panneau du mobile (US-0319)", async () => {
+    const u = userEvent.setup();
+    render(<Ressources stocks={[...STOCKS]} />);
+    await u.click(screen.getByRole("button", { name: /^Viande/ }));
+    const fermer = document.querySelector<HTMLButtonElement>("li[data-ouverte] > [aria-hidden] > button")!;
+    expect(fermer.textContent).toBe("Fermer");
+    // Hors du lecteur d'écran avec la bulle, et hors du parcours au clavier : Échap et le bouton de la ressource le referment déjà.
+    expect(fermer.tabIndex).toBe(-1);
+    await u.click(fermer);
     expect(ouvertes()).toEqual([]);
   });
 

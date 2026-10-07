@@ -198,6 +198,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0319 · Voir le solde horaire de Nourriture
 **En tant que** joueur, **je veux** voir si ma Nourriture monte ou baisse chaque heure, **afin de** réagir avant qu'il ne soit trop tard.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Dans la barre, chaque ressource montre désormais son solde horaire, production moins Entretien (« +5/h », « −4/h » en rose, « 0/h » discret), là où s'affichait sa production : dès 821 px à côté de la quantité, sur mobile sur une troisième petite ligne (la bande passe de 44 à 56 px). Le détail de la Viande et des Végétaux met côte à côte « Production +8/h », « Entretien −12/h » et « Solde −4/h ». Un Stock plein dont l'Entretien dépasse la production montre son solde négatif au lieu de « production perdue ». Sur mobile, le détail s'ouvre dans un panneau en bas de l'écran, au-dessus des onglets, avec un bouton « Fermer ». Vérifié en vrai avec 3 puis 12 Habitants, de 320 à 1 440 px.
 - **Débloquée par** : US-0318, Étape 11
 - **Critères d'acceptation** :
   - Dans la barre du haut, la Viande et les Végétaux affichent leur variation horaire nette : production moins Entretien.

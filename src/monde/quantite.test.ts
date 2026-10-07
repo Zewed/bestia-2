@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { productionAffichee, quantiteAffichee, quantiteExacte } from "./quantite";
+import { productionAffichee, quantiteAffichee, quantiteExacte, soldeAffiche, soldeEnMots, soldeHoraire } from "./quantite";
 
 describe("quantité affichée (US-0203)", () => {
   it.each([
@@ -43,5 +43,39 @@ describe("quantité affichée (US-0203)", () => {
     ["12345.670000", "+12\u00a0345,6/h"],
   ])("la production %s s'affiche « %s » (US-0212)", (parHeure, affichee) => {
     expect(productionAffichee(parHeure)).toBe(affichee);
+  });
+});
+
+describe("solde horaire (US-0319)", () => {
+  it.each([
+    ["8.000000", "3.000000", 5],
+    ["8.000000", "12.000000", -4],
+    ["4.000000", "0.000000", 4],
+    // Compté en millionièmes : 4,3 - 1,1 vaut 3,2, pas 3,1999…
+    ["4.300000", "1.100000", 3.2],
+  ])("une production de %s moins un Entretien de %s donne %s", (parHeure, entretien, solde) => {
+    expect(soldeHoraire(parHeure, entretien)).toBe(solde);
+  });
+
+  it.each([
+    [5, "+5/h"],
+    [-3, "−3/h"],
+    [0, "0/h"],
+    [11.56, "+11,5/h"],
+    [-1234, "−1 234/h"],
+    // Arrondi vers le bas : un Stock qui baisse ne s'affiche jamais à 0.
+    [-0.04, "−0,1/h"],
+    [soldeHoraire("4.300000", "1.100000"), "+3,2/h"],
+  ])("le solde %s s'affiche « %s », avec un vrai signe moins", (solde, affiche) => {
+    expect(soldeAffiche(solde)).toBe(affiche);
+  });
+
+  it.each([
+    [5, "5 par heure"],
+    [-3, "moins 3 par heure"],
+    [0, "0 par heure"],
+    [-2.25, "moins 2,3 par heure"],
+  ])("le solde %s se dit « %s » au lecteur d'écran", (solde, dit) => {
+    expect(soldeEnMots(solde)).toBe(dit);
   });
 });

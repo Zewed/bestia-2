@@ -53,4 +53,26 @@ describe("barre du haut", () => {
     // Le compteur, séparé des ressources du même trait que les deux groupes entre eux.
     expect(mobile).toMatch(/\.groupe \+ \.groupe,\s*\.groupes \+ \.habitants \{[^}]*background: linear-gradient/);
   });
+
+  it("montre le solde horaire sous la quantité sur mobile, sur une troisième ligne de la bande, qui grandit d'autant (US-0319)", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+    // Jamais caché : à côté de la quantité dès 821 px, dessous sur mobile.
+    expect(css).not.toMatch(/\.solde \{[^}]*display: none/);
+    expect(mobile).toMatch(/grid-template-areas: "icone" "quantite" "solde";/);
+    expect(mobile).toMatch(/\.solde \{[^}]*grid-area: solde;/);
+    expect(readFileSync(join(process.cwd(), "src/styles/formes.css"), "utf8")).toMatch(/@media \(max-width: 820px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 56px;/);
+  });
+
+  it("sur mobile, ouvre le détail d'une ressource dans un panneau en bas de l'écran, au-dessus des onglets, avec un bouton « Fermer » de 44 px (US-0319)", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+    expect(mobile).toMatch(/\.bulle,[^{]*\{[^}]*position: fixed;[^}]*right: 0;[^}]*bottom: calc\(var\(--hauteur-onglets\) \+ var\(--bord-bas\)\);[^}]*left: 0;/);
+    // Seul un toucher l'ouvre : ni le survol ni le clavier ne font monter le panneau.
+    expect(mobile).toMatch(/\.ressource:not\(\[data-ouverte\]\) \.bulle \{[^}]*visibility: hidden;/);
+    expect(mobile).toMatch(/\.ressource\[data-ouverte\] \.bulle \{[^}]*pointer-events: auto;/);
+    expect(mobile).toMatch(/\.fermer \{[^}]*display: block;[^}]*min-height: 44px;/);
+    // Sur ordinateur, la bulle reste une bulle, sans bouton.
+    expect(css.slice(0, css.indexOf("@media (max-width: 820px)"))).toMatch(/\.fermer \{\s*display: none;/);
+  });
 });

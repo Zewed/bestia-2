@@ -39,6 +39,27 @@ export function productionHoraire(parHeure: string | number): string {
 /** US-0212 : la production horaire telle que la barre l'affiche : « +14,5/h ». */
 export const productionAffichee = (parHeure: string | number) => `+${productionHoraire(parHeure)}/h`;
 
+/** US-0319 : le solde horaire d'un Stock, sa production moins l'Entretien pris sur lui, compté en millionièmes pour rester exact. */
+export function soldeHoraire(parHeure: string | number, entretienParHeure: string | number): number {
+  return (Math.round(Number(parHeure) * 1_000_000) - Math.round(Number(entretienParHeure) * 1_000_000)) / 1_000_000;
+}
+
+/** Un solde arrondi vers le bas au dixième : un Stock qui baisse, même d'un rien, ne s'affiche jamais à zéro. */
+const auDixiemeInferieur = (solde: number) => Math.floor(solde * 10) / 10;
+
+/** US-0319 : le solde horaire tel que la barre l'affiche : « +5/h », « −3/h » (un vrai signe moins), « 0/h ». */
+export function soldeAffiche(solde: number): string {
+  const arrondi = auDixiemeInferieur(solde);
+  if (arrondi === 0) return "0/h";
+  return `${arrondi > 0 ? "+" : "−"}${insecable(dixiemes.format(Math.abs(arrondi)))}/h`;
+}
+
+/** US-0319 : le solde horaire tel qu'un lecteur d'écran le dit : « 5 par heure », « moins 3 par heure ». */
+export function soldeEnMots(solde: number): string {
+  const arrondi = auDixiemeInferieur(solde);
+  return `${arrondi < 0 ? "moins " : ""}${insecable(dixiemes.format(Math.abs(arrondi)))} par heure`;
+}
+
 const centiemes = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
 
 /** US-0214 : une quantité détaillée, arrondie vers le bas au centième : « 1 234,56 ». */
