@@ -18,12 +18,6 @@ export type Regles = {
   evoluer?: (client: PoolClient, id: number, depuis: Date, jusqua: Date) => Promise<void>;
   /** Ce que fait chaque type d'événement, à son instant exact. */
   evenements?: Record<string, (client: PoolClient, id: number, evenement: Evenement) => Promise<void>>;
-  /**
-   * US-0337 : ce qui se fait au bout de chaque avancée, une fois le temps calculé jusqu'à sa fin, dans la même
-   * transaction, avec les événements qu'elle a appliqués, dans leur ordre, chacun à l'instant où il l'a été. Ce
-   * qui doit se dire une seule fois pour toute l'avancée (un Récit pour plusieurs départs de Voyageurs) se dit ici.
-   */
-  conclure?: (client: PoolClient, id: number, appliques: Evenement[]) => Promise<void>;
 };
 
 /**
@@ -57,8 +51,7 @@ export async function programmerEvenement(
  * Le temps est découpé aux instants exacts des événements : l'élément évolue jusqu'au
  * premier, l'événement est appliqué, puis l'évolution reprend jusqu'au suivant, et ainsi
  * de suite. Un événement programmé en chemin par un autre est appliqué dans la même avancée s'il
- * tombe avant la fin (US-0331). Au bout, les règles concluent l'avancée avec tous les événements appliqués
- * (US-0337). Tout se fait dans une seule transaction : en cas d'échec, rien n'est
+ * tombe avant la fin (US-0331). Tout se fait dans une seule transaction : en cas d'échec, rien n'est
  * enregistré. Avancer de dix heures d'un coup donne donc le même résultat qu'avancer dix fois d'une heure.
  */
 export async function avancer(
@@ -70,7 +63,7 @@ export async function avancer(
 ): Promise<{ depuis: Date; jusqua: Date; evenements: number } | null> {
   let traites = 0;
   const intervalle = await avancerMarquePage(pool, element, id, jusqua, async (client, depuis, fin) => {
-    const appliques: Evenement[] = [];
+    const appliques: { id: number; instant: Date }[] = [];
     const { rows } = await client.query<{ id: string; type: string; survient_le: Date; donnees: Record<string, unknown> }>(
       `select id, type, survient_le, donnees from evenement
        where element = $1 and element_id = $2 and traite_le is null and survient_le <= $3
@@ -95,24 +88,21 @@ export async function avancer(
         curseur = instant;
         const appliquer = regles.evenements?.[suivant.type];
         if (!appliquer) throw new Error(`Événement inconnu pour ${element} : « ${suivant.type} ».`);
-        const applique = { ...suivant, survientLe: instant };
-        await appliquer(client, id, applique);
-        appliques.push(applique);
+        await appliquer(client, id, { ...suivant, survientLe: instant });
+        appliques.push({ id: suivant.id, instant });
         traites += 1;
       }
     } finally {
       avanceesEnCours.delete(client);
     }
     if (fin.getTime() > curseur.getTime()) await regles.evoluer?.(client, id, curseur, fin);
-    // US-0337 : l'avancée calculée jusqu'à sa fin, ce qui se dit une fois pour toute l'avancée.
-    await regles.conclure?.(client, id, appliques);
     // Une seule requête pour marquer tous les événements traités, quel que soit leur nombre.
     if (appliques.length > 0) {
       await client.query(
         `update evenement set traite_le = lot.instant
          from unnest($1::bigint[], $2::timestamptz[]) as lot(id, instant)
          where evenement.id = lot.id`,
-        [appliques.map((a) => a.id), appliques.map((a) => a.survientLe)],
+        [appliques.map((a) => a.id), appliques.map((a) => a.instant)],
       );
     }
   });

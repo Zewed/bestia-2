@@ -15,7 +15,7 @@ import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
-import { recitsDuTerritoire } from "./recits";
+import { marquerUnRecitLu, recitsDuTerritoire } from "./recits";
 import { stocksDuTerritoire } from "./stocks";
 import {
   accueillirLeVoyageur,
@@ -75,16 +75,6 @@ function attendu(territoireId: number, ne: Date, jusqua: Date, sansDepart: numbe
     departs: venus.map((v) => [v + ATTENTE, v + ATTENTE <= jusqua.getTime() ? v + ATTENTE : null]),
     repartis: repartis.map((v) => [v, v + ATTENTE]),
   };
-}
-
-/**
- * US-0337 : les départs `repartis` (arrivée, départ) rangés par avancée du temps, chaque avancée finissant à l'une
- * des `fins`, dans l'ordre : ceux qu'une même avancée applique, de sa fin exclue à la sienne comprise, ensemble.
- */
-function parAvancee(repartis: number[][], fins: number[]): number[][][] {
-  return fins
-    .map((fin, i) => repartis.filter(([, depart]) => depart > (i === 0 ? -Infinity : fins[i - 1]) && depart <= fin))
-    .filter((groupe) => groupe.length > 0);
 }
 
 /** L'instruction de la migration US-0331 qui programme la première arrivée des Territoires déjà nés. */
@@ -320,8 +310,11 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
     { nom: "une absence de 30 heures", heures: 30, page: 37 * MINUTE + 7_919, tache: [3.5, 11, 22.25] },
     { nom: "une absence de 4 jours", heures: 96, page: 3 * HEURE + 7 * MINUTE + 1_237, tache: [9, 40.5, 77] },
   ])("$nom : rien ne se perd ni ne s'invente au rattrapage", ({ heures, page, tache }) => {
-    // US-0337 : chaque Voyageur repart au bout de son attente, au bon moment, et les départs d'une même avancée du
-    // temps se disent dans un seul Récit, daté du dernier.
+    // US-0337 : chaque Voyageur repart au bout de son attente, au bon moment, et tant que le joueur n'a rien lu, tous
+    // les départs se disent dans un seul Récit, daté du dernier, quel que soit le découpage du rattrapage.
+    /** Le seul Récit attendu pour les départs `repartis`, aucun s'il n'y en a pas. */
+    const unSeulRecit = async (territoireId: number, repartis: number[][]) => recitsDeDepart(territoireId, repartis.length > 0 ? [repartis] : []);
+
     it("page fermée : au retour, un seul rattrapage donne exactement les arrivées et les départs prévus, en un seul Récit", async () => {
       const { territoireId, ne } = await naitre();
       const fin = apres(ne, heures * HEURE);
@@ -331,27 +324,24 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(prevu.voyageurs.length + prevu.repartis.length).toBeGreaterThan(0);
       // Trente heures voient au moins un départ ; quatre jours, au moins six, d'au plus douze heures d'écart.
       expect(prevu.repartis.length).toBeGreaterThanOrEqual(heures > 48 ? 6 : 1);
-      expect(await recits(territoireId)).toEqual(await recitsDeDepart(territoireId, [prevu.repartis]));
+      expect(await recits(territoireId)).toEqual(await unSeulRecit(territoireId, prevu.repartis));
     });
 
-    it("page ouverte : à chaque rattrapage, les arrivées et les départs prévus jusque-là, chaque départ dans son Récit, et la même fin", async () => {
+    it("page ouverte : à chaque rattrapage, les arrivées et les départs prévus jusque-là, tous dans le même Récit, et la même fin", async () => {
       const { territoireId, ne } = await naitre();
-      const fins: number[] = [];
       for (let ms = page; ms < heures * HEURE; ms += page) {
         await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, ms) });
-        expect(await etat(territoireId), `${(ms / HEURE).toFixed(2)} h`).toEqual(attendu(territoireId, ne, apres(ne, ms)));
-        fins.push(apres(ne, ms).getTime());
+        const prevu = attendu(territoireId, ne, apres(ne, ms));
+        expect(await etat(territoireId), `${(ms / HEURE).toFixed(2)} h`).toEqual(prevu);
+        expect(await recits(territoireId), `${(ms / HEURE).toFixed(2)} h`).toEqual(await unSeulRecit(territoireId, prevu.repartis));
       }
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, heures * HEURE) });
       const prevu = attendu(territoireId, ne, apres(ne, heures * HEURE));
       expect(await etat(territoireId)).toEqual(prevu);
-      // Deux départs sont toujours à plus d'un rattrapage l'un de l'autre : un Récit chacun.
-      const groupes = parAvancee(prevu.repartis, [...fins, apres(ne, heures * HEURE).getTime()]);
-      expect(groupes.map((g) => g.length)).toEqual(prevu.repartis.map(() => 1));
-      expect(await recits(territoireId)).toEqual(await recitsDeDepart(territoireId, groupes));
+      expect(await recits(territoireId)).toEqual(await unSeulRecit(territoireId, prevu.repartis));
     }, 120_000);
 
-    it("tâche planifiée passée au milieu : même fin qu'à la page fermée, un Récit par passage pour ses départs", async () => {
+    it("tâche planifiée passée au milieu : même fin qu'à la page fermée, et le même Récit", async () => {
       const { territoireId, ne } = await naitre();
       for (const h of tache) {
         const passage = await rattraperLesAbsents({ pool, maintenant: apres(ne, h * HEURE), parmi: { territoire: [territoireId] } });
@@ -360,8 +350,7 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, heures * HEURE) });
       const prevu = attendu(territoireId, ne, apres(ne, heures * HEURE));
       expect(await etat(territoireId)).toEqual(prevu);
-      const groupes = parAvancee(prevu.repartis, [...tache, heures].map((h) => apres(ne, h * HEURE).getTime()));
-      expect(await recits(territoireId)).toEqual(await recitsDeDepart(territoireId, groupes));
+      expect(await recits(territoireId)).toEqual(await unSeulRecit(territoireId, prevu.repartis));
     }, 60_000);
   });
 
@@ -389,22 +378,72 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(await recits(territoireId)).toEqual([[`${venu.prenom} a repris la route`, `${venu.prenom} a attendu aux portes sans qu'on l'accueille.`, depart.getTime()]]);
     });
 
-    it("dit en un seul Récit, daté du dernier, les départs d'une absence d'un bloc, et en un Récit chacun ceux d'une page ouverte", async () => {
-      const [absent, present] = [await naitre(), await naitre()];
-      for (const { territoireId, ne } of [absent, present]) {
-        for (const [prenom, h] of [["Ines", 1], ["Joran", 2], ["Ilda", 3]] as const) await presenterQuiRepart(territoireId, prenom, apres(ne, h * HEURE));
-      }
-      // Ils repartent à 13 h, 14 h et 15 h : l'absent revient à 16 h ; l'autre a la page ouverte, rattrapée entre deux.
-      await rattraper("territoire", absent.territoireId, { pool, jusqua: apres(absent.ne, 16 * HEURE) });
-      for (const h of [13.5, 14.5, 16]) await rattraper("territoire", present.territoireId, { pool, jusqua: apres(present.ne, h * HEURE) });
+    describe("les départs dits ensemble tant que le joueur n'a pas lu leur Récit", () => {
+      /**
+       * Ines et Joran attendent, et repartent à 13 h et 17 h ; Ilda, venue sans passer par le temps, ne repart pas.
+       * Les portes sont pleines dès le départ : aucun Voyageur venu du temps ne repart avant 25 h, après ces essais.
+       */
+      const deuxDeparts = async (territoireId: number, ne: Date) => {
+        await presenter(territoireId, "Ilda", ne);
+        await presenterQuiRepart(territoireId, "Ines", apres(ne, HEURE));
+        await presenterQuiRepart(territoireId, "Joran", apres(ne, 5 * HEURE));
+      };
+      const SEUL = (prenom: string, h: number, ne: Date) => [`${prenom} a repris la route`, `${prenom} a attendu aux portes sans qu'on l'accueille.`, apres(ne, h * HEURE).getTime()];
+      const ENSEMBLE = (ne: Date) => ["2 Voyageurs ont repris la route", "Ines et Joran ont attendu aux portes sans qu'on les accueille.", apres(ne, 17 * HEURE).getTime()];
 
-      expect(await recits(absent.territoireId)).toEqual([
-        ["3 Voyageurs ont repris la route", "Ines, Joran et Ilda ont attendu aux portes sans qu'on les accueille.", apres(absent.ne, 15 * HEURE).getTime()],
-      ]);
-      expect(await recits(present.territoireId)).toEqual(
-        [["Ines", 13], ["Joran", 14], ["Ilda", 15]].map(([prenom, h]) => [`${prenom} a repris la route`, `${prenom} a attendu aux portes sans qu'on l'accueille.`, apres(present.ne, Number(h) * HEURE).getTime()]),
-      );
-      for (const { territoireId } of [absent, present]) expect((await repartis(territoireId)).map((v) => v.prenom)).toEqual(["Ines", "Joran", "Ilda"]);
+      it("deux départs d'une absence découpée par la tâche planifiée : un seul Récit, daté du dernier", async () => {
+        const { territoireId, ne } = await naitre();
+        await deuxDeparts(territoireId, ne);
+        // La tâche passe à 14 h, après le premier départ, puis à 18 h ; le joueur revient à 19 h.
+        for (const h of [14, 18]) {
+          expect(await rattraperLesAbsents({ pool, maintenant: apres(ne, h * HEURE), parmi: { territoire: [territoireId] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+        }
+        await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 19 * HEURE) });
+        expect(await recits(territoireId)).toEqual([ENSEMBLE(ne)]);
+      });
+
+      it("page ouverte, deux départs à 4 h d'écart sans lecture entre : le Récit du premier, repris pour les deux", async () => {
+        const { territoireId, ne } = await naitre();
+        await deuxDeparts(territoireId, ne);
+        let ms = 37 * MINUTE + 7_919;
+        for (; ms <= 14 * HEURE; ms += 37 * MINUTE) await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, ms) });
+        const [premier] = await recitsDuTerritoire(pool, territoireId);
+        expect(await recits(territoireId)).toEqual([SEUL("Ines", 13, ne)]);
+
+        for (; ms <= 18 * HEURE; ms += 37 * MINUTE) await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, ms) });
+        expect(await recits(territoireId)).toEqual([ENSEMBLE(ne)]);
+        // Le même Récit, toujours à lire.
+        expect((await recitsDuTerritoire(pool, territoireId)).map((r) => [r.id, r.luLe])).toEqual([[premier.id, null]]);
+      });
+
+      it("un Récit de départ lu, puis un nouveau départ : un nouveau Récit, et le premier reste tel qu'il a été lu", async () => {
+        const { territoireId, ne } = await naitre();
+        await deuxDeparts(territoireId, ne);
+        await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 14 * HEURE) });
+        const [lu] = await recitsDuTerritoire(pool, territoireId);
+        expect(await marquerUnRecitLu(pool, territoireId, lu.id, apres(ne, 14 * HEURE))).toBe(true);
+
+        await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 18 * HEURE) });
+        expect(await recits(territoireId)).toEqual([SEUL("Ines", 13, ne), SEUL("Joran", 17, ne)]);
+        expect((await recitsDuTerritoire(pool, territoireId)).map((r) => r.luLe === null)).toEqual([true, false]);
+      });
+
+      it("ne reprend qu'un Récit de départ du Territoire : ni un autre Récit à lire, ni le Récit de départ d'un voisin", async () => {
+        const [joueur, voisin] = [await naitre(), await naitre()];
+        // Le voisin a un Récit de départ à lire.
+        await presenter(voisin.territoireId, "Ilda", voisin.ne);
+        await presenterQuiRepart(voisin.territoireId, "Brune", apres(voisin.ne, HEURE));
+        await rattraper("territoire", voisin.territoireId, { pool, jusqua: apres(voisin.ne, 14 * HEURE) });
+        // Le joueur, un Récit d'accueil à lire, avant le départ d'Ines.
+        await presenter(joueur.territoireId, "Ilda", joueur.ne);
+        await presenterQuiRepart(joueur.territoireId, "Ines", apres(joueur.ne, HEURE));
+        const joran = await presenter(joueur.territoireId, "Joran", apres(joueur.ne, HEURE));
+        expect(await accueillirLeVoyageur(pool, joueur.territoireId, joran, apres(joueur.ne, 2 * HEURE))).toBe("accueilli");
+
+        await rattraper("territoire", joueur.territoireId, { pool, jusqua: apres(joueur.ne, 14 * HEURE) });
+        expect((await recits(joueur.territoireId)).map(([titre]) => titre)).toEqual(["Joran a rejoint le Territoire", "Ines a repris la route"]);
+        expect(await recits(voisin.territoireId)).toEqual([SEUL("Brune", 13, voisin.ne)]);
+      });
     });
 
     it("laisse en paix un Voyageur accueilli ou refusé avant la fin de son attente : son sort reste le sien, et aucun Récit de départ", async () => {

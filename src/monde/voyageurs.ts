@@ -89,16 +89,59 @@ function voyageurDuDepart(territoireId: number, evenement: Evenement): number {
 }
 
 /**
+ * US-0337 : le Récit de départ du Territoire $1 que le joueur n'a pas encore lu, s'il y en a un. Un Récit de
+ * départ se reconnaît à coup sûr : le départ ($2, le type de l'événement) d'un Voyageur du Territoire renvoie à
+ * lui dans ses données. Il est tenu jusqu'à la fin de la transaction : ouvert par le joueur en même temps, il
+ * l'est avant ou après sa mise à jour, jamais pendant.
+ */
+const RECIT_DE_DEPART_NON_LU = `
+  select r.id from recit r
+  where r.territoire_id = $1 and r.lu_le is null
+    and exists (
+      select 1 from evenement e
+      where e.element = 'territoire' and e.element_id = $1 and e.type = $2 and (e.donnees->>'recit')::int = r.id
+    )
+  order by r.id desc
+  limit 1
+  for update of r`;
+
+/**
+ * US-0337 : les Voyageurs du Territoire $1 repartis d'eux-mêmes que dit le Récit $3, ceux dont le départ ($2) renvoie
+ * à lui, dans l'ordre de leurs départs.
+ */
+const REPARTIS_DU_RECIT = `
+  select v.prenom, v.sort_le as "sortLe" from evenement e
+  join voyageur v on v.id = (e.donnees->>'voyageur')::int
+  where e.element = 'territoire' and e.element_id = $1 and e.type = $2 and (e.donnees->>'recit')::int = $3
+    and v.territoire_id = $1 and v.sort = 'reparti'
+  order by v.sort_le, v.id`;
+
+/**
  * US-0337 : le départ d'un Voyageur, à la fin de son attente : s'il attend toujours aux portes, il repart de
  * lui-même, à cet instant ; accueilli ou refusé d'ici là, il garde son sort, et rien ne se passe. Un Voyageur
- * d'un autre Territoire n'est jamais touché. Le Récit vient à la fin de l'avancée (raconterLesDeparts).
+ * d'un autre Territoire n'est jamais touché.
+ *
+ * Un Récit le dit. Si le joueur n'a pas encore lu celui d'un départ précédent, c'est lui qui est repris : il dit
+ * tous les Voyageurs repartis depuis (« 2 Voyageurs ont repris la route »), et prend la date du dernier départ ;
+ * sinon, un nouveau Récit. Les départs d'une absence se disent ainsi ensemble, quel que soit le découpage du
+ * rattrapage (page ouverte, tâche planifiée). Le départ note dans ses données le Récit qui le dit.
  */
 export async function departDUnVoyageur(client: PoolClient, territoireId: number, evenement: Evenement): Promise<void> {
-  await client.query("update voyageur set sort = 'reparti', sort_le = $3 where id = $2 and territoire_id = $1 and sort is null", [
-    territoireId,
-    voyageurDuDepart(territoireId, evenement),
-    evenement.survientLe,
-  ]);
+  const { rows: partis } = await client.query<{ prenom: string }>(
+    "update voyageur set sort = 'reparti', sort_le = $3 where id = $2 and territoire_id = $1 and sort is null returning prenom",
+    [territoireId, voyageurDuDepart(territoireId, evenement), evenement.survientLe],
+  );
+  if (partis.length === 0) return;
+  const { rows: nonLu } = await client.query<{ id: number }>(RECIT_DE_DEPART_NON_LU, [territoireId, DEPART_VOYAGEUR]);
+  const recitId = nonLu[0]?.id ?? (await ecrireUnRecit(client, territoireId, recitDeDepart([partis[0].prenom], evenement.survientLe)));
+  await client.query("update evenement set donnees = donnees || jsonb_build_object('recit', $2::int) where id = $1", [evenement.id, recitId]);
+  if (!nonLu[0]) return;
+  const { rows: repartis } = await client.query<{ prenom: string; sortLe: Date }>(REPARTIS_DU_RECIT, [territoireId, DEPART_VOYAGEUR, recitId]);
+  const { titre, texte, survenuLe } = recitDeDepart(
+    repartis.map((v) => v.prenom),
+    repartis.at(-1)!.sortLe,
+  );
+  await client.query("update recit set titre = $2, texte = $3, survenu_le = $4 where id = $1", [recitId, titre, texte, survenuLe]);
 }
 
 /** US-0337 : « Ines », « Ines et Joran », « Ines, Joran et Ilda ». */
@@ -118,29 +161,6 @@ export function recitDeDepart(prenoms: string[], instant: Date): NouveauRecit {
     texte: `${enumerer(prenoms)} ${seul ? "a" : "ont"} attendu aux portes sans qu'on ${seul ? "l'" : "les "}accueille.`,
     survenuLe: instant,
   };
-}
-
-/**
- * US-0337 : la conclusion de chaque avancée du temps d'un Territoire : les Voyageurs que ses départs ont fait
- * repartir, dans l'ordre de leurs départs, sont dits dans un seul Récit, daté du dernier. Une absence rattrapée
- * d'un bloc les regroupe tous ; page ouverte, chaque départ a le sien. Sans départ, rien n'est lu.
- */
-export async function raconterLesDeparts(client: PoolClient, territoireId: number, appliques: Evenement[]): Promise<void> {
-  const departs = appliques.filter((e) => e.type === DEPART_VOYAGEUR).map((e) => voyageurDuDepart(territoireId, e));
-  if (departs.length === 0) return;
-  const { rows } = await client.query<{ prenom: string; sortLe: Date }>(
-    `select prenom, sort_le as "sortLe" from voyageur where territoire_id = $1 and id = any($2) and sort = 'reparti' order by sort_le, id`,
-    [territoireId, departs],
-  );
-  if (rows.length === 0) return;
-  await ecrireUnRecit(
-    client,
-    territoireId,
-    recitDeDepart(
-      rows.map((v) => v.prenom),
-      rows.at(-1)!.sortLe,
-    ),
-  );
 }
 
 /**

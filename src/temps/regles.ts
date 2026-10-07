@@ -1,19 +1,15 @@
 // Les règles qui font vivre chaque élément dans le temps. Le Monde n'a encore rien qui évolue :
 // avancer, c'est seulement déplacer son marque-page. Un Territoire produit en continu (US-0210), ses
 // Habitants y prennent leur Entretien (US-0316) et des Voyageurs s'y présentent de temps en temps (US-0331),
-// puis repartent au bout de leur attente s'ils n'ont pas été accueillis, dits ensemble à la fin de chaque
-// avancée (US-0337) ; les guérisons, les Attaques s'ajouteront ici.
+// puis repartent au bout de leur attente s'ils n'ont pas été accueillis (US-0337) ; les guérisons, les
+// Attaques s'ajouteront ici.
 import "server-only";
 import { produire } from "@/monde/production";
-import { ARRIVEE_VOYAGEUR, arriveeDUnVoyageur, DEPART_VOYAGEUR, departDUnVoyageur, raconterLesDeparts } from "@/monde/voyageurs";
+import { ARRIVEE_VOYAGEUR, arriveeDUnVoyageur, DEPART_VOYAGEUR, departDUnVoyageur } from "@/monde/voyageurs";
 import type { Regles } from "./avancer";
 import type { ElementSuivi } from "./marque-page";
 
 export const REGLES: Record<ElementSuivi, Regles> = {
   monde: {},
-  territoire: {
-    evoluer: produire,
-    evenements: { [ARRIVEE_VOYAGEUR]: arriveeDUnVoyageur, [DEPART_VOYAGEUR]: departDUnVoyageur },
-    conclure: raconterLesDeparts,
-  },
+  territoire: { evoluer: produire, evenements: { [ARRIVEE_VOYAGEUR]: arriveeDUnVoyageur, [DEPART_VOYAGEUR]: departDUnVoyageur } },
 };
