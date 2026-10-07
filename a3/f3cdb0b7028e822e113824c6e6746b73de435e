@@ -1,0 +1,55 @@
+src/app/controle/FixerStock.tsx
+  s_97a431cfa65ca7::t_b5a410aa3f946e 1-36
+src/controle/stocks.ts
+  s_97a431cfa65ca7::t_c4642a89525293 1-16
+src/monde/stocks.ts
+  s_97a431cfa65ca7::t_216f4e4341231a 17-40
+src/monde/quantite.ts
+  s_97a431cfa65ca7::t_c4642a89525293 22-32
+src/app/controle/actions.ts
+  s_97a431cfa65ca7::t_b5a410aa3f946e 1-24,26-33
+  s_97a431cfa65ca7::t_7535a1dabea11e 25
+src/chefs/chef.ts
+  s_97a431cfa65ca7::t_216f4e4341231a 36-40,43-45,47-50
+  s_97a431cfa65ca7::t_c4642a89525293 41-42,46
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_7535a1dabea11e 5
+src/app/controle/actions.test.ts
+  s_97a431cfa65ca7::t_3dbf962411dee3 1-77
+src/monde/stocks.db.test.ts
+  s_97a431cfa65ca7::t_3dbf962411dee3 3,7,133-149
+  s_97a431cfa65ca7::t_0f796533df1eaf 150
+docs/stories/README.md
+  s_97a431cfa65ca7::t_7535a1dabea11e 7,15,31
+src/app/controle/page.module.css
+  s_97a431cfa65ca7::t_a5c1712701f349 281-350
+  s_97a431cfa65ca7::t_79bd46dff36e1e 351-355
+src/monde/quantite.test.ts
+  s_97a431cfa65ca7::t_c4642a89525293 2,29-36
+  s_97a431cfa65ca7::t_389d4845e80c8f 37
+src/app/controle/page.test.tsx
+  s_97a431cfa65ca7::t_f42f8a83004bca 88-100,103-105,118,123,135,144,157,169,179,191,202,208,219,226-270
+src/controle/stocks.test.ts
+  s_97a431cfa65ca7::t_c4642a89525293 1-24
+src/app/controle/page.tsx
+  s_97a431cfa65ca7::t_a5c1712701f349 8,10,15-16,21,24,32,47-48,70-110,211-216
+  s_97a431cfa65ca7::t_853dcfa63223af 217-218
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_7535a1dabea11e 82,87
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a3f3cdb0b7028e822e113824c6e6746b73de435e",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
