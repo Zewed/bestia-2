@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import { BIOMES_DE_LA_COURONNE, COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, JOUEURS_PAR_MONDE, MONDE_RAYON } from "@/reglages";
 import { BANDE_DE_CALCUL, casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine } from "./generer";
-import { casesDesAnneaux, CENTRE, distance, voisines, type Coordonnees } from "./hex";
+import { casesDesAnneaux, CENTRE, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
 const ESSAI = { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: 12345 };
 /** Vingt graines quelconques, pour vérifier ce qui doit tenir pour tout Monde généré. */
@@ -35,7 +35,7 @@ describe("générer un Monde à partir d'une graine (US-0401)", () => {
   it.each([12345, graineDuMonde("Aube")])("fait des 6 anneaux extérieurs la Couronne, exactement celle que donne la même graine (graine %i)", (graine) => {
     const couronne = casesDeLaCouronne({ ...ESSAI, graine });
     const cases = genererLeMonde({ ...ESSAI, graine });
-    expect(cases.filter((c) => c.couronne)).toEqual(couronne.map((c) => ({ ...c, couronne: true, coeur: false })));
+    expect(cases.filter((c) => c.couronne)).toEqual(couronne.map((c) => ({ ...c, couronne: true, coeur: false, eloignement: c.anneau - 7 })));
     for (const c of cases) expect(c.couronne).toBe(c.anneau > MONDE_RAYON - COURONNE_ANNEAUX);
   });
 
@@ -170,4 +170,35 @@ describe("Couronne sur le bord du Monde (US-0404)", () => {
       expect(foyers.length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
     },
   );
+});
+
+describe("éloignement de chaque Case au Cœur sauvage (US-0405)", () => {
+  const cle = (c: Coordonnees) => `${c.q},${c.r}`;
+  const cases = genererLeMonde(ESSAI);
+
+  it("donne à chaque Case sa distance au Cœur sauvage, en Cases à franchir de proche en proche : 0 dans le Cœur, 53 sur le bord", () => {
+    // Le Monde parcouru pas à pas depuis toutes les Cases du Cœur à la fois : le nombre de pas est l'éloignement.
+    const pas = new Map(cases.filter((c) => c.coeur).map((c) => [cle(c), 0]));
+    const file: Coordonnees[] = cases.filter((c) => c.coeur);
+    for (let k = 0; k < file.length; k++) {
+      for (const v of voisinesDansLeMonde(file[k], MONDE_RAYON)) {
+        if (pas.has(cle(v))) continue;
+        pas.set(cle(v), pas.get(cle(file[k]))! + 1);
+        file.push(v);
+      }
+    }
+    expect(pas.size).toBe(cases.length);
+    for (const c of cases) expect(c.eloignement).toBe(pas.get(cle(c)));
+    for (const c of cases) expect(c.eloignement).toBe(eloignementDuCoeur(c, COEUR_SAUVAGE_RAYON));
+    expect(cases.filter((c) => c.eloignement === 0)).toEqual(cases.filter((c) => c.coeur));
+    expect(cases.filter((c) => c.coeur)).toHaveLength(169);
+    expect(Math.max(...cases.map((c) => c.eloignement))).toBe(MONDE_RAYON - COEUR_SAUVAGE_RAYON + 1);
+  });
+
+  it("donne toujours les mêmes distances à la même graine, Case par Case ; elles ne tiennent qu'à la forme du Monde", () => {
+    const encore = new Map(genererLeMonde(ESSAI).map((c) => [cle(c), c.eloignement]));
+    for (const c of cases) expect(encore.get(cle(c))).toBe(c.eloignement);
+    const autre = new Map(genererLeMonde({ ...ESSAI, graine: 54321 }).map((c) => [cle(c), c.eloignement]));
+    for (const c of cases) expect(autre.get(cle(c))).toBe(c.eloignement);
+  });
 });

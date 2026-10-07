@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COEUR_SAUVAGE_RAYON, MONDE_RAYON } from "@/reglages";
-import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
+import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
 describe("géométrie des Cases", () => {
   it("mesure l'anneau d'une Case : sa distance au Cœur sauvage", () => {
@@ -104,5 +104,21 @@ describe("Cœur sauvage au milieu du Monde (US-0403)", () => {
     for (const c of monde) expect(dansLeCoeur(c, COEUR_SAUVAGE_RAYON)).toBe(distance(c, CENTRE) < 8);
     expect(dansLeCoeur({ q: 7, r: -7 }, COEUR_SAUVAGE_RAYON)).toBe(true);
     expect(dansLeCoeur({ q: 8, r: -7 }, COEUR_SAUVAGE_RAYON)).toBe(false);
+  });
+});
+
+describe("éloignement au Cœur sauvage (US-0405)", () => {
+  it("compte la distance d'une Case au Cœur sauvage : jusqu'à la Case du Cœur la plus proche, 0 pour les siennes", () => {
+    const monde = casesDesAnneaux(0, 14);
+    for (const rayonCoeur of [1, 2, 3, 5, COEUR_SAUVAGE_RAYON]) {
+      const coeur = monde.filter((c) => dansLeCoeur(c, rayonCoeur));
+      for (const c of monde) {
+        expect(eloignementDuCoeur(c, rayonCoeur)).toBe(Math.min(...coeur.map((k) => distance(c, k))));
+        expect(eloignementDuCoeur(c, rayonCoeur) === 0).toBe(dansLeCoeur(c, rayonCoeur));
+      }
+    }
+    expect(eloignementDuCoeur(CENTRE, COEUR_SAUVAGE_RAYON)).toBe(0);
+    expect(eloignementDuCoeur({ q: 8, r: -8 }, COEUR_SAUVAGE_RAYON)).toBe(1);
+    expect(eloignementDuCoeur({ q: 0, r: -60 }, COEUR_SAUVAGE_RAYON)).toBe(53);
   });
 });

@@ -43,19 +43,24 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
     expect(await preparerCouronne(client, mondeId)).toEqual({ ajoutees: 2070, total: 2070 });
     const { rows } = await client.query(
       `select count(*)::int as cases, bool_and(couronne) as toutes, bool_or(coeur) as "dansLeCoeur", min(anneau) as de, max(anneau) as a,
+         bool_and(eloignement = anneau - 7) as "eloignees",
          (select json_build_object('rayon', rayon, 'anneaux', anneaux_couronne, 'coeur', rayon_coeur) from monde where id = $1) as taille
        from case_du_monde where monde_id = $1`,
       [mondeId],
     );
-    expect(rows[0]).toEqual({ cases: 2070, toutes: true, dansLeCoeur: false, de: 55, a: 60, taille: { rayon: 60, anneaux: 6, coeur: 8 } });
+    expect(rows[0]).toEqual({ cases: 2070, toutes: true, dansLeCoeur: false, de: 55, a: 60, eloignees: true, taille: { rayon: 60, anneaux: 6, coeur: 8 } });
   });
 
-  it("garde la taille du Cœur sauvage déjà fixée d'un Monde, et dit à chaque Case si elle en fait partie (US-0403)", async () => {
+  it("garde la taille du Cœur sauvage déjà fixée d'un Monde, et dit à chaque Case si elle en fait partie (US-0403) et à quelle distance elle en est (US-0405)", async () => {
     // Un petit Monde dont le Cœur atteint la Couronne : seules les Cases à moins de 7 Cases du milieu en sont.
     await client.query("update monde set rayon = 10, anneaux_couronne = 6, rayon_coeur = 7 where id = $1", [mondeId]);
     await preparerCouronne(client, mondeId);
-    const { rows } = await client.query("select anneau, bool_and(coeur) as tous, bool_or(coeur) as un from case_du_monde where monde_id = $1 group by anneau order by anneau", [mondeId]);
-    expect(rows).toEqual([5, 6, 7, 8, 9, 10].map((anneau) => ({ anneau, tous: anneau < 7, un: anneau < 7 })));
+    const { rows } = await client.query(
+      `select anneau, bool_and(coeur) as tous, bool_or(coeur) as un, min(eloignement) as de, max(eloignement) as a
+       from case_du_monde where monde_id = $1 group by anneau order by anneau`,
+      [mondeId],
+    );
+    expect(rows).toEqual([5, 6, 7, 8, 9, 10].map((anneau) => ({ anneau, tous: anneau < 7, un: anneau < 7, de: Math.max(0, anneau - 6), a: Math.max(0, anneau - 6) })));
     expect((await client.query("select rayon_coeur from monde where id = $1", [mondeId])).rows[0].rayon_coeur).toBe(7);
   });
 
@@ -78,7 +83,7 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
   it("élargit une Couronne existante sans toucher à ses Cases", async () => {
     // Une Couronne de 3 anneaux, telle que la première version la créait.
     await client.query("update monde set rayon = 60, anneaux_couronne = 3 where id = $1", [mondeId]);
-    await client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, biome_id) values ($1, 0, -60, 60, true, 'toundra')", [mondeId]);
+    await client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, eloignement, biome_id) values ($1, 0, -60, 60, true, 53, 'toundra')", [mondeId]);
     expect(await preparerCouronne(client, mondeId)).toEqual({ ajoutees: 2069, total: 2070 });
     const { rows } = await client.query("select biome_id from case_du_monde where monde_id = $1 and q = 0 and r = -60", [mondeId]);
     expect(rows[0].biome_id).toBe("toundra");
@@ -111,13 +116,28 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
   it("refuse en base deux Cases au même endroit, et un anneau faux", async () => {
     await preparerCouronne(client, mondeId);
     await client.query("savepoint essai");
-    await expect(client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, biome_id) values ($1, 60, 0, 60, true, 'prairie')", [mondeId])).rejects.toMatchObject({
+    await expect(client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, eloignement, biome_id) values ($1, 60, 0, 60, true, 53, 'prairie')", [mondeId])).rejects.toMatchObject({
       constraint: "case_unique_dans_le_monde",
     });
     await client.query("rollback to savepoint essai");
-    await expect(client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, biome_id) values ($1, 1, 1, 1, false, 'prairie')", [mondeId])).rejects.toMatchObject({
+    await expect(client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, eloignement, biome_id) values ($1, 1, 1, 1, false, 1, 'prairie')", [mondeId])).rejects.toMatchObject({
       constraint: "case_anneau_exact",
     });
+  });
+
+  it("refuse en base une Case du Cœur sauvage qui n'est pas à 0, une Case à 0 hors du Cœur, et une distance négative (US-0405)", async () => {
+    for (const [coeur, eloignement] of [
+      [true, 1],
+      [false, 0],
+      [false, -1],
+    ]) {
+      await client.query("savepoint essai");
+      await expect(
+        client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, coeur, eloignement, biome_id) values ($1, 1, 1, 2, false, $2, $3, 'prairie')", [mondeId, coeur, eloignement]),
+      ).rejects.toMatchObject({ constraint: "case_coeur_a_zero" });
+      await client.query("rollback to savepoint essai");
+    }
+    await client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, coeur, eloignement, biome_id) values ($1, 1, 1, 2, false, true, 0, 'prairie')", [mondeId]);
   });
 });
 
@@ -145,6 +165,14 @@ describe.skipIf(!URL_TEST)("la Couronne du Monde du jeu, une fois sa graine enre
        from monde m join case_du_monde c on c.monde_id = m.id where m.id = (select min(id) from monde) group by m.rayon_coeur`,
     );
     expect(rows[0]).toEqual({ rayon_coeur: 8, dansLeCoeur: 0, plusPres: 55 });
+  });
+
+  it("porte sur chaque Case sa distance au Cœur sauvage, celle que donne son anneau : de 48 à 53 (US-0405)", async () => {
+    const { rows } = await pool.query(
+      `select bool_and(c.eloignement = c.anneau - (m.rayon_coeur - 1)) as exactes, min(c.eloignement) as de, max(c.eloignement) as a
+       from monde m join case_du_monde c on c.monde_id = m.id where m.id = (select min(id) from monde)`,
+    );
+    expect(rows[0]).toEqual({ exactes: true, de: 48, a: 53 });
   });
 
   it("dit de chaque Case si elle est dans la Couronne, et y garde assez de terre, et de prairie, pour 90 joueurs (US-0404)", async () => {

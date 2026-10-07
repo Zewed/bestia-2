@@ -49,6 +49,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0405 · Mesurer l'éloignement de chaque Case au Cœur sauvage
 **En tant que** développeur, **je veux** que chaque Case connaisse sa distance au Cœur sauvage, **afin de** pouvoir plus tard y régler la Rareté des Bêtes sauvages et la fréquence des Incursions.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Chaque Case porte sa distance au Cœur sauvage (colonne `eloignement`, obligatoire), 0 pour les siennes et seulement elles (contrainte `case_coeur_a_zero`), 53 au bord d'un Monde de 60 ; la migration l'a calculée pour les Cases déjà en base (48 à 53 pour la Couronne du Monde du jeu). Elle se déduit de l'anneau (`eloignementDuCoeur`, fondée sur `distance`) : la même graine donne les mêmes distances. Rien de visible.
 - **Débloquée par** : US-0403
 - **Critères d'acceptation** :
   - Chaque Case porte sa distance au Cœur sauvage, en Cases.

@@ -30,7 +30,7 @@ describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => 
   /** Les Cases d'un Monde en base, rangées comme genererLeMonde les rend. */
   async function lignes(client: PoolClient, mondeId: number) {
     const { rows } = await client.query(
-      "select q, r, anneau, couronne, coeur, biome_id as biome, variante_id as variante, chef_id, imprenable from case_du_monde where monde_id = $1 order by q, r",
+      "select q, r, anneau, couronne, coeur, eloignement, biome_id as biome, variante_id as variante, chef_id, imprenable from case_du_monde where monde_id = $1 order by q, r",
       [mondeId],
     );
     return rows;
@@ -46,6 +46,9 @@ describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => 
       const enBase = await lignes(client, mondeId);
       expect(enBase).toEqual(attendues);
       expect(enBase.filter((c) => c.coeur)).toHaveLength(169);
+      // US-0405 : chaque Case porte en base sa distance au Cœur sauvage, 0 pour les siennes.
+      expect(enBase.filter((c) => c.eloignement === 0)).toEqual(enBase.filter((c) => c.coeur));
+      expect(Math.max(...enBase.map((c) => c.eloignement))).toBe(53);
     });
   });
 

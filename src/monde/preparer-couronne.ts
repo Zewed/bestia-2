@@ -2,14 +2,14 @@
 import type { PoolClient } from "pg";
 import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
-import { dansLeCoeur } from "./hex";
+import { dansLeCoeur, eloignementDuCoeur } from "./hex";
 
 /**
  * Crée les Cases de la Couronne du Monde qui n'existent pas encore, dans la transaction de
  * l'appelant. La première fois, la taille du Monde est fixée sur sa fiche et son rayon ne change
- * plus, ni celui de son Cœur sauvage (US-0403) ; la Couronne peut s'élargir vers l'intérieur si les
- * réglages le demandent, jamais rétrécir. Une Case déjà en base n'est jamais touchée. Rend le nombre
- * de Cases ajoutées et leur total.
+ * plus, ni celui de son Cœur sauvage (US-0403), dont chaque Case porte sa distance (US-0405) ; la
+ * Couronne peut s'élargir vers l'intérieur si les réglages le demandent, jamais rétrécir. Une Case
+ * déjà en base n'est jamais touchée. Rend le nombre de Cases ajoutées et leur total.
  */
 export async function preparerCouronne(client: PoolClient, mondeId: number): Promise<{ ajoutees: number; total: number }> {
   // « for no key update » et non « for update » : il suffit pour passer une préparation à la fois, et
@@ -32,9 +32,9 @@ export async function preparerCouronne(client: PoolClient, mondeId: number): Pro
   }
   const cases = casesDeLaCouronne({ rayon, anneaux, graine });
   const { rowCount } = await client.query(
-    `insert into case_du_monde (monde_id, q, r, anneau, couronne, coeur, biome_id, variante_id)
-     select $1, c.q, c.r, c.anneau, true, c.coeur, c.biome, c.variante
-     from unnest($2::int[], $3::int[], $4::int[], $5::boolean[], $6::text[], $7::text[]) as c(q, r, anneau, coeur, biome, variante)
+    `insert into case_du_monde (monde_id, q, r, anneau, couronne, coeur, eloignement, biome_id, variante_id)
+     select $1, c.q, c.r, c.anneau, true, c.coeur, c.eloignement, c.biome, c.variante
+     from unnest($2::int[], $3::int[], $4::int[], $5::boolean[], $6::int[], $7::text[], $8::text[]) as c(q, r, anneau, coeur, eloignement, biome, variante)
      on conflict (monde_id, q, r) do nothing`,
     [
       mondeId,
@@ -42,6 +42,7 @@ export async function preparerCouronne(client: PoolClient, mondeId: number): Pro
       cases.map((c) => c.r),
       cases.map((c) => c.anneau),
       cases.map((c) => dansLeCoeur(c, rayonCoeur)),
+      cases.map((c) => eloignementDuCoeur(c, rayonCoeur)),
       cases.map((c) => c.biome),
       cases.map((c) => c.variante),
     ],

@@ -382,6 +382,11 @@ export const caseDuMonde = pgTable(
     couronne: boolean("couronne").notNull(),
     /** US-0403 : si la Case fait partie du Cœur sauvage, au milieu du Monde, où aucun Foyer ne naît. */
     coeur: boolean("coeur").notNull().default(false),
+    /**
+     * US-0405 : sa distance au Cœur sauvage, en Cases (eloignementDuCoeur, src/monde/hex.ts) : 0 pour les
+     * siennes. Elle se déduit de l'anneau et de la taille du Cœur, fixée sur la fiche du Monde.
+     */
+    eloignement: integer("eloignement").notNull(),
     biomeId: text("biome_id")
       .notNull()
       .references(() => biome.id),
@@ -397,6 +402,8 @@ export const caseDuMonde = pgTable(
     index("case_par_chef").on(t.chefId),
     // US-0402 : la même formule que distance (src/monde/hex.ts), la seule mesure des distances du jeu, ici pour vérifier l'anneau.
     check("case_anneau_exact", sql`${t.anneau} = greatest(abs(${t.q}), abs(${t.r}), abs(${t.q} + ${t.r}))`),
+    // US-0405 : les Cases du Cœur sauvage sont à 0 de lui, et seulement elles.
+    check("case_coeur_a_zero", sql`${t.eloignement} >= 0 and ${t.coeur} = (${t.eloignement} = 0)`),
   ],
 );
 

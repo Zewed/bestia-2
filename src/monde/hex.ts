@@ -48,6 +48,14 @@ export function dansLeCoeur(c: Coordonnees, rayonCoeur: number): boolean {
   return anneau(c) < rayonCoeur;
 }
 
+/**
+ * US-0405 : la distance d'une Case au Cœur sauvage, en Cases : 0 pour les siennes, sinon la distance à
+ * la Case du Cœur la plus proche, sur son bord, à `rayonCoeur` − 1 Cases du milieu.
+ */
+export function eloignementDuCoeur(c: Coordonnees, rayonCoeur: number): number {
+  return Math.max(0, anneau(c) - (rayonCoeur - 1));
+}
+
 /** US-0402 : les voisines d'une Case dans un Monde de `rayon` Cases de rayon : six, quatre sur le bord, trois aux six coins. */
 export function voisinesDansLeMonde(c: Coordonnees, rayon: number): Coordonnees[] {
   return voisines(c).filter((v) => dansLeMonde(v, rayon));

@@ -1,5 +1,5 @@
 {
-  "id": "3eee0b82-1e17-4551-aef2-1e5702157184",
+  "id": "2e187bef-e647-4909-9654-f45618c6dc63",
   "prevId": "6114c730-9426-4b97-a362-d20ef8873c91",
   "version": "7",
   "dialect": "postgresql",
@@ -92,6 +92,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": false
+        },
+        "eloignement": {
+          "name": "eloignement",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
         },
         "biome_id": {
           "name": "biome_id",
@@ -228,6 +234,10 @@
         "case_anneau_exact": {
           "name": "case_anneau_exact",
           "value": "\"case_du_monde\".\"anneau\" = greatest(abs(\"case_du_monde\".\"q\"), abs(\"case_du_monde\".\"r\"), abs(\"case_du_monde\".\"q\" + \"case_du_monde\".\"r\"))"
+        },
+        "case_coeur_a_zero": {
+          "name": "case_coeur_a_zero",
+          "value": "\"case_du_monde\".\"eloignement\" >= 0 and \"case_du_monde\".\"coeur\" = (\"case_du_monde\".\"eloignement\" = 0)"
         }
       },
       "isRLSEnabled": false
