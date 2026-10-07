@@ -3,6 +3,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { stocksDuTerritoire } from "@/monde/stocks";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { definirAncre, maintenant } from "./horloge";
@@ -132,6 +133,103 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
       await sauterDansLeTemps(pool, SAUTS.jour);
       await rattraper("territoire", territoireId, { pool });
       expect(await stocks(territoireId)).toEqual(await nFois(24));
+    });
+
+    describe("la limite en temps accéléré (US-0232)", () => {
+      /** Le Bois est placé à N unités de sa limite. */
+      const N = 2;
+
+      /** Chaque Stock du Territoire, tel qu'il est en base : quantité, limite et reste exacts, et l'instant où il est devenu plein. */
+      const etats = async (territoireId: number) =>
+        Object.fromEntries(
+          (
+            await pool.query<{ id: string; q: string; limite: string; reste: string; plein_depuis: Date | null }>(
+              "select ressource_id as id, quantite::text as q, limite::text as limite, reste::text as reste, plein_depuis from stock where territoire_id = $1",
+              [territoireId],
+            )
+          ).rows.map((s) => [s.id, s]),
+        );
+      /** Ce qu'une Case de prairie produit par heure, tel que la base le tient de donnees/biomes.yaml. */
+      const prairie = async () =>
+        Object.fromEntries(
+          (await pool.query<{ id: string; par_heure: string }>("select ressource_id as id, par_heure from production_biome where biome_id = 'prairie'")).rows.map(
+            (p) => [p.id, Number(p.par_heure)],
+          ),
+        );
+      /** Le Stock est devenu plein à l'instant de jeu attendu, à la seconde près. */
+      const pleinA = (pleinDepuis: Date | null, attendu: number) => {
+        expect(pleinDepuis).not.toBeNull();
+        expect(Math.abs(pleinDepuis!.getTime() - attendu)).toBeLessThan(1000);
+      };
+
+      it("à ×100, un Stock proche de sa limite l'atteint à l'instant prévu et s'y arrête", async () => {
+        await synchroniserHorloge(pool, 100);
+        const territoireId = await naitre();
+        await pool.query("update stock set quantite = limite - $2 where territoire_id = $1 and ressource_id = 'bois'", [territoireId, N]);
+        const depuis = (await lireMarquePage(pool, "territoire", territoireId)).getTime();
+        // Les N unités manquantes viennent en N / par_heure heures de jeu, soit cent fois moins de temps réel.
+        const duree = (N / (await prairie()).bois) * HEURE;
+        const reel = R0 + duree / 100;
+
+        // Une seconde réelle avant (cent secondes de jeu) : encore sous la limite.
+        vi.setSystemTime(reel - 1000);
+        await rattraper("territoire", territoireId, { pool });
+        const avant = (await etats(territoireId)).bois;
+        expect(Number(avant.q)).toBeLessThan(Number(avant.limite));
+        expect(avant.plein_depuis).toBeNull();
+
+        // Une seconde réelle après : exactement la limite, pleine depuis l'instant prévu.
+        vi.setSystemTime(reel + 1000);
+        await rattraper("territoire", territoireId, { pool });
+        const apres = (await etats(territoireId)).bois;
+        expect(apres.q).toBe(apres.limite);
+        expect(Number(apres.reste)).toBe(0);
+        pleinA(apres.plein_depuis, depuis + duree);
+
+        // Dix minutes réelles plus tard, plus de seize heures de jeu : le Bois ne bouge plus.
+        vi.setSystemTime(reel + 10 * MINUTE);
+        await rattraper("territoire", territoireId, { pool });
+        expect((await etats(territoireId)).bois).toEqual(apres);
+      });
+
+      it("page fermée tout ce temps, la réouverture montre le Stock exactement à sa limite, plein", async () => {
+        await synchroniserHorloge(pool, 100);
+        const territoireId = await naitre();
+        await pool.query("update stock set quantite = limite - $2 where territoire_id = $1 and ressource_id = 'bois'", [territoireId, N]);
+        const depuis = (await lireMarquePage(pool, "territoire", territoireId)).getTime();
+        const duree = (N / (await prairie()).bois) * HEURE;
+
+        // Aucun rattrapage pendant dix minutes réelles, plus de seize heures de jeu ; puis la page se rouvre.
+        vi.setSystemTime(R0 + 10 * MINUTE);
+        await rattraper("territoire", territoireId, { pool });
+        expect(await lireMarquePage(pool, "territoire", territoireId)).toEqual(new Date(R0 + 1000 * MINUTE));
+        // Ce que lit la page : la quantité égale la limite, et la barre signale « plein » dès quantité ≥ limite.
+        const bois = (await stocksDuTerritoire(pool, territoireId)).find((s) => s.id === "bois")!;
+        expect(bois.quantite).toBe(bois.limite);
+        const etat = (await etats(territoireId)).bois;
+        expect(Number(etat.reste)).toBe(0);
+        pleinA(etat.plein_depuis, depuis + duree);
+      });
+
+      it("après un saut d'une semaine depuis la page de contrôle, chaque Stock vaut exactement sa limite", async () => {
+        await synchroniserHorloge(pool, 100);
+        const territoireId = await naitre();
+        // Chaque Stock à mi-chemin de sa limite : une semaine de prairie la dépasse pour les quatre.
+        await pool.query("update stock set quantite = limite / 2 where territoire_id = $1", [territoireId]);
+        const depart = await etats(territoireId);
+        const parHeure = await prairie();
+        const depuis = (await lireMarquePage(pool, "territoire", territoireId)).getTime();
+
+        await sauterDansLeTemps(pool, SAUTS.semaine);
+        await rattraper("territoire", territoireId, { pool });
+        const apres = await etats(territoireId);
+        expect(Object.keys(apres).sort()).toEqual(["bois", "pierre", "vegetaux", "viande"]);
+        for (const [id, stock] of Object.entries(apres)) {
+          expect(stock.q, id).toBe(stock.limite);
+          expect(Number(stock.reste), id).toBe(0);
+          pleinA(stock.plein_depuis, depuis + ((Number(stock.limite) - Number(depart[id].q)) / parHeure[id]) * HEURE);
+        }
+      });
     });
   });
 });

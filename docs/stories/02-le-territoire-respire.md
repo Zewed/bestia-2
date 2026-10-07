@@ -329,6 +329,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0232 · Vérifier la limite en vitesse accélérée
 **En tant que** développeur, **je veux** voir un stock atteindre sa limite en temps accéléré, **afin de** valider l'étape sans attendre des heures.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle), sans code nouveau. Tests sur base (`src/temps/synchroniser-horloge.db.test.ts`) : à ×100, un Bois à 2 de sa limite est encore dessous une seconde réelle avant l'instant prévu, exactement à sa limite une seconde après (reste à zéro, plein depuis l'instant prévu à la seconde) et n'en bouge plus ; page fermée dix minutes réelles, un seul rattrapage le montre à sa limite ; un saut d'une semaine laisse les quatre Stocks exactement à leur limite. Avec les chiffres actuels, une semaine de prairie ne remplit pas un Foyer neuf (100 + 168 × 4 = 772 Bois) : le test, comme la vérification en vrai, part de Stocks à mi-limite.
 - **Débloquée par** : US-0218, US-0222
 - **Critères d'acceptation** :
   - À ×100, un stock proche de sa limite l'atteint à l'instant prévu et s'y arrête.
