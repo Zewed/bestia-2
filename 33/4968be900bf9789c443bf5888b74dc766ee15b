@@ -1,0 +1,52 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 80-86
+src/components/Ressources.test.tsx
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 9,12-15,105-125,186,212-228
+  s_97a431cfa65ca7::t_b60747669ec7ab 229
+src/components/Ressources.tsx
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 14-17,25,44-47,52-60,123-124,173-176
+src/monde/production.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 1-2,5,19-65,67-83,86-93,95-100,103-133,136-140,142-148,150-151,154-157
+src/monde/absence.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+src/monde/entretien.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 1-407
+src/app/jeu/page.test.tsx
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 22-25
+src/monde/stocks.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 4,21-22,29-48,66
+src/monde/reprise.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+src/temps/regles.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 2-3
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 7-10
+src/temps/synchroniser-horloge.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 86,92
+src/monde/production.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+src/monde/surplus.db.test.ts
+  s_97a431cfa65ca7::t_3d1d4d750ad69d 16,23
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_2b65fff6c55d36 164,167-168
+docs/stories/README.md
+  s_97a431cfa65ca7::t_546d94a45aac89 7,16,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_ec6adb0f7425ee 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "334968be900bf9789c443bf5888b74dc766ee15b",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
