@@ -23,6 +23,11 @@ export const monde = pgTable(
      * avait déjà, tirée de son nom.
      */
     graine: bigint("graine", { mode: "number" }),
+    /**
+     * US-0403 : la taille de son Cœur sauvage : les Cases à moins de `rayon_coeur` Cases du milieu.
+     * Fixée à sa naissance (ou à la préparation de sa Couronne), elle ne change plus.
+     */
+    rayonCoeur: integer("rayon_coeur"),
   },
   (t) => [check("monde_graine_sur_32_bits", sql`${t.graine} between 0 and 4294967295`)],
 );
@@ -375,6 +380,8 @@ export const caseDuMonde = pgTable(
     anneau: integer("anneau").notNull(),
     /** Si la Case fait partie de la Couronne, où naissent les joueurs. */
     couronne: boolean("couronne").notNull(),
+    /** US-0403 : si la Case fait partie du Cœur sauvage, au milieu du Monde, où aucun Foyer ne naît. */
+    coeur: boolean("coeur").notNull().default(false),
     biomeId: text("biome_id")
       .notNull()
       .references(() => biome.id),

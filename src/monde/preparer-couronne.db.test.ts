@@ -36,15 +36,24 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
     client.release();
   });
 
-  it("crée les 2 070 Cases de la Couronne, et fixe la taille du Monde", async () => {
+  it("crée les 2 070 Cases de la Couronne, et fixe la taille du Monde, celle de son Cœur sauvage comprise (US-0403)", async () => {
     expect(await preparerCouronne(client, mondeId)).toEqual({ ajoutees: 2070, total: 2070 });
     const { rows } = await client.query(
-      `select count(*)::int as cases, bool_and(couronne) as toutes, min(anneau) as de, max(anneau) as a,
-         (select json_build_object('rayon', rayon, 'anneaux', anneaux_couronne) from monde where id = $1) as taille
+      `select count(*)::int as cases, bool_and(couronne) as toutes, bool_or(coeur) as "dansLeCoeur", min(anneau) as de, max(anneau) as a,
+         (select json_build_object('rayon', rayon, 'anneaux', anneaux_couronne, 'coeur', rayon_coeur) from monde where id = $1) as taille
        from case_du_monde where monde_id = $1`,
       [mondeId],
     );
-    expect(rows[0]).toEqual({ cases: 2070, toutes: true, de: 55, a: 60, taille: { rayon: 60, anneaux: 6 } });
+    expect(rows[0]).toEqual({ cases: 2070, toutes: true, dansLeCoeur: false, de: 55, a: 60, taille: { rayon: 60, anneaux: 6, coeur: 8 } });
+  });
+
+  it("garde la taille du Cœur sauvage déjà fixée d'un Monde, et dit à chaque Case si elle en fait partie (US-0403)", async () => {
+    // Un petit Monde dont le Cœur atteint la Couronne : seules les Cases à moins de 7 Cases du milieu en sont.
+    await client.query("update monde set rayon = 10, anneaux_couronne = 6, rayon_coeur = 7 where id = $1", [mondeId]);
+    await preparerCouronne(client, mondeId);
+    const { rows } = await client.query("select anneau, bool_and(coeur) as tous, bool_or(coeur) as un from case_du_monde where monde_id = $1 group by anneau order by anneau", [mondeId]);
+    expect(rows).toEqual([5, 6, 7, 8, 9, 10].map((anneau) => ({ anneau, tous: anneau < 7, un: anneau < 7 })));
+    expect((await client.query("select rayon_coeur from monde where id = $1", [mondeId])).rows[0].rayon_coeur).toBe(7);
   });
 
   it("ne touche jamais une Case existante : seules les manquantes sont ajoutées", async () => {
@@ -125,5 +134,13 @@ describe.skipIf(!URL_TEST)("la Couronne du Monde du jeu, une fois sa graine enre
     const { id, nom, rayon, anneaux, graine } = rows[0];
     expect(graine).toBe(String(graineDuMonde(nom)));
     expect(await casesEnBase(pool, id)).toEqual(casesDeLaCouronne({ rayon, anneaux, graine: Number(graine) }));
+  });
+
+  it("connaît la taille de son Cœur sauvage, dont aucune de ses Cases ne fait partie : elles sont toutes au bord (US-0403)", async () => {
+    const { rows } = await pool.query(
+      `select m.rayon_coeur, count(*) filter (where c.coeur)::int as "dansLeCoeur", min(c.anneau) as "plusPres"
+       from monde m join case_du_monde c on c.monde_id = m.id where m.id = (select min(id) from monde) group by m.rayon_coeur`,
+    );
+    expect(rows[0]).toEqual({ rayon_coeur: 8, dansLeCoeur: 0, plusPres: 55 });
   });
 });

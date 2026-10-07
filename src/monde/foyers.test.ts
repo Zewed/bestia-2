@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { ECART_ENTRE_FOYERS } from "@/reglages";
+import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, MONDE_RAYON } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
-import { distance } from "./hex";
+import { genererLeMonde } from "./generer";
+import { anneau, distance } from "./hex";
 
 describe("Cases où un Foyer peut naître (US-0152)", () => {
   const prairie = { q: 0, r: -60, biome: "prairie" };
@@ -68,6 +69,34 @@ describe("Case où naît un nouveau chef (US-0153)", () => {
   it("ne trouve rien quand la Couronne est pleine", () => {
     const pleine = emplacementsDeFoyers(couronne, []);
     expect(choisirCaseDeNaissance(couronne, pleine, pleine[0], () => 0)).toBeNull();
+  });
+});
+
+describe("aucun Foyer dans le Cœur sauvage (US-0403)", () => {
+  const monde = genererLeMonde({ rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: graineDuMonde("Aube") });
+  const prairiesDuCoeur = monde.filter((c) => c.coeur && c.biome === "prairie");
+
+  it("n'accueille jamais de Foyer dans le Cœur sauvage, même sur une prairie libre, loin de tout autre Foyer", () => {
+    expect(peutAccueillirUnFoyer({ q: 0, r: 0, biome: "prairie", coeur: true }, [])).toBe(false);
+    expect(peutAccueillirUnFoyer({ q: 0, r: 0, biome: "prairie", coeur: false }, [])).toBe(true);
+  });
+
+  it("ne fait naître aucun chef dans le Cœur, même quand toutes les Cases du Monde sont proposées", () => {
+    expect(prairiesDuCoeur.length).toBeGreaterThan(0);
+    expect(choisirCaseDeNaissance(prairiesDuCoeur, [], null, () => 0)).toBeNull();
+    expect(emplacementsDeFoyers(prairiesDuCoeur, [])).toEqual([]);
+    const emplacements = emplacementsDeFoyers(monde, []);
+    expect(emplacements.length).toBeGreaterThan(0);
+    for (const e of emplacements) expect(anneau(e)).toBeGreaterThanOrEqual(COEUR_SAUVAGE_RAYON);
+    for (let i = 0; i < 20; i++) expect(anneau(choisirCaseDeNaissance(monde, [], null, () => i / 20)!)).toBeGreaterThanOrEqual(COEUR_SAUVAGE_RAYON);
+  });
+
+  it("garde les naissances d'aujourd'hui telles quelles : sur la Couronne, loin du Cœur, aux mêmes Cases", () => {
+    const couronne = casesDeLaCouronne({ rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, graine: graineDuMonde("Aube") });
+    expect(Math.min(...couronne.map((c) => c.anneau))).toBeGreaterThanOrEqual(COEUR_SAUVAGE_RAYON);
+    const generee = monde.filter((c) => c.couronne);
+    expect(emplacementsDeFoyers(generee, [])).toEqual(emplacementsDeFoyers(couronne, []));
+    for (const hasard of [0, 0.3, 0.9999]) expect(choisirCaseDeNaissance(generee, [], null, () => hasard)).toMatchObject(choisirCaseDeNaissance(couronne, [], null, () => hasard)!);
   });
 });
 

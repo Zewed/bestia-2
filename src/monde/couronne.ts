@@ -2,7 +2,7 @@
 // de la graine du Monde : il donne toujours la même Couronne, et l'intérieur du Monde généré
 // (US-0401) prolonge le même relief.
 import { BIOMES_DE_LA_COURONNE, TAILLE_DES_REGIONS } from "@/reglages";
-import { anneau, casesDesAnneaux, centre, voisines, type Coordonnees } from "./hex";
+import { anneau, casesDesAnneaux, centre, dansLeCoeur, distance, voisines, type Coordonnees } from "./hex";
 
 export type BiomeCouronne = keyof typeof BIOMES_DE_LA_COURONNE;
 export type CaseDeCouronne = Coordonnees & { anneau: number; biome: BiomeCouronne; variante: string | null };
@@ -82,14 +82,17 @@ export function casesDeLaCouronne({ rayon, anneaux, graine }: { rayon: number; a
  * US-0401 : les Biomes de tout le Monde, du Cœur sauvage au bord. La bande de calcul garde
  * exactement les siens, donc la Couronne aussi ; plus à l'intérieur, en attendant les vraies régions
  * (US-0406), le même relief se prolonge : chaque Case prend le Biome que les seuils de la bande
- * donnent à son relief, et les régions de la bande continuent vers le Cœur sauvage.
+ * donnent à son relief, et les régions de la bande continuent vers le Cœur sauvage. US-0403 : les
+ * `rayonCoeur` anneaux du milieu, le Cœur sauvage, mêlent plusieurs Biomes de terre (biomesDuCoeur).
  */
-export function biomesDuMonde({ rayon, graine }: { rayon: number; graine: number }): CaseDeCouronne[] {
+export function biomesDuMonde({ rayon, graine, rayonCoeur }: { rayon: number; graine: number; rayonCoeur: number }): CaseDeCouronne[] {
   const bande = biomesDeLaBande(rayon, graine);
   const interieur = casesDesAnneaux(0, rayon - BANDE_DE_CALCUL);
   const { premier, second } = reliefs(interieur, graine);
   const cases = [...bande.cases, ...interieur];
   const biomes = [...bande.cases.map((c) => c.biome), ...interieur.map((_, i) => biomeDuRelief(premier[i], second[i], bande.seuils))];
+  const duCoeur = cases.flatMap((c, i) => (i >= bande.cases.length && dansLeCoeur(c, rayonCoeur) ? [i] : []));
+  biomesDuCoeur(duCoeur.map((i) => cases[i]), graine).forEach((biome, k) => (biomes[duCoeur[k]] = biome));
   fondreLesTaches(cases, biomes, bande.cases.length);
   return cases
     .map((c, i) => ({ q: c.q, r: c.r, anneau: anneau(c), biome: biomes[i], variante: varianteDe(biomes[i]) }))
@@ -104,6 +107,36 @@ const BIOMES_EN_BANDES = ["eau", "foret", "montagne", "savane", "desert"] as con
 
 /** Les seuils de relief qui ont départagé les Biomes de la bande : de quoi les prolonger ailleurs. */
 type Seuils = { prairie: number; bandes: { biome: BiomeCouronne; jusqua: number }[] };
+
+/** US-0403 : les Biomes de terre que mêle le Cœur sauvage, sans eau. */
+const BIOMES_DU_COEUR = ["prairie", "foret", "montagne", "savane", "desert"] as const;
+
+/** US-0403 : l'écart entre deux germes de région du Cœur sauvage, en Cases. */
+const ECART_ENTRE_GERMES = 4;
+
+/**
+ * US-0403 : les Biomes des Cases du Cœur sauvage, de petites régions de plusieurs Biomes de terre.
+ * Des germes sont semés dans le Cœur, dans un ordre tiré de la graine, chacun à au moins
+ * ECART_ENTRE_GERMES Cases des autres ; chaque Case prend le Biome du germe le plus proche. Chaque
+ * région est ainsi d'un seul tenant et compte au moins son germe et ses voisines dans le Cœur (quatre
+ * Cases ou plus) : aucune fonte de tache ne la touche. Semés jusqu'à ne plus trouver de place, les
+ * germes couvrent tout le Cœur à moins de quatre Cases : il en faut au moins cinq dans un Cœur de 8
+ * anneaux (169 Cases, quand chacun en couvre au plus 37). Les cinq premiers reçoivent chacun un Biome
+ * différent, dans un ordre lui aussi tiré de la graine : tous les Biomes de terre y sont.
+ */
+function biomesDuCoeur(cases: Coordonnees[], graine: number): BiomeCouronne[] {
+  const tirage = (c: Coordonnees) => hacher(c.q, c.r, graine, 0x43);
+  const germes: Coordonnees[] = [];
+  for (const c of [...cases].sort((a, b) => tirage(a) - tirage(b) || a.q - b.q || a.r - b.r)) {
+    if (germes.every((g) => distance(g, c) >= ECART_ENTRE_GERMES)) germes.push(c);
+  }
+  const ordre = BIOMES_DU_COEUR.map((biome, i) => ({ biome, tirage: hacher(i, graine, 0x44) })).sort((a, b) => a.tirage - b.tirage);
+  return cases.map((c) => {
+    // À égalité, le premier germe semé l'emporte : chaque région reste d'un seul tenant.
+    const plusProche = germes.reduce((meilleur, g, i) => (distance(g, c) < distance(germes[meilleur], c) ? i : meilleur), 0);
+    return ordre[plusProche % ordre.length].biome;
+  });
+}
 
 /** Les deux reliefs de chaque Case : le premier désigne la prairie, le second départage le reste. */
 function reliefs(cases: Coordonnees[], graine: number): { premier: number[]; second: number[] } {

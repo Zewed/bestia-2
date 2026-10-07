@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import { BIOMES_DE_LA_COURONNE, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
+import { BIOMES_DE_LA_COURONNE, COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
 import { BANDE_DE_CALCUL, casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine } from "./generer";
-import { voisines } from "./hex";
+import { CENTRE, distance, voisines } from "./hex";
 
-const ESSAI = { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, graine: 12345 };
+const ESSAI = { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: 12345 };
+/** Vingt graines quelconques, pour vérifier ce qui doit tenir pour tout Monde généré. */
+const GRAINES = Array.from({ length: 20 }, (_, i) => 1 + i * 7919);
 const cle = (c: { q: number; r: number }) => `${c.q},${c.r}`;
 
 describe("générer un Monde à partir d'une graine (US-0401)", () => {
@@ -33,7 +35,7 @@ describe("générer un Monde à partir d'une graine (US-0401)", () => {
   it.each([12345, graineDuMonde("Aube")])("fait des 6 anneaux extérieurs la Couronne, exactement celle que donne la même graine (graine %i)", (graine) => {
     const couronne = casesDeLaCouronne({ ...ESSAI, graine });
     const cases = genererLeMonde({ ...ESSAI, graine });
-    expect(cases.filter((c) => c.couronne)).toEqual(couronne.map((c) => ({ ...c, couronne: true })));
+    expect(cases.filter((c) => c.couronne)).toEqual(couronne.map((c) => ({ ...c, couronne: true, coeur: false })));
     for (const c of cases) expect(c.couronne).toBe(c.anneau > MONDE_RAYON - COURONNE_ANNEAUX);
   });
 
@@ -92,5 +94,54 @@ describe("générer un Monde à partir d'une graine (US-0401)", () => {
     expect(lireUneGraine("0")).toBe(0);
     expect(lireUneGraine(String(2 ** 32 - 1))).toBe(GRAINE_MAX);
     for (const texte of ["", "abc", "-1", "1.5", "1e3", String(2 ** 32)]) expect(() => lireUneGraine(texte)).toThrow(`Une graine est un nombre entier de 0 à 4294967295, pas « ${texte} ».`);
+  });
+});
+
+describe("Cœur sauvage au milieu du Monde (US-0403)", () => {
+  const cle = (c: { q: number; r: number }) => `${c.q},${c.r}`;
+
+  it("fait savoir à chaque Case si elle appartient au Cœur sauvage : les 169 Cases à moins de 8 Cases du milieu, et seulement elles", () => {
+    const cases = genererLeMonde(ESSAI);
+    expect(cases.filter((c) => c.coeur)).toHaveLength(169);
+    for (const c of cases) expect(c.coeur).toBe(distance(c, CENTRE) < COEUR_SAUVAGE_RAYON);
+    // Au milieu, le Cœur ne touche jamais la Couronne, au bord, la seule où naissent les chefs.
+    expect(cases.filter((c) => c.coeur && c.couronne)).toEqual([]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("mêle au moins quatre Biomes de terre en petites régions, sans eau (graine %i)", (graine) => {
+    const coeur = genererLeMonde({ ...ESSAI, graine }).filter((c) => c.coeur);
+    const parBiome = new Map<string, number>();
+    for (const c of coeur) parBiome.set(c.biome, (parBiome.get(c.biome) ?? 0) + 1);
+    expect(parBiome.size).toBeGreaterThanOrEqual(4);
+    expect(parBiome.has("eau")).toBe(false);
+    // Les régions du Cœur, comptées dans le Cœur seul : plusieurs, aucune ne le couvre à moitié, aucune n'est une tache.
+    const biomeDe = new Map(coeur.map((c) => [cle(c), c.biome]));
+    const vu = new Set<string>();
+    const tailles: number[] = [];
+    for (const c of coeur) {
+      if (vu.has(cle(c))) continue;
+      const region = [c];
+      vu.add(cle(c));
+      for (let k = 0; k < region.length; k++) {
+        for (const v of voisines(region[k])) {
+          if (!vu.has(cle(v)) && biomeDe.get(cle(v)) === c.biome) {
+            vu.add(cle(v));
+            region.push({ ...c, ...v });
+          }
+        }
+      }
+      tailles.push(region.length);
+    }
+    expect(tailles.length).toBeGreaterThanOrEqual(5);
+    expect(Math.max(...tailles)).toBeLessThan(coeur.length / 2);
+    expect(Math.min(...tailles)).toBeGreaterThanOrEqual(3);
+  });
+
+  it("tire le mélange du Cœur de la graine : la même graine donne le même Cœur, une autre un autre", () => {
+    const coeur = (graine: number) => genererLeMonde({ ...ESSAI, graine }).filter((c) => c.coeur);
+    expect(coeur(12345)).toEqual(coeur(12345));
+    const autre = new Map(coeur(54321).map((c) => [cle(c), c.biome]));
+    const differentes = coeur(12345).filter((c) => autre.get(cle(c)) !== c.biome).length;
+    expect(differentes / 169).toBeGreaterThan(0.3);
   });
 });

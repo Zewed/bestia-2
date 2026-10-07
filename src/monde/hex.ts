@@ -43,6 +43,11 @@ export function dansLeMonde(c: Coordonnees, rayon: number): boolean {
   return anneau(c) <= rayon;
 }
 
+/** US-0403 : si une Case appartient au Cœur sauvage d'un Monde : à moins de `rayonCoeur` Cases du milieu. */
+export function dansLeCoeur(c: Coordonnees, rayonCoeur: number): boolean {
+  return anneau(c) < rayonCoeur;
+}
+
 /** US-0402 : les voisines d'une Case dans un Monde de `rayon` Cases de rayon : six, quatre sur le bord, trois aux six coins. */
 export function voisinesDansLeMonde(c: Coordonnees, rayon: number): Coordonnees[] {
   return voisines(c).filter((v) => dansLeMonde(v, rayon));

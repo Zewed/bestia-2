@@ -28,12 +28,13 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0403 · Placer le Cœur sauvage au milieu du Monde
 **En tant que** développeur, **je veux** que le milieu du Monde forme le Cœur sauvage, **afin de** préparer la région où vivront les Espèces les plus rares.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Les 169 Cases à moins de 8 Cases du milieu forment le Cœur sauvage ; chaque Case le sait (`coeur`), et la taille du Cœur est fixée sur la fiche du Monde à sa création (`rayon_coeur`, 8 pour les Mondes déjà nés). Dans un Monde généré, le Cœur mêle au moins cinq Biomes de terre en régions d'un seul tenant, tirées de la graine (frontières encore géométriques : à reprendre avec US-0406). Aucun Foyer ne peut y naître. Rien ne change pour le Monde du jeu, qui n'a en base que sa Couronne. Rien de visible.
 - **Débloquée par** : US-0402
 - **Critères d'acceptation** :
-  - Les Cases à moins de (chiffre à régler) Cases du milieu du Monde appartiennent au Cœur sauvage.
+  - Les Cases à moins de 8 Cases du milieu (provisoire, `COEUR_SAUVAGE_RAYON`) du Monde appartiennent au Cœur sauvage.
   - Chaque Case sait si elle appartient au Cœur sauvage.
   - Aucun Foyer ne peut naître dans le Cœur sauvage.
-  - Le Cœur sauvage mêle plusieurs Biomes au lieu d'un seul (à décider).
+  - Le Cœur sauvage mêle plusieurs Biomes au lieu d'un seul (décidé le 2026-10-07).
 
 ### US-0404 · Placer la Couronne sur le bord du Monde
 **En tant que** développeur, **je veux** que le bord du Monde forme la Couronne, **afin de** préparer les Cases où naîtront les joueurs.

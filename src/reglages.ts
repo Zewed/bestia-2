@@ -111,3 +111,10 @@ export const VOYAGEURS_EN_ATTENTE_MAX = 3;
 export const VOYAGEUR_ATTEND_HEURES = 12;
 /** US-0333 : sous 60 minutes d'attente restante, son compte à rebours passe dans la couleur d'alerte (valeur provisoire, à régler en jouant). */
 export const VOYAGEUR_ALERTE_MINUTES = 60;
+
+/**
+ * US-0403 : les Cases à moins de 8 Cases du milieu du Monde (les anneaux 0 à 7, 169 Cases) forment le
+ * Cœur sauvage, où aucun Foyer ne naît (valeur provisoire, à régler en jouant). Sa taille est fixée sur la
+ * fiche du Monde à sa naissance : la changer ici ne touche pas un Monde déjà né.
+ */
+export const COEUR_SAUVAGE_RAYON = 8;

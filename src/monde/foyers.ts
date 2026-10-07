@@ -2,14 +2,15 @@
 import { ALERTE_PLACES_DE_FOYER, ECART_ENTRE_FOYERS, NAISSANCE_PARMI_LES_PLUS_PROCHES } from "@/reglages";
 import { distance, type Coordonnees } from "./hex";
 
-export type CaseCandidate = Coordonnees & { biome: string; possedee?: boolean };
+export type CaseCandidate = Coordonnees & { biome: string; possedee?: boolean; coeur?: boolean };
 
 /**
  * Si un Foyer peut naître sur cette Case : en prairie seulement (donc jamais sur l'eau, ADR 0008),
- * sur une Case que personne ne possède, et à au moins ECART_ENTRE_FOYERS Cases de tout autre Foyer.
+ * sur une Case que personne ne possède, hors du Cœur sauvage (US-0403), et à au moins
+ * ECART_ENTRE_FOYERS Cases de tout autre Foyer.
  */
 export function peutAccueillirUnFoyer(c: CaseCandidate, foyers: Coordonnees[], ecart = ECART_ENTRE_FOYERS): boolean {
-  return c.biome === "prairie" && !c.possedee && foyers.every((f) => distance(f, c) >= ecart);
+  return c.biome === "prairie" && !c.possedee && !c.coeur && foyers.every((f) => distance(f, c) >= ecart);
 }
 
 /**

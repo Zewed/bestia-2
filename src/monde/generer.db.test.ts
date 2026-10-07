@@ -30,20 +30,22 @@ describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => 
   /** Les Cases d'un Monde en base, rangées comme genererLeMonde les rend. */
   async function lignes(client: PoolClient, mondeId: number) {
     const { rows } = await client.query(
-      "select q, r, anneau, couronne, biome_id as biome, variante_id as variante, chef_id, imprenable from case_du_monde where monde_id = $1 order by q, r",
+      "select q, r, anneau, couronne, coeur, biome_id as biome, variante_id as variante, chef_id, imprenable from case_du_monde where monde_id = $1 order by q, r",
       [mondeId],
     );
     return rows;
   }
 
-  it("enregistre le Monde, sa graine et ses 10 981 Cases, telles que la graine les donne", async () => {
+  it("enregistre le Monde, sa graine, la taille de son Cœur sauvage et ses 10 981 Cases, telles que la graine les donne (US-0403)", async () => {
     await surUneBaseNeuve(async (client) => {
       const { mondeId, cases } = await creerUnMonde(client, { nom, graine: 12345 });
       expect(cases).toBe(10_981);
-      const { rows } = await client.query("select nom, graine, rayon, anneaux_couronne as anneaux from monde where id = $1", [mondeId]);
-      expect(rows[0]).toEqual({ nom, graine: "12345", rayon: 60, anneaux: 6 });
-      const attendues = genererLeMonde({ rayon: 60, anneaux: 6, graine: 12345 }).map((c) => ({ ...c, chef_id: null, imprenable: false }));
-      expect(await lignes(client, mondeId)).toEqual(attendues);
+      const { rows } = await client.query("select nom, graine, rayon, anneaux_couronne as anneaux, rayon_coeur as coeur from monde where id = $1", [mondeId]);
+      expect(rows[0]).toEqual({ nom, graine: "12345", rayon: 60, anneaux: 6, coeur: 8 });
+      const attendues = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: 12345 }).map((c) => ({ ...c, chef_id: null, imprenable: false }));
+      const enBase = await lignes(client, mondeId);
+      expect(enBase).toEqual(attendues);
+      expect(enBase.filter((c) => c.coeur)).toHaveLength(169);
     });
   });
 

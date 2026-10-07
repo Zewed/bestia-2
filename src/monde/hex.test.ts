@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { MONDE_RAYON } from "@/reglages";
-import { anneau, casesDesAnneaux, CENTRE, dansLeMonde, distance, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
+import { COEUR_SAUVAGE_RAYON, MONDE_RAYON } from "@/reglages";
+import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
 describe("géométrie des Cases", () => {
   it("mesure l'anneau d'une Case : sa distance au Cœur sauvage", () => {
@@ -93,5 +93,16 @@ describe("forme et voisinages du Monde (US-0402)", () => {
       (f) => !permis.has(f) && formule.test(readFileSync(f, "utf8")),
     );
     expect(autres).toEqual([]);
+  });
+});
+
+describe("Cœur sauvage au milieu du Monde (US-0403)", () => {
+  it(`fait des Cases à moins de ${COEUR_SAUVAGE_RAYON} Cases du milieu le Cœur sauvage : les anneaux 0 à 7, 169 Cases`, () => {
+    expect(COEUR_SAUVAGE_RAYON).toBe(8);
+    const monde = casesDesAnneaux(0, MONDE_RAYON);
+    expect(monde.filter((c) => dansLeCoeur(c, COEUR_SAUVAGE_RAYON))).toHaveLength(3 * 7 * 8 + 1);
+    for (const c of monde) expect(dansLeCoeur(c, COEUR_SAUVAGE_RAYON)).toBe(distance(c, CENTRE) < 8);
+    expect(dansLeCoeur({ q: 7, r: -7 }, COEUR_SAUVAGE_RAYON)).toBe(true);
+    expect(dansLeCoeur({ q: 8, r: -7 }, COEUR_SAUVAGE_RAYON)).toBe(false);
   });
 });
