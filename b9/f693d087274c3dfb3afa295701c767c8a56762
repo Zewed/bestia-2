@@ -1,11 +1,17 @@
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_c4bafe49cc71c7 18,313-317,327,330,334-336,341,344,353,381-392,394-446
+  s_97a431cfa65ca7::t_1cd36d05fff995 18
+  s_97a431cfa65ca7::t_e20d49a110f100 313-317,327,330,334-336,341,344,353
+  s_97a431cfa65ca7::t_5c265de67d0552 381-392,394-446
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_1264fccf408824 91-118,122-127,130-144
+  s_97a431cfa65ca7::t_a2b1bffab5acfe 91-118,122-127,130-144
 src/temps/avancer.ts
   s_97a431cfa65ca7::t_31d781d6ff6ccb 54,66,91-92,105
+  s_97a431cfa65ca7::t_e502c92e2dac71 54,66,91-92,105
 src/temps/regles.ts
   s_97a431cfa65ca7::t_faadca517c4f90 4-5,8,14
+  s_97a431cfa65ca7::t_21fc94e86fc198 4-5,8,14
 ---
 {
   "schema_version": "authorship/3.0.0",
