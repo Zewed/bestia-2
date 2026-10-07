@@ -1,0 +1,33 @@
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_b6addc99719a56 5
+src/db/schema.ts
+  s_97a431cfa65ca7::t_663aa2b7497bdf 391
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_663aa2b7497bdf 1-2,4-5,12,26-96
+  s_97a431cfa65ca7::t_434685e1b9601d 97
+src/reglages.ts
+  s_97a431cfa65ca7::t_663aa2b7497bdf 51-54
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_b6addc99719a56 21,24
+docs/stories/README.md
+  s_97a431cfa65ca7::t_b6addc99719a56 7,17,31,33
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_663aa2b7497bdf 2-4,8-9,11-15,17-24,41-49
+  s_97a431cfa65ca7::t_fe0fff7e01bb36 50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e6b487037a8365f1c6229d06cfe94c229e6b0a3e",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
