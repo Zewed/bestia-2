@@ -1,23 +1,40 @@
 src/monde/generer.test.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 2,5,17,255-356
   s_97a431cfa65ca7::t_ddb3434c0659a5 357
+  s_97a431cfa65ca7::t_79e250e07534ef 255-345,348,356-357
+  s_97a431cfa65ca7::t_1a2ba9f5586171 2,5
+  s_97a431cfa65ca7::t_8eb3959b24a9dc 346-347,349-355
+  s_97a431cfa65ca7::t_7c3946cd326927 17
 src/monde/climat.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 1-147
+  s_97a431cfa65ca7::t_3d32102b680f12 14
+  s_97a431cfa65ca7::t_2bb33a4302b8ce 57,64-68,75-77,81-83
+  s_97a431cfa65ca7::t_979d960f685b05 1-13,15-56,58-63,69-74,78-80,84-147
 donnees/biomes.yaml
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 6-8,19,23,27,34,38
+  s_97a431cfa65ca7::t_30fb91169f0b13 6-8,19,23,27,34,38
 src/donnees/biomes.test.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 3,63-96
   s_97a431cfa65ca7::t_7206820019a104 97-98
+  s_97a431cfa65ca7::t_065da2a09af581 63-98
+  s_97a431cfa65ca7::t_f7ec11a71a0700 3
 src/donnees/jeux.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 5,169-209,288
+  s_97a431cfa65ca7::t_8b8855c7de3ad1 169-209
+  s_97a431cfa65ca7::t_7fe8ada2b91d58 288
+  s_97a431cfa65ca7::t_f59a06bb849dbc 5
 src/monde/regions.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 8,15-17,188-195,198-202,204-205,210,215,231-238,240-242,244-245,248-249,251-254,259-261,263,269-273
+  s_97a431cfa65ca7::t_ab207659dd0b32 8,15-17,188-195,198-202,204-205,210,215,231-238,240-242,244-245,248-249,251-254,259-261,263,269-273
 src/monde/generer.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 4,6,9,16-42,45-49,51-63,66
+  s_97a431cfa65ca7::t_2c506157799bae 4,6,9,16-42,45-49,51-63,66
 src/reglages.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 147-153
+  s_97a431cfa65ca7::t_8b86e1ee8f54ea 147-153
 src/donnees/coherence.test.ts
   s_97a431cfa65ca7::t_27ae13bbbd1e7b 44-55
+  s_97a431cfa65ca7::t_e0cd19e7d8cb65 44-55
 docs/stories/04-la-carte-du-monde.md
   s_97a431cfa65ca7::t_6fc4a89616fa9d 73,76-77
 docs/stories/README.md
