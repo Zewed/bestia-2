@@ -6,10 +6,13 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_04b3c3dcc9ac5e 5
 src/components/Ressources.test.tsx
   s_97a431cfa65ca7::t_f00d0c72de07aa 204-223
+  s_97a431cfa65ca7::t_275afd148fd71d 204-223
 src/monde/production.ts
   s_97a431cfa65ca7::t_aabe4a46108616 26-27
+  s_97a431cfa65ca7::t_75530c177fb1ca 26-27
 src/monde/surplus.db.test.ts
   s_97a431cfa65ca7::t_3c0f5f2658bce6 1-117
+  s_97a431cfa65ca7::t_fec4be7481e347 1-117
 ---
 {
   "schema_version": "authorship/3.0.0",
