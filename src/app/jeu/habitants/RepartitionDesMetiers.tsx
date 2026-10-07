@@ -30,6 +30,10 @@ function dernierArrive(habitants: HabitantAffiche[], nom: string): HabitantAffic
  * Gratuit et immédiat : l'effectif, les compteurs, la liste et le bandeau des sans Métier suivent aussitôt
  * (HabitantsMontres), le temps que l'action, qui choisit l'Habitant dans la base et jamais dans le navigateur,
  * l'enregistre et relise la page, qui fait alors foi.
+ *
+ * US-0315 : des « + » rapides prennent chacun le sans Métier suivant de la liste montrée, et « + » se grise dès
+ * qu'il n'en reste plus : le navigateur n'en envoie jamais plus qu'il n'en montre. La base, elle, n'en sert jamais
+ * plus qu'elle n'en a, même depuis un autre appareil, et la page relue range tout le monde à sa place.
  */
 export function RepartitionDesMetiers({ metiers }: { metiers: MetierARepartir[] }) {
   const [affiches, montrerLeMetier] = useHabitantsMontres();

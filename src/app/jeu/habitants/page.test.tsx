@@ -70,7 +70,7 @@ const STOCKS_DE_PRAIRIE: Stock[] = [
   unStock("pierre", "materiaux", "100.000000", "4.000000"),
 ];
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0311, US-0312, US-0314, US-0318, US-0320)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0311, US-0312, US-0314, US-0315, US-0318, US-0320)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     adresse.recherche = "";
@@ -346,6 +346,28 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       .split(/(?<=\d)/);
     expect(compteurs).toEqual(["Sans Métier 1", "Explorateur 0", "Chasseur 2", "Cueilleur 0", "Bûcheron 1", "Mineur 0", "Chercheur 0", "Bâtisseur 0", "Éleveur 0"]);
     expect(habitants.habitantsDuTerritoire).toHaveBeenCalledTimes(1);
+  });
+
+  it("relit les Habitants à chaque affichage : après rechargement, deux appareils montrent les effectifs de la base, les mêmes partout (US-0315)", async () => {
+    connecte();
+    /** Les effectifs que montre un affichage de la page : en haut de la liste, puis dans le bloc Métiers. */
+    const effectifsAffiches = async () => {
+      const html = renderToStaticMarkup(await Habitants());
+      return { compteurs: morceaux(rangeeDesEffectifs(html)).slice(1).join("").split(/(?<=\d)/), metiers: repartitions(html).map(([nom, nombre]) => `${nom} ${nombre}`) };
+    };
+    habitants.habitantsDuTerritoire.mockResolvedValue([{ id: 40, prenom: "Fenn", ...UN_HABITANT, metier: "Chasseur" }]);
+    const avant = await effectifsAffiches();
+    // L'autre appareil a remis Fenn sans Métier et donné un Métier à Ilda : la base a changé entre deux affichages.
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 40, prenom: "Fenn", ...UN_HABITANT },
+      { id: 43, prenom: "Ilda", ...UN_HABITANT, metier: "Mineur" },
+    ]);
+    const [ordinateur, telephone] = [await effectifsAffiches(), await effectifsAffiches()];
+    expect(avant.compteurs.slice(0, 3)).toEqual(["Sans Métier 0", "Explorateur 0", "Chasseur 1"]);
+    expect(ordinateur).toEqual(telephone);
+    expect(ordinateur.compteurs).toEqual(["Sans Métier 1", "Explorateur 0", "Chasseur 0", "Cueilleur 0", "Bûcheron 0", "Mineur 1", "Chercheur 0", "Bâtisseur 0", "Éleveur 0"]);
+    expect(ordinateur.metiers).toEqual(ordinateur.compteurs.slice(1));
+    expect(habitants.habitantsDuTerritoire).toHaveBeenCalledTimes(3);
   });
 
   it("rend la liste déjà filtrée quand l'adresse porte un filtre : recharger la page ou suivre un lien le garde (US-0314)", async () => {

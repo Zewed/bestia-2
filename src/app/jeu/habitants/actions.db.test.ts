@@ -14,7 +14,7 @@ vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 import { ajouterAuMetier, donnerUnMetier, retirerDuMetier, retirerLeMetier } from "./actions";
 
-describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, sur base (US-0308, US-0310, US-0311, US-0312)", () => {
+describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, sur base (US-0308, US-0310, US-0311, US-0312, US-0315)", () => {
   let pool: Pool;
   const lancement = `donner-metier-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -93,6 +93,15 @@ describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant,
     await retirerDuMetier("bucheron");
     expect((await metiers(joueur)).filter(([, metier]) => metier === "Bûcheron")).toHaveLength(1);
     expect(await metiers(voisin)).toEqual(avant);
+  });
+
+  it("des « + » envoyés en même temps depuis deux onglets ne donnent un Métier qu'aux Habitants sans Métier, chacun le sien (US-0315)", async () => {
+    const joueur = await naitre();
+    garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: joueur, recitLu: true });
+    await Promise.all(["bucheron", "mineur", "bucheron", "mineur", "bucheron", "mineur"].map((metier) => ajouterAuMetier(metier)));
+    const lus = (await metiers(joueur)).map(([, metier]) => metier);
+    expect(lus.filter((metier) => metier === null)).toEqual([]);
+    expect(lus).toHaveLength(3);
   });
 
   it("refuse sans bruit un Métier qui n'existe pas", async () => {

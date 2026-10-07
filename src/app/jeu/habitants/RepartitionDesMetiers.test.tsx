@@ -129,6 +129,37 @@ describe("répartir les Habitants avec plus et moins, dans le bloc Métiers (US-
     expect(bandeau()).toBe("2 Habitants sans Métier");
   });
 
+  it("plusieurs « + » rapides donnent chacun le sien, jamais plus qu'il n'y a d'Habitants sans Métier, et retrouvent la page relue (US-0315)", async () => {
+    const { rerender } = render(page(HABITANTS));
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(plus("Bûcheron"));
+    await utilisateur.click(plus("Mineur"));
+    // Plus personne sans Métier : un troisième « + » n'envoie rien.
+    await utilisateur.click(plus("Bûcheron"));
+    expect(actions.ajouterAuMetier.mock.calls).toEqual([["bucheron"], ["mineur"]]);
+    expect(lignes()).toEqual(["Arno · Bûcheron", "Brune · Mineur", "Cael · Chasseur"]);
+    // La page relue, rangée par Métier, dit la même chose : rien ne bouge, sinon l'ordre de la liste.
+    const relue: HabitantAffiche[] = [HABITANTS[2], { ...HABITANTS[0], metier: "Bûcheron" }, { ...HABITANTS[1], metier: "Mineur" }];
+    rerender(page(relue));
+    await finirLesActions();
+    expect(lignes()).toEqual(["Cael · Chasseur", "Arno · Bûcheron", "Brune · Mineur"]);
+    expect(METIERS.map((m) => effectif(m.nom))).toEqual(["1", "1", "1"]);
+    expect(METIERS.map((m) => plus(m.nom).disabled)).toEqual([true, true, true]);
+    expect(bandeau()).toBeNull();
+  });
+
+  it("se range à la page relue quand un autre appareil est passé avant : ses effectifs font foi (US-0315)", async () => {
+    const { rerender } = render(page(HABITANTS));
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(plus("Bûcheron"));
+    await utilisateur.click(plus("Mineur"));
+    // Sur l'autre appareil, Brune est devenue Chasseur juste avant : le second « + » n'a trouvé personne.
+    rerender(page([{ ...HABITANTS[1], metier: "Chasseur" }, HABITANTS[2], { ...HABITANTS[0], metier: "Bûcheron" }]));
+    await finirLesActions();
+    expect(lignes()).toEqual(["Brune · Chasseur", "Cael · Chasseur", "Arno · Bûcheron"]);
+    expect(METIERS.map((m) => effectif(m.nom))).toEqual(["2", "1", "0"]);
+  });
+
   it("laisse la page relue faire foi, quand l'action n'a rien changé", async () => {
     render(page(HABITANTS));
     await userEvent.setup().click(plus("Bûcheron"));

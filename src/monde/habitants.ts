@@ -56,12 +56,17 @@ export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId:
  * US-0312 : « + » d'un Métier : le donne au premier Habitant sans Métier du Territoire dans l'ordre de la liste
  * (par prénom, puis le premier arrivé), choisi dans la base et changé d'une seule requête, gratuitement. Rend
  * son identifiant ; null quand il ne reste aucun Habitant sans Métier, ou pour un Métier inconnu.
+ *
+ * US-0315 : des « + » simultanés, depuis deux onglets ou deux appareils, ne prennent jamais le même Habitant :
+ * chacun verrouille celui qu'il choisit, et passe ceux déjà pris par un autre (skip locked). Aucun ne donne plus
+ * de Métiers qu'il n'y a d'Habitants sans Métier, et chacun trouve le sien tant qu'il en reste.
  */
 export async function ajouterUnHabitantAuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
   try {
     const { rows } = await base.query<{ id: number }>(
       `update habitant set metier = $2
-       where id = (select id from habitant where territoire_id = $1 and metier is null order by prenom, id limit 1) and metier is null
+       where id = (select id from habitant where territoire_id = $1 and metier is null order by prenom, id limit 1 for update skip locked)
+         and metier is null
        returning id`,
       [territoireId, metierId],
     );
@@ -76,11 +81,15 @@ export async function ajouterUnHabitantAuMetier(base: Pool | PoolClient, territo
  * US-0312 : « − » d'un Métier : remet sans Métier le dernier arrivé au Territoire de ceux qui l'exercent (le plus
  * grand identifiant : les Habitants sont numérotés à leur arrivée), choisi dans la base et changé d'une seule
  * requête, gratuitement. Rend son identifiant ; null quand personne n'exerce ce Métier.
+ *
+ * US-0315 : comme pour « + », des « − » simultanés verrouillent chacun le sien et passent ceux déjà pris : jamais
+ * plus d'Habitants remis sans Métier qu'il n'en exerçait le Métier, et aucun « − » perdu tant qu'il en reste.
  */
 export async function retirerUnHabitantDuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
   const { rows } = await base.query<{ id: number }>(
     `update habitant set metier = null
-     where id = (select id from habitant where territoire_id = $1 and metier = $2 order by id desc limit 1) and metier = $2
+     where id = (select id from habitant where territoire_id = $1 and metier = $2 order by id desc limit 1 for update skip locked)
+       and metier = $2
      returning id`,
     [territoireId, metierId],
   );

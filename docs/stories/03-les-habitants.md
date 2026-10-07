@@ -162,6 +162,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0315 · Garder des effectifs justes sur deux appareils
 **En tant que** joueur, **je veux** que mes effectifs restent justes même si je joue sur deux appareils à la fois, **afin de** toujours pouvoir me fier aux compteurs.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). « + » et « − » choisissent et modifient l'Habitant en une seule requête qui saute les lignes déjà prises par un autre appareil : douze « + » simultanés pour cinq sans Métier en servent exactement cinq ; deux changements du même Habitant en même temps : le second attend puis l'emporte ; après rechargement, les deux appareils lisent les mêmes effectifs, dont la somme est toujours le nombre d'Habitants. Prouvé en concurrence réelle (deux connexions, plusieurs essais).
 - **Débloquée par** : US-0312
 - **Critères d'acceptation** :
   - Deux changements faits en même temps sur le même Habitant ne créent jamais de doublon : le dernier enregistré l'emporte.
