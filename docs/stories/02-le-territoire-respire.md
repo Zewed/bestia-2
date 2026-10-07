@@ -299,6 +299,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0229 · Reprendre la production dès qu'il y a de la place
 **En tant que** joueur, **je veux** que la production reprenne toute seule quand un stock redescend sous sa limite, **afin de** ne jamais avoir à relancer quoi que ce soit.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle), sans code nouveau : le calcul d'US-0221 ne fait produire que les Stocks sous leur limite. Tests sur base (`src/monde/reprise.db.test.ts`) qui refont ce que fait la page de contrôle (mise à l'heure, puis Stock fixé à la main) : un Bois plein baissé de 100 reprend au calcul suivant, sans rattraper les heures passées plein, remonte exactement à sa limite et s'y arrête (reste à zéro, ne compte que ce qui est vraiment entré), quel que soit le découpage des calculs ; les autres Stocks ne bougent pas.
 - **Débloquée par** : US-0208, US-0221
 - **Critères d'acceptation** :
   - Dès qu'un stock repasse sous sa limite, sa production reprend sans action du joueur.
