@@ -113,6 +113,31 @@ describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis ou refusés, su
     expect(await recitsDuTerritoire(pool, joueur)).toEqual([]);
   });
 
+  it("deux Voyageurs accueillis en même temps (deux onglets) pour une seule place : un seul entre, l'autre reste aux portes, faute de place (US-0339)", async () => {
+    const joueur = await naitre();
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno')", [joueur]);
+    const [ines, joran] = [await presenter(joueur, "Ines"), await presenter(joueur, "Joran")];
+    connecter(joueur);
+
+    const rendus = await Promise.all([accueillirUnVoyageur(ines), accueillirUnVoyageur(joran)]);
+    expect([...rendus].sort()).toEqual(["accueilli", "plus-de-place"]);
+    const { portes, habitants } = await prenoms(joueur);
+    expect(habitants).toHaveLength(5);
+    expect(portes).toEqual([rendus[0] === "accueilli" ? "Joran" : "Ines"]);
+  });
+
+  it("refusé dans un onglet, le Voyageur ne peut plus être accueilli dans l'autre (US-0339)", async () => {
+    const joueur = await naitre();
+    const ines = await presenter(joueur, "Ines");
+    const avant = await prenoms(joueur);
+    connecter(joueur);
+
+    await refuserUnVoyageur(ines);
+    expect(await accueillirUnVoyageur(ines)).toBe("absent");
+    expect(await prenoms(joueur)).toEqual({ portes: [], habitants: avant.habitants });
+    expect(await recitsDuTerritoire(pool, joueur)).toEqual([]);
+  });
+
   it("accueilli deux fois en même temps (deux onglets), le Voyageur ne devient qu'un seul Habitant", async () => {
     const joueur = await naitre();
     const ines = await presenter(joueur, "Ines");

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useOptimistic, useState, useTransition } from "react";
+import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
 import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
@@ -62,6 +62,8 @@ export function AuxPortes({
   const affiches = voyageurs.filter((v) => !enCours.some((c) => c.id === v.id));
   const plein = placesLibres - enCours.filter((c) => c.accueil).length <= 0;
   const phrasePlace = useId();
+  // US-0339 : les Voyageurs dont un choix attend encore la réponse du serveur.
+  const enVol = useRef(new Set<number>());
   const [, demarrer] = useTransition();
   const [annonce, setAnnonce] = useState<string | null>(null);
   const base = maintenant.getTime();
@@ -74,13 +76,22 @@ export function AuxPortes({
     return () => clearInterval(battement);
   }, [base]);
 
-  /** Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. */
+  /**
+   * Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. US-0339 : un
+   * second toucher avant la réponse (un double clic, plus rapide que la ligne) ne relance rien pour ce Voyageur.
+   */
   function decider(voyageur: VoyageurAffiche, accueil: boolean) {
+    if (enVol.current.has(voyageur.id)) return;
+    enVol.current.add(voyageur.id);
     setAnnonce(null);
     demarrer(async () => {
-      choisir({ id: voyageur.id, accueil });
-      const rendu = accueil ? await accueillirUnVoyageur(voyageur.id) : await refuserUnVoyageur(voyageur.id);
-      if (rendu === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
+      try {
+        choisir({ id: voyageur.id, accueil });
+        const rendu = accueil ? await accueillirUnVoyageur(voyageur.id) : await refuserUnVoyageur(voyageur.id);
+        if (rendu === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
+      } finally {
+        enVol.current.delete(voyageur.id);
+      }
     });
   }
 

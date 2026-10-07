@@ -308,6 +308,36 @@ describe("bloquer l'accueil quand la place manque (US-0338)", () => {
   });
 });
 
+describe("ne jamais accueillir deux fois (US-0339)", () => {
+  it("n'envoie qu'un accueil pour un double clic sur « Accueillir »", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().dblClick(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+  });
+
+  it("ne relance rien pour un Voyageur dont un choix est en cours, même touché de nouveau avant que sa ligne parte", () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    const [accueillir, refuser] = within(ligne("Ines")).getAllByRole("button");
+    // Trois touchers avant que React ne retire la ligne.
+    act(() => {
+      accueillir.click();
+      accueillir.click();
+      refuser.click();
+    });
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+    expect(actions.refuserUnVoyageur).not.toHaveBeenCalled();
+  });
+
+  it("laisse de nouveau choisir pour ce Voyageur une fois l'action finie, s'il attend toujours", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    await finirLesActions("plus-de-place");
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [70]]);
+  });
+});
+
 describe("le compte à rebours d'un Voyageur (US-0333)", () => {
   it("dit, au bout de sa ligne, dans combien de temps il repart, à la minute supérieure", () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={[voyageur(1, "Joran", 18 * MINUTE), voyageur(2, "Ilda", 5 * HEURE), partantDans(3, "Maëlle", 42 * MINUTE + 10_000)]} maintenant={MAINTENANT} />);

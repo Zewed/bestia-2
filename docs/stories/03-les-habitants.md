@@ -410,6 +410,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0339 · Empêcher un double accueil
 **En tant que** joueur, **je veux** qu'un Voyageur ne devienne jamais deux Habitants, **afin de** garder des comptes justes.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Un double clic ne lance qu'un accueil ; un Voyageur refusé sur un appareil ne peut plus être accueilli sur un autre ; quatre Voyageurs accueillis en même temps pour une seule place libre : un seul entre, les autres restent aux portes avec la phrase de place manquante. L'accueil verrouille le Territoire avant de compter la place. Prouvé en concurrence réelle (deux connexions, plusieurs essais) et vérifié en vrai.
 - **Débloquée par** : US-0338
 - **Critères d'acceptation** :
   - Un double clic sur « Accueillir » ne crée qu'un seul Habitant.

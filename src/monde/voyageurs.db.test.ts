@@ -610,14 +610,16 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
     });
 
-    describe("quand la place manque (US-0338)", () => {
-      /** Fait venir au Territoire des Habitants, sans passer par les portes, jusqu'à en compter `nombre`. */
-      const remplir = async (territoireId: number, nombre: number) =>
-        pool.query(
-          "insert into habitant (territoire_id, prenom) select $1, 'Arno' from generate_series(1, $2 - (select count(*)::int from habitant where territoire_id = $1))",
-          [territoireId, nombre],
-        );
+    /** US-0338 : fait venir au Territoire des Habitants, sans passer par les portes, jusqu'à en compter `nombre`. */
+    const remplir = async (territoireId: number, nombre: number) =>
+      pool.query(
+        "insert into habitant (territoire_id, prenom) select $1, 'Arno' from generate_series(1, $2 - (select count(*)::int from habitant where territoire_id = $1))",
+        [territoireId, nombre],
+      );
+    /** Retire au Territoire son dernier Habitant venu : sa place se libère. */
+    const liberer = async (territoireId: number) => pool.query("delete from habitant where id = (select max(id) from habitant where territoire_id = $1)", [territoireId]);
 
+    describe("quand la place manque (US-0338)", () => {
       it("refuse l'accueil quand toute la place est prise, et le dit : rien ne change, et le Voyageur attend toujours", async () => {
         const { territoireId, ne } = await naitre();
         const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
@@ -653,7 +655,7 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
 
         // Le temps passe sans qu'elle reparte, puis un Habitant laisse sa place.
         await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 12 * HEURE) });
-        await pool.query("delete from habitant where id = (select max(id) from habitant where territoire_id = $1)", [territoireId]);
+        await liberer(territoireId);
         expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 12 * HEURE))).toBe("accueilli");
         expect(await sort(ines)).toEqual(["accueilli", apres(ne, 12 * HEURE)]);
         expect(await nombreDHabitants(pool, territoireId)).toBe(PLACES_DU_FOYER);
@@ -665,6 +667,78 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
         await remplir(territoireId, PLACES_DU_FOYER);
         await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 14 * HEURE) });
         expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 14 * HEURE))).toBe("reparti");
+      });
+    });
+
+    describe("jamais deux fois (US-0339, en concurrence réelle)", () => {
+      // Un second pool, comme un second appareil : ses demandes passent par d'autres connexions que le premier.
+      let autre: Pool;
+      beforeAll(() => {
+        autre = poolDeTest();
+      });
+      afterAll(async () => {
+        await autre.end();
+      });
+      const ESSAIS = 8;
+
+      it("un double clic, ou deux appareils : le même Voyageur accueilli quatre fois en même temps ne devient qu'un seul Habitant, d'un seul Récit", async () => {
+        const { territoireId, ne } = await naitre();
+        const nombre = await nombreDHabitants(pool, territoireId);
+        for (let essai = 0; essai < ESSAIS; essai++) {
+          const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+          const accueils = await Promise.all([pool, autre, pool, autre].map((base) => accueillirLeVoyageur(base, territoireId, ines, apres(ne, 2 * HEURE))));
+          expect(accueils.sort(), `essai ${essai}`).toEqual(["absent", "absent", "absent", "accueilli"]);
+          expect(await nombreDHabitants(pool, territoireId), `essai ${essai}`).toBe(nombre + 1);
+          expect(await sort(ines)).toEqual(["accueilli", apres(ne, 2 * HEURE)]);
+          // Sa place rendue pour l'essai suivant.
+          await liberer(territoireId);
+        }
+        expect(await recitsDuTerritoire(pool, territoireId)).toHaveLength(ESSAIS);
+      });
+
+      it("un Voyageur refusé sur un appareil ne peut plus être accueilli sur un autre, ensuite comme en même temps", async () => {
+        const { territoireId, ne } = await naitre();
+        const nombre = await nombreDHabitants(pool, territoireId);
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        expect(await refuserLeVoyageur(autre, territoireId, ines, apres(ne, 2 * HEURE))).toBe(true);
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 3 * HEURE))).toBe("absent");
+        expect(await sort(ines)).toEqual(["refuse", apres(ne, 2 * HEURE)]);
+        expect(await nombreDHabitants(pool, territoireId)).toBe(nombre);
+
+        let accueillis = 0;
+        for (let essai = 0; essai < ESSAIS; essai++) {
+          const joran = await presenter(territoireId, "Joran", apres(ne, HEURE));
+          const [refuse, accueil] = await Promise.all([
+            refuserLeVoyageur(autre, territoireId, joran, apres(ne, 2 * HEURE)),
+            accueillirLeVoyageur(pool, territoireId, joran, apres(ne, 2 * HEURE)),
+          ]);
+          // L'un ou l'autre, jamais les deux : un Voyageur refusé n'est jamais devenu Habitant.
+          expect([refuse, accueil === "accueilli"].filter(Boolean), `essai ${essai}`).toHaveLength(1);
+          expect((await sort(joran))[0]).toBe(refuse ? "refuse" : "accueilli");
+          expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + (refuse ? 0 : 1));
+          if (!refuse) {
+            accueillis += 1;
+            await liberer(territoireId);
+          }
+        }
+        expect(await recitsDuTerritoire(pool, territoireId)).toHaveLength(accueillis);
+      });
+
+      it("quatre Voyageurs accueillis en même temps pour une seule place libre : un seul entre, les autres restent aux portes, faute de place", async () => {
+        const { territoireId, ne } = await naitre();
+        await remplir(territoireId, PLACES_DU_FOYER - 1);
+        for (let essai = 0; essai < ESSAIS; essai++) {
+          const venus: number[] = [];
+          for (const prenom of ["Ines", "Joran", "Ilda", "Arno"]) venus.push(await presenter(territoireId, prenom, apres(ne, HEURE)));
+          const accueils = await Promise.all(venus.map((id, i) => accueillirLeVoyageur(i % 2 ? autre : pool, territoireId, id, apres(ne, 2 * HEURE))));
+          expect([...accueils].sort(), `essai ${essai}`).toEqual(["accueilli", "plus-de-place", "plus-de-place", "plus-de-place"]);
+          expect(await nombreDHabitants(pool, territoireId), `essai ${essai}`).toBe(PLACES_DU_FOYER);
+          const restent = venus.filter((_, i) => accueils[i] === "plus-de-place");
+          expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.id)).toEqual(restent);
+          // Pour l'essai suivant : ceux qui attendent renvoyés, et la place rendue.
+          for (const id of restent) await refuserLeVoyageur(pool, territoireId, id, apres(ne, 3 * HEURE));
+          await liberer(territoireId);
+        }
       });
     });
   });
