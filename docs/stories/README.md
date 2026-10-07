@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0231** · Voir les stocks pleins sur mobile (US-0229, US-0230 et US-0232 en cours, en parallèle). US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaine : **US-0229**, **US-0230**, **US-0232** (en cours), puis le jalon 3.
+Dernière story livrée : **US-0301** · Recevoir trois Habitants en naissant. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : la suite du jalon 3, par vagues parallèles.
 
 ## Sommaire
 

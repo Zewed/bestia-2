@@ -7,6 +7,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0301 · Recevoir trois Habitants en naissant
 **En tant que** nouveau joueur, **je veux** commencer avec trois Habitants, **afin de** pouvoir faire tourner mon Territoire dès le premier jour.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Un Habitant est une ligne de la table `habitant`, rattachée à son Territoire, avec son Métier (vide pour l'instant) et son heure d'arrivée. La base en donne trois à chaque naissance, quel que soit le chemin ; les Territoires déjà nés ont reçu les leurs avec la migration, une seule fois. Rien de visible encore : la page Habitants vient avec US-0302.
 - **Débloquée par** : Étape 9
 - **Critères d'acceptation** :
   - Un joueur qui vient de naître sur la carte possède exactement trois Habitants.

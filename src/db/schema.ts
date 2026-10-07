@@ -435,3 +435,20 @@ export const stock = pgTable(
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
 );
+
+/**
+ * Un Habitant (US-0301) : un humain du Territoire, qui ne combat jamais et exerce un Métier (null tant
+ * qu'il n'en a pas). Chaque Territoire en reçoit trois à sa naissance, donnés par la base.
+ */
+export const habitant = pgTable(
+  "habitant",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    metier: text("metier"),
+    arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("habitant_par_territoire").on(t.territoireId)],
+);
