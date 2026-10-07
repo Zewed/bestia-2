@@ -129,6 +129,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0312 · Répartir les Habitants avec plus et moins
 **En tant que** joueur, **je veux** ajouter ou retirer des Habitants d'un Métier avec des boutons plus et moins, **afin de** répartir mes Habitants en quelques touches.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Le bloc « Métiers » de la page Habitants devient l'outil de répartition : sur chaque ligne, l'effectif du Métier entre « − » et « + » (44 px, au pouce), la phrase et « Servira … » dessous. « + » donne ce Métier au premier Habitant sans Métier de la liste, grisé quand il n'en reste aucun ; « − » rend sans Métier le dernier arrivé de ce Métier, grisé à 0. Les compteurs du haut restent des filtres. Le serveur choisit l'Habitant dans la base, pas le navigateur. Vérifié en vrai.
 - **Débloquée par** : US-0311
 - **Critères d'acceptation** :
   - Chaque compteur de Métier a un bouton « + » et un bouton « − ».

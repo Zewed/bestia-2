@@ -12,7 +12,17 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, nombreSansMetier, placesDuTerritoire, plusDePlace } from "./habitants";
+import {
+  ajouterUnHabitantAuMetier,
+  enregistrerLeMetier,
+  entretienDesHabitants,
+  habitantsDuTerritoire,
+  nombreDHabitants,
+  nombreSansMetier,
+  placesDuTerritoire,
+  plusDePlace,
+  retirerUnHabitantDuMetier,
+} from "./habitants";
 import { stocksDuTerritoire } from "./stocks";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
@@ -23,7 +33,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0318, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -238,6 +248,59 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     // L'Habitant du voisin, même désigné par son identifiant, garde le sien.
     expect(await enregistrerLeMetier(pool, ta, voisin, null)).toBe(false);
     expect((await habitants(tb)).map((h) => h.metier)).toEqual(["mineur", null, null]);
+  });
+
+  /** Un Territoire neuf, ses trois Habitants renommés Brune, Cael et Arno, du premier arrivé au dernier. */
+  const territoireABC = async () => {
+    const compte = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    const [brune, cael, arno] = (await habitants(t)).map((h) => h.id);
+    await pool.query("update habitant set prenom = case id when $1 then 'Brune' when $2 then 'Cael' else 'Arno' end where territoire_id = $3", [brune, cael, t]);
+    return { t, brune, cael, arno };
+  };
+
+  it("« + » donne le Métier au premier Habitant sans Métier dans l'ordre de la liste, gratuitement, et à personne quand il n'en reste aucun (US-0312)", async () => {
+    const { t, brune, cael, arno } = await territoireABC();
+    const voisin = await territoireABC();
+    const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
+    const avant = await stocks();
+    // La liste range les sans Métier par prénom : Arno, Brune, puis Cael.
+    expect(await ajouterUnHabitantAuMetier(pool, t, "bucheron")).toBe(arno);
+    expect(await ajouterUnHabitantAuMetier(pool, t, "mineur")).toBe(brune);
+    expect(await ajouterUnHabitantAuMetier(pool, t, "bucheron")).toBe(cael);
+    expect(await ajouterUnHabitantAuMetier(pool, t, "bucheron")).toBeNull();
+    expect((await habitants(t)).map((h) => h.metier)).toEqual(["mineur", "bucheron", "bucheron"]);
+    expect(await stocks()).toEqual(avant);
+    // Le voisin garde les siens sans Métier.
+    expect((await habitants(voisin.t)).map((h) => h.metier)).toEqual([null, null, null]);
+  });
+
+  it("« + » ne donne à personne un Métier qui n'existe pas (US-0312)", async () => {
+    const { t } = await territoireABC();
+    expect(await ajouterUnHabitantAuMetier(pool, t, "poste")).toBeNull();
+    expect(await ajouterUnHabitantAuMetier(pool, t, "Bûcheron")).toBeNull();
+    expect(await ajouterUnHabitantAuMetier(pool, -1, "bucheron")).toBeNull();
+    expect((await habitants(t)).map((h) => h.metier)).toEqual([null, null, null]);
+  });
+
+  it("« − » remet sans Métier le dernier arrivé de ceux qui exercent le Métier, gratuitement, et personne quand il n'y en a plus (US-0312)", async () => {
+    const { t, brune, cael, arno } = await territoireABC();
+    const voisin = await territoireABC();
+    for (const id of [brune, cael, arno]) expect(await enregistrerLeMetier(pool, t, id, "chasseur")).toBe(true);
+    expect(await enregistrerLeMetier(pool, t, cael, "mineur")).toBe(true);
+    expect(await enregistrerLeMetier(pool, voisin.t, voisin.arno, "chasseur")).toBe(true);
+    const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
+    const avant = await stocks();
+    // Arno est arrivé après Brune : il part le premier, quel que soit son prénom.
+    expect(await retirerUnHabitantDuMetier(pool, t, "chasseur")).toBe(arno);
+    expect(await retirerUnHabitantDuMetier(pool, t, "chasseur")).toBe(brune);
+    expect(await retirerUnHabitantDuMetier(pool, t, "chasseur")).toBeNull();
+    expect(await retirerUnHabitantDuMetier(pool, t, "poste")).toBeNull();
+    expect((await habitants(t)).map((h) => h.metier)).toEqual([null, "mineur", null]);
+    expect(await stocks()).toEqual(avant);
+    // Le Chasseur du voisin le reste.
+    expect((await habitants(voisin.t)).map((h) => h.metier)).toEqual([null, null, "chasseur"]);
   });
 
   it("ne touche ni un Habitant d'un autre Territoire, ni ne donne un Métier qui n'existe pas (US-0308, US-0310)", async () => {

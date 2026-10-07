@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
-import { enregistrerLeMetier } from "@/monde/habitants";
+import { ajouterUnHabitantAuMetier, enregistrerLeMetier, retirerUnHabitantDuMetier } from "@/monde/habitants";
 
 /** Le plus grand identifiant qu'une colonne integer de Postgres puisse tenir. */
 const IDENTIFIANT_MAX = 2_147_483_647;
@@ -17,6 +17,11 @@ function identifiantValable(habitantId: number): boolean {
   return Number.isInteger(habitantId) && habitantId > 0 && habitantId <= IDENTIFIANT_MAX;
 }
 
+/** Vrai pour un identifiant de Métier écrit comme dans donnees/. */
+function metierValable(metierId: string): boolean {
+  return typeof metierId === "string" && IDENTIFIANT_DE_METIER.test(metierId);
+}
+
 /**
  * US-0308 : le joueur donne un Métier à un Habitant sans Métier, gratuitement et aussitôt ; US-0310 : ou en
  * donne un autre à un Habitant qui en a un, de la même façon. Le Territoire vient de la garde, jamais du
@@ -27,8 +32,7 @@ function identifiantValable(habitantId: number): boolean {
 export async function donnerUnMetier(habitantId: number, metierId: string): Promise<void> {
   if (!entreeDuJeuOuverte()) return;
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  if (territoireId === null || !identifiantValable(habitantId)) return;
-  if (typeof metierId !== "string" || !IDENTIFIANT_DE_METIER.test(metierId)) return;
+  if (territoireId === null || !identifiantValable(habitantId) || !metierValable(metierId)) return;
   await enregistrerLeMetier(getPool(), territoireId, habitantId, metierId);
   refresh();
 }
@@ -43,5 +47,30 @@ export async function retirerLeMetier(habitantId: number): Promise<void> {
   const { territoireId } = await exigerCompte("/jeu/habitants");
   if (territoireId === null || !identifiantValable(habitantId)) return;
   await enregistrerLeMetier(getPool(), territoireId, habitantId, null);
+  refresh();
+}
+
+/**
+ * US-0312 : « + » d'un Métier : le joueur le donne à un Habitant sans Métier, que la base choisit (le premier de
+ * la liste), jamais le navigateur. Mêmes gardes : seuls les Habitants du joueur sont touchés, et la page relue
+ * fait foi, même quand il ne restait plus personne sans Métier.
+ */
+export async function ajouterAuMetier(metierId: string): Promise<void> {
+  if (!entreeDuJeuOuverte()) return;
+  const { territoireId } = await exigerCompte("/jeu/habitants");
+  if (territoireId === null || !metierValable(metierId)) return;
+  await ajouterUnHabitantAuMetier(getPool(), territoireId, metierId);
+  refresh();
+}
+
+/**
+ * US-0312 : « − » d'un Métier : le joueur remet sans Métier un Habitant qui l'exerce, que la base choisit (le
+ * dernier arrivé). Mêmes gardes, et la page relue fait foi, même quand plus personne ne l'exerçait.
+ */
+export async function retirerDuMetier(metierId: string): Promise<void> {
+  if (!entreeDuJeuOuverte()) return;
+  const { territoireId } = await exigerCompte("/jeu/habitants");
+  if (territoireId === null || !metierValable(metierId)) return;
+  await retirerUnHabitantDuMetier(getPool(), territoireId, metierId);
   refresh();
 }

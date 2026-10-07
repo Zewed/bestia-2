@@ -37,7 +37,7 @@ const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
-vi.mock("./actions", () => ({ donnerUnMetier: vi.fn(), retirerLeMetier: vi.fn() }));
+vi.mock("./actions", () => ({ donnerUnMetier: vi.fn(), retirerLeMetier: vi.fn(), ajouterAuMetier: vi.fn(), retirerDuMetier: vi.fn() }));
 // US-0314 : l'adresse de la page, que la liste lit pour son filtre, dès le rendu sur le serveur.
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
@@ -70,7 +70,7 @@ const STOCKS_DE_PRAIRIE: Stock[] = [
   unStock("pierre", "materiaux", "100.000000", "4.000000"),
 ];
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0311, US-0314, US-0318, US-0320)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0311, US-0312, US-0314, US-0318, US-0320)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     adresse.recherche = "";
@@ -115,7 +115,12 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   const blocMetiers = (html: string) => html.match(/<section[^>]*><h2[^>]*>Métiers<\/h2>.*?<\/section>/)?.[0] ?? "";
   /** US-0307 : chaque ligne du bloc Métiers, en ses morceaux de texte (l'icône, muette, n'en a pas). */
   const lignesMetiers = (html: string) =>
-    [...blocMetiers(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => morceaux(ligne).map((t) => t.trim()));
+    [...blocMetiers(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => morceaux(ligne.replace(/<div[^>]*><button.*?<\/button><\/div>/, "")).map((t) => t.trim()));
+  /** US-0312 : sur chaque ligne du bloc Métiers, l'effectif entre « − » et « + », et ceux des deux boutons qui sont grisés. */
+  const repartitions = (html: string) =>
+    [...blocMetiers(html).matchAll(/<li[^>]*>.*?<strong[^>]*>(.*?)<\/strong><div[^>]*>(<button[^>]*>)−<\/button><span[^>]*>(\d+)<\/span>(<button[^>]*>)\+<\/button><\/div>/g)].map(
+      ([, nom, moins, nombre, plus]) => [nom, Number(nombre), ...[moins, plus].map((bouton) => (bouton.includes("disabled") ? "grisé" : "actif"))],
+    );
   /** US-0318 : la ligne du bloc Entretien, telle qu'on la lit. */
   const ligneEntretien = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>(.*?)<\/p>/)?.[1].replace(/<[^>]+>/g, "");
   /** US-0320 : la ligne qui suit celle de l'Entretien, dans son bloc, telle qu'elle est écrite. */
@@ -234,19 +239,22 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       // US-0320
       "Nourriture assurée",
       "Métiers",
-      ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
+      // US-0312 : sur chaque ligne, l'effectif du Métier entre « − » et « + ».
+      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, `Servira ${m.servira}.`]),
     ]);
     expect(html).not.toMatch(/<(form|input|select)[ >]/);
     // Le seul lien : le raccourci du bandeau vers les Habitants sans Métier (US-0313).
     expect([...html.matchAll(/<a ([^>]*)>(.*?)<\/a>/g)].map(([, attributs, texte]) => [attributs.match(/href="([^"]*)"/)?.[1], texte])).toEqual([
       ["/jeu/habitants?metier=sans", "Voir"],
     ]);
-    // Les seuls boutons : ceux qui filtrent la liste (US-0314), puis ceux qui donnent un Métier (US-0308).
+    // Les seuls boutons : ceux qui filtrent la liste (US-0314), ceux qui donnent un Métier (US-0308), puis « − » et
+    // « + » de chaque Métier (US-0312).
     expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map(([, bouton]) => morceaux(bouton))).toEqual([
       ["Tous"],
       ["Sans Métier ", "3"],
       ...HUIT_METIERS.map((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.map(() => ["Choisir un Métier"]),
+      ...HUIT_METIERS.flatMap(() => [["−"], ["+"]]),
     ]);
   });
 
@@ -454,7 +462,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(lus).toEqual(HUIT_METIERS.map((m) => [m.nom, m.phrase, `Servira ${m.servira}.`]));
   });
 
-  it("montre l'icône peinte de chaque Métier, en petit et muette (le nom est à côté), puis le nom en gras suivi de la phrase (US-0307)", async () => {
+  it("montre l'icône peinte de chaque Métier, en petit et muette (le nom est à côté), puis le nom en gras, sa phrase dessous (US-0307, US-0312)", async () => {
     connecte();
     const bloc = blocMetiers(renderToStaticMarkup(await Habitants()));
     for (const m of HUIT_METIERS) {
@@ -463,7 +471,25 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       expect(icone, m.id).toContain('width="40"');
       expect(icone, m.id).toContain(encodeURIComponent(`/illustrations/metiers/${m.id}.webp`));
     }
-    expect(bloc).toMatch(/<strong[^>]*>Bûcheron<\/strong> rapporte du Bois des forêts<\/p>/);
+    expect(bloc).toMatch(/<strong[^>]*>Bûcheron<\/strong><div[^>]*>.*?<\/div><div[^>]*><p[^>]*>rapporte du Bois des forêts<\/p>/);
+  });
+
+  it("met sur chaque ligne de Métier son effectif entre « − » et « + », compté sur la lecture même de la liste, et les grise quand ils ne peuvent servir (US-0312)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Fenn", ...UN_HABITANT, metier: "Chasseur" },
+      { id: 43, prenom: "Ilda", ...UN_HABITANT, metier: "Chasseur" },
+    ]);
+    let html = renderToStaticMarkup(await Habitants());
+    expect(repartitions(html)).toEqual(HUIT_METIERS.map((m) => (m.nom === "Chasseur" ? [m.nom, 2, "actif", "actif"] : [m.nom, 0, "grisé", "actif"])));
+    // Chaque bouton dit à un lecteur d'écran ce qu'il fait.
+    expect(blocMetiers(html)).toMatch(/<button[^>]*aria-label="Un Chasseur de moins"[^>]*>−<\/button>/);
+    expect(blocMetiers(html)).toMatch(/<button[^>]*aria-label="Un Chasseur de plus"[^>]*>\+<\/button>/);
+    // Plus personne sans Métier : « + » est grisé partout.
+    habitants.habitantsDuTerritoire.mockResolvedValue([{ id: 40, prenom: "Fenn", ...UN_HABITANT, metier: "Mineur" }]);
+    html = renderToStaticMarkup(await Habitants());
+    expect(repartitions(html)).toEqual(HUIT_METIERS.map((m) => (m.nom === "Mineur" ? [m.nom, 1, "actif", "grisé"] : [m.nom, 0, "grisé", "grisé"])));
   });
 
   it("lit les Métiers une fois par affichage, et les montre dans l'ordre de la lecture (US-0307)", async () => {
@@ -534,9 +560,30 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".colonne", mobile)).toContain("gap: var(--ecart-mobile);");
     // La liste ne s'étire pas à la hauteur de la colonne, plus haute qu'elle.
     expect(regle(".liste")).toContain("align-self: start;");
-    // Une ligne par Métier : l'icône, puis le texte qui va à la ligne ; « Servira » en discret.
-    expect(regle(".ligneMetier")).toContain("grid-template-columns: auto minmax(0, 1fr);");
+    // Une ligne par Métier : l'icône, le nom qui va à la ligne, puis « − » et « + » (US-0312) ; dessous, sur toute la
+    // largeur qui reste, la phrase et « Servira » en discret.
+    expect(regle(".ligneMetier")).toContain("grid-template-columns: auto minmax(0, 1fr) auto;");
+    expect(regle(".descriptionMetier")).toContain("grid-column: 2 / -1;");
     expect(regle(".servira")).toContain("color: var(--texte-discret);");
+  });
+
+  it("met « − » et « + » au pouce sur chaque ligne de Métier : 44 px de côté au moins, écartés de 8 px au moins, grisés quand ils ne servent pas (US-0312)", () => {
+    // La surface de toucher vient de la règle commune à tous les boutons de la page.
+    expect(regle(".page button")).toContain("min-width: 44px;");
+    const repartition = regle(".repartition");
+    expect(repartition).toContain("display: flex;");
+    expect(Number(repartition.match(/gap: (\d+)px;/)?.[1])).toBeGreaterThanOrEqual(8);
+    const plusMoins = regle(".plusMoins");
+    expect(plusMoins).toContain("cursor: pointer;");
+    expect(plusMoins).toContain("font: inherit;");
+    const grise = regle(".plusMoins:disabled");
+    expect(grise).toContain("color: var(--galet);");
+    expect(grise).toContain("cursor: default;");
+    expect(regle(".plusMoins:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    // Passer de 9 à 10 ne pousse pas « + ».
+    const effectif = regle(".effectifMetier");
+    expect(effectif).toContain("font-variant-numeric: tabular-nums;");
+    expect(effectif).toContain("min-width: 2ch;");
   });
 
   it("déplie les Métiers au choix sous la ligne, sur toute sa largeur, en une grille qui passe à la ligne : deux colonnes sur un petit écran (US-0308)", () => {

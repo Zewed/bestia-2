@@ -370,8 +370,9 @@
 }
 
 /*
- * US-0307 : une ligne par Métier : son icône peinte, puis son nom en gras suivi de sa phrase, et dessous,
- * en discret, quand il servira.
+ * US-0307 : une ligne par Métier : son icône peinte, puis son nom en gras, et dessous sa phrase puis, en discret,
+ * quand il servira. US-0312 : au bout de la première ligne, l'effectif du Métier entre « − » et « + » ; la phrase
+ * et « Servira » passent dessous, sur toute la largeur qui reste.
  */
 .metiers {
   display: grid;
@@ -382,14 +383,18 @@
 
 .ligneMetier {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 2px 12px;
+  align-items: center;
 }
 
 .iconeMetier {
   width: 40px;
   height: 40px;
+}
+
+.descriptionMetier {
+  grid-column: 2 / -1;
 }
 
 .phraseMetier {
@@ -399,6 +404,59 @@
 .nomMetier {
   color: var(--encre);
   font-weight: var(--graisse-titre);
+}
+
+/*
+ * US-0312 : « − », l'effectif, puis « + », au pouce : chaque bouton a sa surface de 44 px (.page button), à 8 px
+ * du nombre. Grisés, ils restent à leur place sans réagir.
+ */
+.repartition {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plusMoins {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 20px;
+  font-weight: var(--graisse-titre);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.plusMoins:disabled {
+  border-color: var(--trait-doux);
+  background: var(--bloc-2);
+  color: var(--galet);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .plusMoins:enabled:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.plusMoins:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.effectifMetier {
+  min-width: 2ch;
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
 .servira {
@@ -451,6 +509,20 @@
 
   .effectif:has(.iconeEffectif) .nombreEffectif {
     font-size: 13px;
+  }
+}
+
+/*
+ * US-0312 : sur les plus petits écrans (320 px), l'icône d'un Métier rapetisse et les écarts de sa ligne se
+ * resserrent : le plus long nom, « Explorateur », tient en entier à côté de « − » et « + ».
+ */
+@media (max-width: 380px) {
+  .ligneMetier {
+    column-gap: 8px;
+  }
+  .iconeMetier {
+    width: 32px;
+    height: 32px;
   }
 }
 

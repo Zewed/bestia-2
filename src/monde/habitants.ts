@@ -53,6 +53,41 @@ export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId:
 }
 
 /**
+ * US-0312 : « + » d'un Métier : le donne au premier Habitant sans Métier du Territoire dans l'ordre de la liste
+ * (par prénom, puis le premier arrivé), choisi dans la base et changé d'une seule requête, gratuitement. Rend
+ * son identifiant ; null quand il ne reste aucun Habitant sans Métier, ou pour un Métier inconnu.
+ */
+export async function ajouterUnHabitantAuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
+  try {
+    const { rows } = await base.query<{ id: number }>(
+      `update habitant set metier = $2
+       where id = (select id from habitant where territoire_id = $1 and metier is null order by prenom, id limit 1) and metier is null
+       returning id`,
+      [territoireId, metierId],
+    );
+    return rows[0]?.id ?? null;
+  } catch (refus) {
+    if (refus instanceof DatabaseError && refus.code === "23503") return null;
+    throw refus;
+  }
+}
+
+/**
+ * US-0312 : « − » d'un Métier : remet sans Métier le dernier arrivé au Territoire de ceux qui l'exercent (le plus
+ * grand identifiant : les Habitants sont numérotés à leur arrivée), choisi dans la base et changé d'une seule
+ * requête, gratuitement. Rend son identifiant ; null quand personne n'exerce ce Métier.
+ */
+export async function retirerUnHabitantDuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
+  const { rows } = await base.query<{ id: number }>(
+    `update habitant set metier = null
+     where id = (select id from habitant where territoire_id = $1 and metier = $2 order by id desc limit 1) and metier = $2
+     returning id`,
+    [territoireId, metierId],
+  );
+  return rows[0]?.id ?? null;
+}
+
+/**
  * US-0334 : un nouvel Habitant au Territoire, sans Métier, du prénom donné, arrivé à `arriveLe`, l'heure du
  * jeu ; rend son identifiant. Il compte aussitôt dans le nombre d'Habitants et dans l'Entretien. Appelée avec
  * le client d'une transaction, elle tient dedans.

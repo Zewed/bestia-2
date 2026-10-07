@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { CSSProperties } from "react";
@@ -9,7 +8,7 @@ import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { getPool } from "@/db";
 import { type EntretienDesHabitants, entretienDesHabitants, habitantsDuTerritoire, placesDuTerritoire } from "@/monde/habitants";
-import { iconeDeMetier, lesMetiers, type Metier } from "@/monde/metiers";
+import { iconeDeMetier, lesMetiers } from "@/monde/metiers";
 import { nourriturePourEncore, tenueDeLaNourriture } from "@/monde/nourriture";
 import { quantiteExacte } from "@/monde/quantite";
 import type { Stock } from "@/monde/stocks";
@@ -20,6 +19,7 @@ import { BandeauSansMetier } from "./BandeauSansMetier";
 import { HabitantsMontres } from "./HabitantsMontres";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
+import { RepartitionDesMetiers } from "./RepartitionDesMetiers";
 
 export const metadata: Metadata = { title: "Habitants" };
 
@@ -61,26 +61,6 @@ function TenueDeLaNourriture({ stocks, entretien }: { stocks: Stock[]; entretien
 }
 
 /**
- * US-0307 : un Métier sur une ligne : son icône, son nom en gras suivi de sa phrase (« Bûcheron rapporte
- * du Bois des forêts »), puis, tant qu'il ne sert à rien, ce qu'il attend, en discret.
- */
-function LigneMetier({ metier }: { metier: Metier }) {
-  return (
-    <li className={styles.ligneMetier}>
-      {/* Le nom est écrit juste à côté : l'icône est muette, pour qu'un lecteur d'écran ne le dise pas deux fois. */}
-      <Image src={iconeDeMetier(metier.id)} alt="" width={40} height={40} className={styles.iconeMetier} />
-      <div>
-        <p className={styles.phraseMetier}>
-          <strong className={styles.nomMetier}>{metier.nom}</strong>
-          {` ${metier.phrase}`}
-        </p>
-        {metier.servira ? <p className={styles.servira}>{`Servira ${metier.servira}.`}</p> : null}
-      </div>
-    </li>
-  );
-}
-
-/**
  * US-0307 : la colonne qui empile l'Entretien puis les Métiers, placée dans la Grille comme un bloc étroit
  * de largeur 4 : à droite de la liste sur ordinateur, une demi-ligne sur tablette, toute la largeur sur mobile.
  */
@@ -93,7 +73,8 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
  * filtrent la liste (US-0314), puis une ligne par Habitant avec son prénom, son Métier et son état, dans
  * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308), en change
  * (US-0310) ou le retire (US-0311) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
- * (US-0320), d'après les Stocks lus une fois le Territoire mis à l'heure, puis les huit Métiers (US-0307).
+ * (US-0320), d'après les Stocks lus une fois le Territoire mis à l'heure, puis les huit Métiers (US-0307), où
+ * l'on répartit les Habitants avec « − » et « + » (US-0312).
  * Tout est lu à chaque affichage.
  * Sans session, la garde mène à la connexion, qui ramène ici.
  */
@@ -136,15 +117,8 @@ export default async function Habitants() {
                 <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
               </Bloc>
             ) : null}
-            {metiers.length > 0 ? (
-              <Bloc titre="Métiers">
-                <ul className={styles.metiers}>
-                  {metiers.map((m) => (
-                    <LigneMetier key={m.id} metier={m} />
-                  ))}
-                </ul>
-              </Bloc>
-            ) : null}
+            {/* US-0312 : les Métiers, où l'on répartit les Habitants avec « − » et « + », sur les Habitants que montre la liste. */}
+            {metiers.length > 0 ? <RepartitionDesMetiers metiers={metiers.map((m) => ({ ...m, icone: iconeDeMetier(m.id) }))} /> : null}
           </div>
         </Grille>
       </HabitantsMontres>
