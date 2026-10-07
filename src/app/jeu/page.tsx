@@ -16,7 +16,7 @@ import { RecapAbsence } from "./RecapAbsence";
 export const metadata: Metadata = { title: "Foyer" };
 
 /** Tous les Foyers naissent en prairie (US-0152) : une seule illustration sert à tous. */
-export const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hutte du chef, au toit de chaume et à la tête de loup, dans la prairie au petit matin" };
+const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hutte du chef, au toit de chaume et à la tête de loup, dans la prairie au petit matin" };
 
 /**
  * L'écran du Foyer (US-0157) : la hutte du chef en grand, et le Biome du Foyer posé dessus. Rien
