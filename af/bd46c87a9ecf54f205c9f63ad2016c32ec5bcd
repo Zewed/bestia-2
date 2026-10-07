@@ -1,0 +1,21 @@
+docs/stories/02-le-territoire-respire.md
+  s_97a431cfa65ca7::t_131279209aac54 72,75
+docs/stories/README.md
+  s_97a431cfa65ca7::t_6781df256d110c 7,33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "afbd46c87a9ecf54f205c9f63ad2016c32ec5bcd",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
