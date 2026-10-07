@@ -4,16 +4,25 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_228c413d04a62d 7
 src/app/jeu/habitants/RepartitionDesMetiers.test.tsx
   s_97a431cfa65ca7::t_f5bc58d9ab9088 132-162
+  s_97a431cfa65ca7::t_fe8d0810167bbb 132-162
 src/app/jeu/habitants/RepartitionDesMetiers.tsx
   s_97a431cfa65ca7::t_2e9c06f53f2c7b 33-36
+  s_97a431cfa65ca7::t_2cbd253b34a84b 33-36
 src/app/jeu/habitants/actions.db.test.ts
   s_97a431cfa65ca7::t_09d01c4b49a117 17,98-106
+  s_97a431cfa65ca7::t_b4ecee5d27d46f 98-106
+  s_97a431cfa65ca7::t_4e935afd486f1c 17
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_92d0c9d1d51f5b 73,351-372
+  s_97a431cfa65ca7::t_2a3dbfe0ff2e03 73
+  s_97a431cfa65ca7::t_3de5bf181ea8e0 351-372
 src/monde/habitants-deux-appareils.db.test.ts
   s_97a431cfa65ca7::t_6ebf6ffecb76d6 1-137
+  s_97a431cfa65ca7::t_2596761dc419e5 1-137
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_776ccf0eafc59e 59-62,68-69,84-86,91-92
+  s_97a431cfa65ca7::t_6fdacff7dfe8f5 59-62,68-69
+  s_97a431cfa65ca7::t_3c63c50a70df97 84-86,91-92
 ---
 {
   "schema_version": "authorship/3.0.0",
