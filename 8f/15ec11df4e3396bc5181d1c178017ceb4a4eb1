@@ -1,0 +1,46 @@
+src/app/jeu/habitants/actions.ts
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 1-28
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_96ea1d2efd9df5 89,95
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_96ea1d2efd9df5 5
+src/app/jeu/habitants/ListeDesHabitants.tsx
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 1-95
+docs/stories/README.md
+  s_97a431cfa65ca7::t_96ea1d2efd9df5 7,16,31
+src/app/jeu/habitants/ListeDesHabitants.test.tsx
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 1-149
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 14,68-70,93-96
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 15,26,140,151,155,160-163,170-208
+  s_97a431cfa65ca7::t_57670eb64f2c1e 209
+src/app/jeu/habitants/actions.db.test.ts
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 1-62
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 35-42,46,124,128,131,137-155,186,193-195,351-359
+  s_97a431cfa65ca7::t_6dd23e7f11feca 360-361
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 3-4,14-17,20-23,26-29,35-52
+  s_97a431cfa65ca7::t_6c96896298b0c6 53-54
+src/app/jeu/habitants/actions.test.ts
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 1-71
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_4ebbc4efa7ce0b 95-183,260,264-265,273-279
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8f15ec11df4e3396bc5181d1c178017ceb4a4eb1",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
