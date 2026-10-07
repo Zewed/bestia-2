@@ -424,11 +424,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0340 · Mesurer l'Entretien en plus avant d'accueillir
 **En tant que** joueur, **je veux** voir ce que mangera un Voyageur avant de l'accueillir, **afin de** ne pas précipiter une Famine.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Sous les boutons de chaque Voyageur, « Mangera 2 Nourriture par heure ». Quand l'avertissement « famine imminente » est actif, le premier toucher sur « Accueillir » ne fait que préparer l'accueil : le bouton devient « Confirmer l'accueil » (en alerte) et une phrase le rappelle ; un second toucher accueille ; « Refuser », un toucher ailleurs ou Échap annulent. Sans modale. Pendant une Famine (US-0325), la même confirmation vaudra. Vérifié en vrai.
 - **Débloquée par** : US-0334, US-0321
 - **Critères d'acceptation** :
-  - Près du bouton « Accueillir », une ligne rappelle l'Entretien en plus : (chiffre à régler) Nourriture par heure.
+  - Près du bouton « Accueillir », une ligne rappelle l'Entretien en plus : 2 Nourriture par heure (`ENTRETIEN_HABITANT_PAR_HEURE`).
   - Quand l'avertissement « famine imminente » est actif, l'accueil demande une confirmation.
-  - Pendant une Famine, l'accueil reste possible (à décider).
+  - Pendant une Famine, l'accueil reste possible, avec la même confirmation (décidé le 2026-10-08).
 
 ### US-0341 · Fermer les portes aux Voyageurs pendant une Famine
 **En tant que** joueur, **je veux** comprendre pourquoi personne ne vient pendant une Famine, **afin de** ne pas croire que le jeu s'est arrêté.

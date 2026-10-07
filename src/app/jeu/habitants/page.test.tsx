@@ -716,6 +716,7 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
   afterEach(async () => {
     voyageurs.voyageursAuxPortes.mockReset();
     metiers.lesMetiers.mockReset();
+    stocks.stocksDuTerritoire.mockReset();
     (await import("@/temps/horloge")).definirAncre(null);
   });
 
@@ -746,10 +747,10 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     await connecte(["Joran", 5], ["Ilda", 2]);
     const html = renderToStaticMarkup(await Habitants());
     expect(voyageurs.voyageursAuxPortes).toHaveBeenCalledWith(expect.anything(), 12);
-    // US-0334, US-0336 : chaque ligne finit par « Accueillir » et « Refuser ».
+    // US-0334, US-0336 : chaque ligne finit par « Accueillir » et « Refuser » ; US-0340 : puis l'Entretien en plus.
     expect(lignesAuxPortes(html)).toEqual([
-      "Joran · arrivé il y a 5 h · repart dans 7 h · Accueillir · Refuser",
-      "Ilda · arrivé il y a 2 h · repart dans 10 h · Accueillir · Refuser",
+      "Joran · arrivé il y a 5 h · repart dans 7 h · Accueillir · Refuser · Mangera 2 Nourriture par heure",
+      "Ilda · arrivé il y a 2 h · repart dans 10 h · Accueillir · Refuser · Mangera 2 Nourriture par heure",
     ]);
   });
 
@@ -775,6 +776,24 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     expect(portes.AuxPortes.mock.lastCall?.[0].placesLibres).toBe(0);
     expect(html).toContain("Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là.");
     expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Accueillir<\/button>/);
+  });
+
+  it("confie à « Aux portes » l'avertissement « famine imminente », compté comme la bande d'alerte sur les Stocks et l'Entretien lus à l'heure (US-0340)", async () => {
+    await connecte(["Joran", 5]);
+    renderToStaticMarkup(await Habitants());
+    // Trois Habitants en prairie : la Nourriture est assurée.
+    expect(portes.AuxPortes.mock.lastCall?.[0].famineImminente).toBe(false);
+    // Douze Habitants, la Viande vide : les Végétaux tiennent 13 h, puis 12 h, au seuil.
+    habitants.entretienDesHabitants.mockResolvedValue({ habitants: 12, parHabitant: 2, parHeure: "24.000000" });
+    for (const [vegetaux, avertissement] of [
+      ["26.000000", false],
+      ["24.000000", true],
+    ] as const) {
+      stocks.stocksDuTerritoire.mockResolvedValue([unStock("viande", "nourriture", "0.000000", "8.000000"), unStock("vegetaux", "nourriture", vegetaux, "14.000000")]);
+      renderToStaticMarkup(await Habitants());
+      expect(portes.AuxPortes.mock.lastCall?.[0].famineImminente, vegetaux).toBe(avertissement);
+    }
+    expect(stocks.stocksDuTerritoire).toHaveBeenLastCalledWith(expect.anything(), 12);
   });
 
   it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {

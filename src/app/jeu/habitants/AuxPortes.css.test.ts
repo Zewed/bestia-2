@@ -75,3 +75,28 @@ describe("la partie « Aux portes », son lien vers l'historique (US-0342)", () 
     expect(regle(".historique:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 });
+
+describe("la partie « Aux portes », l'Entretien en plus et la confirmation (US-0340)", () => {
+  /** Les déclarations de la règle `selecteur` dans le bloc « @media (hover: hover) », écrite en retrait. */
+  const auSurvol = (selecteur: string) =>
+    [...CSS.matchAll(/@media \(hover: hover\) \{([\s\S]*?)\n\}/g)]
+      .map(([, bloc]) => bloc.match(new RegExp(`\\n  ${selecteur.replace(/[.*+?^${}()|[\]\\:]/g, "\\$&")} \\{([^}]*)\\}`))?.[1])
+      .find(Boolean) ?? "";
+
+  it("met le rappel de l'Entretien sous les boutons, sur toute la largeur de la ligne, en discret", () => {
+    const entretien = regle(".entretien");
+    expect(entretien).toContain("grid-column: 1 / -1;");
+    expect(entretien).toContain("color: var(--texte-discret);");
+    expect(pixels(".entretien", "font-size")).toBeLessThanOrEqual(13);
+  });
+
+  it("met « Confirmer l'accueil » dans la couleur d'alerte, qu'il garde au survol, et la phrase de la famine imminente en alerte, à la place du rappel", () => {
+    expect(regle(".accueillir[data-confirmer]")).toMatch(/background: var\(--mauvais\);[^}]*color: var\(--blanc-chaud\);/);
+    expect(auSurvol(".accueillir[data-confirmer]:hover")).toContain("background: var(--mauvais);");
+    // Plus loin dans la feuille que le survol des autres « Accueillir », pour l'emporter sur lui.
+    expect(CSS.indexOf(".accueillir[data-confirmer]:hover")).toBeGreaterThan(CSS.indexOf(".accueillir:not(:disabled):hover"));
+    const confirmation = regle(".confirmation");
+    expect(confirmation).toContain("grid-column: 1 / -1;");
+    expect(confirmation).toMatch(/color: var\(--mauvais\);[^}]*font-weight: var\(--graisse-titre\);/);
+  });
+});

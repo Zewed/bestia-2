@@ -2,7 +2,7 @@
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { VOYAGEUR_ALERTE_MINUTES, VOYAGEUR_ATTEND_HEURES } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ALERTE_MINUTES, VOYAGEUR_ATTEND_HEURES } from "@/reglages";
 
 /** Les actions serveur, tenues en suspens jusqu'à ce que le test les laisse finir, avec ce qu'elles rendent. */
 const actions = vi.hoisted(() => {
@@ -353,6 +353,163 @@ describe("ne jamais accueillir deux fois (US-0339)", () => {
     await finirLesActions("plus-de-place");
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
     expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [70]]);
+  });
+});
+
+describe("mesurer l'Entretien en plus avant d'accueillir (US-0340)", () => {
+  const ENTRETIEN = `Mangera ${ENTRETIEN_HABITANT_PAR_HEURE} Nourriture par heure`;
+  const PHRASE = `Famine imminente : un Habitant de plus mangera ${ENTRETIEN_HABITANT_PAR_HEURE} Nourriture par heure.`;
+  /** Le bouton d'accueil de la ligne d'un Voyageur, qu'il dise « Accueillir » ou « Confirmer l'accueil ». */
+  const accueil = (prenom: string) => within(ligne(prenom)).getAllByRole("button")[0] as HTMLButtonElement;
+  /** Ce que dit le bouton d'accueil de chaque ligne, et s'il est dans la couleur d'alerte. */
+  const accueils = () => prenoms().map((prenom) => [accueil(prenom!).textContent, accueil(prenom!).hasAttribute("data-confirmer")]);
+  /** La dernière ligne de texte de la ligne de chaque Voyageur, sous ses boutons. */
+  const dessous = () => prenoms().map((prenom) => ligne(prenom!).lastElementChild?.textContent);
+  /** Les messages annoncés de la partie. */
+  const alertes = () => within(partie()).queryAllByRole("alert").map((a) => a.textContent);
+
+  it(`rappelle sous « Accueillir », sur la ligne de chaque Voyageur, l'Entretien qu'il coûtera : « ${ENTRETIEN} »`, () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
+    expect(dessous()).toEqual([ENTRETIEN, ENTRETIEN, ENTRETIEN]);
+    for (const { prenom } of TROIS) expect(ligne(prenom).lastElementChild?.previousElementSibling?.contains(accueil(prenom))).toBe(true);
+  });
+
+  it("le rappelle aussi quand « Accueillir » est grisé faute de place, sans rien demander de plus", async () => {
+    render(<AuxPortes placesLibres={0} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+    expect(dessous()).toEqual([ENTRETIEN, ENTRETIEN, ENTRETIEN]);
+    await userEvent.setup().click(accueil("Ines"));
+    expect(accueils()).toEqual([
+      ["Accueillir", false],
+      ["Accueillir", false],
+      ["Accueillir", false],
+    ]);
+    expect(alertes()).toEqual([]);
+  });
+
+  it("accueille dès le premier toucher, sans confirmation, tant que l'avertissement « famine imminente » n'est pas actif", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente={false} />);
+    await userEvent.setup().click(accueil("Joran"));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    expect(prenoms()).toEqual(["Ines", "Ilda"]);
+  });
+
+  describe("quand l'avertissement « famine imminente » est actif", () => {
+    it("le premier toucher n'accueille personne : sur sa ligne, le bouton devient « Confirmer l'accueil », en alerte, et une phrase dit ce qu'il coûtera", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      await userEvent.setup().click(accueil("Joran"));
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+      expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
+      expect(accueils()).toEqual([
+        ["Accueillir", false],
+        ["Confirmer l'accueil", true],
+        ["Accueillir", false],
+      ]);
+      // La phrase prend la place du rappel, sur sa ligne seulement ; un lecteur d'écran l'entend aussitôt.
+      expect(dessous()).toEqual([ENTRETIEN, PHRASE, ENTRETIEN]);
+      expect(within(ligne("Joran")).getByRole("alert").textContent).toBe(PHRASE);
+      // Le bouton dit toujours, pour un lecteur d'écran, qui il accueille.
+      expect(accueil("Joran").getAttribute("aria-label")).toBe("Confirmer l'accueil de Joran");
+    });
+
+    it("accorde « de » au prénom : « Confirmer l'accueil d'Ines »", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      await userEvent.setup().click(accueil("Ines"));
+      expect(accueil("Ines").getAttribute("aria-label")).toBe("Confirmer l'accueil d'Ines");
+    });
+
+    it("le second toucher, sur « Confirmer l'accueil », accueille le Voyageur : sa ligne part aussitôt", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Confirmer l'accueil de Joran" }));
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+      expect(prenoms()).toEqual(["Ines", "Ilda"]);
+      expect(alertes()).toEqual([]);
+    });
+
+    it("n'accueille personne d'un double clic sur « Accueillir » : la confirmation reste demandée", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.dblClick(accueil("Joran"));
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+      expect(accueils()[1]).toEqual(["Confirmer l'accueil", true]);
+      await utilisateur.click(accueil("Joran"));
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    });
+
+    it("« Refuser » annule la confirmation : sur la même ligne, il refuse le Voyageur sans l'accueillir", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Refuser Joran" }));
+      expect(actions.refuserUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+      expect(prenoms()).toEqual(["Ines", "Ilda"]);
+      expect(alertes()).toEqual([]);
+    });
+
+    it("« Refuser » sur une autre ligne annule la confirmation demandée : sa ligne revient à « Accueillir »", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Refuser Ilda" }));
+      expect(accueils()).toEqual([
+        ["Accueillir", false],
+        ["Accueillir", false],
+      ]);
+      expect(dessous()).toEqual([ENTRETIEN, ENTRETIEN]);
+    });
+
+    it("un toucher ailleurs annule la confirmation ; le toucher suivant sur « Accueillir » la redemande", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      await utilisateur.click(document.body);
+      expect(accueils()[1]).toEqual(["Accueillir", false]);
+      expect(dessous()).toEqual([ENTRETIEN, ENTRETIEN, ENTRETIEN]);
+      await utilisateur.click(accueil("Joran"));
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+      expect(accueils()[1]).toEqual(["Confirmer l'accueil", true]);
+    });
+
+    it("au clavier, Échap ou passer à un autre bouton annule la confirmation", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      accueil("Joran").focus();
+      await utilisateur.keyboard("{Enter}");
+      expect(accueils()[1]).toEqual(["Confirmer l'accueil", true]);
+      await utilisateur.keyboard("{Escape}");
+      expect(accueils()[1]).toEqual(["Accueillir", false]);
+      await utilisateur.keyboard("{Enter}");
+      expect(accueils()[1]).toEqual(["Confirmer l'accueil", true]);
+      await utilisateur.tab();
+      expect(accueils()[1]).toEqual(["Accueillir", false]);
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+    });
+
+    it("toucher « Accueillir » sur une autre ligne y porte la confirmation, sans accueillir personne", async () => {
+      render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      await utilisateur.click(accueil("Ilda"));
+      expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+      expect(accueils()).toEqual([
+        ["Accueillir", false],
+        ["Accueillir", false],
+        ["Confirmer l'accueil", true],
+      ]);
+      expect(dessous()).toEqual([ENTRETIEN, ENTRETIEN, PHRASE]);
+    });
+
+    it("laisse accueillir dès le premier toucher quand la page relue n'a plus l'avertissement", async () => {
+      const { rerender } = render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+      const utilisateur = userEvent.setup();
+      await utilisateur.click(accueil("Joran"));
+      rerender(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={new Date(MAINTENANT.getTime() + 2_000)} famineImminente={false} />);
+      expect(accueils()[1]).toEqual(["Accueillir", false]);
+      await utilisateur.click(accueil("Ilda"));
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(72);
+    });
   });
 });
 

@@ -12,7 +12,7 @@ import { iconeDeMetier, lesMetiers } from "@/monde/metiers";
 import { nourriturePourEncore, tenueDeLaNourriture } from "@/monde/nourriture";
 import { quantiteExacte } from "@/monde/quantite";
 import type { Stock } from "@/monde/stocks";
-import { voyageursAuxPortes } from "@/monde/voyageurs";
+import { avertissementDeFamine, voyageursAuxPortes } from "@/monde/voyageurs";
 import { maintenant, vitesse } from "@/temps/horloge";
 import { AuxPortes } from "./AuxPortes";
 import { BandeauSansMetier } from "./BandeauSansMetier";
@@ -110,7 +110,14 @@ export default async function Habitants() {
           <div className={styles.colonne} style={COLONNE} data-etroit="">
             {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
             {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
-            <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} placesLibres={places - habitants.length} />
+            {/* US-0340 : la famine imminente lui fait confirmer, sur les Stocks et l'Entretien lus à l'heure. */}
+            <AuxPortes
+              voyageurs={voyageurs}
+              maintenant={maintenant()}
+              vitesse={vitesse()}
+              placesLibres={places - habitants.length}
+              famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure)}
+            />
             {entretien ? (
               <Bloc titre="Entretien">
                 <LigneEntretien entretien={entretien} />

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
-import { departDuVoyageur, ecartAvantVoyageur, recitDAccueil, recitDeDepart } from "./voyageurs";
+import { FAMINE_IMMINENTE_HEURES, VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
+import type { Stock } from "./stocks";
+import { avertissementDeFamine, departDuVoyageur, ecartAvantVoyageur, recitDAccueil, recitDeDepart } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -118,5 +119,46 @@ describe("le Récit des Voyageurs repartis sans avoir été accueillis (US-0337)
       titre: "4 Voyageurs ont repris la route",
       texte: "Ines, Joran, Ilda et Arno ont attendu aux portes sans qu'on les accueille.",
     });
+  });
+});
+
+describe("l'avertissement « famine imminente » au moment d'accueillir (US-0340)", () => {
+  /** Un Stock tel que la base le lit, en texte. */
+  const unStock = (id: string, famille: Stock["famille"], quantite: string, parHeure: string): Stock => ({
+    id,
+    nom: id,
+    famille,
+    quantite,
+    limite: "1000.000000",
+    parHeure,
+    entretienParHeure: "0.000000",
+    sources: [],
+  });
+  /** Les quatre Stocks d'un Foyer en prairie (+8 Viande, +14 Végétaux, +4 Bois et Pierre), avec ces quantités de Viande et de Végétaux. */
+  const stocks = (viande: string, vegetaux: string) => [
+    unStock("viande", "nourriture", viande, "8.000000"),
+    unStock("vegetaux", "nourriture", vegetaux, "14.000000"),
+    unStock("bois", "materiaux", "100.000000", "4.000000"),
+    unStock("pierre", "materiaux", "100.000000", "4.000000"),
+  ];
+
+  it("n'est pas actif quand la production couvre l'Entretien, même les Stocks vides", () => {
+    expect(avertissementDeFamine(stocks("100.000000", "100.000000"), "6.000000")).toBe(false);
+    expect(avertissementDeFamine(stocks("0.000000", "0.000000"), "22.000000")).toBe(false);
+  });
+
+  // Douze Habitants : 24 d'Entretien. La Viande est vide ; les Végétaux paient 16 par heure pour 14 produits.
+  it(`l'est, comme la bande d'alerte, quand la Nourriture ne tient plus que ${FAMINE_IMMINENTE_HEURES} heures, ou moins`, () => {
+    expect(avertissementDeFamine(stocks("0.000000", "26.000000"), "24.000000")).toBe(false);
+    expect(avertissementDeFamine(stocks("0.000000", "24.000000"), "24.000000")).toBe(true);
+    expect(avertissementDeFamine(stocks("0.000000", "22.000000"), "24.000000")).toBe(true);
+  });
+
+  it("le reste quand la Nourriture est épuisée, comme pendant une Famine : l'accueil demande la même confirmation", () => {
+    expect(avertissementDeFamine(stocks("0.000000", "0.000000"), "24.000000")).toBe(true);
+  });
+
+  it("n'est pas actif sans Stock de Nourriture", () => {
+    expect(avertissementDeFamine([], "24.000000")).toBe(false);
   });
 });

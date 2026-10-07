@@ -109,9 +109,19 @@
   cursor: not-allowed;
 }
 
+/* US-0340 : quand la famine est imminente, après un premier toucher, « Confirmer l'accueil », dans la couleur d'alerte. */
+.accueillir[data-confirmer] {
+  background: var(--mauvais);
+  color: var(--blanc-chaud);
+}
+
 @media (hover: hover) {
   .accueillir:not(:disabled):hover {
     background: var(--encre-survol);
+  }
+
+  .accueillir[data-confirmer]:hover {
+    background: var(--mauvais);
   }
 
   .refuser:hover {
@@ -123,6 +133,21 @@
 .refuser:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
+}
+
+/* US-0340 : sous les boutons, en discret, l'Entretien qu'un Habitant de plus coûtera. */
+.entretien {
+  grid-column: 1 / -1;
+  color: var(--texte-discret);
+  font-size: 12px;
+}
+
+/* US-0340 : à sa place, tant que l'accueil attend sa confirmation, ce que l'Habitant mangera, en alerte. */
+.confirmation {
+  grid-column: 1 / -1;
+  color: var(--mauvais);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
 }
 
 /* Quand personne n'attend. */

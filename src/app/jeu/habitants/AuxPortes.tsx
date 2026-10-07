@@ -1,12 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
+import { type MouseEvent, useEffect, useId, useOptimistic, useRef, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
-import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
+import { quantiteExacte } from "@/monde/quantite";
+import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
 import { accueillirUnVoyageur, refuserUnVoyageur } from "./actions-aux-portes";
 import styles from "./AuxPortes.module.css";
+
+/** US-0340 : ce que mangera un Habitant de plus, en Nourriture par heure, à la française : « 2 ». */
+const ENTRETIEN_EN_PLUS = quantiteExacte(String(ENTRETIEN_HABITANT_PAR_HEURE));
+
+/** US-0340 : « de Joran », « d'Ines ». */
+const de = (prenom: string) => (/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.test(prenom) ? `d'${prenom}` : `de ${prenom}`);
 
 /**
  * Un Voyageur tel que la partie « Aux portes » le montre : son prénom, l'heure du jeu de son arrivée et,
@@ -48,17 +55,26 @@ function depuisQuand(ms: number): string {
  * d'écran l'entend avec chaque bouton grisé. Les Voyageurs attendent toujours, et « Refuser » reste possible.
  *
  * US-0342 : en tête de la partie, « Historique » mène aux Voyageurs passés, que quelqu'un attende ou non.
+ *
+ * US-0340 : sous les boutons, l'Entretien qu'un Habitant de plus coûtera (« Mangera 2 Nourriture par heure » : pas « +2 », que la barre emploie pour une production). Quand
+ * l'avertissement « famine imminente » est actif (`famineImminente`, compté par le serveur), l'accueil se confirme
+ * sur place : le premier toucher sur « Accueillir » ne fait que changer sa ligne, le bouton devient « Confirmer
+ * l'accueil », dans la couleur d'alerte, et une phrase, annoncée, dit ce que l'Habitant mangera ; le second toucher
+ * accueille. « Refuser », un toucher ailleurs, le focus ailleurs ou Échap annulent ; le second clic d'un double clic
+ * ne confirme pas. Pendant une Famine, l'avertissement reste actif : l'accueil reste possible, confirmé de même.
  */
 export function AuxPortes({
   voyageurs,
   maintenant,
   vitesse = 1,
   placesLibres,
+  famineImminente = false,
 }: {
   voyageurs: VoyageurAffiche[];
   maintenant: Date;
   vitesse?: number;
   placesLibres: number;
+  famineImminente?: boolean;
 }) {
   // Les choix dont l'action n'a pas encore répondu : leurs lignes sont retirées d'avance ; un accueil prend déjà sa place.
   const [enCours, choisir] = useOptimistic<Choix[], Choix>([], (actuels, choix) => [...actuels, choix]);
@@ -73,17 +89,51 @@ export function AuxPortes({
   // Le temps écoulé depuis l'affichage, mesuré pour cette heure du jeu-là : celui d'une heure déjà dépassée ne compte plus.
   const [ecoule, setEcoule] = useState<{ base: number; ms: number } | null>(null);
 
+  // US-0340 : le Voyageur dont l'accueil attend sa confirmation, et le bouton qui la donne.
+  const [aConfirmer, setAConfirmer] = useState<number | null>(null);
+  const boutonDeConfirmation = useRef<HTMLButtonElement>(null);
+
   useEffect(() => {
     const depart = performance.now();
     const battement = setInterval(() => setEcoule({ base, ms: performance.now() - depart }), 1000);
     return () => clearInterval(battement);
   }, [base]);
 
+  // US-0340 : un toucher ou le focus ailleurs que sur « Confirmer l'accueil », ou Échap, annulent la confirmation.
+  useEffect(() => {
+    if (aConfirmer === null) return;
+    const ailleurs = (evenement: Event) => {
+      if (!boutonDeConfirmation.current?.contains(evenement.target as Node)) setAConfirmer(null);
+    };
+    const echap = (evenement: KeyboardEvent) => {
+      if (evenement.key === "Escape") setAConfirmer(null);
+    };
+    document.addEventListener("pointerdown", ailleurs);
+    document.addEventListener("focusin", ailleurs);
+    document.addEventListener("keydown", echap);
+    return () => {
+      document.removeEventListener("pointerdown", ailleurs);
+      document.removeEventListener("focusin", ailleurs);
+      document.removeEventListener("keydown", echap);
+    };
+  }, [aConfirmer]);
+
+  /**
+   * US-0340 : le toucher sur « Accueillir » ; quand l'avertissement « famine imminente » est actif, le premier
+   * demande la confirmation, le second accueille, sauf s'il n'est que le second clic d'un double clic.
+   */
+  function accueillir(voyageur: VoyageurAffiche, evenement: MouseEvent) {
+    if (famineImminente && aConfirmer !== voyageur.id) return setAConfirmer(voyageur.id);
+    if (famineImminente && evenement.detail > 1) return;
+    decider(voyageur, true);
+  }
+
   /**
    * Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. US-0339 : un
    * second toucher avant la réponse (un double clic, plus rapide que la ligne) ne relance rien pour ce Voyageur.
    */
   function decider(voyageur: VoyageurAffiche, accueil: boolean) {
+    setAConfirmer(null);
     if (enVol.current.has(voyageur.id)) return;
     enVol.current.add(voyageur.id);
     setAnnonce(null);
@@ -121,6 +171,8 @@ export function AuxPortes({
             const reste = v.departLe.getTime() - instant;
             // L'alerte vient avec le premier compte affiché sous le seuil (« 59 min »), à la minute supérieure comme lui.
             const alerte = Math.ceil(reste / 60_000) < VOYAGEUR_ALERTE_MINUTES;
+            // US-0340 : sans place, rien à confirmer ; une page relue sans l'avertissement n'en demande plus.
+            const confirmer = famineImminente && !plein && aConfirmer === v.id;
             return (
               <li key={v.id} className={styles.voyageur}>
                 <span className={styles.prenom}>{v.prenom}</span>
@@ -131,19 +183,28 @@ export function AuxPortes({
                 <div className={styles.choix}>
                   {/* Deux boutons par ligne : un lecteur d'écran entend aussi qui il accueille, ou refuse. */}
                   <button
+                    ref={confirmer ? boutonDeConfirmation : undefined}
                     type="button"
                     className={styles.accueillir}
-                    aria-label={`Accueillir ${v.prenom}`}
+                    aria-label={confirmer ? `Confirmer l'accueil ${de(v.prenom)}` : `Accueillir ${v.prenom}`}
+                    data-confirmer={confirmer ? "" : undefined}
                     disabled={plein}
                     aria-describedby={plein ? phrasePlace : undefined}
-                    onClick={() => decider(v, true)}
+                    onClick={(evenement) => accueillir(v, evenement)}
                   >
-                    Accueillir
+                    {confirmer ? "Confirmer l'accueil" : "Accueillir"}
                   </button>
                   <button type="button" className={styles.refuser} aria-label={`Refuser ${v.prenom}`} onClick={() => decider(v, false)}>
                     Refuser
                   </button>
                 </div>
+                {confirmer ? (
+                  <p className={styles.confirmation} role="alert">
+                    {`Famine imminente : un Habitant de plus mangera ${ENTRETIEN_EN_PLUS} Nourriture par heure.`}
+                  </p>
+                ) : (
+                  <p className={styles.entretien}>{`Mangera ${ENTRETIEN_EN_PLUS} Nourriture par heure`}</p>
+                )}
               </li>
             );
           })}

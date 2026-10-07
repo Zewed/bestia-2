@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-248 points au total.
+247 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -19,7 +19,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0326](03-les-habitants.md) · Voir des Habitants s'en aller : l'ordre des départs suit une seule règle : les Habitants sans Métier d'abord, ou au hasard.
 - [US-0329](03-les-habitants.md) · Afficher un Territoire sans Habitant : la Famine peut faire partir le dernier Habitant, ou elle en garde toujours au moins un.
 - [US-0330](03-les-habitants.md) · Laisser partir un Habitant : le joueur peut renvoyer un Habitant de lui-même.
-- [US-0340](03-les-habitants.md) · Mesurer l'Entretien en plus avant d'accueillir : pendant une Famine, l'accueil reste possible.
 - [US-0341](03-les-habitants.md) · Fermer les portes aux Voyageurs pendant une Famine : aucun nouveau Voyageur ne se présente pendant une Famine.
 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
