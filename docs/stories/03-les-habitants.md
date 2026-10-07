@@ -137,6 +137,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0313 · Signaler les Habitants sans Métier
 **En tant que** joueur, **je veux** être prévenu quand des Habitants n'ont pas de Métier, **afin de** ne pas laisser de bras sans emploi.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sous le titre de la page Habitants, un bandeau sable « 2 Habitants sans Métier » avec un lien « Voir » vers la liste filtrée sur eux ; il baisse dès qu'un Métier est donné, avant même la réponse du serveur, et disparaît à zéro. L'entrée « Habitants » de la navigation porte le même point que pour les Voyageurs, et son nom dit les deux (« Habitants, 2 sans Métier, un Voyageur attend »). Vérifié en vrai.
 - **Débloquée par** : US-0309
 - **Critères d'acceptation** :
   - Quand au moins un Habitant est sans Métier, un bandeau « N Habitants sans Métier » s'affiche en haut de la page Habitants.

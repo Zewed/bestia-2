@@ -19,6 +19,51 @@
 }
 
 /*
+ * US-0313 : sous le titre, au-dessus des blocs, le bandeau des Habitants sans Métier, sobre, sur le sable :
+ * leur nombre en gras, puis « Voir », un lien au pouce qui filtre la liste sur eux.
+ */
+.sansMetier {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  margin-bottom: var(--ecart);
+  padding: 2px 4px 2px 16px;
+  border-radius: var(--arrondi);
+  background: var(--sable);
+  color: var(--encre);
+}
+
+.nombreSansMetier {
+  padding: 10px 0;
+  font-weight: var(--graisse-titre);
+}
+
+.voirSansMetier {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--arrondi-moyen);
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .voirSansMetier:hover {
+    background: var(--survol);
+  }
+}
+
+.voirSansMetier:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: -2px;
+}
+
+/*
  * US-0305 : le nombre d'Habitants sur la place du Territoire, et « Plus de place » à côté quand elle est
  * toute prise. US-0306 : quand on fait défiler la liste, cet en-tête reste collé sous la barre du haut
  * (bande des ressources et encoche comprises, voir formes.css) ; la liste passe dessous, sur le fond du

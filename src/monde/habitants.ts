@@ -72,6 +72,12 @@ export async function nombreDHabitants(pool: Pool, territoireId: number): Promis
   return rows[0].nombre;
 }
 
+/** US-0313 : le nombre d'Habitants sans Métier d'un Territoire, pour le repère de l'entrée « Habitants » de la navigation. */
+export async function nombreSansMetier(pool: Pool, territoireId: number): Promise<number> {
+  const { rows } = await pool.query<{ nombre: number }>(`select count(*)::int as nombre from habitant where territoire_id = $1 and metier is null`, [territoireId]);
+  return rows[0].nombre;
+}
+
 /**
  * US-0305 : chaque source de place du Territoire $1, une ligne par source, avec les places qu'elle offre.
  * Pour l'instant, le seul Foyer ; les huttes s'y ajouteront à l'étape 25, d'un « union all » de plus.

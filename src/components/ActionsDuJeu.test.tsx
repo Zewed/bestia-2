@@ -14,6 +14,7 @@ const garde = vi.hoisted(() => ({
   habitantsALHeure: vi.fn(async () => 3),
   recitsNonLusALHeure: vi.fn(async () => 0),
   voyageursALHeure: vi.fn(async () => 0),
+  sansMetierALHeure: vi.fn(async () => 0),
 }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
@@ -30,6 +31,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     garde.habitantsALHeure.mockClear();
     garde.recitsNonLusALHeure.mockClear();
     garde.voyageursALHeure.mockClear();
+    garde.sansMetierALHeure.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
     garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, territoireId: null, recitLu: false, ...chef });
@@ -152,6 +154,43 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
     const html = await rendu();
     expect(html.match(/<a ([^>]*href="\/jeu\/habitants"[^>]*)>(.*?)<\/a>/)?.[2]).toMatch(/^<span[^>]*>Habitants<\/span>$/);
+  });
+
+  it("signale du même repère sur l'entrée « Habitants » les Habitants sans Métier, comptés avec le reste (US-0313)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    garde.sansMetierALHeure.mockResolvedValueOnce(2);
+    garde.voyageursALHeure.mockResolvedValueOnce(1);
+    const html = await rendu();
+    expect(garde.sansMetierALHeure).toHaveBeenCalledWith(12);
+    const habitants = html.match(/<a ([^>]*href="\/jeu\/habitants"[^>]*)>(.*?)<\/a>/);
+    expect(habitants?.[1]).toMatch(/aria-label="Habitants, 2 sans Métier, un Voyageur attend"/);
+    expect(habitants?.[2]).toMatch(/^<span[^>]*>Habitants<\/span><span[^>]*aria-hidden="true"[^>]*><\/span>$/);
+  });
+
+  it("lit les Habitants sans Métier en même temps que les Stocks, les Habitants, les Récits et les Voyageurs (US-0313)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    const lectures: string[] = [];
+    let finir = () => {};
+    garde.stocksALHeure.mockImplementationOnce(async () => {
+      lectures.push("stocks");
+      await new Promise<void>((fin) => (finir = fin));
+      return [];
+    });
+    garde.sansMetierALHeure.mockImplementationOnce(async () => (lectures.push("sans Métier"), 0));
+    const rendue = rendu();
+    await vi.waitFor(() => expect(lectures).toEqual(["stocks", "sans Métier"]));
+    finir();
+    await rendue;
+  });
+
+  it("ne compte pas les Habitants sans Métier avant le récit d'arrivée, ni sans Territoire (US-0313)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    await rendu();
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: true });
+    await rendu();
+    joueur({ nomDeChef: null });
+    await rendu();
+    expect(garde.sansMetierALHeure).not.toHaveBeenCalled();
   });
 
   it("ne compte pas les Voyageurs avant le récit d'arrivée, ni sans Territoire (US-0332)", async () => {

@@ -218,6 +218,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     const html = renderToStaticMarkup(await Habitants());
     expect(morceaux(html)).toEqual([
       "Habitants",
+      // US-0313 : le bandeau des Habitants sans Métier.
+      ...["3 Habitants sans Métier", "Voir"],
       "3 Habitants sur 5 places",
       // US-0309 : les compteurs, chacun son nom et son nombre, après « Tous » (US-0314).
       ...["Tous", "Sans Métier ", "3"],
@@ -234,7 +236,11 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       "Métiers",
       ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
     ]);
-    expect(html).not.toMatch(/<(a|form|input|select)[ >]/);
+    expect(html).not.toMatch(/<(form|input|select)[ >]/);
+    // Le seul lien : le raccourci du bandeau vers les Habitants sans Métier (US-0313).
+    expect([...html.matchAll(/<a ([^>]*)>(.*?)<\/a>/g)].map(([, attributs, texte]) => [attributs.match(/href="([^"]*)"/)?.[1], texte])).toEqual([
+      ["/jeu/habitants?metier=sans", "Voir"],
+    ]);
     // Les seuls boutons : ceux qui filtrent la liste (US-0314), puis ceux qui donnent un Métier (US-0308).
     expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map(([, bouton]) => morceaux(bouton))).toEqual([
       ["Tous"],
@@ -242,6 +248,39 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       ...HUIT_METIERS.map((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.map(() => ["Choisir un Métier"]),
     ]);
+  });
+
+  it("signale en haut de la page, sous le titre et au-dessus des blocs, les Habitants sans Métier, avec « Voir » qui mène à eux (US-0313)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(
+      /<main[^>]*><h1[^>]*>Habitants<\/h1><p[^>]*><strong[^>]*>3 Habitants sans Métier<\/strong><a[^>]*href="\/jeu\/habitants\?metier=sans"[^>]*>Voir<\/a><\/p><div[^>]*><section[^>]*--largeur:8/,
+    );
+  });
+
+  it("compte sur les Habitants de la liste même : « 1 Habitant sans Métier » (US-0313)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
+      { id: 42, prenom: "Fenn", ...UN_HABITANT, metier: "Mineur" },
+    ]);
+    expect(renderToStaticMarkup(await Habitants())).toContain(">1 Habitant sans Métier<");
+    expect(habitants.habitantsDuTerritoire).toHaveBeenCalledTimes(1);
+  });
+
+  it("n'a pas de bandeau quand tous les Habitants ont un Métier, ni sans Habitant (US-0313)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
+      { id: 42, prenom: "Fenn", ...UN_HABITANT, metier: "Mineur" },
+    ]);
+    let html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div/);
+    expect(html).not.toContain("<a ");
+    connecte(0);
+    html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div/);
   });
 
   it("reste sur la page Habitants pour un joueur entré dans son Foyer : recharger la page y ramène", async () => {
@@ -347,8 +386,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   it("met l'Entretien à côté de la liste sur ordinateur, dessous sur mobile, dans un bloc à lui (US-0318)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    // US-0332 : sous « Aux portes », en tête de la colonne.
-    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>/);
+    // US-0332 : sous « Aux portes », en tête de la colonne. US-0313 : les blocs suivent le bandeau des sans Métier.
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><p[^>]*>.*?<\/p><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>/);
   });
 
   it("relit l'Entretien à chaque affichage : il suit chaque arrivée et chaque départ (US-0318)", async () => {
@@ -533,6 +572,18 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".effectif:focus-visible")).toContain("outline: 2px solid var(--encre);");
     // Un filtre sans personne : la phrase à la place de la liste, en discret.
     expect(regle(".personne")).toContain("color: var(--texte-discret);");
+  });
+
+  it("pose le bandeau des sans Métier sur le sable, sans rien de criard, son lien « Voir » au pouce (US-0313)", () => {
+    const bandeau = regle(".sansMetier");
+    expect(bandeau).toContain("background: var(--sable);");
+    expect(bandeau).toContain("color: var(--encre);");
+    expect(bandeau).toContain("flex-wrap: wrap;");
+    expect(bandeau).not.toMatch(/animation|var\(--mauvais\)|var\(--rose\)/);
+    const voir = regle(".voirSansMetier");
+    expect(voir).toContain("min-height: 44px;");
+    expect(voir).toContain("text-decoration: underline;");
+    expect(regle(".voirSansMetier:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 
   it("met la tenue de la Nourriture en gras, dans la couleur d'alerte quand elle baisse (US-0320)", () => {

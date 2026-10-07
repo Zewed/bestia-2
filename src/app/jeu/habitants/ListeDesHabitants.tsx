@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useOptimistic, useState, useTransition } from "react";
+import { useEffect, useId, useState, useTransition } from "react";
 import { donnerUnMetier } from "./actions";
+import { useHabitantsMontres } from "./HabitantsMontres";
 import styles from "./page.module.css";
 
 /** Un Habitant tel que la liste le montre : son prénom, le nom de son Métier (null sans Métier) et son état. */
@@ -47,11 +48,12 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  * US-0314 : chaque compteur filtre la liste sur son Métier, « Tous », en tête de la rangée, retire le filtre,
  * et toucher le compteur pressé aussi. Le filtre ne touche qu'à la liste, sans recharger la page ; il vit
  * dans l'adresse, qui survit au rechargement et sert de lien. Un identifiant inconnu ne filtre rien.
+ *
+ * US-0313 : dans la page, les Habitants montrés, Métier donné d'avance compris, sont ceux qu'elle partage avec le
+ * bandeau des sans Métier (HabitantsMontres).
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
-  const [affiches, montrerLeMetier] = useOptimistic(habitants, (actuels, donne: { id: number; metier: string }) =>
-    actuels.map((h) => (h.id === donne.id ? { ...h, metier: donne.metier } : h)),
-  );
+  const [affiches, montrerLeMetier] = useHabitantsMontres(habitants);
   const recherche = useSearchParams();
   const effectifs = effectifsParMetier(affiches, metiers);
   const filtre = effectifs.find((e) => e.id === recherche.get(PARAMETRE_DU_FILTRE)) ?? null;

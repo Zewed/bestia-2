@@ -12,7 +12,7 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
+import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, nombreSansMetier, placesDuTerritoire } from "./habitants";
 import { stocksDuTerritoire } from "./stocks";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
@@ -220,6 +220,27 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     expect(await nombreDHabitants(pool, ta)).toBe(1);
     expect(await nombreDHabitants(pool, tb)).toBe(3);
     expect(await nombreDHabitants(pool, -1)).toBe(0);
+  });
+
+  it("compte les Habitants sans Métier du Territoire pour la navigation, et suit chaque Métier donné, chaque arrivée et chaque départ (US-0313)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await nombreSansMetier(pool, ta)).toBe(3);
+    const [h1, h2] = (await habitants(ta)).map((h) => h.id);
+    expect(await enregistrerLeMetier(pool, ta, h1, "chasseur")).toBe(true);
+    expect(await nombreSansMetier(pool, ta)).toBe(2);
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Arno', null), ($1, 'Dara', 'mineur')", [ta]);
+    expect(await nombreSansMetier(pool, ta)).toBe(3);
+    await pool.query("delete from habitant where territoire_id = $1 and metier is null and id <> $2", [ta, h2]);
+    expect(await nombreSansMetier(pool, ta)).toBe(1);
+    expect(await enregistrerLeMetier(pool, ta, h2, "bucheron")).toBe(true);
+    expect(await nombreSansMetier(pool, ta)).toBe(0);
+    // Le voisin garde les siens, et un Territoire qui n'existe pas n'en a aucun.
+    expect(await nombreSansMetier(pool, tb)).toBe(3);
+    expect(await nombreSansMetier(pool, -1)).toBe(0);
   });
 
   it("rend la place du Territoire : au départ, les 5 places du Foyer, quel que soit le nombre d'Habitants (US-0305)", async () => {

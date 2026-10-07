@@ -16,6 +16,8 @@ import type { Stock } from "@/monde/stocks";
 import { voyageursAuxPortes } from "@/monde/voyageurs";
 import { maintenant, vitesse } from "@/temps/horloge";
 import { AuxPortes } from "./AuxPortes";
+import { BandeauSansMetier } from "./BandeauSansMetier";
+import { HabitantsMontres } from "./HabitantsMontres";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
 
@@ -85,7 +87,8 @@ function LigneMetier({ metier }: { metier: Metier }) {
 const COLONNE = { "--largeur": 4 } as CSSProperties;
 
 /**
- * La page Habitants (US-0302), ouverte depuis la navigation : leur nombre sur la place du Territoire,
+ * La page Habitants (US-0302), ouverte depuis la navigation : sous le titre, tant qu'il y en a, le bandeau des
+ * Habitants sans Métier (US-0313) ; puis leur nombre sur la place du Territoire,
  * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), qui
  * filtrent la liste (US-0314), puis une ligne par Habitant avec son prénom, son Métier et son état, dans
  * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308) ; à côté,
@@ -106,43 +109,45 @@ export default async function Habitants() {
     territoireId === null ? [] : stocksALHeure(territoireId),
     territoireId === null ? [] : voyageursAuxPortes(getPool(), territoireId),
   ]);
+  const montres = habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }));
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Habitants</h1>
-      <Grille>
-        <Bloc largeur={8} className={styles.liste}>
-          <div className={styles.entete}>
-            <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
-            {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
+      {/* US-0313 : le bandeau des sans Métier compte sur les Habitants de la liste, Métier donné d'avance compris. */}
+      <HabitantsMontres habitants={montres}>
+        <BandeauSansMetier />
+        <Grille>
+          <Bloc largeur={8} className={styles.liste}>
+            <div className={styles.entete}>
+              <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
+              {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
+            </div>
+            {habitants.length > 0 ? (
+              <ListeDesHabitants habitants={montres} metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))} />
+            ) : null}
+          </Bloc>
+          <div className={styles.colonne} style={COLONNE} data-etroit="">
+            {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
+            {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse. */}
+            <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} />
+            {entretien ? (
+              <Bloc titre="Entretien">
+                <LigneEntretien entretien={entretien} />
+                <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
+              </Bloc>
+            ) : null}
+            {metiers.length > 0 ? (
+              <Bloc titre="Métiers">
+                <ul className={styles.metiers}>
+                  {metiers.map((m) => (
+                    <LigneMetier key={m.id} metier={m} />
+                  ))}
+                </ul>
+              </Bloc>
+            ) : null}
           </div>
-          {habitants.length > 0 ? (
-            <ListeDesHabitants
-              habitants={habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }))}
-              metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))}
-            />
-          ) : null}
-        </Bloc>
-        <div className={styles.colonne} style={COLONNE} data-etroit="">
-          {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
-          {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse. */}
-          <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} />
-          {entretien ? (
-            <Bloc titre="Entretien">
-              <LigneEntretien entretien={entretien} />
-              <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
-            </Bloc>
-          ) : null}
-          {metiers.length > 0 ? (
-            <Bloc titre="Métiers">
-              <ul className={styles.metiers}>
-                {metiers.map((m) => (
-                  <LigneMetier key={m.id} metier={m} />
-                ))}
-              </ul>
-            </Bloc>
-          ) : null}
-        </div>
-      </Grille>
+        </Grille>
+      </HabitantsMontres>
     </main>
   );
 }

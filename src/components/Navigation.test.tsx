@@ -81,6 +81,33 @@ describe("navigation du jeu (US-0302)", () => {
     expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, "Habitants, 3 Voyageurs attendent", "Récits, 2 non lus"]);
   });
 
+  it("signale du même repère sur l'entrée « Habitants » des Habitants sans Métier, et le dit dans son nom : « Habitants, 2 sans Métier » (US-0313)", () => {
+    render(<Navigation sansMetier={2} />);
+    const habitants = screen.getByRole("link", { name: "Habitants, 2 sans Métier" });
+    expect(habitants.getAttribute("href")).toBe("/jeu/habitants");
+    expect(habitants.textContent).toBe("Habitants");
+    expect(habitants.querySelectorAll("[aria-hidden='true']")).toHaveLength(1);
+    cleanup();
+    render(<Navigation sansMetier={1} />);
+    expect(screen.getByRole("link", { name: "Habitants, 1 sans Métier" }).textContent).toBe("Habitants");
+  });
+
+  it("n'a qu'un repère pour les Habitants sans Métier et les Voyageurs aux portes, et dit les deux dans son nom (US-0313)", () => {
+    render(<Navigation sansMetier={2} voyageurs={1} />);
+    const habitants = screen.getByRole("link", { name: "Habitants, 2 sans Métier, un Voyageur attend" });
+    expect(habitants.querySelectorAll("[aria-hidden='true']")).toHaveLength(1);
+    cleanup();
+    render(<Navigation sansMetier={3} voyageurs={2} recitsNonLus={4} />);
+    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, "Habitants, 3 sans Métier, 2 Voyageurs attendent", "Récits, 4 non lus"]);
+  });
+
+  it("retire le repère dès que tous les Habitants ont un Métier et que personne n'attend aux portes (US-0313)", () => {
+    render(<Navigation sansMetier={0} voyageurs={0} />);
+    const habitants = screen.getByRole("link", { name: "Habitants" });
+    expect(habitants.querySelector("[aria-hidden='true']")).toBeNull();
+    expect(habitants.hasAttribute("aria-label")).toBe(false);
+  });
+
   it("marque l'entrée de la page affichée, et elle seule", () => {
     render(<Navigation />);
     expect(marquees()).toEqual(["Foyer"]);
