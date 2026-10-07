@@ -1,0 +1,23 @@
+src/components/Ressources.test.tsx
+  s_97a431cfa65ca7::t_275afd148fd71d 204-223
+src/monde/surplus.db.test.ts
+  s_97a431cfa65ca7::t_fec4be7481e347 1-117
+src/monde/production.ts
+  s_97a431cfa65ca7::t_75530c177fb1ca 26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3b0c78c3ba135f5216157efae55870d6c9705df3",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
