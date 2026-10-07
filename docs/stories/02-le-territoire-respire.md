@@ -154,6 +154,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0215 · Détailler une ressource au toucher
 **En tant que** joueur, **je veux** toucher une ressource sur mon téléphone pour en voir le détail, **afin de** comprendre ma production sans survol possible.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot), sans code nouveau : la bulle d'US-0204 et son détail d'US-0214 répondent déjà au toucher. Vérifié en vrai à 320 px : toucher la Pierre ouvre son détail dans l'écran (de 182 à 316 px), toucher la Viande le remplace (de 4 à 138 px), toucher ailleurs le ferme ; sous 1 100 px de large, la production horaire n'apparaît que dans ce détail.
 - **Débloquée par** : US-0207, US-0214
 - **Critères d'acceptation** :
   - Sur mobile, toucher une ressource ouvre le même détail qu'au survol.
