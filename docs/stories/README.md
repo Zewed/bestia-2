@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0407** · Enchaîner les Biomes de façon naturelle ; le jalon 2 est terminé, le jalon 4 a commencé en parallèle de la fin du jalon 3. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : la fin du jalon 3 et le début du jalon 4, par vagues parallèles.
+Dernière story livrée : **US-0408** · Créer la mer ; le jalon 2 est terminé, le jalon 4 a commencé en parallèle de la fin du jalon 3. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : la fin du jalon 3 et le début du jalon 4, par vagues parallèles.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0407** · Enchaîner les Biomes de façon naturel
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **65 étapes** | **748** | **250** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (154 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (153 au total).
 
 ## Lire une story
 

@@ -55,7 +55,7 @@ export function champ(grille: Grille, graine: number, taille: number): number[] 
 }
 
 /** Une file où sort d'abord la plus petite clé ; à égalité, la plus petite Case : un ordre fixé, sans hasard. */
-class FileDePriorite {
+export class FileDePriorite {
   private tas: { cle: number; case_: number; province: number }[] = [];
 
   get taille(): number {

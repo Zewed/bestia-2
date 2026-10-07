@@ -80,10 +80,11 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0408 · Créer la mer
 **En tant que** joueur, **je veux** trouver de grandes étendues de mer, **afin de** parcourir un Monde aux paysages variés.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). La mer couvre 15 % des Cases d'un Monde généré, en une à trois étendues d'au moins 300 Cases d'un seul tenant, jamais jointives, sans Case de mer isolée, jamais dans le Cœur sauvage (au moins 4 Cases de lui) ; elle peut toucher la Couronne, qui garde de la terre pour 90 Foyers. Toute l'eau est en variante « mer » ; côtes, lacs et rivières viennent ensuite. Prouvé sur 21 graines, tenu sur 600 (mers de 414 Cases au moins). Rien de visible.
 - **Débloquée par** : US-0406
 - **Critères d'acceptation** :
   - La mer forme de grandes étendues d'eau d'un seul tenant.
-  - Elle couvre (chiffre à régler) des Cases du Monde.
+  - Elle couvre 15 % des Cases du Monde (provisoire, `MER_PART`).
   - Elle peut toucher la Couronne, mais la Couronne garde assez de Cases de terre pour les naissances.
 
 ### US-0409 · Border la mer de côtes

@@ -11,7 +11,7 @@ import { BIOMES_DE_TERRE, champ, climatMoyen, regionsDe, type Biome, type BiomeD
 /** US-0406 : l'échelle du climat, en Cases à peu près : la largeur d'une grande région. */
 const TAILLE_DU_CLIMAT = 28;
 /** US-0407 : la force du bruit sur la température, qui va de −1 au milieu du côté froid à 1 au milieu du côté chaud. */
-const BRUIT_DE_TEMPERATURE = 0.45;
+const BRUIT_DE_TEMPERATURE = 0.35;
 
 /**
  * US-0407 : le climat de chaque Case. Sa température va de −1 au milieu du côté froid du Monde à 1 au

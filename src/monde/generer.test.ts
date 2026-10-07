@@ -7,6 +7,9 @@ import {
   COURONNE_ANNEAUX,
   ECART_ENTRE_FOYERS,
   JOUEURS_PAR_MONDE,
+  MER_MIN_CASES,
+  MER_PART,
+  MERS_MAX,
   MONDE_RAYON,
   PART_BIOME_MAX,
   PART_BIOME_MIN,
@@ -353,5 +356,39 @@ describe("Biomes enchaînés de façon naturelle (US-0407)", () => {
     // Presque toutes les montagnes sont dans ces chaînes : celles du Cœur sont peu de chose.
     const enChaines = chaines.reduce((s, r) => s + r.length, 0);
     expect(enChaines / cases.filter((c) => c.biome === "montagne").length).toBeGreaterThan(0.9);
+  });
+});
+
+describe("mer (US-0408)", () => {
+  const mersDe = (cases: CaseGeneree[]) => regionsDe(cases.filter((c) => c.variante === "mer"));
+
+  it("fixe les réglages de la mer : 15 % des Cases du Monde, en une à trois mers d'au moins 300 Cases", () => {
+    expect([MER_PART, MERS_MAX, MER_MIN_CASES]).toEqual([0.15, 3, 300]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "couvre 15 % des Cases du Monde, à 2 points près, en une à trois grandes étendues d'un seul tenant, sans Case de mer isolée (graine %i)",
+    (graine) => {
+      const cases = mondeDe(graine);
+      const mer = cases.filter((c) => c.variante === "mer");
+      expect(Math.abs(mer.length / cases.length - MER_PART)).toBeLessThanOrEqual(0.02);
+      // L'eau du Monde est toute de la mer, pour l'instant : les côtes, lacs et rivières viennent après.
+      expect(cases.filter((c) => c.biome === "eau")).toEqual(mer);
+      const mers = mersDe(cases);
+      expect(mers.length).toBeGreaterThanOrEqual(1);
+      expect(mers.length).toBeLessThanOrEqual(MERS_MAX);
+      for (const etendue of mers) expect(etendue.length).toBeGreaterThanOrEqual(MER_MIN_CASES);
+      const deMer = new Set(mer.map(cle));
+      expect(mer.filter((c) => voisines(c).every((v) => !deMer.has(cle(v))))).toEqual([]);
+    },
+  );
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("n'entre jamais dans le Cœur sauvage (graine %i)", (graine) => {
+    expect(mondeDe(graine).filter((c) => c.coeur && c.biome === "eau")).toEqual([]);
+  });
+
+  it("peut toucher la Couronne, et change d'un Monde à l'autre : une, deux ou trois mers selon la graine", () => {
+    expect(GRAINES.some((graine) => mondeDe(graine).some((c) => c.couronne && c.variante === "mer"))).toBe(true);
+    expect(new Set(GRAINES.map((graine) => mersDe(mondeDe(graine)).length))).toEqual(new Set([1, 2, 3]));
   });
 });

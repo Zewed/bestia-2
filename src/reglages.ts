@@ -151,3 +151,13 @@ export const PARTS_DES_BIOMES = { prairie: 0.2, foret: 0.17, jungle: 0.1, savane
  * qu'on y trouve, sa largeur ses Cases divisées par sa longueur.
  */
 export const CHAINE_ALLONGEMENT_MIN = 3;
+
+/**
+ * US-0408 : la mer couvre 15 % des Cases d'un Monde généré, à 2 points près (valeur provisoire, à régler en
+ * jouant)…
+ */
+export const MER_PART = 0.15;
+/** … en une à trois mers (valeur provisoire)… */
+export const MERS_MAX = 3;
+/** … chacune d'au moins 300 Cases d'un seul tenant (valeur provisoire). */
+export const MER_MIN_CASES = 300;
