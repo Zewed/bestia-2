@@ -290,16 +290,38 @@
   cursor: default;
 }
 
+/*
+ * US-0311 : dans le dépliant d'un Habitant qui a un Métier, « Sans Métier », en dernier, sur toute la largeur de
+ * la grille : sans icône et en pointillés, pour ne pas le confondre avec un Métier.
+ */
+.sansMetierAuChoix {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  border: 1px dashed var(--galet);
+  border-radius: var(--arrondi-petit);
+  background: transparent;
+  color: var(--texte-2);
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
 @media (hover: hover) {
   .choisir:hover,
-  .metierAuChoix:enabled:hover {
+  .metierAuChoix:enabled:hover,
+  .sansMetierAuChoix:hover {
     border-color: var(--galet);
     background: var(--bloc-3);
   }
 }
 
 .choisir:focus-visible,
-.metierAuChoix:focus-visible {
+.metierAuChoix:focus-visible,
+.sansMetierAuChoix:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
 }

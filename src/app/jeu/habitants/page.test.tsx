@@ -37,7 +37,7 @@ const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
-vi.mock("./actions", () => ({ donnerUnMetier: vi.fn() }));
+vi.mock("./actions", () => ({ donnerUnMetier: vi.fn(), retirerLeMetier: vi.fn() }));
 // US-0314 : l'adresse de la page, que la liste lit pour son filtre, dès le rendu sur le serveur.
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
@@ -70,7 +70,7 @@ const STOCKS_DE_PRAIRIE: Stock[] = [
   unStock("pierre", "materiaux", "100.000000", "4.000000"),
 ];
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0314, US-0318, US-0320)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0311, US-0314, US-0318, US-0320)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     adresse.recherche = "";
@@ -555,8 +555,20 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(actuel).toContain("background: var(--encre);");
     expect(actuel).toContain("color: var(--ivoire);");
     expect(actuel).toContain("cursor: default;");
-    expect(css).toContain(".metierAuChoix:enabled:hover {");
+    expect(css).toMatch(/\.metierAuChoix:enabled:hover[ ,]/);
     expect(css).not.toMatch(/\.metierAuChoix:hover/);
+  });
+
+  it("met « Sans Métier » en dernier dans le dépliant, sur toute sa largeur, en pointillés pour ne pas le confondre avec un Métier (US-0311)", () => {
+    const sansMetier = regle(".sansMetierAuChoix");
+    // Un bouton ne s'étire pas dans sa grille sans être lui-même une boîte flexible.
+    expect(sansMetier).toContain("display: flex;");
+    expect(sansMetier).toContain("grid-column: 1 / -1;");
+    expect(sansMetier).toContain("border: 1px dashed var(--galet);");
+    expect(sansMetier).toContain("cursor: pointer;");
+    expect(sansMetier).toContain("font: inherit;");
+    expect(css).toMatch(/\.sansMetierAuChoix:hover/);
+    expect(css).toMatch(/\.sansMetierAuChoix:focus-visible/);
   });
 
   it("fait passer les compteurs à la ligne sur un écran étroit, chacun son icône à sa taille, et rien qui ne colle au défilement (US-0309)", () => {

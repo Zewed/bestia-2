@@ -8,7 +8,7 @@ vi.mock("@/monde/habitants", () => habitants);
 const cache = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/cache", () => cache);
 
-import { donnerUnMetier } from "./actions";
+import { donnerUnMetier, retirerLeMetier } from "./actions";
 
 describe("donner un Métier à un Habitant (US-0308)", () => {
   afterEach(() => {
@@ -65,6 +65,54 @@ describe("donner un Métier à un Habitant (US-0308)", () => {
   it("ne fait rien en production tant que l'entrée du jeu est fermée", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
     await donnerUnMetier(40, "bucheron");
+    expect(garde.exigerCompte).not.toHaveBeenCalled();
+    expect(habitants.enregistrerLeMetier).not.toHaveBeenCalled();
+  });
+});
+
+describe("retirer son Métier à un Habitant (US-0311)", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    garde.exigerCompte.mockReset();
+    habitants.enregistrerLeMetier.mockClear();
+    cache.refresh.mockClear();
+  });
+
+  it("passe par la garde, puis remet sans Métier l'Habitant dans le Territoire du joueur, et relit la page", async () => {
+    garde.exigerCompte.mockResolvedValue({ id: 7, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    await retirerLeMetier(40);
+    expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/habitants");
+    expect(habitants.enregistrerLeMetier).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 40, null);
+    expect(cache.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("relit la page même quand rien n'a changé (Habitant d'un autre) : la page relue fait foi", async () => {
+    garde.exigerCompte.mockResolvedValue({ territoireId: 12 });
+    habitants.enregistrerLeMetier.mockResolvedValueOnce(false);
+    await retirerLeMetier(41);
+    expect(cache.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("s'arrête à la garde sans session : rien n'est retiré", async () => {
+    garde.exigerCompte.mockRejectedValue(Object.assign(new Error("NEXT_REDIRECT"), { digest: "NEXT_REDIRECT;replace;/connexion?suite=%2Fjeu%2Fhabitants;307;" }));
+    await expect(retirerLeMetier(40)).rejects.toMatchObject({ digest: expect.stringContaining("/connexion") });
+    expect(habitants.enregistrerLeMetier).not.toHaveBeenCalled();
+  });
+
+  it.each([[0], [-3], [1.5], [Number.NaN], [2 ** 31], ["40" as unknown as number]])("ignore un Habitant dont l'identifiant n'en est pas un : %s", async (id) => {
+    garde.exigerCompte.mockResolvedValue({ territoireId: 12 });
+    await retirerLeMetier(id);
+    expect(habitants.enregistrerLeMetier).not.toHaveBeenCalled();
+    expect(cache.refresh).not.toHaveBeenCalled();
+  });
+
+  it("ne fait rien pour un chef sans Territoire, ni en production tant que l'entrée du jeu est fermée", async () => {
+    garde.exigerCompte.mockResolvedValue({ territoireId: null });
+    await retirerLeMetier(40);
+    expect(habitants.enregistrerLeMetier).not.toHaveBeenCalled();
+    garde.exigerCompte.mockClear();
+    vi.stubEnv("VERCEL_ENV", "production");
+    await retirerLeMetier(40);
     expect(garde.exigerCompte).not.toHaveBeenCalled();
     expect(habitants.enregistrerLeMetier).not.toHaveBeenCalled();
   });

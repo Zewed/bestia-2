@@ -12,9 +12,9 @@ const base = vi.hoisted(() => ({ pool: null as Pool | null }));
 vi.mock("@/db", async (original) => ({ ...(await original<object>()), getPool: () => base.pool }));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-import { donnerUnMetier } from "./actions";
+import { donnerUnMetier, retirerLeMetier } from "./actions";
 
-describe.skipIf(!URL_TEST)("donner ou changer le Métier d'un Habitant, sur base (US-0308, US-0310)", () => {
+describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, sur base (US-0308, US-0310, US-0311)", () => {
   let pool: Pool;
   const lancement = `donner-metier-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -65,6 +65,21 @@ describe.skipIf(!URL_TEST)("donner ou changer le Métier d'un Habitant, sur base
     expect((await metiers(joueur)).map(([, metier]) => metier)).toEqual(["Mineur", null, null]);
     await donnerUnMetier(autre, "mineur");
     expect((await metiers(voisin)).map(([, metier]) => metier)).toEqual(["Chasseur", null, null]);
+  });
+
+  it("remet sans Métier un Habitant du joueur, jamais celui d'un Habitant d'un autre (US-0311)", async () => {
+    const [joueur, voisin] = [await naitre(), await naitre()];
+    const [sien] = (await metiers(joueur)).map(([id]) => id as number);
+    const [autre] = (await metiers(voisin)).map(([id]) => id as number);
+    garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: voisin, recitLu: true });
+    await donnerUnMetier(autre, "chasseur");
+    garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: joueur, recitLu: true });
+    await donnerUnMetier(sien, "mineur");
+
+    await retirerLeMetier(autre);
+    expect((await metiers(voisin)).map(([, metier]) => metier)).toEqual(["Chasseur", null, null]);
+    await retirerLeMetier(sien);
+    expect((await metiers(joueur)).map(([, metier]) => metier)).toEqual([null, null, null]);
   });
 
   it("refuse sans bruit un Métier qui n'existe pas", async () => {

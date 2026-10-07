@@ -91,8 +91,8 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
  * Habitants sans Métier (US-0313) ; puis leur nombre sur la place du Territoire,
  * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), qui
  * filtrent la liste (US-0314), puis une ligne par Habitant avec son prénom, son Métier et son état, dans
- * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308), ou en
- * change (US-0310) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
+ * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308), en change
+ * (US-0310) ou le retire (US-0311) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
  * (US-0320), d'après les Stocks lus une fois le Territoire mis à l'heure, puis les huit Métiers (US-0307).
  * Tout est lu à chaque affichage.
  * Sans session, la garde mène à la connexion, qui ramène ici.

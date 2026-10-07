@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useState, useTransition } from "react";
-import { donnerUnMetier } from "./actions";
+import { donnerUnMetier, retirerLeMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
 import styles from "./page.module.css";
 
@@ -44,7 +44,8 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  *
  * US-0310 : sur la ligne d'un Habitant qui a un Métier, ce Métier est le même bouton : il déplie les Métiers,
  * le sien pressé et hors d'atteinte ; en toucher un autre le lui donne de la même façon, gratuitement et
- * aussitôt. Dans les deux cas, la main revient au bouton de la ligne.
+ * aussitôt. Dans les deux cas, la main revient au bouton de la ligne. US-0311 : en dernier, « Sans Métier » le
+ * lui retire de même ; il rejoint aussitôt les sans Métier, en tête de la liste (HabitantsMontres).
  *
  * US-0309 : au-dessus de la liste, une rangée de compteurs, « Sans Métier » puis un par Métier, comptés sur
  * les lignes mêmes : un Métier donné les fait bouger aussitôt, avec la ligne.
@@ -80,13 +81,14 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     return () => document.removeEventListener("keydown", fermer);
   }, [ouvert, prefixe]);
 
-  function donner(habitant: HabitantAffiche, metier: MetierAuChoix) {
+  /** Donne le Métier `metier` à l'Habitant, ou le remet sans Métier (null, US-0311). */
+  function donner(habitant: HabitantAffiche, metier: MetierAuChoix | null) {
     setOuvert(null);
     // Le Métier touché s'en va avec le dépliant : la main revient au bouton de la ligne.
     document.getElementById(idBouton(habitant.id))?.focus();
     demarrer(async () => {
-      montrerLeMetier({ id: habitant.id, metier: metier.nom });
-      await donnerUnMetier(habitant.id, metier.id);
+      montrerLeMetier({ id: habitant.id, metier: metier?.nom ?? null });
+      await (metier ? donnerUnMetier(habitant.id, metier.id) : retirerLeMetier(habitant.id));
     });
   }
 
@@ -168,6 +170,11 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
                         </button>
                       );
                     })}
+                    {h.metier !== null ? (
+                      <button type="button" className={styles.sansMetierAuChoix} onClick={() => donner(h, null)}>
+                        Sans Métier
+                      </button>
+                    ) : null}
                   </div>
                 ) : null}
               </li>

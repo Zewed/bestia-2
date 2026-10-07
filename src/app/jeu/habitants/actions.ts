@@ -12,6 +12,11 @@ const IDENTIFIANT_MAX = 2_147_483_647;
 /** L'identifiant d'un Métier, écrit comme dans donnees/ (minuscules sans accent), et pas plus long qu'il n'en faut. */
 const IDENTIFIANT_DE_METIER = /^[a-z0-9_]{1,64}$/;
 
+/** Vrai pour un identifiant que la colonne integer d'un Habitant peut tenir. */
+function identifiantValable(habitantId: number): boolean {
+  return Number.isInteger(habitantId) && habitantId > 0 && habitantId <= IDENTIFIANT_MAX;
+}
+
 /**
  * US-0308 : le joueur donne un Métier à un Habitant sans Métier, gratuitement et aussitôt ; US-0310 : ou en
  * donne un autre à un Habitant qui en a un, de la même façon. Le Territoire vient de la garde, jamais du
@@ -22,8 +27,21 @@ const IDENTIFIANT_DE_METIER = /^[a-z0-9_]{1,64}$/;
 export async function donnerUnMetier(habitantId: number, metierId: string): Promise<void> {
   if (!entreeDuJeuOuverte()) return;
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  if (territoireId === null || !Number.isInteger(habitantId) || habitantId <= 0 || habitantId > IDENTIFIANT_MAX) return;
+  if (territoireId === null || !identifiantValable(habitantId)) return;
   if (typeof metierId !== "string" || !IDENTIFIANT_DE_METIER.test(metierId)) return;
   await enregistrerLeMetier(getPool(), territoireId, habitantId, metierId);
+  refresh();
+}
+
+/**
+ * US-0311 : le joueur remet sans Métier un Habitant qui en a un, gratuitement et aussitôt, comme il le
+ * changerait. Mêmes gardes que pour le donner : un Habitant d'un autre Territoire n'est pas touché, et la page
+ * relue fait foi, même quand rien n'a changé.
+ */
+export async function retirerLeMetier(habitantId: number): Promise<void> {
+  if (!entreeDuJeuOuverte()) return;
+  const { territoireId } = await exigerCompte("/jeu/habitants");
+  if (territoireId === null || !identifiantValable(habitantId)) return;
+  await enregistrerLeMetier(getPool(), territoireId, habitantId, null);
   refresh();
 }

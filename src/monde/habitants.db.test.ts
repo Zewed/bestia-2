@@ -210,6 +210,36 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     expect((await habitants(t)).map((h) => h.metier)).toEqual(["mineur", "chasseur", null]);
   });
 
+  it("remet sans Métier un Habitant qui en a un, pour de bon, aussitôt et sans rien coûter : il revient en tête de la lecture (US-0311)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    const [h1, h2, h3] = (await habitants(ta)).map((h) => h.id);
+    const [voisin] = (await habitants(tb)).map((h) => h.id);
+    await pool.query("update habitant set prenom = case id when $1 then 'Arno' when $2 then 'Brune' else 'Cael' end where territoire_id = $3", [h1, h2, ta]);
+    expect(await enregistrerLeMetier(pool, ta, h1, "chasseur")).toBe(true);
+    expect(await enregistrerLeMetier(pool, ta, h2, "mineur")).toBe(true);
+    expect(await enregistrerLeMetier(pool, tb, voisin, "mineur")).toBe(true);
+    const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [ta])).rows;
+    const avant = await stocks();
+
+    expect(await enregistrerLeMetier(pool, ta, h1, null)).toBe(true);
+    expect((await habitants(ta)).map((h) => h.metier)).toEqual([null, "mineur", null]);
+    // Sans Métier, il passe devant ceux qui en ont un, à sa place parmi les sans Métier.
+    expect((await habitantsDuTerritoire(pool, ta)).map((h) => [h.id, h.metier])).toEqual([
+      [h1, null],
+      [h3, null],
+      [h2, "Mineur"],
+    ]);
+    // Gratuit : aucune Ressource n'a bougé.
+    expect(await stocks()).toEqual(avant);
+    // L'Habitant du voisin, même désigné par son identifiant, garde le sien.
+    expect(await enregistrerLeMetier(pool, ta, voisin, null)).toBe(false);
+    expect((await habitants(tb)).map((h) => h.metier)).toEqual(["mineur", null, null]);
+  });
+
   it("ne touche ni un Habitant d'un autre Territoire, ni ne donne un Métier qui n'existe pas (US-0308, US-0310)", async () => {
     const a = await nouveauCompte();
     expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });

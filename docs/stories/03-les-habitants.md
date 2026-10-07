@@ -119,6 +119,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0311 · Retirer son Métier à un Habitant
 **En tant que** joueur, **je veux** remettre un Habitant sans Métier, **afin de** le garder disponible pour plus tard.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Dans le dépliant d'un Habitant qui a un Métier, un dernier choix « Sans Métier » (sans icône, sur toute la largeur) le lui retire, gratuitement et aussitôt, comme un changement : il rejoint les sans Métier en tête de liste, et le compteur et le bandeau des sans Métier montent. Vérifié en vrai.
 - **Débloquée par** : US-0310
 - **Critères d'acceptation** :
   - Le choix « sans Métier » est proposé pour tout Habitant qui a un Métier.

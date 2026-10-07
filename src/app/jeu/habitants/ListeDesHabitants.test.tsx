@@ -9,6 +9,7 @@ const actions = vi.hoisted(() => {
   return {
     enCours,
     donnerUnMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+    retirerLeMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
   };
 });
 vi.mock("./actions", () => actions);
@@ -61,6 +62,7 @@ afterEach(async () => {
   await finirLesActions();
   cleanup();
   actions.donnerUnMetier.mockClear();
+  actions.retirerLeMetier.mockClear();
   ouvrir();
 });
 
@@ -262,6 +264,74 @@ describe("changer le Métier d'un Habitant depuis sa ligne (US-0310)", () => {
     // L'action s'achève sans que la page ait changé : Cael reste Mineur.
     await finirLesActions();
     expect(lignes()[2]).toBe("Cael · Mineur · libre");
+  });
+});
+
+describe("retirer son Métier à un Habitant depuis sa ligne (US-0311)", () => {
+  /** Deux Habitants sans Métier, deux Chasseurs, dans l'ordre de la lecture. */
+  const QUATRE: HabitantAffiche[] = [
+    { id: 50, prenom: "Arno", metier: null, etat: "libre" },
+    { id: 51, prenom: "Dara", metier: null, etat: "libre" },
+    { id: 52, prenom: "Brune", metier: "Chasseur", etat: "libre" },
+    { id: 53, prenom: "Cael", metier: "Chasseur", etat: "libre" },
+  ];
+  /** Remet sans Métier l'Habitant `prenom`, depuis sa ligne. */
+  async function retirer(prenom: string) {
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier(prenom));
+    await utilisateur.click(within(ligne(prenom)).getByRole("button", { name: "Sans Métier" }));
+  }
+
+  it("propose « Sans Métier » en dernier dans le dépliant d'un Habitant qui a un Métier, sans icône et d'une autre allure, jamais à un Habitant sans Métier", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    const boutons = auChoix("Cael");
+    expect(boutons.map((b) => b.textContent)).toEqual([...METIERS.map((m) => m.nom), "Sans Métier"]);
+    const sansMetier = boutons.at(-1)!;
+    expect(sansMetier.querySelector("img")).toBeNull();
+    expect(sansMetier.className).not.toBe(boutons[0].className);
+    expect((sansMetier as HTMLButtonElement).disabled).toBe(false);
+    await utilisateur.click(choisir("Arno"));
+    expect(auChoix("Arno").map((b) => b.textContent)).toEqual(METIERS.map((m) => m.nom));
+  });
+
+  it("toucher « Sans Métier » le retire aussitôt : la ligne propose de nouveau un Métier et remonte parmi les sans Métier, l'action reçoit l'Habitant", async () => {
+    render(<ListeDesHabitants habitants={QUATRE} metiers={METIERS} />);
+    await retirer("Brune");
+    expect(actions.retirerLeMetier).toHaveBeenCalledExactlyOnceWith(52);
+    expect(actions.donnerUnMetier).not.toHaveBeenCalled();
+    // L'action n'a pas encore répondu : Brune a déjà rejoint les sans Métier, à sa place dans l'ordre des prénoms.
+    expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Dara · Choisir un Métier · libre", "Cael · Chasseur · libre"]);
+    expect(auChoix("Brune")).toEqual([]);
+    expect(document.activeElement).toBe(choisir("Brune"));
+  });
+
+  it("le fait remonter en tête de la liste quand personne d'autre n'est sans Métier", async () => {
+    render(<ListeDesHabitants habitants={QUATRE.slice(2).map((h, i) => ({ ...h, metier: i ? "Mineur" : "Chasseur" }))} metiers={METIERS} />);
+    await retirer("Cael");
+    expect(lignes()).toEqual(["Cael · Choisir un Métier · libre", "Brune · Chasseur · libre"]);
+  });
+
+  it("fait bouger les compteurs aussitôt : « Sans Métier » monte de un, l'ancien Métier baisse de un", async () => {
+    render(<ListeDesHabitants habitants={QUATRE} metiers={METIERS} />);
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 2", "Chasseur 2"]));
+    await retirer("Cael");
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 3", "Chasseur 1"]));
+  });
+
+  it("garde l'Habitant sans Métier une fois la page relue, et lui rend son Métier quand la page relue le garde", async () => {
+    const { rerender } = render(<ListeDesHabitants habitants={QUATRE} metiers={METIERS} />);
+    await retirer("Cael");
+    rerender(<ListeDesHabitants habitants={[QUATRE[0], { ...QUATRE[3], metier: null }, QUATRE[1], QUATRE[2]]} metiers={METIERS} />);
+    await finirLesActions();
+    expect(lignes().map((l) => l.split(" · ").slice(0, 2).join(" · "))).toEqual(["Arno · Choisir un Métier", "Cael · Choisir un Métier", "Dara · Choisir un Métier", "Brune · Chasseur"]);
+    await retirer("Brune");
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 4", "Chasseur 0"]));
+    // L'action s'achève sans que la page ait changé : Brune reste Chasseur, à sa place.
+    await finirLesActions();
+    expect(lignes()[3]).toBe("Brune · Chasseur · libre");
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 3", "Chasseur 1"]));
   });
 });
 
