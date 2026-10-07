@@ -1,8 +1,12 @@
 src/monde/entretien-absence.db.test.ts
   s_97a431cfa65ca7::t_12c9f737dfccb3 1-326
+  s_97a431cfa65ca7::t_e90ee2f5536627 1-319
+  s_97a431cfa65ca7::t_f2c4f6c8b660c2 320-326
 src/temps/synchroniser-horloge.db.test.ts
   s_97a431cfa65ca7::t_12c9f737dfccb3 7,237-336
   s_97a431cfa65ca7::t_e88efa02009303 337
+  s_97a431cfa65ca7::t_89fe2a3d32ef55 7
+  s_97a431cfa65ca7::t_c6970d36611498 237-337
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_2e8d98b0cbb322 177
 ---
