@@ -1,0 +1,62 @@
+donnees/LISEZMOI.md
+  s_97a431cfa65ca7::t_94d4b5068b835a 3
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_ad35b58a4302cc 147
+  s_97a431cfa65ca7::t_253fa254c940a6 61,63,75-78,80,232-283,313-317,320,322-323
+  s_97a431cfa65ca7::t_5489b30be6d40c 160
+  s_97a431cfa65ca7::t_d780a8c80b6653 321
+  s_97a431cfa65ca7::t_7454b436dcc349 66-72,79
+  s_97a431cfa65ca7::t_378ef192d1cb42 318-319
+  s_97a431cfa65ca7::t_5bb40a2944f6d6 5-6,27-31,38,46,50-51,59,64-65,73-74,167-168,214
+  s_97a431cfa65ca7::t_79ff0848acab31 324
+drizzle/0037_metiers.sql
+  s_97a431cfa65ca7::t_3931dd1cc23533 1-8
+  s_97a431cfa65ca7::t_c61221c92077b9 9-11
+src/donnees/metiers.test.ts
+  s_97a431cfa65ca7::t_5238217bb04eaa 1-56
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_8f169c05fef83c 121-158
+  s_97a431cfa65ca7::t_7eed0bbe302c4c 95-96,98,103-110
+  s_97a431cfa65ca7::t_3cf376389676e4 168-170
+  s_97a431cfa65ca7::t_a6a7713ce4768e 97,99
+src/db/schema.ts
+  s_97a431cfa65ca7::t_8dfcbd4516bc13 466-476
+  s_97a431cfa65ca7::t_ae1055fbf40e29 441-442
+  s_97a431cfa65ca7::t_80ce12b3d19ff2 451
+  s_97a431cfa65ca7::t_cc69f7325cf85f 465
+src/monde/metiers.ts
+  s_97a431cfa65ca7::t_68c67b1cceb5f5 1-2,4-11,14-15
+  s_97a431cfa65ca7::t_56be4baf2d66d8 3,12-13
+donnees/metiers.yaml
+  s_97a431cfa65ca7::t_92039d5ec572ce 1-38
+src/monde/metiers.db.test.ts
+  s_97a431cfa65ca7::t_8c8c5fc6b79ff7 1-54
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_4935e77b43f204 84
+  s_97a431cfa65ca7::t_606546ab559ff4 57-60,67-68
+  s_97a431cfa65ca7::t_8928896f43e859 2,5,12,38-56,61-62,74,78,103-118
+src/donnees/jeux.ts
+  s_97a431cfa65ca7::t_3fb03321ee1bc1 105,109,115,117
+  s_97a431cfa65ca7::t_49f31d63e106c7 235
+  s_97a431cfa65ca7::t_6348b3429b8092 104,106-108,110-114,116,118-132
+drizzle/meta/0037_snapshot.json
+  s_97a431cfa65ca7::t_a336bb199a11ea 1-2164
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_4c6f2af58e71a0 263-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "946fbe6788d01f6b84bef7cf9fbb3d9f484d20d8",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
