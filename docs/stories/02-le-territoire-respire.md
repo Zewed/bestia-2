@@ -69,9 +69,10 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0207 · Faire tenir la barre du haut sur mobile
 **En tant que** joueur, **je veux** voir mes quatre ressources sur mon téléphone sans rien faire défiler, **afin de** jouer au pouce comme sur ordinateur.
 
+- **Statut** : Livrée le 2026-10-07, sans changement d'affichage : la bande des ressources sous la barre (US-0203) et l'abréviation des grands nombres (US-0206) y suffisaient. Vérifié au pire à 320 px, avec et sans barre d'état, et à 375 px avec l'encoche : un nom de chef de 16 « M » et quatre quantités à 99 999 tiennent sans défilement ni chevauchement ; le nom est coupé, et se lit en entier en tête de son menu.
 - **Débloquée par** : US-0204, US-0206
 - **Critères d'acceptation** :
-  - Sur un téléphone en portrait de (chiffre à régler) pixels de large, le logo, les quatre ressources et l'accès au nom du chef tiennent sans défilement de côté.
+  - Sur un téléphone en portrait de 320 pixels de large (décidé le 2026-10-07), le logo, les quatre ressources et l'accès au nom du chef tiennent sans défilement de côté.
   - Les quantités restent lisibles et ne se chevauchent pas, même à six chiffres.
   - Si la place manque, c'est le nom du chef qui se replie dans un menu, jamais les ressources.
 
