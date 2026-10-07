@@ -1,0 +1,38 @@
+src/app/jeu/habitants/RepartitionDesMetiers.test.tsx
+  s_97a431cfa65ca7::t_375f1457940b23 1-66,68,70-141
+  s_97a431cfa65ca7::t_d12c23b65dbfb1 67,69
+src/app/jeu/habitants/RepartitionDesMetiers.tsx
+  s_97a431cfa65ca7::t_8a31d7a70d5337 1-90
+src/app/jeu/habitants/actions.db.test.ts
+  s_97a431cfa65ca7::t_16298e4ce1a420 15,17,85-97
+src/app/jeu/habitants/actions.test.ts
+  s_97a431cfa65ca7::t_266d7f859671ce 6-10,15,124-191
+src/app/jeu/habitants/actions.ts
+  s_97a431cfa65ca7::t_3034c1481b947b 7,20-24,35,52-76
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_84edbb6eb04b5a 373-375,386-388,396-399,409-461,515-528
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_7b2454fb4cc215 40,73,118-123,242-243,250-251,257,465,474-492,563-566,570-588
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_a19c96ec006d9d 11,22,76-77,120-121
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_0bb0a65795675f 15-24,35,252-304
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_0498aa7e994efa 55-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c4a1b4e50fa54e8161eb14791d5e9873ef02e126",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
