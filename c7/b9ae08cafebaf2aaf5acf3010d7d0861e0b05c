@@ -4,16 +4,34 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_89bfa382b9396f 7
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_78885696e3acbf 285-295
+  s_97a431cfa65ca7::t_f4593a443b637b 285-295
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_505e81addf4e4a 32-37,54-73,83-84,89,98,120-122,229-230,366-404,533-539
+  s_97a431cfa65ca7::t_e8ef9e5546e70a 229-230
+  s_97a431cfa65ca7::t_57189ff1b4ddae 533-539
+  s_97a431cfa65ca7::t_ccfa17c4c3cb90 32-37
+  s_97a431cfa65ca7::t_4795c9493d8202 366-404
+  s_97a431cfa65ca7::t_37235ba807c8ba 120-122
+  s_97a431cfa65ca7::t_13ffe6c0ee20f5 54-73,83-84,89,98
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_4438797a721543 6,13,15,41-57,89-91,98,103,125
+  s_97a431cfa65ca7::t_dc96b6bc6e7bc6 89-91
+  s_97a431cfa65ca7::t_cd52f8f2c172b5 98,103
+  s_97a431cfa65ca7::t_7fc6fbfa028527 42-57
+  s_97a431cfa65ca7::t_85474022a09739 125
+  s_97a431cfa65ca7::t_e37e3d6118cd59 6,13,15
+  s_97a431cfa65ca7::t_6d7d2ca4645ab8 41
 src/monde/nourriture.db.test.ts
   s_97a431cfa65ca7::t_79315ec2ea369c 1-109
+  s_97a431cfa65ca7::t_1e513e2996d6b8 1-109
 src/monde/nourriture.test.ts
   s_97a431cfa65ca7::t_bebe5b9798b26e 1-138
+  s_97a431cfa65ca7::t_74cddc9f3ecac6 84,87,89-93,97,99-103
+  s_97a431cfa65ca7::t_ea25b3ef0fb603 122-124
+  s_97a431cfa65ca7::t_f7b352a3a87a28 1-83,85-86,88,94-96,98,104-121,125-138
 src/monde/nourriture.ts
   s_97a431cfa65ca7::t_2c3ad26b10acb0 1-64
+  s_97a431cfa65ca7::t_e224071ea1c80b 1-64
 ---
 {
   "schema_version": "authorship/3.0.0",
