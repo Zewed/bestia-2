@@ -22,24 +22,31 @@ export const PRODUCTION_DU_TERRITOIRE = `
  *
  * US-0221 : un Stock s'arrête exactement à sa limite ; ce qui la dépasse est perdu, reste compris, et
  * un Stock déjà à sa limite (ou au-dessus) ne gagne plus rien. Les autres continuent de monter.
+ * US-0228 : le calcul note l'instant où un Stock atteint sa limite.
  */
 export const PRODUIRE = `
   with p as (${PRODUCTION_DU_TERRITOIRE}),
-  ajout as (
-    select s.ressource_id, s.quantite, s.limite,
-      p.par_heure * (extract(epoch from ($3::timestamptz - $2::timestamptz)) * 1000000) + s.reste as total
-    from stock s join p on p.ressource_id = s.ressource_id
-    where s.territoire_id = $1 and p.par_heure > 0 and s.quantite < s.limite
+  etat as (
+    select s.ressource_id, s.quantite, s.limite, coalesce(p.par_heure, 0) as par_heure,
+      coalesce(p.par_heure, 0) * (extract(epoch from ($3::timestamptz - $2::timestamptz)) * 1000000) + s.reste as total
+    from stock s left join p on p.ressource_id = s.ressource_id
+    where s.territoire_id = $1
   ),
   calcul as (
-    select ressource_id, quantite, limite, total, quantite + div(total, 3600) / 1000000 >= limite as plein,
+    select ressource_id, quantite, limite, par_heure, total, quantite < limite and par_heure > 0 as produit,
       least(limite, quantite + div(total, 3600) / 1000000) as nouvelle
-    from ajout
+    from etat
   )
   update stock s set
-    quantite = c.nouvelle,
-    produit_depuis_visite = s.produit_depuis_visite + (c.nouvelle - c.quantite),
-    reste = case when c.plein then 0 else c.total - div(c.total, 3600) * 3600 end
+    quantite = case when c.produit then c.nouvelle else s.quantite end,
+    produit_depuis_visite = s.produit_depuis_visite + case when c.produit then c.nouvelle - c.quantite else 0 end,
+    reste = case when not c.produit then s.reste when c.nouvelle >= c.limite then 0 else c.total - div(c.total, 3600) * 3600 end,
+    -- US-0228 : l'instant où le Stock a atteint sa limite, à la seconde près ; null dès qu'il repasse dessous.
+    plein_depuis = case
+      when (case when c.produit then c.nouvelle else s.quantite end) < c.limite then null
+      when c.produit then $2::timestamptz + make_interval(secs => ((c.limite - c.quantite) / c.par_heure * 3600)::double precision)
+      else coalesce(s.plein_depuis, $2::timestamptz)
+    end
   from calcul c
   where s.territoire_id = $1 and s.ressource_id = c.ressource_id`;
 

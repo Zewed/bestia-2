@@ -70,9 +70,9 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
       const { territoireId, ne } = await naitre();
       await noterLaPresence(pool, territoireId, ne);
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 1) });
-      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 1))).toEqual([]);
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 1))).toEqual({ gains: [], pleins: [] });
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 3) });
-      const gains = await recapitulatifDAbsence(pool, territoireId, apres(ne, 3));
+      const { gains } = await recapitulatifDAbsence(pool, territoireId, apres(ne, 3));
       const attendus = (await nFois(3)).filter((p) => Number(p.quantite) >= 1);
       expect(gains.map((g) => [g.id, g.gain])).toEqual(
         ["viande", "vegetaux", "bois", "pierre"].flatMap((id) => attendus.filter((a) => a.id === id).map((a) => [a.id, a.quantite])),
@@ -82,12 +82,12 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
     it("repart de zéro quand le joueur revient, et ne dit rien avant sa première visite notée", async () => {
       const { territoireId, ne } = await naitre();
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 5) });
-      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 5))).toEqual([]);
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 5))).toEqual({ gains: [], pleins: [] });
       await noterLaPresence(pool, territoireId, apres(ne, 5));
       await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 8) });
-      expect((await recapitulatifDAbsence(pool, territoireId, apres(ne, 8))).length).toBeGreaterThan(0);
+      expect((await recapitulatifDAbsence(pool, territoireId, apres(ne, 8))).gains.length).toBeGreaterThan(0);
       await noterLaPresence(pool, territoireId, apres(ne, 8));
-      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 11))).toEqual([]);
+      expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 11))).toEqual({ gains: [], pleins: [] });
     });
   });
 
@@ -120,6 +120,36 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
       for (const heures of [0.25, 2, 2.5, 4.4, 4.6, 9, 10]) await rattraper("territoire", ouverte.territoireId, { pool, jusqua: apres(ouverte.ne, heures) });
       expect(await comptes(tache.territoireId)).toEqual(await comptes(ferme.territoireId));
       expect(await comptes(ouverte.territoireId)).toEqual(await comptes(ferme.territoireId));
+    });
+  });
+
+  describe("les Stocks pleins dans le récapitulatif d'absence (US-0228)", () => {
+    it("dit qu'un Stock s'est rempli pendant l'absence et depuis quand, et ne compte que ce qui est vraiment entré", async () => {
+      const { territoireId, ne } = await naitre();
+      await noterLaPresence(pool, territoireId, ne);
+      // Dix Bois de place : à 4 par heure de prairie, le Stock est plein après 2 h 30, sur 6 h 30 d'absence.
+      const parHeure = Number((await pool.query("select par_heure from production_biome where biome_id = 'prairie' and ressource_id = 'bois'")).rows[0].par_heure);
+      await pool.query("update stock set quantite = limite - 10 where territoire_id = $1 and ressource_id = 'bois'", [territoireId]);
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 6.5) });
+      const recap = await recapitulatifDAbsence(pool, territoireId, apres(ne, 6.5));
+      expect(recap.gains.find((g) => g.id === "bois")?.gain).toBe("10.000000");
+      const plein = recap.pleins.find((p) => p.id === "bois");
+      expect(plein?.nom).toBe("Bois");
+      // Plein depuis 6,5 - 10 / parHeure heures.
+      const heures = 6.5 - 10 / parHeure;
+      const minutes = Math.ceil(heures * 60);
+      expect(plein?.depuis).toBe(minutes % 60 === 0 ? `${minutes / 60} h` : `${Math.floor(minutes / 60)} h ${String(minutes % 60).padStart(2, "0")}`);
+    });
+
+    it("signale aussi un Stock déjà plein au départ et resté plein", async () => {
+      const { territoireId, ne } = await naitre();
+      await pool.query("update stock set quantite = limite where territoire_id = $1 and ressource_id = 'pierre'", [territoireId]);
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 1) });
+      await noterLaPresence(pool, territoireId, apres(ne, 1));
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 4) });
+      const recap = await recapitulatifDAbsence(pool, territoireId, apres(ne, 4));
+      expect(recap.gains.find((g) => g.id === "pierre")).toBeUndefined();
+      expect(recap.pleins.map((p) => [p.id, p.depuis])).toEqual([["pierre", "4 h"]]);
     });
   });
 });

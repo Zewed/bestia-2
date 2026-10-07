@@ -30,7 +30,7 @@ export default async function Foyer() {
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu");
   const foyer = territoireId === null ? null : await foyerDuTerritoire(getPool(), territoireId);
-  const gains = territoireId === null ? [] : await recapitulatifDAbsence(getPool(), territoireId, maintenant());
+  const recap = territoireId === null ? { gains: [], pleins: [] } : await recapitulatifDAbsence(getPool(), territoireId, maintenant());
   const stocks = territoireId === null ? [] : await stocksDuTerritoire(getPool(), territoireId);
   return (
     <main className={`${styles.page} ${foyer ? styles.avecProduction : ""}`}>
@@ -42,7 +42,7 @@ export default async function Foyer() {
           prioritaire
           className={styles.remplir}
         />
-        <RecapAbsence gains={gains} />
+        <RecapAbsence recap={recap} />
         <h1 className={styles.legende}>{foyer ? `Foyer · ${foyer.biome.nom.toLocaleLowerCase("fr")}` : "Foyer"}</h1>
       </section>
       {foyer ? <BlocProduction biome={foyer.biome.nom} productions={stocks} /> : null}

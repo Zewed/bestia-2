@@ -430,6 +430,8 @@ export const stock = pgTable(
     reste: numeric("reste", { precision: 30, scale: 6 }).notNull().default("0"),
     /** US-0220 : la limite de ce Stock, propre au Territoire, pour que ses constructions la relèvent (étape 28). */
     limite: numeric("limite", { precision: 24, scale: 6 }).notNull(),
+    /** US-0228 : l'instant du jeu où le Stock a atteint sa limite ; null tant qu'il est en dessous. */
+    pleinDepuis: timestamp("plein_depuis", { withTimezone: true }),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
 );

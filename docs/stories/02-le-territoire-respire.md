@@ -289,6 +289,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0228 · Signaler les stocks pleins dans le récapitulatif d'absence
 **En tant que** joueur, **je veux** apprendre au retour qu'un stock s'est rempli pendant mon absence, **afin de** mieux prévoir ma prochaine visite.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Le calcul note l'instant où un Stock atteint sa limite (`stock.plein_depuis`, à la seconde près, remis à vide dès qu'il repasse dessous) ; le récapitulatif ajoute, en rouge sous les gains, « Bois : stock plein depuis 4 h » pour chaque Stock plein au retour, y compris s'il l'était déjà au départ. Le gain affiché est ce qui est vraiment entré (« +10 Bois » pour un Stock qui n'avait que dix de place).
 - **Débloquée par** : US-0216, US-0222
 - **Critères d'acceptation** :
   - Si un stock a atteint sa limite pendant l'absence, le récapitulatif le dit : « Bois : stock plein depuis 4 h ».

@@ -64,7 +64,7 @@ export async function fixerStock(base: Pool | PoolClient, territoireId: number, 
        where s.territoire_id = $1 and s.ressource_id = $2
        for update of s
      )
-     update stock set quantite = $3 from avant
+     update stock set quantite = $3, plein_depuis = case when $3::numeric < stock.limite then null else stock.plein_depuis end from avant
      where stock.territoire_id = $1 and stock.ressource_id = $2
      returning avant.chef, avant.ressource, avant.quantite as avant, stock.quantite as apres`,
     [territoireId, ressourceId, quantite],
