@@ -1,0 +1,31 @@
+src/monde/rivieres.ts
+  s_97a431cfa65ca7::t_b9b151d573e715 13,15
+  s_97a431cfa65ca7::t_823bc7a3041506 18,23-30,46-47,64,72-74,76-79,83
+  s_97a431cfa65ca7::t_b7ddbcd5d17447 44-45
+  s_97a431cfa65ca7::t_7da7bfe1c2b082 89
+  s_97a431cfa65ca7::t_677bae0596d84a 1-12,14,16-17,19-22,31-43,48-63,65-71,75,80-82,84-88,90-105
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_5337e6c389016e 20-21
+  s_97a431cfa65ca7::t_5b7021a377fe9a 485-575
+src/reglages.ts
+  s_97a431cfa65ca7::t_5db384c1eade18 173-180
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_04965022cf14fd 12,25-26,59-60
+  s_97a431cfa65ca7::t_b9db1831ec5485 61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1a75e6f0e022bc831ee21050d405f72844adc8f4",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
