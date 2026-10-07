@@ -461,3 +461,25 @@ export const prenom = pgTable("prenom", {
   nom: text("nom").primaryKey(),
   ordre: integer("ordre").notNull(),
 });
+
+/**
+ * Un Récit (US-0324) : le compte rendu daté d'un événement du Territoire (retour d'une Récolte ou d'une
+ * Expédition, Attaque, Incursion, Famine), que le joueur lit après coup sur la page Récits. Les
+ * événements l'écrivent par ecrireUnRecit (src/monde/recits.ts).
+ */
+export const recit = pgTable(
+  "recit",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    titre: text("titre").notNull(),
+    texte: text("texte").notNull(),
+    /** L'heure du jeu où l'événement est survenu. */
+    survenuLe: timestamp("survenu_le", { withTimezone: true }).notNull(),
+    /** L'heure du jeu où le joueur l'a ouvert ; null tant qu'il ne l'a pas lu. */
+    luLe: timestamp("lu_le", { withTimezone: true }),
+  },
+  (t) => [index("recit_par_territoire").on(t.territoireId, t.survenuLe)],
+);

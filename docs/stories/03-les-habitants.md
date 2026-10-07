@@ -242,6 +242,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0324 · Lire les récits du Territoire
 **En tant que** joueur, **je veux** retrouver dans une liste ce qui est arrivé sur mon Territoire, **afin de** ne rien manquer de ce qui s'est passé en mon absence.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Un Récit est une ligne de la table `recit` : titre, texte, heure du jeu où il est survenu, heure où il a été lu. Les événements à venir (Famine, retours de Récolte, Attaques…) l'écrivent par `ecrireUnRecit`, dans leur propre transaction ; aucun n'en écrit encore. La navigation gagne une troisième entrée, « Récits », avec une pastille citron qui compte les non lus (« 99+ » au-delà) ; un récit non lu a son titre en gras et la marque « nouveau » ; le toucher déplie son texte sur place et le marque lu, et la pastille baisse aussitôt. Dates en heure de Paris, en attendant le fuseau du joueur. Pour faire place à la troisième entrée, sous 1 280 px sur ordinateur, les ressources passent en bande sous la barre, comme sur mobile : la ligne ne tenait plus avec quatre Stocks pleins ou de grands nombres. Vérifié en vrai de 320 à 1 440 px, avec des récits écrits à la main sur un compte d'essai : aucun défilement de côté.
 - **Débloquée par** : US-0302
 - **Critères d'acceptation** :
   - Une page Récits liste les récits du plus récent au plus ancien, chacun avec sa date et son heure.

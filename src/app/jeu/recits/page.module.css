@@ -1,0 +1,147 @@
+/* La page Récits (US-0324) : un titre, puis un bloc Bento, dans la largeur de l'écran du Foyer. */
+.page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.titre {
+  margin-bottom: 16px;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.vide {
+  color: var(--texte-discret);
+}
+
+/* Une ligne par Récit : le titre, la date, la flèche ; le texte se déplie dessous. */
+.recits {
+  display: grid;
+  gap: 6px;
+  padding: 0;
+  list-style: none;
+}
+
+.recit {
+  min-width: 0;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+}
+
+.entete {
+  display: grid;
+  grid-template-areas: "titre quand fleche";
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 4px 12px;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: var(--arrondi-petit);
+  background: transparent;
+  color: var(--texte-2);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .entete:hover {
+    background: var(--survol);
+  }
+}
+
+.entete:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.titreRecit {
+  grid-area: titre;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Un Récit non lu : son titre en gras, et la marque « nouveau », jamais la couleur seule. */
+.recit[data-non-lu] .titreRecit {
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+}
+
+.nouveau {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: var(--arrondi-petit);
+  background: var(--citron);
+  color: var(--encre);
+  font-size: 11px;
+  font-weight: var(--graisse-titre);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+.quand {
+  grid-area: quand;
+  color: var(--texte-discret);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.fleche {
+  grid-area: fleche;
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.entete[aria-expanded="true"] .fleche {
+  transform: rotate(180deg);
+}
+
+/* Le texte du Récit, ses retours à la ligne gardés. */
+.texte {
+  max-width: 70ch;
+  padding: 0 12px 12px;
+  color: var(--encre);
+  overflow-wrap: anywhere;
+  white-space: pre-line;
+}
+
+.texte[hidden] {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fleche {
+    transition: none;
+  }
+}
+
+/* Sur mobile, une seule colonne : la date passe sous le titre, la flèche reste à droite. */
+@media (max-width: 820px), (max-height: 500px) {
+  .page {
+    padding: 12px;
+  }
+  .titre {
+    margin: 8px 0 12px;
+    font-size: 24px;
+  }
+  .entete {
+    grid-template-areas: "titre fleche" "quand fleche";
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .quand {
+    white-space: normal;
+  }
+}

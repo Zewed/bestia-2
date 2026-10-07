@@ -28,6 +28,23 @@ describe("barre du haut", () => {
     expect(lire("src/components/BarreHaut.module.css")).toMatch(/@media \(max-width: 820px\) \{[\s\S]*\.navigation \{[^}]*position: fixed;[^}]*bottom: 0;[^}]*var\(--bord-bas\)/);
   });
 
+  it("sur un petit écran d'ordinateur, passe les ressources en bande sous la barre, la navigation restant en haut (US-0324)", () => {
+    const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
+    expect(lire("src/styles/formes.css")).toMatch(/@media \(max-width: 1279px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 44px;/);
+    const css = lire("src/components/BarreHaut.module.css");
+    const petit = css.slice(css.indexOf("@media (min-width: 821px) and (max-width: 1279px)"), css.indexOf("@media (max-width: 820px)"));
+    expect(petit).toMatch(/\.ressources \{[^}]*grid-column: 1 \/ -1;[^}]*grid-row: 2;/);
+    expect(petit).not.toMatch(/\.navigation/);
+  });
+
+  it("sur mobile, pose trois onglets égaux en bas de l'écran : Foyer, Habitants, Récits (US-0324)", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+    expect(mobile).toMatch(/\.entrees \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/);
+    // Le trait de l'entrée affichée souligne son nom, pas la pastille des Récits non lus.
+    expect(css).toMatch(/\.entree\[aria-current="page"\] \.libelle \{[^}]*text-decoration: underline/);
+  });
+
   it("sur mobile, range les quatre ressources puis le compteur d'Habitants en colonnes égales : cinq sur la bande (US-0304)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
     const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));

@@ -8,6 +8,7 @@ import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
 import { nombreDHabitants } from "@/monde/habitants";
+import { nombreDeRecitsNonLus } from "@/monde/recits";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
@@ -92,4 +93,13 @@ export async function stocksALHeure(territoireId: number): Promise<Stock[]> {
 export async function habitantsALHeure(territoireId: number): Promise<number> {
   await mettreALHeure(territoireId);
   return nombreDHabitants(getPool(), territoireId);
+}
+
+/**
+ * Le nombre de Récits non lus pour l'entrée « Récits » de la navigation (US-0324), lu après la mise à
+ * l'heure du Territoire : un Récit écrit en rattrapant le temps compte dès cet affichage.
+ */
+export async function recitsNonLusALHeure(territoireId: number): Promise<number> {
+  await mettreALHeure(territoireId);
+  return nombreDeRecitsNonLus(getPool(), territoireId);
 }

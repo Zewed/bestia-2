@@ -1,0 +1,62 @@
+"use client";
+
+import { useId, useState, useTransition } from "react";
+import { lireUnRecit } from "./actions";
+import styles from "./page.module.css";
+
+/** Un Récit tel que la liste le montre : sa date déjà écrite par le serveur, dans le fuseau du joueur. */
+export type RecitAffiche = { id: number; titre: string; texte: string; instant: string; quand: string; lu: boolean };
+
+/**
+ * US-0324 : une ligne par Récit, son titre et sa date ; un Récit non lu porte la marque « nouveau ».
+ * Le toucher déplie son texte sur place et le note comme lu : la marque s'en va aussitôt, et l'action
+ * serveur relit la barre du haut, dont l'entrée « Récits » compte les non lus.
+ */
+export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
+  const [ouverts, setOuverts] = useState<ReadonlySet<number>>(() => new Set());
+  const [lusIci, setLusIci] = useState<ReadonlySet<number>>(() => new Set());
+  const [, demarrer] = useTransition();
+  const prefixe = useId();
+
+  function basculer(recit: RecitAffiche) {
+    const ouvrir = !ouverts.has(recit.id);
+    setOuverts((avant) => {
+      const apres = new Set(avant);
+      if (ouvrir) apres.add(recit.id);
+      else apres.delete(recit.id);
+      return apres;
+    });
+    if (!ouvrir || recit.lu || lusIci.has(recit.id)) return;
+    setLusIci((avant) => new Set(avant).add(recit.id));
+    demarrer(() => lireUnRecit(recit.id));
+  }
+
+  return (
+    <ul className={styles.recits}>
+      {recits.map((recit) => {
+        const ouvert = ouverts.has(recit.id);
+        const nonLu = !recit.lu && !lusIci.has(recit.id);
+        const idTexte = `${prefixe}-recit-${recit.id}`;
+        return (
+          <li key={recit.id} className={styles.recit} data-non-lu={nonLu ? "" : undefined}>
+            <button type="button" className={styles.entete} aria-expanded={ouvert} aria-controls={idTexte} onClick={() => basculer(recit)}>
+              <span className={styles.titreRecit}>
+                {recit.titre}
+                {nonLu ? <span className={styles.nouveau}>nouveau</span> : null}
+              </span>
+              <time className={styles.quand} dateTime={recit.instant}>
+                {recit.quand}
+              </time>
+              <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
+                <path d="M2.5 4.5 6 8l3.5-3.5" />
+              </svg>
+            </button>
+            <p id={idTexte} className={styles.texte} hidden={!ouvert}>
+              {recit.texte}
+            </p>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}

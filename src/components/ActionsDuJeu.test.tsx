@@ -10,6 +10,7 @@ const garde = vi.hoisted(() => ({
     { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "0.999999", limite: "1000.000000", parHeure: "4.000000", entretienParHeure: "0.000000", sources: [] },
   ]),
   habitantsALHeure: vi.fn(async () => 3),
+  recitsNonLusALHeure: vi.fn(async () => 0),
 }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
@@ -24,6 +25,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     garde.joueurConnecte.mockReset();
     garde.stocksALHeure.mockClear();
     garde.habitantsALHeure.mockClear();
+    garde.recitsNonLusALHeure.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
     garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, territoireId: null, recitLu: false, ...chef });
@@ -93,12 +95,33 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
     const html = await rendu();
     const nav = html.match(/<nav[^>]*>(.*?)<\/nav>/)?.[1] ?? "";
-    const liens = [...nav.matchAll(/<a ([^>]*)>([^<]+)<\/a>/g)].map((m) => [m[2], m[1].match(/href="([^"]+)"/)?.[1], /aria-current="page"/.test(m[1])]);
+    const liens = [...nav.matchAll(/<a ([^>]*)>(.*?)<\/a>/g)].map((m) => [m[2].replace(/<[^>]+>/g, ""), m[1].match(/href="([^"]+)"/)?.[1], /aria-current="page"/.test(m[1])]);
     expect(liens).toEqual([
       ["Foyer", "/jeu", false],
       ["Habitants", "/jeu/habitants", true],
+      ["Récits", "/jeu/recits", false],
     ]);
     expect(html.indexOf("<nav")).toBeLessThan(html.indexOf("Ressources"));
+  });
+
+  it("compte ses Récits non lus sur l'entrée « Récits » de la navigation (US-0324)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    garde.recitsNonLusALHeure.mockResolvedValueOnce(2);
+    const html = await rendu();
+    expect(garde.recitsNonLusALHeure).toHaveBeenCalledWith(12);
+    const recits = html.match(/<a ([^>]*href="\/jeu\/recits"[^>]*)>(.*?)<\/a>/);
+    expect(recits?.[1]).toMatch(/aria-label="Récits, 2 non lus"/);
+    expect(recits?.[2]).toMatch(/^<span[^>]*>Récits<\/span><span[^>]*aria-hidden="true"[^>]*>2<\/span>$/);
+  });
+
+  it("ne compte pas ses Récits avant le récit d'arrivée, ni sans Territoire (US-0324)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    await rendu();
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: true });
+    await rendu();
+    joueur({ nomDeChef: null });
+    await rendu();
+    expect(garde.recitsNonLusALHeure).not.toHaveBeenCalled();
   });
 
   it("n'a pas de navigation sans Territoire, avant le récit d'arrivée, ni sans nom de chef (US-0302)", async () => {

@@ -16,12 +16,40 @@ describe("navigation du jeu (US-0302)", () => {
   const entrees = () => within(screen.getByRole("navigation")).getAllByRole("link");
   const marquees = () => entrees().filter((lien) => lien.getAttribute("aria-current") === "page").map((lien) => lien.textContent);
 
-  it("mène au Foyer puis aux Habitants", () => {
+  it("mène au Foyer, aux Habitants puis aux Récits (US-0324)", () => {
     render(<Navigation />);
     expect(entrees().map((lien) => [lien.textContent, lien.getAttribute("href")])).toEqual([
       ["Foyer", "/jeu"],
       ["Habitants", "/jeu/habitants"],
+      ["Récits", "/jeu/recits"],
     ]);
+  });
+
+  it("porte sur l'entrée « Récits » le nombre de Récits non lus, en chiffres, et le dit dans son nom (US-0324)", () => {
+    render(<Navigation recitsNonLus={2} />);
+    const recits = screen.getByRole("link", { name: "Récits, 2 non lus" });
+    expect(recits.getAttribute("href")).toBe("/jeu/recits");
+    expect(recits.textContent).toBe("Récits2");
+    // La pastille ne double pas le nom pour un lecteur d'écran, et aucune autre entrée n'en porte.
+    expect(within(recits).getByText("2").getAttribute("aria-hidden")).toBe("true");
+    expect(entrees().map((lien) => lien.textContent)).toEqual(["Foyer", "Habitants", "Récits2"]);
+  });
+
+  it("accorde le nom au nombre : « Récits, 1 non lu »", () => {
+    render(<Navigation recitsNonLus={1} />);
+    expect(screen.getByRole("link", { name: "Récits, 1 non lu" }).textContent).toBe("Récits1");
+  });
+
+  it("n'a pas de pastille sans Récit non lu", () => {
+    render(<Navigation recitsNonLus={0} />);
+    const recits = screen.getByRole("link", { name: "Récits" });
+    expect(recits.textContent).toBe("Récits");
+    expect(recits.hasAttribute("aria-label")).toBe(false);
+  });
+
+  it("garde la pastille courte au-delà de 99, le nom donnant le nombre exact", () => {
+    render(<Navigation recitsNonLus={140} />);
+    expect(screen.getByRole("link", { name: "Récits, 140 non lus" }).textContent).toBe("Récits99+");
   });
 
   it("marque l'entrée de la page affichée, et elle seule", () => {
@@ -31,6 +59,10 @@ describe("navigation du jeu (US-0302)", () => {
     adresse.page = "/jeu/habitants";
     render(<Navigation />);
     expect(marquees()).toEqual(["Habitants"]);
+    cleanup();
+    adresse.page = "/jeu/recits";
+    render(<Navigation recitsNonLus={3} />);
+    expect(marquees()).toEqual(["Récits3"]);
   });
 
   it("ne marque pas le Foyer sur une autre page du jeu", () => {
