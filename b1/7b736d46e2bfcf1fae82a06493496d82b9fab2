@@ -4,8 +4,15 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_0fd415a3e417b0 33
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_5e9b0b46cbad1a 15-26,28-30,35-37,95
+  s_97a431cfa65ca7::t_fde8c2639b7f35 95
+  s_97a431cfa65ca7::t_4983b5d52230eb 15-26,28-30,35-37
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_6021cd92ca2eed 1-2,30,156-202
+  s_97a431cfa65ca7::t_4eaa93af3c78d2 199-201
+  s_97a431cfa65ca7::t_00fae51f874519 1-2
+  s_97a431cfa65ca7::t_52a82947e668a8 30
+  s_97a431cfa65ca7::t_74880b1424df7e 173
+  s_97a431cfa65ca7::t_0a9203c41535f7 156-172,174-198,202
 ---
 {
   "schema_version": "authorship/3.0.0",
