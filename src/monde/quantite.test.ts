@@ -7,8 +7,23 @@ describe("quantité affichée (US-0203)", () => {
     ["1999.800000", "1\u00a0999"],
     ["0.999999", "0"],
     ["12500", "12\u00a0500"],
-    [1234567.5, "1\u00a0234\u00a0567"],
+    ["99999.990000", "99\u00a0999"],
   ])("%s s'affiche « %s » : entier, arrondi vers le bas, milliers séparés", (quantite, affichee) => {
+    expect(quantiteAffichee(quantite)).toBe(affichee);
+  });
+
+  it.each([
+    ["100000", "100\u00a0k"],
+    ["123456.700000", "123\u00a0k"],
+    ["199999.999999", "199\u00a0k"],
+    ["999999", "999\u00a0k"],
+    ["1000000", "1\u00a0M"],
+    ["1299999", "1,2\u00a0M"],
+    ["9999999", "9,9\u00a0M"],
+    ["12345678", "12\u00a0M"],
+    ["123456789", "123\u00a0M"],
+    ["1234567890", "1\u00a0234\u00a0M"],
+  ])("%s s'abrège en « %s », sans jamais arrondir vers le haut (US-0206)", (quantite, affichee) => {
     expect(quantiteAffichee(quantite)).toBe(affichee);
   });
 });

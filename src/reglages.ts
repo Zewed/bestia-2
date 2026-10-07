@@ -69,3 +69,5 @@ export const BIOMES_DE_LA_COURONNE = { prairie: 0.4, foret: 0.25, montagne: 0.1,
 /** La taille des régions de Biome, en Cases à peu près : plus le nombre est grand, plus elles s'étendent. */
 export const TAILLE_DES_REGIONS = 16;
 
+/** US-0206 : à partir de cette quantité, la barre du haut abrège les nombres (123 k, 1,2 M). */
+export const ABREGER_A_PARTIR_DE = 100_000;

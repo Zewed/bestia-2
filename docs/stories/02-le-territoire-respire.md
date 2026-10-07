@@ -59,11 +59,12 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0206 · Lire des quantités simples
 **En tant que** joueur, **je veux** des nombres ronds et bien espacés, **afin de** lire mes quantités sans effort.
 
+- **Statut** : Livrée le 2026-10-07. Les deux premiers critères l'étaient avec US-0203 ; l'espace des milliers est insécable, l'espace fine du français ne se voyant pas dans la police du jeu. Le seuil d'abréviation est `ABREGER_A_PARTIR_DE` dans `src/reglages.ts`.
 - **Débloquée par** : US-0203
 - **Critères d'acceptation** :
   - La barre affiche des nombres entiers, arrondis vers le bas : 1 999,8 s'affiche 1 999.
   - Les milliers sont séparés par une espace : 12 500.
-  - Au-delà de (chiffre à régler), les grands nombres s'abrègent (12,5 k) ; le format exact des abréviations (à décider).
+  - À partir de 100 000 (provisoire), les grands nombres s'abrègent en milliers puis en millions, toujours arrondis vers le bas, avec une virgule et une espace insécable avant la lettre : une décimale sous 10, aucune au-delà (123 k, 1,2 M, 12 M ; décidé le 2026-10-07).
 
 ### US-0207 · Faire tenir la barre du haut sur mobile
 **En tant que** joueur, **je veux** voir mes quatre ressources sur mon téléphone sans rien faire défiler, **afin de** jouer au pouce comme sur ordinateur.
