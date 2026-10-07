@@ -1,0 +1,54 @@
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_a491fe72be91f8 183-184,186,195-199,205
+  s_97a431cfa65ca7::t_7cdac3d2cda54b 9
+  s_97a431cfa65ca7::t_6e23ff76defa8c 218-221
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_751822c7c3cf15 15
+  s_97a431cfa65ca7::t_6909f6e1a7cd42 244-259
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_db04a232b1168c 625-635
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_75fc4d9f5da1a2 44-47,49-64
+  s_97a431cfa65ca7::t_2c112ab44317f4 95-99
+  s_97a431cfa65ca7::t_779517f3ef0026 115-122,125
+  s_97a431cfa65ca7::t_f2bce3a9420b1e 78,81-83
+  s_97a431cfa65ca7::t_2c946fa66ba1d9 16-18
+  s_97a431cfa65ca7::t_c4417fdf9c768d 3
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_e97ba55af46dd3 238-310
+  s_97a431cfa65ca7::t_560e8dc555181f 67,72,83,88,102,112,120,127,129,135,144,155,166,174,179,186,199,203,210,212,219,226,229,313,319,329,336,350,364,368,376
+  s_97a431cfa65ca7::t_e13eb590a9861d 24-25
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_de8102e6a15c01 114-124
+  s_97a431cfa65ca7::t_779ecd48078d4d 86-92,94
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_6e270949eb37b5 127-128
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_b555ec232ac37e 89-99
+  s_97a431cfa65ca7::t_9bb9a73394925d 88
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_e97ba55af46dd3 11,612-668
+  s_97a431cfa65ca7::t_697374305ffe11 669
+src/app/jeu/habitants/AuxPortes.css.test.ts
+  s_97a431cfa65ca7::t_be7c406a2850d3 1-21
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_2f46f076031d0c 102-115
+src/app/jeu/habitants/actions-aux-portes.test.ts
+  s_97a431cfa65ca7::t_571c354e132f45 41-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cf7e76ad2d9c77e73d42a97ee0597806fb09fa80",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
