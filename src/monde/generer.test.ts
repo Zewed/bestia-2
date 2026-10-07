@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
-import { BIOMES_DE_LA_COURONNE, COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
+import { BIOMES_DE_LA_COURONNE, COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, JOUEURS_PAR_MONDE, MONDE_RAYON } from "@/reglages";
 import { BANDE_DE_CALCUL, casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine } from "./generer";
-import { CENTRE, distance, voisines } from "./hex";
+import { casesDesAnneaux, CENTRE, distance, voisines, type Coordonnees } from "./hex";
 
 const ESSAI = { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: 12345 };
 /** Vingt graines quelconques, pour vérifier ce qui doit tenir pour tout Monde généré. */
@@ -144,4 +144,30 @@ describe("Cœur sauvage au milieu du Monde (US-0403)", () => {
     const differentes = coeur(12345).filter((c) => autre.get(cle(c)) !== c.biome).length;
     expect(differentes / 169).toBeGreaterThan(0.3);
   });
+});
+
+describe("Couronne sur le bord du Monde (US-0404)", () => {
+  it("fait des Cases à moins de 6 Cases du bord la Couronne : comptées de proche en proche jusqu'au bord, et seulement elles", () => {
+    expect(COURONNE_ANNEAUX).toBe(6);
+    const bord = casesDesAnneaux(MONDE_RAYON, MONDE_RAYON);
+    for (const c of genererLeMonde(ESSAI)) {
+      const jusquAuBord = Math.min(...bord.map((b) => distance(c, b)));
+      expect(jusquAuBord).toBe(MONDE_RAYON - c.anneau);
+      expect(c.couronne).toBe(jusquAuBord < COURONNE_ANNEAUX);
+    }
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "fait savoir à chaque Case si elle est dans la Couronne, et y garde assez de terre pour 90 joueurs, à 4 Cases au moins l'un de l'autre (graine %i)",
+    (graine) => {
+      const cases = genererLeMonde({ ...ESSAI, graine });
+      for (const c of cases) expect(c.couronne).toBe(c.anneau > MONDE_RAYON - COURONNE_ANNEAUX);
+      expect(cases.filter((c) => c.couronne)).toHaveLength(2070);
+      // Des Foyers posés un à un sur la terre de la Couronne, sur la première Case assez loin des autres.
+      const foyers: Coordonnees[] = [];
+      for (const c of cases) if (c.couronne && c.biome !== "eau" && foyers.every((f) => distance(f, c) >= ECART_ENTRE_FOYERS)) foyers.push(c);
+      expect(JOUEURS_PAR_MONDE).toBe(90);
+      expect(foyers.length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
+    },
+  );
 });

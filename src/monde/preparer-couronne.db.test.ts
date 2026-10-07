@@ -2,8 +2,11 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { chargerJeu } from "@/donnees/charger";
 import { lireDonnees } from "@/donnees/jeux";
+import { ECART_ENTRE_FOYERS, JOUEURS_PAR_MONDE } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
+import { emplacementsDeFoyers } from "./foyers";
+import { distance, type Coordonnees } from "./hex";
 import { preparerCouronne } from "./preparer-couronne";
 
 /** Les Cases d'un Monde en base, rangées comme casesDeLaCouronne les rend. */
@@ -142,5 +145,22 @@ describe.skipIf(!URL_TEST)("la Couronne du Monde du jeu, une fois sa graine enre
        from monde m join case_du_monde c on c.monde_id = m.id where m.id = (select min(id) from monde) group by m.rayon_coeur`,
     );
     expect(rows[0]).toEqual({ rayon_coeur: 8, dansLeCoeur: 0, plusPres: 55 });
+  });
+
+  it("dit de chaque Case si elle est dans la Couronne, et y garde assez de terre, et de prairie, pour 90 joueurs (US-0404)", async () => {
+    const { rows: mondes } = await pool.query("select id, rayon, anneaux_couronne as anneaux from monde order by id limit 1");
+    const { id, rayon, anneaux } = mondes[0];
+    const { rows: cases } = await pool.query<Coordonnees & { anneau: number; couronne: boolean; biome: string }>(
+      "select q, r, anneau, couronne, biome_id as biome from case_du_monde where monde_id = $1 order by q, r",
+      [id],
+    );
+    expect(cases).toHaveLength(2070);
+    for (const c of cases) expect(c.couronne).toBe(c.anneau > rayon - anneaux);
+    // Des Foyers posés un à un sur la terre de la Couronne, sur la première Case assez loin des autres.
+    const surLaTerre: Coordonnees[] = [];
+    for (const c of cases) if (c.biome !== "eau" && surLaTerre.every((f) => distance(f, c) >= ECART_ENTRE_FOYERS)) surLaTerre.push(c);
+    expect(surLaTerre.length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
+    // Et selon la règle des naissances (US-0152), en prairie seulement, Cases déjà prises comprises.
+    expect(emplacementsDeFoyers(cases, []).length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
   });
 });

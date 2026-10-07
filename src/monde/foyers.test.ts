@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, MONDE_RAYON } from "@/reglages";
+import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, JOUEURS_PAR_MONDE, MONDE_RAYON } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
 import { genererLeMonde } from "./generer";
@@ -26,10 +26,10 @@ describe("Cases où un Foyer peut naître (US-0152)", () => {
     expect(peutAccueillirUnFoyer(prairie, [{ q: 4, r: -60 }])).toBe(true);
   });
 
-  it("estime la place de la Couronne d'Aube à environ 90 Foyers, tous en prairie et assez éloignés", () => {
+  it("estime la place de la Couronne d'Aube à au moins 90 Foyers, tous en prairie et assez éloignés (US-0404)", () => {
     const couronne = casesDeLaCouronne({ rayon: 60, anneaux: 6, graine: graineDuMonde("Aube") });
     const emplacements = emplacementsDeFoyers(couronne, []);
-    expect(emplacements.length).toBeGreaterThan(75);
+    expect(emplacements.length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
     const biomeDe = new Map(couronne.map((c) => [`${c.q},${c.r}`, c.biome]));
     for (const e of emplacements) expect(biomeDe.get(`${e.q},${e.r}`)).toBe("prairie");
     for (const [i, a] of emplacements.entries()) for (const b of emplacements.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);

@@ -54,8 +54,9 @@ export const NOM_DE_CHEF_PAUSE_MS = 500;
  */
 export const MONDE_RAYON = 60;
 /**
- * … dont les 6 anneaux extérieurs forment la Couronne, où naissent les joueurs (US-0152 : environ 90
- * Foyers). Elle peut s'élargir vers l'intérieur, jamais rétrécir : une Case créée reste.
+ * … dont les 6 anneaux extérieurs, les Cases à moins de 6 Cases du bord, forment la Couronne, où naissent
+ * les joueurs (US-0152, US-0404 : valeur provisoire, à régler en jouant). Elle peut s'élargir vers
+ * l'intérieur, jamais rétrécir : une Case créée reste.
  */
 export const COURONNE_ANNEAUX = 6;
 /** US-0152 : deux Foyers sont toujours à au moins 4 Cases l'un de l'autre. */
@@ -118,3 +119,9 @@ export const VOYAGEUR_ALERTE_MINUTES = 60;
  * fiche du Monde à sa naissance : la changer ici ne touche pas un Monde déjà né.
  */
 export const COEUR_SAUVAGE_RAYON = 8;
+
+/**
+ * US-0404 : la Couronne d'un Monde garde assez de terre pour 90 joueurs, chacun son Foyer à au moins
+ * ECART_ENTRE_FOYERS Cases des autres (valeur provisoire, à régler en jouant).
+ */
+export const JOUEURS_PAR_MONDE = 90;

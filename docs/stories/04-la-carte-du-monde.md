@@ -39,11 +39,12 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0404 · Placer la Couronne sur le bord du Monde
 **En tant que** développeur, **je veux** que le bord du Monde forme la Couronne, **afin de** préparer les Cases où naîtront les joueurs.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). C'était déjà en place depuis le jalon 1 : les 6 anneaux du bord (2 070 Cases) forment la Couronne, et chaque Case le sait. La story ajoute la preuve, sur 21 graines et sur le Monde du jeu : la Couronne garde assez de terre pour 90 Foyers espacés de 4 Cases (96 emplacements en prairie pour le Monde du jeu). Attention pour US-0413 : avec la règle de naissance actuelle (prairie seulement), un Monde généré n'offre selon sa graine que 76 à 97 emplacements. Rien de visible.
 - **Débloquée par** : US-0402
 - **Critères d'acceptation** :
-  - Les Cases à moins de (chiffre à régler) Cases du bord appartiennent à la Couronne.
+  - Les Cases à moins de 6 Cases du bord (provisoire, `COURONNE_ANNEAUX`) appartiennent à la Couronne.
   - Chaque Case sait si elle appartient à la Couronne.
-  - La Couronne compte assez de Cases de terre pour accueillir (chiffre à régler) joueurs.
+  - La Couronne compte assez de Cases de terre pour accueillir 90 joueurs (provisoire, `JOUEURS_PAR_MONDE`).
 
 ### US-0405 · Mesurer l'éloignement de chaque Case au Cœur sauvage
 **En tant que** développeur, **je veux** que chaque Case connaisse sa distance au Cœur sauvage, **afin de** pouvoir plus tard y régler la Rareté des Bêtes sauvages et la fréquence des Incursions.
