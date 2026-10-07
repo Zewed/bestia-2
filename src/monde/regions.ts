@@ -48,6 +48,30 @@ export function regionsDe<T>(grille: Grille, etiquettes: ArrayLike<T>, retenue: 
   return regions;
 }
 
+/**
+ * US-0410, US-0411 : si les régions de terre où sont les Cases `bord` gardent chacune au moins
+ * REGION_BIOME_MIN_CASES Cases d'un seul tenant : de l'eau vient d'être posée à côté d'elles, qui a pu
+ * couper la terre. Chaque région n'est parcourue que jusqu'à cette taille.
+ */
+export function regionsEntieres(grille: Grille, biomes: Biome[], bord: Iterable<number>): boolean {
+  const assezGrandes = new Set<number>();
+  for (const depart of bord) {
+    if (biomes[depart] === "eau" || assezGrandes.has(depart)) continue;
+    const region = [depart];
+    const dans = new Set(region);
+    for (let k = 0; k < region.length && region.length < REGION_BIOME_MIN_CASES; k++) {
+      for (const v of grille.autour[region[k]]) {
+        if (dans.has(v) || biomes[v] !== biomes[depart]) continue;
+        dans.add(v);
+        region.push(v);
+      }
+    }
+    if (region.length < REGION_BIOME_MIN_CASES) return false;
+    for (const i of region) assezGrandes.add(i);
+  }
+  return true;
+}
+
 /** Un champ de bruit doux sur tout le Monde, de 0 à 1, à l'échelle de `taille` Cases à peu près. */
 export function champ(grille: Grille, graine: number, taille: number): number[] {
   return grille.cases.map((c) => {

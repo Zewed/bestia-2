@@ -7,6 +7,9 @@ import {
   COURONNE_ANNEAUX,
   ECART_ENTRE_FOYERS,
   JOUEURS_PAR_MONDE,
+  LAC_MAX_CASES,
+  LAC_MIN_CASES,
+  LACS_PAR_MONDE,
   MER_MIN_CASES,
   MER_PART,
   MERS_MAX,
@@ -55,6 +58,13 @@ function regionsDe(cases: CaseGeneree[]): CaseGeneree[][] {
   }
   return regions;
 }
+
+/** Les Cases voisines d'une Case, dans un Monde. */
+function autourDans(cases: CaseGeneree[]): (c: Coordonnees) => CaseGeneree[] {
+  const parCle = new Map(cases.map((c) => [cle(c), c]));
+  return (c) => voisinesDansLeMonde(c, MONDE_RAYON).map((v) => parCle.get(cle(v))!);
+}
+const terre = (c: CaseGeneree) => c.biome !== "eau";
 
 describe("générer un Monde à partir d'une graine (US-0401)", () => {
   const monde = mondeDe(ESSAI.graine);
@@ -374,8 +384,8 @@ describe("mer (US-0408)", () => {
       const cases = mondeDe(graine);
       const mer = cases.filter(deMer);
       expect(Math.abs(mer.length / cases.length - MER_PART)).toBeLessThanOrEqual(0.02);
-      // L'eau du Monde est toute de la mer, côtes comprises, pour l'instant : les lacs et rivières viennent après.
-      expect(cases.filter((c) => c.biome === "eau")).toEqual(mer);
+      // Hors des lacs et des rivières (US-0410, US-0411), l'eau du Monde est toute de la mer, côtes comprises.
+      expect(cases.filter((c) => c.biome === "eau" && c.variante !== "lac" && c.variante !== "riviere")).toEqual(mer);
       const mers = mersDe(cases);
       expect(mers.length).toBeGreaterThanOrEqual(1);
       expect(mers.length).toBeLessThanOrEqual(MERS_MAX);
@@ -396,13 +406,6 @@ describe("mer (US-0408)", () => {
 });
 
 describe("côtes (US-0409)", () => {
-  /** Les Cases voisines d'une Case, dans le Monde. */
-  const autourDans = (cases: CaseGeneree[]) => {
-    const parCle = new Map(cases.map((c) => [cle(c), c]));
-    return (c: Coordonnees) => voisinesDansLeMonde(c, MONDE_RAYON).map((v) => parCle.get(cle(v))!);
-  };
-  const terre = (c: CaseGeneree) => c.biome !== "eau";
-
   it.each([...GRAINES, graineDuMonde("Aube")])("change en côte toute Case de mer qui touche la terre, et elles seules : la côte est de l'eau (graine %i)", (graine) => {
     const cases = mondeDe(graine);
     const autour = autourDans(cases);
@@ -428,4 +431,52 @@ describe("côtes (US-0409)", () => {
     expect(mer.length).toBeGreaterThan(0);
     for (const c of mer) expect(autour(c).every((v) => v.variante === "mer" || v.variante === "cote"), cle(c)).toBe(true);
   });
+});
+
+describe("lacs (US-0410)", () => {
+  const lacsDe = (cases: CaseGeneree[]) => regionsDe(cases.filter((c) => c.variante === "lac"));
+  const salee = (c: CaseGeneree) => c.variante === "mer" || c.variante === "cote";
+
+  it("fixe les réglages des lacs : 8 lacs par Monde, de 3 à 12 Cases chacun", () => {
+    expect([LACS_PAR_MONDE, LAC_MIN_CASES, LAC_MAX_CASES]).toEqual([8, 3, 12]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("sème 8 lacs de 3 à 12 Cases d'un seul tenant (graine %i)", (graine) => {
+    const lacs = lacsDe(mondeDe(graine));
+    expect(lacs).toHaveLength(LACS_PAR_MONDE);
+    for (const lac of lacs) {
+      expect(lac.length, cle(lac[0])).toBeGreaterThanOrEqual(LAC_MIN_CASES);
+      expect(lac.length, cle(lac[0])).toBeLessThanOrEqual(LAC_MAX_CASES);
+      for (const c of lac) expect(c.biome).toBe("eau");
+    }
+    // Des lacs de tailles diverses, pas tous pareils.
+    expect(new Set(lacs.map((l) => l.length)).size).toBeGreaterThan(1);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("les met à l'intérieur des terres : ni dans le Cœur sauvage, ni dans la Couronne (graine %i)", (graine) => {
+    const cases = mondeDe(graine);
+    const autour = autourDans(cases);
+    for (const c of cases.filter((c) => c.variante === "lac")) expect(c.coeur || c.couronne, cle(c)).toBe(false);
+    // Chaque lac est entouré de terre, et des rivières qui s'y jettent (US-0411).
+    for (const lac of lacsDe(cases)) {
+      const dans = new Set(lac.map(cle));
+      const bord = lac.flatMap(autour).filter((v) => !dans.has(cle(v)));
+      expect(bord.filter((v) => !terre(v) && v.variante !== "riviere").map(cle), cle(lac[0])).toEqual([]);
+    }
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "ne fait jamais toucher un lac à la mer ni à la côte, ni à un autre lac : une Case de terre au moins les sépare (graine %i)",
+    (graine) => {
+      const cases = mondeDe(graine);
+      const autour = autourDans(cases);
+      const lacDe = new Map(lacsDe(cases).flatMap((lac, k) => lac.map((c) => [cle(c), k])));
+      for (const c of cases.filter((c) => c.variante === "lac")) expect(autour(c).filter(salee).map(cle), cle(c)).toEqual([]);
+      // Toute Case voisine à la fois d'un lac et d'une autre eau (la mer, sa côte, un autre lac) est de la terre.
+      for (const c of cases.filter((c) => c.variante !== "lac")) {
+        const sesLacs = new Set(autour(c).flatMap((v) => (lacDe.has(cle(v)) ? [lacDe.get(cle(v))] : [])));
+        if (sesLacs.size > 1 || (sesLacs.size === 1 && autour(c).some(salee))) expect(terre(c), cle(c)).toBe(true);
+      }
+    },
+  );
 });

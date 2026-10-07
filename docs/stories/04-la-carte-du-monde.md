@@ -100,11 +100,12 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0410 · Semer des lacs
 **En tant que** joueur, **je veux** trouver des lacs à l'intérieur des terres, **afin de** rencontrer de l'eau loin de la mer.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Huit lacs de 3 à 12 Cases (variante « lac »), d'un seul tenant, à l'intérieur des terres : jamais dans le Cœur sauvage ni dans la Couronne (pour garder la place des naissances), ni sur une montagne, toujours séparés de la mer, des côtes et des autres lacs par de la terre. Prouvé sur 21 graines, tenu sur 600. Rien de visible.
 - **Débloquée par** : US-0408
 - **Critères d'acceptation** :
-  - Des lacs de (chiffre à régler) à (chiffre à régler) Cases apparaissent à l'intérieur des terres.
+  - Des lacs de 3 à 12 Cases (provisoire, `LAC_MIN_CASES`, `LAC_MAX_CASES`) apparaissent à l'intérieur des terres.
   - Un lac ne touche jamais la mer ni la côte.
-  - Le Monde compte (chiffre à régler) lacs.
+  - Le Monde compte 8 lacs (provisoire, `LACS_PAR_MONDE`).
 
 ### US-0411 · Tracer des rivières
 **En tant que** joueur, **je veux** voir des rivières couler des montagnes vers l'eau, **afin de** lire le paysage comme un vrai relief.

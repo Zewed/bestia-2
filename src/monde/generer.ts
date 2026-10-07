@@ -6,6 +6,7 @@ import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
 import { chainesDeMontagnes, climatDuMonde, eviterLesVoisinagesInterdits } from "./climat";
 import { BANDE_DE_CALCUL } from "./couronne";
 import { anneau, dansLeCoeur, eloignementDuCoeur, type Coordonnees } from "./hex";
+import { lacsDuMonde } from "./lacs";
 import { cotesDeLaMer, merDuMonde } from "./mer";
 import { biomesDesProvinces, fondreLesPetitesRegions, grilleDuMonde, provinces, regionsDuCoeur, type Biome, type Grille, type Variante } from "./regions";
 
@@ -20,11 +21,17 @@ export const GRAINE_MAX = 2 ** 32 - 1;
  * dressent leurs chaînes (US-0407) ; tout le reste, Couronne comprise, est fait de provinces qui reçoivent
  * chacune un Biome de terre selon leur climat (US-0406), un côté du Monde froid et l'autre chaud
  * (US-0407). Les voisinages interdits sont ensuite ôtés, puis les petites régions fondues. Enfin, la mer
- * qui touche la terre devient sa côte (US-0409).
+ * qui touche la terre devient sa côte (US-0409), et des lacs sont semés à l'intérieur des terres (US-0410).
  */
 function biomesDuMonde(
   grille: Grille,
-  { rayon, rayonCoeur, graine, voisinagesInterdits }: { rayon: number; rayonCoeur: number; graine: number; voisinagesInterdits: [string, string][] },
+  {
+    rayon,
+    anneaux,
+    rayonCoeur,
+    graine,
+    voisinagesInterdits,
+  }: { rayon: number; anneaux: number; rayonCoeur: number; graine: number; voisinagesInterdits: [string, string][] },
 ): { biomes: Biome[]; variantes: (Variante | null)[] } {
   const interdites = new Set(voisinagesInterdits.flatMap(([a, b]) => [`${a}|${b}`, `${b}|${a}`]));
   const interdit = (a: Biome, b: Biome) => interdites.has(`${a}|${b}`);
@@ -44,6 +51,9 @@ function biomesDuMonde(
   fondreLesPetitesRegions(grille, biomes, interdit);
   const cote = cotesDeLaMer(grille, mer);
   const variantes = grille.cases.map((_, i): Variante | null => (cote[i] ? "cote" : mer[i] ? "mer" : null));
+  for (const lac of lacsDuMonde(grille, biomes, { rayon, anneaux, rayonCoeur, graine })) {
+    for (const i of lac) [biomes[i], variantes[i]] = ["eau", "lac"];
+  }
   return { biomes, variantes };
 }
 
@@ -70,7 +80,7 @@ export function genererLeMonde({
 }): CaseGeneree[] {
   if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
   const grille = grilleDuMonde(rayon);
-  const { biomes, variantes } = biomesDuMonde(grille, { rayon, rayonCoeur, graine, voisinagesInterdits });
+  const { biomes, variantes } = biomesDuMonde(grille, { rayon, anneaux, rayonCoeur, graine, voisinagesInterdits });
   return grille.cases.map((c, i) => ({
     q: c.q,
     r: c.r,

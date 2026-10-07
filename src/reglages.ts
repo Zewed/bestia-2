@@ -161,3 +161,12 @@ export const MER_PART = 0.15;
 export const MERS_MAX = 3;
 /** … chacune d'au moins 300 Cases d'un seul tenant (valeur provisoire). */
 export const MER_MIN_CASES = 300;
+
+/**
+ * US-0410 : un Monde généré compte 8 lacs à l'intérieur des terres (valeur provisoire, à régler en jouant ;
+ * jamais moins de 6 quand la place manque)…
+ */
+export const LACS_PAR_MONDE = 8;
+/** … chacun de 3 à 12 Cases d'un seul tenant (valeurs provisoires). */
+export const LAC_MIN_CASES = 3;
+export const LAC_MAX_CASES = 12;
