@@ -18,9 +18,10 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0402 · Donner au Monde sa forme et ses voisinages
 **En tant que** développeur, **je veux** un Monde d'une taille fixe où chaque Case connaît ses voisines, **afin de** mesurer partout les distances de la même façon.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). C'était déjà la géométrie du jeu : un grand hexagone en coordonnées axiales, l'anneau d'une Case étant sa distance au Cœur sauvage. `distance` (`src/monde/hex.ts`) est la seule mesure, l'anneau en découle, et un test refuse toute autre formule dans le code ; `voisinesDansLeMonde` rend six voisines, quatre au bord, trois aux six coins. Rien de visible.
 - **Débloquée par** : US-0401
 - **Critères d'acceptation** :
-  - Le Monde a la forme d'un grand hexagone ou d'un disque (à décider), de (chiffre à régler) Cases de rayon.
+  - Le Monde a la forme d'un grand hexagone (décidé le 2026-10-07), de 60 Cases de rayon (provisoire, `MONDE_RAYON`).
   - Chaque Case connaît ses six voisines ; celles du bord en ont moins.
   - La distance entre deux Cases se compte en nombre de Cases à franchir, avec une seule façon de la calculer, réutilisée partout (trajets, brouillard, Couronne).
 

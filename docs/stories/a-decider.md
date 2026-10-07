@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-255 points au total.
+254 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -26,7 +26,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
 
-- [US-0402](04-la-carte-du-monde.md) · Donner au Monde sa forme et ses voisinages : le Monde a la forme d'un grand hexagone ou d'un disque, de (chiffre à régler) Cases de rayon.
 - [US-0403](04-la-carte-du-monde.md) · Placer le Cœur sauvage au milieu du Monde : le Cœur sauvage mêle plusieurs Biomes au lieu d'un seul.
 - [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu.
 - [US-0407](04-la-carte-du-monde.md) · Enchaîner les Biomes de façon naturelle : les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde, ou selon l'éloignement au Cœur sauvage.

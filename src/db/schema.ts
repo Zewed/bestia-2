@@ -388,6 +388,7 @@ export const caseDuMonde = pgTable(
     unique("case_unique_dans_le_monde").on(t.mondeId, t.q, t.r),
     index("case_par_anneau").on(t.mondeId, t.anneau),
     index("case_par_chef").on(t.chefId),
+    // US-0402 : la même formule que distance (src/monde/hex.ts), la seule mesure des distances du jeu, ici pour vérifier l'anneau.
     check("case_anneau_exact", sql`${t.anneau} = greatest(abs(${t.q}), abs(${t.r}), abs(${t.q} + ${t.r}))`),
   ],
 );

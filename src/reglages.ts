@@ -48,7 +48,10 @@ export const NOM_DE_CHEF_MAX = 16;
 /** US-0136 : la disponibilité du nom est cherchée après une demi-seconde sans frappe. */
 export const NOM_DE_CHEF_PAUSE_MS = 500;
 
-/** US-0151 : le Monde est un disque d'hexagones de 60 anneaux autour du Cœur sauvage… */
+/**
+ * US-0151, US-0402 : le Monde est un grand hexagone de 60 Cases de rayon (valeur provisoire, à régler en
+ * jouant) : 60 anneaux autour du Cœur sauvage, 10 981 Cases en tout…
+ */
 export const MONDE_RAYON = 60;
 /**
  * … dont les 6 anneaux extérieurs forment la Couronne, où naissent les joueurs (US-0152 : environ 90

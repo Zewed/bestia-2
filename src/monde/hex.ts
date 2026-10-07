@@ -1,16 +1,27 @@
 // La géométrie des Cases : des hexagones repérés par deux coordonnées (q, r), le Cœur sauvage
-// au centre (0, 0). L'anneau d'une Case est sa distance au centre, en Cases.
+// au centre (0, 0). Le Monde est un grand hexagone (US-0402) : toutes les Cases à au plus son
+// rayon du centre. Les distances se comptent d'une seule façon, par `distance`, partout ;
+// l'anneau d'une Case est sa distance au centre.
 
 export type Coordonnees = { q: number; r: number };
 
-/** La distance au centre : 0 au Cœur sauvage, le rayon du Monde sur son bord. */
-export function anneau({ q, r }: Coordonnees): number {
-  return Math.max(Math.abs(q), Math.abs(r), Math.abs(q + r));
+/** Le centre du Monde, au cœur du Cœur sauvage. */
+export const CENTRE: Coordonnees = { q: 0, r: 0 };
+
+/**
+ * US-0402 : la distance entre deux Cases, en nombre de Cases à franchir de l'une à l'autre. C'est la
+ * seule façon de la compter dans le jeu (trajets, brouillard, Couronne) ; seule la contrainte
+ * case_anneau_exact de la base refait le même calcul, pour vérifier l'anneau de chaque Case.
+ */
+export function distance(a: Coordonnees, b: Coordonnees): number {
+  const dq = a.q - b.q;
+  const dr = a.r - b.r;
+  return Math.max(Math.abs(dq), Math.abs(dr), Math.abs(dq + dr));
 }
 
-/** La distance entre deux Cases, en Cases. */
-export function distance(a: Coordonnees, b: Coordonnees): number {
-  return anneau({ q: a.q - b.q, r: a.r - b.r });
+/** La distance au centre : 0 au Cœur sauvage, le rayon du Monde sur son bord. */
+export function anneau(c: Coordonnees): number {
+  return distance(c, CENTRE);
 }
 
 /** Les six directions d'une Case vers ses voisines. */
@@ -25,6 +36,16 @@ export const DIRECTIONS: readonly Coordonnees[] = [
 
 export function voisines({ q, r }: Coordonnees): Coordonnees[] {
   return DIRECTIONS.map((d) => ({ q: q + d.q, r: r + d.r }));
+}
+
+/** US-0402 : si une Case fait partie d'un Monde de `rayon` Cases de rayon. */
+export function dansLeMonde(c: Coordonnees, rayon: number): boolean {
+  return anneau(c) <= rayon;
+}
+
+/** US-0402 : les voisines d'une Case dans un Monde de `rayon` Cases de rayon : six, quatre sur le bord, trois aux six coins. */
+export function voisinesDansLeMonde(c: Coordonnees, rayon: number): Coordonnees[] {
+  return voisines(c).filter((v) => dansLeMonde(v, rayon));
 }
 
 /** Toutes les Cases dont l'anneau est entre `de` et `a`, bornes comprises. */
