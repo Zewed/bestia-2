@@ -3,7 +3,7 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
-import { VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { programmerEvenement, type Evenement } from "@/temps/avancer";
 
 /** US-0331 : l'événement d'une arrivée ; ses données portent son numéro, 1 pour la première du Territoire. */
@@ -56,16 +56,28 @@ export async function arriveeDUnVoyageur(client: PoolClient, territoireId: numbe
   await programmerEvenement(client, "territoire", territoireId, suivante, ARRIVEE_VOYAGEUR, { numero: numero + 1 });
 }
 
-/** US-0332 : un Voyageur qui attend aux portes : son prénom et l'heure du jeu de son arrivée. */
-export type VoyageurAuxPortes = { id: number; prenom: string; arriveLe: Date };
+/**
+ * US-0333 : l'instant où un Voyageur arrivé à `arriveLe` repart s'il n'a pas été accueilli, VOYAGEUR_ATTEND_HEURES
+ * heures de jeu plus tard. La seule règle de son départ : la page en tire le compte à rebours, et le départ
+ * lui-même (US-0337) la suivra.
+ */
+export function departDuVoyageur(arriveLe: Date): Date {
+  return new Date(arriveLe.getTime() + VOYAGEUR_ATTEND_HEURES * 3_600_000);
+}
+
+/**
+ * US-0332 : un Voyageur qui attend aux portes : son prénom et l'heure du jeu de son arrivée ; US-0333 : et celle
+ * de son départ.
+ */
+export type VoyageurAuxPortes = { id: number; prenom: string; arriveLe: Date; departLe: Date };
 
 /** US-0332 : les Voyageurs qui attendent aux portes du Territoire, du premier arrivé au dernier. */
 export async function voyageursAuxPortes(base: Pool | PoolClient, territoireId: number): Promise<VoyageurAuxPortes[]> {
-  const { rows } = await base.query<VoyageurAuxPortes>(
+  const { rows } = await base.query<Omit<VoyageurAuxPortes, "departLe">>(
     `select id, prenom, arrive_le as "arriveLe" from voyageur where territoire_id = $1 order by arrive_le, id`,
     [territoireId],
   );
-  return rows;
+  return rows.map((v) => ({ ...v, departLe: departDuVoyageur(v.arriveLe) }));
 }
 
 /** US-0332 : le nombre de Voyageurs qui attendent aux portes, pour le repère de l'entrée « Habitants ». */

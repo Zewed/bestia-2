@@ -556,20 +556,32 @@ describe("page Habitants au pouce (US-0306)", () => {
   });
 });
 
-// US-0332 : les Voyageurs aux portes, lus pour la page (vitest remonte ces deux appels en tête du fichier).
-type Voyageur = { id: number; prenom: string; arriveLe: Date };
+// US-0332 : les Voyageurs aux portes, lus pour la page, et US-0333 : la partie qui les montre, observée pour voir
+// ce que la page lui confie (vitest remonte ces appels en tête du fichier).
+type Voyageur = { id: number; prenom: string; arriveLe: Date; departLe: Date };
 const voyageurs = vi.hoisted(() => ({ voyageursAuxPortes: vi.fn(async (): Promise<Voyageur[]> => []) }));
 vi.mock("@/monde/voyageurs", async (original) => ({ ...(await original<object>()), ...voyageurs }));
+const portes = vi.hoisted(() => ({ AuxPortes: vi.fn() }));
+vi.mock("./AuxPortes", async (original) => {
+  const { AuxPortes } = await original<typeof import("./AuxPortes")>();
+  portes.AuxPortes.mockImplementation(AuxPortes);
+  return portes;
+});
 
-describe("page Habitants, les Voyageurs aux portes (US-0332)", () => {
-  afterEach(() => {
+describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
+  afterEach(async () => {
     voyageurs.voyageursAuxPortes.mockReset();
     metiers.lesMetiers.mockReset();
+    (await import("@/temps/horloge")).definirAncre(null);
   });
 
   const HEURE = 3_600_000;
-  /** Un joueur connecté, ses trois Habitants, les huit Métiers et ces Voyageurs aux portes, arrivés il y a tant d'heures. */
-  const connecte = (...attentes: [prenom: string, heures: number][]) => {
+  /**
+   * Un joueur connecté, ses trois Habitants, les huit Métiers et ces Voyageurs aux portes, arrivés il y a tant
+   * d'heures, chacun avec son départ tel que le jeu le calcule.
+   */
+  const connecte = async (...attentes: [prenom: string, heures: number][]) => {
+    const { departDuVoyageur } = await import("@/monde/voyageurs");
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
     habitants.habitantsDuTerritoire.mockResolvedValue(PRENOMS.map((prenom, i) => ({ id: 40 + i, prenom, ...UN_HABITANT })));
@@ -577,9 +589,8 @@ describe("page Habitants, les Voyageurs aux portes (US-0332)", () => {
     habitants.entretienDesHabitants.mockResolvedValue({ habitants: 3, parHabitant: 2, parHeure: "6" });
     metiers.lesMetiers.mockResolvedValue(HUIT_METIERS);
     // Une demi-minute de plus : le temps du test passe sans changer l'heure entière affichée.
-    voyageurs.voyageursAuxPortes.mockResolvedValue(
-      attentes.map(([prenom, heures], i) => ({ id: 70 + i, prenom, arriveLe: new Date(Date.now() - heures * HEURE - 30_000) })),
-    );
+    const arrivees = attentes.map(([prenom, heures], i) => ({ id: 70 + i, prenom, arriveLe: new Date(Date.now() - heures * HEURE - 30_000) }));
+    voyageurs.voyageursAuxPortes.mockResolvedValue(arrivees.map((v) => ({ ...v, departLe: departDuVoyageur(v.arriveLe) })));
   };
   /** La partie « Aux portes », telle qu'elle est écrite. */
   const auxPortes = (html: string) => html.match(/<section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section>/)?.[0] ?? "";
@@ -587,20 +598,33 @@ describe("page Habitants, les Voyageurs aux portes (US-0332)", () => {
   const lignesAuxPortes = (html: string) =>
     [...auxPortes(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
 
-  it("montre chaque Voyageur qui attend aux portes du Territoire du joueur, dans l'ordre de la lecture, et depuis quand il attend", async () => {
-    connecte(["Joran", 5], ["Ilda", 2]);
+  it("montre chaque Voyageur qui attend aux portes du Territoire du joueur, dans l'ordre de la lecture, depuis quand il attend et, US-0333, dans combien de temps il repart", async () => {
+    await connecte(["Joran", 5], ["Ilda", 2]);
     const html = renderToStaticMarkup(await Habitants());
     expect(voyageurs.voyageursAuxPortes).toHaveBeenCalledWith(expect.anything(), 12);
-    expect(lignesAuxPortes(html)).toEqual(["Joran · arrivé il y a 5 h", "Ilda · arrivé il y a 2 h"]);
+    expect(lignesAuxPortes(html)).toEqual(["Joran · arrivé il y a 5 h · repart dans 7 h", "Ilda · arrivé il y a 2 h · repart dans 10 h"]);
+  });
+
+  it("confie au compte à rebours l'heure et la vitesse du jeu, telles que le serveur les tient (US-0333)", async () => {
+    const { definirAncre } = await import("@/temps/horloge");
+    const jeu = Date.parse("2026-10-07T18:00:00Z");
+    definirAncre({ facteur: 100, reel: Date.now(), jeu });
+    await connecte(["Joran", 5]);
+    renderToStaticMarkup(await Habitants());
+    const { voyageurs: confies, maintenant, vitesse } = portes.AuxPortes.mock.lastCall?.[0] ?? {};
+    expect(confies).toEqual(await voyageurs.voyageursAuxPortes.mock.results[0].value);
+    expect(vitesse).toBe(100);
+    expect(maintenant.getTime() - jeu).toBeGreaterThanOrEqual(0);
+    expect(maintenant.getTime() - jeu).toBeLessThan(100 * 5_000);
   });
 
   it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {
-    connecte();
+    await connecte();
     expect(auxPortes(renderToStaticMarkup(await Habitants()))).toMatch(/<h2[^>]*>Aux portes<\/h2><p[^>]*>Personne aux portes pour l&#x27;instant\.<\/p><\/section>$/);
   });
 
   it("met « Aux portes » en tête de la colonne, avant l'Entretien et les Métiers, à côté de la liste sur ordinateur", async () => {
-    connecte(["Joran", 5]);
+    await connecte(["Joran", 5]);
     const html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(/<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Aux portes<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Entretien<\/h2>/);
   });
@@ -617,5 +641,14 @@ describe("page Habitants, les Voyageurs aux portes (US-0332)", () => {
     expect(dans(page, "@media (max-width: 1100px)", ".colonne")).toContain("display: contents;");
     expect(dans(page, "@media (max-width: 1100px)", ".colonne > *")).toContain("grid-column: 1 / span 6;");
     expect(dans(page, "@media (max-width: 820px) {\n  .colonne > *", ".colonne > *")).toContain("grid-column: 1 / -1;");
+  });
+
+  it("met le compte à rebours qui s'achève dans la couleur d'alerte de la page, et le garde au bout de la ligne sans la déborder (US-0333)", () => {
+    const css = readFileSync(join(process.cwd(), "src/app/jeu/habitants/AuxPortes.module.css"), "utf8");
+    expect(css).toMatch(/\n\.depart\[data-alerte\] \{[^}]*color: var\(--mauvais\);/);
+    expect(css).toMatch(/\n\.depart \{[^}]*grid-column: 2;[^}]*font-variant-numeric: tabular-nums;/);
+    // Le prénom prend la place qui reste ; le compte va à la ligne plutôt que de pousser la page de côté.
+    expect(css).toMatch(/\n\.voyageur \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/);
+    expect(css).not.toContain("nowrap");
   });
 });

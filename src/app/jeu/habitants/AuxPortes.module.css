@@ -1,6 +1,6 @@
 /*
  * US-0332 : la partie « Aux portes » de la page Habitants, une ligne par Voyageur qui attend : son prénom,
- * et dessous, en discret, depuis quand il attend.
+ * et dessous, en discret, depuis quand il attend ; US-0333 : à droite, son compte à rebours.
  */
 .voyageurs {
   display: grid;
@@ -28,6 +28,23 @@
   grid-row: 2;
   color: var(--texte-discret);
   font-size: 13px;
+}
+
+/*
+ * US-0333 : à droite, sur la hauteur des deux lignes, le compte à rebours avant son départ, en chiffres de même
+ * largeur pour qu'il ne danse pas en diminuant ; sous l'heure qui reste, dans la couleur d'alerte.
+ */
+.depart {
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  color: var(--texte-2);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.depart[data-alerte] {
+  color: var(--mauvais);
+  font-weight: var(--graisse-titre);
 }
 
 /* Quand personne n'attend. */

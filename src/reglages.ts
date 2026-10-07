@@ -103,3 +103,11 @@ export const PLACES_DU_FOYER = 5;
 export const VOYAGEUR_TOUTES_LES_HEURES = 8;
 /** US-0331 : au plus 3 Voyageurs attendent aux portes en même temps (valeur provisoire, à régler en jouant). */
 export const VOYAGEURS_EN_ATTENTE_MAX = 3;
+
+/**
+ * US-0333 : un Voyageur attend 12 heures de jeu aux portes avant de repartir (valeur provisoire, à régler en
+ * jouant). La tour de guet et la taverne changeront cette durée à l'étape 30.
+ */
+export const VOYAGEUR_ATTEND_HEURES = 12;
+/** US-0333 : sous 60 minutes d'attente restante, son compte à rebours passe dans la couleur d'alerte (valeur provisoire, à régler en jouant). */
+export const VOYAGEUR_ALERTE_MINUTES = 60;

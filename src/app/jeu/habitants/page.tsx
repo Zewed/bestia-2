@@ -14,7 +14,7 @@ import { nourriturePourEncore, tenueDeLaNourriture } from "@/monde/nourriture";
 import { quantiteExacte } from "@/monde/quantite";
 import type { Stock } from "@/monde/stocks";
 import { voyageursAuxPortes } from "@/monde/voyageurs";
-import { maintenant } from "@/temps/horloge";
+import { maintenant, vitesse } from "@/temps/horloge";
 import { AuxPortes } from "./AuxPortes";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
@@ -124,7 +124,8 @@ export default async function Habitants() {
         </Bloc>
         <div className={styles.colonne} style={COLONNE} data-etroit="">
           {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
-          <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} />
+          {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse. */}
+          <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} />
           {entretien ? (
             <Bloc titre="Entretien">
               <LigneEntretien entretien={entretien} />

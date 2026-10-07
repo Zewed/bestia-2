@@ -13,7 +13,7 @@ import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
+import { departDuVoyageur, ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -253,10 +253,11 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       await presenter(voisin.territoireId, "Brune", apres(ne, 2 * HEURE));
       // Deux arrivées au même instant : la première enregistrée d'abord.
       const dara = await presenter(territoireId, "Dara", apres(ne, 5 * HEURE));
+      // US-0333 : chacun avec l'instant de son départ, s'il n'est pas accueilli d'ici là.
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([
-        { id: arno, prenom: "Arno", arriveLe: apres(ne, HEURE) },
-        { id: cael, prenom: "Cael", arriveLe: apres(ne, 5 * HEURE) },
-        { id: dara, prenom: "Dara", arriveLe: apres(ne, 5 * HEURE) },
+        { id: arno, prenom: "Arno", arriveLe: apres(ne, HEURE), departLe: departDuVoyageur(apres(ne, HEURE)) },
+        { id: cael, prenom: "Cael", arriveLe: apres(ne, 5 * HEURE), departLe: departDuVoyageur(apres(ne, 5 * HEURE)) },
+        { id: dara, prenom: "Dara", arriveLe: apres(ne, 5 * HEURE), departLe: departDuVoyageur(apres(ne, 5 * HEURE)) },
       ]);
       expect(await nombreDeVoyageurs(pool, territoireId)).toBe(3);
       expect(await nombreDeVoyageurs(pool, voisin.territoireId)).toBe(1);

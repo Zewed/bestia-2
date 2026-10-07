@@ -346,11 +346,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0333 · Suivre le compte à rebours d'un Voyageur
 **En tant que** joueur, **je veux** voir combien de temps un Voyageur va encore attendre, **afin de** revenir avant qu'il ne reparte.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Au bout de la ligne de chaque Voyageur, « repart dans 11 h 42 », qui diminue en direct au rythme du jeu sans recharger la page ; sous une heure, en rouge ; à zéro, « sur le départ » (le départ lui-même vient avec US-0337). Le moment du départ ne se calcule qu'en un endroit (`departDuVoyageur`), que le départ réutilisera. Vérifié en vrai avec trois Voyageurs, de 320 à 1 440 px.
 - **Débloquée par** : US-0332
 - **Critères d'acceptation** :
-  - Chaque Voyageur attend (chiffre à régler) heures ; la tour de guet et la taverne changeront ces durées à l'étape 30.
+  - Chaque Voyageur attend 12 heures (provisoire, `VOYAGEUR_ATTEND_HEURES`) ; la tour de guet et la taverne changeront ces durées à l'étape 30.
   - Le temps restant s'affiche et diminue en direct, sans recharger la page.
-  - Sous (chiffre à régler) minutes, le compte à rebours passe dans la couleur d'alerte.
+  - Sous 60 minutes (provisoire, `VOYAGEUR_ALERTE_MINUTES`), le compte à rebours passe dans la couleur d'alerte.
 
 ### US-0334 · Accueillir un Voyageur
 **En tant que** joueur, **je veux** accueillir un Voyageur, **afin de** gagner un nouvel Habitant.

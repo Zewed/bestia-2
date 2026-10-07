@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
-import { ecartAvantVoyageur } from "./voyageurs";
+import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES } from "@/reglages";
+import { departDuVoyageur, ecartAvantVoyageur } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MOYENNE = VOYAGEUR_TOUTES_LES_HEURES * HEURE;
@@ -54,3 +54,18 @@ describe("l'écart entre deux arrivées de Voyageurs (US-0331)", () => {
 
 /** Les écarts du Territoire 1 pour ses arrivées 1 et 2, et du Territoire 303 pour sa première, en millisecondes. */
 const ECARTS_FIXES = [37_883_206, 39_482_426, 38_074_376];
+
+describe("le départ d'un Voyageur (US-0333)", () => {
+  it("vient VOYAGEUR_ATTEND_HEURES heures de jeu après son arrivée, à la milliseconde", () => {
+    const arrive = new Date("2026-10-07T08:00:00.123Z");
+    expect(departDuVoyageur(arrive)).toEqual(new Date(arrive.getTime() + VOYAGEUR_ATTEND_HEURES * HEURE));
+    // L'instant d'arrivée qu'on lui confie reste tel quel.
+    expect(arrive.toISOString()).toBe("2026-10-07T08:00:00.123Z");
+  });
+
+  it("laisse une attente de quelques heures entières", () => {
+    expect(Number.isInteger(VOYAGEUR_ATTEND_HEURES)).toBe(true);
+    expect(VOYAGEUR_ATTEND_HEURES).toBeGreaterThan(0);
+    expect(VOYAGEUR_ATTEND_HEURES).toBeLessThanOrEqual(48);
+  });
+});
