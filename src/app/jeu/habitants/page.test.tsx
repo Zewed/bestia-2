@@ -33,6 +33,9 @@ vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 vi.mock("./actions", () => ({ donnerUnMetier: vi.fn() }));
+// US-0314 : l'adresse de la page, que la liste lit pour son filtre, dès le rendu sur le serveur.
+const adresse = vi.hoisted(() => ({ recherche: "" }));
+vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
 // US-0308 : la vraie liste, observée pour voir ce que la page lui confie.
 const liste = vi.hoisted(() => ({ ListeDesHabitants: vi.fn() }));
 vi.mock("./ListeDesHabitants", async (original) => {
@@ -43,9 +46,10 @@ vi.mock("./ListeDesHabitants", async (original) => {
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0318)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0314, US-0318)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
+    adresse.recherche = "";
     session.compteDeLaSession.mockReset();
     cookie.jetonDeSession.mockReset();
     habitants.habitantsDuTerritoire.mockReset();
@@ -68,11 +72,11 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   };
   /** US-0309 : la rangée des compteurs, la première liste de la page, telle qu'elle est écrite. */
   const rangeeDesEffectifs = (html: string) => html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul>/)?.[0] ?? "";
-  /** Le texte de chaque ligne d'Habitant (la liste qui suit les compteurs), ses morceaux séparés par « · ». */
+  /** La liste des Habitants, juste après les compteurs, telle qu'elle est écrite. */
+  const listeDesHabitants = (html: string) => html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul>(<ul[^>]*>.*?<\/ul>)/)?.[1] ?? "";
+  /** Le texte de chaque ligne d'Habitant, ses morceaux séparés par « · ». */
   const lignes = (html: string) =>
-    [...(html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul><ul[^>]*>(.*?)<\/ul>/)?.[1] ?? "").matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) =>
-      ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "),
-    );
+    [...listeDesHabitants(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
   /** Les morceaux de texte d'un bout de page, tels qu'on les lit (l'apostrophe y est écrite « &#x27; »). */
   const morceaux = (html: string) =>
     html
@@ -139,7 +143,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     ]);
     const html = renderToStaticMarkup(await Habitants());
     expect(lignes(html)).toEqual(["Dara · Choisir un Métier · libre", "Elio · Chasseur · libre"]);
-    expect(html.match(/<button[ >]/g)).toHaveLength(1);
+    expect(listeDesHabitants(html).match(/<button[ >]/g)).toHaveLength(1);
   });
 
   it("confie à la liste chaque Habitant avec le nom de son Métier, et les Métiers au choix, chacun avec son icône (US-0308)", async () => {
@@ -186,8 +190,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(morceaux(html)).toEqual([
       "Habitants",
       "3 Habitants sur 5 places",
-      // US-0309 : les compteurs, chacun son nom et son nombre.
-      ...["Sans Métier ", "3"],
+      // US-0309 : les compteurs, chacun son nom et son nombre, après « Tous » (US-0314).
+      ...["Tous", "Sans Métier ", "3"],
       ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.flatMap((prenom) => [prenom, "Choisir un Métier", "libre"]),
       "Entretien",
@@ -197,8 +201,13 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
     ]);
     expect(html).not.toMatch(/<(a|form|input|select)[ >]/);
-    // US-0308 : les seuls boutons, ceux qui donnent un Métier.
-    expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map(([, bouton]) => morceaux(bouton))).toEqual(PRENOMS.map(() => ["Choisir un Métier"]));
+    // Les seuls boutons : ceux qui filtrent la liste (US-0314), puis ceux qui donnent un Métier (US-0308).
+    expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map(([, bouton]) => morceaux(bouton))).toEqual([
+      ["Tous"],
+      ["Sans Métier ", "3"],
+      ...HUIT_METIERS.map((m) => [`${m.nom} `, "0"]),
+      ...PRENOMS.map(() => ["Choisir un Métier"]),
+    ]);
   });
 
   it("reste sur la page Habitants pour un joueur entré dans son Foyer : recharger la page y ramène", async () => {
@@ -236,9 +245,10 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     connecte();
     const html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(
-      /<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*aria-label="Effectifs par Métier"[^>]*>(<li[^>]*>.*?<\/li>){9}<\/ul><ul/,
+      /<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*aria-label="Effectifs par Métier"[^>]*>(<li[^>]*>.*?<\/li>){10}<\/ul><ul/,
     );
-    expect(morceaux(rangeeDesEffectifs(html)).join("|")).toBe(["Sans Métier ", "3", ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"])].join("|"));
+    // « Tous » (US-0314) en tête, puis les compteurs.
+    expect(morceaux(rangeeDesEffectifs(html)).join("|")).toBe(["Tous", "Sans Métier ", "3", ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"])].join("|"));
   });
 
   it("compte sur la lecture même de la liste : la somme des compteurs est le nombre d'Habitants (US-0309)", async () => {
@@ -250,10 +260,45 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       { id: 42, prenom: "Joran", ...UN_HABITANT, metier: "Bûcheron" },
     ]);
     const compteurs = morceaux(rangeeDesEffectifs(renderToStaticMarkup(await Habitants())))
+      .slice(1)
       .join("")
       .split(/(?<=\d)/);
     expect(compteurs).toEqual(["Sans Métier 1", "Explorateur 0", "Chasseur 2", "Cueilleur 0", "Bûcheron 1", "Mineur 0", "Chercheur 0", "Bâtisseur 0", "Éleveur 0"]);
     expect(habitants.habitantsDuTerritoire).toHaveBeenCalledTimes(1);
+  });
+
+  it("rend la liste déjà filtrée quand l'adresse porte un filtre : recharger la page ou suivre un lien le garde (US-0314)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
+    ]);
+    adresse.recherche = "metier=chasseur";
+    let html = renderToStaticMarkup(await Habitants());
+    expect(lignes(html)).toEqual(["Elio · Chasseur · libre"]);
+    expect(rangeeDesEffectifs(html)).toMatch(/<button[^>]*aria-pressed="true"[^>]*>.*?Chasseur <strong[^>]*>1<\/strong><\/button>/);
+    expect(rangeeDesEffectifs(html).match(/aria-pressed="true"/g)).toHaveLength(1);
+    adresse.recherche = "metier=sans";
+    html = renderToStaticMarkup(await Habitants());
+    expect(lignes(html)).toEqual(["Dara · Choisir un Métier · libre"]);
+    // Le filtre ne touche qu'à la liste : les compteurs et les Métiers restent entiers.
+    expect(morceaux(rangeeDesEffectifs(html)).slice(1, 5)).toEqual(["Sans Métier ", "1", "Explorateur ", "0"]);
+    expect(lignesMetiers(html)).toHaveLength(8);
+  });
+
+  it("montre « Personne n'exerce ce Métier. » à la place de la liste quand l'adresse filtre sur un Métier que personne n'exerce (US-0314)", async () => {
+    connecte();
+    adresse.recherche = "metier=mineur";
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul><p[^>]*>Personne n&#x27;exerce ce Métier.<\/p><\/section>/);
+  });
+
+  it("ne filtre rien quand l'adresse porte un identifiant inconnu (US-0314)", async () => {
+    connecte();
+    adresse.recherche = "metier=druide";
+    const html = renderToStaticMarkup(await Habitants());
+    expect(lignes(html)).toHaveLength(3);
+    expect(rangeeDesEffectifs(html)).toMatch(/<button[^>]*aria-pressed="true"[^>]*>Tous<\/button>/);
   });
 
   it("affiche l'Entretien total par heure, détaillé en une ligne : « 3 Habitants × 2 Nourriture = 6 Nourriture par heure » (US-0318)", async () => {
@@ -399,6 +444,20 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".iconeEffectif")).toContain("width: 22px;");
     // Les chiffres ont tous la même largeur : passer de 1 à 2 ne pousse pas les compteurs suivants.
     expect(regle(".nombreEffectif")).toContain("font-variant-numeric: tabular-nums;");
+  });
+
+  it("fait de chaque compteur un bouton au pouce, le filtre pressé en Encre, lisible sans la couleur (US-0314)", () => {
+    // La surface de toucher vient de la règle commune à tous les boutons de la page.
+    expect(regle(".page button")).toContain("min-height: 44px;");
+    const effectif = regle(".effectif");
+    expect(effectif).toContain("cursor: pointer;");
+    expect(effectif).toContain("font: inherit;");
+    const presse = regle('.effectif[aria-pressed="true"]');
+    expect(presse).toContain("background: var(--encre);");
+    expect(presse).toContain("color: var(--ivoire);");
+    expect(regle(".effectif:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    // Un filtre sans personne : la phrase à la place de la liste, en discret.
+    expect(regle(".personne")).toContain("color: var(--texte-discret);");
   });
 
   it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {

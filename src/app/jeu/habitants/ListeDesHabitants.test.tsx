@@ -13,7 +13,29 @@ const actions = vi.hoisted(() => {
 });
 vi.mock("./actions", () => actions);
 
+/**
+ * US-0314 : Next.js relie window.history.replaceState à useSearchParams ; la simulation fait de même :
+ * la liste relit l'adresse à chaque changement, sans recharger la page.
+ */
+vi.mock("next/navigation", async () => {
+  const { useSyncExternalStore } = await import("react");
+  const abonnes = new Set<() => void>();
+  const remplacer = window.history.replaceState.bind(window.history);
+  window.history.replaceState = (...args: Parameters<History["replaceState"]>) => {
+    remplacer(...args);
+    abonnes.forEach((prevenir) => prevenir());
+  };
+  const suivre = (prevenir: () => void) => {
+    abonnes.add(prevenir);
+    return () => abonnes.delete(prevenir);
+  };
+  return { useSearchParams: () => new URLSearchParams(useSyncExternalStore(suivre, () => window.location.search)) };
+});
+
 import { type HabitantAffiche, ListeDesHabitants, type MetierAuChoix } from "./ListeDesHabitants";
+
+/** L'adresse de la page Habitants, avec `recherche` (« ?metier=bucheron ») : un rechargement, ou un lien. */
+const ouvrir = (recherche = "") => window.history.replaceState(null, "", `/jeu/habitants${recherche}`);
 
 const METIERS: MetierAuChoix[] = [
   ["explorateur", "Explorateur"],
@@ -39,12 +61,25 @@ afterEach(async () => {
   await finirLesActions();
   cleanup();
   actions.donnerUnMetier.mockClear();
+  ouvrir();
 });
 
 /** US-0309 : la rangée des compteurs, au-dessus de la liste. */
 const rangeeDesEffectifs = () => screen.getByRole("list", { name: "Effectifs par Métier" });
-/** US-0309 : chaque compteur tel qu'on le lit : « Bûcheron 2 ». */
-const effectifs = () => within(rangeeDesEffectifs()).getAllByRole("listitem").map((li) => li.textContent);
+/** US-0309 : chaque compteur tel qu'on le lit : « Bûcheron 2 » ; « Tous » (US-0314) n'en est pas un. */
+const effectifs = () =>
+  within(rangeeDesEffectifs())
+    .getAllByRole("listitem")
+    .map((li) => li.textContent)
+    .filter((texte) => texte !== "Tous");
+/** US-0314 : le bouton d'un compteur, par son nom (« Bûcheron », « Sans Métier »), ou « Tous ». */
+const compteur = (nom: string) => within(rangeeDesEffectifs()).getByRole("button", { name: new RegExp(`^${nom}( \\d+)?$`) });
+/** US-0314 : les boutons pressés de la rangée, par leur texte. */
+const presses = () =>
+  within(rangeeDesEffectifs())
+    .getAllByRole("button")
+    .filter((b) => b.getAttribute("aria-pressed") === "true")
+    .map((b) => b.textContent);
 /** La liste des Habitants, sous les compteurs. */
 const listeDesHabitants = () => screen.getAllByRole("list").find((liste) => liste !== rangeeDesEffectifs())!;
 /** La ligne d'un Habitant, trouvée par son prénom. */
@@ -158,7 +193,7 @@ describe("donner un Métier depuis la ligne d'un Habitant (US-0308)", () => {
   it("garde « sans Métier » quand il n'y a aucun Métier à proposer", () => {
     render(<ListeDesHabitants habitants={HABITANTS} metiers={[]} />);
     expect(lignes()).toEqual(["Arno · sans Métier · libre", "Brune · sans Métier · libre", "Cael · Chasseur · libre"]);
-    expect(screen.queryByRole("button")).toBeNull();
+    expect(within(listeDesHabitants()).queryByRole("button")).toBeNull();
   });
 });
 
@@ -186,7 +221,9 @@ describe("compter les effectifs par Métier (US-0309)", () => {
 
   it("met devant chaque Métier son icône, petite et muette (le nom est à côté) ; « Sans Métier » n'en a pas", () => {
     render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
-    const [sansMetier, ...parMetier] = within(rangeeDesEffectifs()).getAllByRole("listitem");
+    // « Tous » (US-0314) passe en tête.
+    const [tous, sansMetier, ...parMetier] = within(rangeeDesEffectifs()).getAllByRole("listitem");
+    expect(tous.querySelector("img")).toBeNull();
     expect(sansMetier.querySelector("img")).toBeNull();
     for (const [i, compteur] of parMetier.entries()) {
       const icone = compteur.querySelector("img")!;
@@ -233,5 +270,110 @@ describe("compter les effectifs par Métier (US-0309)", () => {
     // L'action s'achève sans que la page ait changé : Brune reste sans Métier.
     await finirLesActions();
     expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 1", "Mineur 0"]));
+  });
+});
+
+describe("filtrer la liste par Métier (US-0314)", () => {
+  /** Les prénoms de la liste, dans son ordre. */
+  const prenoms = () => lignes().map((l) => l.split(" · ")[0]);
+
+  it("met « Tous » en premier dans la rangée, pressé tant qu'il n'y a pas de filtre, puis chaque compteur en bouton", () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const boutons = within(rangeeDesEffectifs()).getAllByRole("button");
+    expect(boutons.map((b) => b.textContent)).toEqual(["Tous", "Sans Métier 2", ...METIERS.map((m) => `${m.nom} ${m.nom === "Chasseur" ? 1 : 0}`)]);
+    expect(boutons.every((b) => b.getAttribute("type") === "button" && b.hasAttribute("aria-pressed"))).toBe(true);
+    expect(presses()).toEqual(["Tous"]);
+    expect(prenoms()).toEqual(["Arno", "Brune", "Cael"]);
+  });
+
+  it("toucher un compteur de Métier filtre la liste sur ce Métier, sans recharger, et l'adresse le garde", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await userEvent.setup().click(compteur("Chasseur"));
+    expect(lignes()).toEqual(["Cael · Chasseur · libre"]);
+    expect(presses()).toEqual(["Chasseur 1"]);
+    expect(window.location.pathname).toBe("/jeu/habitants");
+    expect(window.location.search).toBe("?metier=chasseur");
+  });
+
+  it("toucher « Sans Métier » filtre sur les Habitants sans Métier", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await userEvent.setup().click(compteur("Sans Métier"));
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+    expect(presses()).toEqual(["Sans Métier 2"]);
+    expect(window.location.search).toBe("?metier=sans");
+  });
+
+  it("« Tous » retire le filtre, de la liste comme de l'adresse ; toucher de nouveau le compteur pressé aussi", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(compteur("Chasseur"));
+    await utilisateur.click(compteur("Tous"));
+    expect(prenoms()).toEqual(["Arno", "Brune", "Cael"]);
+    expect(presses()).toEqual(["Tous"]);
+    expect(window.location.search).toBe("");
+    await utilisateur.click(compteur("Sans Métier"));
+    await utilisateur.click(compteur("Sans Métier"));
+    expect(prenoms()).toEqual(["Arno", "Brune", "Cael"]);
+    expect(presses()).toEqual(["Tous"]);
+    expect(window.location.search).toBe("");
+  });
+
+  it("ne change ni les compteurs ni les Métiers au choix", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const avant = effectifs();
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(compteur("Chasseur"));
+    expect(effectifs()).toEqual(avant);
+    await utilisateur.click(compteur("Sans Métier"));
+    expect(effectifs()).toEqual(avant);
+    await utilisateur.click(choisir("Arno"));
+    expect(auChoix("Arno").map((b) => b.textContent)).toEqual(METIERS.map((m) => m.nom));
+  });
+
+  it("affiche « Personne n'exerce ce Métier. » à la place de la liste quand le filtre ne trouve personne", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await userEvent.setup().click(compteur("Mineur"));
+    expect(screen.getAllByRole("list")).toEqual([rangeeDesEffectifs()]);
+    expect(screen.getByText("Personne n'exerce ce Métier.").tagName).toBe("P");
+    expect(presses()).toEqual(["Mineur 0"]);
+  });
+
+  it("affiche « Personne n'est sans Métier. » quand tous les Habitants en ont un", async () => {
+    render(<ListeDesHabitants habitants={[HABITANTS[2]]} metiers={METIERS} />);
+    await userEvent.setup().click(compteur("Sans Métier"));
+    expect(screen.getAllByRole("list")).toEqual([rangeeDesEffectifs()]);
+    expect(screen.getByText("Personne n'est sans Métier.").tagName).toBe("P");
+  });
+
+  it("garde le filtre quand on donne un Métier : l'Habitant quitte aussitôt la liste « Sans Métier », et la rejoint s'il n'a pas été donné", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await userEvent.setup().click(compteur("Sans Métier"));
+    await donner("Arno", "Bûcheron");
+    expect(prenoms()).toEqual(["Brune"]);
+    expect(presses()).toEqual(["Sans Métier 1"]);
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+  });
+
+  it("reprend le filtre de l'adresse en arrivant sur la page : un rechargement, ou un lien", () => {
+    ouvrir("?metier=chasseur");
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    expect(prenoms()).toEqual(["Cael"]);
+    expect(presses()).toEqual(["Chasseur 1"]);
+    cleanup();
+    ouvrir("?metier=sans");
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+    expect(presses()).toEqual(["Sans Métier 2"]);
+  });
+
+  it("ne filtre rien pour un identifiant inconnu dans l'adresse", () => {
+    for (const inconnu of ["?metier=druide", "?metier=", "?metier=Chasseur", "?metier=sans%20metier"]) {
+      ouvrir(inconnu);
+      render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+      expect(prenoms(), inconnu).toEqual(["Arno", "Brune", "Cael"]);
+      expect(presses(), inconnu).toEqual(["Tous"]);
+      cleanup();
+    }
   });
 });

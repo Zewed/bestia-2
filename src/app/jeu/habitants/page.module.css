@@ -55,6 +55,7 @@
 /*
  * US-0309 : sous l'en-tête, hors de la partie collée, les effectifs : « Sans Métier » puis un compteur par
  * Métier, son icône, son nom et son nombre en gras ; ils passent à la ligne sur un écran étroit.
+ * US-0314 : chacun est un bouton qui filtre la liste, après « Tous » ; le filtre pressé passe en Encre.
  */
 .effectifs {
   display: flex;
@@ -69,12 +70,32 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 36px;
-  padding: 4px 10px;
+  padding: 0 10px;
+  border: 1px solid var(--trait-doux);
   border-radius: var(--arrondi-petit);
   background: var(--bloc-2);
   color: var(--texte-2);
+  font: inherit;
   font-size: 13px;
+  cursor: pointer;
+}
+
+.effectif[aria-pressed="true"] {
+  border-color: var(--encre);
+  background: var(--encre);
+  color: var(--ivoire);
+}
+
+@media (hover: hover) {
+  .effectif[aria-pressed="false"]:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.effectif:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
 }
 
 .iconeEffectif {
@@ -90,6 +111,19 @@
 
 /* Un Métier que personne n'exerce garde son compteur, son 0 en discret. */
 .effectif[data-personne] .nombreEffectif {
+  color: var(--texte-discret);
+}
+
+/* US-0314 : sur l'Encre du filtre pressé, le nombre en citron, 0 compris. */
+.effectif[aria-pressed="true"] .nombreEffectif {
+  color: var(--citron);
+}
+
+/* US-0314 : un filtre qui ne trouve personne le dit à la place de la liste. */
+.personne {
+  padding: 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
   color: var(--texte-discret);
 }
 

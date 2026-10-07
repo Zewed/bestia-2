@@ -147,6 +147,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0314 · Filtrer la liste par Métier
 **En tant que** joueur, **je veux** n'afficher que les Habitants d'un Métier, **afin de** retrouver vite ceux qui m'intéressent.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Les compteurs sont des boutons, précédés de « Tous » : en toucher un filtre la liste sur ce Métier (ou sur les Habitants sans Métier), le toucher à nouveau ou « Tous » retire le filtre. Le filtre ne recharge rien et reste dans l'adresse (`?metier=bucheron`, `?metier=sans`) : il survit au rechargement. Sans résultat : « Personne n'exerce ce Métier. » (« Personne n'est sans Métier. » pour les sans Métier). Vérifié en vrai.
 - **Débloquée par** : US-0309
 - **Critères d'acceptation** :
   - Toucher un compteur de Métier filtre la liste sur ce Métier.

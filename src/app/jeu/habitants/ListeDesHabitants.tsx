@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useId, useOptimistic, useState, useTransition } from "react";
 import { donnerUnMetier } from "./actions";
 import styles from "./page.module.css";
@@ -11,8 +12,15 @@ export type HabitantAffiche = { id: number; prenom: string; metier: string | nul
 /** US-0308 : un Métier qu'on peut donner, son icône déjà nommée par le serveur. */
 export type MetierAuChoix = { id: string; nom: string; icone: string };
 
-/** US-0309 : un compteur : « Sans Métier », ou un Métier avec son icône, et le nombre d'Habitants qu'il compte. */
-type Effectif = { id: string; nom: string; icone: string | null; nombre: number };
+/**
+ * US-0309 : un compteur : « Sans Métier », ou un Métier avec son icône, le Métier qu'il compte tel que la
+ * liste le montre (null : sans Métier) et le nombre d'Habitants qui l'exercent. US-0314 : son identifiant
+ * est celui du filtre dans l'adresse (?metier=bucheron, ?metier=sans).
+ */
+type Effectif = { id: string; nom: string; icone: string | null; metier: string | null; nombre: number };
+
+/** US-0314 : le paramètre de l'adresse qui porte le filtre. */
+const PARAMETRE_DU_FILTRE = "metier";
 
 /**
  * US-0309 : les effectifs de la liste même, Habitant par Habitant : ceux sans Métier d'abord, puis chaque
@@ -21,7 +29,10 @@ type Effectif = { id: string; nom: string; icone: string | null; nombre: number 
  */
 function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix[]): Effectif[] {
   const compter = (metier: string | null) => habitants.filter((h) => h.metier === metier).length;
-  return [{ id: "sans", nom: "Sans Métier", icone: null, nombre: compter(null) }, ...metiers.map((m) => ({ ...m, nombre: compter(m.nom) }))];
+  return [
+    { id: "sans", nom: "Sans Métier", icone: null, metier: null, nombre: compter(null) },
+    ...metiers.map((m) => ({ ...m, metier: m.nom, nombre: compter(m.nom) })),
+  ];
 }
 
 /**
@@ -32,11 +43,19 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  *
  * US-0309 : au-dessus de la liste, une rangée de compteurs, « Sans Métier » puis un par Métier, comptés sur
  * les lignes mêmes : un Métier donné les fait bouger aussitôt, avec la ligne.
+ *
+ * US-0314 : chaque compteur filtre la liste sur son Métier, « Tous », en tête de la rangée, retire le filtre,
+ * et toucher le compteur pressé aussi. Le filtre ne touche qu'à la liste, sans recharger la page ; il vit
+ * dans l'adresse, qui survit au rechargement et sert de lien. Un identifiant inconnu ne filtre rien.
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
   const [affiches, montrerLeMetier] = useOptimistic(habitants, (actuels, donne: { id: number; metier: string }) =>
     actuels.map((h) => (h.id === donne.id ? { ...h, metier: donne.metier } : h)),
   );
+  const recherche = useSearchParams();
+  const effectifs = effectifsParMetier(affiches, metiers);
+  const filtre = effectifs.find((e) => e.id === recherche.get(PARAMETRE_DU_FILTRE)) ?? null;
+  const montres = filtre ? affiches.filter((h) => h.metier === filtre.metier) : affiches;
   const [ouvert, setOuvert] = useState<number | null>(null);
   const [, demarrer] = useTransition();
   const prefixe = useId();
@@ -63,60 +82,89 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     });
   }
 
+  /**
+   * US-0314 : filtre la liste sur un compteur, ou retire le filtre (null). Next.js relie replaceState à
+   * useSearchParams : la liste se relit sans requête, et l'historique ne garde pas chaque filtre essayé.
+   */
+  function filtrer(id: string | null) {
+    const parametres = new URLSearchParams(recherche.toString());
+    if (id === null) parametres.delete(PARAMETRE_DU_FILTRE);
+    else parametres.set(PARAMETRE_DU_FILTRE, id);
+    const suite = parametres.toString();
+    window.history.replaceState(null, "", suite ? `?${suite}` : window.location.pathname);
+  }
+
   return (
     <>
       <ul className={styles.effectifs} aria-label="Effectifs par Métier">
-        {effectifsParMetier(affiches, metiers).map((e) => (
-          <li key={e.id} className={styles.effectif} data-personne={e.nombre === 0 ? "" : undefined}>
-            {/* Le nom est écrit juste à côté : l'icône est muette. */}
-            {e.icone ? <Image src={e.icone} alt="" width={22} height={22} className={styles.iconeEffectif} /> : null}
-            {e.nom} <strong className={styles.nombreEffectif}>{e.nombre}</strong>
+        <li>
+          <button type="button" className={styles.effectif} aria-pressed={filtre === null} onClick={() => filtrer(null)}>
+            Tous
+          </button>
+        </li>
+        {effectifs.map((e) => (
+          <li key={e.id}>
+            <button
+              type="button"
+              className={styles.effectif}
+              aria-pressed={filtre?.id === e.id}
+              data-personne={e.nombre === 0 ? "" : undefined}
+              onClick={() => filtrer(filtre?.id === e.id ? null : e.id)}
+            >
+              {/* Le nom est écrit juste à côté : l'icône est muette. */}
+              {e.icone ? <Image src={e.icone} alt="" width={22} height={22} className={styles.iconeEffectif} /> : null}
+              {e.nom} <strong className={styles.nombreEffectif}>{e.nombre}</strong>
+            </button>
           </li>
         ))}
       </ul>
-      <ul className={styles.habitants}>
-        {affiches.map((h) => {
-          const deplie = ouvert === h.id && h.metier === null;
-          return (
-            <li key={h.id} className={styles.habitant}>
-              <span className={styles.prenom}>{h.prenom}</span>
-              {h.metier !== null ? (
-                <span className={styles.metier}>{h.metier}</span>
-              ) : metiers.length > 0 ? (
-                <button
-                  type="button"
-                  id={idBouton(h.id)}
-                  className={styles.choisir}
-                  aria-expanded={deplie}
-                  aria-controls={deplie ? idChoix(h.id) : undefined}
-                  onClick={() => setOuvert(deplie ? null : h.id)}
-                >
-                  Choisir un Métier
-                  <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
-                    <path d="M2.5 4.5 6 8l3.5-3.5" />
-                  </svg>
-                </button>
-              ) : (
-                <span className={styles.metier} data-sans-metier="">
-                  sans Métier
-                </span>
-              )}
-              <span className={styles.etat}>{h.etat}</span>
-              {deplie ? (
-                <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
-                  {metiers.map((m) => (
-                    <button key={m.id} type="button" className={styles.metierAuChoix} onClick={() => donner(h, m)}>
-                      {/* Le nom est écrit juste à côté : l'icône est muette. */}
-                      <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
-                      {m.nom}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
-            </li>
-          );
-        })}
-      </ul>
+      {montres.length === 0 ? (
+        <p className={styles.personne}>{filtre?.metier === null ? "Personne n'est sans Métier." : "Personne n'exerce ce Métier."}</p>
+      ) : (
+        <ul className={styles.habitants}>
+          {montres.map((h) => {
+            const deplie = ouvert === h.id && h.metier === null;
+            return (
+              <li key={h.id} className={styles.habitant}>
+                <span className={styles.prenom}>{h.prenom}</span>
+                {h.metier !== null ? (
+                  <span className={styles.metier}>{h.metier}</span>
+                ) : metiers.length > 0 ? (
+                  <button
+                    type="button"
+                    id={idBouton(h.id)}
+                    className={styles.choisir}
+                    aria-expanded={deplie}
+                    aria-controls={deplie ? idChoix(h.id) : undefined}
+                    onClick={() => setOuvert(deplie ? null : h.id)}
+                  >
+                    Choisir un Métier
+                    <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
+                      <path d="M2.5 4.5 6 8l3.5-3.5" />
+                    </svg>
+                  </button>
+                ) : (
+                  <span className={styles.metier} data-sans-metier="">
+                    sans Métier
+                  </span>
+                )}
+                <span className={styles.etat}>{h.etat}</span>
+                {deplie ? (
+                  <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
+                    {metiers.map((m) => (
+                      <button key={m.id} type="button" className={styles.metierAuChoix} onClick={() => donner(h, m)}>
+                        {/* Le nom est écrit juste à côté : l'icône est muette. */}
+                        <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
+                        {m.nom}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </>
   );
 }
