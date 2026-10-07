@@ -86,12 +86,13 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0308 · Donner un Métier à un Habitant
 **En tant que** joueur, **je veux** donner un Métier à un Habitant sans Métier, **afin de** le mettre au travail.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sur la ligne d'un Habitant sans Métier, « Choisir un Métier » déplie dessous les huit Métiers en boutons (icône et nom, quatre colonnes, deux sur téléphone) ; en toucher un le donne, gratuitement : la ligne le montre aussitôt, puis l'Habitant se range à la place de son Métier. Le Métier est enregistré en base, sous son nom à l'affichage ; un Habitant qui a déjà un Métier, celui d'un autre Territoire ou un Métier inconnu ne bougent pas. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0307
 - **Critères d'acceptation** :
   - Depuis la ligne d'un Habitant sans Métier, on choisit l'un des huit Métiers.
   - L'Habitant affiche aussitôt son nouveau Métier.
   - Le Métier est enregistré : il est toujours là après rechargement et sur un autre appareil.
-  - Donner un Métier est gratuit et immédiat (à décider).
+  - Donner un Métier est gratuit et immédiat (décidé le 2026-10-07).
 
 ### US-0309 · Compter les effectifs par Métier
 **En tant que** joueur, **je veux** voir combien d'Habitants exercent chaque Métier, **afin de** vérifier ma répartition d'un coup d'œil.

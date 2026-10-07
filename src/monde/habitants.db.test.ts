@@ -12,7 +12,7 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
+import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
 import { stocksDuTerritoire } from "./stocks";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
@@ -23,7 +23,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0318, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0318, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -137,7 +137,7 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     }
   });
 
-  it("range la lecture par Métier, ceux sans Métier en premier, puis par prénom (US-0303)", async () => {
+  it("range la lecture par Métier dans l'ordre des Métiers, ceux sans Métier en premier, puis par prénom (US-0303, US-0308)", async () => {
     const compte = await nouveauCompte();
     expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
     const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
@@ -148,21 +148,63 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     await nommer(h2, "Miro", null);
     await nommer(h3, "Brune", "chasseur");
     await pool.query(
-      `insert into habitant (territoire_id, prenom, metier) values ($1, 'Dara', 'bucheron'), ($1, 'Arno', null), ($1, 'Miro', null)`,
+      `insert into habitant (territoire_id, prenom, metier) values ($1, 'Dara', 'bucheron'), ($1, 'Arno', null), ($1, 'Miro', null), ($1, 'Cael', 'explorateur')`,
       [t],
     );
     const lus = await habitantsDuTerritoire(pool, t);
+    // US-0308 : le nom du Métier, pas son identifiant, et l'ordre de donnees/metiers.yaml, pas celui de l'alphabet.
     expect(lus.map((h) => [h.prenom, h.metier])).toEqual([
       ["Arno", null],
       ["Miro", null],
       ["Miro", null],
-      ["Dara", "bucheron"],
-      ["Brune", "chasseur"],
-      ["Talo", "chasseur"],
+      ["Cael", "Explorateur"],
+      ["Brune", "Chasseur"],
+      ["Talo", "Chasseur"],
+      ["Dara", "Bûcheron"],
     ]);
     // Deux prénoms pareils : le premier arrivé d'abord.
     expect(lus[1].id).toBe(h2);
     expect(lus.every((h) => h.etat === "libre")).toBe(true);
+  });
+
+  it("donne un Métier à un Habitant sans Métier du Territoire, pour de bon, sans rien coûter (US-0308)", async () => {
+    const compte = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    const [h1, h2] = (await habitants(t)).map((h) => h.id);
+    const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
+    const avant = await stocks();
+    expect(await enregistrerLeMetier(pool, t, h1, "bucheron")).toBe(true);
+    // Enregistré : une nouvelle lecture, comme après un rechargement ou sur un autre appareil, le retrouve.
+    expect(await habitants(t)).toEqual([
+      { id: h1, metier: "bucheron" },
+      { id: h2, metier: null },
+      expect.objectContaining({ metier: null }),
+    ]);
+    expect((await habitantsDuTerritoire(pool, t)).find((h) => h.id === h1)?.metier).toBe("Bûcheron");
+    // Gratuit : aucune Ressource n'a bougé.
+    expect(await stocks()).toEqual(avant);
+  });
+
+  it("ne touche ni un Habitant qui a déjà un Métier, ni celui d'un autre Territoire, ni ne donne un Métier qui n'existe pas (US-0308)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    const [h1, h2] = (await habitants(ta)).map((h) => h.id);
+    const [voisin] = (await habitants(tb)).map((h) => h.id);
+    expect(await enregistrerLeMetier(pool, ta, h1, "chasseur")).toBe(true);
+    // Changer de Métier, c'est US-0310 : celui qui en a un le garde.
+    expect(await enregistrerLeMetier(pool, ta, h1, "mineur")).toBe(false);
+    // L'Habitant du voisin, même désigné par son identifiant, n'est pas à ce Territoire.
+    expect(await enregistrerLeMetier(pool, ta, voisin, "mineur")).toBe(false);
+    // Un Métier inconnu, refusé par la base, ne change rien et ne casse rien.
+    expect(await enregistrerLeMetier(pool, ta, h2, "poste")).toBe(false);
+    expect(await enregistrerLeMetier(pool, ta, h2, "Bûcheron")).toBe(false);
+    expect(await enregistrerLeMetier(pool, ta, -1, "mineur")).toBe(false);
+    expect((await habitants(ta)).map((h) => h.metier)).toEqual(["chasseur", null, null]);
+    expect((await habitants(tb)).map((h) => h.metier)).toEqual([null, null, null]);
   });
 
   it("compte les Habitants du Territoire pour la barre du haut, et suit chaque arrivée et chaque départ (US-0304)", async () => {

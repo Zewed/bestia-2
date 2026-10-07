@@ -93,6 +93,95 @@
 }
 
 /*
+ * US-0308 : sur la ligne d'un Habitant sans Métier, à la place de « sans Métier », le bouton qui déplie
+ * les Métiers au choix ; sa flèche se retourne tant qu'ils sont dépliés.
+ */
+.choisir {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.fleche {
+  width: 12px;
+  height: 12px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.choisir[aria-expanded="true"] .fleche {
+  transform: rotate(180deg);
+}
+
+/*
+ * US-0308 : sous la ligne, sur toute sa largeur, les Métiers au choix : une grille de quatre colonnes
+ * qui passe à la ligne, deux sur un petit écran ; chaque Métier, son icône au-dessus de son nom.
+ */
+.choix {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.metierAuChoix {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 6px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.iconeAuChoix {
+  width: 28px;
+  height: 28px;
+}
+
+@media (hover: hover) {
+  .choisir:hover,
+  .metierAuChoix:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.choisir:focus-visible,
+.metierAuChoix:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fleche {
+    transition: none;
+  }
+}
+
+/*
  * US-0307 : à côté de la liste sur ordinateur, la colonne de l'Entretien (US-0318) puis des Métiers, l'un
  * sous l'autre, chacun à sa propre hauteur ; la liste garde la sienne, même quand la colonne est plus haute.
  */
@@ -168,15 +257,23 @@
   .colonne {
     gap: var(--ecart-mobile);
   }
-  /* Sur mobile, le Métier passe sous le prénom ; l'état reste à droite. */
+  /* Sur mobile, le Métier, ou le bouton qui en choisit un (US-0308), passe sous le prénom ; l'état reste à droite. */
   .habitant {
     grid-template-columns: minmax(0, 1fr) auto;
   }
-  .metier {
+  .metier,
+  .choisir {
     grid-row: 2;
   }
   .etat {
     grid-row: 1 / span 2;
     grid-column: 2;
+  }
+}
+
+/* US-0308 : sur un petit écran, deux Métiers au choix par ligne. */
+@media (max-width: 540px) {
+  .choix {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }

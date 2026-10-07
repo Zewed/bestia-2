@@ -11,6 +11,7 @@ import { getPool } from "@/db";
 import { type EntretienDesHabitants, entretienDesHabitants, habitantsDuTerritoire, placesDuTerritoire } from "@/monde/habitants";
 import { iconeDeMetier, lesMetiers, type Metier } from "@/monde/metiers";
 import { quantiteExacte } from "@/monde/quantite";
+import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Habitants" };
@@ -64,8 +65,9 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
 /**
  * La page Habitants (US-0302), ouverte depuis la navigation : leur nombre sur la place du Territoire,
  * avec « Plus de place » quand elle est toute prise (US-0305), puis une ligne par Habitant avec son
- * prénom, son Métier et son état, dans l'ordre de la lecture (US-0303) ; à côté, ou dessous sur mobile,
- * leur Entretien par heure (US-0318), puis les huit Métiers (US-0307). Tout est lu à chaque affichage.
+ * prénom, son Métier et son état, dans l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un
+ * Habitant sans Métier (US-0308) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318), puis
+ * les huit Métiers (US-0307). Tout est lu à chaque affichage.
  * Sans session, la garde mène à la connexion, qui ramène ici.
  */
 export default async function Habitants() {
@@ -88,17 +90,10 @@ export default async function Habitants() {
             {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
           </div>
           {habitants.length > 0 ? (
-            <ul className={styles.habitants}>
-              {habitants.map((h) => (
-                <li key={h.id} className={styles.habitant}>
-                  <span className={styles.prenom}>{h.prenom}</span>
-                  <span className={styles.metier} data-sans-metier={h.metier === null ? "" : undefined}>
-                    {h.metier ?? "sans Métier"}
-                  </span>
-                  <span className={styles.etat}>{h.etat}</span>
-                </li>
-              ))}
-            </ul>
+            <ListeDesHabitants
+              habitants={habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }))}
+              metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))}
+            />
           ) : null}
         </Bloc>
         <div className={styles.colonne} style={COLONNE} data-etroit="">

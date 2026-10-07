@@ -1,6 +1,7 @@
 // Les Habitants d'un Territoire tels que le jeu les montre. Côté serveur uniquement.
 import "server-only";
-import type { Pool } from "pg";
+import type { Pool, PoolClient } from "pg";
+import { DatabaseError } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { ENTRETIEN_DU_TERRITOIRE } from "./production";
 
@@ -10,17 +11,45 @@ import { ENTRETIEN_DU_TERRITOIRE } from "./production";
  */
 export type EtatHabitant = "libre";
 
-/** Un Habitant (US-0301) : son prénom (US-0303), son Métier, null tant qu'il n'en a pas, son heure d'arrivée et son état. */
+/**
+ * Un Habitant (US-0301) : son prénom (US-0303), le nom de son Métier (« Bûcheron », US-0308), null tant
+ * qu'il n'en a pas, son heure d'arrivée et son état.
+ */
 export type Habitant = { id: number; prenom: string; metier: string | null; arriveLe: Date; etat: EtatHabitant };
 
-/** Les Habitants d'un Territoire, rangés par Métier, ceux sans Métier en premier, puis par prénom (US-0303). */
+/**
+ * Les Habitants d'un Territoire, rangés par Métier, ceux sans Métier en premier, puis par prénom (US-0303).
+ * US-0308 : les Métiers dans leur ordre de donnees/metiers.yaml, chacun sous son nom.
+ */
 export async function habitantsDuTerritoire(pool: Pool, territoireId: number): Promise<Habitant[]> {
   const { rows } = await pool.query<Omit<Habitant, "etat">>(
-    `select id, prenom, metier, arrive_le as "arriveLe" from habitant where territoire_id = $1
-     order by metier nulls first, prenom, id`,
+    `select h.id, h.prenom, m.nom as metier, h.arrive_le as "arriveLe"
+     from habitant h left join metier m on m.id = h.metier
+     where h.territoire_id = $1
+     order by m.ordre nulls first, h.prenom, h.id`,
     [territoireId],
   );
   return rows.map((h) => ({ ...h, etat: "libre" }));
+}
+
+/**
+ * US-0308 : donne le Métier `metierId` à l'Habitant `habitantId` du Territoire, s'il n'en a pas encore.
+ * Gratuit et immédiat : aucune Ressource n'est touchée. Rend false sans rien changer pour un Habitant
+ * d'un autre Territoire, un Habitant qui a déjà un Métier (le changer, c'est US-0310), ou un Métier
+ * inconnu, que la clé étrangère vers `metier` refuse.
+ */
+export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId: number, habitantId: number, metierId: string): Promise<boolean> {
+  try {
+    const { rowCount } = await base.query("update habitant set metier = $3 where id = $2 and territoire_id = $1 and metier is null", [
+      territoireId,
+      habitantId,
+      metierId,
+    ]);
+    return rowCount === 1;
+  } catch (refus) {
+    if (refus instanceof DatabaseError && refus.code === "23503") return false;
+    throw refus;
+  }
 }
 
 /** Le nombre d'Habitants d'un Territoire, pour le compteur de la barre du haut (US-0304). */

@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-256 points au total.
+255 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -13,7 +13,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 3 · Les Habitants](03-les-habitants.md)
 
-- [US-0308](03-les-habitants.md) · Donner un Métier à un Habitant : donner un Métier est gratuit et immédiat.
 - [US-0310](03-les-habitants.md) · Changer le Métier d'un Habitant : changer de Métier est gratuit et immédiat, sans temps d'apprentissage.
 - [US-0323](03-les-habitants.md) · Retirer l'avertissement quand le danger est passé : tant que le danger est là, le joueur ne peut pas le masquer.
 - [US-0325](03-les-habitants.md) · Entrer en Famine : un Habitant mange indifféremment de la Viande ou des Végétaux : la Famine ne commence que quand les deux ensemble ne suffisent plus.

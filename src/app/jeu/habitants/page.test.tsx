@@ -32,10 +32,18 @@ vi.mock("@/monde/metiers", async (original) => ({ ...(await original<object>()),
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
+vi.mock("./actions", () => ({ donnerUnMetier: vi.fn() }));
+// US-0308 : la vraie liste, observée pour voir ce que la page lui confie.
+const liste = vi.hoisted(() => ({ ListeDesHabitants: vi.fn() }));
+vi.mock("./ListeDesHabitants", async (original) => {
+  const { ListeDesHabitants } = await original<typeof import("./ListeDesHabitants")>();
+  liste.ListeDesHabitants.mockImplementation(ListeDesHabitants);
+  return liste;
+});
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0318)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0318)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -113,20 +121,38 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0318)"
     expect(renderToStaticMarkup(await Habitants())).toContain(">Plus de place<");
   });
 
-  it("montre chaque Habitant sur une ligne, sous leur nombre : son prénom, « sans Métier » et « libre » (US-0303)", async () => {
+  it("montre chaque Habitant sur une ligne, sous leur nombre : son prénom, « Choisir un Métier » à la place de « sans Métier », et « libre » (US-0303, US-0308)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
     expect(html).toMatch(/<p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
-    expect(lignes(html)).toEqual(["Arno · sans Métier · libre", "Brune · sans Métier · libre", "Cael · sans Métier · libre"]);
+    expect(lignes(html)).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Cael · Choisir un Métier · libre"]);
   });
 
-  it("montre le Métier d'un Habitant qui en a un, à la place de « sans Métier »", async () => {
+  it("montre le Métier d'un Habitant qui en a un, sans bouton pour en choisir un", async () => {
     connecte();
     habitants.habitantsDuTerritoire.mockResolvedValue([
       { id: 41, prenom: "Dara", ...UN_HABITANT },
       { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
     ]);
-    expect(lignes(renderToStaticMarkup(await Habitants()))).toEqual(["Dara · sans Métier · libre", "Elio · Chasseur · libre"]);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(lignes(html)).toEqual(["Dara · Choisir un Métier · libre", "Elio · Chasseur · libre"]);
+    expect(html.match(/<button[ >]/g)).toHaveLength(1);
+  });
+
+  it("confie à la liste chaque Habitant avec le nom de son Métier, et les Métiers au choix, chacun avec son icône (US-0308)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
+    ]);
+    renderToStaticMarkup(await Habitants());
+    expect(liste.ListeDesHabitants.mock.lastCall?.[0]).toEqual({
+      habitants: [
+        { id: 41, prenom: "Dara", metier: null, etat: "libre" },
+        { id: 40, prenom: "Elio", metier: "Chasseur", etat: "libre" },
+      ],
+      metiers: HUIT_METIERS.map((m) => ({ id: m.id, nom: m.nom, icone: `/illustrations/metiers/${m.id}.webp` })),
+    });
   });
 
   it("garde l'ordre de la lecture, qui range par Métier, ceux sans Métier en premier", async () => {
@@ -157,14 +183,16 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0318)"
     expect(morceaux(html)).toEqual([
       "Habitants",
       "3 Habitants sur 5 places",
-      ...PRENOMS.flatMap((prenom) => [prenom, "sans Métier", "libre"]),
+      ...PRENOMS.flatMap((prenom) => [prenom, "Choisir un Métier", "libre"]),
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
       "6 Nourriture par heure",
       "Métiers",
       ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
     ]);
-    expect(html).not.toMatch(/<(a|button|form|input|select)[ >]/);
+    expect(html).not.toMatch(/<(a|form|input|select)[ >]/);
+    // US-0308 : les seuls boutons, ceux qui donnent un Métier.
+    expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map(([, bouton]) => morceaux(bouton))).toEqual(PRENOMS.map(() => ["Choisir un Métier"]));
   });
 
   it("reste sur la page Habitants pour un joueur entré dans son Foyer : recharger la page y ramène", async () => {
@@ -318,6 +346,17 @@ describe("page Habitants au pouce (US-0306)", () => {
     // Une ligne par Métier : l'icône, puis le texte qui va à la ligne ; « Servira » en discret.
     expect(regle(".ligneMetier")).toContain("grid-template-columns: auto minmax(0, 1fr);");
     expect(regle(".servira")).toContain("color: var(--texte-discret);");
+  });
+
+  it("déplie les Métiers au choix sous la ligne, sur toute sa largeur, en une grille qui passe à la ligne : deux colonnes sur un petit écran (US-0308)", () => {
+    const choix = regle(".choix");
+    expect(choix).toContain("grid-column: 1 / -1;");
+    expect(choix).toContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);");
+    const petit = css.slice(css.indexOf("@media (max-width: 540px)"));
+    expect(regle(".choix", petit)).toContain("grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);");
+    // Chaque Métier, son icône au-dessus de son nom, pour tenir à deux par ligne sur 320 px.
+    expect(regle(".metierAuChoix")).toContain("flex-direction: column;");
+    expect(regle(".iconeAuChoix")).toContain("width: 28px;");
   });
 
   it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {
