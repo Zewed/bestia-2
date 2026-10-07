@@ -75,3 +75,5 @@ export const ABREGER_A_PARTIR_DE = 100_000;
 export const RECALER_LA_BARRE_MINUTES = 5;
 /** US-0216 : après au moins 2 heures d'absence, le Foyer résume ce qu'il a produit entre-temps. */
 export const RECAP_ABSENCE_HEURES = 2;
+/** US-0227 : à partir de 90 % de sa limite, un Stock se signale comme presque plein. */
+export const PRESQUE_PLEIN_POURCENT = 90;

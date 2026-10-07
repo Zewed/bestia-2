@@ -279,9 +279,10 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0227 · Signaler un stock presque plein
 **En tant que** joueur, **je veux** être prévenu avant qu'un stock soit plein, **afin de** dépenser avant de perdre de la production.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). La quantité passe en ambre (`--sable`), sans étiquette : le Stock plein, lui, est en rose avec « PLEIN » en rouge. Le signal suit la quantité qui monte ; un lecteur d'écran entend « presque plein ».
 - **Débloquée par** : US-0224
 - **Critères d'acceptation** :
-  - Au-delà de (chiffre à régler) % de sa limite, la quantité prend une couleur d'avertissement de la palette.
+  - Au-delà de 90 % de sa limite (provisoire, `PRESQUE_PLEIN_POURCENT`), la quantité prend une couleur d'avertissement de la palette.
   - Ce signal se distingue nettement de celui du stock plein.
   - Il se voit sans survol, donc aussi sur mobile.
 

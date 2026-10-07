@@ -213,6 +213,11 @@
   color: var(--rose);
 }
 
+/* US-0227 : un Stock presque plein, d'une couleur d'avertissement, sans l'étiquette du Stock plein. */
+.ressource[data-presque-plein] .quantite {
+  color: var(--sable);
+}
+
 .plein {
   padding: 1px 6px;
   border-radius: var(--arrondi-petit);

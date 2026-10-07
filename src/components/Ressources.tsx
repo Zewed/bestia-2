@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
-import { RECALER_LA_BARRE_MINUTES } from "@/reglages";
+import { PRESQUE_PLEIN_POURCENT, RECALER_LA_BARRE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
 import { iconeDeRessource } from "./icone-de-ressource";
 import styles from "./BarreHaut.module.css";
@@ -106,12 +106,15 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
             const quantite = ecoule === null ? Number(stock.quantite) : quantiteMontee(stock, ecoule, vitesse);
             // US-0224 : un Stock plein se signale dans la barre, par la couleur et par le mot « plein ».
             const plein = quantite >= Number(stock.limite);
+            // US-0227 : avant d'être plein, le Stock prévient, d'une autre couleur.
+            const presquePlein = !plein && quantite >= (Number(stock.limite) * PRESQUE_PLEIN_POURCENT) / 100;
             return (
-            <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined} data-plein={plein ? "" : undefined}>
+            <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined} data-plein={plein ? "" : undefined} data-presque-plein={presquePlein ? "" : undefined}>
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
                 <Image src={iconeDeRessource(stock.id)} alt={stock.nom} width={22} height={22} className={styles.icone} />
                 {/* Une espace entre le nom et la quantité, pour qu'un lecteur d'écran dise « Pierre 42 ». */}{" "}
                 <span className={styles.quantite}>{quantiteAffichee(quantite)}</span>
+                {presquePlein ? <span className={styles.annonce}>, presque plein</span> : null}
                 {plein ? (
                   <>
                     {" "}

@@ -102,6 +102,18 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     expect((await detail("Pierre")).some((ligne) => ligne?.startsWith("plein dans"))).toBe(false);
   });
 
+  it("prévient d'un Stock presque plein, à partir de 90 % de sa limite, autrement que d'un Stock plein (US-0227)", () => {
+    render(<Ressources stocks={[{ ...STOCKS[0], quantite: "899.000000" }, { ...STOCKS[2], quantite: "900.000000" }, { ...STOCKS[3], quantite: "1000.000000" }]} />);
+    const etat = (nom: string) => {
+      const li = [...document.querySelectorAll("li")].find((l) => l.querySelector("img")?.alt === nom)!;
+      return [li.hasAttribute("data-presque-plein"), li.hasAttribute("data-plein")];
+    };
+    expect(etat("Viande")).toEqual([false, false]);
+    expect(etat("Bois")).toEqual([true, false]);
+    expect(etat("Pierre")).toEqual([false, true]);
+    expect(screen.getByRole("button", { name: /^Bois 900, presque plein/ })).toBeTruthy();
+  });
+
   it("signale un Stock plein par le mot « plein », pas seulement par la couleur (US-0224)", () => {
     render(<Ressources stocks={[{ ...STOCKS[2], quantite: "1000.000000" }, STOCKS[3]]} />);
     const pleins = [...document.querySelectorAll("li[data-plein]")].map((li) => li.querySelector("img")?.alt);
