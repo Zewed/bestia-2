@@ -4,6 +4,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { stocksDuTerritoire } from "@/monde/stocks";
+import { ENTRETIEN_HABITANT_PAR_HEURE } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { definirAncre, maintenant } from "./horloge";
@@ -232,6 +233,107 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
         }
       });
     });
+  });
+
+  describe("l'Entretien en temps accéléré (US-0317)", () => {
+    const lancement = `faim-vite-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    let numero = 0;
+    const HEURE = 60 * MINUTE;
+    const JOUR = 24 * HEURE;
+    const HABITANTS = 12;
+    const ENTRETIEN = HABITANTS * ENTRETIEN_HABITANT_PAR_HEURE;
+
+    /** Ce qu'une Case de prairie produit par heure, tel que la base le tient de donnees/biomes.yaml. */
+    const prairie = async () =>
+      Object.fromEntries(
+        (await pool.query<{ id: string; par_heure: string }>("select ressource_id as id, par_heure from production_biome where biome_id = 'prairie'")).rows.map(
+          (p) => [p.id, Number(p.par_heure)],
+        ),
+      );
+    /**
+     * Un Foyer né à l'heure du jeu, avec douze Habitants : la Viande, qui produit moins que sa part de l'Entretien,
+     * se vide en dix heures ; les Végétaux atteignent leur limite en cinq heures, puis en redescendent quand ils
+     * paient seuls l'Entretien ; le Bois atteint la sienne en route.
+     */
+    const naitre = async () => {
+      const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+      expect(await enregistrerNomDeChef(pool, compte.id, `Faim${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
+      const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      const p = await prairie();
+      await pool.query(
+        `update stock set produit_depuis_visite = 0, plein_depuis = null,
+           quantite = case ressource_id when 'viande' then $2 when 'vegetaux' then limite - $3 when 'bois' then 950.5 else 123.456789 end,
+           reste = case ressource_id when 'bois' then 1234 when 'pierre' then 17 else 0 end
+         where territoire_id = $1`,
+        [territoireId, 10 * (ENTRETIEN / 2 - p.viande), 5 * (p.vegetaux - ENTRETIEN / 2)],
+      );
+      await pool.query(
+        "with partis as (delete from habitant where territoire_id = $1) insert into habitant (territoire_id, prenom) select $1, 'Essai' from generate_series(1, $2)",
+        [territoireId, HABITANTS],
+      );
+      return territoireId;
+    };
+    /** Chaque Stock du Territoire, exact : quantité, reste, production entrée, limite, et l'instant où il est devenu plein, en microsecondes. */
+    const etats = async (territoireId: number) =>
+      Object.fromEntries(
+        (
+          await pool.query<{ id: string; q: string; reste: string; produit: string; limite: string; plein: string | null }>(
+            `select ressource_id as id, quantite::text as q, reste::text as reste, produit_depuis_visite::text as produit, limite::text as limite,
+               (extract(epoch from plein_depuis) * 1000000)::bigint::text as plein
+             from stock where territoire_id = $1`,
+            [territoireId],
+          )
+        ).rows.map(({ id, ...stock }) => [id, stock]),
+      );
+    /** Une journée de jeu : la page ouverte aux instants réels `visites`, la tâche planifiée aux instants réels `passages`, puis le retour. */
+    const vivreUneJournee = async (territoireId: number, facteur: number, visites: number[], passages: number[]) => {
+      const instants = [...visites.map((ms) => ({ ms, tache: false })), ...passages.map((ms) => ({ ms, tache: true }))].sort((a, b) => a.ms - b.ms);
+      for (const { ms, tache } of instants) {
+        vi.setSystemTime(R0 + ms);
+        if (tache) expect(await rattraperLesAbsents({ pool, parmi: { territoire: [territoireId] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+        else await rattraper("territoire", territoireId, { pool });
+      }
+      vi.setSystemTime(R0 + JOUR / facteur);
+      await rattraper("territoire", territoireId, { pool });
+      expect(await lireMarquePage(pool, "territoire", territoireId)).toEqual(new Date(R0 + JOUR));
+    };
+
+    beforeAll(async () => {
+      await preparerMondeDeTest(pool);
+    });
+    afterAll(async () => {
+      await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    });
+
+    it("à ×100, une journée de jeu (864 secondes réelles) donne exactement les mêmes Stocks qu'une journée réelle, Habitants compris", async () => {
+      const p = await prairie();
+      expect(ENTRETIEN / 2).toBeGreaterThan(p.viande);
+      expect(p.vegetaux).toBeGreaterThan(ENTRETIEN / 2);
+      expect(ENTRETIEN).toBeGreaterThan(p.viande + p.vegetaux);
+
+      // Une journée réelle, à vitesse normale : la page ouverte toutes les trois heures, la tâche planifiée entre deux.
+      await synchroniserHorloge(pool, 1);
+      const normal = await naitre();
+      await vivreUneJournee(normal, 1, [3, 6, 9, 12, 15, 18, 21].map((h) => h * HEURE), [10.5 * HEURE, 16 * HEURE]);
+
+      // La même journée à ×100, sur une horloge neuve partie du même instant : la page ouverte toutes les 37 secondes réelles.
+      await pool.query("delete from horloge");
+      definirAncre(null);
+      vi.setSystemTime(R0);
+      await synchroniserHorloge(pool, 100);
+      const accelere = await naitre();
+      await vivreUneJournee(accelere, 100, Array.from({ length: 23 }, (_, i) => (i + 1) * 37_000), [300_500, 600_500]);
+
+      // Quantité et reste exacts, production entrée et instant de remplissage compris.
+      const fin = await etats(accelere);
+      expect(fin).toEqual(await etats(normal));
+      // Les Habitants ont mangé toute la journée, et les limites ont joué en route.
+      expect(fin.viande).toMatchObject({ q: "0.000000", reste: "0.000000" });
+      expect(fin.vegetaux.q).toBe((Number(fin.vegetaux.limite) - 14 * (ENTRETIEN - p.viande - p.vegetaux)).toFixed(6));
+      expect(fin.vegetaux.plein).toBeNull();
+      expect(fin.bois.q).toBe(fin.bois.limite);
+      expect(fin.pierre.q).toBe((123.456789 + 24 * p.pierre).toFixed(6));
+    }, 60_000);
   });
 });
 

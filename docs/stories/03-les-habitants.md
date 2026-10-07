@@ -174,6 +174,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0317 · Rattraper l'Entretien après une absence
 **En tant que** joueur, **je veux** retrouver des stocks justes quand je reviens après plusieurs heures, **afin de** pouvoir me fier aux chiffres affichés.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Le calcul d'US-0316 tenait déjà ces critères : la story ajoute la preuve, sans toucher au jeu. Trois absences (12 Habitants sur 20 h, 20 sur 12 h, 15 sur 24 h) qui vident la Nourriture, la remplissent jusqu'à sa limite puis l'en font redescendre, ou mangent le surplus au-dessus d'elle, donnent exactement les Stocks d'un déroulement heure par heure, que la page soit restée fermée, ouverte (trois mises à l'heure par heure) ou que la tâche planifiée soit passée entre-temps. À ×100, 864 secondes réelles donnent exactement la journée réelle d'un Territoire jumeau. Rien de visible.
 - **Débloquée par** : US-0316
 - **Critères d'acceptation** :
   - Après une absence, chaque stock vaut exactement le stock de départ, plus la production, moins l'Entretien, heure par heure.
