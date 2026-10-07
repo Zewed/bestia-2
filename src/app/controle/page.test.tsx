@@ -16,10 +16,21 @@ vi.mock("@/temps/absents", () => ({
 
 vi.mock("@/donnees/en-base", () => ({
   biomesEnBase: async () => [
-    { id: "prairie", nom: "Prairie", variantes: [] },
+    {
+      id: "prairie",
+      nom: "Prairie",
+      variantes: [],
+      production: [
+        { ressource: "Viande", parHeure: "8.000000" },
+        { ressource: "Végétaux", parHeure: "14.500000" },
+        { ressource: "Bois", parHeure: "4.000000" },
+        { ressource: "Pierre", parHeure: "0.000000" },
+      ],
+    },
     {
       id: "eau",
       nom: "Eau",
+      production: [],
       variantes: [
         { id: "cote", nom: "Côte" },
         { id: "lac", nom: "Lac" },
@@ -268,6 +279,12 @@ describe("page de contrôle", () => {
       expect(chefs.chefParNom).not.toHaveBeenCalled();
       expect(html).toMatch(/<input[^>]*name="chef"/);
     });
+  });
+
+  it("montre ce que chaque Biome produit par heure (US-0209)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`dev:${MOT_DE_PASSE}`).toString("base64")}`;
+    const html = renderToStaticMarkup(await ouvrir());
+    expect(html).toContain("8 Viande · 14,5 Végétaux · 4 Bois · 0 Pierre par heure");
   });
 });
 

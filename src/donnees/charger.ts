@@ -10,8 +10,8 @@ export type Jeu<T> = {
   nom: string;
   fichier: string;
   table: string;
-  /** La colonne qui identifie une entrée pour toujours (par exemple « id »). */
-  cle: string;
+  /** La colonne qui identifie une entrée pour toujours (par exemple « id »), ou les colonnes qui le font ensemble. */
+  cle: string | string[];
   schema: z.ZodType<T>;
   /** Pour tirer les entrées d'un fichier partagé (les variantes rangées sous leur Biome). */
   extraire?: (brut: unknown[]) => unknown[];
@@ -20,6 +20,8 @@ export type Jeu<T> = {
 };
 
 export type Bilan = { ajoutes: number; modifies: number; inchanges: number };
+
+const colonnesDeCle = (jeu: { cle: string | string[] }): string[] => (Array.isArray(jeu.cle) ? jeu.cle : [jeu.cle]);
 
 /** Lit un fichier YAML qui contient une liste d'entrées. */
 export function lireFichier(chemin: string): unknown[] {
@@ -41,8 +43,9 @@ export function valider<T>(jeu: Jeu<T>, brut: unknown[]): T[] {
       }
       return;
     }
-    const cle = jeu.colonnes(resultat.data)[jeu.cle];
-    if (vues.has(cle)) erreurs.push(`entrée n° ${i + 1} : la clé « ${String(cle)} » existe déjà`);
+    const colonnes = jeu.colonnes(resultat.data);
+    const cle = colonnesDeCle(jeu).map((c) => String(colonnes[c])).join(" · ");
+    if (vues.has(cle)) erreurs.push(`entrée n° ${i + 1} : la clé « ${cle} » existe déjà`);
     vues.add(cle);
     entrees.push(resultat.data);
   });
@@ -59,7 +62,8 @@ export async function chargerJeu<T>(client: PoolClient, jeu: Jeu<T>, entrees: T[
   for (const entree of entrees) {
     const colonnes = jeu.colonnes(entree);
     const noms = Object.keys(colonnes);
-    const autres = noms.filter((n) => n !== jeu.cle);
+    const cles = colonnesDeCle(jeu);
+    const autres = noms.filter((n) => !cles.includes(n));
     const q = (n: string) => `"${n}"`;
     const miseAJour = autres.length
       ? `do update set ${autres.map((n) => `${q(n)} = excluded.${q(n)}`).join(", ")}
@@ -68,7 +72,7 @@ export async function chargerJeu<T>(client: PoolClient, jeu: Jeu<T>, entrees: T[
     const { rows } = await client.query<{ ajoute: boolean }>(
       `insert into ${q(jeu.table)} (${noms.map(q).join(", ")})
        values (${noms.map((_, i) => `$${i + 1}`).join(", ")})
-       on conflict (${q(jeu.cle)}) ${miseAJour}
+       on conflict (${cles.map(q).join(", ")}) ${miseAJour}
        returning (xmax = 0) as ajoute`,
       Object.values(colonnes),
     );

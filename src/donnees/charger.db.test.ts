@@ -60,4 +60,35 @@ describe.skipIf(!URL_TEST)("chargement des données de référence (sur base)", 
       { id: "c", nom: "Gamma" },
     ]);
   });
+
+  it("reconnaît une entrée à plusieurs colonnes, comme la production d'un Biome en une Ressource (US-0209)", async () => {
+    type Paire = { a: string; b: string; valeur: number };
+    const paires: Jeu<Paire> = {
+      nom: "Paires",
+      fichier: "paires.yaml",
+      table: "essai_paire",
+      cle: ["a", "b"],
+      schema: z.object({ a: z.string(), b: z.string(), valeur: z.number() }),
+      colonnes: (e) => ({ a: e.a, b: e.b, valeur: e.valeur }),
+    };
+    await pool.query("create table if not exists essai_paire (a text, b text, valeur integer not null, primary key (a, b))");
+    await pool.query("delete from essai_paire");
+    const client = await pool.connect();
+    try {
+      const v1 = [
+        { a: "prairie", b: "bois", valeur: 4 },
+        { a: "prairie", b: "pierre", valeur: 4 },
+        { a: "foret", b: "bois", valeur: 14 },
+      ];
+      expect(await chargerJeu(client, paires, v1)).toEqual({ ajoutes: 3, modifies: 0, inchanges: 0 });
+      expect(await chargerJeu(client, paires, [{ ...v1[0], valeur: 5 }, v1[1], v1[2]])).toEqual({ ajoutes: 0, modifies: 1, inchanges: 2 });
+    } finally {
+      client.release();
+    }
+    expect((await pool.query("select a, b, valeur from essai_paire order by a, b")).rows).toEqual([
+      { a: "foret", b: "bois", valeur: 14 },
+      { a: "prairie", b: "bois", valeur: 5 },
+      { a: "prairie", b: "pierre", valeur: 4 },
+    ]);
+  });
 });

@@ -120,6 +120,24 @@ export const ressource = pgTable(
 );
 
 /**
+ * US-0209 : ce qu'une Case d'un Biome produit par heure de chaque Ressource, réglé dans
+ * donnees/biomes.yaml. Le Foyer produit comme une Case ordinaire de son Biome.
+ */
+export const productionBiome = pgTable(
+  "production_biome",
+  {
+    biomeId: text("biome_id")
+      .notNull()
+      .references(() => biome.id),
+    ressourceId: text("ressource_id")
+      .notNull()
+      .references(() => ressource.id),
+    parHeure: numeric("par_heure", { precision: 24, scale: 6 }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.biomeId, t.ressourceId] }), check("production_jamais_negative", sql`${t.parHeure} >= 0`)],
+);
+
+/**
  * Une Espèce : la fiche commune à toutes ses Bêtes, qui sont identiques. Ses chiffres
  * sont calqués sur l'animal réel (la source peut être notée).
  */

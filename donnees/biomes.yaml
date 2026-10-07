@@ -1,25 +1,36 @@
 # Les Biomes du Monde : le milieu naturel de chaque Case.
 # id : identifiant stable, il ne change plus une fois choisi (même si le nom affiché change).
 # L'eau est un seul Biome, avec quatre variantes : une Espèce d'eau vit dans toutes.
+# production : ce qu'une Case du Biome produit par heure de chaque Ressource (chiffres à régler en
+# jouant ; le Foyer produit comme une Case ordinaire). Chaque Biome donne les quatre, 0 compris.
 
 - id: prairie
   nom: Prairie
+  production: { viande: 8, vegetaux: 14, bois: 4, pierre: 4 }
 - id: foret
   nom: Forêt
+  production: { viande: 8, vegetaux: 6, bois: 14, pierre: 2 }
 - id: jungle
   nom: Jungle
+  production: { viande: 6, vegetaux: 14, bois: 10, pierre: 0 }
 - id: savane
   nom: Savane
+  production: { viande: 14, vegetaux: 8, bois: 4, pierre: 4 }
 - id: desert
   nom: Désert
+  production: { viande: 8, vegetaux: 4, bois: 0, pierre: 18 }
 - id: montagne
   nom: Montagne
+  production: { viande: 6, vegetaux: 2, bois: 4, pierre: 18 }
 - id: toundra
   nom: Toundra
+  production: { viande: 14, vegetaux: 4, bois: 6, pierre: 6 }
 - id: banquise
   nom: Banquise
+  production: { viande: 20, vegetaux: 0, bois: 0, pierre: 10 }
 - id: eau
   nom: Eau
+  production: { viande: 18, vegetaux: 12, bois: 0, pierre: 0 }
   variantes:
     - id: cote
       nom: Côte

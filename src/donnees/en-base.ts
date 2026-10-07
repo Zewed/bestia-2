@@ -3,15 +3,22 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 
-export type BiomeEnBase = { id: string; nom: string; variantes: { id: string; nom: string }[] };
+export type BiomeEnBase = {
+  id: string;
+  nom: string;
+  variantes: { id: string; nom: string }[];
+  /** US-0209 : ce qu'une Case du Biome produit par heure, Ressource par Ressource, dans leur ordre. */
+  production: { ressource: string; parHeure: string }[];
+};
 
-/** Les Biomes dans leur ordre, chacun avec ses variantes (les formes de l'eau). */
+/** Les Biomes dans leur ordre, chacun avec ses variantes (les formes de l'eau) et sa production horaire. */
 export async function biomesEnBase(base: Pool | PoolClient): Promise<BiomeEnBase[]> {
   const { rows } = await base.query<BiomeEnBase>(
     `select b.id, b.nom,
-       coalesce(json_agg(json_build_object('id', v.id, 'nom', v.nom) order by v.ordre) filter (where v.id is not null), '[]') as variantes
-     from biome b left join variante_biome v on v.biome_id = b.id
-     group by b.id
+       coalesce((select json_agg(json_build_object('id', v.id, 'nom', v.nom) order by v.ordre) from variante_biome v where v.biome_id = b.id), '[]') as variantes,
+       coalesce((select json_agg(json_build_object('ressource', r.nom, 'parHeure', p.par_heure::text) order by r.ordre)
+                 from production_biome p join ressource r on r.id = p.ressource_id where p.biome_id = b.id), '[]') as production
+     from biome b
      order by b.ordre`,
   );
   return rows;

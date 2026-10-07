@@ -84,6 +84,42 @@ export const RESSOURCES: Jeu<z.infer<typeof entreeRessource>> = {
   colonnes: (r) => ({ id: r.id, nom: r.nom, famille: r.famille, ordre: r.ordre, au_depart: r.au_depart }),
 };
 
+type EntreeProduction = { biomeId: string; ressourceId: string; parHeure: number };
+
+/** US-0209 : la production horaire de chaque Biome, rangée sous le Biome dans biomes.yaml. */
+export const PRODUCTIONS: Jeu<EntreeProduction> = {
+  nom: "Productions des Biomes",
+  fichier: "biomes.yaml",
+  table: "production_biome",
+  cle: ["biome_id", "ressource_id"],
+  extraire: (brut) =>
+    brut.flatMap((b) => {
+      const biome = b as { id?: unknown; production?: unknown };
+      if (!biome.production || typeof biome.production !== "object") return [];
+      return Object.entries(biome.production).map(([ressourceId, parHeure]) => ({ biomeId: biome.id, ressourceId, parHeure }));
+    }),
+  schema: z.object({
+    biomeId: identifiant,
+    ressourceId: identifiant,
+    parHeure: z.number({ error: "la production doit être un nombre" }).nonnegative("la production ne peut pas être négative"),
+  }),
+  colonnes: (p) => ({ biome_id: p.biomeId, ressource_id: p.ressourceId, par_heure: p.parHeure }),
+};
+
+/** Chaque Biome donne la production des quatre Ressources, et seulement d'elles (US-0209). */
+export function verifierProductions(productions: EntreeProduction[], connus: { biomes: string[]; ressources: string[] }): void {
+  const erreurs: string[] = [];
+  for (const p of productions) {
+    if (!connus.ressources.includes(p.ressourceId)) erreurs.push(`${p.biomeId} : Ressource inconnue « ${p.ressourceId} »`);
+  }
+  for (const biome of connus.biomes) {
+    for (const ressource of connus.ressources) {
+      if (!productions.some((p) => p.biomeId === biome && p.ressourceId === ressource)) erreurs.push(`${biome} : production de ${ressource} manquante`);
+    }
+  }
+  if (erreurs.length > 0) throw new Error(`biomes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
+}
+
 const positif = (champ: string) => z.number({ error: `${champ} doit être un nombre` }).positive(`${champ} doit être positif`);
 const positifOuNul = (champ: string) =>
   z.number({ error: `${champ} doit être un nombre` }).nonnegative(`${champ} ne peut pas être négatif`);
@@ -150,7 +186,7 @@ export function verifierReferences(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES, PRODUCTIONS];
 
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en
@@ -162,5 +198,6 @@ export function lireDonnees(dossier?: string): { jeu: Jeu<any>; entrees: any[] }
   const entrees = <T>(jeu: Jeu<T>) => lots.find((l) => l.jeu === jeu)!.entrees as T[];
   const ids = <T extends { id: string }>(jeu: Jeu<T>) => entrees(jeu).map((e) => e.id);
   verifierReferences(entrees(ESPECES), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) });
+  verifierProductions(entrees(PRODUCTIONS), { biomes: ids(BIOMES), ressources: ids(RESSOURCES) });
   return lots;
 }

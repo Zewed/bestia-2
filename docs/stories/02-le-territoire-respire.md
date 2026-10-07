@@ -91,12 +91,13 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0209 · Régler la production de chaque Biome
 **En tant que** développeur, **je veux** une table qui dit combien chaque Biome produit par heure de chaque ressource, **afin de** régler l'équilibre sans toucher au code.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). La production se règle dans `donnees/biomes.yaml`, sous chaque Biome (`production: { viande, vegetaux, bois, pierre }`), chargée dans la table `production_biome` ; le chargement refuse un Biome à qui il manque une Ressource, une Ressource inconnue ou une valeur négative. La page de contrôle montre ce que chaque Biome produit par heure. Valeurs provisoires, 30 par heure en tout pour chaque Biome, réparties selon son milieu (prairie : 8 Viande, 14 Végétaux, 4 Bois, 4 Pierre).
 - **Débloquée par** : US-0201, Étape 4
 - **Critères d'acceptation** :
-  - Pour chaque Biome, la table donne une production horaire de Viande, de Végétaux, de Bois et de Pierre (chiffre à régler).
+  - Pour chaque Biome, la table donne une production horaire de Viande, de Végétaux, de Bois et de Pierre (valeurs provisoires dans `donnees/biomes.yaml`, à régler en jouant).
   - Les Biomes d'eau ont aussi leur ligne, pour les Cases qui rejoindront un Territoire plus tard.
-  - Le Foyer produit comme une Case ordinaire de son Biome, ou davantage grâce à la hutte du chef (à décider).
-  - Une valeur modifiée s'applique à tous les joueurs dès le calcul suivant ; son effet sur le temps pas encore rattrapé (à décider).
+  - Le Foyer produit comme une Case ordinaire de son Biome (décidé le 2026-10-07) ; un bonus de la hutte du chef pourra venir avec les constructions.
+  - Une valeur modifiée s'applique à tous les joueurs dès le calcul suivant, y compris sur le temps pas encore rattrapé (décidé le 2026-10-07) : la tâche planifiée rattrape chaque Territoire toutes les quelques minutes, l'écart reste donc minime.
 
 ### US-0210 · Faire produire le Foyer en continu
 **En tant que** joueur, **je veux** que mon Foyer produise un peu de ressources en permanence, selon son Biome, **afin de** voir mon Territoire grandir même quand je ne fais rien.

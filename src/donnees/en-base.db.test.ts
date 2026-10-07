@@ -1,9 +1,9 @@
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, it } from "vitest";
 import { poolDeTest, URL_TEST } from "@/test/base";
-import { chargerJeu } from "./charger";
+import { chargerJeu, lireJeu } from "./charger";
 import { biomesEnBase, especesEnBase, raretesEnBase, rolesEnBase } from "./en-base";
-import { lireDonnees } from "./jeux";
+import { lireDonnees, PRODUCTIONS } from "./jeux";
 
 describe.skipIf(!URL_TEST)("données de référence lues en base", () => {
   let pool: Pool;
@@ -29,7 +29,11 @@ describe.skipIf(!URL_TEST)("données de référence lues en base", () => {
   it("donne chaque Biome dans son ordre, avec son nom et son identifiant", async () => {
     const biomes = await biomesEnBase(client);
     expect(biomes.map((b) => b.id)).toEqual(["prairie", "foret", "jungle", "savane", "desert", "montagne", "toundra", "banquise", "eau"]);
-    expect(biomes[1]).toEqual({ id: "foret", nom: "Forêt", variantes: [] });
+    expect(biomes[1]).toMatchObject({ id: "foret", nom: "Forêt", variantes: [] });
+    // US-0209 : sa production horaire, telle que biomes.yaml la règle, dans l'ordre des Ressources.
+    expect(biomes[1].production.map((p) => p.ressource)).toEqual(["Viande", "Végétaux", "Bois", "Pierre"]);
+    const reglee = lireJeu(PRODUCTIONS).filter((p) => p.biomeId === "foret");
+    expect(biomes[1].production.map((p) => Number(p.parHeure))).toEqual(reglee.map((p) => p.parHeure));
   });
 
   it("range les quatre formes de l'eau sous l'Eau", async () => {

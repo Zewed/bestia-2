@@ -160,6 +160,11 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
               {biomes.map((b) => (
                 <li key={b.id}>
                   <span className={styles.nom}>{b.nom}</span> <code className={styles.id}>{b.id}</code>
+                  {b.production.length > 0 ? (
+                    <p className={styles.note}>
+                      {b.production.map((p) => `${quantiteExacte(p.parHeure)} ${p.ressource}`).join(" · ")} par heure
+                    </p>
+                  ) : null}
                   {b.variantes.length > 0 ? (
                     <ul className={styles.variantes} aria-label={`Les ${b.variantes.length} formes : ${b.nom}`}>
                       {b.variantes.map((v) => (
