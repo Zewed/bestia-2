@@ -16,8 +16,9 @@ function nombreDHabitants(nombre: number): string {
 }
 
 /**
- * La page Habitants (US-0302), ouverte depuis la navigation : pour l'instant leur nombre ; la liste
- * de chacun viendra ensuite (US-0303). Sans session, la garde mène à la connexion, qui ramène ici.
+ * La page Habitants (US-0302), ouverte depuis la navigation : leur nombre, puis une ligne par Habitant
+ * avec son prénom, son Métier et son état, dans l'ordre de la lecture (US-0303). Sans session, la
+ * garde mène à la connexion, qui ramène ici.
  */
 export default async function Habitants() {
   await connection();
@@ -29,6 +30,19 @@ export default async function Habitants() {
       <h1 className={styles.titre}>Habitants</h1>
       <Bloc>
         <p className={styles.nombre}>{nombreDHabitants(habitants.length)}</p>
+        {habitants.length > 0 ? (
+          <ul className={styles.habitants}>
+            {habitants.map((h) => (
+              <li key={h.id} className={styles.habitant}>
+                <span className={styles.prenom}>{h.prenom}</span>
+                <span className={styles.metier} data-sans-metier={h.metier === null ? "" : undefined}>
+                  {h.metier ?? "sans Métier"}
+                </span>
+                <span className={styles.etat}>{h.etat}</span>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </Bloc>
     </main>
   );

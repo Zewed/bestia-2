@@ -1,6 +1,6 @@
 # Données de référence
 
-Les données fixes du jeu, une liste par fichier YAML : Biomes, Raretés, Rôles, Espèces et Ressources. On les relit et on les corrige sans toucher au code ; `npm run db:donnees` les charge en base, et la mise en ligne le fait toute seule.
+Les données fixes du jeu, une liste par fichier YAML : Biomes, Raretés, Rôles, Espèces, Ressources et prénoms des Habitants. On les relit et on les corrige sans toucher au code ; `npm run db:donnees` les charge en base, et la mise en ligne le fait toute seule.
 
 - Chaque entrée a un `id` stable : il ne change plus une fois choisi, même si le nom affiché change.
 - Les lignes qui commencent par `#` sont des commentaires : on y note les sources des chiffres.

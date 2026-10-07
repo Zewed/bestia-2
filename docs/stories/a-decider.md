@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-258 points au total.
+257 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -13,7 +13,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 3 · Les Habitants](03-les-habitants.md)
 
-- [US-0303](03-les-habitants.md) · Lister chaque Habitant avec son état : chaque Habitant porte un prénom tiré au hasard.
 - [US-0307](03-les-habitants.md) · Découvrir les huit Métiers : un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve.
 - [US-0308](03-les-habitants.md) · Donner un Métier à un Habitant : donner un Métier est gratuit et immédiat.
 - [US-0310](03-les-habitants.md) · Changer le Métier d'un Habitant : changer de Métier est gratuit et immédiat, sans temps d'apprentissage.

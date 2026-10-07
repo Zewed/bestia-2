@@ -89,7 +89,7 @@ describe.skipIf(!URL_TEST)("l'Entretien des Habitants (US-0316, sur base)", () =
       [territoireId, [...RESSOURCES], lignes.map((l) => l.quantite), lignes.map((l) => l.reste ?? "0"), lignes.map((l) => l.limite ?? null)],
     );
     await pool.query(
-      "with partis as (delete from habitant where territoire_id = $1) insert into habitant (territoire_id) select $1 from generate_series(1, $2)",
+      "with partis as (delete from habitant where territoire_id = $1) insert into habitant (territoire_id, prenom) select $1, 'Essai' from generate_series(1, $2)",
       [territoireId, habitants],
     );
   };

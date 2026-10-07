@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0316** · Faire manger les Habitants chaque heure ; le jalon 2 est terminé. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : la suite du jalon 3, par vagues parallèles.
+Dernière story livrée : **US-0303** · Lister chaque Habitant avec son état ; le jalon 2 est terminé. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : la suite du jalon 3, par vagues parallèles.
 
 ## Sommaire
 
@@ -13,7 +13,7 @@ Dernière story livrée : **US-0316** · Faire manger les Habitants chaque heure
 | [0 · Les fondations](00-fondations.md) | 1 à 4 | 52 | 1 |
 | [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9, sans la 8 | 54 | 0 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 0 |
-| [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 13 |
+| [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 12 |
 | [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 9 |
 | [5 · Récolter](05-recolter.md) | 21 à 24 | 52 | 24 |
 | [6 · Construire](06-construire.md) | 25 à 30 | 46 | 13 |
@@ -28,7 +28,7 @@ Dernière story livrée : **US-0316** · Faire manger les Habitants chaque heure
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **65 étapes** | **748** | **258** |
+| **Total** | **65 étapes** | **748** | **257** |
 
 Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (168 au total).
 

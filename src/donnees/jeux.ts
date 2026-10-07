@@ -85,6 +85,22 @@ export const RESSOURCES: Jeu<z.infer<typeof entreeRessource>> = {
   colonnes: (r) => ({ id: r.id, nom: r.nom, famille: r.famille, ordre: r.ordre, au_depart: r.au_depart, limite_au_depart: r.limite_au_depart }),
 };
 
+const entreePrenom = z.object({
+  nom: z.string().regex(/^[A-Z][a-z]{2,5}$/, "prénom : une majuscule puis 2 à 5 minuscules, sans accent"),
+  ordre: z.number().int(),
+});
+
+/** US-0303 : les prénoms que les Habitants reçoivent, tirés au hasard, une simple liste dans prenoms.yaml. */
+export const PRENOMS: Jeu<z.infer<typeof entreePrenom>> = {
+  nom: "Prénoms",
+  fichier: "prenoms.yaml",
+  table: "prenom",
+  cle: "nom",
+  extraire: (brut) => brut.map((nom, i) => ({ nom, ordre: i + 1 })),
+  schema: entreePrenom,
+  colonnes: (p) => ({ nom: p.nom, ordre: p.ordre }),
+};
+
 type EntreeProduction = { biomeId: string; ressourceId: string; parHeure: number };
 
 /** US-0209 : la production horaire de chaque Biome, rangée sous le Biome dans biomes.yaml. */
@@ -187,7 +203,7 @@ export function verifierReferences(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES, PRODUCTIONS];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES, PRODUCTIONS, PRENOMS];
 
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en

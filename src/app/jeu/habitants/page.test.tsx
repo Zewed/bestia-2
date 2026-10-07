@@ -11,9 +11,11 @@ const chefs = vi.hoisted(() => ({
   naitreSurLaCouronne: vi.fn(async (): Promise<number | null> => null),
 }));
 vi.mock("@/chefs/chef", () => chefs);
-const UN_HABITANT = { metier: null, arriveLe: new Date("2026-10-07T08:00:00Z") };
+type Habitant = { id: number; prenom: string; metier: string | null; arriveLe: Date; etat: "libre" };
+const PRENOMS = ["Arno", "Brune", "Cael"];
+const UN_HABITANT = { metier: null, arriveLe: new Date("2026-10-07T08:00:00Z"), etat: "libre" as const };
 const habitants = vi.hoisted(() => ({
-  habitantsDuTerritoire: vi.fn(async (): Promise<{ id: number; metier: string | null; arriveLe: Date }[]> => []),
+  habitantsDuTerritoire: vi.fn(async (): Promise<Habitant[]> => []),
 }));
 vi.mock("@/monde/habitants", () => habitants);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
@@ -22,7 +24,7 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302)", () => {
+describe("page Habitants (US-0302, US-0303)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -33,8 +35,11 @@ describe("page Habitants (US-0302)", () => {
   const connecte = (nombre = 3) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
-    habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, ...UN_HABITANT })));
+    habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, prenom: PRENOMS[i], ...UN_HABITANT })));
   };
+  /** Le texte de chaque ligne d'Habitant, ses morceaux séparés par « · ». */
+  const lignes = (html: string) =>
+    [...html.matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
 
   it("titre la page « Habitants », dans l'onglet comme sur la page", async () => {
     connecte();
@@ -46,7 +51,38 @@ describe("page Habitants (US-0302)", () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
     expect(habitants.habitantsDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
-    expect(html).toMatch(/<section[^>]*><p[^>]*>3 Habitants<\/p><\/section>/);
+    expect(html).toMatch(/<section[^>]*><p[^>]*>3 Habitants<\/p><ul/);
+  });
+
+  it("montre chaque Habitant sur une ligne, sous leur nombre : son prénom, « sans Métier » et « libre » (US-0303)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(/<p[^>]*>3 Habitants<\/p><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
+    expect(lignes(html)).toEqual(["Arno · sans Métier · libre", "Brune · sans Métier · libre", "Cael · sans Métier · libre"]);
+  });
+
+  it("montre le Métier d'un Habitant qui en a un, à la place de « sans Métier »", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Elio", ...UN_HABITANT, metier: "Chasseur" },
+    ]);
+    expect(lignes(renderToStaticMarkup(await Habitants()))).toEqual(["Dara · sans Métier · libre", "Elio · Chasseur · libre"]);
+  });
+
+  it("garde l'ordre de la lecture, qui range par Métier, ceux sans Métier en premier", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 42, prenom: "Joran", ...UN_HABITANT },
+      { id: 40, prenom: "Fenn", ...UN_HABITANT, metier: "Bûcheron" },
+      { id: 41, prenom: "Ilda", ...UN_HABITANT, metier: "Chasseur" },
+    ]);
+    expect(lignes(renderToStaticMarkup(await Habitants())).map((l) => l.split(" · ")[0])).toEqual(["Joran", "Fenn", "Ilda"]);
+  });
+
+  it("ne montre pas de liste vide quand il n'y a aucun Habitant", async () => {
+    connecte(0);
+    expect(renderToStaticMarkup(await Habitants())).not.toContain("<ul");
   });
 
   it("accorde le nombre : « 1 Habitant », « 0 Habitant »", async () => {
@@ -59,7 +95,11 @@ describe("page Habitants (US-0302)", () => {
   it("n'ajoute aucune phrase d'explication, ni lien vers ce qui n'existe pas encore", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual(["Habitants", "3 Habitants"]);
+    expect(html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([
+      "Habitants",
+      "3 Habitants",
+      ...PRENOMS.flatMap((prenom) => [prenom, "sans Métier", "libre"]),
+    ]);
     expect(html).not.toMatch(/<(a|button|form|input|select)[ >]/);
   });
 

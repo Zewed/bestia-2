@@ -438,7 +438,8 @@ export const stock = pgTable(
 
 /**
  * Un Habitant (US-0301) : un humain du Territoire, qui ne combat jamais et exerce un Métier (null tant
- * qu'il n'en a pas). Chaque Territoire en reçoit trois à sa naissance, donnés par la base.
+ * qu'il n'en a pas). Chaque Territoire en reçoit trois à sa naissance, donnés par la base, chacun avec
+ * un prénom tiré au hasard (US-0303).
  */
 export const habitant = pgTable(
   "habitant",
@@ -449,6 +450,14 @@ export const habitant = pgTable(
       .references(() => territoire.id, { onDelete: "cascade" }),
     metier: text("metier"),
     arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull().defaultNow(),
+    /** US-0303 : tiré au hasard dans la table prenom à son arrivée, puis le sien pour toujours. */
+    prenom: text("prenom").notNull(),
   },
   (t) => [index("habitant_par_territoire").on(t.territoireId)],
 );
+
+/** US-0303 : les prénoms que peuvent recevoir les Habitants, réglés dans donnees/prenoms.yaml. */
+export const prenom = pgTable("prenom", {
+  nom: text("nom").primaryKey(),
+  ordre: integer("ordre").notNull(),
+});

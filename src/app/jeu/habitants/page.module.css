@@ -18,6 +18,47 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* US-0303 : une ligne par Habitant ; prénom, Métier et état côte à côte sur ordinateur. */
+.habitants {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.habitant {
+  display: grid;
+  grid-template-columns: minmax(0, 160px) minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+}
+
+.prenom {
+  font-weight: var(--graisse-titre);
+}
+
+.metier {
+  color: var(--texte-2);
+}
+
+.metier[data-sans-metier] {
+  color: var(--texte-discret);
+}
+
+.etat {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--menthe);
+  color: var(--menthe-fonce);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+}
+
 @media (max-width: 820px), (max-height: 500px) {
   .page {
     padding: 12px;
@@ -25,5 +66,16 @@
   .titre {
     margin: 8px 0 12px;
     font-size: 24px;
+  }
+  /* Sur mobile, le Métier passe sous le prénom ; l'état reste à droite. */
+  .habitant {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .metier {
+    grid-row: 2;
+  }
+  .etat {
+    grid-row: 1 / span 2;
+    grid-column: 2;
   }
 }

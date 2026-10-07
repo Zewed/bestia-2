@@ -29,12 +29,13 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0303 · Lister chaque Habitant avec son état
 **En tant que** joueur, **je veux** voir chaque Habitant avec son Métier et son état, **afin de** comprendre d'un coup d'œil qui fait quoi.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sous le nombre d'Habitants, une ligne par Habitant : son prénom, son Métier ou « sans Métier », et une pastille « libre ». Les prénoms viennent de `donnees/prenoms.yaml` (soixante prénoms courts, sans accent), semés aussi par la migration ; une naissance en donne trois différents, et les Habitants déjà là ont reçu le leur. Vérifié en vrai sur ordinateur et à 320 px, sans défilement de côté.
 - **Débloquée par** : US-0302
 - **Critères d'acceptation** :
   - Chaque Habitant occupe une ligne qui montre son Métier, ou « sans Métier ».
   - Chaque ligne montre l'état de l'Habitant ; à ce stade, le seul état possible est « libre » (au Foyer et disponible), les autres arriveront avec les Expéditions, les Élevages, les Récoltes et les chantiers.
   - Les lignes sont rangées par Métier, les Habitants sans Métier en premier.
-  - Chaque Habitant porte un prénom tiré au hasard (à décider).
+  - Chaque Habitant porte un prénom tiré au hasard (décidé le 2026-10-07), différent des autres prénoms de son Territoire à la naissance.
 
 ### US-0304 · Compter ses Habitants dans la barre du haut
 **En tant que** joueur, **je veux** voir mon nombre d'Habitants dans la barre du haut, **afin de** suivre mon Territoire depuis n'importe quelle page.
