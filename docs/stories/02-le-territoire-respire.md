@@ -228,6 +228,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0222 · Respecter la limite pendant le rattrapage
 **En tant que** joueur, **je veux** que la limite joue aussi pendant mon absence, **afin de** trouver des stocks justes en revenant.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot), sans code nouveau : le plafond d'US-0221 est dans le calcul unique du temps. Tests sur base : un Bois à dix de sa limite s'y arrête au milieu de dix heures d'absence et ne gagne plus rien ensuite (dix comptés depuis la visite, reste à zéro), la Viande prend ses dix heures ; page fermée, page ouverte par petits pas ou tâche planifiée donnent exactement les mêmes comptes, reste compris. Vérifié en vrai avec US-0221 (saut d'un jour sur un Bois plein).
 - **Débloquée par** : US-0221
 - **Critères d'acceptation** :
   - Après une longue absence, un stock s'arrête à sa limite, même si la production de l'absence l'aurait dépassée.

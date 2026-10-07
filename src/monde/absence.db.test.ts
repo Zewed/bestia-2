@@ -90,5 +90,37 @@ describe.skipIf(!URL_TEST)("retrouver ses stocks montés après une absence (US-
       expect(await recapitulatifDAbsence(pool, territoireId, apres(ne, 11))).toEqual([]);
     });
   });
+
+  describe("la limite pendant le rattrapage (US-0222)", () => {
+    /** Le Bois à dix de sa limite : quatre heures et demie de prairie l'y amènent, au milieu de l'absence. */
+    const presDeLaLimite = async () => {
+      const t = await naitre();
+      await pool.query("update stock set quantite = limite - 10 where territoire_id = $1 and ressource_id = 'bois'", [t.territoireId]);
+      return t;
+    };
+    const comptes = async (territoireId: number) =>
+      (await pool.query("select ressource_id, quantite::text, reste::text, produit_depuis_visite::text, (quantite = limite) as plein from stock where territoire_id = $1 order by ressource_id", [territoireId])).rows;
+
+    it("après une longue absence, arrête un Stock à sa limite, et il ne gagne plus rien pour le reste de l'absence", async () => {
+      const { territoireId, ne } = await presDeLaLimite();
+      await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 10) });
+      const bois = (await comptes(territoireId)).find((s) => s.ressource_id === "bois");
+      expect(bois).toMatchObject({ plein: true, reste: "0.000000", produit_depuis_visite: "10.000000" });
+      const viande = (await comptes(territoireId)).find((s) => s.ressource_id === "viande");
+      expect(viande.quantite).toBe((await nFois(10)).find((p) => p.id === "viande")!.quantite);
+    });
+
+    it("donne le même résultat page fermée, page ouverte ou après la tâche planifiée", async () => {
+      const ferme = await presDeLaLimite();
+      const tache = await presDeLaLimite();
+      const ouverte = await presDeLaLimite();
+      await rattraper("territoire", ferme.territoireId, { pool, jusqua: apres(ferme.ne, 10) });
+      for (const heures of [1.5, 4, 7]) await rattraperLesAbsents({ pool, maintenant: apres(tache.ne, heures), parmi: { territoire: [tache.territoireId] } });
+      await rattraper("territoire", tache.territoireId, { pool, jusqua: apres(tache.ne, 10) });
+      for (const heures of [0.25, 2, 2.5, 4.4, 4.6, 9, 10]) await rattraper("territoire", ouverte.territoireId, { pool, jusqua: apres(ouverte.ne, heures) });
+      expect(await comptes(tache.territoireId)).toEqual(await comptes(ferme.territoireId));
+      expect(await comptes(ouverte.territoireId)).toEqual(await comptes(ferme.territoireId));
+    });
+  });
 });
 
