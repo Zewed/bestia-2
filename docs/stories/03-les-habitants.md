@@ -97,6 +97,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0309 · Compter les effectifs par Métier
 **En tant que** joueur, **je veux** voir combien d'Habitants exercent chaque Métier, **afin de** vérifier ma répartition d'un coup d'œil.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sous l'en-tête de la page Habitants, une rangée de compteurs : « Sans Métier » puis les huit Métiers dans leur ordre, chacun avec son icône et son nombre (un 0 en discret). Ils sont comptés sur la liste elle-même : leur somme est toujours le nombre d'Habitants, et ils bougent dès qu'un Métier est donné. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0308
 - **Critères d'acceptation** :
   - En tête de la page Habitants, un compteur par Métier, plus un compteur « sans Métier ».

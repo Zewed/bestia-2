@@ -64,10 +64,10 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
 
 /**
  * La page Habitants (US-0302), ouverte depuis la navigation : leur nombre sur la place du Territoire,
- * avec « Plus de place » quand elle est toute prise (US-0305), puis une ligne par Habitant avec son
- * prénom, son Métier et son état, dans l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un
- * Habitant sans Métier (US-0308) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318), puis
- * les huit Métiers (US-0307). Tout est lu à chaque affichage.
+ * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), puis
+ * une ligne par Habitant avec son prénom, son Métier et son état, dans l'ordre de la lecture (US-0303),
+ * d'où l'on donne un Métier à un Habitant sans Métier (US-0308) ; à côté, ou dessous sur mobile, leur
+ * Entretien par heure (US-0318), puis les huit Métiers (US-0307). Tout est lu à chaque affichage.
  * Sans session, la garde mène à la connexion, qui ramène ici.
  */
 export default async function Habitants() {

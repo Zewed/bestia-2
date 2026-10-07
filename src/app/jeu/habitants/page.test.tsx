@@ -43,7 +43,7 @@ vi.mock("./ListeDesHabitants", async (original) => {
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0318)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0318)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -66,9 +66,11 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     habitants.entretienDesHabitants.mockResolvedValue({ habitants: nombre, parHabitant: 2, parHeure: String(2 * nombre) });
     metiers.lesMetiers.mockResolvedValue(HUIT_METIERS);
   };
-  /** Le texte de chaque ligne d'Habitant (la première liste de la page), ses morceaux séparés par « · ». */
+  /** US-0309 : la rangée des compteurs, la première liste de la page, telle qu'elle est écrite. */
+  const rangeeDesEffectifs = (html: string) => html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul>/)?.[0] ?? "";
+  /** Le texte de chaque ligne d'Habitant (la liste qui suit les compteurs), ses morceaux séparés par « · ». */
   const lignes = (html: string) =>
-    [...(html.match(/<ul[^>]*>(.*?)<\/ul>/)?.[1] ?? "").matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) =>
+    [...(html.match(/<ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul><ul[^>]*>(.*?)<\/ul>/)?.[1] ?? "").matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) =>
       ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "),
     );
   /** Les morceaux de texte d'un bout de page, tels qu'on les lit (l'apostrophe y est écrite « &#x27; »). */
@@ -124,7 +126,8 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   it("montre chaque Habitant sur une ligne, sous leur nombre : son prénom, « Choisir un Métier » à la place de « sans Métier », et « libre » (US-0303, US-0308)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html).toMatch(/<p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
+    // US-0309 : les compteurs passent entre les deux.
+    expect(html).toMatch(/<p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
     expect(lignes(html)).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Cael · Choisir un Métier · libre"]);
   });
 
@@ -183,6 +186,9 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(morceaux(html)).toEqual([
       "Habitants",
       "3 Habitants sur 5 places",
+      // US-0309 : les compteurs, chacun son nom et son nombre.
+      ...["Sans Métier ", "3"],
+      ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"]),
       ...PRENOMS.flatMap((prenom) => [prenom, "Choisir un Métier", "libre"]),
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
@@ -221,7 +227,33 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
   it("rassemble le nombre, la place et « Plus de place » dans l'en-tête du bloc, la liste à part, dessous (US-0306)", async () => {
     connecte(5, 5);
     const html = renderToStaticMarkup(await Habitants());
-    expect(html).toMatch(/<section[^>]*><div[^>]*><p[^>]*>5 Habitants sur 5 places<\/p><p[^>]*>Plus de place<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){5}<\/ul><\/section>/);
+    expect(html).toMatch(
+      /<section[^>]*><div[^>]*><p[^>]*>5 Habitants sur 5 places<\/p><p[^>]*>Plus de place<\/p><\/div><ul[^>]*aria-label="Effectifs par Métier"[^>]*>.*?<\/ul><ul[^>]*>(<li[^>]*>.*?<\/li>){5}<\/ul><\/section>/,
+    );
+  });
+
+  it("compte les effectifs par Métier juste sous l'en-tête, hors de la partie collée, au-dessus de la liste : « Sans Métier » puis les huit Métiers (US-0309)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(
+      /<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*aria-label="Effectifs par Métier"[^>]*>(<li[^>]*>.*?<\/li>){9}<\/ul><ul/,
+    );
+    expect(morceaux(rangeeDesEffectifs(html)).join("|")).toBe(["Sans Métier ", "3", ...HUIT_METIERS.flatMap((m) => [`${m.nom} `, "0"])].join("|"));
+  });
+
+  it("compte sur la lecture même de la liste : la somme des compteurs est le nombre d'Habitants (US-0309)", async () => {
+    connecte();
+    habitants.habitantsDuTerritoire.mockResolvedValue([
+      { id: 41, prenom: "Dara", ...UN_HABITANT },
+      { id: 40, prenom: "Fenn", ...UN_HABITANT, metier: "Chasseur" },
+      { id: 43, prenom: "Ilda", ...UN_HABITANT, metier: "Chasseur" },
+      { id: 42, prenom: "Joran", ...UN_HABITANT, metier: "Bûcheron" },
+    ]);
+    const compteurs = morceaux(rangeeDesEffectifs(renderToStaticMarkup(await Habitants())))
+      .join("")
+      .split(/(?<=\d)/);
+    expect(compteurs).toEqual(["Sans Métier 1", "Explorateur 0", "Chasseur 2", "Cueilleur 0", "Bûcheron 1", "Mineur 0", "Chercheur 0", "Bâtisseur 0", "Éleveur 0"]);
+    expect(habitants.habitantsDuTerritoire).toHaveBeenCalledTimes(1);
   });
 
   it("affiche l'Entretien total par heure, détaillé en une ligne : « 3 Habitants × 2 Nourriture = 6 Nourriture par heure » (US-0318)", async () => {
@@ -357,6 +389,16 @@ describe("page Habitants au pouce (US-0306)", () => {
     // Chaque Métier, son icône au-dessus de son nom, pour tenir à deux par ligne sur 320 px.
     expect(regle(".metierAuChoix")).toContain("flex-direction: column;");
     expect(regle(".iconeAuChoix")).toContain("width: 28px;");
+  });
+
+  it("fait passer les compteurs à la ligne sur un écran étroit, chacun son icône à sa taille, et rien qui ne colle au défilement (US-0309)", () => {
+    const effectifs = regle(".effectifs");
+    expect(effectifs).toContain("display: flex;");
+    expect(effectifs).toContain("flex-wrap: wrap;");
+    expect(effectifs).not.toContain("sticky");
+    expect(regle(".iconeEffectif")).toContain("width: 22px;");
+    // Les chiffres ont tous la même largeur : passer de 1 à 2 ne pousse pas les compteurs suivants.
+    expect(regle(".nombreEffectif")).toContain("font-variant-numeric: tabular-nums;");
   });
 
   it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {

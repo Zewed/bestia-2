@@ -11,11 +11,27 @@ export type HabitantAffiche = { id: number; prenom: string; metier: string | nul
 /** US-0308 : un Métier qu'on peut donner, son icône déjà nommée par le serveur. */
 export type MetierAuChoix = { id: string; nom: string; icone: string };
 
+/** US-0309 : un compteur : « Sans Métier », ou un Métier avec son icône, et le nombre d'Habitants qu'il compte. */
+type Effectif = { id: string; nom: string; icone: string | null; nombre: number };
+
+/**
+ * US-0309 : les effectifs de la liste même, Habitant par Habitant : ceux sans Métier d'abord, puis chaque
+ * Métier dans son ordre, même quand personne ne l'exerce. Chaque Habitant compte une fois : leur somme est
+ * le nombre d'Habitants.
+ */
+function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix[]): Effectif[] {
+  const compter = (metier: string | null) => habitants.filter((h) => h.metier === metier).length;
+  return [{ id: "sans", nom: "Sans Métier", icone: null, nombre: compter(null) }, ...metiers.map((m) => ({ ...m, nombre: compter(m.nom) }))];
+}
+
 /**
  * Une ligne par Habitant (US-0303) : son prénom, son Métier, son état. US-0308 : sur la ligne d'un Habitant
  * sans Métier, « Choisir un Métier » déplie dessous les Métiers au choix, un seul dépliant à la fois ; Échap
  * ou un second toucher le referment. Toucher un Métier le donne : la ligne le montre aussitôt, le temps que
  * l'action serveur l'enregistre et relise la page, qui fait alors foi.
+ *
+ * US-0309 : au-dessus de la liste, une rangée de compteurs, « Sans Métier » puis un par Métier, comptés sur
+ * les lignes mêmes : un Métier donné les fait bouger aussitôt, avec la ligne.
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
   const [affiches, montrerLeMetier] = useOptimistic(habitants, (actuels, donne: { id: number; metier: string }) =>
@@ -48,48 +64,59 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
   }
 
   return (
-    <ul className={styles.habitants}>
-      {affiches.map((h) => {
-        const deplie = ouvert === h.id && h.metier === null;
-        return (
-          <li key={h.id} className={styles.habitant}>
-            <span className={styles.prenom}>{h.prenom}</span>
-            {h.metier !== null ? (
-              <span className={styles.metier}>{h.metier}</span>
-            ) : metiers.length > 0 ? (
-              <button
-                type="button"
-                id={idBouton(h.id)}
-                className={styles.choisir}
-                aria-expanded={deplie}
-                aria-controls={deplie ? idChoix(h.id) : undefined}
-                onClick={() => setOuvert(deplie ? null : h.id)}
-              >
-                Choisir un Métier
-                <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
-                  <path d="M2.5 4.5 6 8l3.5-3.5" />
-                </svg>
-              </button>
-            ) : (
-              <span className={styles.metier} data-sans-metier="">
-                sans Métier
-              </span>
-            )}
-            <span className={styles.etat}>{h.etat}</span>
-            {deplie ? (
-              <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
-                {metiers.map((m) => (
-                  <button key={m.id} type="button" className={styles.metierAuChoix} onClick={() => donner(h, m)}>
-                    {/* Le nom est écrit juste à côté : l'icône est muette. */}
-                    <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
-                    {m.nom}
-                  </button>
-                ))}
-              </div>
-            ) : null}
+    <>
+      <ul className={styles.effectifs} aria-label="Effectifs par Métier">
+        {effectifsParMetier(affiches, metiers).map((e) => (
+          <li key={e.id} className={styles.effectif} data-personne={e.nombre === 0 ? "" : undefined}>
+            {/* Le nom est écrit juste à côté : l'icône est muette. */}
+            {e.icone ? <Image src={e.icone} alt="" width={22} height={22} className={styles.iconeEffectif} /> : null}
+            {e.nom} <strong className={styles.nombreEffectif}>{e.nombre}</strong>
           </li>
-        );
-      })}
-    </ul>
+        ))}
+      </ul>
+      <ul className={styles.habitants}>
+        {affiches.map((h) => {
+          const deplie = ouvert === h.id && h.metier === null;
+          return (
+            <li key={h.id} className={styles.habitant}>
+              <span className={styles.prenom}>{h.prenom}</span>
+              {h.metier !== null ? (
+                <span className={styles.metier}>{h.metier}</span>
+              ) : metiers.length > 0 ? (
+                <button
+                  type="button"
+                  id={idBouton(h.id)}
+                  className={styles.choisir}
+                  aria-expanded={deplie}
+                  aria-controls={deplie ? idChoix(h.id) : undefined}
+                  onClick={() => setOuvert(deplie ? null : h.id)}
+                >
+                  Choisir un Métier
+                  <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
+                    <path d="M2.5 4.5 6 8l3.5-3.5" />
+                  </svg>
+                </button>
+              ) : (
+                <span className={styles.metier} data-sans-metier="">
+                  sans Métier
+                </span>
+              )}
+              <span className={styles.etat}>{h.etat}</span>
+              {deplie ? (
+                <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
+                  {metiers.map((m) => (
+                    <button key={m.id} type="button" className={styles.metierAuChoix} onClick={() => donner(h, m)}>
+                      {/* Le nom est écrit juste à côté : l'icône est muette. */}
+                      <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
+                      {m.nom}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </li>
+          );
+        })}
+      </ul>
+    </>
   );
 }

@@ -52,6 +52,47 @@
   font-weight: var(--graisse-titre);
 }
 
+/*
+ * US-0309 : sous l'en-tête, hors de la partie collée, les effectifs : « Sans Métier » puis un compteur par
+ * Métier, son icône, son nom et son nombre en gras ; ils passent à la ligne sur un écran étroit.
+ */
+.effectifs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.effectif {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 4px 10px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+  color: var(--texte-2);
+  font-size: 13px;
+}
+
+.iconeEffectif {
+  width: 22px;
+  height: 22px;
+}
+
+.nombreEffectif {
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Un Métier que personne n'exerce garde son compteur, son 0 en discret. */
+.effectif[data-personne] .nombreEffectif {
+  color: var(--texte-discret);
+}
+
 /* US-0303 : une ligne par Habitant ; prénom, Métier et état côte à côte sur ordinateur. */
 .habitants {
   display: grid;
