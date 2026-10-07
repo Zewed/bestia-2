@@ -362,4 +362,18 @@
   .choix {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
+
+  /*
+   * US-0309 : un compteur de Métier ne montre que son icône et son nombre : avec les noms, la rangée passerait
+   * sur six lignes. Le nom, réduit à rien, reste lu par un lecteur d'écran ; « Tous » et « Sans Métier »,
+   * sans icône, gardent le leur.
+   */
+  .effectif:has(.iconeEffectif) {
+    gap: 4px;
+    font-size: 0;
+  }
+
+  .effectif:has(.iconeEffectif) .nombreEffectif {
+    font-size: 13px;
+  }
 }
