@@ -1,0 +1,25 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_5940292e4298e7 65,69
+docs/stories/README.md
+  s_97a431cfa65ca7::t_0fd415a3e417b0 33
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_5e9b0b46cbad1a 15-26,28-30,35-37,95
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_6021cd92ca2eed 1-2,30,156-202
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b17b736d46e2bfcf1fae82a06493496d82b9fab2",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
