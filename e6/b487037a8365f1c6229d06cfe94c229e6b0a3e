@@ -2,11 +2,18 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_b6addc99719a56 5
 src/db/schema.ts
   s_97a431cfa65ca7::t_663aa2b7497bdf 391
+  s_97a431cfa65ca7::t_d5eb936a81770c 391
 src/monde/hex.test.ts
   s_97a431cfa65ca7::t_663aa2b7497bdf 1-2,4-5,12,26-96
   s_97a431cfa65ca7::t_434685e1b9601d 97
+  s_97a431cfa65ca7::t_7188540f89e33d 82-83,85
+  s_97a431cfa65ca7::t_bc44ce047fc1e0 93
+  s_97a431cfa65ca7::t_f4b8399164f493 76
+  s_97a431cfa65ca7::t_58e036f57eeb41 1-2,4-5,12,26-75,77-81,84,86-92,94-96
+  s_97a431cfa65ca7::t_e532f609dc9c78 97
 src/reglages.ts
   s_97a431cfa65ca7::t_663aa2b7497bdf 51-54
+  s_97a431cfa65ca7::t_47df69e77cbb99 51-54
 docs/stories/04-la-carte-du-monde.md
   s_97a431cfa65ca7::t_b6addc99719a56 21,24
 docs/stories/README.md
@@ -14,6 +21,8 @@ docs/stories/README.md
 src/monde/hex.ts
   s_97a431cfa65ca7::t_663aa2b7497bdf 2-4,8-9,11-15,17-24,41-49
   s_97a431cfa65ca7::t_fe0fff7e01bb36 50
+  s_97a431cfa65ca7::t_4c20bfc6547112 2-4,8-9,11-15,17-24,41-49
+  s_97a431cfa65ca7::t_56bd90f9a31efd 50
 ---
 {
   "schema_version": "authorship/3.0.0",
