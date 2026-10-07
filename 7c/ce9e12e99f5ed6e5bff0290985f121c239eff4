@@ -1,0 +1,59 @@
+donnees/prenoms.yaml
+  s_97a431cfa65ca7::t_66808781e29a0c 1-64
+drizzle/0035_prenoms.sql
+  s_97a431cfa65ca7::t_66808781e29a0c 1-97
+src/db/schema.ts
+  s_97a431cfa65ca7::t_66808781e29a0c 441-442,453-454,458-463
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_66808781e29a0c 14-16,18,27,38,40-42,54-85,98-102
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_66808781e29a0c 1-2,8-10,14-22,71,78,85-162
+src/monde/entretien.db.test.ts
+  s_97a431cfa65ca7::t_65174d52c31239 92
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_66808781e29a0c 5-9,11-14,16-18,21
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_66808781e29a0c 19-21,33-45
+src/donnees/jeux.ts
+  s_97a431cfa65ca7::t_66808781e29a0c 88-103,206
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_66808781e29a0c 21-61,70-80
+src/donnees/prenoms.test.ts
+  s_97a431cfa65ca7::t_66808781e29a0c 1-54
+donnees/LISEZMOI.md
+  s_97a431cfa65ca7::t_66808781e29a0c 3
+drizzle/meta/0035_snapshot.json
+  s_97a431cfa65ca7::t_3d19499b7dfd15 1-2012
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_f5f14f75a2b6b5 249-255
+docs/stories/03-les-habitants.md
+  s_67fa7d60fb3221::t_826069d8663547 32,38
+docs/stories/README.md
+  s_67fa7d60fb3221::t_358102f969f68e 7,16,31
+docs/stories/a-decider.md
+  s_67fa7d60fb3221::t_664578eedd32ff 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7cce9e12e99f5ed6e5bff0290985f121c239eff4",
+  "prompts": {},
+  "sessions": {
+    "s_67fa7d60fb3221": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a6d222bdfe751399d",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
