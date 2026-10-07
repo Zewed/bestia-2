@@ -7,6 +7,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0401 · Générer un Monde à partir d'une graine
 **En tant que** développeur, **je veux** générer un Monde entier à partir d'une graine, **afin de** pouvoir le recréer à l'identique à tout moment.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). `npm run monde:generer -- --nom "…" --graine 12345` crée un nouveau Monde et ses 10 981 Cases (graine facultative : tirée au hasard et affichée si absente) ; elle refuse un nom déjà pris et ne tourne pas à la mise en ligne. La graine est enregistrée avec le Monde ; le Monde du jeu a reçu la sienne, celle dont sa Couronne a toujours été tirée, sans qu'aucune Case ne change. La Couronne d'un Monde généré est celle que le jeu tirait déjà ; l'intérieur reçoit en attendant le même relief (les vraies régions viennent avec US-0406). Vérifié sur une base de test : même graine, mêmes Cases ; une autre, 7 799 Cases sur 10 981 différentes.
 - **Débloquée par** : Étape 4
 - **Critères d'acceptation** :
   - Une commande crée un Monde en hexagones à partir d'une graine et l'enregistre.

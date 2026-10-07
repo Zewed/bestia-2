@@ -6,16 +6,26 @@ import { bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
-export const monde = pgTable("monde", {
-  id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  nom: text("nom").notNull().unique(),
-  neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
-  /** Le marque-page du temps : l'instant jusqu'auquel le Monde a été calculé. Il ne recule jamais. */
-  calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
-  /** US-0151 : sa taille en anneaux, et combien d'anneaux extérieurs forment sa Couronne. Fixées à la préparation de la Couronne, elles ne changent plus. */
-  rayon: integer("rayon"),
-  anneauxCouronne: integer("anneaux_couronne"),
-});
+export const monde = pgTable(
+  "monde",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    nom: text("nom").notNull().unique(),
+    neLe: timestamp("ne_le", { withTimezone: true }).notNull().defaultNow(),
+    /** Le marque-page du temps : l'instant jusqu'auquel le Monde a été calculé. Il ne recule jamais. */
+    calculeJusquA: timestamp("calcule_jusqu_a", { withTimezone: true }).notNull().defaultNow(),
+    /** US-0151 : sa taille en anneaux, et combien d'anneaux extérieurs forment sa Couronne. Fixées à la préparation de la Couronne, elles ne changent plus. */
+    rayon: integer("rayon"),
+    anneauxCouronne: integer("anneaux_couronne"),
+    /**
+     * US-0401 : la graine dont toutes ses Cases sont tirées, un entier de 0 à 2³² − 1 : la même graine
+     * redonne le même Monde. Un Monde né sans graine reçoit à la préparation de sa Couronne celle qu'il
+     * avait déjà, tirée de son nom.
+     */
+    graine: bigint("graine", { mode: "number" }),
+  },
+  (t) => [check("monde_graine_sur_32_bits", sql`${t.graine} between 0 and 4294967295`)],
+);
 
 /**
  * Un événement daté qui touche un élément du jeu (une Attaque qui arrive, une Bête qui guérit…).

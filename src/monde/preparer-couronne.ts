@@ -13,18 +13,21 @@ export async function preparerCouronne(client: PoolClient, mondeId: number): Pro
   // « for no key update » et non « for update » : il suffit pour passer une préparation à la fois, et
   // laisse naître les chefs pendant ce temps (leur fiche renvoie au Monde, ce qu'un « for update »
   // bloquerait, alors que la préparation attend la Case que la naissance est en train de prendre).
-  const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null }>(
-    "select nom, rayon, anneaux_couronne as anneaux from monde where id = $1 for no key update",
+  const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null; graine: string | null }>(
+    "select nom, rayon, anneaux_couronne as anneaux, graine from monde where id = $1 for no key update",
     [mondeId],
   );
   if (!rows[0]) throw new Error(`Monde ${mondeId} introuvable.`);
   let { rayon, anneaux } = rows[0];
-  if (rayon === null || anneaux === null || anneaux < COURONNE_ANNEAUX) {
+  // US-0401 : la Couronne est tirée de la graine enregistrée avec le Monde. Un Monde né sans graine
+  // reçoit celle dont sa Couronne a toujours été tirée, celle de son nom : aucune Case ne change.
+  const graine = rows[0].graine === null ? graineDuMonde(rows[0].nom) : Number(rows[0].graine);
+  if (rayon === null || anneaux === null || anneaux < COURONNE_ANNEAUX || rows[0].graine === null) {
     rayon ??= MONDE_RAYON;
     anneaux = Math.max(anneaux ?? 0, COURONNE_ANNEAUX);
-    await client.query("update monde set rayon = $2, anneaux_couronne = $3 where id = $1", [mondeId, rayon, anneaux]);
+    await client.query("update monde set rayon = $2, anneaux_couronne = $3, graine = $4 where id = $1", [mondeId, rayon, anneaux, graine]);
   }
-  const cases = casesDeLaCouronne({ rayon, anneaux, graine: graineDuMonde(rows[0].nom) });
+  const cases = casesDeLaCouronne({ rayon, anneaux, graine });
   const { rowCount } = await client.query(
     `insert into case_du_monde (monde_id, q, r, anneau, couronne, biome_id, variante_id)
      select $1, c.q, c.r, c.anneau, true, c.biome, c.variante

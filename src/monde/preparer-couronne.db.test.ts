@@ -2,8 +2,15 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { chargerJeu } from "@/donnees/charger";
 import { lireDonnees } from "@/donnees/jeux";
-import { poolDeTest, URL_TEST } from "@/test/base";
+import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { preparerCouronne } from "./preparer-couronne";
+
+/** Les Cases d'un Monde en base, rangées comme casesDeLaCouronne les rend. */
+async function casesEnBase(base: Pool | PoolClient, mondeId: number) {
+  const { rows } = await base.query("select q, r, anneau, biome_id as biome, variante_id as variante from case_du_monde where monde_id = $1 order by q, r", [mondeId]);
+  return rows;
+}
 
 describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
   let pool: Pool;
@@ -65,6 +72,30 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
     expect(rows[0].biome_id).toBe("toundra");
   });
 
+  it("donne sa graine à un Monde né sans graine : celle de son nom, dont sa Couronne a toujours été tirée (US-0401)", async () => {
+    const { rows } = await client.query("select nom from monde where id = $1", [mondeId]);
+    await preparerCouronne(client, mondeId);
+    const graine = graineDuMonde(rows[0].nom);
+    expect((await client.query("select graine from monde where id = $1", [mondeId])).rows[0].graine).toBe(String(graine));
+    expect(await casesEnBase(client, mondeId)).toEqual(casesDeLaCouronne({ rayon: 60, anneaux: 6, graine }));
+  });
+
+  it("tire la Couronne de la graine enregistrée avec le Monde, et la garde (US-0401)", async () => {
+    await client.query("update monde set graine = 12345 where id = $1", [mondeId]);
+    await preparerCouronne(client, mondeId);
+    expect((await client.query("select graine from monde where id = $1", [mondeId])).rows[0].graine).toBe("12345");
+    expect(await casesEnBase(client, mondeId)).toEqual(casesDeLaCouronne({ rayon: 60, anneaux: 6, graine: 12345 }));
+  });
+
+  it("refuse en base une graine hors des entiers de 0 à 2³² − 1 (US-0401)", async () => {
+    for (const graine of [-1, 2 ** 32]) {
+      await client.query("savepoint essai");
+      await expect(client.query("update monde set graine = $2 where id = $1", [mondeId, graine])).rejects.toMatchObject({ constraint: "monde_graine_sur_32_bits" });
+      await client.query("rollback to savepoint essai");
+    }
+    await client.query("update monde set graine = $2 where id = $1", [mondeId, 2 ** 32 - 1]);
+  });
+
   it("refuse en base deux Cases au même endroit, et un anneau faux", async () => {
     await preparerCouronne(client, mondeId);
     await client.query("savepoint essai");
@@ -75,5 +106,24 @@ describe.skipIf(!URL_TEST)("préparer la Couronne en base (US-0151)", () => {
     await expect(client.query("insert into case_du_monde (monde_id, q, r, anneau, couronne, biome_id) values ($1, 1, 1, 1, false, 'prairie')", [mondeId])).rejects.toMatchObject({
       constraint: "case_anneau_exact",
     });
+  });
+});
+
+describe.skipIf(!URL_TEST)("la Couronne du Monde du jeu, une fois sa graine enregistrée (US-0401)", () => {
+  let pool: Pool;
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    await preparerMondeDeTest(pool);
+  });
+  afterAll(async () => {
+    await pool.end();
+  });
+
+  it("reste la même, Case par Case : sa graine enregistrée est celle dont elle a été tirée", async () => {
+    const { rows } = await pool.query("select id, nom, rayon, anneaux_couronne as anneaux, graine from monde order by id limit 1");
+    const { id, nom, rayon, anneaux, graine } = rows[0];
+    expect(graine).toBe(String(graineDuMonde(nom)));
+    expect(await casesEnBase(pool, id)).toEqual(casesDeLaCouronne({ rayon, anneaux, graine: Number(graine) }));
   });
 });

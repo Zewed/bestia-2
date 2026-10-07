@@ -1,6 +1,6 @@
 // La Couronne d'un Monde (US-0151) : ses Cases et le Biome de chacune. Le calcul ne dépend que
-// de la graine du Monde : il donne toujours la même Couronne, et l'intérieur généré plus tard
-// (étape 18) pourra prolonger les mêmes régions.
+// de la graine du Monde : il donne toujours la même Couronne, et l'intérieur du Monde généré
+// (US-0401) prolonge le même relief.
 import { BIOMES_DE_LA_COURONNE, TAILLE_DES_REGIONS } from "@/reglages";
 import { anneau, casesDesAnneaux, centre, voisines, type Coordonnees } from "./hex";
 
@@ -75,32 +75,72 @@ export const BANDE_DE_CALCUL = 10;
  */
 export function casesDeLaCouronne({ rayon, anneaux, graine }: { rayon: number; anneaux: number; graine: number }): CaseDeCouronne[] {
   if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
-  return biomesDeLaBande(rayon, graine).filter((c) => c.anneau > rayon - anneaux);
+  return biomesDeLaBande(rayon, graine).cases.filter((c) => c.anneau > rayon - anneaux);
 }
 
-/** Les Biomes de toute la bande de calcul, du bord du Monde vers l'intérieur. */
-function biomesDeLaBande(rayon: number, graine: number): CaseDeCouronne[] {
-  const cases = casesDesAnneaux(rayon - BANDE_DE_CALCUL + 1, rayon);
+/**
+ * US-0401 : les Biomes de tout le Monde, du Cœur sauvage au bord. La bande de calcul garde
+ * exactement les siens, donc la Couronne aussi ; plus à l'intérieur, en attendant les vraies régions
+ * (US-0406), le même relief se prolonge : chaque Case prend le Biome que les seuils de la bande
+ * donnent à son relief, et les régions de la bande continuent vers le Cœur sauvage.
+ */
+export function biomesDuMonde({ rayon, graine }: { rayon: number; graine: number }): CaseDeCouronne[] {
+  const bande = biomesDeLaBande(rayon, graine);
+  const interieur = casesDesAnneaux(0, rayon - BANDE_DE_CALCUL);
+  const { premier, second } = reliefs(interieur, graine);
+  const cases = [...bande.cases, ...interieur];
+  const biomes = [...bande.cases.map((c) => c.biome), ...interieur.map((_, i) => biomeDuRelief(premier[i], second[i], bande.seuils))];
+  fondreLesTaches(cases, biomes, bande.cases.length);
+  return cases
+    .map((c, i) => ({ q: c.q, r: c.r, anneau: anneau(c), biome: biomes[i], variante: varianteDe(biomes[i]) }))
+    .sort((a, b) => a.q - b.q || a.r - b.r);
+}
+
+/** L'eau, faute de mer (US-0408), est faite de lacs ; les autres Biomes n'ont pas de variante. */
+const varianteDe = (biome: BiomeCouronne) => (biome === "eau" ? "lac" : null);
+
+/** Les Biomes que se partagent les bandes du second relief, de la plus basse à la plus haute. */
+const BIOMES_EN_BANDES = ["eau", "foret", "montagne", "savane", "desert"] as const;
+
+/** Les seuils de relief qui ont départagé les Biomes de la bande : de quoi les prolonger ailleurs. */
+type Seuils = { prairie: number; bandes: { biome: BiomeCouronne; jusqua: number }[] };
+
+/** Les deux reliefs de chaque Case : le premier désigne la prairie, le second départage le reste. */
+function reliefs(cases: Coordonnees[], graine: number): { premier: number[]; second: number[] } {
   const releve = (graineDuRelief: number) =>
     cases.map((c) => {
       const { x, y } = centre(c);
       return bruit(x / TAILLE_DES_REGIONS, y / TAILLE_DES_REGIONS, graineDuRelief);
     });
-  const premier = releve(graine);
-  const second = releve(graine ^ 0x5bd1e995);
+  return { premier: releve(graine), second: releve(graine ^ 0x5bd1e995) };
+}
+
+/** Le Biome que les seuils de la bande donnent à un relief. */
+function biomeDuRelief(premier: number, second: number, seuils: Seuils): BiomeCouronne {
+  if (premier >= seuils.prairie) return "prairie";
+  return (seuils.bandes.find((b) => second <= b.jusqua) ?? seuils.bandes.at(-1))?.biome ?? "prairie";
+}
+
+/** Les Biomes de toute la bande de calcul, du bord du Monde vers l'intérieur, et les seuils qui les ont départagés. */
+function biomesDeLaBande(rayon: number, graine: number): { cases: CaseDeCouronne[]; seuils: Seuils } {
+  const cases = casesDesAnneaux(rayon - BANDE_DE_CALCUL + 1, rayon);
+  const { premier, second } = reliefs(cases, graine);
   const nombres = repartir(cases.length, BIOMES_DE_LA_COURONNE);
 
   const biomes = new Array<BiomeCouronne>(cases.length);
   const parPremier = cases.map((_, i) => i).sort((a, b) => premier[b] - premier[a] || a - b);
   parPremier.slice(0, nombres.prairie).forEach((i) => (biomes[i] = "prairie"));
   const reste = parPremier.slice(nombres.prairie).sort((a, b) => second[a] - second[b] || a - b);
+  const seuils: Seuils = { prairie: nombres.prairie > 0 ? premier[parPremier[nombres.prairie - 1]] : Infinity, bandes: [] };
   let curseur = 0;
-  for (const biome of ["eau", "foret", "montagne", "savane", "desert"] as const) {
-    for (const i of reste.slice(curseur, curseur + nombres[biome])) biomes[i] = biome;
+  for (const biome of BIOMES_EN_BANDES) {
+    const tranche = reste.slice(curseur, curseur + nombres[biome]);
+    for (const i of tranche) biomes[i] = biome;
+    if (tranche.length > 0) seuils.bandes.push({ biome, jusqua: second[tranche.at(-1)!] });
     curseur += nombres[biome];
   }
   fondreLesTaches(cases, biomes);
-  return cases.map((c, i) => ({ ...c, anneau: anneau(c), biome: biomes[i], variante: biomes[i] === "eau" ? "lac" : null }));
+  return { cases: cases.map((c, i) => ({ ...c, anneau: anneau(c), biome: biomes[i], variante: varianteDe(biomes[i]) })), seuils };
 }
 
 /** La plus petite région gardée : en dessous, une tache prend le Biome le plus présent autour d'elle. */
@@ -108,9 +148,11 @@ const REGION_MINIMALE = 3;
 
 /**
  * Fond dans leur voisinage les taches d'une ou deux Cases qu'un découpage en bandes laisse aux
- * frontières. Les parts de chaque Biome bougent à peine (un ou deux points).
+ * frontières. Les parts de chaque Biome bougent à peine (un ou deux points). Les `figees` premières
+ * Cases ne changent pas (US-0401 : la bande, autour de l'intérieur) ; une région qui en touche une se
+ * prolonge en elles et n'est pas une tache.
  */
-function fondreLesTaches(cases: Coordonnees[], biomes: BiomeCouronne[]): void {
+function fondreLesTaches(cases: Coordonnees[], biomes: BiomeCouronne[], figees = 0): void {
   const indice = new Map(cases.map((c, i) => [`${c.q},${c.r}`, i]));
   const autour = cases.map((c) => voisines(c).flatMap((v) => indice.get(`${v.q},${v.r}`) ?? []));
   for (let passage = 0; passage < 3; passage++) {
@@ -128,7 +170,7 @@ function fondreLesTaches(cases: Coordonnees[], biomes: BiomeCouronne[]): void {
           }
         }
       }
-      if (region.length >= REGION_MINIMALE) continue;
+      if (region.length >= REGION_MINIMALE || region.some((i) => i < figees)) continue;
       const comptes = new Map<BiomeCouronne, number>();
       for (const i of region) for (const v of autour[i]) if (biomes[v] !== biomes[depart]) comptes.set(biomes[v], (comptes.get(biomes[v]) ?? 0) + 1);
       const majoritaire = [...comptes.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))[0]?.[0];
