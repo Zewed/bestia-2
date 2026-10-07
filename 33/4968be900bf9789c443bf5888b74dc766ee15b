@@ -1,32 +1,65 @@
 src/reglages.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 80-86
+  s_97a431cfa65ca7::t_baebcb8ec11bfd 80-86
 src/components/Ressources.test.tsx
   s_97a431cfa65ca7::t_3d1d4d750ad69d 9,12-15,105-125,186,212-228
   s_97a431cfa65ca7::t_b60747669ec7ab 229
+  s_97a431cfa65ca7::t_36e571e211af37 9
+  s_97a431cfa65ca7::t_1271ce5e158650 105-125
+  s_97a431cfa65ca7::t_bab0dc71c4709c 212-229
+  s_97a431cfa65ca7::t_c01726371089cf 12-15,186
 src/components/Ressources.tsx
   s_97a431cfa65ca7::t_3d1d4d750ad69d 14-17,25,44-47,52-60,123-124,173-176
+  s_97a431cfa65ca7::t_a6efbca4ab8722 173-176
+  s_97a431cfa65ca7::t_d709ae906b2b57 14-17,25
+  s_97a431cfa65ca7::t_a83755baef1d0e 123-124
+  s_97a431cfa65ca7::t_558e280cd3b390 44-47,52-60
 src/monde/production.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 1-2,5,19-65,67-83,86-93,95-100,103-133,136-140,142-148,150-151,154-157
+  s_97a431cfa65ca7::t_14e4bf204aa694 1-2,5,19-53,57-65,67-81,83,86-93,95-100,103-105,108-115,117,121-133,136-140,142-148,150-151,154-157
+  s_97a431cfa65ca7::t_28bf39acba3a72 82
+  s_97a431cfa65ca7::t_02b39b7f8edb1c 107,116,118-120
+  s_97a431cfa65ca7::t_34cfdcb913cde8 106
+  s_97a431cfa65ca7::t_d9b4b3775cfe87 54-56
 src/monde/absence.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+  s_97a431cfa65ca7::t_f08317b4bf7366 17,24
 src/monde/entretien.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 1-407
+  s_97a431cfa65ca7::t_50c585dc8dcab3 318
+  s_97a431cfa65ca7::t_fd8f80cafe600c 380
+  s_97a431cfa65ca7::t_3996187b8fb1e4 74-76
+  s_97a431cfa65ca7::t_c0a0b162903e58 270,323
+  s_97a431cfa65ca7::t_1cd0e3060422f0 1-18,22-24,26,28-35,39-44,46-51,55-60,62-73,77-116,118-267,269,271-317,319-322,324-364,366-379,382-407
+  s_97a431cfa65ca7::t_9182cca484dfee 19-21
+  s_97a431cfa65ca7::t_5ea176311a001f 25,27,36-38,45,52-54,61,117,365,381
+  s_97a431cfa65ca7::t_30bbb99edc79f9 268
 src/app/jeu/page.test.tsx
   s_97a431cfa65ca7::t_3d1d4d750ad69d 22-25
+  s_97a431cfa65ca7::t_18945645745074 22-25
 src/monde/stocks.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 4,21-22,29-48,66
+  s_97a431cfa65ca7::t_2ead64b717beec 4
+  s_97a431cfa65ca7::t_fc310b76eadf2d 21-22,29-48
+  s_97a431cfa65ca7::t_0aeb7d83b4671b 66
 src/monde/reprise.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+  s_97a431cfa65ca7::t_026457f99f68f7 17,24
 src/temps/regles.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 2-3
+  s_97a431cfa65ca7::t_7312fd7226326f 2-3
 src/components/ActionsDuJeu.test.tsx
   s_97a431cfa65ca7::t_3d1d4d750ad69d 7-10
+  s_97a431cfa65ca7::t_edd0aec86b6b09 7-10
 src/temps/synchroniser-horloge.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 86,92
+  s_97a431cfa65ca7::t_afd10ba05c9504 86,92
 src/monde/production.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 17,24
+  s_97a431cfa65ca7::t_b0234f0df7409f 17,24
 src/monde/surplus.db.test.ts
   s_97a431cfa65ca7::t_3d1d4d750ad69d 16,23
+  s_97a431cfa65ca7::t_864d2dab04ecf0 16,23
 docs/stories/03-les-habitants.md
   s_97a431cfa65ca7::t_2b65fff6c55d36 164,167-168
 docs/stories/README.md
