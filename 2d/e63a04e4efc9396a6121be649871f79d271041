@@ -4,10 +4,17 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_ab18fdf46ccaad 7
 src/app/jeu/habitants/AuxPortes.css.test.ts
   s_97a431cfa65ca7::t_ee21be070a99f2 8-47
+  s_97a431cfa65ca7::t_19b40b84ac4cda 8-9
+  s_97a431cfa65ca7::t_f7136a8ccc1a2d 11-47
+  s_97a431cfa65ca7::t_bb7a639b4a7cc8 10
 src/app/jeu/habitants/AuxPortes.module.css
   s_97a431cfa65ca7::t_3a9137c65ddcf4 3-5,12,53-68,72,77
+  s_97a431cfa65ca7::t_81d62e212ee9ff 3-5,12
+  s_97a431cfa65ca7::t_cdf0993c6eb0b6 54-68,72,77
+  s_97a431cfa65ca7::t_3e8137ec4e8377 53
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_96deece9bc5678 723
+  s_97a431cfa65ca7::t_47817afcb1935c 723
 ---
 {
   "schema_version": "authorship/3.0.0",
