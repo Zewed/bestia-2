@@ -1,0 +1,33 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_e18dc19565f314 165
+docs/stories/README.md
+  s_97a431cfa65ca7::t_228c413d04a62d 7
+src/app/jeu/habitants/RepartitionDesMetiers.test.tsx
+  s_97a431cfa65ca7::t_f5bc58d9ab9088 132-162
+src/app/jeu/habitants/RepartitionDesMetiers.tsx
+  s_97a431cfa65ca7::t_2e9c06f53f2c7b 33-36
+src/app/jeu/habitants/actions.db.test.ts
+  s_97a431cfa65ca7::t_09d01c4b49a117 17,98-106
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_92d0c9d1d51f5b 73,351-372
+src/monde/habitants-deux-appareils.db.test.ts
+  s_97a431cfa65ca7::t_6ebf6ffecb76d6 1-137
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_776ccf0eafc59e 59-62,68-69,84-86,91-92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1cea5fd497b9a97045406d29ede0033dcbc89cb0",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
