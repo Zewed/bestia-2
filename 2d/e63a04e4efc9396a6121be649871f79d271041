@@ -1,0 +1,27 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_485ea420ef94e6 451
+docs/stories/README.md
+  s_97a431cfa65ca7::t_ab18fdf46ccaad 7
+src/app/jeu/habitants/AuxPortes.css.test.ts
+  s_97a431cfa65ca7::t_ee21be070a99f2 8-47
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_3a9137c65ddcf4 3-5,12,53-68,72,77
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_96deece9bc5678 723
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2de63a04e4efc9396a6121be649871f79d271041",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
