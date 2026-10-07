@@ -1,0 +1,44 @@
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_980eb8cac1333e 5,38,174-203
+  s_97a431cfa65ca7::t_a532e9572c93b2 204
+src/db/schema.ts
+  s_97a431cfa65ca7::t_32f90e392e394e 385-389
+  s_97a431cfa65ca7::t_d1924a74249b79 405-406
+src/monde/preparer-couronne.db.test.ts
+  s_97a431cfa65ca7::t_dce0d4c870e8fc 46,51,54,58-63,86,119,123,127-141,170-175
+  s_97a431cfa65ca7::t_5d840ba3c8d47b 176-177
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_4e45500e39d076 51-58
+drizzle/0040_coeur_sauvage.sql
+  s_97a431cfa65ca7::t_437015e7d3f977 1-16
+src/monde/preparer-couronne.ts
+  s_97a431cfa65ca7::t_3487dcec1afdd5 5,10-12,35-37,45
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_3487dcec1afdd5 60-63,71
+  s_97a431cfa65ca7::t_59944067824523 6,8,16-18,22-27
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_980eb8cac1333e 5,109-122
+  s_97a431cfa65ca7::t_38247081bd4966 123-124
+src/monde/generer.db.test.ts
+  s_97a431cfa65ca7::t_dce0d4c870e8fc 33,49-51
+drizzle/meta/0040_snapshot.json
+  s_97a431cfa65ca7::t_18804e7a53fd38 2,96-101,237-240
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_75c10925421538 288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2f8c60bbb6bc7c71362119a0a041616217224836",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
