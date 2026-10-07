@@ -269,6 +269,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0226 · Afficher le temps avant qu'un stock soit plein
 **En tant que** joueur, **je veux** voir dans combien de temps chaque stock sera plein, **afin de** revenir à temps pour dépenser.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Sous la jauge du détail : « plein dans 45 min », « plein dans 3 h 20 », puis « plein dans 2 j 5 h » ; le temps est arrondi à la minute supérieure, suit la quantité qui monte et tient compte d'un temps de jeu accéléré. Rien pour un Stock qui ne produit pas, ni pour un Stock déjà plein (US-0225).
 - **Débloquée par** : US-0223
 - **Critères d'acceptation** :
   - Le détail d'une ressource indique le temps restant : « plein dans 3 h 20 ».

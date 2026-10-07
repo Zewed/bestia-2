@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
 import { RECALER_LA_BARRE_MINUTES } from "@/reglages";
+import { formaterDuree } from "@/temps/affichage";
 import { iconeDeRessource } from "./icone-de-ressource";
 import styles from "./BarreHaut.module.css";
 
@@ -149,6 +150,18 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
                     {Number(stock.parHeure) > 0 ? (
                       <span className={`${styles.sourceBulle} ${styles.reprise}`}>Elle reprendra à {productionAffichee(stock.parHeure)} dès qu&apos;il y aura de la place.</span>
                     ) : null}
+                  </>
+                ) : Number(stock.parHeure) > 0 ? (
+                  <>
+                    {/* US-0226 : dans combien de temps, au rythme du jeu, ce Stock sera plein. */}
+                    <span className={styles.sourceBulle}>
+                      plein dans {formaterDuree((Number(stock.limite) - quantite) / (Number(stock.parHeure) * vitesse))}
+                    </span>
+                    {stock.sources.map((source) => (
+                      <span key={source.libelle} className={styles.sourceBulle}>
+                        {source.libelle} : {productionAffichee(source.parHeure)}
+                      </span>
+                    ))}
                   </>
                 ) : stock.sources.length === 0 ? (
                   <span className={styles.sourceBulle}>{productionAffichee(0)}</span>

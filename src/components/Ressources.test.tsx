@@ -76,8 +76,8 @@ describe("ressources dans la barre du haut (US-0204)", () => {
       await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
       return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
     };
-    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4 / 20\u00a0000", "", "Foyer · prairie : +14,5/h"]);
-    expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99 / 1\u00a0000", "", "Foyer · prairie : +4/h"]);
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4 / 20\u00a0000", "", "plein dans 21 j 13 h", "Foyer · prairie : +14,5/h"]);
+    expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99 / 1\u00a0000", "", "plein dans 10 j 9 h", "Foyer · prairie : +4/h"]);
     expect(await detail("Pierre")).toEqual(["Pierre", "Matériaux", "42 / 1\u00a0000", "", "+0/h"]);
   });
 
@@ -88,6 +88,18 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     const bulle = document.querySelector("li[data-ouverte] > [aria-hidden]")!;
     expect(bulle.children[2].textContent).toBe("250 / 1\u00a0000");
     expect((bulle.children[3].firstElementChild as HTMLElement).style.width).toBe("25%");
+  });
+
+  it("dit dans combien de temps un Stock sera plein, au rythme du jeu, et rien pour un Stock qui ne produit pas (US-0226)", async () => {
+    const u = userEvent.setup();
+    render(<Ressources stocks={[{ ...STOCKS[2], quantite: "986.666667" }, STOCKS[3]]} vitesse={2} />);
+    const detail = async (nom: string) => {
+      await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
+      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+    };
+    // 13,33 Bois à 4 par heure de jeu, le jeu allant deux fois plus vite : 1 h 40.
+    expect(await detail("Bois")).toContain("plein dans 1 h 40");
+    expect((await detail("Pierre")).some((ligne) => ligne?.startsWith("plein dans"))).toBe(false);
   });
 
   it("signale un Stock plein par le mot « plein », pas seulement par la couleur (US-0224)", () => {
