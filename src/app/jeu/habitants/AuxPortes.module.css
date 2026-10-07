@@ -83,8 +83,15 @@
   box-shadow: inset 0 0 0 1px var(--trait);
 }
 
+/* US-0338 : sans place, « Accueillir » s'éteint : fond creux, texte pâle, et il ne réagit plus. */
+.accueillir:disabled {
+  background: var(--bloc-3);
+  color: var(--texte-pale);
+  cursor: not-allowed;
+}
+
 @media (hover: hover) {
-  .accueillir:hover {
+  .accueillir:not(:disabled):hover {
     background: var(--encre-survol);
   }
 
@@ -102,6 +109,17 @@
 /* Quand personne n'attend. */
 .personne {
   color: var(--texte-discret);
+}
+
+/* US-0338 : en tête de la partie, une seule fois, pourquoi « Accueillir » est grisé, aux couleurs de « Plus de place ». */
+.plusDePlace {
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  border-radius: var(--arrondi-petit);
+  background: var(--sable);
+  color: var(--sable-fonce);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
 }
 
 /* US-0337 : en tête de la partie, pourquoi un Voyageur n'a pas été accueilli : il était déjà reparti. */

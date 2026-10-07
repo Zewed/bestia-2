@@ -6,7 +6,7 @@ import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { VOYAGEUR_ATTEND_HEURES, VOYAGEUR_TOUTES_LES_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { programmerEvenement, type Evenement } from "@/temps/avancer";
-import { ajouterUnHabitant } from "./habitants";
+import { ajouterUnHabitant, plusDePlace } from "./habitants";
 import { ecrireUnRecit, type NouveauRecit } from "./recits";
 
 /** US-0331 : l'événement d'une arrivée ; ses données portent son numéro, 1 pour la première du Territoire. */
@@ -180,9 +180,10 @@ export function recitDAccueil(prenom: string, arriveLe: Date, instant: Date): No
 
 /**
  * Ce qu'a donné un accueil (US-0334) : « accueilli » ; US-0337 : « reparti », le Voyageur est déjà reparti de
- * lui-même ; « absent », il n'attend pas aux portes de ce Territoire (déjà accueilli, refusé, ou d'un autre).
+ * lui-même ; « absent », il n'attend pas aux portes de ce Territoire (déjà accueilli, refusé, ou d'un autre) ;
+ * US-0338 : « plus-de-place », toute la place du Territoire est prise, et il attend toujours.
  */
-export type Accueil = "accueilli" | "reparti" | "absent";
+export type Accueil = "accueilli" | "reparti" | "absent" | "plus-de-place";
 
 /**
  * US-0334 : le Voyageur `voyageurId` qui attend aux portes du Territoire devient, à l'instant `instant` (l'heure
@@ -191,11 +192,17 @@ export type Accueil = "accueilli" | "reparti" | "absent";
  * et le dit (US-0337). Le Voyageur prend son sort avant tout le reste : deux accueils du même Voyageur en même
  * temps, ou un accueil et un refus, se suivent sur sa ligne, et seul le premier le trouve encore aux portes. Un
  * seul Habitant, jamais deux.
+ *
+ * US-0338 : sans place au Territoire, rien ne change et le Voyageur continue d'attendre, d'où que vienne la
+ * demande. Le Territoire est tenu d'abord, jusqu'à la fin de l'accueil (comme le temps qui avance le tient,
+ * avant ses Voyageurs) : deux accueils en même temps se suivent, et le second compte l'Habitant du premier ;
+ * la place n'est jamais dépassée.
  */
 export async function accueillirLeVoyageur(pool: Pool, territoireId: number, voyageurId: number, instant: Date): Promise<Accueil> {
   const client = await pool.connect();
   try {
     await client.query("begin");
+    await client.query("select 1 from territoire where id = $1 for no key update", [territoireId]);
     const { rows } = await client.query<{ prenom: string; arriveLe: Date }>(
       `update voyageur set sort = 'accueilli', sort_le = $3 where id = $2 and territoire_id = $1 and sort is null
        returning prenom, arrive_le as "arriveLe"`,
@@ -207,6 +214,10 @@ export async function accueillirLeVoyageur(pool: Pool, territoireId: number, voy
       const { rows: parti } = await client.query<{ sort: string }>("select sort from voyageur where id = $2 and territoire_id = $1", [territoireId, voyageurId]);
       await client.query("rollback");
       return parti[0]?.sort === "reparti" ? "reparti" : "absent";
+    }
+    if (await plusDePlace(client, territoireId)) {
+      await client.query("rollback");
+      return "plus-de-place";
     }
     await ajouterUnHabitant(client, territoireId, voyageur.prenom, instant);
     await ecrireUnRecit(client, territoireId, recitDAccueil(voyageur.prenom, voyageur.arriveLe, instant));

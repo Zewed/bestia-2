@@ -99,6 +99,20 @@ describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis ou refusés, su
     expect((await recitsDuTerritoire(pool, joueur)).map((r) => r.titre)).toEqual(["Ines a repris la route"]);
   });
 
+  it("refuse l'accueil quand toute la place est prise, même demandé sans passer par le bouton : le Voyageur attend toujours (US-0338)", async () => {
+    const joueur = await naitre();
+    const ines = await presenter(joueur, "Ines");
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno'), ($1, 'Dara')", [joueur]);
+    const avant = await prenoms(joueur);
+    connecter(joueur);
+
+    expect(await accueillirUnVoyageur(ines)).toBe("plus-de-place");
+    expect(await prenoms(joueur)).toEqual(avant);
+    expect(avant).toMatchObject({ portes: ["Ines"] });
+    expect(avant.habitants).toHaveLength(5);
+    expect(await recitsDuTerritoire(pool, joueur)).toEqual([]);
+  });
+
   it("accueilli deux fois en même temps (deux onglets), le Voyageur ne devient qu'un seul Habitant", async () => {
     const joueur = await naitre();
     const ines = await presenter(joueur, "Ines");

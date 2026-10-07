@@ -128,8 +128,8 @@ export default async function Habitants() {
           </Bloc>
           <div className={styles.colonne} style={COLONNE} data-etroit="">
             {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
-            {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse. */}
-            <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} />
+            {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
+            <AuxPortes voyageurs={voyageurs} maintenant={maintenant()} vitesse={vitesse()} placesLibres={places - habitants.length} />
             {entretien ? (
               <Bloc titre="Entretien">
                 <LigneEntretien entretien={entretien} />

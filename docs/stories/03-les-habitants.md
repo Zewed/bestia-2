@@ -399,6 +399,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0338 · Bloquer l'accueil quand la place manque
 **En tant que** joueur, **je veux** qu'on m'explique pourquoi je ne peux pas accueillir un Voyageur quand la place manque, **afin de** comprendre ce qu'il me faut.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Quand toute la place est prise, « Accueillir » est grisé et le bloc « Aux portes » le dit une seule fois : « Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là. » Le Voyageur continue d'attendre : si une place se libère avant son départ, on peut l'accueillir. Le serveur contrôle la place dans la transaction de l'accueil, quel que soit le chemin de la demande. Vérifié en vrai à 5/5.
 - **Débloquée par** : US-0334, US-0305
 - **Critères d'acceptation** :
   - Quand toute la place est prise, le bouton « Accueillir » est grisé.

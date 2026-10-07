@@ -92,6 +92,18 @@ export async function placesDuTerritoire(pool: Pool, territoireId: number): Prom
 }
 
 /**
+ * US-0338 : vrai quand toute la place du Territoire est prise : au moins autant d'Habitants que de places. Appelée
+ * avec le client d'une transaction qui tient le Territoire, elle compte juste jusqu'à la fin de la transaction.
+ */
+export async function plusDePlace(base: Pool | PoolClient, territoireId: number): Promise<boolean> {
+  const { rows } = await base.query<{ plein: boolean }>(
+    `select (select count(*) from habitant where territoire_id = $1) >= (select coalesce(sum(places), 0) from (${SOURCES_DE_PLACE}) source) as plein`,
+    [territoireId],
+  );
+  return rows[0].plein;
+}
+
+/**
  * US-0318 : l'Entretien des Habitants tel que la page le détaille : leur nombre, l'Entretien de chacun
  * et le total, en Nourriture par heure (numeric de Postgres, en texte).
  */

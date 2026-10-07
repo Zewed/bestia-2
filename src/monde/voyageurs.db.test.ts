@@ -8,7 +8,7 @@ import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
-import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { programmerEvenement } from "@/temps/avancer";
 import { lireMarquePage } from "@/temps/marque-page";
@@ -608,6 +608,64 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + 1);
       expect(await recitsDuTerritoire(pool, territoireId)).toHaveLength(1);
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
+    });
+
+    describe("quand la place manque (US-0338)", () => {
+      /** Fait venir au Territoire des Habitants, sans passer par les portes, jusqu'à en compter `nombre`. */
+      const remplir = async (territoireId: number, nombre: number) =>
+        pool.query(
+          "insert into habitant (territoire_id, prenom) select $1, 'Arno' from generate_series(1, $2 - (select count(*)::int from habitant where territoire_id = $1))",
+          [territoireId, nombre],
+        );
+
+      it("refuse l'accueil quand toute la place est prise, et le dit : rien ne change, et le Voyageur attend toujours", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        await remplir(territoireId, PLACES_DU_FOYER);
+        const avant = await tout(territoireId);
+
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))).toBe("plus-de-place");
+        expect(await tout(territoireId)).toEqual(avant);
+        expect(await sort(ines)).toEqual([null, null]);
+        // Plus d'Habitants que de places, de même.
+        await remplir(territoireId, PLACES_DU_FOYER + 1);
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))).toBe("plus-de-place");
+        expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.id)).toEqual([ines]);
+      });
+
+      it("accueille jusqu'à la dernière place, et pas au-delà", async () => {
+        const { territoireId, ne } = await naitre();
+        const [ines, joran] = [await presenter(territoireId, "Ines", apres(ne, HEURE)), await presenter(territoireId, "Joran", apres(ne, HEURE))];
+        await remplir(territoireId, PLACES_DU_FOYER - 1);
+
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE))).toBe("accueilli");
+        expect(await nombreDHabitants(pool, territoireId)).toBe(PLACES_DU_FOYER);
+        expect(await accueillirLeVoyageur(pool, territoireId, joran, apres(ne, 4 * HEURE))).toBe("plus-de-place");
+        expect(await nombreDHabitants(pool, territoireId)).toBe(PLACES_DU_FOYER);
+        expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.id)).toEqual([joran]);
+      });
+
+      it("l'accueille dès que de la place se libère avant la fin de son attente", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenterQuiRepart(territoireId, "Ines", apres(ne, HEURE));
+        await remplir(territoireId, PLACES_DU_FOYER);
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 2 * HEURE))).toBe("plus-de-place");
+
+        // Le temps passe sans qu'elle reparte, puis un Habitant laisse sa place.
+        await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 12 * HEURE) });
+        await pool.query("delete from habitant where id = (select max(id) from habitant where territoire_id = $1)", [territoireId]);
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 12 * HEURE))).toBe("accueilli");
+        expect(await sort(ines)).toEqual(["accueilli", apres(ne, 12 * HEURE)]);
+        expect(await nombreDHabitants(pool, territoireId)).toBe(PLACES_DU_FOYER);
+      });
+
+      it("dit d'abord qu'un Voyageur est déjà reparti, même quand la place manque", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenterQuiRepart(territoireId, "Ines", apres(ne, HEURE));
+        await remplir(territoireId, PLACES_DU_FOYER);
+        await rattraper("territoire", territoireId, { pool, jusqua: apres(ne, 14 * HEURE) });
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 14 * HEURE))).toBe("reparti");
+      });
     });
   });
 

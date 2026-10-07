@@ -38,12 +38,15 @@ describe("accueillir un Voyageur (US-0334)", () => {
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("rend, après avoir relu la page, qu'un Voyageur est déjà reparti, pour que la page le dise (US-0337)", async () => {
-    garde.exigerCompte.mockResolvedValue(CONNECTE);
-    voyageurs.accueillirLeVoyageur.mockResolvedValueOnce("reparti");
-    expect(await accueillirUnVoyageur(70)).toBe("reparti");
-    expect(cache.refresh).toHaveBeenCalledTimes(1);
-  });
+  it.each([["reparti"], ["plus-de-place"]])(
+    "rend, après avoir relu la page, pourquoi le Voyageur n'a pas été accueilli : %s (US-0337, US-0338)",
+    async (raison) => {
+      garde.exigerCompte.mockResolvedValue(CONNECTE);
+      voyageurs.accueillirLeVoyageur.mockResolvedValueOnce(raison);
+      expect(await accueillirUnVoyageur(70)).toBe(raison);
+      expect(cache.refresh).toHaveBeenCalledTimes(1);
+    },
+  );
 });
 
 describe("refuser un Voyageur (US-0336)", () => {

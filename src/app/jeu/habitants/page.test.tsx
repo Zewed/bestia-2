@@ -673,6 +673,17 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     expect(maintenant.getTime() - jeu).toBeLessThan(100 * 5_000);
   });
 
+  it("confie à « Aux portes » la place qui reste au Foyer, grisant « Accueillir » quand elle est toute prise (US-0338)", async () => {
+    await connecte(["Joran", 5]);
+    renderToStaticMarkup(await Habitants());
+    expect(portes.AuxPortes.mock.lastCall?.[0].placesLibres).toBe(2);
+    habitants.placesDuTerritoire.mockResolvedValue(3);
+    const html = auxPortes(renderToStaticMarkup(await Habitants()));
+    expect(portes.AuxPortes.mock.lastCall?.[0].placesLibres).toBe(0);
+    expect(html).toContain("Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là.");
+    expect(html).toMatch(/<button[^>]*disabled=""[^>]*>Accueillir<\/button>/);
+  });
+
   it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {
     await connecte();
     expect(auxPortes(renderToStaticMarkup(await Habitants()))).toMatch(/<h2[^>]*>Aux portes<\/h2><p[^>]*>Personne aux portes pour l&#x27;instant\.<\/p><\/section>$/);

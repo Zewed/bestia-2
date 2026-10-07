@@ -12,7 +12,7 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, nombreSansMetier, placesDuTerritoire } from "./habitants";
+import { enregistrerLeMetier, entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, nombreSansMetier, placesDuTerritoire, plusDePlace } from "./habitants";
 import { stocksDuTerritoire } from "./stocks";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
@@ -260,6 +260,22 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     expect(await placesDuTerritoire(pool, tb)).toBe(PLACES_DU_FOYER);
     // Sans Territoire, aucune place.
     expect(await placesDuTerritoire(pool, -1)).toBe(0);
+  });
+
+  it("dit quand toute la place est prise : autant d'Habitants que de places, ou plus (US-0338)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const ta = (await chefDuCompte(pool, a.id))!.territoireId!;
+    expect(await plusDePlace(pool, ta)).toBe(false);
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno')", [ta]);
+    expect(await plusDePlace(pool, ta)).toBe(false);
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Dara')", [ta]);
+    expect(await nombreDHabitants(pool, ta)).toBe(PLACES_DU_FOYER);
+    expect(await plusDePlace(pool, ta)).toBe(true);
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Elio')", [ta]);
+    expect(await plusDePlace(pool, ta)).toBe(true);
+    await pool.query("delete from habitant where id in (select id from habitant where territoire_id = $1 order by id limit 2)", [ta]);
+    expect(await plusDePlace(pool, ta)).toBe(false);
   });
 
   /** L'Entretien lu pour la page, son total en nombre. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useOptimistic, useState, useTransition } from "react";
+import { useEffect, useId, useOptimistic, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
 import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
@@ -12,6 +12,9 @@ import styles from "./AuxPortes.module.css";
  * US-0333, celle de son départ.
  */
 export type VoyageurAffiche = { id: number; prenom: string; arriveLe: Date; departLe: Date };
+
+/** US-0338 : un choix sur un Voyageur dont l'action n'a pas encore répondu : l'accueillir, ou le refuser. */
+type Choix = { id: number; accueil: boolean };
 
 /** US-0332 : depuis quand un Voyageur attend, en temps du jeu : « arrivé à l'instant », « arrivé il y a 12 min », « arrivé il y a 2 h ». */
 function depuisQuand(ms: number): string {
@@ -38,9 +41,27 @@ function depuisQuand(ms: number): string {
  * du Voyageur un Habitant et relise la page, qui fait alors foi. US-0336 : à côté, « Refuser », qui le fait
  * repartir de même. US-0337 : un Voyageur déjà reparti de lui-même n'est pas accueilli ; la partie le dit, en
  * tête, jusqu'au choix suivant.
+ *
+ * US-0338 : quand les `placesLibres` du Territoire sont toutes prises, comptée d'avance celle de chaque accueil en
+ * cours, « Accueillir » est grisé, et une phrase, une seule fois en tête de la partie, dit pourquoi ; un lecteur
+ * d'écran l'entend avec chaque bouton grisé. Les Voyageurs attendent toujours, et « Refuser » reste possible.
  */
-export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: VoyageurAffiche[]; maintenant: Date; vitesse?: number }) {
-  const [affiches, retirer] = useOptimistic(voyageurs, (actuels, parti: number) => actuels.filter((v) => v.id !== parti));
+export function AuxPortes({
+  voyageurs,
+  maintenant,
+  vitesse = 1,
+  placesLibres,
+}: {
+  voyageurs: VoyageurAffiche[];
+  maintenant: Date;
+  vitesse?: number;
+  placesLibres: number;
+}) {
+  // Les choix dont l'action n'a pas encore répondu : leurs lignes sont retirées d'avance ; un accueil prend déjà sa place.
+  const [enCours, choisir] = useOptimistic<Choix[], Choix>([], (actuels, choix) => [...actuels, choix]);
+  const affiches = voyageurs.filter((v) => !enCours.some((c) => c.id === v.id));
+  const plein = placesLibres - enCours.filter((c) => c.accueil).length <= 0;
+  const phrasePlace = useId();
   const [, demarrer] = useTransition();
   const [annonce, setAnnonce] = useState<string | null>(null);
   const base = maintenant.getTime();
@@ -54,11 +75,12 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
   }, [base]);
 
   /** Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. */
-  function decider(voyageur: VoyageurAffiche, action: (voyageurId: number) => Promise<unknown>) {
+  function decider(voyageur: VoyageurAffiche, accueil: boolean) {
     setAnnonce(null);
     demarrer(async () => {
-      retirer(voyageur.id);
-      if ((await action(voyageur.id)) === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
+      choisir({ id: voyageur.id, accueil });
+      const rendu = accueil ? await accueillirUnVoyageur(voyageur.id) : await refuserUnVoyageur(voyageur.id);
+      if (rendu === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
     });
   }
 
@@ -68,6 +90,11 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
       {annonce ? (
         <p className={styles.annonce} role="alert">
           {annonce}
+        </p>
+      ) : null}
+      {plein && affiches.length > 0 ? (
+        <p id={phrasePlace} className={styles.plusDePlace}>
+          Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là.
         </p>
       ) : null}
       {affiches.length > 0 ? (
@@ -85,10 +112,17 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
                 </span>
                 <div className={styles.choix}>
                   {/* Deux boutons par ligne : un lecteur d'écran entend aussi qui il accueille, ou refuse. */}
-                  <button type="button" className={styles.accueillir} aria-label={`Accueillir ${v.prenom}`} onClick={() => decider(v, accueillirUnVoyageur)}>
+                  <button
+                    type="button"
+                    className={styles.accueillir}
+                    aria-label={`Accueillir ${v.prenom}`}
+                    disabled={plein}
+                    aria-describedby={plein ? phrasePlace : undefined}
+                    onClick={() => decider(v, true)}
+                  >
                     Accueillir
                   </button>
-                  <button type="button" className={styles.refuser} aria-label={`Refuser ${v.prenom}`} onClick={() => decider(v, refuserUnVoyageur)}>
+                  <button type="button" className={styles.refuser} aria-label={`Refuser ${v.prenom}`} onClick={() => decider(v, false)}>
                     Refuser
                   </button>
                 </div>
