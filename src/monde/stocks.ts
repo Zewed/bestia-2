@@ -3,16 +3,34 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { PRODUCTION_DU_TERRITOIRE } from "./production";
 
+/** US-0214 : d'où vient une production : le Foyer et son Biome, ou des Cases d'un Biome. */
+export type SourceDeProduction = { libelle: string; parHeure: string };
+
 /**
- * Le Stock d'une Ressource, avec sa famille (US-0205), sa quantité exacte, fractions comprises, et ce
- * que le Territoire en produit par heure (US-0212), en texte (numeric de Postgres).
+ * Le Stock d'une Ressource, avec sa famille (US-0205), sa quantité exacte, fractions comprises, ce que
+ * le Territoire en produit par heure (US-0212) et d'où cela vient (US-0214), en texte (numeric de Postgres).
  */
-export type Stock = { id: string; nom: string; famille: "nourriture" | "materiaux"; quantite: string; parHeure: string };
+export type Stock = { id: string; nom: string; famille: "nourriture" | "materiaux"; quantite: string; parHeure: string; sources: SourceDeProduction[] };
 
 /** Les quatre Stocks du Territoire, dans l'ordre des Ressources : Viande, Végétaux, Bois, Pierre. */
 export async function stocksDuTerritoire(base: Pool | PoolClient, territoireId: number): Promise<Stock[]> {
   const { rows } = await base.query<Stock>(
-    `select r.id, r.nom, r.famille, s.quantite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure"
+    `select r.id, r.nom, r.famille, s.quantite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure",
+       coalesce((
+         select json_agg(json_build_object(
+                  'libelle', case when source.foyer then 'Foyer · ' || lower(source.biome)
+                                  else source.cases || case when source.cases > 1 then ' Cases de ' else ' Case de ' end || lower(source.biome) end,
+                  'parHeure', source.par_heure::numeric(24, 6)::text)
+                order by source.foyer desc, source.biome)
+         from (
+           select c.id = t.foyer_case_id as foyer, b.nom as biome, count(*) as cases, sum(pb.par_heure) as par_heure
+           from territoire t join case_du_monde c on c.chef_id = t.chef_id
+             join biome b on b.id = c.biome_id
+             join production_biome pb on pb.biome_id = c.biome_id and pb.ressource_id = s.ressource_id
+           where t.id = $1
+           group by 1, 2
+         ) source
+       ), '[]') as sources
      from stock s join ressource r on r.id = s.ressource_id
        left join (${PRODUCTION_DU_TERRITOIRE}) p on p.ressource_id = s.ressource_id
      where s.territoire_id = $1 order by r.ordre`,

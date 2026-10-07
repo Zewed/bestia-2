@@ -6,14 +6,14 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
 
-import { Ressources } from "./Ressources";
+import { Ressources, type RessourceDeLaBarre } from "./Ressources";
 
-const STOCKS = [
-  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000" },
-  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", parHeure: "14.500000" },
-  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", parHeure: "4.000000" },
-  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", parHeure: "0.000000" },
-] as const satisfies Parameters<typeof Ressources>[0]["stocks"];
+const STOCKS: RessourceDeLaBarre[] = [
+  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "8.000000" }] },
+  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", parHeure: "14.500000", sources: [{ libelle: "Foyer · prairie", parHeure: "14.500000" }] },
+  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", parHeure: "4.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "4.000000" }] },
+  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", parHeure: "0.000000", sources: [] },
+];
 
 describe("ressources dans la barre du haut (US-0204)", () => {
   afterEach(cleanup);
@@ -43,7 +43,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     render(<Ressources stocks={[...STOCKS]} />);
     await u.click(screen.getByRole("button", { name: /^Bois/ }));
     expect(ouvertes()).toEqual(["Bois"]);
-    expect(document.querySelector("li[data-ouverte] > [aria-hidden]")?.textContent).toBe("BoisMatériaux");
+    expect(document.querySelector("li[data-ouverte] > [aria-hidden]")?.firstChild?.textContent).toBe("Bois");
     await u.click(screen.getByRole("button", { name: /^Viande/ }));
     expect(ouvertes()).toEqual(["Viande"]);
     await u.click(screen.getByRole("button", { name: /^Viande/ }));
@@ -65,8 +65,20 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     render(<Ressources stocks={[...STOCKS]} />);
     await u.click(screen.getByRole("button", { name: /^Végétaux/ }));
     const bulle = document.querySelector("li[data-ouverte] > [aria-hidden]")!;
-    expect(bulle.firstChild?.textContent).toBe("Végétaux");
-    expect(bulle.lastChild?.textContent).toBe("Nourriture");
+    expect(bulle.children[0].textContent).toBe("Végétaux");
+    expect(bulle.children[1].textContent).toBe("Nourriture");
+  });
+
+  it("détaille la ressource : sa quantité exacte au centième et la source de sa production (US-0214)", async () => {
+    const u = userEvent.setup();
+    render(<Ressources stocks={STOCKS} />);
+    const detail = async (nom: string) => {
+      await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
+      return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
+    };
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4", "Foyer · prairie : +14,5/h"]);
+    expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99", "Foyer · prairie : +4/h"]);
+    expect(await detail("Pierre")).toEqual(["Pierre", "Matériaux", "42", "+0/h"]);
   });
 
   it("referme la bulle d'un toucher ailleurs ou avec Échap", async () => {
@@ -92,7 +104,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     });
     const quantites = () => [...document.querySelectorAll("button > span:first-of-type")].map((q) => q.textContent);
     // Une production d'une unité par seconde, pour voir la quantité monter à chaque battement.
-    const VITE = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "3600.000000" }] as const;
+    const VITE: RessourceDeLaBarre[] = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "3600.000000", sources: [] }];
 
     it("montrent d'abord les quantités exactes du jeu, puis montent d'elles-mêmes au rythme de la production", async () => {
       vi.useFakeTimers();

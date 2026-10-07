@@ -148,6 +148,31 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
     expect(await chefParNom(pool, "!!!")).toBeNull();
   });
 
+  it("disent d'où vient leur production : le Foyer et son Biome, puis les autres Cases par Biome (US-0214)", async () => {
+    const { territoireId } = await naitre();
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      const parHeure = async (biome: string) =>
+        (await client.query("select par_heure::text as p from production_biome where biome_id = $1 and ressource_id = 'bois'", [biome])).rows[0].p;
+      const bois = async () => (await stocksDuTerritoire(client, territoireId)).find((s) => s.id === "bois")!.sources;
+      expect(await bois()).toEqual([{ libelle: "Foyer · prairie", parHeure: await parHeure("prairie") }]);
+      await client.query(
+        `update case_du_monde set chef_id = (select chef_id from territoire where id = $1)
+         where id in (select id from case_du_monde where chef_id is null and biome_id = 'foret' order by id limit 2)`,
+        [territoireId],
+      );
+      const deuxForets = (Number(await parHeure("foret")) * 2).toFixed(6);
+      expect(await bois()).toEqual([
+        { libelle: "Foyer · prairie", parHeure: await parHeure("prairie") },
+        { libelle: "2 Cases de forêt", parHeure: deuxForets },
+      ]);
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
+  });
+
   it("disparaissent avec leur Territoire", async () => {
     const { compte, territoireId } = await naitre();
     await pool.query("delete from compte where id = $1", [compte.id]);

@@ -38,3 +38,10 @@ export function productionHoraire(parHeure: string | number): string {
 
 /** US-0212 : la production horaire telle que la barre l'affiche : « +14,5/h ». */
 export const productionAffichee = (parHeure: string | number) => `+${productionHoraire(parHeure)}/h`;
+
+const centiemes = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
+
+/** US-0214 : une quantité détaillée, arrondie vers le bas au centième : « 1 234,56 ». */
+export function quantiteDetaillee(quantite: string | number): string {
+  return insecable(centiemes.format(Math.floor(Number(quantite) * 100) / 100));
+}

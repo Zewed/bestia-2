@@ -3,14 +3,21 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { productionAffichee, productionHoraire, quantiteAffichee } from "@/monde/quantite";
+import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
 import { RECALER_LA_BARRE_MINUTES } from "@/reglages";
 import styles from "./BarreHaut.module.css";
 
 type Famille = "nourriture" | "materiaux";
 
-/** Ce que la barre montre d'un Stock : la Ressource, sa famille, sa quantité exacte et sa production horaire, en texte. */
-export type RessourceDeLaBarre = { id: string; nom: string; famille: Famille; quantite: string; parHeure: string };
+/** Ce que la barre montre d'un Stock : la Ressource, sa famille, sa quantité exacte, sa production horaire et ses sources, en texte. */
+export type RessourceDeLaBarre = {
+  id: string;
+  nom: string;
+  famille: Famille;
+  quantite: string;
+  parHeure: string;
+  sources: { libelle: string; parHeure: string }[];
+};
 
 /** US-0205 : les deux groupes de Ressources, sous les mots du glossaire. */
 const NOM_DE_FAMILLE: Record<Famille, string> = { nourriture: "Nourriture", materiaux: "Matériaux" };
@@ -91,25 +98,42 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
     <div ref={racine} role="group" className={styles.ressources} aria-label="Ressources" data-bande-ressources="">
       {parFamille(stocks).map((groupe) => (
         <ul key={groupe.famille} className={styles.groupe} aria-label={NOM_DE_FAMILLE[groupe.famille]}>
-          {groupe.stocks.map((stock) => (
+          {groupe.stocks.map((stock) => {
+            const quantite = ecoule === null ? Number(stock.quantite) : quantiteMontee(stock, ecoule, vitesse);
+            return (
             <li key={stock.id} className={styles.ressource} data-ouverte={ouverte === stock.id ? "" : undefined}>
               <button type="button" className={styles.boutonRessource} onClick={() => setOuverte((avant) => (avant === stock.id ? null : stock.id))}>
                 <Image src={iconeDeRessource(stock.id)} alt={stock.nom} width={22} height={22} className={styles.icone} />
                 {/* Une espace entre le nom et la quantité, pour qu'un lecteur d'écran dise « Pierre 42 ». */}{" "}
-                <span className={styles.quantite}>{quantiteAffichee(ecoule === null ? stock.quantite : quantiteMontee(stock, ecoule, vitesse))}</span>
+                <span className={styles.quantite}>{quantiteAffichee(quantite)}</span>
                 {/* US-0212 : la production horaire, sur ordinateur ; plus discrète quand elle est nulle. */}
                 <span className={styles.production} data-nulle={Number(stock.parHeure) === 0 ? "" : undefined}>
                   <span aria-hidden="true">{productionAffichee(stock.parHeure)}</span>
                   <span className={styles.annonce}>, {productionHoraire(stock.parHeure)} par heure</span>
                 </span>
               </button>
-              {/* Le nom et le groupe sont déjà dits par l'icône et la liste : la bulle ne sert qu'aux yeux. */}
+              {/*
+                US-0214 : le détail de la ressource, au survol, au clavier ou au toucher : son nom et son groupe,
+                sa quantité exacte et d'où vient sa production. Le nom, la quantité et la production sont déjà
+                dits au lecteur d'écran par le bouton : la bulle ne sert qu'aux yeux.
+              */}
               <span className={styles.bulle} aria-hidden="true">
-                {stock.nom}
+                <span className={styles.nomBulle}>{stock.nom}</span>
                 <span className={styles.groupeBulle}>{NOM_DE_FAMILLE[stock.famille]}</span>
+                <span className={styles.quantiteBulle}>{quantiteDetaillee(quantite)}</span>
+                {stock.sources.length === 0 ? (
+                  <span className={styles.sourceBulle}>{productionAffichee(0)}</span>
+                ) : (
+                  stock.sources.map((source) => (
+                    <span key={source.libelle} className={styles.sourceBulle}>
+                      {source.libelle} : {productionAffichee(source.parHeure)}
+                    </span>
+                  ))
+                )}
               </span>
             </li>
-          ))}
+            );
+          })}
         </ul>
       ))}
     </div>

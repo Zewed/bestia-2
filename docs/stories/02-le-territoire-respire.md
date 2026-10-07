@@ -143,6 +143,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0214 · Détailler une ressource au survol
 **En tant que** joueur, **je veux** qu'un petit encadré m'explique une ressource quand je passe le pointeur dessus, **afin de** comprendre d'où vient ma production.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). La bulle de chaque ressource donne son nom, son groupe, sa quantité au centième (arrondie vers le bas, et qui monte comme la barre) et chaque source de production : « Foyer · prairie : +8/h », puis, plus tard, « 2 Cases de forêt : +28/h ». Elle s'ouvre au survol, au clavier (Tab) et au toucher ; collée au bord pour la première et la dernière ressource, elle ne sort pas de l'écran (vérifié à 320 px et 1 440 px).
 - **Débloquée par** : US-0212
 - **Critères d'acceptation** :
   - Au survol d'une ressource, un encadré montre son nom, sa quantité exacte, sa production horaire et sa source : « Foyer · forêt : +12/h ».
