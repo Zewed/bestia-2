@@ -1,31 +1,46 @@
 donnees/prenoms.yaml
   s_97a431cfa65ca7::t_66808781e29a0c 1-64
+  s_97a431cfa65ca7::t_79b14c04324f59 1-64
 drizzle/0035_prenoms.sql
   s_97a431cfa65ca7::t_66808781e29a0c 1-97
+  s_97a431cfa65ca7::t_79b14c04324f59 6-97
+  s_97a431cfa65ca7::t_639b123b7b7c5c 1-5
 src/db/schema.ts
   s_97a431cfa65ca7::t_66808781e29a0c 441-442,453-454,458-463
+  s_97a431cfa65ca7::t_639b123b7b7c5c 441-442,453-454,458-463
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_66808781e29a0c 14-16,18,27,38,40-42,54-85,98-102
+  s_97a431cfa65ca7::t_e9217a603588dd 14-16,18,27,38,40-42,54-85,98-102
 src/monde/habitants.db.test.ts
   s_97a431cfa65ca7::t_66808781e29a0c 1-2,8-10,14-22,71,78,85-162
+  s_97a431cfa65ca7::t_e716458c9a5b39 1-2,8-10,14-22,71,78,85-162
 src/monde/entretien.db.test.ts
   s_97a431cfa65ca7::t_65174d52c31239 92
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_66808781e29a0c 5-9,11-14,16-18,21
+  s_97a431cfa65ca7::t_7acd5bb3a2e080 5-9,11-14,16-18,21
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_66808781e29a0c 19-21,33-45
+  s_97a431cfa65ca7::t_8dddcc0180b001 19-21,33-45
 src/donnees/jeux.ts
   s_97a431cfa65ca7::t_66808781e29a0c 88-103,206
+  s_97a431cfa65ca7::t_749fbe90d68868 88-103,206
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_66808781e29a0c 21-61,70-80
+  s_97a431cfa65ca7::t_8dddcc0180b001 21-31,33-61,70-80
+  s_97a431cfa65ca7::t_62168d124e0fd8 32
 src/donnees/prenoms.test.ts
   s_97a431cfa65ca7::t_66808781e29a0c 1-54
+  s_97a431cfa65ca7::t_f10c24aa17e322 1-54
 donnees/LISEZMOI.md
   s_97a431cfa65ca7::t_66808781e29a0c 3
+  s_97a431cfa65ca7::t_749fbe90d68868 3
 drizzle/meta/0035_snapshot.json
   s_97a431cfa65ca7::t_3d19499b7dfd15 1-2012
+  s_97a431cfa65ca7::t_284ce72919b4d0 1-2012
 drizzle/meta/_journal.json
   s_97a431cfa65ca7::t_f5f14f75a2b6b5 249-255
+  s_97a431cfa65ca7::t_6e5f835f9ba2e1 249-255
 docs/stories/03-les-habitants.md
   s_67fa7d60fb3221::t_826069d8663547 32,38
 docs/stories/README.md
