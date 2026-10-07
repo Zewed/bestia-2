@@ -12,7 +12,7 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
   /** Un nom de chef propre à ce lancement, pour ne pas croiser les autres essais. */
-  const nomUnique = () => `Stock${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[numero % 10]}`;
+  const nomUnique = () => `Stock${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
 
   const naitre = async () => {
     const compte = await nouveauCompte();
@@ -56,6 +56,21 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
     const { territoireId } = await naitre();
     expect((await stocks(territoireId)).map(([ressource]) => ressource)).toEqual(["viande", "vegetaux", "bois", "pierre"]);
     expect(await stocks(territoireId)).toEqual(await auDepart());
+  });
+
+  it("donne à chaque Stock, à la naissance, la limite de départ de sa Ressource, enregistrée pour ce Territoire (US-0220)", async () => {
+    const { territoireId } = await naitre();
+    const { rows } = await pool.query(
+      `select s.ressource_id, s.limite = r.limite_au_depart as egale, s.limite > s.quantite as sous_la_limite
+       from stock s join ressource r on r.id = s.ressource_id where s.territoire_id = $1 order by r.ordre`,
+      [territoireId],
+    );
+    expect(rows).toEqual(["viande", "vegetaux", "bois", "pierre"].map((ressource_id) => ({ ressource_id, egale: true, sous_la_limite: true })));
+    // Propre au Territoire : la relever chez l'un ne touche pas les autres.
+    const autre = await naitre();
+    await pool.query("update stock set limite = 5000 where territoire_id = $1 and ressource_id = 'bois'", [territoireId]);
+    const { rows: autres } = await pool.query("select limite::text from stock where territoire_id = $1 and ressource_id = 'bois'", [autre.territoireId]);
+    expect(autres[0].limite).toBe((await pool.query("select limite_au_depart::text as l from ressource where id = 'bois'")).rows[0].l);
   });
 
   it("verse les quantités de départ réglées dans les données de référence, sans toucher au code", async () => {

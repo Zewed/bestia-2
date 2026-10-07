@@ -70,6 +70,7 @@ const entreeRessource = z.object({
   nom,
   famille: z.enum(["nourriture", "materiaux"], { error: "famille : nourriture ou materiaux" }),
   au_depart: z.number({ error: "au_depart doit être un nombre" }).nonnegative("au_depart ne peut pas être négatif"),
+  limite_au_depart: z.number({ error: "limite_au_depart doit être un nombre" }).positive("limite_au_depart doit être positive"),
   ordre: z.number().int(),
 });
 
@@ -81,7 +82,7 @@ export const RESSOURCES: Jeu<z.infer<typeof entreeRessource>> = {
   // L'ordre d'affichage suit l'ordre du fichier.
   extraire: (brut) => brut.map((r, i) => ({ ...(r as object), ordre: i + 1 })),
   schema: entreeRessource,
-  colonnes: (r) => ({ id: r.id, nom: r.nom, famille: r.famille, ordre: r.ordre, au_depart: r.au_depart }),
+  colonnes: (r) => ({ id: r.id, nom: r.nom, famille: r.famille, ordre: r.ordre, au_depart: r.au_depart, limite_au_depart: r.limite_au_depart }),
 };
 
 type EntreeProduction = { biomeId: string; ressourceId: string; parHeure: number };

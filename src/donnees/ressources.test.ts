@@ -26,7 +26,7 @@ describe("Ressources (US-0201)", () => {
   });
 
   it("refusent une famille inconnue, en disant laquelle", () => {
-    expect(() => valider(RESSOURCES, [{ id: "or", nom: "Or", famille: "tresor", au_depart: 0, ordre: 1 }])).toThrow(
+    expect(() => valider(RESSOURCES, [{ id: "or", nom: "Or", famille: "tresor", au_depart: 0, limite_au_depart: 10, ordre: 1 }])).toThrow(
       "entrée n° 1 (famille) : famille : nourriture ou materiaux",
     );
   });
@@ -36,10 +36,23 @@ describe("Ressources (US-0201)", () => {
   });
 
   it("refusent une quantité de départ négative", () => {
-    expect(() => valider(RESSOURCES, [{ id: "bois", nom: "Bois", famille: "materiaux", au_depart: -5, ordre: 1 }])).toThrow(
+    expect(() => valider(RESSOURCES, [{ id: "bois", nom: "Bois", famille: "materiaux", au_depart: -5, limite_au_depart: 10, ordre: 1 }])).toThrow(
       "entrée n° 1 (au_depart) : au_depart ne peut pas être négatif",
     );
   });
+  it("donnent à chaque Stock une limite de départ, au-dessus de sa quantité de départ (US-0220)", () => {
+    for (const r of ressources) {
+      expect(r.limite_au_depart, r.id).toBeGreaterThan(0);
+      expect(r.au_depart, r.id).toBeLessThanOrEqual(r.limite_au_depart);
+    }
+  });
+
+  it("refusent une limite de départ nulle", () => {
+    expect(() => valider(RESSOURCES, [{ id: "bois", nom: "Bois", famille: "materiaux", au_depart: 0, limite_au_depart: 0, ordre: 1 }])).toThrow(
+      "entrée n° 1 (limite_au_depart) : limite_au_depart doit être positive",
+    );
+  });
+
   it("ont chacune leur icône, carrée, rangée sous le nom de leur identifiant (US-0204)", async () => {
     for (const r of ressources) {
       const { width, height, format, hasAlpha } = await sharp(join(process.cwd(), "public/illustrations/ressources", `${r.id}.webp`)).metadata();

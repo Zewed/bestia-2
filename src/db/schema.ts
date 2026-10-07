@@ -115,8 +115,10 @@ export const ressource = pgTable(
     ordre: integer("ordre").notNull(),
     /** US-0202 : ce que reçoit un Territoire à sa naissance. */
     auDepart: numeric("au_depart", { precision: 24, scale: 6 }).notNull().default("0"),
+    /** US-0220 : la limite du Stock d'un Territoire à sa naissance ; les constructions de stockage la relèveront. */
+    limiteAuDepart: numeric("limite_au_depart", { precision: 24, scale: 6 }).notNull().default("0"),
   },
-  (t) => [check("ressource_au_depart_positif", sql`${t.auDepart} >= 0`)],
+  (t) => [check("ressource_au_depart_positif", sql`${t.auDepart} >= 0`), check("ressource_limite_positive", sql`${t.limiteAuDepart} > 0`)],
 );
 
 /**
@@ -426,6 +428,8 @@ export const stock = pgTable(
      * (en unités × microsecondes par heure, de 0 à 3 600) pour le calcul suivant : rien ne se perd.
      */
     reste: numeric("reste", { precision: 30, scale: 6 }).notNull().default("0"),
+    /** US-0220 : la limite de ce Stock, propre au Territoire, pour que ses constructions la relèvent (étape 28). */
+    limite: numeric("limite", { precision: 24, scale: 6 }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.ressourceId] }), check("stock_jamais_negatif", sql`${t.quantite} >= 0`)],
 );

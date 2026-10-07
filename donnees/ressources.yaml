@@ -2,20 +2,26 @@
 # famille : nourriture (ce que mangent les Bêtes et les Habitants) ou materiaux (ce qui sert à construire).
 # au_depart : ce que reçoit un Territoire à sa naissance (chiffre à régler en jouant). Le changer ne
 # touche que les Territoires qui naissent ensuite.
+# limite_au_depart : la limite de chaque Stock à la naissance (chiffre à régler en jouant) ; les
+# constructions de stockage la relèveront. Elle aussi ne touche que les Territoires à naître.
 
 - id: viande
   nom: Viande
   famille: nourriture
   au_depart: 100
+  limite_au_depart: 1000
 - id: vegetaux
   nom: Végétaux
   famille: nourriture
   au_depart: 100
+  limite_au_depart: 1000
 - id: bois
   nom: Bois
   famille: materiaux
   au_depart: 100
+  limite_au_depart: 1000
 - id: pierre
   nom: Pierre
   famille: materiaux
   au_depart: 100
+  limite_au_depart: 1000

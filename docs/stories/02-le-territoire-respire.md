@@ -207,9 +207,10 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0220 · Donner une limite à chaque stock
 **En tant que** développeur, **je veux** une limite propre à chaque stock de chaque Territoire, **afin de** pouvoir la relever plus tard avec les constructions de stockage.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Chaque Stock porte sa limite (`stock.limite`), reçue à la naissance depuis `limite_au_depart` de sa Ressource dans `donnees/ressources.yaml` ; les Stocks déjà là l'ont reçue avec la migration. La base ne refuse pas une quantité au-dessus de la limite : ce cas reste à trancher (US-0230).
 - **Débloquée par** : US-0201
 - **Critères d'acceptation** :
-  - Chaque Territoire a une limite de Viande, de Végétaux, de Bois et de Pierre, de (chiffre à régler) au départ.
+  - Chaque Territoire a une limite de Viande, de Végétaux, de Bois et de Pierre, de 1 000 au départ (provisoire, décidé le 2026-10-07).
   - Les limites de départ se règlent dans les données de référence.
   - La limite est enregistrée par joueur, pour que le grenier, le fumoir, le bûcher et la taillerie puissent la relever (étape 28).
   - Un test vérifie que les quantités de départ sont sous les limites de départ.
