@@ -59,12 +59,13 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0406 · Former des régions de Biomes crédibles
 **En tant que** joueur, **je veux** que les Biomes forment de vraies régions, **afin de** parcourir un Monde qui ressemble à un vrai paysage.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Un Monde généré dessine désormais toute sa terre, Couronne comprise, avec les huit Biomes : elle est découpée en régions d'au moins 6 Cases aux frontières sinueuses, chacune prenant un Biome selon sa température et son humidité ; aucune Case isolée, chaque Biome entre 4 et 30 % de la terre (parts visées : prairie 20 %, forêt 17 %, savane et toundra 12 %, montagne 11 %, jungle et désert 10 %, banquise 8 %). Le Monde du jeu garde sa Couronne, déjà en base. Prouvé sur 21 graines, tenu sur 600. Rien de visible.
 - **Débloquée par** : US-0402
 - **Critères d'acceptation** :
   - Les huit Biomes de terre (prairie, forêt, jungle, savane, désert, montagne, toundra, banquise) sont tous présents.
-  - Chaque Biome forme des régions d'un seul tenant d'au moins (chiffre à régler) Cases.
-  - Une Case isolée au milieu d'un autre Biome reste rare : au plus (chiffre à régler) sur tout le Monde.
-  - La part de chaque Biome reste dans une fourchette (chiffre à régler).
+  - Chaque Biome forme des régions d'un seul tenant d'au moins 6 Cases (provisoire, `REGION_BIOME_MIN_CASES`).
+  - Une Case isolée au milieu d'un autre Biome reste rare : au plus 20 sur tout le Monde (provisoire, `CASES_ISOLEES_MAX`).
+  - La part de chaque Biome reste entre 4 et 30 % de la terre (provisoire, `PART_BIOME_MIN`, `PART_BIOME_MAX`).
 
 ### US-0407 · Enchaîner les Biomes de façon naturelle
 **En tant que** joueur, **je veux** que les Biomes voisins aillent bien ensemble, **afin de** croire au Monde que je parcours.

@@ -2,26 +2,33 @@
 // Côté serveur et scripts uniquement.
 import type { PoolClient } from "pg";
 import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
-import { BANDE_DE_CALCUL, biomesDuMonde, type CaseDeCouronne } from "./couronne";
-import { dansLeCoeur, eloignementDuCoeur } from "./hex";
+import { BANDE_DE_CALCUL } from "./couronne";
+import { anneau, dansLeCoeur, eloignementDuCoeur, type Coordonnees } from "./hex";
+import { biomesDuMonde, grilleDuMonde, type Biome } from "./regions";
 
-export type CaseGeneree = CaseDeCouronne & { couronne: boolean; coeur: boolean; eloignement: number };
+export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante: string | null; couronne: boolean; coeur: boolean; eloignement: number };
 
 /** La plus grande graine : un entier de 0 à 2³² − 1, comme la base l'accepte. */
 export const GRAINE_MAX = 2 ** 32 - 1;
 
 /**
- * Toutes les Cases d'un Monde de `rayon` anneaux, du Cœur sauvage au bord, avec leur Biome ; les
- * `anneaux` anneaux extérieurs forment la Couronne, la même que casesDeLaCouronne pour la même
- * graine, et les Cases à moins de `rayonCoeur` Cases du milieu le Cœur sauvage (US-0403), dont chaque
+ * Toutes les Cases d'un Monde de `rayon` anneaux, du Cœur sauvage au bord, rangées par q puis r, avec
+ * leur Biome (US-0406 : en régions, Couronne comprise) ; les `anneaux` anneaux extérieurs forment la
+ * Couronne, et les Cases à moins de `rayonCoeur` Cases du milieu le Cœur sauvage (US-0403), dont chaque
  * Case porte sa distance (US-0405). Rien d'autre que la graine n'y met de hasard : la même graine rend
  * toujours le même Monde.
  */
 export function genererLeMonde({ rayon, anneaux, rayonCoeur, graine }: { rayon: number; anneaux: number; rayonCoeur: number; graine: number }): CaseGeneree[] {
   if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
-  return biomesDuMonde({ rayon, graine, rayonCoeur }).map((c) => ({
-    ...c,
-    couronne: c.anneau > rayon - anneaux,
+  const grille = grilleDuMonde(rayon);
+  const biomes = biomesDuMonde(grille, { rayonCoeur, graine });
+  return grille.cases.map((c, i) => ({
+    q: c.q,
+    r: c.r,
+    anneau: anneau(c),
+    biome: biomes[i],
+    variante: null,
+    couronne: anneau(c) > rayon - anneaux,
     coeur: dansLeCoeur(c, rayonCoeur),
     eloignement: eloignementDuCoeur(c, rayonCoeur),
   }));

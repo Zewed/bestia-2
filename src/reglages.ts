@@ -131,3 +131,16 @@ export const JOUEURS_PAR_MONDE = 90;
  * plus que 12 heures d'Entretien (valeur provisoire, à régler en jouant).
  */
 export const FAMINE_IMMINENTE_HEURES = 12;
+
+/**
+ * US-0406 : dans un Monde généré, chaque Biome de terre forme des régions d'un seul tenant d'au moins 6 Cases
+ * (valeur provisoire, à régler en jouant)…
+ */
+export const REGION_BIOME_MIN_CASES = 6;
+/** … et au plus 20 Cases de tout le Monde n'ont aucune voisine de leur Biome (idéalement aucune ; valeur provisoire). */
+export const CASES_ISOLEES_MAX = 20;
+/** US-0406 : chaque Biome de terre couvre de 4 % à 30 % de la terre d'un Monde généré (valeurs provisoires)… */
+export const PART_BIOME_MIN = 0.04;
+export const PART_BIOME_MAX = 0.3;
+/** … autour de la part visée pour chacun (valeurs provisoires, à régler en jouant). */
+export const PARTS_DES_BIOMES = { prairie: 0.2, foret: 0.17, jungle: 0.1, savane: 0.12, desert: 0.1, montagne: 0.11, toundra: 0.12, banquise: 0.08 } as const;

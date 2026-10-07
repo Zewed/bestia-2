@@ -3,7 +3,7 @@ import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, JOUEURS_PAR_
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
 import { genererLeMonde } from "./generer";
-import { anneau, distance } from "./hex";
+import { anneau, dansLeCoeur, distance } from "./hex";
 
 describe("Cases où un Foyer peut naître (US-0152)", () => {
   const prairie = { q: 0, r: -60, biome: "prairie" };
@@ -91,12 +91,13 @@ describe("aucun Foyer dans le Cœur sauvage (US-0403)", () => {
     for (let i = 0; i < 20; i++) expect(anneau(choisirCaseDeNaissance(monde, [], null, () => i / 20)!)).toBeGreaterThanOrEqual(COEUR_SAUVAGE_RAYON);
   });
 
-  it("garde les naissances d'aujourd'hui telles quelles : sur la Couronne, loin du Cœur, aux mêmes Cases", () => {
+  it("garde les naissances d'aujourd'hui telles quelles : sur la Couronne du Monde du jeu, loin du Cœur, aux mêmes Cases", () => {
     const couronne = casesDeLaCouronne({ rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, graine: graineDuMonde("Aube") });
     expect(Math.min(...couronne.map((c) => c.anneau))).toBeGreaterThanOrEqual(COEUR_SAUVAGE_RAYON);
-    const generee = monde.filter((c) => c.couronne);
-    expect(emplacementsDeFoyers(generee, [])).toEqual(emplacementsDeFoyers(couronne, []));
-    for (const hasard of [0, 0.3, 0.9999]) expect(choisirCaseDeNaissance(generee, [], null, () => hasard)).toMatchObject(choisirCaseDeNaissance(couronne, [], null, () => hasard)!);
+    // Telle que preparerCouronne l'écrit en base, chaque Case sachant si elle est dans le Cœur (aucune ne l'est).
+    const enBase = couronne.map((c) => ({ ...c, coeur: dansLeCoeur(c, COEUR_SAUVAGE_RAYON) }));
+    expect(emplacementsDeFoyers(enBase, [])).toEqual(emplacementsDeFoyers(couronne, []));
+    for (const hasard of [0, 0.3, 0.9999]) expect(choisirCaseDeNaissance(enBase, [], null, () => hasard)).toMatchObject(choisirCaseDeNaissance(couronne, [], null, () => hasard)!);
   });
 });
 
