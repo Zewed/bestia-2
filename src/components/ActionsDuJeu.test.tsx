@@ -9,6 +9,7 @@ const garde = vi.hoisted(() => ({
     { id: "bois", nom: "Bois", famille: "materiaux", quantite: "12500.400000", limite: "1000.000000", parHeure: "4.000000", entretienParHeure: "0.000000", sources: [] },
     { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "0.999999", limite: "1000.000000", parHeure: "4.000000", entretienParHeure: "0.000000", sources: [] },
   ]),
+  habitantsALHeure: vi.fn(async () => 3),
 }));
 vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/comptes/deconnexion", () => ({ seDeconnecter: vi.fn() }));
@@ -22,6 +23,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     vi.unstubAllEnvs();
     garde.joueurConnecte.mockReset();
     garde.stocksALHeure.mockClear();
+    garde.habitantsALHeure.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
     garde.joueurConnecte.mockResolvedValue({ compte: { id: 7, email: "nom@exemple.fr" }, territoireId: null, recitLu: false, ...chef });
@@ -64,6 +66,27 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: false });
     expect(await rendu()).not.toContain("Ressources");
     expect(garde.stocksALHeure).not.toHaveBeenCalled();
+  });
+
+  it("compte ses Habitants juste après ses ressources, dans la même bande, en lien vers leur page (US-0304)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+    const html = await rendu();
+    expect(garde.habitantsALHeure).toHaveBeenCalledWith(12);
+    // Le groupe des ressources se ferme, le compteur suit, la bande se ferme, puis vient le nom du chef.
+    const compteur = html.match(/<\/ul><\/div><div[^>]*><a ([^>]*)><img[^>]*alt="Habitants"[^>]*\/><span[^>]*>([^<]+)<\/span><\/a><\/div><\/div><div[^>]*><button[^>]*aria-haspopup="menu"/);
+    expect(compteur?.[2]).toBe("3");
+    expect(compteur?.[1]).toMatch(/href="\/jeu\/habitants"/);
+    expect(compteur?.[1]).toMatch(/aria-label="3 Habitants"/);
+  });
+
+  it("ne compte pas ses Habitants avant le récit d'arrivée, ni sans Territoire (US-0304)", async () => {
+    joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
+    expect(await rendu()).not.toContain("Habitant");
+    joueur({ nomDeChef: "Ourse", territoireId: null, recitLu: true });
+    expect(await rendu()).not.toContain("Habitant");
+    joueur({ nomDeChef: null });
+    expect(await rendu()).not.toContain("Habitant");
+    expect(garde.habitantsALHeure).not.toHaveBeenCalled();
   });
 
   it("pose la navigation du jeu, à côté du logo, une fois entré dans son Foyer (US-0302)", async () => {

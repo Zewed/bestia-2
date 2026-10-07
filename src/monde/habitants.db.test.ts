@@ -9,7 +9,7 @@ import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { habitantsDuTerritoire } from "./habitants";
+import { habitantsDuTerritoire, nombreDHabitants } from "./habitants";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
 function nommerLesHabitantsDejaLa(): string {
@@ -159,5 +159,20 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, sur base)"
     // Deux prénoms pareils : le premier arrivé d'abord.
     expect(lus[1].id).toBe(h2);
     expect(lus.every((h) => h.etat === "libre")).toBe(true);
+  });
+
+  it("compte les Habitants du Territoire pour la barre du haut, et suit chaque arrivée et chaque départ (US-0304)", async () => {
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await nombreDHabitants(pool, ta)).toBe(3);
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno'), ($1, 'Dara')", [ta]);
+    expect(await nombreDHabitants(pool, ta)).toBe(5);
+    await pool.query("delete from habitant where id in (select id from habitant where territoire_id = $1 order by id limit 4)", [ta]);
+    expect(await nombreDHabitants(pool, ta)).toBe(1);
+    expect(await nombreDHabitants(pool, tb)).toBe(3);
+    expect(await nombreDHabitants(pool, -1)).toBe(0);
   });
 });

@@ -27,4 +27,13 @@ describe("barre du haut", () => {
     expect(lire("src/app/globals.css")).toMatch(/body \{[^}]*padding: [^;]*calc\(var\(--hauteur-onglets\) \+ var\(--bord-bas\)\)/);
     expect(lire("src/components/BarreHaut.module.css")).toMatch(/@media \(max-width: 820px\) \{[\s\S]*\.navigation \{[^}]*position: fixed;[^}]*bottom: 0;[^}]*var\(--bord-bas\)/);
   });
+
+  it("sur mobile, range les quatre ressources puis le compteur d'Habitants en colonnes égales : cinq sur la bande (US-0304)", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+    expect(mobile).toMatch(/\.ressources \{[^}]*grid-auto-columns: minmax\(0, 1fr\);[^}]*grid-auto-flow: column;/);
+    expect(mobile).toMatch(/\.groupes \{[^}]*grid-column: span 4;/);
+    // Le compteur, séparé des ressources du même trait que les deux groupes entre eux.
+    expect(mobile).toMatch(/\.groupe \+ \.groupe,\s*\.groupes \+ \.habitants \{[^}]*background: linear-gradient/);
+  });
 });

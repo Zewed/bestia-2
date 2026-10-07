@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { productionAffichee, productionHoraire, quantiteAffichee, quantiteDetaillee } from "@/monde/quantite";
 import { PRESQUE_PLEIN_POURCENT, RECALER_LA_BARRE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
@@ -71,8 +71,11 @@ export function quantiteMontee(stock: RessourceDeLaBarre, ecoule: number, vitess
  * arrivée dans la page ; la barre se recale sur les quantités exactes du jeu toutes les
  * RECALER_LA_BARRE_MINUTES minutes et dès qu'on revient sur l'onglet (une action, elle, recharge déjà
  * la page). De nouvelles quantités arrivent avec une nouvelle clé (ActionsDuJeu) : tout repart d'elles.
+ *
+ * `children` : ce qui suit les ressources dans la même bande, hors de leur groupe : le compteur
+ * d'Habitants (US-0304).
  */
-export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre[]; vitesse?: number }) {
+export function Ressources({ stocks, vitesse = 1, children }: { stocks: RessourceDeLaBarre[]; vitesse?: number; children?: ReactNode }) {
   const [ouverte, setOuverte] = useState<string | null>(null);
   const [ecoule, setEcoule] = useState<number | null>(null);
   const racine = useRef<HTMLDivElement>(null);
@@ -111,7 +114,8 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
   }, [ouverte]);
 
   return (
-    <div ref={racine} role="group" className={styles.ressources} aria-label="Ressources" data-bande-ressources="">
+    <div className={styles.ressources} data-bande-ressources="">
+      <div ref={racine} role="group" className={styles.groupes} aria-label="Ressources">
       {parFamille(stocks).map((groupe) => (
         <ul key={groupe.famille} className={styles.groupe} aria-label={NOM_DE_FAMILLE[groupe.famille]}>
           {groupe.stocks.map((stock) => {
@@ -195,6 +199,8 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
           })}
         </ul>
       ))}
+      </div>
+      {children}
     </div>
   );
 }

@@ -176,6 +176,25 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     expect(ouvertes()).toEqual([]);
   });
 
+  it("pose ce qui suit les ressources dans la même bande, après elles et hors de leur groupe (US-0304)", async () => {
+    const u = userEvent.setup();
+    render(
+      <Ressources stocks={[...STOCKS]}>
+        <a href="#habitants">3 Habitants</a>
+      </Ressources>,
+    );
+    const bande = document.querySelector("[data-bande-ressources]")!;
+    const groupe = screen.getByRole("group", { name: "Ressources" });
+    const lien = screen.getByRole("link", { name: "3 Habitants" });
+    expect([...bande.children]).toEqual([groupe, lien]);
+    // Toucher le compteur referme la bulle ouverte, comme tout autre toucher hors des ressources.
+    await u.click(screen.getByRole("button", { name: /^Bois/ }));
+    expect(ouvertes()).toEqual(["Bois"]);
+    lien.addEventListener("click", (evenement) => evenement.preventDefault());
+    await u.click(lien);
+    expect(ouvertes()).toEqual([]);
+  });
+
   describe("les quantités qui montent page ouverte (US-0213)", () => {
     afterEach(() => {
       vi.useRealTimers();

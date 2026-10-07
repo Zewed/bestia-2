@@ -20,3 +20,9 @@ export async function habitantsDuTerritoire(pool: Pool, territoireId: number): P
   );
   return rows.map((h) => ({ ...h, etat: "libre" }));
 }
+
+/** Le nombre d'Habitants d'un Territoire, pour le compteur de la barre du haut (US-0304). */
+export async function nombreDHabitants(pool: Pool, territoireId: number): Promise<number> {
+  const { rows } = await pool.query<{ nombre: number }>(`select count(*)::int as nombre from habitant where territoire_id = $1`, [territoireId]);
+  return rows[0].nombre;
+}

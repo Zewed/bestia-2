@@ -202,6 +202,12 @@
   align-items: center;
 }
 
+/* Les deux groupes de ressources ; après eux, le compteur d'Habitants (US-0304), séparé du même trait. */
+.groupes {
+  display: flex;
+  align-items: center;
+}
+
 .groupe {
   display: flex;
   gap: 8px;
@@ -209,13 +215,15 @@
   list-style: none;
 }
 
-.groupe + .groupe {
+.groupe + .groupe,
+.groupes + .habitants {
   position: relative;
   margin-left: 12px;
   padding-left: 12px;
 }
 
-.groupe + .groupe::before {
+.groupe + .groupe::before,
+.groupes + .habitants::before {
   content: "";
   position: absolute;
   top: 50%;
@@ -248,6 +256,22 @@
 .boutonRessource:focus-visible {
   outline: 2px solid var(--ivoire);
   outline-offset: -2px;
+}
+
+/* US-0304 : le compteur d'Habitants, posé comme une ressource ; c'est un lien vers la page Habitants. */
+.habitants {
+  display: flex;
+}
+
+.lienHabitants {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .lienHabitants:hover {
+    background: var(--sur-encre-survol);
+  }
 }
 
 .icone {
@@ -295,7 +319,7 @@
   color: var(--sur-encre-eteint);
 }
 
-@media (min-width: 1100px) {
+@media (min-width: 1180px) {
   .production {
     display: inline;
   }
@@ -457,17 +481,29 @@
     outline-offset: -4px;
   }
 
-  /* La bande des ressources : toute la largeur de l'écran, quatre colonnes égales, sous un filet. */
+  /*
+   * La bande des ressources : toute la largeur de l'écran, sous un filet, une colonne égale par
+   * ressource puis une pour le compteur d'Habitants (US-0304) : cinq colonnes, de 64 px sur 320 px.
+   */
   .ressources {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: stretch;
     align-self: stretch;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
     align-items: stretch;
     margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
     border-top: 1px solid var(--sur-encre-trait);
+  }
+
+  /* Les quatre ressources prennent quatre colonnes de la bande. */
+  .groupes {
+    grid-column: span 4;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
   }
 
   /* Deux colonnes par groupe : quatre colonnes égales, le trait entre la 2e et la 3e. */
@@ -477,15 +513,17 @@
     gap: 0;
   }
 
-  /* Le trait entre les groupes, dessiné en fond : le groupe reste sans position propre, et la bulle se centre sous toute la bande. */
-  .groupe + .groupe {
+  /* Le trait entre les groupes, et avant le compteur, dessiné en fond : le groupe reste sans position propre, et la bulle se centre sous toute la bande. */
+  .groupe + .groupe,
+  .groupes + .habitants {
     position: static;
     margin-left: 0;
     padding-left: 0;
     background: linear-gradient(var(--sur-encre-eteint), var(--sur-encre-eteint)) left center / 1px 24px no-repeat;
   }
 
-  .groupe + .groupe::before {
+  .groupe + .groupe::before,
+  .groupes + .habitants::before {
     display: none;
   }
 
@@ -527,9 +565,10 @@
     max-width: calc(100vw - 24px);
   }
 
-  /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous. */
+  /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous ; serrés, pour tenir dans une colonne de 64 px (US-0304). */
   .ressource[data-plein] .boutonRessource {
     grid-template-areas: "icone plein" "quantite quantite";
+    column-gap: 2px;
   }
 
   .plein {

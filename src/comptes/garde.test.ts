@@ -11,8 +11,10 @@ const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async () => [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000" }]) }));
 vi.mock("@/monde/stocks", () => stocks);
+const habitants = vi.hoisted(() => ({ nombreDHabitants: vi.fn(async () => 3) }));
+vi.mock("@/monde/habitants", () => habitants);
 
-import { exigerCompte, exigerCompteSansChef, joueurConnecte, stocksALHeure } from "./garde";
+import { exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, stocksALHeure } from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
@@ -82,6 +84,17 @@ describe("garde du jeu", () => {
     await stocksALHeure(12);
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
     expect(ordre).toEqual(["rattrapage", "lecture"]);
+  });
+
+  it("compte les Habitants de la barre du haut après avoir mis le Territoire à l'heure (US-0304)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    habitants.nombreDHabitants.mockImplementationOnce(async () => (ordre.push("comptage"), 4));
+    expect(await habitantsALHeure(13)).toBe(4);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 13);
+    expect(habitants.nombreDHabitants).toHaveBeenCalledWith(expect.anything(), 13);
+    expect(ordre).toEqual(["rattrapage", "comptage"]);
   });
 
   describe("reprendre l'arrivée là où elle s'était arrêtée (US-0160)", () => {

@@ -40,6 +40,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0304 · Compter ses Habitants dans la barre du haut
 **En tant que** joueur, **je veux** voir mon nombre d'Habitants dans la barre du haut, **afin de** suivre mon Territoire depuis n'importe quelle page.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Le compteur suit les ressources, séparé d'elles par le même fin trait : l'icône des Habitants puis le nombre ; c'est un lien vers la page Habitants (« 3 Habitants » pour un lecteur d'écran). Sur mobile, la bande passe à cinq colonnes égales (64 px à 320 px, où « 99 999 PLEIN » tient encore). Il est relu à chaque affichage et à chaque recalage de la barre. Pour laisser sa place au nom du chef, le « +8/h » des ressources ne s'affiche plus qu'à partir de 1 180 px (au lieu de 1 100). Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0301, Étape 10
 - **Critères d'acceptation** :
   - Le nombre total d'Habitants s'affiche dans la barre du haut, à côté des ressources.

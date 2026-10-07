@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
+import { nombreDHabitants } from "@/monde/habitants";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
@@ -84,3 +85,11 @@ export async function stocksALHeure(territoireId: number): Promise<Stock[]> {
   return stocksDuTerritoire(getPool(), territoireId);
 }
 
+/**
+ * Le nombre d'Habitants du Territoire pour le compteur de la barre du haut (US-0304), lu après sa mise
+ * à l'heure, comme les Stocks : à chaque affichage et à chaque recalage de la barre.
+ */
+export async function habitantsALHeure(territoireId: number): Promise<number> {
+  await mettreALHeure(territoireId);
+  return nombreDHabitants(getPool(), territoireId);
+}
