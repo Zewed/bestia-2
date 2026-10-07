@@ -1,0 +1,70 @@
+src/components/FamineImminente.tsx
+  s_97a431cfa65ca7::t_9c83aca9126285 49
+  s_97a431cfa65ca7::t_3b724bfac47551 5,21-25,27,30,50-51
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_a851f68b7cc408 245
+  s_97a431cfa65ca7::t_b3f98f9f482289 335
+  s_97a431cfa65ca7::t_26e6cbfbf6da53 45
+  s_97a431cfa65ca7::t_c37b28d1f5e314 295
+  s_97a431cfa65ca7::t_a9e12c84c87542 19
+  s_97a431cfa65ca7::t_2718db64a970a5 287-294,296-326
+src/monde/production.ts
+  s_97a431cfa65ca7::t_79f46e9465b048 2,4-5
+  s_97a431cfa65ca7::t_37b31216344b40 63-65
+  s_97a431cfa65ca7::t_474643cd5d80e7 87-95
+  s_97a431cfa65ca7::t_c14329101e3411 116-127,130,132-143
+  s_97a431cfa65ca7::t_dbe1ecedb718cc 128-129,131
+  s_97a431cfa65ca7::t_49a889614f9710 202-213
+src/comptes/garde.test.ts
+  s_97a431cfa65ca7::t_973516d28fc56a 165-175
+  s_97a431cfa65ca7::t_14e40718cafe99 24-38
+src/db/schema.ts
+  s_97a431cfa65ca7::t_463f3d30744044 432-436
+src/comptes/garde.ts
+  s_97a431cfa65ca7::t_590b44f70e2490 11
+  s_97a431cfa65ca7::t_994eab11b7cb5c 136-145
+src/monde/nourriture.test.ts
+  s_97a431cfa65ca7::t_b2c8e49796620e 5-6
+  s_97a431cfa65ca7::t_79b284957c4154 184
+  s_97a431cfa65ca7::t_6bce84ea99271b 180-183,185-221
+drizzle/0042_famine_imminente.sql
+  s_97a431cfa65ca7::t_bcff9f7d50f315 1-4
+src/monde/famine-imminente.db.test.ts
+  s_97a431cfa65ca7::t_871cd991514b7a 1-9,12,14-124,127-131,149-156
+  s_97a431cfa65ca7::t_54cefab4cce7b7 10-11,13
+  s_97a431cfa65ca7::t_5cd0d3b6dd55f7 125-126
+  s_97a431cfa65ca7::t_ffb893e2c5a649 132-148
+src/components/ActionsDuJeu.tsx
+  s_97a431cfa65ca7::t_4b73bed59c9503 2-11
+  s_97a431cfa65ca7::t_94bd49553c13a5 34
+  s_97a431cfa65ca7::t_fc13fed9d061db 52,54
+  s_97a431cfa65ca7::t_1062dca3e869a0 43
+  s_97a431cfa65ca7::t_7d67e15c66d62c 70-72
+src/monde/nourriture.ts
+  s_97a431cfa65ca7::t_438bd33a07b82c 79-89
+  s_97a431cfa65ca7::t_adabb4dd98875e 105-110,112-124
+src/components/FamineImminente.test.tsx
+  s_97a431cfa65ca7::t_e635f2bb57f94f 81-130
+  s_97a431cfa65ca7::t_268601c11c6147 28
+  s_97a431cfa65ca7::t_6e663e34ff637c 23,68
+drizzle/meta/0042_snapshot.json
+  s_97a431cfa65ca7::t_130f7e0b38a0a9 1-2319
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_b8dafc968ee0fd 298-304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3bc96e5ad9f5774f40871f826dbb0eb8afabddad",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
