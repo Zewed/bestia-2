@@ -30,6 +30,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Les copies de travail des agents (git worktree) : chacune se vérifie chez elle.
+    ".claude/**",
   ]),
 ]);
 
