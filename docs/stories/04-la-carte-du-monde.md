@@ -70,10 +70,11 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0407 · Enchaîner les Biomes de façon naturelle
 **En tant que** joueur, **je veux** que les Biomes voisins aillent bien ensemble, **afin de** croire au Monde que je parcours.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Les voisinages interdits sont écrits dans `donnees/biomes.yaml` (`jamais_a_cote_de`) : le froid (banquise, toundra) ne touche jamais le chaud (désert, savane, jungle), ni le désert la jungle ; prairie, forêt et montagne vont avec tout. La liste est validée au chargement et lue par le générateur. Le Monde a un côté froid et un côté chaud, orientés par la graine (banquise, toundra, puis prairie et forêt, puis le chaud), et ses montagnes forment des chaînes au moins trois fois plus longues que larges. Prouvé sur 21 graines. Rien de visible.
 - **Débloquée par** : US-0406
 - **Critères d'acceptation** :
-  - Certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu (à décider).
-  - Les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde, ou selon l'éloignement au Cœur sauvage (à décider).
+  - Certains voisinages n'existent jamais, comme banquise contre désert ou contre jungle ; la liste complète est fixée dans les données du jeu (décidé le 2026-10-07 : `donnees/biomes.yaml`).
+  - Les Biomes froids et les Biomes chauds se regroupent selon une seule règle : un côté froid et un côté chaud du Monde (décidé le 2026-10-07).
   - Les montagnes forment des chaînes plutôt que des taches isolées.
 
 ### US-0408 · Créer la mer

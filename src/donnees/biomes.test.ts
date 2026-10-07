@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { lireJeu, valider } from "./charger";
-import { BIOMES, lireDonnees, PRODUCTIONS, VARIANTES, verifierProductions } from "./jeux";
+import { BIOMES, lireDonnees, lireVoisinagesInterdits, PRODUCTIONS, VARIANTES, verifierProductions } from "./jeux";
 
 describe("Biomes", () => {
   const biomes = lireJeu(BIOMES);
@@ -57,6 +57,42 @@ describe("Biomes", () => {
         verifierProductions([...productions, { biomeId: "prairie", ressourceId: "or", parHeure: 1 }], { biomes: ["prairie"], ressources: RESSOURCES }),
       ).toThrow("prairie : Ressource inconnue « or »");
     });
+  });
+});
+
+describe("voisinages interdits (US-0407)", () => {
+  const paires = lireVoisinagesInterdits();
+  const interdit = (a: string, b: string) => paires.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+
+  it("interdisent au moins la banquise contre le désert, la jungle et la savane, la toundra contre le désert et la jungle, le désert contre la jungle", () => {
+    for (const [a, b] of [
+      ["banquise", "desert"],
+      ["banquise", "jungle"],
+      ["banquise", "savane"],
+      ["toundra", "desert"],
+      ["toundra", "jungle"],
+      ["desert", "jungle"],
+    ]) {
+      expect(interdit(a, b), `${a} · ${b}`).toBe(true);
+    }
+  });
+
+  it("gardent les Biomes froids loin des chauds : banquise et toundra ne touchent jamais désert, savane ni jungle", () => {
+    for (const froid of ["banquise", "toundra"]) for (const chaud of ["desert", "savane", "jungle"]) expect(interdit(froid, chaud), `${froid} · ${chaud}`).toBe(true);
+  });
+
+  it("ne nomment que des Biomes de terre, chaque paire une seule fois, sans Biome interdit à côté de lui-même", () => {
+    const terre = lireJeu(BIOMES)
+      .map((b) => b.id)
+      .filter((id) => id !== "eau");
+    for (const [a, b] of paires) {
+      expect(terre).toContain(a);
+      expect(terre).toContain(b);
+      expect(a < b, `${a} · ${b}`).toBe(true);
+    }
+    expect(new Set(paires.map((p) => p.join(" · "))).size).toBe(paires.length);
+    // Prairie, forêt et montagne vont avec tout : elles peuvent toujours séparer deux Biomes qui ne se touchent pas.
+    for (const libre of ["prairie", "foret", "montagne"]) expect(paires.filter((p) => p.includes(libre))).toEqual([]);
   });
 });
 

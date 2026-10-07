@@ -144,3 +144,10 @@ export const PART_BIOME_MIN = 0.04;
 export const PART_BIOME_MAX = 0.3;
 /** … autour de la part visée pour chacun (valeurs provisoires, à régler en jouant). */
 export const PARTS_DES_BIOMES = { prairie: 0.2, foret: 0.17, jungle: 0.1, savane: 0.12, desert: 0.1, montagne: 0.11, toundra: 0.12, banquise: 0.08 } as const;
+
+/**
+ * US-0407 : les montagnes d'un Monde généré forment des chaînes : chacune au moins 3 fois plus longue que
+ * large (valeur provisoire, à régler en jouant). Sa longueur est le plus long chemin de proche en proche
+ * qu'on y trouve, sa largeur ses Cases divisées par sa longueur.
+ */
+export const CHAINE_ALLONGEMENT_MIN = 3;

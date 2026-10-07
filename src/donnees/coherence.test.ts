@@ -41,4 +41,16 @@ describe("cohérence des données de référence", () => {
   ])("arrête la mise en ligne pour %s", (_, modifier, message) => {
     expect(() => lireDonnees(donneesAvec("especes.yaml", modifier))).toThrow(message);
   });
+
+  /** US-0407 : la liste jamais_a_cote_de d'un Biome de biomes.yaml, changée. */
+  const voisinages = (id: string, jamais: unknown) => (entrees: Entree[]) => entrees.map((e) => (e.id === id ? { ...e, jamais_a_cote_de: jamais } : e));
+
+  it.each([
+    ["un voisinage interdit avec un Biome qui n'existe pas", voisinages("banquise", ["desert", "jungle", "savane", "lune"]), /banquise : Biome inconnu « lune » dans jamais_a_cote_de/],
+    ["un Biome interdit à côté de lui-même", voisinages("prairie", ["prairie"]), /prairie : un Biome ne peut pas être interdit à côté de lui-même/],
+    ["un voisinage interdit écrit d'un seul côté", voisinages("prairie", ["foret"]), /prairie : jamais à côté de foret, mais foret ne le dit pas/],
+    ["une liste qui n'en est pas une", voisinages("desert", "jungle"), /desert : jamais_a_cote_de doit être une liste de Biomes/],
+  ])("arrête la mise en ligne pour %s (US-0407)", (_, modifier, message) => {
+    expect(() => lireDonnees(donneesAvec("biomes.yaml", modifier))).toThrow(message);
+  });
 });

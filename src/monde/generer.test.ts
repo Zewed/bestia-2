@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
+import { lireVoisinagesInterdits } from "@/donnees/jeux";
 import {
   CASES_ISOLEES_MAX,
+  CHAINE_ALLONGEMENT_MIN,
   COEUR_SAUVAGE_RAYON,
   COURONNE_ANNEAUX,
   ECART_ENTRE_FOYERS,
@@ -12,7 +14,7 @@ import {
 } from "@/reglages";
 import { BANDE_DE_CALCUL, graineDuMonde } from "./couronne";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine, type CaseGeneree } from "./generer";
-import { casesDesAnneaux, CENTRE, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
+import { casesDesAnneaux, CENTRE, centre, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
 const ESSAI = { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: 12345 };
 /** Vingt graines quelconques, pour vérifier ce qui doit tenir pour tout Monde généré. */
@@ -248,5 +250,108 @@ describe("régions de Biomes crédibles (US-0406)", () => {
     const tailles = regionsDe(cases).map((r) => r.length);
     expect(tailles.length).toBeGreaterThan(20);
     expect(Math.max(...tailles)).toBeLessThan(cases.length * PART_BIOME_MAX);
+  });
+});
+
+describe("Biomes enchaînés de façon naturelle (US-0407)", () => {
+  const paires = lireVoisinagesInterdits();
+  const FROIDS = ["banquise", "toundra"];
+  const TEMPERES = ["prairie", "foret"];
+  const CHAUDS = ["desert", "savane", "jungle"];
+  /** Les voisinages d'un Monde qui figurent dans une liste de paires interdites, chacun une fois. */
+  const voisinagesInterdits = (cases: CaseGeneree[], interdites: [string, string][]) => {
+    const biomeDe = new Map(cases.map((c) => [cle(c), c.biome]));
+    return cases.flatMap((c) =>
+      voisinesDansLeMonde(c, MONDE_RAYON)
+        .filter((v) => interdites.some(([a, b]) => a === c.biome && b === biomeDe.get(cle(v))))
+        .map((v) => `${cle(c)} ${c.biome} · ${cle(v)} ${biomeDe.get(cle(v))}`),
+    );
+  };
+
+  /**
+   * Le côté chaud d'un Monde, parmi les six côtés de l'hexagone : celui vers lequel les Biomes chauds
+   * s'écartent le plus des froids. Rend sa direction et la position de chaque Case le long de l'axe, de
+   * −1 au milieu du côté opposé à 1 au milieu du côté chaud.
+   */
+  function coteChaud(cases: CaseGeneree[]) {
+    const axes = [0, 1, 2, 3, 4, 5].map((k) => {
+      const angle = Math.PI / 6 + (k * Math.PI) / 3;
+      const position = (c: Coordonnees) => (centre(c).x * Math.cos(angle) + centre(c).y * Math.sin(angle)) / (1.5 * MONDE_RAYON);
+      const moyenne = (biomes: string[]) => {
+        const choisies = cases.filter((c) => biomes.includes(c.biome) && !c.coeur);
+        return choisies.reduce((s, c) => s + position(c), 0) / choisies.length;
+      };
+      return { k, position, moyenne, ecart: moyenne(CHAUDS) - moyenne(FROIDS) };
+    });
+    return axes.sort((a, b) => b.ecart - a.ecart)[0];
+  }
+
+  /** L'allongement d'une région : sa longueur (le plus long chemin de proche en proche qu'on y trouve) divisée par sa largeur (ses Cases divisées par sa longueur). */
+  function allongement(region: CaseGeneree[]): number {
+    const dans = new Set(region.map(cle));
+    const plusLoin = (depart: Coordonnees) => {
+      const pas = new Map([[cle(depart), 0]]);
+      const file = [depart];
+      for (let k = 0; k < file.length; k++) {
+        for (const v of voisines(file[k])) {
+          if (!dans.has(cle(v)) || pas.has(cle(v))) continue;
+          pas.set(cle(v), pas.get(cle(file[k]))! + 1);
+          file.push(v);
+        }
+      }
+      return { bout: file[file.length - 1], longueur: pas.get(cle(file[file.length - 1]))! + 1 };
+    };
+    const { longueur } = plusLoin(plusLoin(region[0]).bout);
+    return longueur / (region.length / longueur);
+  }
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("n'a aucun des voisinages que les données du jeu interdisent, Cœur sauvage et Couronne compris (graine %i)", (graine) => {
+    expect(paires.length).toBeGreaterThanOrEqual(6);
+    expect(voisinagesInterdits(mondeDe(graine), paires)).toEqual([]);
+  });
+
+  it("suit la liste des données : un voisinage qu'on y ajoute disparaît du Monde", () => {
+    const ajoutee: [string, string] = ["foret", "jungle"];
+    expect(voisinagesInterdits(mondeDe(ESSAI.graine), [ajoutee]).length).toBeGreaterThan(0);
+    const monde = genererLeMonde({ ...ESSAI, voisinagesInterdits: [...paires, ajoutee] });
+    expect(voisinagesInterdits(monde, [...paires, ajoutee])).toEqual([]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "met les Biomes froids d'un côté du Monde et les chauds du côté opposé, prairie et forêt entre les deux (graine %i)",
+    (graine) => {
+      const cases = mondeDe(graine).filter((c) => !c.coeur);
+      const { position, moyenne } = coteChaud(mondeDe(graine));
+      const part = (biomes: string[], cote: (p: number) => boolean) => {
+        const choisies = cases.filter((c) => biomes.includes(c.biome));
+        return choisies.filter((c) => cote(position(c))).length / choisies.length;
+      };
+      // Hors du Cœur sauvage, qui mêle ses Biomes : presque tout le froid d'un côté, presque tout le chaud de l'autre.
+      expect(part(FROIDS, (p) => p < 0)).toBeGreaterThan(0.9);
+      expect(part(CHAUDS, (p) => p > 0)).toBeGreaterThan(0.9);
+      expect(moyenne(["banquise"])).toBeLessThan(moyenne(["toundra"]));
+      expect(moyenne(["toundra"])).toBeLessThan(moyenne(TEMPERES));
+      expect(moyenne(TEMPERES)).toBeLessThan(moyenne(CHAUDS));
+    },
+  );
+
+  it("tire de la graine le côté froid du Monde : il change d'un Monde à l'autre", () => {
+    const cotes = new Set(GRAINES.map((graine) => coteChaud(mondeDe(graine)).k));
+    expect(cotes.size).toBeGreaterThanOrEqual(3);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("dresse les montagnes en chaînes, au moins trois fois plus longues que larges, hors du Cœur sauvage (graine %i)", (graine) => {
+    expect(CHAINE_ALLONGEMENT_MIN).toBe(3);
+    const cases = mondeDe(graine);
+    // Le Cœur sauvage mêle de petites régions rondes (US-0403) : les chaînes se comptent hors de lui.
+    const chaines = regionsDe(cases.filter((c) => !c.coeur)).filter((r) => r[0].biome === "montagne");
+    expect(chaines.length).toBeGreaterThanOrEqual(3);
+    for (const chaine of chaines) {
+      expect(chaine.length).toBeGreaterThanOrEqual(REGION_BIOME_MIN_CASES);
+      expect(allongement(chaine), `${chaine.length} Cases depuis ${cle(chaine[0])}`).toBeGreaterThanOrEqual(CHAINE_ALLONGEMENT_MIN);
+    }
+    // Presque toutes les montagnes sont dans ces chaînes : celles du Cœur sont peu de chose.
+    const enChaines = chaines.reduce((s, r) => s + r.length, 0);
+    expect(enChaines / cases.filter((c) => c.biome === "montagne").length).toBeGreaterThan(0.9);
   });
 });

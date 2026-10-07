@@ -1,10 +1,12 @@
 // Générer un Monde entier à partir d'une graine (US-0401), pour pouvoir le recréer à l'identique.
 // Côté serveur et scripts uniquement.
 import type { PoolClient } from "pg";
+import { lireVoisinagesInterdits } from "@/donnees/jeux";
 import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
+import { chainesDeMontagnes, climatDuMonde, eviterLesVoisinagesInterdits } from "./climat";
 import { BANDE_DE_CALCUL } from "./couronne";
 import { anneau, dansLeCoeur, eloignementDuCoeur, type Coordonnees } from "./hex";
-import { biomesDuMonde, grilleDuMonde, type Biome } from "./regions";
+import { biomesDesProvinces, fondreLesPetitesRegions, grilleDuMonde, provinces, regionsDuCoeur, type Biome, type Grille } from "./regions";
 
 export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante: string | null; couronne: boolean; coeur: boolean; eloignement: number };
 
@@ -12,16 +14,56 @@ export type CaseGeneree = Coordonnees & { anneau: number; biome: Biome; variante
 export const GRAINE_MAX = 2 ** 32 - 1;
 
 /**
- * Toutes les Cases d'un Monde de `rayon` anneaux, du Cœur sauvage au bord, rangées par q puis r, avec
- * leur Biome (US-0406 : en régions, Couronne comprise) ; les `anneaux` anneaux extérieurs forment la
- * Couronne, et les Cases à moins de `rayonCoeur` Cases du milieu le Cœur sauvage (US-0403), dont chaque
- * Case porte sa distance (US-0405). Rien d'autre que la graine n'y met de hasard : la même graine rend
- * toujours le même Monde.
+ * Le Biome de chaque Case d'un Monde, dans l'ordre de la grille. Le Cœur sauvage mêle ses petites régions
+ * (US-0403) ; les montagnes dressent leurs chaînes (US-0407) ; tout le reste, Couronne comprise, est fait
+ * de provinces qui reçoivent chacune un Biome de terre selon leur climat (US-0406), un côté du Monde froid
+ * et l'autre chaud (US-0407). Les voisinages interdits sont ensuite ôtés, puis les petites régions fondues.
  */
-export function genererLeMonde({ rayon, anneaux, rayonCoeur, graine }: { rayon: number; anneaux: number; rayonCoeur: number; graine: number }): CaseGeneree[] {
+function biomesDuMonde(
+  grille: Grille,
+  { rayon, rayonCoeur, graine, voisinagesInterdits }: { rayon: number; rayonCoeur: number; graine: number; voisinagesInterdits: [string, string][] },
+): Biome[] {
+  const interdites = new Set(voisinagesInterdits.flatMap(([a, b]) => [`${a}|${b}`, `${b}|${a}`]));
+  const interdit = (a: Biome, b: Biome) => interdites.has(`${a}|${b}`);
+  const coeur = grille.cases.map((c) => dansLeCoeur(c, rayonCoeur));
+  const biomes = new Array<Biome>(grille.cases.length);
+  const duCoeur = regionsDuCoeur(grille, coeur, graine);
+  duCoeur.membres.forEach((membres, k) => membres.forEach((i) => (biomes[i] = duCoeur.biomes[k])));
+  const montagne = chainesDeMontagnes(grille, (i) => !coeur[i], graine);
+  grille.cases.forEach((_, i) => montagne[i] && (biomes[i] = "montagne"));
+  const climat = climatDuMonde(grille, rayon, graine);
+  const membres = provinces(grille, (i) => !coeur[i] && !montagne[i], graine);
+  biomesDesProvinces(membres, climat).forEach((biome, p) => membres[p].forEach((i) => (biomes[i] = biome)));
+  const unites = [...membres, ...duCoeur.membres];
+  eviterLesVoisinagesInterdits(grille, biomes, { unites, duCoeur: (u) => u >= membres.length, climat, interdit });
+  fondreLesPetitesRegions(grille, biomes, interdit);
+  return biomes;
+}
+
+/**
+ * Toutes les Cases d'un Monde de `rayon` anneaux, du Cœur sauvage au bord, rangées par q puis r, avec
+ * leur Biome (US-0406 : en régions, Couronne comprise ; US-0407 : sans aucun des voisinages que les
+ * données du jeu interdisent, ou que `voisinagesInterdits` interdit) ; les `anneaux` anneaux extérieurs
+ * forment la Couronne, et les Cases à moins de `rayonCoeur` Cases du milieu le Cœur sauvage (US-0403),
+ * dont chaque Case porte sa distance (US-0405). Rien d'autre que la graine n'y met de hasard : la même
+ * graine rend toujours le même Monde.
+ */
+export function genererLeMonde({
+  rayon,
+  anneaux,
+  rayonCoeur,
+  graine,
+  voisinagesInterdits = lireVoisinagesInterdits(),
+}: {
+  rayon: number;
+  anneaux: number;
+  rayonCoeur: number;
+  graine: number;
+  voisinagesInterdits?: [string, string][];
+}): CaseGeneree[] {
   if (anneaux > BANDE_DE_CALCUL) throw new Error(`Une Couronne ne dépasse pas ${BANDE_DE_CALCUL} anneaux.`);
   const grille = grilleDuMonde(rayon);
-  const biomes = biomesDuMonde(grille, { rayonCoeur, graine });
+  const biomes = biomesDuMonde(grille, { rayon, rayonCoeur, graine, voisinagesInterdits });
   return grille.cases.map((c, i) => ({
     q: c.q,
     r: c.r,

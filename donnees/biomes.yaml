@@ -3,6 +3,9 @@
 # L'eau est un seul Biome, avec quatre variantes : une Espèce d'eau vit dans toutes.
 # production : ce qu'une Case du Biome produit par heure de chaque Ressource (chiffres à régler en
 # jouant ; le Foyer produit comme une Case ordinaire). Chaque Biome donne les quatre, 0 compris.
+# jamais_a_cote_de : les Biomes qu'une Case de ce Biome ne touche jamais dans un Monde généré (US-0407).
+# Un voisinage interdit l'est dans les deux sens : il s'écrit sous les deux Biomes. Les Biomes froids
+# (banquise, toundra) ne touchent jamais les chauds (désert, savane, jungle), ni le désert la jungle.
 
 - id: prairie
   nom: Prairie
@@ -13,21 +16,26 @@
 - id: jungle
   nom: Jungle
   production: { viande: 6, vegetaux: 14, bois: 10, pierre: 0 }
+  jamais_a_cote_de: [desert, toundra, banquise]
 - id: savane
   nom: Savane
   production: { viande: 14, vegetaux: 8, bois: 4, pierre: 4 }
+  jamais_a_cote_de: [toundra, banquise]
 - id: desert
   nom: Désert
   production: { viande: 8, vegetaux: 4, bois: 0, pierre: 18 }
+  jamais_a_cote_de: [jungle, toundra, banquise]
 - id: montagne
   nom: Montagne
   production: { viande: 6, vegetaux: 2, bois: 4, pierre: 18 }
 - id: toundra
   nom: Toundra
   production: { viande: 14, vegetaux: 4, bois: 6, pierre: 6 }
+  jamais_a_cote_de: [desert, savane, jungle]
 - id: banquise
   nom: Banquise
   production: { viande: 20, vegetaux: 0, bois: 0, pierre: 10 }
+  jamais_a_cote_de: [desert, savane, jungle]
 - id: eau
   nom: Eau
   production: { viande: 18, vegetaux: 12, bois: 0, pierre: 0 }

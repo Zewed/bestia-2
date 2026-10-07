@@ -2,7 +2,7 @@
 // Biomes, aux Raretés et aux Rôles). Chaque story qui en a besoin ajoute le sien.
 import { z } from "zod";
 import { appliquerBareme, BAREME } from "./bareme";
-import { lireJeu, type Jeu } from "./charger";
+import { lireFichier, lireJeu, type Jeu } from "./charger";
 
 // Un identifiant stable : minuscules sans accent, chiffres et tirets bas.
 const identifiant = z.string().regex(/^[a-z0-9_]+$/, "identifiant en minuscules sans accent (a-z, 0-9, _)");
@@ -166,7 +166,47 @@ export function verifierProductions(productions: EntreeProduction[], connus: { b
   if (erreurs.length > 0) throw new Error(`biomes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
-const positif = (champ: string) => z.number({ error: `${champ} doit être un nombre` }).positive(`${champ} doit être positif`);
+/**
+ * US-0407 : les voisinages qu'un Monde généré n'a jamais, rangés sous chaque Biome de biomes.yaml
+ * (jamais_a_cote_de) : chaque paire une fois, ses deux Biomes dans l'ordre alphabétique. Une
+ * interdiction s'écrit sous les deux Biomes et ne nomme que des Biomes qui existent. Le générateur du
+ * Monde les lit ici ; elles ne vont pas en base, où rien ne les lirait.
+ */
+export function lireVoisinagesInterdits(dossier = "donnees"): [string, string][] {
+  const biomes = lireFichier(`${dossier}/${BIOMES.fichier}`) as { id?: unknown; jamais_a_cote_de?: unknown }[];
+  const ids = new Set(biomes.map((b) => String(b.id)));
+  const jamais = new Map<string, string[]>();
+  const erreurs: string[] = [];
+  for (const biome of biomes) {
+    const id = String(biome.id);
+    const liste = biome.jamais_a_cote_de ?? [];
+    if (!Array.isArray(liste) || liste.some((autre) => typeof autre !== "string")) {
+      erreurs.push(`${id} : jamais_a_cote_de doit être une liste de Biomes`);
+      continue;
+    }
+    jamais.set(id, liste);
+    for (const autre of liste) {
+      if (!ids.has(autre)) erreurs.push(`${id} : Biome inconnu « ${autre} » dans jamais_a_cote_de`);
+      else if (autre === id) erreurs.push(`${id} : un Biome ne peut pas être interdit à côté de lui-même`);
+    }
+  }
+  for (const [id, liste] of jamais) {
+    for (const autre of liste) {
+      if (autre !== id && jamais.get(autre)?.includes(id) === false) erreurs.push(`${id} : jamais à côté de ${autre}, mais ${autre} ne le dit pas`);
+    }
+  }
+  if (erreurs.length > 0) throw new Error(`biomes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
+  const paires = new Map<string, [string, string]>();
+  for (const [id, liste] of jamais) {
+    for (const autre of liste) {
+      const paire = [id, autre].sort() as [string, string];
+      paires.set(paire.join(" · "), paire);
+    }
+  }
+  return [...paires.values()].sort((a, b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+}
+
+const positif =(champ: string) => z.number({ error: `${champ} doit être un nombre` }).positive(`${champ} doit être positif`);
 const positifOuNul = (champ: string) =>
   z.number({ error: `${champ} doit être un nombre` }).nonnegative(`${champ} ne peut pas être négatif`);
 
@@ -245,5 +285,6 @@ export function lireDonnees(dossier?: string): { jeu: Jeu<any>; entrees: any[] }
   const ids = <T extends { id: string }>(jeu: Jeu<T>) => entrees(jeu).map((e) => e.id);
   verifierReferences(entrees(ESPECES), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) });
   verifierProductions(entrees(PRODUCTIONS), { biomes: ids(BIOMES), ressources: ids(RESSOURCES) });
+  lireVoisinagesInterdits(dossier);
   return lots;
 }
