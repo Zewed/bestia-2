@@ -100,8 +100,8 @@ const chefs = vi.hoisted(() => ({ chefParNom: vi.fn(async (): Promise<{ nom: str
 vi.mock("@/chefs/chef", () => chefs);
 const stocks = vi.hoisted(() => ({
   stocksDuTerritoire: vi.fn(async () => [
-    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000" },
-    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "1234.400000", parHeure: "4.000000" },
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000" },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "1234.400000", limite: "1000.000000", parHeure: "4.000000" },
   ]),
 }));
 vi.mock("@/monde/stocks", () => stocks);

@@ -10,12 +10,21 @@ export type SourceDeProduction = { libelle: string; parHeure: string };
  * Le Stock d'une Ressource, avec sa famille (US-0205), sa quantité exacte, fractions comprises, ce que
  * le Territoire en produit par heure (US-0212) et d'où cela vient (US-0214), en texte (numeric de Postgres).
  */
-export type Stock = { id: string; nom: string; famille: "nourriture" | "materiaux"; quantite: string; parHeure: string; sources: SourceDeProduction[] };
+export type Stock = {
+  id: string;
+  nom: string;
+  famille: "nourriture" | "materiaux";
+  quantite: string;
+  /** US-0220 : la limite du Stock, celle qu'utilise le calcul de production. */
+  limite: string;
+  parHeure: string;
+  sources: SourceDeProduction[];
+};
 
 /** Les quatre Stocks du Territoire, dans l'ordre des Ressources : Viande, Végétaux, Bois, Pierre. */
 export async function stocksDuTerritoire(base: Pool | PoolClient, territoireId: number): Promise<Stock[]> {
   const { rows } = await base.query<Stock>(
-    `select r.id, r.nom, r.famille, s.quantite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure",
+    `select r.id, r.nom, r.famille, s.quantite, s.limite, coalesce(p.par_heure, 0)::numeric(24, 6)::text as "parHeure",
        coalesce((
          select json_agg(json_build_object(
                   'libelle', case when source.foyer then 'Foyer · ' || lower(source.biome)

@@ -9,10 +9,10 @@ vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
 import { Ressources, type RessourceDeLaBarre } from "./Ressources";
 
 const STOCKS: RessourceDeLaBarre[] = [
-  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "8.000000" }] },
-  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", parHeure: "14.500000", sources: [{ libelle: "Foyer · prairie", parHeure: "14.500000" }] },
-  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", parHeure: "4.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "4.000000" }] },
-  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", parHeure: "0.000000", sources: [] },
+  { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "8.000000" }] },
+  { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "12500.400000", limite: "1000.000000", parHeure: "14.500000", sources: [{ libelle: "Foyer · prairie", parHeure: "14.500000" }] },
+  { id: "bois", nom: "Bois", famille: "materiaux", quantite: "0.999999", limite: "1000.000000", parHeure: "4.000000", sources: [{ libelle: "Foyer · prairie", parHeure: "4.000000" }] },
+  { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "42.000000", limite: "1000.000000", parHeure: "0.000000", sources: [] },
 ];
 
 describe("ressources dans la barre du haut (US-0204)", () => {
@@ -76,9 +76,18 @@ describe("ressources dans la barre du haut (US-0204)", () => {
       await u.click(screen.getByRole("button", { name: new RegExp(`^${nom}`) }));
       return [...document.querySelector("li[data-ouverte] > [aria-hidden]")!.children].map((ligne) => ligne.textContent);
     };
-    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4", "Foyer · prairie : +14,5/h"]);
-    expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99", "Foyer · prairie : +4/h"]);
-    expect(await detail("Pierre")).toEqual(["Pierre", "Matériaux", "42", "+0/h"]);
+    expect(await detail("Végétaux")).toEqual(["Végétaux", "Nourriture", "12\u00a0500,4 / 1\u00a0000", "", "Foyer · prairie : +14,5/h"]);
+    expect(await detail("Bois")).toEqual(["Bois", "Matériaux", "0,99 / 1\u00a0000", "", "Foyer · prairie : +4/h"]);
+    expect(await detail("Pierre")).toEqual(["Pierre", "Matériaux", "42 / 1\u00a0000", "", "+0/h"]);
+  });
+
+  it("montre la limite du Stock et une jauge de remplissage (US-0223)", async () => {
+    const u = userEvent.setup();
+    render(<Ressources stocks={[{ ...STOCKS[2], quantite: "250.000000" }]} />);
+    await u.click(screen.getByRole("button", { name: /^Bois/ }));
+    const bulle = document.querySelector("li[data-ouverte] > [aria-hidden]")!;
+    expect(bulle.children[2].textContent).toBe("250 / 1\u00a0000");
+    expect((bulle.children[3].firstElementChild as HTMLElement).style.width).toBe("25%");
   });
 
   it("referme la bulle d'un toucher ailleurs ou avec Échap", async () => {
@@ -104,7 +113,7 @@ describe("ressources dans la barre du haut (US-0204)", () => {
     });
     const quantites = () => [...document.querySelectorAll("button > span:first-of-type")].map((q) => q.textContent);
     // Une production d'une unité par seconde, pour voir la quantité monter à chaque battement.
-    const VITE: RessourceDeLaBarre[] = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "3600.000000", sources: [] }];
+    const VITE: RessourceDeLaBarre[] = [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "3600.000000", sources: [] }];
 
     it("montrent d'abord les quantités exactes du jeu, puis montent d'elles-mêmes au rythme de la production", async () => {
       vi.useFakeTimers();
@@ -112,6 +121,13 @@ describe("ressources dans la barre du haut (US-0204)", () => {
       expect(quantites()).toEqual(["100"]);
       await act(async () => vi.advanceTimersByTime(5_000));
       expect(quantites()).toEqual(["105"]);
+    });
+
+    it("s'arrêtent à la limite, et ne montent pas au-dessus (US-0221)", async () => {
+      vi.useFakeTimers();
+      render(<Ressources stocks={[{ ...VITE[0], quantite: "998.000000" }]} />);
+      await act(async () => vi.advanceTimersByTime(10_000));
+      expect(quantites()).toEqual(["1\u00a0000"]);
     });
 
     it("montent plus vite quand le temps du jeu est accéléré", async () => {

@@ -290,6 +290,21 @@
   font-variant-numeric: tabular-nums;
 }
 
+.jauge {
+  height: 6px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--bloc-3);
+}
+
+.remplissage {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--encre);
+}
+
 .sourceBulle {
   color: var(--texte-2);
   font-size: 12px;

@@ -16,6 +16,7 @@ export type RessourceDeLaBarre = {
   nom: string;
   famille: Famille;
   quantite: string;
+  limite: string;
   parHeure: string;
   sources: { libelle: string; parHeure: string }[];
 };
@@ -36,10 +37,14 @@ function parFamille(stocks: RessourceDeLaBarre[]): { famille: Famille; stocks: R
 
 /**
  * US-0213 : la quantité d'un Stock `ecoule` millisecondes réelles après sa lecture, montée depuis au
- * rythme de sa production, accélérée comme le temps du jeu.
+ * rythme de sa production, accélérée comme le temps du jeu ; elle s'arrête à la limite (US-0221), et
+ * un Stock déjà au-dessus ne bouge pas.
  */
 export function quantiteMontee(stock: RessourceDeLaBarre, ecoule: number, vitesse: number): number {
-  return Number(stock.quantite) + (Number(stock.parHeure) * vitesse * Math.max(0, ecoule)) / 3_600_000;
+  const quantite = Number(stock.quantite);
+  const limite = Number(stock.limite);
+  if (quantite >= limite) return quantite;
+  return Math.min(limite, quantite + (Number(stock.parHeure) * vitesse * Math.max(0, ecoule)) / 3_600_000);
 }
 
 /**
@@ -118,7 +123,13 @@ export function Ressources({ stocks, vitesse = 1 }: { stocks: RessourceDeLaBarre
               <span className={styles.bulle} aria-hidden="true">
                 <span className={styles.nomBulle}>{stock.nom}</span>
                 <span className={styles.groupeBulle}>{NOM_DE_FAMILLE[stock.famille]}</span>
-                <span className={styles.quantiteBulle}>{quantiteDetaillee(quantite)}</span>
+                {/* US-0223 : la quantité et la limite, avec la jauge de remplissage. */}
+                <span className={styles.quantiteBulle}>
+                  {quantiteDetaillee(quantite)} / {quantiteAffichee(stock.limite)}
+                </span>
+                <span className={styles.jauge}>
+                  <span className={styles.remplissage} style={{ width: `${Math.min(100, (quantite / Number(stock.limite)) * 100)}%` }} />
+                </span>
                 {stock.sources.length === 0 ? (
                   <span className={styles.sourceBulle}>{productionAffichee(0)}</span>
                 ) : (

@@ -9,7 +9,7 @@ vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
-const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async () => [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000" }]) }));
+const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async () => [{ id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000" }]) }));
 vi.mock("@/monde/stocks", () => stocks);
 
 import { exigerCompte, exigerCompteSansChef, joueurConnecte, stocksALHeure } from "./garde";

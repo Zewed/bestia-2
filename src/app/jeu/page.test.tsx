@@ -17,10 +17,10 @@ const absence = vi.hoisted(() => ({ recapitulatifDAbsence: vi.fn(async (): Promi
 vi.mock("@/monde/absence", () => absence);
 const stocks = vi.hoisted(() => ({
   stocksDuTerritoire: vi.fn(async () => [
-    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", parHeure: "8.000000", sources: [] },
-    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "100.000000", parHeure: "14.500000", sources: [] },
-    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "100.000000", parHeure: "4.000000", sources: [] },
-    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "100.000000", parHeure: "0.000000", sources: [] },
+    { id: "viande", nom: "Viande", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "8.000000", sources: [] },
+    { id: "vegetaux", nom: "Végétaux", famille: "nourriture", quantite: "100.000000", limite: "1000.000000", parHeure: "14.500000", sources: [] },
+    { id: "bois", nom: "Bois", famille: "materiaux", quantite: "100.000000", limite: "1000.000000", parHeure: "4.000000", sources: [] },
+    { id: "pierre", nom: "Pierre", famille: "materiaux", quantite: "100.000000", limite: "1000.000000", parHeure: "0.000000", sources: [] },
   ]),
 }));
 vi.mock("@/monde/stocks", () => stocks);

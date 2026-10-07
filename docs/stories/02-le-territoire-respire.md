@@ -238,6 +238,7 @@ Le Foyer se met à produire : Viande, Végétaux, Bois et Pierre s'affichent dan
 ### US-0223 · Afficher la limite de chaque stock
 **En tant que** joueur, **je veux** voir la limite de chaque stock à côté de sa quantité, **afin de** mesurer la place qu'il me reste.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot). Le détail montre « 640,27 / 1 000 » (la quantité au centième, la limite en entier) et une jauge de remplissage dessous ; la limite vient du Stock même (`stock.limite`), celle du calcul. Au passage, la barre qui monte toute seule (US-0213) s'arrête désormais elle aussi à la limite entre deux recalages.
 - **Débloquée par** : US-0214, US-0220
 - **Critères d'acceptation** :
   - Le détail au survol et au toucher montre la quantité et la limite : « 1 240 / 2 000 ».
