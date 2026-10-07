@@ -1,0 +1,57 @@
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 1-39
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 1-54
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 1-2,16,32,131-165
+  s_97a431cfa65ca7::t_c46d234b344042 166
+src/components/Navigation.test.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 55-83
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_a834878c399b0b 16,242-277
+  s_97a431cfa65ca7::t_bd60fc63bb0fab 278
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 226-228,350-351,458-459,558-620
+  s_97a431cfa65ca7::t_3501345f318eac 621
+src/comptes/garde.ts
+  s_97a431cfa65ca7::t_a834878c399b0b 13,107-114
+  s_97a431cfa65ca7::t_8582f29799afd3 115
+src/components/ActionsDuJeu.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 2,15-18,27,29-30,33
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_0f6dd8a65a25d1 101
+  s_97a431cfa65ca7::t_a834878c399b0b 16-18,107,126-127
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_a834878c399b0b 1-46
+src/app/jeu/habitants/page.module.css
+  s_97a431cfa65ca7::t_a834878c399b0b 380-399
+src/comptes/garde.test.ts
+  s_97a431cfa65ca7::t_a834878c399b0b 18-19,21,115-122
+  s_97a431cfa65ca7::t_a377bcfdb893f9 123-125
+src/components/BarreHaut.module.css
+  s_97a431cfa65ca7::t_a834878c399b0b 215-224
+src/components/Navigation.tsx
+  s_97a431cfa65ca7::t_a834878c399b0b 7-8,15,28-30,36-37,39,46-47,54,62
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_a834878c399b0b 5,58-75
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_ca04af2e5e1c59 339
+docs/stories/README.md
+  s_97a431cfa65ca7::t_d4be70ffb3409b 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cedd41606db914b0d5cf83c43ab5ddac4389505a",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
