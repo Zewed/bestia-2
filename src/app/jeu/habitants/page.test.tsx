@@ -720,7 +720,7 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
 
   it("met « Accueillir » et « Refuser » sous la ligne, sur toute sa largeur, en boutons écartés d'au moins 44 px de haut qui ne la débordent pas (US-0334, US-0336)", () => {
     const css = readFileSync(join(process.cwd(), "src/app/jeu/habitants/AuxPortes.module.css"), "utf8");
-    expect(css).toMatch(/\n\.choix \{[^}]*grid-column: 1 \/ -1;[^}]*gap: 10px;/);
+    expect(css).toMatch(/\n\.choix \{[^}]*grid-column: 1 \/ -1;[^}]*gap: 12px;/);
     expect(css).toMatch(/\n\.accueillir,\n\.refuser \{[^}]*min-width: 0;[^}]*min-height: 44px;/);
   });
 });

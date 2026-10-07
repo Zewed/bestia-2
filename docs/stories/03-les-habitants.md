@@ -448,6 +448,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0343 · Accueillir les Voyageurs sur mobile
 **En tant que** joueur, **je veux** accueillir ou refuser un Voyageur au pouce, **afin de** régler cela en quelques secondes sur mon téléphone.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sur mobile, chaque Voyageur tient dans une colonne avec son compte à rebours ; « Accueillir » et « Refuser » font au moins 44 px de haut, écartés de 12 px, « Refuser » en secondaire ; quand la ligne est étroite (moins de 280 px), le compte à rebours passe sous le prénom. Vérifié de 320 px au paysage mobile, sans défilement de côté.
 - **Débloquée par** : US-0334, US-0336
 - **Critères d'acceptation** :
   - Chaque Voyageur tient dans un bloc d'une colonne, avec son compte à rebours.

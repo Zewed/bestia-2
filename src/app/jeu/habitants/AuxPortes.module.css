@@ -1,12 +1,15 @@
 /*
  * US-0332 : la partie « Aux portes » de la page Habitants, une ligne par Voyageur qui attend : son prénom,
- * et dessous, en discret, depuis quand il attend ; US-0333 : à droite, son compte à rebours.
+ * et dessous, en discret, depuis quand il attend ; US-0333 : à droite, son compte à rebours. US-0343 : chaque
+ * Voyageur dans un bloc à lui, les uns sous les autres ; la liste mesure sa propre largeur, qui ne suit pas
+ * celle de l'écran (colonne sur ordinateur, demi-ligne sur tablette, toute la largeur sur mobile).
  */
 .voyageurs {
   display: grid;
   gap: 6px;
   padding: 0;
   list-style: none;
+  container-type: inline-size;
 }
 
 .voyageur {
@@ -48,14 +51,30 @@
 }
 
 /*
+ * US-0343 : une ligne trop étroite pour mettre le compte à rebours à côté (sur un téléphone de 320 px) passe en
+ * une colonne : le prénom, depuis quand, puis le compte à rebours, plutôt que de couper « 10 min » en deux.
+ */
+@container (max-width: 279px) {
+  .voyageur {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .depart {
+    grid-row: auto;
+    grid-column: auto;
+    text-align: left;
+  }
+}
+
+/*
  * US-0334, US-0336 : sous la ligne, sur toute sa largeur, ce qu'on peut faire du Voyageur, en boutons d'au moins
  * 44 px de haut qui se partagent la place, écartés pour ne pas toucher l'un pour l'autre : « Accueillir », le
- * principal, en Encre ; « Refuser », le secondaire, cerné d'un trait.
+ * principal, en Encre ; « Refuser », le secondaire, cerné d'un trait. US-0343 : 12 px d'écart au moins, au pouce.
  */
 .choix {
   display: flex;
   grid-column: 1 / -1;
-  gap: 10px;
+  gap: 12px;
   margin-top: 6px;
 }
 
