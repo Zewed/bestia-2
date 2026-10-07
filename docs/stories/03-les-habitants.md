@@ -74,12 +74,13 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0307 · Découvrir les huit Métiers
 **En tant que** joueur, **je veux** voir les huit Métiers avec une phrase qui dit à quoi chacun sert, **afin de** choisir en connaissance de cause.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sur la page Habitants, un bloc « Métiers » sous l'Entretien (à droite sur ordinateur, dessous sur mobile) : une ligne par Métier, son icône peinte, son nom en gras suivi de sa phrase (« Bûcheron rapporte du Bois des forêts »), puis ce qu'il attend (« Servira avec les Récoltes. ») ; aujourd'hui aucun ne sert encore. Les Métiers sont des données de référence (`donnees/metiers.yaml`, table `metier`) et le Métier d'un Habitant doit en être un. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0303
 - **Critères d'acceptation** :
   - Les huit Métiers sont listés : explorateur, chasseur, cueilleur, bûcheron, mineur, chercheur, bâtisseur, éleveur ; l'éleveur servira avec l'Élevage (étape 34).
   - Chaque Métier a son icône et une phrase courte (par exemple « bûcheron : rapporte du Bois des forêts »).
   - Un Métier qui ne sert à rien pour l'instant le dit (« servira quand le cercle des sages sera bâti »).
-  - Un Métier qui ne sert à rien pour l'instant est montré quand même, ou caché jusqu'à ce qu'il serve (à décider).
+  - Un Métier qui ne sert à rien pour l'instant est montré quand même (décidé le 2026-10-07).
   - Les Postes ne figurent pas dans cette liste : ils arriveront avec les constructions (étape 29).
 
 ### US-0308 · Donner un Métier à un Habitant

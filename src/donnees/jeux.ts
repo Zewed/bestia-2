@@ -101,6 +101,35 @@ export const PRENOMS: Jeu<z.infer<typeof entreePrenom>> = {
   colonnes: (p) => ({ nom: p.nom, ordre: p.ordre }),
 };
 
+/** US-0307 : un texte qui se lit à la suite d'un autre (« Bûcheron rapporte du Bois des forêts »). */
+const suite = (vide: string) =>
+  z
+    .string()
+    .trim()
+    .min(1, vide)
+    .regex(/^\p{Ll}.*[^.]$/u, "une minuscule au début, sans point final");
+
+const entreeMetier = z.object({
+  id: identifiant,
+  nom,
+  phrase: suite("phrase manquante"),
+  /** Ce que le Métier attend pour servir ; absent quand il sert. */
+  servira: suite("servira vide : retirez la ligne quand le Métier sert").optional(),
+  ordre: z.number().int(),
+});
+
+/** US-0307 : les huit Métiers des Habitants, chacun avec sa phrase et, tant qu'il ne sert à rien, ce qu'il attend. */
+export const METIERS: Jeu<z.infer<typeof entreeMetier>> = {
+  nom: "Métiers",
+  fichier: "metiers.yaml",
+  table: "metier",
+  cle: "id",
+  // L'ordre d'affichage suit l'ordre du fichier.
+  extraire: (brut) => brut.map((m, i) => ({ ...(m as object), ordre: i + 1 })),
+  schema: entreeMetier,
+  colonnes: (m) => ({ id: m.id, nom: m.nom, phrase: m.phrase, servira: m.servira ?? null, ordre: m.ordre }),
+};
+
 type EntreeProduction = { biomeId: string; ressourceId: string; parHeure: number };
 
 /** US-0209 : la production horaire de chaque Biome, rangée sous le Biome dans biomes.yaml. */
@@ -203,7 +232,7 @@ export function verifierReferences(
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES, PRODUCTIONS, PRENOMS];
+export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RESSOURCES, PRODUCTIONS, PRENOMS, METIERS];
 
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en

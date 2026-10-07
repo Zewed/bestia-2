@@ -438,8 +438,8 @@ export const stock = pgTable(
 
 /**
  * Un Habitant (US-0301) : un humain du Territoire, qui ne combat jamais et exerce un Métier (null tant
- * qu'il n'en a pas). Chaque Territoire en reçoit trois à sa naissance, donnés par la base, chacun avec
- * un prénom tiré au hasard (US-0303).
+ * qu'il n'en a pas ; US-0307 : l'un de la table metier). Chaque Territoire en reçoit trois à sa naissance,
+ * donnés par la base, chacun avec un prénom tiré au hasard (US-0303).
  */
 export const habitant = pgTable(
   "habitant",
@@ -448,7 +448,7 @@ export const habitant = pgTable(
     territoireId: integer("territoire_id")
       .notNull()
       .references(() => territoire.id, { onDelete: "cascade" }),
-    metier: text("metier"),
+    metier: text("metier").references(() => metier.id),
     arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull().defaultNow(),
     /** US-0303 : tiré au hasard dans la table prenom à son arrivée, puis le sien pour toujours. */
     prenom: text("prenom").notNull(),
@@ -459,6 +459,18 @@ export const habitant = pgTable(
 /** US-0303 : les prénoms que peuvent recevoir les Habitants, réglés dans donnees/prenoms.yaml. */
 export const prenom = pgTable("prenom", {
   nom: text("nom").primaryKey(),
+  ordre: integer("ordre").notNull(),
+});
+
+/**
+ * Un Métier (US-0307) : ce qu'un Habitant fait pour le Territoire, réglé dans donnees/metiers.yaml avec la
+ * phrase qui dit à quoi il sert. `servira` dit ce qu'il attend pour servir ; null quand il sert.
+ */
+export const metier = pgTable("metier", {
+  id: text("id").primaryKey(),
+  nom: text("nom").notNull(),
+  phrase: text("phrase").notNull(),
+  servira: text("servira"),
   ordre: integer("ordre").notNull(),
 });
 

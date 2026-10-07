@@ -2,6 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { lireJeu } from "@/donnees/charger";
+import { METIERS } from "@/donnees/jeux";
 
 // La vraie garde, branchée sur une session simulée.
 const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
@@ -22,13 +24,18 @@ const habitants = vi.hoisted(() => ({
   entretienDesHabitants: vi.fn(async (): Promise<{ habitants: number; parHabitant: number; parHeure: string }> => ({ habitants: 0, parHabitant: 2, parHeure: "0" })),
 }));
 vi.mock("@/monde/habitants", () => habitants);
+type Metier = { id: string; nom: string; phrase: string; servira: string | null };
+/** US-0307 : les huit Métiers tels que donnees/metiers.yaml les règle. */
+const HUIT_METIERS: Metier[] = lireJeu(METIERS).map((m) => ({ id: m.id, nom: m.nom, phrase: m.phrase, servira: m.servira ?? null }));
+const metiers = vi.hoisted(() => ({ lesMetiers: vi.fn(async (): Promise<Metier[]> => []) }));
+vi.mock("@/monde/metiers", async (original) => ({ ...(await original<object>()), ...metiers }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0318)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -36,11 +43,12 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
     habitants.habitantsDuTerritoire.mockReset();
     habitants.placesDuTerritoire.mockReset();
     habitants.entretienDesHabitants.mockReset();
+    metiers.lesMetiers.mockReset();
   });
 
   /**
-   * Un joueur connecté, ses `nombre` Habitants, la place de son Territoire (5 par défaut, celle du Foyer)
-   * et leur Entretien, 2 Nourriture par heure chacun.
+   * Un joueur connecté, ses `nombre` Habitants, la place de son Territoire (5 par défaut, celle du Foyer),
+   * leur Entretien, 2 Nourriture par heure chacun, et les huit Métiers.
    */
   const connecte = (nombre = 3, places = 5) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
@@ -48,10 +56,25 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
     habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, prenom: PRENOMS[i % 3], ...UN_HABITANT })));
     habitants.placesDuTerritoire.mockResolvedValue(places);
     habitants.entretienDesHabitants.mockResolvedValue({ habitants: nombre, parHabitant: 2, parHeure: String(2 * nombre) });
+    metiers.lesMetiers.mockResolvedValue(HUIT_METIERS);
   };
-  /** Le texte de chaque ligne d'Habitant, ses morceaux séparés par « · ». */
+  /** Le texte de chaque ligne d'Habitant (la première liste de la page), ses morceaux séparés par « · ». */
   const lignes = (html: string) =>
-    [...html.matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
+    [...(html.match(/<ul[^>]*>(.*?)<\/ul>/)?.[1] ?? "").matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) =>
+      ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "),
+    );
+  /** Les morceaux de texte d'un bout de page, tels qu'on les lit (l'apostrophe y est écrite « &#x27; »). */
+  const morceaux = (html: string) =>
+    html
+      .replace(/<[^>]+>/g, "|")
+      .split("|")
+      .filter(Boolean)
+      .map((t) => t.replaceAll("&#x27;", "'"));
+  /** US-0307 : le bloc Métiers, tel qu'il est écrit. */
+  const blocMetiers = (html: string) => html.match(/<section[^>]*><h2[^>]*>Métiers<\/h2>.*?<\/section>/)?.[0] ?? "";
+  /** US-0307 : chaque ligne du bloc Métiers, en ses morceaux de texte (l'icône, muette, n'en a pas). */
+  const lignesMetiers = (html: string) =>
+    [...blocMetiers(html).matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => morceaux(ligne).map((t) => t.trim()));
   /** US-0318 : la ligne du bloc Entretien, telle qu'on la lit. */
   const ligneEntretien = (html: string) => html.match(/<h2[^>]*>Entretien<\/h2><p[^>]*>(.*?)<\/p><\/section>/)?.[1].replace(/<[^>]+>/g, "");
 
@@ -118,7 +141,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
 
   it("ne montre pas de liste vide quand il n'y a aucun Habitant", async () => {
     connecte(0);
-    expect(renderToStaticMarkup(await Habitants())).not.toContain("<ul");
+    expect(renderToStaticMarkup(await Habitants())).toMatch(/<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>0 Habitant sur 5 places<\/p><\/div><\/section>/);
   });
 
   it("accorde le nombre : « 1 Habitant », « 0 Habitant »", async () => {
@@ -131,13 +154,15 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
   it("n'ajoute aucune phrase d'explication, ni lien vers ce qui n'existe pas encore", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([
+    expect(morceaux(html)).toEqual([
       "Habitants",
       "3 Habitants sur 5 places",
       ...PRENOMS.flatMap((prenom) => [prenom, "sans Métier", "libre"]),
       "Entretien",
       "3 Habitants × 2 Nourriture = ",
       "6 Nourriture par heure",
+      "Métiers",
+      ...HUIT_METIERS.flatMap((m) => [m.nom, ` ${m.phrase}`, `Servira ${m.servira}.`]),
     ]);
     expect(html).not.toMatch(/<(a|button|form|input|select)[ >]/);
   });
@@ -183,7 +208,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
   it("met l'Entretien à côté de la liste sur ordinateur, dessous sur mobile, dans un bloc à lui (US-0318)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><section[^>]*--largeur:4[^>]*><h2[^>]*>Entretien<\/h2>/);
+    expect(html).toMatch(/<main[^>]*><h1[^>]*>Habitants<\/h1><div[^>]*><section[^>]*--largeur:8[^>]*>.*?<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Entretien<\/h2>/);
   });
 
   it("relit l'Entretien à chaque affichage : il suit chaque arrivée et chaque départ (US-0318)", async () => {
@@ -200,6 +225,59 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0318)", () => {
     connecte();
     habitants.entretienDesHabitants.mockResolvedValue({ habitants: 3, parHabitant: 1.5, parHeure: "4.500000" });
     expect(ligneEntretien(renderToStaticMarkup(await Habitants()))).toBe("3 Habitants × 1,5 Nourriture = 4,5 Nourriture par heure");
+  });
+
+  it("liste les huit Métiers dans un bloc « Métiers », une ligne chacun : son icône, son nom, sa phrase et quand il servira (US-0307)", async () => {
+    connecte();
+    const lus = lignesMetiers(renderToStaticMarkup(await Habitants()));
+    expect(lus.map(([nom]) => nom)).toEqual(["Explorateur", "Chasseur", "Cueilleur", "Bûcheron", "Mineur", "Chercheur", "Bâtisseur", "Éleveur"]);
+    expect(lus[3]).toEqual(["Bûcheron", "rapporte du Bois des forêts", "Servira avec les Récoltes."]);
+    expect(lus[5]).toEqual(["Chercheur", "fait avancer la Recherche", "Servira quand le cercle des sages sera bâti."]);
+    expect(lus).toEqual(HUIT_METIERS.map((m) => [m.nom, m.phrase, `Servira ${m.servira}.`]));
+  });
+
+  it("montre l'icône peinte de chaque Métier, en petit et muette (le nom est à côté), puis le nom en gras suivi de la phrase (US-0307)", async () => {
+    connecte();
+    const bloc = blocMetiers(renderToStaticMarkup(await Habitants()));
+    for (const m of HUIT_METIERS) {
+      const icone = bloc.match(new RegExp(`<img[^>]*${encodeURIComponent(`/illustrations/metiers/${m.id}.webp`)}[^>]*>`))?.[0] ?? "";
+      expect(icone, m.id).toContain('alt=""');
+      expect(icone, m.id).toContain('width="40"');
+      expect(icone, m.id).toContain(encodeURIComponent(`/illustrations/metiers/${m.id}.webp`));
+    }
+    expect(bloc).toMatch(/<strong[^>]*>Bûcheron<\/strong> rapporte du Bois des forêts<\/p>/);
+  });
+
+  it("lit les Métiers une fois par affichage, et les montre dans l'ordre de la lecture (US-0307)", async () => {
+    connecte();
+    metiers.lesMetiers.mockResolvedValue([HUIT_METIERS[4], HUIT_METIERS[0]]);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(metiers.lesMetiers).toHaveBeenCalledTimes(1);
+    expect(lignesMetiers(html).map(([nom]) => nom)).toEqual(["Mineur", "Explorateur"]);
+  });
+
+  it("ne dit rien de plus d'un Métier qui sert déjà (US-0307)", async () => {
+    connecte();
+    metiers.lesMetiers.mockResolvedValue([{ ...HUIT_METIERS[3], servira: null }, HUIT_METIERS[4]]);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(lignesMetiers(html)).toEqual([
+      ["Bûcheron", "rapporte du Bois des forêts"],
+      ["Mineur", "rapporte de la Pierre des montagnes", "Servira avec les Récoltes."],
+    ]);
+  });
+
+  it("ne montre pas de bloc Métiers vide (US-0307)", async () => {
+    connecte();
+    metiers.lesMetiers.mockResolvedValue([]);
+    expect(renderToStaticMarkup(await Habitants())).not.toContain(">Métiers<");
+  });
+
+  it("met les Métiers sous l'Entretien, dans la colonne à côté de la liste sur ordinateur, à la suite sur mobile (US-0307)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Habitants());
+    expect(html).toMatch(
+      /<\/ul><\/section><div[^>]*--largeur:4[^>]*><section[^>]*><h2[^>]*>Entretien<\/h2>.*?<\/section><section[^>]*><h2[^>]*>Métiers<\/h2><ul[^>]*>(<li[^>]*>.*?<\/li>){8}<\/ul><\/section><\/div><\/div><\/main>$/,
+    );
   });
 });
 
@@ -228,6 +306,18 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(bouton).toContain("min-width: 44px;");
     expect(bouton).toContain("min-height: 44px;");
     expect(css.indexOf(".page button {")).toBeLessThan(css.indexOf("@media"));
+  });
+
+  it("empile l'Entretien et les Métiers dans leur colonne, chacun à sa hauteur, sans grille de cartes (US-0307)", () => {
+    const colonne = regle(".colonne");
+    expect(colonne).toContain("display: grid;");
+    expect(colonne).toContain("align-content: start;");
+    expect(regle(".colonne", mobile)).toContain("gap: var(--ecart-mobile);");
+    // La liste ne s'étire pas à la hauteur de la colonne, plus haute qu'elle.
+    expect(regle(".liste")).toContain("align-self: start;");
+    // Une ligne par Métier : l'icône, puis le texte qui va à la ligne ; « Servira » en discret.
+    expect(regle(".ligneMetier")).toContain("grid-template-columns: auto minmax(0, 1fr);");
+    expect(regle(".servira")).toContain("color: var(--texte-discret);");
   });
 
   it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {

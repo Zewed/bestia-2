@@ -1,0 +1,38 @@
+# Les huit Métiers des Habitants (US-0307), dans l'ordre de la page Habitants. Les Postes n'y sont pas :
+# ils arriveront avec les constructions (étape 29).
+# La phrase se lit à la suite du nom (« Bûcheron rapporte du Bois des forêts ») : une minuscule au début,
+# sans point final. De même pour servira (« Servira avec les Récoltes. ») : ce que le Métier attend pour
+# servir à quelque chose ; on retire la ligne le jour où il sert.
+
+- id: explorateur
+  nom: Explorateur
+  phrase: "part en Expédition chercher des Bêtes sauvages"
+  servira: "quand les Expéditions partiront"
+- id: chasseur
+  nom: Chasseur
+  phrase: "rapporte de la Viande"
+  servira: "avec les Récoltes"
+- id: cueilleur
+  nom: Cueilleur
+  phrase: "rapporte des Végétaux"
+  servira: "avec les Récoltes"
+- id: bucheron
+  nom: Bûcheron
+  phrase: "rapporte du Bois des forêts"
+  servira: "avec les Récoltes"
+- id: mineur
+  nom: Mineur
+  phrase: "rapporte de la Pierre des montagnes"
+  servira: "avec les Récoltes"
+- id: chercheur
+  nom: Chercheur
+  phrase: "fait avancer la Recherche"
+  servira: "quand le cercle des sages sera bâti"
+- id: batisseur
+  nom: Bâtisseur
+  phrase: "construit plus vite"
+  servira: "avec les premières constructions"
+- id: eleveur
+  nom: Éleveur
+  phrase: "élève les Bêtes d'un Couple réuni"
+  servira: "avec l'Élevage"

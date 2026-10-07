@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
+import type { CSSProperties } from "react";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
 import { getPool } from "@/db";
 import { type EntretienDesHabitants, entretienDesHabitants, habitantsDuTerritoire, placesDuTerritoire } from "@/monde/habitants";
+import { iconeDeMetier, lesMetiers, type Metier } from "@/monde/metiers";
 import { quantiteExacte } from "@/monde/quantite";
 import styles from "./page.module.css";
 
@@ -33,26 +36,53 @@ function LigneEntretien({ entretien }: { entretien: EntretienDesHabitants }) {
 }
 
 /**
+ * US-0307 : un Métier sur une ligne : son icône, son nom en gras suivi de sa phrase (« Bûcheron rapporte
+ * du Bois des forêts »), puis, tant qu'il ne sert à rien, ce qu'il attend, en discret.
+ */
+function LigneMetier({ metier }: { metier: Metier }) {
+  return (
+    <li className={styles.ligneMetier}>
+      {/* Le nom est écrit juste à côté : l'icône est muette, pour qu'un lecteur d'écran ne le dise pas deux fois. */}
+      <Image src={iconeDeMetier(metier.id)} alt="" width={40} height={40} className={styles.iconeMetier} />
+      <div>
+        <p className={styles.phraseMetier}>
+          <strong className={styles.nomMetier}>{metier.nom}</strong>
+          {` ${metier.phrase}`}
+        </p>
+        {metier.servira ? <p className={styles.servira}>{`Servira ${metier.servira}.`}</p> : null}
+      </div>
+    </li>
+  );
+}
+
+/**
+ * US-0307 : la colonne qui empile l'Entretien puis les Métiers, placée dans la Grille comme un bloc étroit
+ * de largeur 4 : à droite de la liste sur ordinateur, une demi-ligne sur tablette, toute la largeur sur mobile.
+ */
+const COLONNE = { "--largeur": 4 } as CSSProperties;
+
+/**
  * La page Habitants (US-0302), ouverte depuis la navigation : leur nombre sur la place du Territoire,
  * avec « Plus de place » quand elle est toute prise (US-0305), puis une ligne par Habitant avec son
  * prénom, son Métier et son état, dans l'ordre de la lecture (US-0303) ; à côté, ou dessous sur mobile,
- * leur Entretien par heure (US-0318). Tout est lu à chaque affichage. Sans session, la garde mène à la
- * connexion, qui ramène ici.
+ * leur Entretien par heure (US-0318), puis les huit Métiers (US-0307). Tout est lu à chaque affichage.
+ * Sans session, la garde mène à la connexion, qui ramène ici.
  */
 export default async function Habitants() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  const [habitants, places, entretien] = await Promise.all([
+  const [habitants, places, entretien, metiers] = await Promise.all([
     territoireId === null ? [] : habitantsDuTerritoire(getPool(), territoireId),
     territoireId === null ? 0 : placesDuTerritoire(getPool(), territoireId),
     territoireId === null ? null : entretienDesHabitants(getPool(), territoireId),
+    lesMetiers(getPool()),
   ]);
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Habitants</h1>
       <Grille>
-        <Bloc largeur={8}>
+        <Bloc largeur={8} className={styles.liste}>
           <div className={styles.entete}>
             <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
             {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
@@ -71,11 +101,22 @@ export default async function Habitants() {
             </ul>
           ) : null}
         </Bloc>
-        {entretien ? (
-          <Bloc titre="Entretien" largeur={4} className={styles.entretien}>
-            <LigneEntretien entretien={entretien} />
-          </Bloc>
-        ) : null}
+        <div className={styles.colonne} style={COLONNE} data-etroit="">
+          {entretien ? (
+            <Bloc titre="Entretien">
+              <LigneEntretien entretien={entretien} />
+            </Bloc>
+          ) : null}
+          {metiers.length > 0 ? (
+            <Bloc titre="Métiers">
+              <ul className={styles.metiers}>
+                {metiers.map((m) => (
+                  <LigneMetier key={m.id} metier={m} />
+                ))}
+              </ul>
+            </Bloc>
+          ) : null}
+        </div>
       </Grille>
     </main>
   );
