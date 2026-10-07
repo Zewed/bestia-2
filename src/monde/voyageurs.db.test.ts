@@ -16,7 +16,7 @@ import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
 import { recitsDuTerritoire } from "./recits";
 import { stocksDuTerritoire } from "./stocks";
-import { accueillirLeVoyageur, departDuVoyageur, ecartAvantVoyageur, nombreDeVoyageurs, voyageursAuxPortes } from "./voyageurs";
+import { accueillirLeVoyageur, departDuVoyageur, ecartAvantVoyageur, nombreDeVoyageurs, refuserLeVoyageur, voyageursAuxPortes } from "./voyageurs";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -361,6 +361,88 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(accueils.filter(Boolean)).toHaveLength(1);
       expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + 1);
       expect(await recitsDuTerritoire(pool, territoireId)).toHaveLength(1);
+      expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
+    });
+  });
+
+  describe("refuser un Voyageur (US-0336)", () => {
+    /** Tout ce qu'un refus pourrait changer au Territoire : ses Habitants, ses Récits et ses Stocks. */
+    const reste = async (territoireId: number) => ({
+      habitants: await habitantsDuTerritoire(pool, territoireId),
+      recits: await recitsDuTerritoire(pool, territoireId),
+      stocks: (await stocksDuTerritoire(pool, territoireId)).map((s) => [s.id, s.quantite]),
+    });
+
+    it("le fait repartir aussitôt : il disparaît des portes, sans devenir Habitant ni laisser de Récit", async () => {
+      const { territoireId, ne } = await naitre();
+      const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+      const joran = await presenter(territoireId, "Joran", apres(ne, 2 * HEURE));
+      const avant = await reste(territoireId);
+
+      expect(await refuserLeVoyageur(pool, territoireId, ines)).toBe(true);
+      expect((await voyageursAuxPortes(pool, territoireId)).map((v) => v.id)).toEqual([joran]);
+      expect(await reste(territoireId)).toEqual(avant);
+    });
+
+    it("libère sa place aux portes : avec trois Voyageurs qui attendent, la prochaine arrivée en fait entrer un de nouveau", async () => {
+      const { territoireId, ne } = await naitre();
+      const [premiere] = prevues(territoireId, ne, apres(ne, 1000 * HEURE)).arrivees;
+      // Une heure avant la première arrivée, les portes sont pleines : elle serait perdue.
+      const [ines, joran, ilda] = [
+        await presenter(territoireId, "Ines", new Date(premiere.instant - HEURE)),
+        await presenter(territoireId, "Joran", new Date(premiere.instant - HEURE)),
+        await presenter(territoireId, "Ilda", new Date(premiere.instant - HEURE)),
+      ];
+      expect(await nombreDeVoyageurs(pool, territoireId)).toBe(VOYAGEURS_EN_ATTENTE_MAX);
+
+      expect(await refuserLeVoyageur(pool, territoireId, joran)).toBe(true);
+      await rattraper("territoire", territoireId, { pool, jusqua: new Date(premiere.instant) });
+      const venus = await voyageursAuxPortes(pool, territoireId);
+      expect(venus.map((v) => v.id).slice(0, 2)).toEqual([ines, ilda]);
+      expect(venus.map((v) => v.arriveLe.getTime())).toEqual([premiere.instant - HEURE, premiere.instant - HEURE, premiere.instant]);
+    });
+
+    it("ne le fait jamais revenir, même quand le temps avance et que d'autres se présentent", async () => {
+      const { territoireId, ne } = await naitre();
+      const [premiere, deuxieme] = prevues(territoireId, ne, apres(ne, 1000 * HEURE)).arrivees;
+      const ines = await presenter(territoireId, "Ines", new Date(premiere.instant - HEURE));
+
+      expect(await refuserLeVoyageur(pool, territoireId, ines)).toBe(true);
+      await rattraper("territoire", territoireId, { pool, jusqua: new Date(deuxieme.instant) });
+      const venus = await voyageursAuxPortes(pool, territoireId);
+      expect(venus.map((v) => v.arriveLe.getTime())).toEqual([premiere.instant, deuxieme.instant]);
+      expect(venus.map((v) => v.id)).not.toContain(ines);
+      // Refusé une seconde fois, il n'y a plus personne à faire repartir.
+      expect(await refuserLeVoyageur(pool, territoireId, ines)).toBe(false);
+    });
+
+    it("ne touche jamais au Voyageur d'un autre Territoire, quel que soit l'identifiant envoyé", async () => {
+      const [joueur, voisin] = [await naitre(), await naitre()];
+      await presenter(joueur.territoireId, "Ines", apres(joueur.ne, HEURE));
+      const brune = await presenter(voisin.territoireId, "Brune", apres(voisin.ne, HEURE));
+      const [siens, autres] = [await voyageursAuxPortes(pool, joueur.territoireId), await voyageursAuxPortes(pool, voisin.territoireId)];
+
+      expect(await refuserLeVoyageur(pool, joueur.territoireId, brune)).toBe(false);
+      expect(await voyageursAuxPortes(pool, joueur.territoireId)).toEqual(siens);
+      expect(await voyageursAuxPortes(pool, voisin.territoireId)).toEqual(autres);
+    });
+
+    it("accueilli et refusé en même temps, un seul des deux l'emporte : jamais un Habitant en double, ni un Habitant refusé", async () => {
+      const { territoireId, ne } = await naitre();
+      const nombre = await nombreDHabitants(pool, territoireId);
+      for (let essai = 0; essai < 4; essai++) {
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        const [accueilli, refuse, accueilliAussi, refuseAussi] = await Promise.all([
+          accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE)),
+          refuserLeVoyageur(pool, territoireId, ines),
+          accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE)),
+          refuserLeVoyageur(pool, territoireId, ines),
+        ]);
+        expect([accueilli, refuse, accueilliAussi, refuseAussi].filter(Boolean), `essai ${essai}`).toHaveLength(1);
+      }
+      // Chaque accueil qui l'a emporté a donné un Habitant et un Récit, et rien de plus.
+      const accueils = (await recitsDuTerritoire(pool, territoireId)).length;
+      expect(await nombreDHabitants(pool, territoireId)).toBe(nombre + accueils);
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
     });
   });

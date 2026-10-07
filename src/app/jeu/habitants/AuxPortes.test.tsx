@@ -10,6 +10,7 @@ const actions = vi.hoisted(() => {
   return {
     enCours,
     accueillirUnVoyageur: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+    refuserUnVoyageur: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
   };
 });
 vi.mock("./actions-aux-portes", () => actions);
@@ -50,6 +51,7 @@ afterEach(async () => {
   cleanup();
   vi.useRealTimers();
   actions.accueillirUnVoyageur.mockClear();
+  actions.refuserUnVoyageur.mockClear();
 });
 
 describe("les Voyageurs aux portes (US-0332)", () => {
@@ -87,9 +89,10 @@ describe("les Voyageurs aux portes (US-0332)", () => {
 
 });
 
-describe("accueillir un Voyageur (US-0334)", () => {
-  const TROIS = [voyageur(70, "Ines", 3 * HEURE), voyageur(71, "Joran", 2 * HEURE), voyageur(72, "Ilda", 20 * MINUTE)];
+/** Trois Voyageurs aux portes, du premier arrivé au dernier. */
+const TROIS = [voyageur(70, "Ines", 3 * HEURE), voyageur(71, "Joran", 2 * HEURE), voyageur(72, "Ilda", 20 * MINUTE)];
 
+describe("accueillir un Voyageur (US-0334)", () => {
   it("met sur la ligne de chaque Voyageur un bouton « Accueillir », qui dit pour un lecteur d'écran qui il accueille", () => {
     render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
     for (const { prenom } of TROIS) {
@@ -139,6 +142,47 @@ describe("accueillir un Voyageur (US-0334)", () => {
     await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Accueillir Ilda" }));
     expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [72]]);
     expect(prenoms()).toEqual(["Joran"]);
+  });
+});
+
+describe("refuser un Voyageur (US-0336)", () => {
+  it("met sur la ligne de chaque Voyageur, après « Accueillir », un bouton « Refuser », qui dit pour un lecteur d'écran qui il refuse", () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    for (const { prenom } of TROIS) {
+      expect(within(ligne(prenom)).getAllByRole("button").map((b) => [b.textContent, b.getAttribute("aria-label"), b.getAttribute("type")])).toEqual([
+        ["Accueillir", `Accueillir ${prenom}`, "button"],
+        ["Refuser", `Refuser ${prenom}`, "button"],
+      ]);
+    }
+    expect(actions.refuserUnVoyageur).not.toHaveBeenCalled();
+  });
+
+  it("toucher « Refuser » retire aussitôt la ligne, sans attendre l'action, qui reçoit le Voyageur, sans l'accueillir", async () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Joran")).getByRole("button", { name: "Refuser Joran" }));
+    expect(actions.refuserUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+    expect(prenoms()).toEqual(["Ines", "Ilda"]);
+  });
+
+  it("ne remontre pas la ligne une fois la page relue, et laisse « Personne aux portes pour l'instant. » quand tous sont partis", async () => {
+    const { rerender } = render(<AuxPortes voyageurs={[TROIS[0], TROIS[1]]} maintenant={MAINTENANT} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Refuser Ines" }));
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }));
+    expect(within(partie()).getByText("Personne aux portes pour l'instant.")).toBeTruthy();
+    rerender(<AuxPortes voyageurs={[]} maintenant={new Date(MAINTENANT.getTime() + 2_000)} />);
+    await finirLesActions();
+    expect(within(partie()).queryByRole("list")).toBeNull();
+    expect(within(partie()).getByText("Personne aux portes pour l'instant.")).toBeTruthy();
+  });
+
+  it("laisse la page relue faire foi quand le Voyageur n'a pas été refusé", async () => {
+    render(<AuxPortes voyageurs={TROIS} maintenant={MAINTENANT} />);
+    await userEvent.setup().click(within(ligne("Ilda")).getByRole("button", { name: "Refuser Ilda" }));
+    expect(prenoms()).toEqual(["Ines", "Joran"]);
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
   });
 });
 

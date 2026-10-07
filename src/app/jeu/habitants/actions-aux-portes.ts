@@ -4,7 +4,7 @@ import { refresh } from "next/cache";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
-import { accueillirLeVoyageur } from "@/monde/voyageurs";
+import { accueillirLeVoyageur, refuserLeVoyageur } from "@/monde/voyageurs";
 import { maintenant } from "@/temps/horloge";
 
 /** Le plus grand identifiant qu'une colonne integer de Postgres puisse tenir. */
@@ -27,5 +27,18 @@ export async function accueillirUnVoyageur(voyageurId: number): Promise<void> {
   const { territoireId } = await exigerCompte("/jeu/habitants");
   if (territoireId === null || !identifiantValable(voyageurId)) return;
   await accueillirLeVoyageur(getPool(), territoireId, voyageurId, maintenant());
+  refresh();
+}
+
+/**
+ * US-0336 : le joueur refuse un Voyageur qui attend aux portes : il repart aussitôt, sans Récit, et ne revient
+ * pas ; sa place aux portes se libère pour le suivant. Mêmes gardes que pour l'accueil : un Voyageur d'un autre
+ * Territoire n'est pas touché, et la page relue fait foi, même quand le Voyageur n'attendait plus.
+ */
+export async function refuserUnVoyageur(voyageurId: number): Promise<void> {
+  if (!entreeDuJeuOuverte()) return;
+  const { territoireId } = await exigerCompte("/jeu/habitants");
+  if (territoireId === null || !identifiantValable(voyageurId)) return;
+  await refuserLeVoyageur(getPool(), territoireId, voyageurId);
   refresh();
 }

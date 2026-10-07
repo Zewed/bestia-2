@@ -4,7 +4,7 @@ import { useEffect, useOptimistic, useState, useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
 import { VOYAGEUR_ALERTE_MINUTES } from "@/reglages";
 import { formaterDuree } from "@/temps/affichage";
-import { accueillirUnVoyageur } from "./actions-aux-portes";
+import { accueillirUnVoyageur, refuserUnVoyageur } from "./actions-aux-portes";
 import styles from "./AuxPortes.module.css";
 
 /**
@@ -35,7 +35,8 @@ function depuisQuand(ms: number): string {
  * y passe, sans qu'il soit répété à chaque minute. Quand la page est relue, tout repart de la nouvelle heure.
  *
  * US-0334 : sous chaque ligne, « Accueillir » : la ligne disparaît aussitôt, le temps que l'action serveur fasse
- * du Voyageur un Habitant et relise la page, qui fait alors foi.
+ * du Voyageur un Habitant et relise la page, qui fait alors foi. US-0336 : à côté, « Refuser », qui le fait
+ * repartir de même.
  */
 export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: VoyageurAffiche[]; maintenant: Date; vitesse?: number }) {
   const [affiches, retirer] = useOptimistic(voyageurs, (actuels, parti: number) => actuels.filter((v) => v.id !== parti));
@@ -50,10 +51,11 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
     return () => clearInterval(battement);
   }, [base]);
 
-  function accueillir(voyageur: VoyageurAffiche) {
+  /** Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. */
+  function decider(voyageur: VoyageurAffiche, action: (voyageurId: number) => Promise<void>) {
     demarrer(async () => {
       retirer(voyageur.id);
-      await accueillirUnVoyageur(voyageur.id);
+      await action(voyageur.id);
     });
   }
 
@@ -74,9 +76,12 @@ export function AuxPortes({ voyageurs, maintenant, vitesse = 1 }: { voyageurs: V
                   {reste > 0 ? `repart dans ${formaterDuree(reste / 3_600_000)}` : "sur le départ"}
                 </span>
                 <div className={styles.choix}>
-                  {/* Un bouton par ligne : un lecteur d'écran entend aussi qui il accueille. */}
-                  <button type="button" className={styles.accueillir} aria-label={`Accueillir ${v.prenom}`} onClick={() => accueillir(v)}>
+                  {/* Deux boutons par ligne : un lecteur d'écran entend aussi qui il accueille, ou refuse. */}
+                  <button type="button" className={styles.accueillir} aria-label={`Accueillir ${v.prenom}`} onClick={() => decider(v, accueillirUnVoyageur)}>
                     Accueillir
+                  </button>
+                  <button type="button" className={styles.refuser} aria-label={`Refuser ${v.prenom}`} onClick={() => decider(v, refuserUnVoyageur)}>
+                    Refuser
                   </button>
                 </div>
               </li>

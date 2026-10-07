@@ -602,8 +602,11 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     await connecte(["Joran", 5], ["Ilda", 2]);
     const html = renderToStaticMarkup(await Habitants());
     expect(voyageurs.voyageursAuxPortes).toHaveBeenCalledWith(expect.anything(), 12);
-    // US-0334 : chaque ligne finit par « Accueillir ».
-    expect(lignesAuxPortes(html)).toEqual(["Joran · arrivé il y a 5 h · repart dans 7 h · Accueillir", "Ilda · arrivé il y a 2 h · repart dans 10 h · Accueillir"]);
+    // US-0334, US-0336 : chaque ligne finit par « Accueillir » et « Refuser ».
+    expect(lignesAuxPortes(html)).toEqual([
+      "Joran · arrivé il y a 5 h · repart dans 7 h · Accueillir · Refuser",
+      "Ilda · arrivé il y a 2 h · repart dans 10 h · Accueillir · Refuser",
+    ]);
   });
 
   it("confie au compte à rebours l'heure et la vitesse du jeu, telles que le serveur les tient (US-0333)", async () => {
@@ -653,9 +656,9 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     expect(css).not.toContain("nowrap");
   });
 
-  it("met « Accueillir » sous la ligne, sur toute sa largeur, en bouton d'au moins 44 px de haut qui ne la déborde pas (US-0334)", () => {
+  it("met « Accueillir » et « Refuser » sous la ligne, sur toute sa largeur, en boutons écartés d'au moins 44 px de haut qui ne la débordent pas (US-0334, US-0336)", () => {
     const css = readFileSync(join(process.cwd(), "src/app/jeu/habitants/AuxPortes.module.css"), "utf8");
-    expect(css).toMatch(/\n\.choix \{[^}]*grid-column: 1 \/ -1;/);
-    expect(css).toMatch(/\n\.accueillir \{[^}]*min-width: 0;[^}]*min-height: 44px;/);
+    expect(css).toMatch(/\n\.choix \{[^}]*grid-column: 1 \/ -1;[^}]*gap: 10px;/);
+    expect(css).toMatch(/\n\.accueillir,\n\.refuser \{[^}]*min-width: 0;[^}]*min-height: 44px;/);
   });
 });

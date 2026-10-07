@@ -376,6 +376,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0336 · Refuser un Voyageur
 **En tant que** joueur, **je veux** refuser un Voyageur, **afin de** garder ma place et ma Nourriture pour plus tard.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). « Refuser » fait repartir le Voyageur aussitôt : il disparaît des portes, sans Récit, et ne revient pas ; sa place sert au prochain Voyageur qui se présente. Un Voyageur d'un autre Territoire n'est jamais touché. Vérifié en vrai.
 - **Débloquée par** : US-0332
 - **Critères d'acceptation** :
   - Le bouton « Refuser » fait repartir le Voyageur aussitôt.

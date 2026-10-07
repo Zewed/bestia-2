@@ -135,6 +135,17 @@ export async function accueillirLeVoyageur(pool: Pool, territoireId: number, voy
   }
 }
 
+/**
+ * US-0336 : le Voyageur `voyageurId` qui attend aux portes du Territoire repart aussitôt, sans Récit : il n'est
+ * plus nulle part, et ne revient pas. Sa place aux portes se libère pour la prochaine arrivée. Rend false sans
+ * rien changer pour un Voyageur qui n'attend plus (déjà accueilli, ou refusé), ou qui attend aux portes d'un
+ * autre Territoire. Refusé et accueilli en même temps, il ne l'est que par le premier des deux.
+ */
+export async function refuserLeVoyageur(base: Pool | PoolClient, territoireId: number, voyageurId: number): Promise<boolean> {
+  const { rowCount } = await base.query("delete from voyageur where id = $2 and territoire_id = $1", [territoireId, voyageurId]);
+  return rowCount === 1;
+}
+
 /** US-0332 : le nombre de Voyageurs qui attendent aux portes, pour le repère de l'entrée « Habitants ». */
 export async function nombreDeVoyageurs(base: Pool | PoolClient, territoireId: number): Promise<number> {
   const { rows } = await base.query<{ nombre: number }>("select count(*)::int as nombre from voyageur where territoire_id = $1", [territoireId]);

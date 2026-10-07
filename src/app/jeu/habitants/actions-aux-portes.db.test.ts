@@ -14,9 +14,9 @@ const base = vi.hoisted(() => ({ pool: null as Pool | null }));
 vi.mock("@/db", async (original) => ({ ...(await original<object>()), getPool: () => base.pool }));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-import { accueillirUnVoyageur } from "./actions-aux-portes";
+import { accueillirUnVoyageur, refuserUnVoyageur } from "./actions-aux-portes";
 
-describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis, sur base (US-0334)", () => {
+describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis ou refusés, sur base (US-0334, US-0336)", () => {
   let pool: Pool;
   const lancement = `aux-portes-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -89,5 +89,44 @@ describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis, sur base (US-0
     await Promise.all([accueillirUnVoyageur(ines), accueillirUnVoyageur(ines)]);
     expect(await prenoms(joueur)).toEqual({ portes: [], habitants: [...trois, "Ines"] });
     expect(await recitsDuTerritoire(pool, joueur)).toHaveLength(1);
+  });
+
+  it("refusé, le Voyageur repart sans devenir Habitant ni laisser de Récit (US-0336)", async () => {
+    const joueur = await naitre();
+    const ines = await presenter(joueur, "Ines");
+    const joran = await presenter(joueur, "Joran");
+    const { habitants: trois } = await prenoms(joueur);
+    connecter(joueur);
+
+    await refuserUnVoyageur(ines);
+    expect(await prenoms(joueur)).toEqual({ portes: ["Joran"], habitants: trois });
+    expect(await recitsDuTerritoire(pool, joueur)).toEqual([]);
+    expect((await voyageursAuxPortes(pool, joueur)).map((v) => v.id)).toEqual([joran]);
+  });
+
+  it("ne refuse que les Voyageurs aux portes du joueur connecté, jamais ceux d'un autre, même en envoyant leur identifiant (US-0336)", async () => {
+    const [joueur, voisin] = [await naitre(), await naitre()];
+    await presenter(joueur, "Ines");
+    const brune = await presenter(voisin, "Brune");
+    const [siens, autres] = [await prenoms(joueur), await prenoms(voisin)];
+    connecter(joueur);
+
+    await refuserUnVoyageur(brune);
+    expect(await prenoms(voisin)).toEqual(autres);
+    expect(await prenoms(joueur)).toEqual(siens);
+  });
+
+  it("accueilli dans un onglet et refusé dans l'autre en même temps, un seul des deux l'emporte, jamais un Habitant en double (US-0336)", async () => {
+    const joueur = await naitre();
+    const { habitants: trois } = await prenoms(joueur);
+    connecter(joueur);
+    for (let essai = 0; essai < 4; essai++) {
+      const ines = await presenter(joueur, "Ines");
+      await Promise.all(essai % 2 ? [accueillirUnVoyageur(ines), refuserUnVoyageur(ines)] : [refuserUnVoyageur(ines), accueillirUnVoyageur(ines)]);
+      expect((await prenoms(joueur)).portes, `essai ${essai}`).toEqual([]);
+    }
+    // Chaque accueil qui l'a emporté a donné un Habitant et son Récit ; chaque refus, rien.
+    const accueils = (await recitsDuTerritoire(pool, joueur)).length;
+    expect(await prenoms(joueur)).toEqual({ portes: [], habitants: [...trois, ...Array.from({ length: accueils }, () => "Ines")] });
   });
 });
