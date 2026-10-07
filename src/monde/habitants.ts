@@ -33,14 +33,14 @@ export async function habitantsDuTerritoire(pool: Pool, territoireId: number): P
 }
 
 /**
- * US-0308 : donne le Métier `metierId` à l'Habitant `habitantId` du Territoire, s'il n'en a pas encore.
- * Gratuit et immédiat : aucune Ressource n'est touchée. Rend false sans rien changer pour un Habitant
- * d'un autre Territoire, un Habitant qui a déjà un Métier (le changer, c'est US-0310), ou un Métier
+ * US-0308 : donne le Métier `metierId` à l'Habitant `habitantId` du Territoire ; US-0310 : ou le change, s'il
+ * en a déjà un, enregistré de la même façon. Gratuit et immédiat, sans temps d'apprentissage : aucune
+ * Ressource n'est touchée. Rend false sans rien changer pour un Habitant d'un autre Territoire, ou un Métier
  * inconnu, que la clé étrangère vers `metier` refuse.
  */
 export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId: number, habitantId: number, metierId: string): Promise<boolean> {
   try {
-    const { rowCount } = await base.query("update habitant set metier = $3 where id = $2 and territoire_id = $1 and metier is null", [
+    const { rowCount } = await base.query("update habitant set metier = $3 where id = $2 and territoire_id = $1", [
       territoireId,
       habitantId,
       metierId,

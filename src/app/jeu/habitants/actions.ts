@@ -13,10 +13,11 @@ const IDENTIFIANT_MAX = 2_147_483_647;
 const IDENTIFIANT_DE_METIER = /^[a-z0-9_]{1,64}$/;
 
 /**
- * US-0308 : le joueur donne un Métier à un Habitant sans Métier, gratuitement et aussitôt. Le Territoire
- * vient de la garde, jamais du navigateur : un Habitant d'un autre Territoire n'est pas touché, quel que
- * soit l'identifiant envoyé. La page est ensuite relue, même quand rien n'a changé (Habitant déjà au
- * travail, Métier inconnu) : c'est elle qui fait foi, à la place du Métier montré d'avance.
+ * US-0308 : le joueur donne un Métier à un Habitant sans Métier, gratuitement et aussitôt ; US-0310 : ou en
+ * donne un autre à un Habitant qui en a un, de la même façon. Le Territoire vient de la garde, jamais du
+ * navigateur : un Habitant d'un autre Territoire n'est pas touché, quel que soit l'identifiant envoyé. La
+ * page est ensuite relue, même quand rien n'a changé (Habitant d'un autre, Métier inconnu) : c'est elle qui
+ * fait foi, à la place du Métier montré d'avance.
  */
 export async function donnerUnMetier(habitantId: number, metierId: string): Promise<void> {
   if (!entreeDuJeuOuverte()) return;

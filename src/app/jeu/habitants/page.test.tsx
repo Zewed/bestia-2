@@ -70,7 +70,7 @@ const STOCKS_DE_PRAIRIE: Stock[] = [
   unStock("pierre", "materiaux", "100.000000", "4.000000"),
 ];
 
-describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0314, US-0318, US-0320)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, US-0309, US-0310, US-0314, US-0318, US-0320)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     adresse.recherche = "";
@@ -164,7 +164,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(lignes(html)).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Cael · Choisir un Métier · libre"]);
   });
 
-  it("montre le Métier d'un Habitant qui en a un, sans bouton pour en choisir un", async () => {
+  it("montre le Métier d'un Habitant qui en a un, sur le bouton qui en choisit un autre (US-0310)", async () => {
     connecte();
     habitants.habitantsDuTerritoire.mockResolvedValue([
       { id: 41, prenom: "Dara", ...UN_HABITANT },
@@ -172,7 +172,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     ]);
     const html = renderToStaticMarkup(await Habitants());
     expect(lignes(html)).toEqual(["Dara · Choisir un Métier · libre", "Elio · Chasseur · libre"]);
-    expect(listeDesHabitants(html).match(/<button[ >]/g)).toHaveLength(1);
+    expect([...listeDesHabitants(html).matchAll(/<button[^>]*aria-expanded="false"[^>]*>(.*?)<svg/g)].map(([, texte]) => texte)).toEqual(["Choisir un Métier", "Chasseur"]);
   });
 
   it("confie à la liste chaque Habitant avec le nom de son Métier, et les Métiers au choix, chacun avec son icône (US-0308)", async () => {
@@ -548,6 +548,15 @@ describe("page Habitants au pouce (US-0306)", () => {
     // Chaque Métier, son icône au-dessus de son nom, pour tenir à deux par ligne sur 320 px.
     expect(regle(".metierAuChoix")).toContain("flex-direction: column;");
     expect(regle(".iconeAuChoix")).toContain("width: 28px;");
+  });
+
+  it("marque dans le dépliant le Métier que l'Habitant exerce, en Encre comme un filtre pressé, sans réagir au survol (US-0310)", () => {
+    const actuel = regle('.metierAuChoix[aria-pressed="true"]');
+    expect(actuel).toContain("background: var(--encre);");
+    expect(actuel).toContain("color: var(--ivoire);");
+    expect(actuel).toContain("cursor: default;");
+    expect(css).toContain(".metierAuChoix:enabled:hover {");
+    expect(css).not.toMatch(/\.metierAuChoix:hover/);
   });
 
   it("fait passer les compteurs à la ligne sur un écran étroit, chacun son icône à sa taille, et rien qui ne colle au défilement (US-0309)", () => {

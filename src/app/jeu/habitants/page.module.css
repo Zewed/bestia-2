@@ -214,7 +214,8 @@
 
 /*
  * US-0308 : sur la ligne d'un Habitant sans Métier, à la place de « sans Métier », le bouton qui déplie
- * les Métiers au choix ; sa flèche se retourne tant qu'ils sont dépliés.
+ * les Métiers au choix ; sa flèche se retourne tant qu'ils sont dépliés. US-0310 : sur celle d'un Habitant
+ * qui a un Métier, le même bouton, à son nom.
  */
 .choisir {
   display: inline-flex;
@@ -281,9 +282,17 @@
   height: 28px;
 }
 
+/* US-0310 : dans le dépliant d'un Habitant qui a un Métier, le sien, pressé en Encre comme un filtre, hors d'atteinte. */
+.metierAuChoix[aria-pressed="true"] {
+  border-color: var(--encre);
+  background: var(--encre);
+  color: var(--ivoire);
+  cursor: default;
+}
+
 @media (hover: hover) {
   .choisir:hover,
-  .metierAuChoix:hover {
+  .metierAuChoix:enabled:hover {
     border-color: var(--galet);
     background: var(--bloc-3);
   }

@@ -90,8 +90,13 @@ const lignes = () =>
     .getAllByRole("listitem")
     .map((li) => [...li.querySelectorAll(":scope > span, :scope > button")].map((e) => e.textContent).join(" · "));
 const choisir = (prenom: string) => within(ligne(prenom)).getByRole("button", { name: "Choisir un Métier" });
-/** Les Métiers dépliés sous une ligne, par leur nom. */
-const auChoix = (prenom: string) => within(ligne(prenom)).queryAllByRole("button").filter((b) => b.textContent !== "Choisir un Métier");
+/** US-0310 : le bouton qui déplie les Métiers sur la ligne d'un Habitant : « Choisir un Métier », ou son Métier. */
+const deplier = (prenom: string) => within(ligne(prenom)).getAllByRole("button").find((b) => b.hasAttribute("aria-expanded"))!;
+/** Les Métiers dépliés sous une ligne. */
+function auChoix(prenom: string) {
+  const groupe = within(ligne(prenom)).queryByRole("group");
+  return groupe ? within(groupe).getAllByRole("button") : [];
+}
 /** Donne le Métier `nom` à l'Habitant `prenom`, depuis sa ligne. */
 async function donner(prenom: string, nom: string) {
   const utilisateur = userEvent.setup();
@@ -100,10 +105,9 @@ async function donner(prenom: string, nom: string) {
 }
 
 describe("donner un Métier depuis la ligne d'un Habitant (US-0308)", () => {
-  it("met « Choisir un Métier » sur la ligne d'un Habitant sans Métier, à la place de « sans Métier », et rien sur celle d'un Habitant qui en a un", () => {
+  it("met « Choisir un Métier » sur la ligne d'un Habitant sans Métier, à la place de « sans Métier », et son Métier sur celle d'un Habitant qui en a un", () => {
     render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
     expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Cael · Chasseur · libre"]);
-    expect(within(ligne("Cael")).queryByRole("button")).toBeNull();
     expect(choisir("Arno").getAttribute("aria-expanded")).toBe("false");
     expect(auChoix("Arno")).toEqual([]);
   });
@@ -194,6 +198,70 @@ describe("donner un Métier depuis la ligne d'un Habitant (US-0308)", () => {
     render(<ListeDesHabitants habitants={HABITANTS} metiers={[]} />);
     expect(lignes()).toEqual(["Arno · sans Métier · libre", "Brune · sans Métier · libre", "Cael · Chasseur · libre"]);
     expect(within(listeDesHabitants()).queryByRole("button")).toBeNull();
+  });
+});
+
+describe("changer le Métier d'un Habitant depuis sa ligne (US-0310)", () => {
+  it("fait du Métier d'un Habitant qui en a un un bouton, à son nom et à la flèche, comme « Choisir un Métier »", () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const bouton = deplier("Cael");
+    expect(bouton.textContent).toBe("Chasseur");
+    expect(bouton.className).toBe(choisir("Arno").className);
+    expect(bouton.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+    expect(bouton.getAttribute("aria-expanded")).toBe("false");
+    expect(auChoix("Cael")).toEqual([]);
+  });
+
+  it("déplie sous la ligne les huit Métiers, l'actuel pressé et qu'on ne peut pas toucher, les autres au choix", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    expect(deplier("Cael").getAttribute("aria-expanded")).toBe("true");
+    expect(within(ligne("Cael")).getByRole("group", { name: "Métier de Cael" }).id).toBe(deplier("Cael").getAttribute("aria-controls"));
+    const boutons = auChoix("Cael").slice(0, METIERS.length);
+    expect(boutons.map((b) => b.textContent)).toEqual(METIERS.map((m) => m.nom));
+    expect(boutons.map((b) => b.getAttribute("aria-pressed"))).toEqual(METIERS.map((m) => String(m.nom === "Chasseur")));
+    expect(boutons.map((b) => (b as HTMLButtonElement).disabled)).toEqual(METIERS.map((m) => m.nom === "Chasseur"));
+    // Sur la ligne d'un Habitant sans Métier, aucun n'est pressé.
+    await utilisateur.click(choisir("Arno"));
+    expect(auChoix("Arno").map((b) => b.getAttribute("aria-pressed"))).toEqual(METIERS.map(() => "false"));
+  });
+
+  it("toucher un autre Métier le donne aussitôt : la ligne le montre, le dépliant se referme, l'action reçoit l'Habitant et le nouveau Métier", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(within(ligne("Cael")).getByRole("button", { name: "Mineur" }));
+    expect(actions.donnerUnMetier).toHaveBeenCalledExactlyOnceWith(42, "mineur");
+    // L'action n'a pas encore répondu : la ligne montre déjà le nouveau Métier, et son bouton reprend la main.
+    expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Brune · Choisir un Métier · libre", "Cael · Mineur · libre"]);
+    expect(auChoix("Cael")).toEqual([]);
+    expect(document.activeElement).toBe(deplier("Cael"));
+  });
+
+  it("fait bouger les compteurs aussitôt : l'ancien Métier baisse de un, le nouveau monte de un", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 2", "Chasseur 1", "Mineur 0"]));
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(within(ligne("Cael")).getByRole("button", { name: "Mineur" }));
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 2", "Chasseur 0", "Mineur 1"]));
+  });
+
+  it("garde le nouveau Métier une fois la page relue, et rend l'ancien quand la page relue le garde", async () => {
+    const { rerender } = render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(within(ligne("Cael")).getByRole("button", { name: "Mineur" }));
+    rerender(<ListeDesHabitants habitants={[HABITANTS[0], HABITANTS[1], { ...HABITANTS[2], metier: "Mineur" }]} metiers={METIERS} />);
+    await finirLesActions();
+    expect(lignes()[2]).toBe("Cael · Mineur · libre");
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(within(ligne("Cael")).getByRole("button", { name: "Bûcheron" }));
+    expect(lignes()[2]).toBe("Cael · Bûcheron · libre");
+    // L'action s'achève sans que la page ait changé : Cael reste Mineur.
+    await finirLesActions();
+    expect(lignes()[2]).toBe("Cael · Mineur · libre");
   });
 });
 

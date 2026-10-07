@@ -42,6 +42,10 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  * ou un second toucher le referment. Toucher un Métier le donne : la ligne le montre aussitôt, le temps que
  * l'action serveur l'enregistre et relise la page, qui fait alors foi.
  *
+ * US-0310 : sur la ligne d'un Habitant qui a un Métier, ce Métier est le même bouton : il déplie les Métiers,
+ * le sien pressé et hors d'atteinte ; en toucher un autre le lui donne de la même façon, gratuitement et
+ * aussitôt. Dans les deux cas, la main revient au bouton de la ligne.
+ *
  * US-0309 : au-dessus de la liste, une rangée de compteurs, « Sans Métier » puis un par Métier, comptés sur
  * les lignes mêmes : un Métier donné les fait bouger aussitôt, avec la ligne.
  *
@@ -78,6 +82,8 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
 
   function donner(habitant: HabitantAffiche, metier: MetierAuChoix) {
     setOuvert(null);
+    // Le Métier touché s'en va avec le dépliant : la main revient au bouton de la ligne.
+    document.getElementById(idBouton(habitant.id))?.focus();
     demarrer(async () => {
       montrerLeMetier({ id: habitant.id, metier: metier.nom });
       await donnerUnMetier(habitant.id, metier.id);
@@ -125,13 +131,11 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
       ) : (
         <ul className={styles.habitants}>
           {montres.map((h) => {
-            const deplie = ouvert === h.id && h.metier === null;
+            const deplie = ouvert === h.id;
             return (
               <li key={h.id} className={styles.habitant}>
                 <span className={styles.prenom}>{h.prenom}</span>
-                {h.metier !== null ? (
-                  <span className={styles.metier}>{h.metier}</span>
-                ) : metiers.length > 0 ? (
+                {metiers.length > 0 ? (
                   <button
                     type="button"
                     id={idBouton(h.id)}
@@ -140,26 +144,30 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
                     aria-controls={deplie ? idChoix(h.id) : undefined}
                     onClick={() => setOuvert(deplie ? null : h.id)}
                   >
-                    Choisir un Métier
+                    {h.metier ?? "Choisir un Métier"}
                     <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
                       <path d="M2.5 4.5 6 8l3.5-3.5" />
                     </svg>
                   </button>
                 ) : (
-                  <span className={styles.metier} data-sans-metier="">
-                    sans Métier
+                  <span className={styles.metier} data-sans-metier={h.metier === null ? "" : undefined}>
+                    {h.metier ?? "sans Métier"}
                   </span>
                 )}
                 <span className={styles.etat}>{h.etat}</span>
                 {deplie ? (
                   <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
-                    {metiers.map((m) => (
-                      <button key={m.id} type="button" className={styles.metierAuChoix} onClick={() => donner(h, m)}>
-                        {/* Le nom est écrit juste à côté : l'icône est muette. */}
-                        <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
-                        {m.nom}
-                      </button>
-                    ))}
+                    {metiers.map((m) => {
+                      // US-0310 : le Métier qu'il exerce déjà est marqué, et ne se redonne pas.
+                      const actuel = m.nom === h.metier;
+                      return (
+                        <button key={m.id} type="button" className={styles.metierAuChoix} aria-pressed={actuel} disabled={actuel} onClick={() => donner(h, m)}>
+                          {/* Le nom est écrit juste à côté : l'icône est muette. */}
+                          <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
+                          {m.nom}
+                        </button>
+                      );
+                    })}
                   </div>
                 ) : null}
               </li>

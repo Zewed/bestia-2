@@ -108,11 +108,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0310 · Changer le Métier d'un Habitant
 **En tant que** joueur, **je veux** changer le Métier d'un Habitant, **afin de** suivre les besoins du moment.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). Sur la ligne d'un Habitant qui a un Métier, ce Métier devient un bouton qui déplie les huit Métiers, l'actuel marqué ; en toucher un autre le donne aussitôt, gratuitement, et les compteurs de l'ancien et du nouveau Métier bougent. Enregistré comme le premier ; deux changements simultanés : le dernier enregistré l'emporte. Vérifié en vrai.
 - **Débloquée par** : US-0309
 - **Critères d'acceptation** :
   - Depuis la ligne d'un Habitant qui a un Métier, on peut en choisir un autre.
   - Le compteur de l'ancien Métier baisse de un, celui du nouveau monte de un.
-  - Changer de Métier est gratuit et immédiat, sans temps d'apprentissage (à décider).
+  - Changer de Métier est gratuit et immédiat, sans temps d'apprentissage (décidé le 2026-10-07).
   - Le nouveau Métier est enregistré comme le premier.
 
 ### US-0311 · Retirer son Métier à un Habitant

@@ -26,7 +26,7 @@ describe("donner un Métier à un Habitant (US-0308)", () => {
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("relit la page même quand rien n'a changé (Habitant déjà au travail, pas à ce joueur, Métier inconnu) : la page relue fait foi", async () => {
+  it("relit la page même quand rien n'a changé (Habitant pas à ce joueur, Métier inconnu) : la page relue fait foi", async () => {
     garde.exigerCompte.mockResolvedValue({ territoireId: 12 });
     habitants.enregistrerLeMetier.mockResolvedValueOnce(false);
     await donnerUnMetier(41, "mineur");
