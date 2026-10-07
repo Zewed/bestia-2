@@ -4,6 +4,8 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_28e86925130674 7
 src/temps/synchroniser-horloge.db.test.ts
   s_97a431cfa65ca7::t_d9ed9341c07c99 6,137-233
+  s_97a431cfa65ca7::t_f7b2d63d93baef 6
+  s_97a431cfa65ca7::t_fa29fc15cbc290 137-233
 ---
 {
   "schema_version": "authorship/3.0.0",
