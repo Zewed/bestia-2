@@ -51,10 +51,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0305 · Voir la place pour de nouveaux Habitants
 **En tant que** joueur, **je veux** voir combien d'Habitants mon Territoire peut encore accueillir, **afin de** prévoir l'arrivée de nouveaux bras.
 
+- **Statut** : Livrée le 2026-10-07 (autopilot, par un agent en parallèle). En tête de la page Habitants : « 3 Habitants sur 5 places », et une pastille sable « Plus de place » dès que toute la place est prise. La place totale est la somme de ses sources, pour l'instant le seul Foyer ; les huttes s'y ajouteront d'une ligne. Vérifié en vrai sur ordinateur et à 320 px.
 - **Débloquée par** : US-0303
 - **Critères d'acceptation** :
   - La page Habitants affiche « X Habitants sur Y places », Y étant la place totale du Territoire.
-  - Au départ, le Foyer offre (chiffre à régler) places.
+  - Au départ, le Foyer offre 5 places (provisoire, `PLACES_DU_FOYER`).
   - Quand toute la place est prise, la page affiche « Plus de place ».
   - La place totale additionne toutes ses sources, pour l'instant le seul Foyer ; les huttes s'y ajouteront à l'étape 25.
 

@@ -12,10 +12,27 @@
   line-height: 1.15;
 }
 
+/* US-0305 : le nombre d'Habitants sur la place du Territoire, et « Plus de place » à côté quand elle est toute prise. */
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
 .nombre {
   font-size: 24px;
   font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
+}
+
+.plein {
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--sable);
+  color: var(--sable-fonce);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
 }
 
 /* US-0303 : une ligne par Habitant ; prénom, Métier et état côte à côte sur ordinateur. */

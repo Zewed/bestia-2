@@ -1,6 +1,7 @@
 // Les Habitants d'un Territoire tels que le jeu les montre. Côté serveur uniquement.
 import "server-only";
 import type { Pool } from "pg";
+import { PLACES_DU_FOYER } from "@/reglages";
 
 /**
  * Ce que fait un Habitant (US-0303). À ce stade, il est toujours libre : au Foyer et disponible.
@@ -25,4 +26,17 @@ export async function habitantsDuTerritoire(pool: Pool, territoireId: number): P
 export async function nombreDHabitants(pool: Pool, territoireId: number): Promise<number> {
   const { rows } = await pool.query<{ nombre: number }>(`select count(*)::int as nombre from habitant where territoire_id = $1`, [territoireId]);
   return rows[0].nombre;
+}
+
+/**
+ * US-0305 : chaque source de place du Territoire $1, une ligne par source, avec les places qu'elle offre.
+ * Pour l'instant, le seul Foyer ; les huttes s'y ajouteront à l'étape 25, d'un « union all » de plus.
+ */
+const SOURCES_DE_PLACE = `
+  select ${PLACES_DU_FOYER} as places from territoire where id = $1`;
+
+/** US-0305 : la place totale du Territoire, en Habitants : la somme de toutes ses sources ; 0 s'il n'existe pas. */
+export async function placesDuTerritoire(pool: Pool, territoireId: number): Promise<number> {
+  const { rows } = await pool.query<{ places: number }>(`select coalesce(sum(places), 0)::int as places from (${SOURCES_DE_PLACE}) source`, [territoireId]);
+  return rows[0].places;
 }

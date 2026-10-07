@@ -84,3 +84,9 @@ export const PRESQUE_PLEIN_POURCENT = 90;
  * deux en ont ; quand l'un est vide, tout l'Entretien est pris sur l'autre.
  */
 export const ENTRETIEN_HABITANT_PAR_HEURE = 2;
+
+/**
+ * US-0305 : le Foyer offre 5 places d'Habitant (valeur provisoire, à régler en jouant). C'est pour
+ * l'instant la seule source de place du Territoire ; les huttes en ajouteront à l'étape 25.
+ */
+export const PLACES_DU_FOYER = 5;

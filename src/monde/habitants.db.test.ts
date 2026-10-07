@@ -8,8 +8,9 @@ import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { lireJeu } from "@/donnees/charger";
 import { PRENOMS } from "@/donnees/jeux";
+import { PLACES_DU_FOYER } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { habitantsDuTerritoire, nombreDHabitants } from "./habitants";
+import { habitantsDuTerritoire, nombreDHabitants, placesDuTerritoire } from "./habitants";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
 function nommerLesHabitantsDejaLa(): string {
@@ -19,7 +20,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -174,5 +175,24 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, sur base)"
     expect(await nombreDHabitants(pool, ta)).toBe(1);
     expect(await nombreDHabitants(pool, tb)).toBe(3);
     expect(await nombreDHabitants(pool, -1)).toBe(0);
+  });
+
+  it("rend la place du Territoire : au départ, les 5 places du Foyer, quel que soit le nombre d'Habitants (US-0305)", async () => {
+    expect(PLACES_DU_FOYER).toBe(5);
+    const a = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const b = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await placesDuTerritoire(pool, ta)).toBe(PLACES_DU_FOYER);
+    // Toute la place prise, puis plus d'Habitants que de places : la place ne bouge pas.
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno'), ($1, 'Dara')", [ta]);
+    expect(await nombreDHabitants(pool, ta)).toBe(PLACES_DU_FOYER);
+    expect(await placesDuTerritoire(pool, ta)).toBe(PLACES_DU_FOYER);
+    await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Elio')", [ta]);
+    expect(await placesDuTerritoire(pool, ta)).toBe(PLACES_DU_FOYER);
+    expect(await placesDuTerritoire(pool, tb)).toBe(PLACES_DU_FOYER);
+    // Sans Territoire, aucune place.
+    expect(await placesDuTerritoire(pool, -1)).toBe(0);
   });
 });

@@ -16,6 +16,7 @@ const PRENOMS = ["Arno", "Brune", "Cael"];
 const UN_HABITANT = { metier: null, arriveLe: new Date("2026-10-07T08:00:00Z"), etat: "libre" as const };
 const habitants = vi.hoisted(() => ({
   habitantsDuTerritoire: vi.fn(async (): Promise<Habitant[]> => []),
+  placesDuTerritoire: vi.fn(async (): Promise<number> => 0),
 }));
 vi.mock("@/monde/habitants", () => habitants);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
@@ -24,18 +25,21 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 
 import Habitants, { metadata } from "./page";
 
-describe("page Habitants (US-0302, US-0303)", () => {
+describe("page Habitants (US-0302, US-0303, US-0305)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
     cookie.jetonDeSession.mockReset();
     habitants.habitantsDuTerritoire.mockReset();
+    habitants.placesDuTerritoire.mockReset();
   });
 
-  const connecte = (nombre = 3) => {
+  /** Un joueur connecté, ses `nombre` Habitants, et la place de son Territoire : 5 par défaut, celle du Foyer. */
+  const connecte = (nombre = 3, places = 5) => {
     cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
-    habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, prenom: PRENOMS[i], ...UN_HABITANT })));
+    habitants.habitantsDuTerritoire.mockResolvedValue(Array.from({ length: nombre }, (_, i) => ({ id: 40 + i, prenom: PRENOMS[i % 3], ...UN_HABITANT })));
+    habitants.placesDuTerritoire.mockResolvedValue(places);
   };
   /** Le texte de chaque ligne d'Habitant, ses morceaux séparés par « · ». */
   const lignes = (html: string) =>
@@ -51,13 +55,35 @@ describe("page Habitants (US-0302, US-0303)", () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
     expect(habitants.habitantsDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
-    expect(html).toMatch(/<section[^>]*><p[^>]*>3 Habitants<\/p><ul/);
+    expect(html).toMatch(/<section[^>]*><div[^>]*><p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul/);
+  });
+
+  it("dit combien de places le Territoire offre, lues pour le Territoire du joueur : « 3 Habitants sur 5 places » (US-0305)", async () => {
+    connecte(3, 5);
+    expect(renderToStaticMarkup(await Habitants())).toContain(">3 Habitants sur 5 places<");
+    expect(habitants.placesDuTerritoire).toHaveBeenCalledWith(expect.anything(), 12);
+    connecte(2, 9);
+    expect(renderToStaticMarkup(await Habitants())).toContain(">2 Habitants sur 9 places<");
+  });
+
+  it("accorde la place : « 1 Habitant sur 1 place » (US-0305)", async () => {
+    connecte(1, 1);
+    expect(renderToStaticMarkup(await Habitants())).toContain(">1 Habitant sur 1 place<");
+  });
+
+  it("affiche « Plus de place » quand toute la place est prise, et pas avant (US-0305)", async () => {
+    connecte(4, 5);
+    expect(renderToStaticMarkup(await Habitants())).not.toContain("Plus de place");
+    connecte(5, 5);
+    expect(renderToStaticMarkup(await Habitants())).toMatch(/<p[^>]*>5 Habitants sur 5 places<\/p><p[^>]*>Plus de place<\/p>/);
+    connecte(6, 5);
+    expect(renderToStaticMarkup(await Habitants())).toContain(">Plus de place<");
   });
 
   it("montre chaque Habitant sur une ligne, sous leur nombre : son prénom, « sans Métier » et « libre » (US-0303)", async () => {
     connecte();
     const html = renderToStaticMarkup(await Habitants());
-    expect(html).toMatch(/<p[^>]*>3 Habitants<\/p><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
+    expect(html).toMatch(/<p[^>]*>3 Habitants sur 5 places<\/p><\/div><ul[^>]*>(<li[^>]*>.*?<\/li>){3}<\/ul><\/section>/);
     expect(lignes(html)).toEqual(["Arno · sans Métier · libre", "Brune · sans Métier · libre", "Cael · sans Métier · libre"]);
   });
 
@@ -87,9 +113,9 @@ describe("page Habitants (US-0302, US-0303)", () => {
 
   it("accorde le nombre : « 1 Habitant », « 0 Habitant »", async () => {
     connecte(1);
-    expect(renderToStaticMarkup(await Habitants())).toContain(">1 Habitant<");
+    expect(renderToStaticMarkup(await Habitants())).toContain(">1 Habitant sur 5 places<");
     connecte(0);
-    expect(renderToStaticMarkup(await Habitants())).toContain(">0 Habitant<");
+    expect(renderToStaticMarkup(await Habitants())).toContain(">0 Habitant sur 5 places<");
   });
 
   it("n'ajoute aucune phrase d'explication, ni lien vers ce qui n'existe pas encore", async () => {
@@ -97,7 +123,7 @@ describe("page Habitants (US-0302, US-0303)", () => {
     const html = renderToStaticMarkup(await Habitants());
     expect(html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual([
       "Habitants",
-      "3 Habitants",
+      "3 Habitants sur 5 places",
       ...PRENOMS.flatMap((prenom) => [prenom, "sans Métier", "libre"]),
     ]);
     expect(html).not.toMatch(/<(a|button|form|input|select)[ >]/);
