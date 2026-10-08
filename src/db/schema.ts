@@ -597,3 +597,21 @@ export const caseDecouverte = pgTable(
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.caseId] })],
 );
+
+/**
+ * Une Bête sauvage partie de sa Case avant la fin de sa présence (US-0926), en suivant une Expédition : elle n'y est plus
+ * à partir de `partie_le`, un instant du jeu, pour toujours. Rien d'autre n'est écrit des Bêtes sauvages : leurs
+ * apparitions se recalculent à la demande (src/monde/betes-sauvages.ts), et leur numéro, propre à leur Case et jamais
+ * réutilisé, les désigne.
+ */
+export const betePartie = pgTable(
+  "bete_partie",
+  {
+    caseId: integer("case_id")
+      .notNull()
+      .references(() => caseDuMonde.id),
+    numero: bigint("numero", { mode: "number" }).notNull(),
+    partieLe: timestamp("partie_le", { withTimezone: true }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.caseId, t.numero] })],
+);

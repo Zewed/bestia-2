@@ -255,10 +255,11 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0926 · Une présence limitée dans le temps
 **En tant que** joueur, **je veux** que chaque Bête sauvage ne reste qu'un temps sur sa Case, **afin de** sentir qu'il faut être là au bon moment.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque Bête reste 6 heures de jeu sur sa Case, quelle que soit sa Rareté, puis disparaît, et une Bête disparue ne revient jamais. Une Bête qui suit une Expédition est retirée de sa Case pour toujours. Seule `emmenerUneBete` l'écrit, dans la table `bete_partie` (migration 0046). Elle refuse une Bête pas encore arrivée, déjà partie ou déjà emmenée, et deux demandes simultanées n'en emmènent qu'une. Prouvé sur base.
 - **Débloquée par** : US-0925
 - **Critères d'acceptation** :
-  - Chaque Bête apparue reste sur sa Case pendant une durée limitée (chiffre à régler), puis disparaît.
-  - Une durée qui change selon la Rareté (à décider).
+  - Chaque Bête apparue reste sur sa Case pendant 6 heures de jeu (provisoire, `PRESENCE_D_UNE_BETE_HEURES`), puis disparaît.
+  - La durée est la même pour toutes les Raretés (décidé le 2026-10-08).
   - Une Bête qui suit une Expédition quitte aussitôt sa Case.
   - Une Bête disparue ne revient jamais sur cette Case.
 

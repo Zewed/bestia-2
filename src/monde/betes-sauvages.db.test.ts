@@ -3,11 +3,12 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { apparitions, betesSauvagesDesCases, betesSauvagesDUneCase } from "./betes-sauvages";
+import { apparitions, betesSauvages, betesSauvagesDesCases, betesSauvagesDUneCase, emmenerUneBete } from "./betes-sauvages";
 import { creerUnMonde } from "./generer";
 import type { Coordonnees } from "./hex";
 
-const JOUR = 86_400_000;
+const HEURE = 3_600_000;
+const JOUR = 24 * HEURE;
 const DEBUT = new Date("2026-10-08T09:17:23.456Z");
 const apres = (ms: number) => new Date(DEBUT.getTime() + ms);
 
@@ -25,7 +26,7 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
   const nomUnique = () => `Betes${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
   /**
    * Un chef qui naît dans le Monde généré des essais, pour ne pas prendre de place au Monde du jeu : la Case de son Foyer,
-   * et une Case libre de ce Monde.
+   * et une Case libre de ce Monde, au Cœur sauvage, où aucun Foyer ne naît : elle le reste.
    */
   const naitre = async (): Promise<{ foyer: CaseEnBase; libre: CaseEnBase }> => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
@@ -33,12 +34,20 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
     const { rows } = await pool.query<CaseEnBase & { foyer: boolean }>(
       `select c.id, c.q, c.r, m.graine::float8 as graine, c.id = t.foyer_case_id as foyer
        from chef ch join territoire t on t.chef_id = ch.id join case_du_monde f on f.id = t.foyer_case_id join monde m on m.id = f.monde_id
-       join lateral (select * from case_du_monde c where c.monde_id = f.monde_id and (c.id = f.id or c.chef_id is null) order by c.id = f.id desc, c.id limit 2) c on true
+       join lateral (select * from case_du_monde c where c.monde_id = f.monde_id and (c.id = f.id or c.coeur) order by c.id = f.id desc, c.id limit 2) c on true
        where ch.compte_id = $1`,
       [compte.id],
     );
     const [foyer, libre] = [rows.find((c) => c.foyer)!, rows.find((c) => !c.foyer)!];
     return { foyer, libre };
+  };
+  /** Une Case du Cœur sauvage du Monde généré des essais : libre pour toujours. */
+  const uneCaseLibre = async (): Promise<CaseEnBase> => {
+    const { rows } = await pool.query<CaseEnBase>(
+      "select c.id, c.q, c.r, m.graine::float8 as graine from case_du_monde c join monde m on m.id = c.monde_id where m.id = $1 and c.coeur order by c.id limit 1",
+      [genereId],
+    );
+    return rows[0];
   };
 
   beforeAll(async () => {
@@ -67,7 +76,7 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
     const { libre } = await naitre();
     const betes = await betesSauvagesDUneCase(pool, libre.id, DEBUT, apres(30 * JOUR));
     expect(betes.length).toBeGreaterThan(5);
-    expect(betes).toEqual(apparitions(libre.graine, libre, DEBUT, apres(30 * JOUR)));
+    expect(betes).toEqual(betesSauvages(libre.graine, libre, DEBUT, apres(30 * JOUR)));
   });
 
   it("n'en fait jamais apparaître sur une Case qui appartient à un Territoire", async () => {
@@ -83,5 +92,53 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
     expect(ensemble.get(libre.id)).toEqual(await betesSauvagesDUneCase(pool, libre.id, DEBUT, apres(7 * JOUR)));
     expect(ensemble.get(foyer.id)).toEqual([]);
     expect(ensemble.get(-1)).toEqual([]);
+  });
+
+  describe("une Bête qui suit une Expédition (US-0926)", () => {
+    /** Une période propre à chaque lancement, des années plus tard : les Bêtes emmenées d'un essai ne croisent pas les autres. */
+    const PERIODE = new Date(Date.UTC(2031, 0, 1) + Math.floor(Math.random() * 3650) * JOUR + 1234);
+    const ensuite = (ms: number) => new Date(PERIODE.getTime() + ms);
+    let laCase: CaseEnBase;
+    /** Les lignes écrites pour la Case pendant la période : les Bêtes qui en sont parties. */
+    const parties = async () =>
+      (
+        await pool.query<{ numero: number; partie_le: Date }>(
+          "select numero::float8 as numero, partie_le from bete_partie where case_id = $1 and partie_le >= $2 and partie_le < $3 order by partie_le",
+          [laCase.id, PERIODE, ensuite(60 * JOUR)],
+        )
+      ).rows;
+    const numeros = async (de: Date, a: Date) => (await betesSauvagesDUneCase(pool, laCase.id, de, a)).map((b) => b.numero);
+
+    beforeAll(async () => {
+      laCase = await uneCaseLibre();
+    });
+    afterAll(async () => {
+      await pool.query("delete from bete_partie where case_id = $1 and partie_le >= $2 and partie_le < $3", [laCase.id, PERIODE, ensuite(60 * JOUR)]);
+    });
+
+    it("quitte aussitôt sa Case, pour toujours : c'est la seule écriture des Bêtes sauvages", async () => {
+      const suivie = (await betesSauvagesDUneCase(pool, laCase.id, PERIODE, ensuite(7 * JOUR))).find((b) => b.arrivee >= PERIODE)!;
+      const instant = new Date(suivie.arrivee.getTime() + HEURE);
+      expect(await emmenerUneBete(pool, laCase.id, suivie.numero, instant)).toBe(true);
+      expect(await numeros(instant, new Date(instant.getTime() + 1))).not.toContain(suivie.numero);
+      expect(await numeros(instant, ensuite(60 * JOUR))).not.toContain(suivie.numero);
+      // Jusque-là, elle était bien sur sa Case.
+      expect((await betesSauvagesDUneCase(pool, laCase.id, suivie.arrivee, instant)).find((b) => b.numero === suivie.numero)).toEqual({ ...suivie, depart: instant });
+      expect(await parties()).toEqual([{ numero: suivie.numero, partie_le: instant }]);
+    });
+
+    it("ne part pas si elle n'est pas là : pas encore arrivée, déjà partie, inconnue, ou déjà emmenée, même au même instant", async () => {
+      const b = (await betesSauvagesDUneCase(pool, laCase.id, ensuite(10 * JOUR), ensuite(20 * JOUR)))[0];
+      const avant = await parties();
+      expect(await emmenerUneBete(pool, laCase.id, b.numero, new Date(b.arrivee.getTime() - 1))).toBe(false);
+      expect(await emmenerUneBete(pool, laCase.id, b.numero, b.depart)).toBe(false);
+      expect(await emmenerUneBete(pool, laCase.id, 7, b.arrivee)).toBe(false);
+      expect(await parties()).toEqual(avant);
+      // Deux Expéditions en même temps : une seule l'emmène.
+      const [une, autre] = await Promise.all([emmenerUneBete(pool, laCase.id, b.numero, b.arrivee), emmenerUneBete(pool, laCase.id, b.numero, b.arrivee)]);
+      expect([une, autre].sort()).toEqual([false, true]);
+      expect(await emmenerUneBete(pool, laCase.id, b.numero, new Date(b.arrivee.getTime() + HEURE))).toBe(false);
+      expect((await parties()).filter((p) => p.numero === b.numero)).toEqual([{ numero: b.numero, partie_le: b.arrivee }]);
+    });
   });
 });

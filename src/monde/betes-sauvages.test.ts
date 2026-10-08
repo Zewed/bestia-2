@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { APPARITIONS_PAR_CASE_PAR_JOUR } from "@/reglages";
-import { apparitions } from "./betes-sauvages";
+import { APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
+import { apparitions, betesSauvages } from "./betes-sauvages";
 import { casesDesAnneaux } from "./hex";
 
 const HEURE = 3_600_000;
@@ -85,5 +85,58 @@ describe("des Bêtes sauvages apparaissent de temps en temps (US-0925)", () => {
       "src/monde/fiche.ts",
     ];
     for (const fichier of carte) expect(readFileSync(fichier, "utf8"), fichier).not.toMatch(/betes-sauvages/);
+  });
+});
+
+describe("une présence limitée dans le temps (US-0926)", () => {
+  const PRESENCE = PRESENCE_D_UNE_BETE_HEURES * HEURE;
+  /** Les numéros des Bêtes présentes sur la Case à l'instant `t`. */
+  const presentes = (t: Date, parties?: Map<number, Date>) => betesSauvages(GRAINE, ICI, t, new Date(t.getTime() + 1), parties).map((b) => b.numero);
+  const betes = betesSauvages(GRAINE, ICI, DEBUT, apres(30 * JOUR));
+
+  it(`garde chaque Bête ${PRESENCE_D_UNE_BETE_HEURES} heures sur sa Case, la même durée pour toutes, puis elle disparaît`, () => {
+    expect(betes.length).toBeGreaterThan(10);
+    for (const b of betes) {
+      expect(b.depart.getTime() - b.arrivee.getTime()).toBe(PRESENCE);
+      expect(presentes(new Date(b.arrivee.getTime() - 1))).not.toContain(b.numero);
+      expect(presentes(b.arrivee)).toContain(b.numero);
+      expect(presentes(new Date(b.depart.getTime() - 1))).toContain(b.numero);
+      expect(presentes(b.depart)).not.toContain(b.numero);
+    }
+  });
+
+  it("compte toutes les Bêtes présentes pendant la période, même arrivées avant elle", () => {
+    // Une période qui commence une heure après l'arrivée d'une Bête : elle y est encore.
+    const de = new Date(betes[5].arrivee.getTime() + HEURE);
+    const pendant = betesSauvages(GRAINE, ICI, de, new Date(de.getTime() + JOUR));
+    expect(pendant.map((b) => b.numero)).toContain(betes[5].numero);
+    expect(pendant.map((b) => b.numero)).toEqual(apparitions(GRAINE, ICI, new Date(de.getTime() - PRESENCE + 1), new Date(de.getTime() + JOUR)).map((x) => x.numero));
+  });
+
+  it("laisse parfois plusieurs Bêtes ensemble sur une même Case", () => {
+    const annee = betesSauvages(GRAINE, ICI, DEBUT, apres(365 * JOUR));
+    expect(Math.max(...annee.map((b) => presentes(b.arrivee).length))).toBeGreaterThanOrEqual(2);
+  });
+
+  it("ne fait jamais revenir une Bête disparue : chacune n'est là que pendant sa présence, d'un seul tenant", () => {
+    const quarts = new Map<number, number[]>();
+    for (let k = 0; k < 30 * 24 * 4; k++) {
+      for (const numero of presentes(apres((k * HEURE) / 4))) quarts.set(numero, [...(quarts.get(numero) ?? []), k]);
+    }
+    expect(quarts.size).toBeGreaterThan(10);
+    for (const [numero, vus] of quarts) {
+      expect(vus.at(-1)! - vus[0] + 1, `${numero}`).toBe(vus.length);
+      expect(vus.length).toBeLessThanOrEqual(PRESENCE_D_UNE_BETE_HEURES * 4 + 1);
+    }
+  });
+
+  it("fait quitter aussitôt sa Case à une Bête qui suit une Expédition, pour toujours, sans rien changer aux autres", () => {
+    const suivie = betes[3];
+    const instant = new Date(suivie.arrivee.getTime() + 2 * HEURE);
+    const parties = new Map([[suivie.numero, instant]]);
+    expect(presentes(new Date(instant.getTime() - 1), parties)).toContain(suivie.numero);
+    expect(presentes(instant, parties)).not.toContain(suivie.numero);
+    expect(betesSauvages(GRAINE, ICI, instant, apres(60 * JOUR), parties).map((b) => b.numero)).not.toContain(suivie.numero);
+    expect(betesSauvages(GRAINE, ICI, DEBUT, apres(30 * JOUR), parties)).toEqual(betes.map((b) => (b === suivie ? { ...b, depart: instant } : b)));
   });
 });

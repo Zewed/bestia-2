@@ -264,3 +264,9 @@ export const ANNEAUX_DU_MONDE = 6;
  * change toutes les apparitions qu'aucune Expédition n'a encore vues, passées comme à venir.
  */
 export const APPARITIONS_PAR_CASE_PAR_JOUR = 1;
+
+/**
+ * US-0926 : une Bête sauvage reste 6 heures de jeu sur sa Case (valeur provisoire, à régler en jouant), quelle que soit
+ * sa Rareté, puis disparaît pour toujours ; plus tôt si elle suit une Expédition.
+ */
+export const PRESENCE_D_UNE_BETE_HEURES = 6;
