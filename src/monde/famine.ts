@@ -1,6 +1,6 @@
 // La Famine d'un Territoire (US-0325) : le manque de Nourriture pour payer l'Entretien. Le mécanisme du temps la
 // tient à jour (PRODUIRE, src/monde/production.ts), et fait partir des Habitants tant qu'elle dure (US-0326), ce
-// qu'un Récit raconte (US-0327). Côté serveur uniquement.
+// qu'un Récit raconte (US-0327), comme sa fin (US-0328). Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { ecrireUnRecit, type NouveauRecit } from "./recits";
@@ -134,6 +134,59 @@ export async function departsNonLus(base: Pool | PoolClient, territoireId: numbe
 /** US-0327 : « 1 Habitant est parti pendant votre absence », « 3 Habitants sont partis pendant votre absence ». */
 export function departsPendantLAbsence(habitants: number): string {
   return habitants > 1 ? `${habitants} Habitants sont partis pendant votre absence` : `${habitants} Habitant est parti pendant votre absence`;
+}
+
+/**
+ * US-0328 : les départs de Famine du Territoire $1 ($2) depuis le début de la Famine ($3) jusqu'à sa fin ($4), et sa
+ * durée, en heures de jeu ; avec l'instant de la fin, pour le Récit.
+ */
+const BILAN_DE_LA_FAMINE = `
+  select count(e.id)::int as departs, extract(epoch from $4::timestamptz - $3::timestamptz) / 3600 as heures, $4::timestamptz as fin
+  from (select 1) une_ligne
+    left join evenement e on e.element = 'territoire' and e.element_id = $1 and e.type = $2
+      and e.survient_le > $3::timestamptz and e.survient_le <= $4::timestamptz`;
+
+/**
+ * US-0328 : la Famine du Territoire, commencée à `debut`, a fini à l'instant `fin` (en texte ou en Date, à la
+ * microseconde), la Nourriture payant de nouveau l'Entretien : un départ qui l'a ramené sous la production, ou de la
+ * Nourriture ajoutée. Les départs ont cessé, et les Habitants partis ne reviennent pas ; un Récit dit sa durée et le
+ * total des départs. Appelée par produire, dans la transaction du temps qui avance, qui a déjà remis l'état retenu
+ * à null.
+ */
+export async function finirLaFamine(client: PoolClient, territoireId: number, debut: string, fin: Date | string): Promise<void> {
+  const { rows } = await client.query<{ departs: number; heures: string; fin: Date }>(BILAN_DE_LA_FAMINE, [territoireId, DEPART_DE_FAMINE, debut, fin]);
+  await ecrireUnRecit(client, territoireId, recitDeFinDeFamine(Number(rows[0].heures), rows[0].departs, rows[0].fin));
+}
+
+/**
+ * US-0328 : la durée d'une Famine, arrondie à la minute en dessous : « moins d'une minute », « 45 min », « 2 h 05 »,
+ * puis en jours et heures au-delà de 48 h, comme le temps que tiendra la Nourriture : « 2 j 5 h ».
+ */
+function dureeDeLaFamine(heures: number): string {
+  const minutes = Math.floor(Math.round(heures * 3_600_000_000) / 60_000_000);
+  if (minutes < 1) return "moins d'une minute";
+  if (minutes < 60) return `${minutes} min`;
+  const [entieres, reste] = [Math.floor(minutes / 60), minutes % 60];
+  if (entieres <= 48) return reste === 0 ? `${entieres} h` : `${entieres} h ${String(reste).padStart(2, "0")}`;
+  return entieres % 24 === 0 ? `${entieres / 24} j` : `${Math.floor(entieres / 24)} j ${entieres % 24} h`;
+}
+
+/**
+ * US-0328 : le Récit de la fin de la Famine, daté de sa fin : « Fin de la Famine », sa durée et le total des départs
+ * qu'elle a causés.
+ */
+export function recitDeFinDeFamine(heures: number, departs: number, fin: Date): NouveauRecit {
+  const partis =
+    departs === 0
+      ? "aucun Habitant n'a quitté le Territoire"
+      : departs === 1
+        ? "1 Habitant a quitté le Territoire"
+        : `${departs} Habitants ont quitté le Territoire`;
+  return {
+    titre: "Fin de la Famine",
+    texte: `La Nourriture paie de nouveau l'Entretien. La Famine a duré ${dureeDeLaFamine(heures)} ; ${partis}.`,
+    survenuLe: fin,
+  };
 }
 
 /**

@@ -375,6 +375,22 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       expect(avertissement(html)?.[1]).toMatch(/data-famine=""/);
     });
 
+    it("ôte « Famine » de la barre une fois la Famine finie : rien quand la Nourriture est assurée, la famine imminente sinon (US-0328)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      // Onze Habitants, les deux Stocks vides : la production paie tout juste l'Entretien.
+      garde.stocksALHeure.mockResolvedValueOnce(nourriture("0.000000", "0.000000"));
+      garde.entretienALHeure.mockResolvedValueOnce("22.000000");
+      garde.famineImminenteALHeure.mockResolvedValueOnce(14);
+      expect(avertissement(await rendu())).toBeNull();
+      // De la Nourriture ajoutée : 5 h, la famine imminente reprend selon ses règles.
+      garde.stocksALHeure.mockResolvedValueOnce(nourriture("0.000000", "90.000000"));
+      garde.entretienALHeure.mockResolvedValueOnce("40.000000");
+      garde.famineImminenteALHeure.mockResolvedValueOnce(14);
+      const html = await rendu();
+      expect(avertissement(html)?.[2].replace(/<[^>]+>/g, "")).toBe("Famine imminente depuis 14 h Nourriture pour encore 5 h Voir");
+      expect(avertissement(html)?.[1]).not.toMatch(/data-famine/);
+    });
+
     it("lit depuis quand en même temps que les Stocks et le reste de la barre, et repart des nouvelles valeurs quand la Famine commence (US-0325)", async () => {
       joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
       const lectures: string[] = [];

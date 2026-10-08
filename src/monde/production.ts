@@ -4,7 +4,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
-import { faireRepartirUnHabitant } from "./famine";
+import { faireRepartirUnHabitant, finirLaFamine } from "./famine";
 
 /**
  * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
@@ -117,6 +117,10 @@ const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE
  * (depart) ; produire() le fait partir, puis reprend de là. Les départs tombent aux heures pleines depuis le début de
  * la Famine, que le Territoire retient : les mêmes quel que soit le découpage du temps. Un départ à l'instant $3
  * même est appliqué dans ce calcul-ci.
+ *
+ * US-0328 : la Famine finit en $2 quand la Nourriture y paie de nouveau l'Entretien (un départ qui l'a ramené sous la
+ * production, de la Nourriture ajoutée) : le calcul rend alors son début (famineFinie), pour le Récit de sa fin, et
+ * ne programme plus de départ.
  */
 export const PRODUIRE = `
   with production as (${PRODUCTION_DU_TERRITOIRE}),
@@ -236,8 +240,11 @@ export const PRODUIRE = `
     from fin f
     where s.territoire_id = $1 and s.ressource_id = f.ressource_id
   )
-  -- US-0326 : l'instant atteint, à la microseconde, et s'il faut y faire partir un Habitant.
-  select ($2::timestamptz + k * interval '1 microsecond')::text as atteint, depart from fenetre`;
+  -- US-0326 : l'instant atteint, à la microseconde, et s'il faut y faire partir un Habitant. US-0328 : le début de la
+  -- Famine qui a fini en $2, l'Entretien de nouveau payé (null sinon) ; la requête lit l'état d'avant sa mise à jour.
+  select ($2::timestamptz + w.k * interval '1 microsecond')::text as atteint, w.depart,
+    case when f.pas is distinct from 0 then t.famine_depuis::text end as "famineFinie"
+  from fenetre w cross join famine f left join territoire t on t.id = $1`;
 
 /**
  * Met à l'heure les Stocks du Territoire entre deux instants : ce que toutes ses Cases produisent, chacune
@@ -249,15 +256,17 @@ export const PRODUIRE = `
  * `jusqua`. Les départs sont calculés ici plutôt que programmés comme des événements : ils ne se connaissent qu'une
  * fois la Famine commencée, au milieu d'un calcul, et le mécanisme du temps n'applique à leur instant que les
  * événements programmés avant le calcul en cours. Après un départ à `jusqua` même, un calcul de durée nulle note
- * aussitôt ce qu'il change à la Famine.
+ * aussitôt ce qu'il change à la Famine. US-0328 : une Famine finie en chemin, son Récit est écrit à l'instant de sa fin.
  */
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
   // Les instants des départs tombent à la microseconde : ils passent en texte, qu'une Date arrondirait.
   let debut: Date | string = depuis;
   for (;;) {
-    const calcul: { atteint: string; depart: boolean } | undefined = (
-      await client.query<{ atteint: string; depart: boolean }>(PRODUIRE, [territoireId, debut, jusqua])
+    const calcul: { atteint: string; depart: boolean; famineFinie: string | null } | undefined = (
+      await client.query<{ atteint: string; depart: boolean; famineFinie: string | null }>(PRODUIRE, [territoireId, debut, jusqua])
     ).rows[0];
+    // US-0328 : la Famine a fini en `debut`, par un départ ou de la Nourriture ajoutée : un Récit le dit.
+    if (calcul?.famineFinie) await finirLaFamine(client, territoireId, calcul.famineFinie, debut);
     if (!calcul?.depart) return;
     await faireRepartirUnHabitant(client, territoireId, calcul.atteint);
     debut = calcul.atteint;

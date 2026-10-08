@@ -111,6 +111,15 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
         [territoireId, ne, DEPART_DE_FAMINE],
       )
     ).rows;
+  /** US-0328 : les Récits de fin de Famine du Territoire, du premier écrit au dernier : texte et instant, en microsecondes après `ne`. */
+  const recitsDeFin = async (territoireId: number, ne: Date) =>
+    (
+      await pool.query<{ texte: string; instant: string }>(
+        `select texte, (extract(epoch from survenu_le - $2::timestamptz) * 1000000)::bigint::text as instant
+         from recit where territoire_id = $1 and titre = 'Fin de la Famine' order by id`,
+        [territoireId, ne],
+      )
+    ).rows;
   /** US-0327 : le Récit attendu pour des départs notés (departs), d'un Territoire né à `ne`. */
   const recitAttendu = (ne: Date, partis: { prenom: string; metier: string | null; instant: string }[]) => {
     const recit = recitDesDeparts(partis.map((d) => ({ prenom: d.prenom, metier: d.metier, partiLe: new Date(ne.getTime() + Number(d.instant) / 1000) })));
@@ -301,6 +310,8 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
           await pool.query("select ressource_id, quantite::text, reste::text from stock where territoire_id = $1 order by ressource_id", [t.territoireId])
         ).rows,
         famine: await debut(t.territoireId, t.ne),
+        // US-0328 : la fin de la Famine, au même instant, avec la même durée et le même total.
+        fin: await recitsDeFin(t.territoireId, t.ne),
       });
       /**
        * US-0327 : un seul Récit pour tous les départs de l'absence, quel que soit le découpage du temps. Il dit les heures
@@ -322,6 +333,7 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
         await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
         fermee = await etat(t);
         expect(fermee.departs).toHaveLength(9);
+        expect(fermee.fin).toHaveLength(1);
         await unSeulRecit(t);
       });
 
@@ -426,6 +438,73 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
       expect(nonLus).toMatchObject({ habitants: 9 });
       expect(await marquerUnRecitLu(pool, t.territoireId, nonLus!.recitId, apres(t.ne, 40 * HEURE))).toBe(true);
       expect(await departsNonLus(pool, t.territoireId)).toBeNull();
+    });
+  });
+
+  describe("sortir de la Famine (US-0328)", () => {
+    it("finit au départ qui ramène l'Entretien sous la production : plus de départ ensuite, et un Récit dit sa durée et le total des départs", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
+      expect(await debut(t.territoireId, t.ne)).toBeNull();
+      expect(await departs(t.territoireId, t.ne)).toHaveLength(9);
+      expect(await recitsDeFin(t.territoireId, t.ne)).toEqual([
+        { texte: "La Nourriture paie de nouveau l'Entretien. La Famine a duré 9 h ; 9 Habitants ont quitté le Territoire.", instant: us(29) },
+      ]);
+    });
+
+    it("finit à l'instant même de ce départ, quand le temps s'arrête juste dessus", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 29 * HEURE) });
+      expect(await restants(t.territoireId)).toHaveLength(11);
+      expect(await debut(t.territoireId, t.ne)).toBeNull();
+      expect(await famineDepuis(pool, t.territoireId)).toBeNull();
+      expect((await recitsDeFin(t.territoireId, t.ne)).map((r) => r.instant)).toEqual([us(29)]);
+    });
+
+    it("finit dès que de la Nourriture est ajoutée : les départs cessent aussitôt", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 22.5 * HEURE) });
+      expect(await fixerStock(pool, t.territoireId, "vegetaux", "1000")).not.toBeNull();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
+      expect((await departs(t.territoireId, t.ne)).map((d) => d.instant)).toEqual([us(21), us(22)]);
+      expect(await recitsDeFin(t.territoireId, t.ne)).toEqual([
+        { texte: "La Nourriture paie de nouveau l'Entretien. La Famine a duré 2 h 30 ; 2 Habitants ont quitté le Territoire.", instant: us(22.5) },
+      ]);
+    });
+
+    it("dit aussi la fin d'une Famine sans aucun départ", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 20.5 * HEURE) });
+      expect(await fixerStock(pool, t.territoireId, "vegetaux", "1000")).not.toBeNull();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 30 * HEURE) });
+      expect(await recitsDeFin(t.territoireId, t.ne)).toEqual([
+        { texte: "La Nourriture paie de nouveau l'Entretien. La Famine a duré 30 min ; aucun Habitant n'a quitté le Territoire.", instant: us(20.5) },
+      ]);
+    });
+
+    it("ne fait pas revenir les Habitants partis", async () => {
+      const t = await vingtHeures();
+      await peupler(t.territoireId, VINGT);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 30 * HEURE) });
+      const apresLaFamine = await restants(t.territoireId);
+      expect(apresLaFamine).toHaveLength(11);
+      // De quoi nourrir tout le monde longtemps : rien ne change pour autant.
+      expect(await fixerStock(pool, t.territoireId, "viande", "1000")).not.toBeNull();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 60 * HEURE) });
+      expect(await restants(t.territoireId)).toEqual(apresLaFamine);
+      expect(apresLaFamine.map((h) => h.prenom)).not.toEqual(expect.arrayContaining(["H14", "H17"]));
+    });
+
+    it("compte les départs de chaque Famine à part : une nouvelle Famine repart de zéro", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 22.5 * HEURE) });
+      expect(await fixerStock(pool, t.territoireId, "vegetaux", "36")).not.toBeNull();
+      // 18 Habitants (36 d'Entretien), la Viande vide : les Végétaux paient 28 et en produisent 14, 36 tiennent 2 h 34.
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
+      expect((await recitsDeFin(t.territoireId, t.ne)).map((r) => r.texte)).toEqual([
+        "La Nourriture paie de nouveau l'Entretien. La Famine a duré 2 h 30 ; 2 Habitants ont quitté le Territoire.",
+        "La Nourriture paie de nouveau l'Entretien. La Famine a duré 7 h ; 7 Habitants ont quitté le Territoire.",
+      ]);
     });
   });
 });

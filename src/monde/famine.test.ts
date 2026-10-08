@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { departsPendantLAbsence, recitDesDeparts } from "./famine";
+import { departsPendantLAbsence, recitDeFinDeFamine, recitDesDeparts } from "./famine";
 
 /** Une heure de Paris en octobre (UTC+2), comme le jeu l'enregistre, en temps universel. */
 const aParis = (jour: number, heure: number, minute = 0) => new Date(Date.UTC(2026, 9, jour, heure - 2, minute));
@@ -38,6 +38,31 @@ describe("le Récit des départs de Famine (US-0327)", () => {
       ].join("\n"),
       survenuLe: aParis(9, 1),
     });
+  });
+});
+
+describe("le Récit de la fin de la Famine (US-0328)", () => {
+  it("dit que la Nourriture paie de nouveau l'Entretien, combien de temps la Famine a duré et combien d'Habitants sont partis", () => {
+    expect(recitDeFinDeFamine(9, 9, aParis(9, 7))).toEqual({
+      titre: "Fin de la Famine",
+      texte: "La Nourriture paie de nouveau l'Entretien. La Famine a duré 9 h ; 9 Habitants ont quitté le Territoire.",
+      survenuLe: aParis(9, 7),
+    });
+  });
+
+  it("dit un seul départ, ou aucun", () => {
+    expect(recitDeFinDeFamine(1.5, 1, aParis(9, 7)).texte).toBe("La Nourriture paie de nouveau l'Entretien. La Famine a duré 1 h 30 ; 1 Habitant a quitté le Territoire.");
+    expect(recitDeFinDeFamine(0.5, 0, aParis(9, 7)).texte).toBe(
+      "La Nourriture paie de nouveau l'Entretien. La Famine a duré 30 min ; aucun Habitant n'a quitté le Territoire.",
+    );
+  });
+
+  it("dit sa durée arrondie à la minute en dessous : jamais plus longue qu'elle n'a été", () => {
+    const duree = (heures: number) => recitDeFinDeFamine(heures, 0, aParis(9, 7)).texte.match(/a duré (.*) ;/)?.[1];
+    expect(duree(0.01)).toBe("moins d'une minute");
+    expect(duree(2 + 5 / 60 + 0.9 / 60)).toBe("2 h 05");
+    expect(duree(26)).toBe("26 h");
+    expect(duree(50.5)).toBe("2 j 2 h");
   });
 });
 

@@ -305,6 +305,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0328 · Sortir de la Famine
 **En tant que** joueur, **je veux** voir ma Famine s'arrêter dès que ma Nourriture suffit de nouveau, **afin de** reprendre le cours normal de mon Territoire.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La Famine finit à l'instant exact où l'Entretien redevient payable (un départ qui suffit, ou de la Nourriture ajoutée) : plus de départ, la bande « Famine » quitte la barre (l'avertissement reprend selon ses règles), les partis ne reviennent pas, et un Récit « Fin de la Famine » dit : « La Nourriture paie de nouveau l'Entretien. La Famine a duré 9 h ; 9 Habitants ont quitté le Territoire. » Vérifié en vrai.
 - **Débloquée par** : US-0326
 - **Critères d'acceptation** :
   - Dès que l'Entretien peut de nouveau être payé, les départs cessent.
