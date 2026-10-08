@@ -7,6 +7,7 @@ import type { CarteDuJoueur } from "@/monde/carte";
 import type { Fiche } from "@/monde/fiche";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
+import { LEGENDE_MONTREE } from "./Legende";
 import { avancer, bornesDuZoom, cadrer, deplacer, devoiler, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
 
 /** US-0428 : les fiches de Case demandées au serveur, chacune avec de quoi lui répondre. */
@@ -558,6 +559,41 @@ describe("revenir au Foyer (US-0426)", () => {
     prochaineImage(1300);
     expect(auMilieuDeLEcran()).toBe(true);
     expect(fleche().hidden).toBe(true);
+  });
+
+  it("repose la flèche quand la légende se montre ou qu'un panneau publie sa hauteur, sans attendre que la carte bouge", async () => {
+    render(
+      <>
+        <CarteDuJeu carte={CARTE} fonds={FONDS} />
+        <aside data-sur-la-carte="" />
+      </>,
+    );
+    // Le Foyer passé loin au-dessus du haut de l'écran : la flèche au bord du haut.
+    glisser(0, -1000);
+    prochaineImage();
+    const auNord = deplacer(ouverte(), 0, -1000, 60);
+    expect(fleche().style.transform).toBe(placee(auNord));
+    // La légende se montre en haut de la carte, là où était la flèche : elle descend sous son panneau.
+    let montree = true;
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return (this.tagName === "ASIDE" && montree ? { left: 300, top: 0, width: 200, height: 200, right: 500, bottom: 200 } : { left: 0, top: 0, width: 0, height: 0, right: 0, bottom: 0 }) as DOMRect;
+    });
+    document.dispatchEvent(new Event(LEGENDE_MONTREE));
+    prochaineImage();
+    // Son panneau en pixels de la carte, qui commence 64 pixels sous le haut de la page.
+    const sousLaLegende = flecheVersLeFoyer(auNord, FOYER, [{ gauche: 300, haut: -64, droite: 500, bas: 136 }], 22)!;
+    expect(sousLaLegende.y).toBeGreaterThan(136);
+    expect(fleche().style.transform).toBe(`translate(${sousLaLegende.x}px, ${sousLaLegende.y}px) rotate(${sousLaLegende.angle}rad)`);
+    // Elle se referme, et un panneau du bas publie sa hauteur : la flèche reprend sa place au bord du haut.
+    montree = false;
+    try {
+      document.documentElement.style.setProperty("--hauteur-fiche", "120px");
+      await Promise.resolve();
+      prochaineImage();
+      expect(fleche().style.transform).toBe(placee(auNord));
+    } finally {
+      document.documentElement.style.removeProperty("--hauteur-fiche");
+    }
   });
 
   it("cesse le mouvement une fois la page quittée", async () => {

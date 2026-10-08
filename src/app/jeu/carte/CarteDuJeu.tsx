@@ -9,6 +9,7 @@ import { type Cadre, dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from
 import { FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
 import { suivreLesGestes } from "./gestes";
+import { LEGENDE_MONTREE } from "./Legende";
 import { glisser } from "./mouvement";
 import styles from "./page.module.css";
 import { avancer, cadrer, caseSous, deplacer, devoiler, limiteDeLaCarte, retourAuFoyer, zoomer, zoomPossible } from "./vue";
@@ -141,6 +142,16 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
         griser();
       });
     };
+    // US-0426 : la flèche du Foyer reposée quand ce qu'elle évite change sans que la carte bouge : un panneau du bas qui
+    // publie sa hauteur sur la page (--hauteur-legende, --hauteur-fiche), la légende qui se montre sur ordinateur.
+    let pose = 0;
+    const reposer = () => {
+      cancelAnimationFrame(pose);
+      pose = requestAnimationFrame(() => vue && placerLaFleche(fleche.current, canvas, vue, carte.foyer));
+    };
+    const panneaux = new MutationObserver(reposer);
+    panneaux.observe(document.documentElement, { attributes: true, attributeFilter: ["style"] });
+    document.addEventListener(LEGENDE_MONTREE, reposer);
     // US-0428 : la carte redessinée (la flèche du Foyer reposée) quand la fiche change, glissée si elle cache la Case.
     pourLaFiche.current = {
       redessiner: dessiner,
@@ -155,6 +166,9 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       illustration.onload = null;
       arreter();
       cancelAnimationFrame(image);
+      cancelAnimationFrame(pose);
+      panneaux.disconnect();
+      document.removeEventListener(LEGENDE_MONTREE, reposer);
       mouvement();
       zoomerAuMilieu.current = () => {};
       revenirAuFoyer.current = () => {};
