@@ -7,8 +7,9 @@ import { definirAncre } from "@/temps/horloge";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { DEPART_DE_FAMINE, famineDepuis } from "./famine";
+import { DEPART_DE_FAMINE, departsNonLus, famineDepuis, recitDesDeparts } from "./famine";
 import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
+import { ecrireUnRecit, marquerUnRecitLu } from "./recits";
 import { fixerStock } from "./stocks";
 
 const HEURE = 3_600_000;
@@ -20,6 +21,8 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
   let pool: Pool;
   const lancement = `famine-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
+  /** Les comptes des Territoires nés pendant l'essai en cours. */
+  const nes: string[] = [];
 
   /**
    * Un Territoire tout neuf en prairie (Viande +8, Végétaux +14 par heure), ses `habitants` Habitants, sa Viande et
@@ -27,6 +30,7 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
    */
   const naitre = async (habitants: number, viande: string, vegetaux: string) => {
     const n = ++numero;
+    nes.push(`${lancement}-${n}@essai.test`);
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Fain${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
@@ -59,14 +63,69 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
   const apres = (ne: Date, ms: number) => new Date(ne.getTime() + ms);
   /** 20 heures, en microsecondes. */
   const VINGT_HEURES = String(20 * HEURE_US);
+  /** US-0326 : les Habitants du Territoire, du premier arrivé au dernier : leur prénom, et leur Métier. */
+  const restants = async (territoireId: number) =>
+    (
+      await pool.query<{ prenom: string; metier: string | null }>("select prenom, metier from habitant where territoire_id = $1 order by id", [
+        territoireId,
+      ])
+    ).rows;
+  /** US-0326 : les départs de Famine notés, dans leur ordre : le prénom, le Métier et l'instant, en microsecondes après `ne`. */
+  const departs = async (territoireId: number, ne: Date) =>
+    (
+      await pool.query<{ prenom: string; metier: string | null; instant: string }>(
+        `select donnees->>'prenom' as prenom, donnees->>'metier' as metier,
+           (extract(epoch from survient_le - $2::timestamptz) * 1000000)::bigint::text as instant
+         from evenement where element = 'territoire' and element_id = $1 and type = $3 order by survient_le, id`,
+        [territoireId, ne, DEPART_DE_FAMINE],
+      )
+    ).rows;
+  /** Des heures, en microsecondes, comme les donne la base. */
+  const us = (heures: number) => String(heures * HEURE_US);
+  /**
+   * Vingt Habitants, du premier arrivé au dernier : H01 à H20 ; cinq sans Métier (H02, H05, H08, H11, H14), les
+   * autres chasseurs ou bûcherons.
+   */
+  const VINGT = Array.from({ length: 20 }, (_, i) => ({
+    prenom: `H${String(i + 1).padStart(2, "0")}`,
+    metier: i % 3 === 1 && i < 15 ? null : i % 2 === 0 ? "chasseur" : "bucheron",
+  }));
+  const peupler = async (territoireId: number, habitants: { prenom: string; metier: string | null }[]) =>
+    pool.query(
+      `with partis as (delete from habitant where territoire_id = $1)
+       insert into habitant (territoire_id, prenom, metier) select $1, h.prenom, h.metier from unnest($2::text[], $3::text[]) with ordinality as h(prenom, metier, rang) order by h.rang`,
+      [territoireId, habitants.map((h) => h.prenom), habitants.map((h) => h.metier)],
+    );
+  /**
+   * US-0327 : les Récits de Famine du Territoire, du premier écrit au dernier (pas ceux des Voyageurs qui passent) :
+   * titre, texte, instant en microsecondes après `ne`, lu ou non.
+   */
+  const recitsDeFamine = async (territoireId: number, ne: Date) =>
+    (
+      await pool.query<{ titre: string; texte: string; instant: string; lu: boolean }>(
+        `select r.titre, r.texte, (extract(epoch from r.survenu_le - $2::timestamptz) * 1000000)::bigint::text as instant, r.lu_le is not null as lu
+         from recit r
+         where r.territoire_id = $1
+           and exists (select 1 from evenement e where e.element = 'territoire' and e.element_id = $1 and e.type = $3 and (e.donnees->>'recit')::int = r.id)
+         order by r.id`,
+        [territoireId, ne, DEPART_DE_FAMINE],
+      )
+    ).rows;
+  /** US-0327 : le Récit attendu pour des départs notés (departs), d'un Territoire né à `ne`. */
+  const recitAttendu = (ne: Date, partis: { prenom: string; metier: string | null; instant: string }[]) => {
+    const recit = recitDesDeparts(partis.map((d) => ({ prenom: d.prenom, metier: d.metier, partiLe: new Date(ne.getTime() + Number(d.instant) / 1000) })));
+    return { titre: recit.titre, texte: recit.texte, instant: partis.at(-1)!.instant, lu: false };
+  };
 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
   });
-  afterEach(() => {
+  afterEach(async () => {
     vi.useRealTimers();
     definirAncre(null);
+    // Chaque essai rend ses Foyers à la Couronne du Monde d'essai, que les autres fichiers remplissent en même temps.
+    await pool.query("delete from compte where email = any($1)", [nes.splice(0)]);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -157,40 +216,6 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
   });
 
   describe("voir des Habitants s'en aller (US-0326)", () => {
-    /** Les Habitants du Territoire, du premier arrivé au dernier : leur prénom, et leur Métier. */
-    const restants = async (territoireId: number) =>
-      (
-        await pool.query<{ prenom: string; metier: string | null }>("select prenom, metier from habitant where territoire_id = $1 order by id", [
-          territoireId,
-        ])
-      ).rows;
-    /** Les départs de Famine notés, dans leur ordre : le prénom, le Métier et l'instant, en microsecondes après `ne`. */
-    const departs = async (territoireId: number, ne: Date) =>
-      (
-        await pool.query<{ prenom: string; metier: string | null; instant: string }>(
-          `select donnees->>'prenom' as prenom, donnees->>'metier' as metier,
-             (extract(epoch from survient_le - $2::timestamptz) * 1000000)::bigint::text as instant
-           from evenement where element = 'territoire' and element_id = $1 and type = $3 order by survient_le, id`,
-          [territoireId, ne, DEPART_DE_FAMINE],
-        )
-      ).rows;
-    /** Des heures, en microsecondes, comme les donne la base. */
-    const us = (heures: number) => String(heures * HEURE_US);
-    /**
-     * Vingt Habitants, du premier arrivé au dernier : H01 à H20 ; cinq sans Métier (H02, H05, H08, H11, H14), les
-     * autres chasseurs ou bûcherons.
-     */
-    const VINGT = Array.from({ length: 20 }, (_, i) => ({
-      prenom: `H${String(i + 1).padStart(2, "0")}`,
-      metier: i % 3 === 1 && i < 15 ? null : i % 2 === 0 ? "chasseur" : "bucheron",
-    }));
-    const peupler = async (territoireId: number, habitants: { prenom: string; metier: string | null }[]) =>
-      pool.query(
-        `with partis as (delete from habitant where territoire_id = $1)
-         insert into habitant (territoire_id, prenom, metier) select $1, h.prenom, h.metier from unnest($2::text[], $3::text[]) with ordinality as h(prenom, metier, rang) order by h.rang`,
-        [territoireId, habitants.map((h) => h.prenom), habitants.map((h) => h.metier)],
-      );
-
     it("fait partir un Habitant par heure de Famine, à l'instant exact : une heure pile après son début, puis d'heure en heure", async () => {
       const t = await vingtHeures();
       await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 21 * HEURE - 1) });
@@ -277,6 +302,14 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
         ).rows,
         famine: await debut(t.territoireId, t.ne),
       });
+      /**
+       * US-0327 : un seul Récit pour tous les départs de l'absence, quel que soit le découpage du temps. Il dit les heures
+       * de Paris : celui de chaque Territoire se compare à ses propres départs, chacun étant né à son instant.
+       */
+      const unSeulRecit = async (t: { territoireId: number; ne: Date }) => {
+        const partis = await departs(t.territoireId, t.ne);
+        expect(await recitsDeFamine(t.territoireId, t.ne)).toEqual(partis.length > 0 ? [recitAttendu(t.ne, partis)] : []);
+      };
       let fermee: Awaited<ReturnType<typeof etat>>;
       const preparer = async () => {
         const t = await vingtHeures();
@@ -289,17 +322,20 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
         await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
         fermee = await etat(t);
         expect(fermee.departs).toHaveLength(9);
+        await unSeulRecit(t);
       });
 
-      it("page ouverte : à chaque rattrapage, les départs prévus jusque-là, et la même fin qu'à la page fermée", async () => {
+      it("page ouverte : à chaque rattrapage, les départs prévus jusque-là, dans un seul Récit, et la même fin qu'à la page fermée", async () => {
         const t = await preparer();
         for (let ms = 17 * MINUTE + 3_123; ms < 40 * HEURE; ms += 17 * MINUTE + 3_123) {
           await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ms) });
           const partis = fermee.departs.filter((d) => Number(d.instant) <= ms * 1000);
           expect(await departs(t.territoireId, t.ne), `${(ms / HEURE).toFixed(2)} h`).toEqual(partis);
+          await unSeulRecit(t);
         }
         await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
         expect(await etat(t)).toEqual(fermee);
+        await unSeulRecit(t);
       }, 120_000);
 
       it("tâche planifiée passée au milieu, dont une à l'instant même d'un départ : même fin qu'à la page fermée", async () => {
@@ -310,6 +346,7 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
         }
         await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
         expect(await etat(t)).toEqual(fermee);
+        await unSeulRecit(t);
       }, 60_000);
     });
 
@@ -330,6 +367,65 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
       await rattraper("territoire", t.territoireId, { pool });
       expect(await restants(t.territoireId)).toHaveLength(11);
       expect((await departs(t.territoireId, t.ne)).map((d) => d.instant)).toEqual([21, 22, 23, 24, 25, 26, 27, 28, 29].map(us));
+    });
+  });
+
+  describe("être informé des départs par un Récit (US-0327)", () => {
+    it("écrit un Récit non lu : combien d'Habitants sont partis, avec quels Métiers, à quelle heure, et comment sortir de la Famine", async () => {
+      const t = await vingtHeures();
+      await peupler(t.territoireId, VINGT);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 21 * HEURE) });
+      const [premier] = await departs(t.territoireId, t.ne);
+      expect(await recitsDeFamine(t.territoireId, t.ne)).toEqual([recitAttendu(t.ne, [premier])]);
+      expect((await recitsDeFamine(t.territoireId, t.ne))[0]).toMatchObject({
+        titre: "H14 a quitté le Territoire",
+        texte: expect.stringContaining("Pour sortir de la Famine : produire plus de Nourriture ou nourrir moins de bouches."),
+      });
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
+      const [recit] = await recitsDeFamine(t.territoireId, t.ne);
+      expect(recit.titre).toBe("9 Habitants ont quitté le Territoire");
+      expect(recit.texte.split("\n").slice(1, 10).map((ligne) => ligne.split(",").slice(0, 2).join(","))).toEqual([
+        "H14, sans Métier",
+        "H11, sans Métier",
+        "H08, sans Métier",
+        "H05, sans Métier",
+        "H02, sans Métier",
+        "H20, Bûcheron",
+        "H19, Chasseur",
+        "H18, Bûcheron",
+        "H17, Chasseur",
+      ]);
+    });
+
+    it("un Récit lu, puis de nouveaux départs : un nouveau Récit, et le premier reste tel qu'il a été lu", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 23 * HEURE) });
+      const [lu] = await recitsDeFamine(t.territoireId, t.ne);
+      expect(lu.titre).toBe("3 Habitants ont quitté le Territoire");
+      await pool.query("update recit set lu_le = $2 where territoire_id = $1", [t.territoireId, apres(t.ne, 23 * HEURE)]);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 25 * HEURE) });
+      const partis = await departs(t.territoireId, t.ne);
+      expect(await recitsDeFamine(t.territoireId, t.ne)).toEqual([{ ...lu, lu: true }, recitAttendu(t.ne, partis.slice(3))]);
+    });
+
+    it("ne reprend qu'un Récit de Famine : un autre Récit à lire reste tel quel", async () => {
+      const t = await vingtHeures();
+      await ecrireUnRecit(pool, t.territoireId, { titre: "Un autre Récit", texte: "Rien à voir.", survenuLe: apres(t.ne, 20 * HEURE) });
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 22 * HEURE) });
+      expect(await recitsDeFamine(t.territoireId, t.ne)).toEqual([recitAttendu(t.ne, await departs(t.territoireId, t.ne))]);
+      const { rows } = await pool.query("select titre, texte from recit where territoire_id = $1 and titre = 'Un autre Récit'", [t.territoireId]);
+      expect(rows).toEqual([{ titre: "Un autre Récit", texte: "Rien à voir." }]);
+    });
+
+    it("signale au retour les départs que le joueur n'a pas encore lus, et plus rien une fois leur Récit lu", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 20.5 * HEURE) });
+      expect(await departsNonLus(pool, t.territoireId)).toBeNull();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 40 * HEURE) });
+      const nonLus = await departsNonLus(pool, t.territoireId);
+      expect(nonLus).toMatchObject({ habitants: 9 });
+      expect(await marquerUnRecitLu(pool, t.territoireId, nonLus!.recitId, apres(t.ne, 40 * HEURE))).toBe(true);
+      expect(await departsNonLus(pool, t.territoireId)).toBeNull();
     });
   });
 });

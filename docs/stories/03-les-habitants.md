@@ -294,6 +294,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0327 · Être informé des départs par un récit
 **En tant que** joueur, **je veux** un récit qui dit qui est parti à cause de la Famine, **afin de** mesurer les dégâts.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque départ rejoint le Récit de Famine non lu (sinon il en écrit un) : « 3 Habitants ont quitté le Territoire », une ligne par départ (prénom, Métier ou « sans Métier », heure de Paris), puis « Pour sortir de la Famine : produire plus de Nourriture ou nourrir moins de bouches. » Une absence donne un seul Récit. Sur le Foyer, un bandeau « 3 Habitants sont partis pendant votre absence · Lire » mène aux Récits tant que celui-ci n'est pas lu. Vérifié en vrai, mobile compris.
 - **Débloquée par** : US-0324, US-0326
 - **Critères d'acceptation** :
   - Les départs donnent un récit : combien d'Habitants sont partis, avec quels Métiers, et à quelle heure.

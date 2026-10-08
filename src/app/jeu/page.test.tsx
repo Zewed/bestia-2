@@ -26,6 +26,8 @@ const stocks = vi.hoisted(() => ({
   ]),
 }));
 vi.mock("@/monde/stocks", () => stocks);
+const famine = vi.hoisted(() => ({ departsNonLus: vi.fn(async (): Promise<{ recitId: number; habitants: number } | null> => null) }));
+vi.mock("@/monde/famine", async (original) => ({ ...(await original<object>()), departsNonLus: famine.departsNonLus }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -89,6 +91,16 @@ describe("écran du Foyer (US-0157)", () => {
     const html = renderToStaticMarkup(await Foyer());
     expect(absence.recapitulatifDAbsence).toHaveBeenCalledWith(expect.anything(), 12, expect.any(Date));
     expect(html).toMatch(/<button[^>]*><span>Pendant votre absence : \+40 Viande, \+25 Végétaux<\/span><\/button>/);
+  });
+
+  it("signale en haut les Habitants partis pendant l'absence, tant que leur Récit n'est pas lu, avec « Lire » vers les Récits (US-0327)", async () => {
+    connecte();
+    famine.departsNonLus.mockResolvedValueOnce({ recitId: 41, habitants: 3 });
+    const html = renderToStaticMarkup(await Foyer());
+    expect(famine.departsNonLus).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(html).toMatch(/<p[^>]*><strong[^>]*>3 Habitants sont partis pendant votre absence<\/strong> ?<a[^>]*href="\/jeu\/recits"[^>]*>Lire<\/a><\/p>/);
+    // En haut de la page, avant l'illustration.
+    expect(html.indexOf("partis pendant votre absence")).toBeLessThan(html.indexOf("<img"));
   });
 
   it("montre « Foyer » seul pour un chef toujours sans Foyer (Monde complet)", async () => {

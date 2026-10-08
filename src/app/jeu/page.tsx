@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
@@ -6,6 +7,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
 import { getPool } from "@/db";
 import { recapitulatifDAbsence } from "@/monde/absence";
+import { departsNonLus, departsPendantLAbsence } from "@/monde/famine";
 import { stocksDuTerritoire } from "@/monde/stocks";
 import { foyerDuTerritoire } from "@/monde/territoire";
 import { maintenant } from "@/temps/horloge";
@@ -24,6 +26,9 @@ const ILLUSTRATION_DU_FOYER = { chemin: "foyer/prairie.webp", alt: "La hutte du 
  * pas encore (US-0163) ; au retour d'une absence, ce que le Foyer a produit entre-temps (US-0216) ;
  * à côté, ou dessous sur mobile, sa production horaire (US-0217). Sans session, la garde mène à la
  * connexion ; sans nom de chef, à son choix.
+ *
+ * US-0327 : en haut, tant que le joueur n'a pas lu le Récit des départs de Famine, une ligne le signale, « 3 Habitants
+ * sont partis pendant votre absence », et « Lire » mène aux Récits.
  */
 export default async function Foyer() {
   await connection();
@@ -32,8 +37,17 @@ export default async function Foyer() {
   const foyer = territoireId === null ? null : await foyerDuTerritoire(getPool(), territoireId);
   const recap = territoireId === null ? { gains: [], pleins: [] } : await recapitulatifDAbsence(getPool(), territoireId, maintenant());
   const stocks = territoireId === null ? [] : await stocksDuTerritoire(getPool(), territoireId);
+  const departs = territoireId === null ? null : await departsNonLus(getPool(), territoireId);
   return (
     <main className={`${styles.page} ${foyer ? styles.avecProduction : ""}`}>
+      {departs ? (
+        <p className={styles.departs}>
+          <strong className={styles.nombreDeDeparts}>{departsPendantLAbsence(departs.habitants)}</strong>{" "}
+          <Link href="/jeu/recits" className={styles.lireDeparts}>
+            Lire
+          </Link>
+        </p>
+      ) : null}
       <section className={styles.foyer}>
         <Illustration
           chemin={ILLUSTRATION_DU_FOYER.chemin}

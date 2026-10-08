@@ -15,6 +15,62 @@
   border-radius: var(--arrondi);
 }
 
+/*
+ * US-0327 : en haut, toute la largeur, les Habitants partis pendant l'absence, tant que leur Récit n'est pas lu ;
+ * « Lire » mène aux Récits. L'illustration cède sa hauteur, pour que l'écran tienne toujours sans défiler.
+ */
+.departs {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0 12px;
+  margin-bottom: var(--ecart);
+  padding: 2px 4px 2px 16px;
+  border-radius: var(--arrondi);
+  background: var(--sable);
+  color: var(--encre);
+}
+
+.avecProduction > .departs {
+  margin-bottom: 0;
+}
+
+.page:has(.departs) .foyer {
+  max-height: calc(var(--hauteur-utile) - 48px - 48px - var(--ecart));
+}
+
+/* À l'étroit, la phrase passe à la ligne et « Lire » reste à droite. */
+.nombreDeDeparts {
+  min-width: 0;
+  padding: 10px 0;
+  font-weight: var(--graisse-titre);
+}
+
+.lireDeparts {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: var(--arrondi-moyen);
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (hover: hover) {
+  .lireDeparts:hover {
+    background: var(--survol);
+  }
+}
+
+.lireDeparts:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: -2px;
+}
+
 /* US-0217 : sur ordinateur, la production à droite de l'illustration ; sur mobile, dessous (voir plus bas). */
 .avecProduction {
   display: grid;
@@ -108,6 +164,9 @@
     aspect-ratio: 4 / 5;
     max-height: calc(var(--hauteur-utile) - 24px);
   }
+  .page:has(.departs) .foyer {
+    max-height: calc(var(--hauteur-utile) - 24px - 48px - var(--ecart));
+  }
   .legende {
     padding: 56px 20px 20px;
   }
@@ -122,6 +181,9 @@
   .foyer {
     min-height: 0;
     max-height: calc(var(--hauteur-utile) - 24px);
+  }
+  .page:has(.departs) .foyer {
+    max-height: calc(var(--hauteur-utile) - 24px - 48px - var(--ecart));
   }
   .foyer img {
     object-position: 50% 25%;
