@@ -9,30 +9,34 @@ export type Commandes = {
 
 /**
  * US-0420 : de combien de pixels un pointeur appuyé doit bouger avant qu'on le prenne pour un glissement : en
- * deçà, c'est un clic, même si la main tremble un peu.
+ * deçà, c'est un clic, même si la main tremble un peu. US-0421 : un doigt bouge davantage en se posant qu'une
+ * souris (ou un stylet) : un toucher bref ne déplace rien.
  */
-export const SEUIL_DE_GLISSEMENT = 4;
+export const SEUIL_DE_GLISSEMENT = { souris: 4, doigt: 8 };
 
 /**
  * US-0420 : suit les gestes du joueur sur la carte (`element`) et les transmet à `commandes`, jusqu'à l'appel de
  * la fonction rendue. Glisser en gardant le bouton principal appuyé déplace la carte, d'autant que la souris
  * depuis l'endroit où il a été appuyé, une fois passé le seuil de glissement ; la carte garde la souris quand
- * elle sort de l'écran en chemin.
+ * elle sort de l'écran en chemin. US-0421 : de même au doigt, ces mêmes événements du navigateur valant pour la
+ * souris, le doigt et le stylet.
  */
 export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () => void {
-  // Le pointeur appuyé sur la carte : là où il a été appuyé, sa dernière position prise en compte, et s'il glisse.
-  let appuye: { id: number; depart: { x: number; y: number }; dernier: { x: number; y: number }; glisse: boolean } | null = null;
+  // Le pointeur appuyé sur la carte : là où il a été appuyé, sa dernière position prise en compte, son seuil de
+  // glissement, et s'il glisse.
+  let appuye: { id: number; depart: { x: number; y: number }; dernier: { x: number; y: number }; seuil: number; glisse: boolean } | null = null;
 
   const poser = (e: PointerEvent) => {
     if (appuye || e.button !== 0) return;
     element.setPointerCapture(e.pointerId);
     const ici = { x: e.clientX, y: e.clientY };
-    appuye = { id: e.pointerId, depart: ici, dernier: ici, glisse: false };
+    const seuil = e.pointerType === "touch" ? SEUIL_DE_GLISSEMENT.doigt : SEUIL_DE_GLISSEMENT.souris;
+    appuye = { id: e.pointerId, depart: ici, dernier: ici, seuil, glisse: false };
   };
   const bouger = (e: PointerEvent) => {
     if (appuye?.id !== e.pointerId) return;
     const ici = { x: e.clientX, y: e.clientY };
-    if (!appuye.glisse && Math.hypot(ici.x - appuye.depart.x, ici.y - appuye.depart.y) < SEUIL_DE_GLISSEMENT) return;
+    if (!appuye.glisse && Math.hypot(ici.x - appuye.depart.x, ici.y - appuye.depart.y) < appuye.seuil) return;
     appuye.glisse = true;
     commandes.deplacer(ici.x - appuye.dernier.x, ici.y - appuye.dernier.y);
     appuye.dernier = ici;

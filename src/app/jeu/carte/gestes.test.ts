@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { suivreLesGestes, type Commandes } from "./gestes";
+import { SEUIL_DE_GLISSEMENT, suivreLesGestes, type Commandes } from "./gestes";
 
 /** La carte à l'écran, et ce que les gestes lui ont demandé. */
 let carte: HTMLElement;
@@ -79,5 +79,41 @@ describe("glisser la carte à la souris (US-0420)", () => {
     pointeur("pointerdown", 100, 100);
     pointeur("pointermove", 150, 150);
     expect(deplacements()).toEqual([]);
+  });
+});
+
+describe("glisser la carte au doigt (US-0421)", () => {
+  const doigt = { pointerType: "touch", pointerId: 7 };
+
+  it("la déplace d'autant que le doigt, à chaque mouvement", () => {
+    pointeur("pointerdown", 200, 300, doigt);
+    pointeur("pointermove", 190, 280, doigt);
+    pointeur("pointermove", 150, 260, doigt);
+    pointeur("pointerup", 150, 260, doigt);
+    expect(deplacements()).toEqual([
+      [-10, -20],
+      [-40, -20],
+    ]);
+    expect(carte.setPointerCapture).toHaveBeenCalledWith(7);
+  });
+
+  it("ne prend pas un toucher bref pour un déplacement : un doigt bouge plus qu'une souris en se posant", () => {
+    expect(SEUIL_DE_GLISSEMENT.doigt).toBeGreaterThan(SEUIL_DE_GLISSEMENT.souris);
+    pointeur("pointerdown", 200, 300, doigt);
+    pointeur("pointermove", 205, 304, doigt);
+    pointeur("pointerup", 205, 304, doigt);
+    expect(deplacements()).toEqual([]);
+    // La même hésitation à la souris, c'est déjà un glissement.
+    pointeur("pointerdown", 200, 300);
+    pointeur("pointermove", 205, 304);
+    expect(deplacements()).toEqual([[5, 4]]);
+  });
+
+  it("une fois le doigt levé ou le geste interrompu par le navigateur, ne déplace plus rien", () => {
+    pointeur("pointerdown", 200, 300, doigt);
+    pointeur("pointermove", 230, 300, doigt);
+    pointeur("pointercancel", 230, 300, doigt);
+    pointeur("pointermove", 260, 300, doigt);
+    expect(deplacements()).toEqual([[30, 0]]);
   });
 });

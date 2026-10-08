@@ -217,6 +217,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0421 · Déplacer la carte au doigt
 **En tant que** joueur, **je veux** faire glisser la carte du doigt, **afin de** parcourir le Monde sur mon téléphone.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Les mêmes gestes au doigt : la carte suit le doigt, la page ne défile pas (la carte garde les gestes pour elle), un toucher de moins de 8 px n'est pas un glissement, mêmes limites qu'à la souris. Vérifié en vrai à 390 px.
 - **Débloquée par** : US-0420
 - **Critères d'acceptation** :
   - Glisser un doigt déplace la carte, qui suit le doigt sans à-coups.

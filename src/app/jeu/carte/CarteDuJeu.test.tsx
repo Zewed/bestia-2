@@ -282,6 +282,23 @@ describe("glisser la carte à la souris (US-0420)", () => {
     expect(dessineeLa({ ...deplacer(ouverte(), 60, -40, 60), largeur: 375, hauteur: 559 })).toBe(true);
   });
 
+  it("se laisse aussi glisser au doigt, avec les mêmes limites (US-0421)", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const doigt = { pointerType: "touch", pointerId: 3 };
+    pointeur("pointerdown", 200, 300, doigt);
+    pointeur("pointermove", 205, 304, doigt);
+    // Un doigt qui se pose bouge un peu : ce n'est pas encore un glissement.
+    expect(aLaProchaineImage.size).toBe(0);
+    pointeur("pointermove", 170, 320, doigt);
+    prochaineImage();
+    expect(dessineeLa(deplacer(ouverte(), -30, 20, 60))).toBe(true);
+    pointeur("pointermove", 170, 100_320, doigt);
+    pointeur("pointerup", 170, 100_320, doigt);
+    prochaineImage();
+    expect(dessineeLa(deplacer(ouverte(), -30, 100_020, 60))).toBe(true);
+    expect(AUTOUR.filter((c) => dessineeLa(deplacer(ouverte(), -30, 100_020, 60), c))).toHaveLength(7);
+  });
+
   it("cesse de suivre la souris et de dessiner une fois la page quittée", () => {
     const { unmount, container } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
     const canvas = container.querySelector("canvas")!;

@@ -13,4 +13,10 @@ describe("les styles de la carte du Monde", () => {
     expect(regle(".carte")).toContain("user-select: none;");
     expect(regle(".carte:active")).toContain("cursor: grabbing;");
   });
+
+  it("laissent la carte au doigt : glisser dessus ne fait pas défiler la page (US-0421)", () => {
+    expect(regle(".carte")).toContain("touch-action: none;");
+    // Ni bulle de menu ni loupe quand le doigt s'attarde sur la carte.
+    expect(regle(".carte")).toContain("-webkit-touch-callout: none;");
+  });
 });
