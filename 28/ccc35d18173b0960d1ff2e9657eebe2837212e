@@ -4,18 +4,25 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_26d7c42d06bdf7 7,33
 donnees/LISEZMOI.md
   s_97a431cfa65ca7::t_90eaacfa7fe4d8 9
+  s_97a431cfa65ca7::t_cc6577a886ea78 9
 donnees/raretes-par-anneau.yaml
   s_97a431cfa65ca7::t_85e404cb0faa67 1-43
+  s_97a431cfa65ca7::t_7110094c12ac23 1-43
 src/donnees/jeux.ts
   s_97a431cfa65ca7::t_24b46946ba412b 8,324,328-363
+  s_97a431cfa65ca7::t_6600c264212b7a 8,324,328-363
 src/donnees/raretes-par-anneau.test.ts
   s_97a431cfa65ca7::t_8991f11e16eb84 1-64
+  s_97a431cfa65ca7::t_3d0359c0d1d3cb 1-64
 src/monde/betes-sauvages.db.test.ts
   s_97a431cfa65ca7::t_e6495556baef7f 5,80-96
+  s_97a431cfa65ca7::t_b28ff7b01b209b 5,80-96
 src/monde/betes-sauvages.test.ts
   s_97a431cfa65ca7::t_6ef3b0768c1f3d 4-6,16-17,97-98,114,120,142-200
+  s_97a431cfa65ca7::t_ccf00d43749d80 4-6,16-17,97-98,114,120,142-200
 src/monde/betes-sauvages.ts
   s_97a431cfa65ca7::t_c8d7b4ff5927d3 6-7,9,11,21,33,35-58,94-97,99-106,110-111,116-117,122-123,126,128,138-140
+  s_97a431cfa65ca7::t_4337ff726fe594 6-7,9,11,21,33,35-58,94-97,99-106,110-111,116-117,122-123,126,128,138-140
 ---
 {
   "schema_version": "authorship/3.0.0",
