@@ -1,0 +1,33 @@
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_b33690fb9b699c 211,213-237
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_a7ee6547cf96a1 75
+  s_97a431cfa65ca7::t_34d680eff57a10 107-108
+src/monde/habitants.db.test.ts
+  s_97a431cfa65ca7::t_1b37dd4ecadea9 15
+  s_97a431cfa65ca7::t_c3b88a3beaada1 454
+  s_97a431cfa65ca7::t_bebd4b8d94acc7 28,38
+  s_97a431cfa65ca7::t_97a923b8775549 438-453,455
+src/app/jeu/habitants/ListeDesHabitants.tsx
+  s_97a431cfa65ca7::t_9d12fe3d01d924 110,114
+  s_97a431cfa65ca7::t_74a5544b68afdc 59-61
+  s_97a431cfa65ca7::t_1ce6bf07cd8c9d 111-113
+src/app/jeu/habitants/ListeDesHabitants.test.tsx
+  s_97a431cfa65ca7::t_9ba7e82a05d433 518-538
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c9aa127f06d5fbea5aed4b88ee8b5fb0ebaff09f",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
