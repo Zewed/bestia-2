@@ -89,14 +89,19 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(apres.cases.teinte.map((t) => apres.teintes[t])).toEqual(monde.map((c, i) => (c === loin ? "mer" : attendues[i])));
   });
 
-  it("donne à chaque Case sa zone : la Couronne, le Cœur sauvage, ou ni l'une ni l'autre (US-0433)", async () => {
-    const { territoireId } = await naitre(genereId);
+  it("donne à chaque Case découverte sa zone : la Couronne, le Cœur sauvage, ou ni l'une ni l'autre (US-0433) ; aucune sous le brouillard (US-0439)", async () => {
+    const { territoireId, foyer } = await naitre(genereId);
+    const monde = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE });
+    const zoneDe = (c: (typeof monde)[number]) => (c.couronne ? ZONE_COURONNE : c.coeur ? ZONE_COEUR : 0);
+    // Le joueur découvre le Cœur sauvage, et une Case entre les deux, en plus des abords de son Foyer, sur la Couronne.
+    const entre = monde.find((c) => !c.couronne && !c.coeur)!;
+    await decouvrir(pool, territoireId, [...monde.filter((c) => c.coeur), entre]);
     const carte = (await carteDuJoueur(pool, territoireId))!;
-    const attendues = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE }).map((c) => (c.couronne ? ZONE_COURONNE : c.coeur ? ZONE_COEUR : 0));
-    expect(carte.cases.zone).toEqual(attendues);
-    // Les 6 anneaux du bord, et les Cases à moins de 8 du milieu.
-    expect(carte.cases.zone.filter((z) => z === ZONE_COURONNE)).toHaveLength(6 * (55 + 60) * 3);
+    const decouverte = (c: (typeof monde)[number]) => distance(c, foyer) <= ABORDS_DU_FOYER_CASES || c.coeur || c === entre;
+    expect(carte.cases.zone).toEqual(monde.map((c) => (decouverte(c) ? zoneDe(c) : 0)));
+    // Les Cases à moins de 8 du milieu ; de la Couronne, seulement ses abords : rien de ce que cache le brouillard.
     expect(carte.cases.zone.filter((z) => z === ZONE_COEUR)).toHaveLength(1 + 3 * 7 * 8);
+    expect(carte.cases.zone.filter((z) => z === ZONE_COURONNE)).toHaveLength(monde.filter((c) => c.couronne && distance(c, foyer) <= ABORDS_DU_FOYER_CASES).length);
   });
 
   it("voyage léger, même pour les 10 981 Cases d'un Monde généré (US-0434)", async () => {
@@ -109,15 +114,25 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect((gzipSync(envoyee).length * 8) / 1.6e6).toBeLessThan(CARTE_UTILISABLE_SECONDES / 20);
   });
 
-  it("donne les Foyers des autres chefs de son Monde, sans le sien (US-0419)", async () => {
+  it("donne les Foyers des autres chefs sur les Cases qu'il a découvertes, et eux seuls, sans le sien (US-0419, US-0439)", async () => {
     const moi = await naitre(genereId);
-    const voisin = await naitre(genereId);
+    // Un voisin dont le Foyer est sous le brouillard du joueur : chacun naît près du dernier arrivé.
+    let voisin = await naitre(genereId);
+    for (let i = 0; i < 8 && distance(voisin.foyer, moi.foyer) <= ABORDS_DU_FOYER_CASES; i++) voisin = await naitre(genereId);
+    expect(distance(voisin.foyer, moi.foyer)).toBeGreaterThan(ABORDS_DU_FOYER_CASES);
+    const avant = (await carteDuJoueur(pool, moi.territoireId))!;
+    expect(avant.foyers).not.toContainEqual(voisin.foyer);
+    expect(avant.foyers).not.toContainEqual(moi.foyer);
+    // Découvert, son Foyer se voit.
+    await decouvrir(pool, moi.territoireId, [voisin.foyer]);
     const carte = (await carteDuJoueur(pool, moi.territoireId))!;
     expect(carte.foyers).toContainEqual(voisin.foyer);
     expect(carte.foyers).not.toContainEqual(moi.foyer);
-    // Tous les autres Foyers de ce Monde, et eux seuls, rangés par q puis r.
+    // Tous les autres Foyers de ce Monde sur les Cases qu'il a découvertes, et eux seuls, rangés par q puis r.
     const { rows } = await pool.query<{ q: number; r: number }>(
-      `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id where c.monde_id = $1 and t.id <> $2 order by c.q, c.r`,
+      `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id
+       join case_decouverte d on d.territoire_id = $2 and d.case_id = c.id
+       where c.monde_id = $1 and t.id <> $2 order by c.q, c.r`,
       [genereId, moi.territoireId],
     );
     expect(carte.foyers).toEqual(rows);
@@ -140,8 +155,8 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte!.cases.teinte).toHaveLength(2070);
     const decouvertes = await casesDecouvertes(pool, territoireId);
     expect(carte!.cases.teinte.filter((t) => carte!.teintes[t] !== BROUILLARD)).toHaveLength(decouvertes.length);
-    // US-0433 : toutes de la Couronne.
-    expect(new Set(carte!.cases.zone)).toEqual(new Set([ZONE_COURONNE]));
+    // US-0433 : toutes de la Couronne ; US-0439 : ce que le joueur en a découvert.
+    expect(carte!.cases.zone).toEqual(carte!.cases.teinte.map((t) => (carte!.teintes[t] === BROUILLARD ? 0 : ZONE_COURONNE)));
   });
 
   it("ne lit rien pour un Territoire qui n'existe pas", async () => {

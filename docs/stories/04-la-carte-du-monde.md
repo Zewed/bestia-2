@@ -400,6 +400,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0439 · Ne rien laisser passer de ce que cache le brouillard
 **En tant que** développeur, **je veux** que le navigateur ne reçoive jamais ce que cache le brouillard, **afin de** rendre la triche impossible.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Pour une Case non découverte, la page ne reçoit que sa place et la brume : ni Biome, ni zone, ni Foyer. La liste des teintes envoyée ne contient que celles des Cases découvertes. Demander directement la fiche d'une Case cachée renvoie « Case inconnue », sans nom de chef. Prouvé sur base, en inspectant ce que reçoit la page et par l'action appelée directement.
 - **Débloquée par** : US-0438
 - **Critères d'acceptation** :
   - Le navigateur ne reçoit ni le Biome ni le propriétaire d'une Case sous le brouillard du joueur.
