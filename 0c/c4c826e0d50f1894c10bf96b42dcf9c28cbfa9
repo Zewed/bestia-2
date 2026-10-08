@@ -6,12 +6,24 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_b7d75f0c86323b 5
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_bb3166bc0d142b 9,26-27,564-642
+  s_97a431cfa65ca7::t_2020e6d0c1537e 9
+  s_97a431cfa65ca7::t_a013a428123113 595-598
+  s_97a431cfa65ca7::t_1e211d324efa8f 564-594,599-642
+  s_97a431cfa65ca7::t_b102ba0904e1e3 26-27
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_72f01d5e96a811 13,43,69,74,83,90
+  s_97a431cfa65ca7::t_a61f69fd80a87d 90
+  s_97a431cfa65ca7::t_ed971e18d86e59 83
+  s_97a431cfa65ca7::t_ae4d92e989501b 69
+  s_97a431cfa65ca7::t_cc3cf823b7111d 13
+  s_97a431cfa65ca7::t_513f256589f719 43
+  s_97a431cfa65ca7::t_0121408eef99fa 74
 src/app/jeu/carte/vue-retenue.test.ts
   s_97a431cfa65ca7::t_0ec6a6b934b23b 1-54
+  s_97a431cfa65ca7::t_a5a5a47864ca62 1-54
 src/app/jeu/carte/vue-retenue.ts
   s_97a431cfa65ca7::t_8a9d3bfcf9064f 1-36
+  s_97a431cfa65ca7::t_0233a8ef9cd1ba 1-36
 ---
 {
   "schema_version": "authorship/3.0.0",
