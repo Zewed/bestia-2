@@ -1,0 +1,133 @@
+.agents/skills/armada-coordinator/SKILL.md
+  s_00c131376e16bb::t_666669d122d2d9 1-8
+.agents/skills/armada-runtime-claude-code/SKILL.md
+  s_00c131376e16bb::t_913ff55df08f7e 1-8
+.agents/skills/armada-runtime-conductor/SKILL.md
+  s_00c131376e16bb::t_bda2fc711c42ec 1-8
+.agents/skills/armada-runtime-herdr/SKILL.md
+  s_00c131376e16bb::t_01ba5328f7d60f 1-8
+.agents/skills/armada-worker/SKILL.md
+  s_00c131376e16bb::t_f82daa2893ebe9 1-8
+.agents/skills/capture-learning-tools/LICENSE
+  s_00c131376e16bb::t_45e482ffaaaed8 1-21
+.agents/skills/capture-learning-tools/SKILL.md
+  s_00c131376e16bb::t_30b6cae410546a 1-181
+.agents/skills/capture-learning-tools/UPSTREAM.md
+  s_00c131376e16bb::t_8db93e9b747601 1-6
+.agents/skills/capture-learning-tools/companion.json
+  s_00c131376e16bb::t_fcbc33585e37ef 1-57
+.agents/skills/capture-learning-tools/evals/evals.json
+  s_00c131376e16bb::t_f1d095198a3ca1 1-29
+.agents/skills/capture-learning-tools/references/agent-instructions.md
+  s_00c131376e16bb::t_fbf2495e3fb27a 1-71
+.agents/skills/capture-learning-tools/references/ci-policy.md
+  s_00c131376e16bb::t_58d95f8527cc7e 1-84
+.agents/skills/capture-learning-tools/references/conversation-analysis.md
+  s_00c131376e16bb::t_486f81779ee3ca 1-44
+.agents/skills/capture-learning-tools/references/cross-agent-linking.md
+  s_00c131376e16bb::t_f636759566a0e3 1-56
+.agents/skills/capture-learning-tools/references/examples.md
+  s_00c131376e16bb::t_8df1f6d301c901 1-61
+.agents/skills/capture-learning-tools/references/non-technical-mode.md
+  s_00c131376e16bb::t_e51fd63d294f2c 1-36
+.agents/skills/capture-learning-tools/references/project-memory.md
+  s_00c131376e16bb::t_06185beeb42bce 1-46
+.agents/skills/capture-learning-tools/references/promotion-matrix.md
+  s_00c131376e16bb::t_1afa9c96d5620e 1-44
+.agents/skills/capture-learning-tools/references/testing-policy.md
+  s_00c131376e16bb::t_760f890c3946a4 1-57
+.agents/skills/capture-learning-tools/scripts/classify_learning.py
+  s_00c131376e16bb::t_ee892c13abc3fc 1-72
+.agents/skills/capture-learning-tools/scripts/inspect_ci_surface.py
+  s_00c131376e16bb::t_12b5e958202b11 1-115
+.agents/skills/capture-learning-tools/scripts/inspect_project_guidance.py
+  s_00c131376e16bb::t_ad8517f23eda25 1-137
+.agents/skills/review-code-dev/LICENSE
+  s_00c131376e16bb::t_03f973b385a6fd 1-201
+.agents/skills/review-code-dev/LICENSE-MIT
+  s_00c131376e16bb::t_e9278dcbfa32b5 1-21
+.agents/skills/review-code-dev/SKILL.md
+  s_00c131376e16bb::t_5f12df7fc315f7 1-270
+.agents/skills/review-code-dev/UPSTREAM.md
+  s_00c131376e16bb::t_f1117e1413c02e 1-25
+.agents/skills/review-code-dev/companion.json
+  s_00c131376e16bb::t_5c1ad59a3fd46c 1-108
+.agents/skills/review-code-dev/scripts/.gitignore
+  s_00c131376e16bb::t_677d9885e9eda3 1-2
+.agents/skills/review-code-dev/scripts/ocr.py
+  s_00c131376e16bb::t_df0e733e7cb77b 1-109
+.agents/skills/review-code-dev/scripts/test_ocr.py
+  s_00c131376e16bb::t_569c00cb38f4a1 1-97
+.agents/skills/ship-pr-dev/LICENSE
+  s_00c131376e16bb::t_ff56540d4c636b 1-21
+.agents/skills/ship-pr-dev/SKILL.md
+  s_00c131376e16bb::t_754f91bf6ce160 1-179
+.agents/skills/ship-pr-dev/UPSTREAM.md
+  s_00c131376e16bb::t_36ca5920238b73 1-15
+.agents/skills/ship-pr-dev/companion.json
+  s_00c131376e16bb::t_edfa91559b538d 1-118
+.agents/skills/ship-pr-dev/evals/evals.json
+  s_00c131376e16bb::t_7514bcbd10095b 1-130
+.agents/skills/ship-pr-dev/references/agent-routing.md
+  s_00c131376e16bb::t_aff02d2143c658 1-123
+.agents/skills/ship-pr-dev/references/pr-template.md
+  s_00c131376e16bb::t_d4f5f74396a098 1-81
+.agents/skills/ship-pr-dev/references/readiness-gates.md
+  s_00c131376e16bb::t_d14317eb37d7b2 1-94
+.agents/skills/ship-pr-dev/references/review-gate.md
+  s_00c131376e16bb::t_808eae4f3f266f 1-66
+.agents/skills/ship-pr-dev/references/workflow.md
+  s_00c131376e16bb::t_b22c541ae047c1 1-58
+.agents/skills/ship-pr-dev/scripts/.gitignore
+  s_00c131376e16bb::t_980dbe297149dc 1-2
+.agents/skills/ship-pr-dev/scripts/collect_ship_context.py
+  s_00c131376e16bb::t_a7283fa235b3a1 1-225
+.agents/skills/ship-pr-dev/scripts/prepare_ship_run.py
+  s_00c131376e16bb::t_a7bc55c4ef2689 1-97
+.agents/skills/ship-pr-dev/scripts/test_collect_ship_context.py
+  s_00c131376e16bb::t_59b3f8e028a9ff 1-85
+.agents/skills/ship-pr-dev/scripts/test_prepare_ship_run.py
+  s_00c131376e16bb::t_fba51ad4ddc549 1-29
+.claude/settings.json
+  s_00c131376e16bb::t_4cc65353e80cfe 1-15
+.claude/skills/armada-coordinator
+  s_00c131376e16bb::t_6f38d4a71ba1a8 1
+.claude/skills/armada-runtime-claude-code
+  s_00c131376e16bb::t_4d1099707d45f0 1
+.claude/skills/armada-runtime-conductor
+  s_00c131376e16bb::t_a84e641dd5aa95 1
+.claude/skills/armada-runtime-herdr
+  s_00c131376e16bb::t_63bbed11f5e4bc 1
+.claude/skills/armada-worker
+  s_00c131376e16bb::t_efda0f58bef052 1
+.claude/skills/capture-learning-tools
+  s_00c131376e16bb::t_db97d3a0ab0804 1
+.claude/skills/review-code-dev
+  s_00c131376e16bb::t_129e6d37c5a23a 1
+.claude/skills/ship-pr-dev
+  s_00c131376e16bb::t_1fd3b3e8dbcfb5 1
+.conductor/settings.toml
+  s_00c131376e16bb::t_d8e137944c6e48 1-5
+.gitignore
+  s_00c131376e16bb::t_79eeb9d92c65f0 44-46
+armada.toml
+  s_00c131376e16bb::t_fad3dc4835a106 1-181
+skills-lock.json
+  s_00c131376e16bb::t_77349403a5c1b3 1-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8affd2281ad7703075c46f8caccd44d89ad3ba16",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
