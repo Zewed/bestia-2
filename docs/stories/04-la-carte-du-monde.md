@@ -268,11 +268,12 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0426 · Revenir au Foyer sur la carte
 **En tant que** joueur, **je veux** un bouton qui ramène la carte sur mon Foyer, **afin de** ne jamais me perdre dans le Monde.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Un bouton « Revenir au Foyer » de 44 px, au-dessus de « + » et « − », ramène la carte sur le Foyer au zoom d'ouverture, par un glissement doux de 300 ms (`CARTE_RETOUR_AU_FOYER_MS`). Avec le mouvement réduit, elle y va d'un coup ; un geste pendant le mouvement l'arrête. Quand le Foyer est hors de l'écran, une flèche citron au bord de la carte pointe vers lui, suit la vue, évite la légende et les panneaux, et ramène au Foyer quand on la touche. Sur mobile, les boutons restent au-dessus du panneau de la légende ouvert. Vérifié en vrai.
 - **Débloquée par** : US-0419, US-0420
 - **Critères d'acceptation** :
   - Un bouton ramène la carte sur le Foyer, au zoom par défaut, par un court mouvement.
   - Le bouton reste visible quoi que l'on fasse sur la carte.
-  - Quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction (à décider).
+  - Quand le Foyer est hors de l'écran, une flèche au bord de la carte indique sa direction (décidé le 2026-10-08).
 
 ### US-0427 · Retrouver la carte là où on l'a laissée
 **En tant que** joueur, **je veux** retrouver la carte au même endroit quand j'y reviens, **afin de** ne pas refaire le chemin à chaque fois.

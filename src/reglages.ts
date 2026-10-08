@@ -222,3 +222,6 @@ export const CARTE_CRAN_DE_ZOOM = 1.5;
  * provisoire, à régler en jouant), mesurée sur le profil « Slow 4G » de Chrome : 150 ms d'aller-retour, 1,6 Mb/s.
  */
 export const CARTE_UTILISABLE_SECONDES = 3;
+
+/** US-0426 : le retour de la carte sur le Foyer glisse en 300 ms, en douceur (valeur provisoire, à régler en jouant). */
+export const CARTE_RETOUR_AU_FOYER_MS = 300;

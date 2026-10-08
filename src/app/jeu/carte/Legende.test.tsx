@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { couleur } from "@/monde/couleurs-de-la-carte";
@@ -55,10 +55,42 @@ const uneCase = (teinte: string, foyer = { q: 1000, r: 0 }, foyers: { q: number;
     }),
   ).traits.map((t) => ({ d: t.d, couleur: t.couleur }));
 
-beforeEach(() => localStorage.clear());
+/** US-0426 : si l'écran est celui d'un mobile, où la légende s'ouvre en bas ; ce qui suit son passage de l'un à l'autre. */
+let mobile = false;
+let changementsDEcran: (() => void)[] = [];
+/** US-0426 : le suivi de taille du panneau, pour annoncer un changement de taille comme le navigateur. */
+let suivi: { annoncer: () => void; arrete: boolean } | null = null;
+
+beforeEach(() => {
+  localStorage.clear();
+  vi.stubGlobal("matchMedia", (requete: string) => ({
+    matches: requete === "(max-width: 820px)" && mobile,
+    addEventListener: (_: string, rappel: () => void) => changementsDEcran.push(rappel),
+    removeEventListener: (_: string, rappel: () => void) => (changementsDEcran = changementsDEcran.filter((r) => r !== rappel)),
+  }));
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(rappel: () => void) {
+        suivi = { annoncer: rappel, arrete: false };
+      }
+      observe() {
+        suivi!.annoncer();
+      }
+      disconnect() {
+        suivi!.arrete = true;
+      }
+    },
+  );
+});
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  mobile = false;
+  changementsDEcran = [];
+  suivi = null;
+  document.documentElement.removeAttribute("style");
 });
 
 describe("la légende de la carte (US-0432)", () => {
@@ -156,5 +188,61 @@ describe("la légende de la carte (US-0432)", () => {
     expect(panneau().hidden).toBe(false);
     await userEvent.click(bouton());
     expect(panneau().hidden).toBe(true);
+  });
+});
+
+describe("la légende ouverte en bas de la carte sur mobile (US-0426)", () => {
+  /** La hauteur que la légende publie sur la page, pour les boutons de la carte et la flèche du Foyer. */
+  const publiee = () => document.documentElement.style.getPropertyValue("--hauteur-legende");
+  /** Le panneau mesure 260 pixels de haut ouvert, rien fermé ; un changement de taille, annoncé comme le navigateur. */
+  const mesurer = () =>
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return { height: this.hidden ? 0 : 260 } as DOMRect;
+    });
+  const annoncer = () => act(() => suivi!.annoncer());
+
+  it("publie la hauteur de son panneau quand elle est ouverte, et la retire quand elle se ferme", async () => {
+    mobile = true;
+    mesurer();
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    expect(publiee()).toBe("");
+    await userEvent.click(bouton());
+    annoncer();
+    expect(publiee()).toBe("260px");
+    await userEvent.click(bouton());
+    annoncer();
+    expect(publiee()).toBe("");
+  });
+
+  it("ne publie rien sur ordinateur, où elle flotte sous son bouton ; suit le passage de l'un à l'autre", async () => {
+    mesurer();
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    annoncer();
+    expect(publiee()).toBe("");
+    // La fenêtre rétrécie jusqu'à la largeur d'un mobile, puis élargie.
+    mobile = true;
+    act(() => changementsDEcran.forEach((rappel) => rappel()));
+    expect(publiee()).toBe("260px");
+    mobile = false;
+    act(() => changementsDEcran.forEach((rappel) => rappel()));
+    expect(publiee()).toBe("");
+  });
+
+  it("retire sa hauteur et cesse de suivre son panneau une fois la page quittée", async () => {
+    mobile = true;
+    mesurer();
+    const { unmount } = render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    annoncer();
+    unmount();
+    expect(publiee()).toBe("");
+    expect(suivi!.arrete).toBe(true);
+    expect(changementsDEcran).toEqual([]);
+  });
+
+  it("se déclare posée sur la carte : la flèche du Foyer ne passe pas dessous", () => {
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    expect(bouton().parentElement!.hasAttribute("data-sur-la-carte")).toBe(true);
   });
 });

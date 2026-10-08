@@ -1,0 +1,35 @@
+/*
+ * US-0426 : la flèche du Foyer, par-dessus la carte, son centre là où la carte la pose (au coin en haut à gauche,
+ * déplacé et tourné par la carte) ; 44 px à toucher du doigt pour une petite flèche.
+ */
+.fleche {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+.fleche[hidden] {
+  display: none;
+}
+
+.fleche svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Citron cernée d'Encre, comme le repère du Foyer. */
+.fleche path {
+  fill: var(--citron);
+  stroke: var(--encre);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}

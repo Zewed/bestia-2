@@ -3,7 +3,7 @@
 // (dessin.ts) reçoit la vue telle quelle ; son milieu est une Case en coordonnées non entières, entre deux Cases.
 import { anneau, centre, DIRECTIONS, type Coordonnees } from "@/monde/hex";
 import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
-import type { CarteADessiner, Vue } from "./dessin";
+import { aLEcran, type CarteADessiner, type Vue, vueSurLeFoyer } from "./dessin";
 
 /** Un point du plan de `centre`, où une Case a un rayon de 1. */
 type Point = { x: number; y: number };
@@ -110,4 +110,63 @@ export function zoomer(vue: Vue, facteur: number, x: number, y: number, limite: 
   const ici = centre(vue.milieu);
   const vise = { x: ici.x + dx / vue.rayon, y: ici.y + dy / vue.rayon };
   return borner({ ...vue, rayon, milieu: depuisLePlan({ x: vise.x - dx / rayon, y: vise.y - dy / rayon }) }, limite);
+}
+
+/** US-0426 : la vue au retour sur le Foyer : lui au milieu, au zoom de l'ouverture, ramené dans les bornes de cet écran. */
+export function retourAuFoyer(vue: Vue, foyer: Coordonnees): Vue {
+  return cadrer(vueSurLeFoyer(foyer, vue.largeur, vue.hauteur), vue.largeur, vue.hauteur);
+}
+
+/**
+ * US-0426 : la vue à l'instant `t` (de 0 à 1) d'un mouvement de `depart` à `arrivee`, en douceur : lent au départ
+ * et à l'arrivée, vif entre les deux. Le milieu de l'écran va droit de l'un à l'autre ; le zoom, d'autant de crans
+ * à chaque pas.
+ */
+export function enChemin(depart: Vue, arrivee: Vue, t: number): Vue {
+  const e = t < 0.5 ? 4 * t ** 3 : 1 - (2 - 2 * t) ** 3 / 2;
+  const entre = (a: number, b: number) => a * (1 - e) + b * e;
+  return { ...arrivee, milieu: { q: entre(depart.milieu.q, arrivee.milieu.q), r: entre(depart.milieu.r, arrivee.milieu.r) }, rayon: depart.rayon ** (1 - e) * arrivee.rayon ** e };
+}
+
+/** US-0426 : un rectangle posé sur la carte, en pixels depuis son coin en haut à gauche. */
+export type Rectangle = { gauche: number; haut: number; droite: number; bas: number };
+
+/**
+ * US-0426 : sur la droite qui part de (x, y) dans la direction (dx, dy), la part de (dx, dy) à faire pour entrer
+ * dans le rectangle `r` ; Infinity si elle n'y entre pas, ou si elle part de dedans.
+ */
+function entreeDans(x: number, y: number, dx: number, dy: number, r: Rectangle): number {
+  let [entree, sortie] = [-Infinity, Infinity];
+  for (const [depuis, vers, debut, fin] of [
+    [x, dx, r.gauche, r.droite],
+    [y, dy, r.haut, r.bas],
+  ]) {
+    if (vers === 0) {
+      if (depuis <= debut || depuis >= fin) return Infinity;
+      continue;
+    }
+    const [a, b] = [(debut - depuis) / vers, (fin - depuis) / vers];
+    [entree, sortie] = [Math.max(entree, Math.min(a, b)), Math.min(sortie, Math.max(a, b))];
+  }
+  return entree > 0 && entree < sortie ? entree : Infinity;
+}
+
+/**
+ * US-0426 : où poser la flèche qui montre le Foyer quand il n'est pas à l'écran (ou qu'il est caché sous ce qui est
+ * posé sur la carte, `obstacles`) : sur la droite qui va du milieu de l'écran au Foyer, au plus loin vers lui, son
+ * centre à au moins `marge` pixels des bords de la carte et des obstacles ; tournée vers lui (`angle`, en radians,
+ * 0 vers la droite, dans le sens des aiguilles d'une montre). null quand le Foyer se voit, ou que la place manque.
+ */
+export function flecheVersLeFoyer(vue: Vue, foyer: Coordonnees, obstacles: Rectangle[], marge: number): { x: number; y: number; angle: number } | null {
+  const { x, y } = aLEcran(foyer, vue);
+  const dessous = (r: Rectangle) => x >= r.gauche && x <= r.droite && y >= r.haut && y <= r.bas;
+  if (dessous({ gauche: 0, haut: 0, droite: vue.largeur, bas: vue.hauteur }) && !obstacles.some(dessous)) return null;
+  const [milieuX, milieuY] = [vue.largeur / 2, vue.hauteur / 2];
+  const [dx, dy] = [x - milieuX, y - milieuY];
+  // Jusqu'au bord de la carte, moins la marge…
+  let t = Math.min(dx === 0 ? Infinity : (milieuX - marge) / Math.abs(dx), dy === 0 ? Infinity : (milieuY - marge) / Math.abs(dy));
+  // … ou jusqu'au premier obstacle, élargi de la marge.
+  for (const o of obstacles) t = Math.min(t, entreeDans(milieuX, milieuY, dx, dy, { gauche: o.gauche - marge, haut: o.haut - marge, droite: o.droite + marge, bas: o.bas + marge }));
+  if (!Number.isFinite(t) || t <= 0) return null;
+  return { x: milieuX + t * dx, y: milieuY + t * dy, angle: Math.atan2(dy, dx) };
 }

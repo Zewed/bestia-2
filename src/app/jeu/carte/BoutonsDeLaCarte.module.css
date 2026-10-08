@@ -1,11 +1,14 @@
 /*
  * US-0425 : « + » au-dessus de « − », en bas à droite de la carte, à portée de pouce sur mobile, où la carte s'arrête
- * au-dessus des onglets ; à l'écart de l'encoche d'un téléphone tourné.
+ * au-dessus des onglets ; à l'écart de l'encoche d'un téléphone tourné. US-0426 : le bouton du Foyer au-dessus d'eux ;
+ * sur mobile, tous au-dessus du panneau ouvert en bas, la légende ou la fiche d'une Case, qui publient leur hauteur ;
+ * sur un écran d'ordinateur peu haut, par-dessus le panneau flottant de la légende quand il descend jusqu'à eux.
  */
-.zoom {
+.boutons {
   position: absolute;
   right: calc(12px + var(--bord-droit));
-  bottom: 12px;
+  bottom: calc(12px + max(var(--hauteur-legende, 0px), var(--hauteur-fiche, 0px)));
+  z-index: 11;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -48,4 +51,21 @@
 .bouton:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
+}
+
+/* US-0426 : le repère du Foyer, comme sur la carte : une épingle citron cernée d'Encre, un œil d'Encre au milieu. */
+.repere {
+  width: 24px;
+  height: 24px;
+}
+
+.repere path {
+  fill: var(--citron);
+  stroke: var(--encre);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+.repere circle {
+  fill: var(--encre);
 }

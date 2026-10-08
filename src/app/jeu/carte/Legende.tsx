@@ -1,6 +1,6 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, useEffect, useId, useState } from "react";
+import { type CSSProperties, type ReactNode, useEffect, useId, useRef, useState } from "react";
 import { couleur } from "@/monde/couleurs-de-la-carte";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
@@ -29,6 +29,19 @@ function retenirLaLegende(ouverte: boolean): void {
   } catch {
     // Elle s'ouvrira fermée, voilà tout.
   }
+}
+
+/** US-0426 : les écrans où la légende s'ouvre en bas de la carte, ceux de Legende.module.css. */
+const MOBILE = "(max-width: 820px)";
+
+/**
+ * US-0426 : publie sur la page (--hauteur-legende) la hauteur du panneau ouvert en bas de la carte, sur mobile : les
+ * boutons de la carte et la flèche du Foyer restent au-dessus. Rien quand il est fermé, ni sur ordinateur.
+ */
+function publierLaHauteur(panneau: HTMLElement): void {
+  const hauteur = matchMedia(MOBILE).matches ? panneau.getBoundingClientRect().height : 0;
+  if (hauteur > 0) document.documentElement.style.setProperty("--hauteur-legende", `${hauteur}px`);
+  else document.documentElement.style.removeProperty("--hauteur-legende");
 }
 
 /** Les couleurs de la carte en CSS, que le SVG comprend telles quelles : celles que CarteDuJeu donne au <canvas> (un test le vérifie). */
@@ -110,15 +123,31 @@ function Groupe({ titre, uneColonne = false, children }: { titre: string; uneCol
  * autres chefs ; US-0433 : et les liserés des limites de la Couronne et du Cœur sauvage. Un geste l'ouvre, un autre
  * la ferme ; l'appareil retient si elle était ouverte. Sur ordinateur, un
  * panneau flottant sous le bouton ; sur mobile, un panneau en bas, au-dessus des onglets, qui laisse voir la carte.
+ * US-0426 : elle se déclare posée sur la carte, et publie la hauteur de son panneau ouvert en bas.
  */
 export function Legende({ terre, eaux }: { terre: TeinteNommee[]; eaux: TeinteNommee[] }) {
   const [ouverte, setOuverte] = useState(false);
   const panneau = useId();
+  const refPanneau = useRef<HTMLDivElement>(null);
 
   // L'appareil retient la légende ouverte : on ne peut le lire qu'une fois dans le navigateur.
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- lecture unique d'un état extérieur (localStorage)
     if (legendeOuverte()) setOuverte(true);
+  }, []);
+
+  // US-0426 : sa hauteur publiée à chaque changement de taille du panneau (ouvert, fermé) ou de l'écran.
+  useEffect(() => {
+    const publier = () => publierLaHauteur(refPanneau.current!);
+    const suivi = new ResizeObserver(publier);
+    suivi.observe(refPanneau.current!);
+    const ecran = matchMedia(MOBILE);
+    ecran.addEventListener("change", publier);
+    return () => {
+      suivi.disconnect();
+      ecran.removeEventListener("change", publier);
+      document.documentElement.style.removeProperty("--hauteur-legende");
+    };
   }, []);
 
   const basculer = () => {
@@ -127,11 +156,11 @@ export function Legende({ terre, eaux }: { terre: TeinteNommee[]; eaux: TeinteNo
   };
 
   return (
-    <div className={styles.legende}>
+    <div className={styles.legende} data-sur-la-carte="">
       <button type="button" className={styles.bouton} aria-expanded={ouverte} aria-controls={panneau} onClick={basculer}>
         Légende
       </button>
-      <div id={panneau} className={styles.panneau} hidden={!ouverte}>
+      <div id={panneau} ref={refPanneau} className={styles.panneau} hidden={!ouverte}>
         <Groupe titre="Terre">
           {terre.map(({ teinte, nom }) => (
             <li key={teinte}>

@@ -3,11 +3,13 @@
 import { getImageProps } from "next/image";
 import { useEffect, useRef, useState } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
-import { BoutonsDeZoom } from "./BoutonsDeZoom";
+import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
 import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
+import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
 import { suivreLesGestes } from "./gestes";
+import { glisser } from "./mouvement";
 import styles from "./page.module.css";
-import { avancer, cadrer, deplacer, limiteDeLaCarte, zoomer, zoomPossible } from "./vue";
+import { avancer, cadrer, deplacer, limiteDeLaCarte, retourAuFoyer, zoomer, zoomPossible } from "./vue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -35,13 +37,17 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches. US-0423 : elle zoome à
  * la molette ou au pavé tactile, autour du pointeur, entre la vue large et la vue rapprochée. US-0424 : de même en
  * pinçant à deux doigts, autour du point entre eux. US-0425 : et aux boutons « + » et « − », autour du milieu de
- * l'écran, chacun grisé quand sa limite est atteinte, quel que soit le geste qui l'a atteinte.
+ * l'écran, chacun grisé quand sa limite est atteinte, quel que soit le geste qui l'a atteinte. US-0426 : le bouton du
+ * Foyer, ou la flèche qui le montre quand il est hors de l'écran, y ramène la carte en glissant ; un geste l'arrête.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
   // US-0425 : si l'on peut encore rapprocher ou éloigner la carte, et le zoom d'un cran autour du milieu de l'écran.
   const [zoom, setZoom] = useState({ rapprocher: true, eloigner: true });
   const zoomerAuMilieu = useRef<(facteur: number) => void>(() => {});
+  // US-0426 : le retour au Foyer, et la flèche qui le montre.
+  const revenirAuFoyer = useRef(() => {});
+  const fleche = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const canvas = toile.current;
     const pinceau = canvas?.getContext("2d");
@@ -59,7 +65,9 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     let vue: Vue | null = null;
     const limite = limiteDeLaCarte(carte);
     const dessiner = () => {
-      if (vue) dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
+      if (!vue) return;
+      dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
+      placerLaFleche(fleche.current, canvas, vue, carte.foyer);
     };
     // US-0425 : les boutons de zoom grisés ou non selon la vue, sans rien redessiner s'ils ne changent pas.
     const griser = () => {
@@ -79,9 +87,12 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       dessiner();
       griser();
     };
-    // US-0420 : le dessin demandé pour la prochaine image de l'écran, s'il y en a un : un seul par image.
+    // US-0420 : le dessin demandé pour la prochaine image de l'écran, s'il y en a un : un seul par image. US-0426 :
+    // un geste arrête le retour au Foyer en cours.
     let image = 0;
+    let mouvement = () => {};
     const changer = (nouvelle: Vue) => {
+      mouvement();
       vue = nouvelle;
       image ||= requestAnimationFrame(() => {
         image = 0;
@@ -103,19 +114,34 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
     });
     zoomerAuMilieu.current = (facteur) => vue && changer(zoomer(vue, facteur, vue.largeur / 2, vue.hauteur / 2, limite));
+    // US-0426 : le retour au Foyer, chaque vue dessinée aussitôt, à l'image de l'écran du mouvement, à la taille de la carte.
+    revenirAuFoyer.current = () => {
+      mouvement();
+      if (!vue) return;
+      mouvement = glisser(vue, retourAuFoyer(vue, carte.foyer), (etape) => {
+        cancelAnimationFrame(image);
+        image = 0;
+        vue = cadrer(etape, vue!.largeur, vue!.hauteur);
+        dessiner();
+        griser();
+      });
+    };
     return () => {
       suivi.disconnect();
       illustration.onload = null;
       arreter();
       cancelAnimationFrame(image);
+      mouvement();
       zoomerAuMilieu.current = () => {};
+      revenirAuFoyer.current = () => {};
     };
   }, [carte, fonds]);
   return (
     <div className={styles.cadre}>
       {/* US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent. */}
       <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
-      <BoutonsDeZoom {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} />
+      <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
+      <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
     </div>
   );
 }

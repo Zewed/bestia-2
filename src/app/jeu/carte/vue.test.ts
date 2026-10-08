@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { anneau, casesDesAnneaux, type Coordonnees } from "@/monde/hex";
 import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
 import { aLEcran, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, borner, bornesDuZoom, cadrer, deplacer, limiteDeLaCarte, zoomer, zoomPossible } from "./vue";
+import { avancer, borner, bornesDuZoom, cadrer, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, type Rectangle, retourAuFoyer, zoomer, zoomPossible } from "./vue";
 
 const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
@@ -146,5 +146,117 @@ describe("les bornes du zoom atteintes (US-0425)", () => {
     expect(zoomPossible(vue).rapprocher).toBe(false);
     // Une carte sans place à l'écran ne zoome pas.
     expect(zoomPossible(cadrer(OUVERTE, 0, 0))).toEqual({ rapprocher: false, eloigner: false });
+  });
+});
+
+describe("revenir au Foyer (US-0426)", () => {
+  /** Une vue loin du Foyer, rapprochée. */
+  const LOIN = zoomer(deplacer(OUVERTE, -3000, 1200, 62), 3, 100, 100, 62);
+
+  it("ramène la carte sur le Foyer, au zoom par défaut, celui de l'ouverture", () => {
+    expect(retourAuFoyer(LOIN, FOYER)).toEqual(OUVERTE);
+    // Sur un très grand écran, le zoom par défaut est ramené dans ses bornes, comme à l'ouverture.
+    expect(retourAuFoyer({ ...LOIN, largeur: 4000, hauteur: 3000 }, FOYER)).toEqual(cadrer(vueSurLeFoyer(FOYER, 4000, 3000), 4000, 3000));
+  });
+
+  it("y va par un court mouvement en douceur : lentement au départ et à l'arrivée, vite entre les deux", () => {
+    const arrivee = retourAuFoyer(LOIN, FOYER);
+    expect(enChemin(LOIN, arrivee, 0)).toEqual(LOIN);
+    expect(enChemin(LOIN, arrivee, 1)).toEqual(arrivee);
+    // À mi-chemin, le milieu de l'écran est à mi-chemin, et le zoom aussi : autant de crans faits que de crans à faire.
+    const moitie = enChemin(LOIN, arrivee, 0.5);
+    expect(moitie.milieu.q).toBeCloseTo((LOIN.milieu.q + FOYER.q) / 2, 9);
+    expect(moitie.milieu.r).toBeCloseTo((LOIN.milieu.r + FOYER.r) / 2, 9);
+    expect(moitie.rayon).toBeCloseTo(Math.sqrt(LOIN.rayon * arrivee.rayon), 9);
+    /** La part du chemin faite à l'instant t, de 0 à 1. */
+    const fait = (t: number) => (enChemin(LOIN, arrivee, t).milieu.q - LOIN.milieu.q) / (FOYER.q - LOIN.milieu.q);
+    expect(fait(0.1)).toBeLessThan(0.05);
+    expect(fait(0.9)).toBeGreaterThan(0.95);
+    for (let t = 0; t < 0.99; t += 0.05) expect(fait(t + 0.05)).toBeGreaterThan(fait(t));
+  });
+});
+
+describe("la flèche du Foyer hors de l'écran (US-0426)", () => {
+  /** La place autour du centre de la flèche, qui la garde du bord de la carte et de ce qui est posé dessus. */
+  const MARGE = 22;
+  /** La vue dont le Foyer tombe à l'écran en (x, y). */
+  const foyerEn = (x: number, y: number) => deplacer(OUVERTE, x - 400, y - 300, 1000);
+  /** Si (x, y) touche le rectangle `o` élargi de `m` pixels. */
+  const touche = (x: number, y: number, o: Rectangle, m: number) => x > o.gauche - m && x < o.droite + m && y > o.haut - m && y < o.bas + m;
+  /** Si la flèche est sur la droite qui va du milieu de l'écran au Foyer, de son côté, et tournée vers lui. */
+  const surLaDroite = (vue: Vue, fleche: { x: number; y: number; angle: number } | null) => {
+    const foyer = aLEcran(FOYER, vue);
+    const [dx, dy] = [foyer.x - 400, foyer.y - 300];
+    expect(fleche).not.toBeNull();
+    expect(((fleche!.x - 400) * dy - (fleche!.y - 300) * dx) / Math.hypot(dx, dy)).toBeCloseTo(0, 6);
+    expect((fleche!.x - 400) * dx + (fleche!.y - 300) * dy).toBeGreaterThan(0);
+    expect(fleche!.angle).toBeCloseTo(Math.atan2(dy, dx), 9);
+  };
+
+  it("n'apparaît pas tant que le Foyer est à l'écran, même tout près du bord", () => {
+    expect(flecheVersLeFoyer(OUVERTE, FOYER, [], MARGE)).toBeNull();
+    for (const [x, y] of [
+      [799, 300],
+      [1, 599],
+      [400, 2],
+    ])
+      expect(flecheVersLeFoyer(foyerEn(x, y), FOYER, [], MARGE)).toBeNull();
+  });
+
+  it("se pose au bord de la carte, sur la droite qui va du milieu de l'écran au Foyer, tournée vers lui", () => {
+    // Le Foyer loin à l'ouest, sur la rangée du milieu : la flèche au bord gauche, à mi-hauteur, tournée vers la gauche.
+    const ouest = flecheVersLeFoyer(foyerEn(-600, 300), FOYER, [], MARGE)!;
+    expect(ouest.x).toBeCloseTo(MARGE, 9);
+    expect(ouest.y).toBeCloseTo(300, 9);
+    expect(Math.abs(ouest.angle)).toBeCloseTo(Math.PI, 9);
+    // Loin au nord : au bord du haut, tournée vers le haut.
+    const nord = flecheVersLeFoyer(foyerEn(400, -700), FOYER, [], MARGE)!;
+    expect(nord.x).toBeCloseTo(400, 9);
+    expect(nord.y).toBeCloseTo(MARGE, 9);
+    expect(nord.angle).toBeCloseTo(-Math.PI / 2, 9);
+    // Dans toutes les directions, au bord de la carte, à sa marge, sur la droite vers le Foyer.
+    for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 20) {
+      const vue = foyerEn(400 + 3000 * Math.cos(angle), 300 + 3000 * Math.sin(angle));
+      const fleche = flecheVersLeFoyer(vue, FOYER, [], MARGE);
+      surLaDroite(vue, fleche);
+      const aLaMarge = Math.min(fleche!.x - MARGE, 800 - MARGE - fleche!.x, fleche!.y - MARGE, 600 - MARGE - fleche!.y);
+      expect(aLaMarge).toBeCloseTo(0, 6);
+    }
+  });
+
+  it("ne passe jamais sous ce qui est posé sur la carte : elle s'arrête avant, au plus loin sur la même droite", () => {
+    const boutons = { gauche: 744, haut: 392, droite: 788, bas: 588 };
+    const legende = { gauche: 468, haut: 12, droite: 788, bas: 360 };
+    const panneauDuBas = { gauche: 0, haut: 480, droite: 800, bas: 600 };
+    const obstacles = [boutons, legende, panneauDuBas];
+    // Le Foyer loin à l'est, sur la rangée du milieu : la flèche s'arrête devant le panneau de la légende.
+    const est = flecheVersLeFoyer(foyerEn(4000, 300), FOYER, [legende], MARGE)!;
+    expect(est.x).toBeCloseTo(legende.gauche - MARGE, 9);
+    expect(est.y).toBeCloseTo(300, 9);
+    for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 20) {
+      const vue = foyerEn(400 + 3000 * Math.cos(angle), 300 + 3000 * Math.sin(angle));
+      const fleche = flecheVersLeFoyer(vue, FOYER, obstacles, MARGE)!;
+      surLaDroite(vue, fleche);
+      // Toute sa place hors des obstacles…
+      for (const o of obstacles) expect(touche(fleche.x, fleche.y, o, MARGE - 1e-6), JSON.stringify(o)).toBe(false);
+      // … et pourtant au plus loin : un pixel plus loin vers le Foyer, elle toucherait un obstacle ou sortirait de la carte.
+      const [x, y] = [fleche.x + Math.cos(fleche.angle), fleche.y + Math.sin(fleche.angle)];
+      const dehors = x < MARGE || x > 800 - MARGE || y < MARGE || y > 600 - MARGE;
+      expect(dehors || obstacles.some((o) => touche(x, y, o, MARGE))).toBe(true);
+    }
+  });
+
+  it("montre aussi le Foyer caché sous un panneau, depuis le bord de ce panneau", () => {
+    const panneauDuBas = { gauche: 0, haut: 450, droite: 800, bas: 600 };
+    const fleche = flecheVersLeFoyer(foyerEn(400, 550), FOYER, [panneauDuBas], MARGE)!;
+    expect(fleche.x).toBeCloseTo(400, 9);
+    expect(fleche.y).toBeCloseTo(450 - MARGE, 9);
+    expect(fleche.angle).toBeCloseTo(Math.PI / 2, 9);
+    // Au-dessus du panneau, le Foyer se voit : pas de flèche.
+    expect(flecheVersLeFoyer(foyerEn(400, 440), FOYER, [panneauDuBas], MARGE)).toBeNull();
+  });
+
+  it("n'a pas de place sur une carte trop petite pour elle", () => {
+    expect(flecheVersLeFoyer(cadrer(foyerEn(-600, 300), 40, 40), FOYER, [], MARGE)).toBeNull();
   });
 });

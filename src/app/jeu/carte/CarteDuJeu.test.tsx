@@ -6,7 +6,7 @@ import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, bornesDuZoom, deplacer, limiteDeLaCarte, zoomer } from "./vue";
+import { avancer, bornesDuZoom, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de
@@ -133,13 +133,16 @@ const dessineeLa = (vue: Vue, c = FOYER) => {
 };
 /** La vue à l'ouverture de la carte. */
 const ouverte = () => vueSurLeFoyer(FOYER, ecran.largeur, ecran.hauteur);
-/** Lance ce que la carte a demandé de faire à la prochaine image de l'écran, en oubliant les tracés d'avant. */
-const prochaineImage = () =>
+/**
+ * Lance ce que la carte a demandé de faire à la prochaine image de l'écran, en oubliant les tracés d'avant ; US-0426 :
+ * une image affichée à l'instant `ms`.
+ */
+const prochaineImage = (ms = 0) =>
   act(() => {
     const rappels = [...aLaProchaineImage.values()];
     aLaProchaineImage.clear();
     toile.departs = [];
-    for (const rappel of rappels) rappel(0);
+    for (const rappel of rappels) rappel(ms);
   });
 /** Un pointeur qui se pose, bouge ou se lève sur la carte, en (x, y) : la souris par défaut, bouton principal. */
 const pointeur = (type: "pointerdown" | "pointermove" | "pointerup", x: number, y: number, en: Partial<PointerEventInit> = {}) =>
@@ -441,5 +444,118 @@ describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
     toile.departs = [];
     act(() => suivi!.annoncer());
     expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(375, 559).max })).toBe(true);
+  });
+});
+
+describe("revenir au Foyer (US-0426)", () => {
+  /** Glisse la carte de (dx, dy) à la souris. */
+  const glisser = (dx: number, dy: number) => {
+    pointeur("pointerdown", 400, 300);
+    pointeur("pointermove", 400 + dx, 300 + dy);
+    pointeur("pointerup", 400 + dx, 300 + dy);
+  };
+  /** La carte glissée de 150 pixels vers la gauche, puis rapprochée deux fois autour de la Case à l'est du Foyer : il reste à l'écran. */
+  const ailleurs = () => {
+    glisser(-150, 0);
+    const { x, y } = aLEcran(AUTOUR[1], deplacer(ouverte(), -150, 0, 60));
+    fireEvent.wheel(screen.getByRole("application", { name: "Carte du Monde" }), { deltaY: -300, clientX: x, clientY: y + 64 });
+    prochaineImage();
+    return zoomer(deplacer(ouverte(), -150, 0, 60), 2, x, y, 60);
+  };
+  const revenir = () => userEvent.setup().click(screen.getByRole("button", { name: "Revenir au Foyer" }));
+  /** La flèche du Foyer : hors du clavier et des lecteurs d'écran, qui ont le bouton du Foyer. */
+  const fleche = () => document.querySelector<HTMLButtonElement>("button[aria-hidden]")!;
+  /** La place de la flèche pour une vue, telle que vue.ts la calcule, en style. */
+  const placee = (vue: Vue) => {
+    const ou = flecheVersLeFoyer(vue, FOYER, [], 22)!;
+    return `translate(${ou.x}px, ${ou.y}px) rotate(${ou.angle}rad)`;
+  };
+
+  it(`ramène la carte sur le Foyer, au zoom par défaut, par un court mouvement dessiné à chaque image de l'écran`, async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const depart = ailleurs();
+    expect(dessineeLa(depart)).toBe(true);
+    await revenir();
+    // Le mouvement part de la première image, là où est la carte ; à mi-temps, il est à mi-chemin.
+    prochaineImage(1000);
+    expect(dessineeLa(depart)).toBe(true);
+    prochaineImage(1150);
+    expect(dessineeLa(enChemin(depart, ouverte(), 0.5))).toBe(true);
+    prochaineImage(1300);
+    expect(auMilieuDeLEcran()).toBe(true);
+    expect(dessineeLa(ouverte())).toBe(true);
+    // Arrivé, plus rien ne bouge.
+    expect(aLaProchaineImage.size).toBe(0);
+  });
+
+  it("arrive au Foyer à la taille qu'a la carte, même quand l'écran change de taille en chemin", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    ailleurs();
+    await revenir();
+    prochaineImage(1000);
+    Object.assign(ecran, { largeur: 375, hauteur: 559 });
+    act(() => suivi!.annoncer());
+    prochaineImage(1300);
+    expect(auMilieuDeLEcran()).toBe(true);
+    expect(dessineeLa(ouverte())).toBe(true);
+  });
+
+  it("s'arrête là où il en est dès que le joueur bouge la carte, ou zoome", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const depart = ailleurs();
+    await revenir();
+    prochaineImage(1000);
+    prochaineImage(1100);
+    glisser(20, 0);
+    prochaineImage(1200);
+    expect(dessineeLa(deplacer(enChemin(depart, ouverte(), 1 / 3), 20, 0, 60))).toBe(true);
+    expect(aLaProchaineImage.size).toBe(0);
+    // De même au bouton « + ».
+    await revenir();
+    prochaineImage(2000);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Zoomer" }));
+    prochaineImage(2100);
+    expect(aLaProchaineImage.size).toBe(0);
+  });
+
+  it("y va d'un coup, sans mouvement, quand le joueur préfère les écrans sans mouvement", async () => {
+    vi.stubGlobal("matchMedia", (requete: string) => ({ matches: requete === "(prefers-reduced-motion: reduce)" }));
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    ailleurs();
+    toile.departs = [];
+    await revenir();
+    // Aussitôt, sans attendre d'image de l'écran.
+    expect(dessineeLa(ouverte())).toBe(true);
+    expect(aLaProchaineImage.size).toBe(0);
+  });
+
+  it("montre d'une flèche au bord de la carte où est le Foyer hors de l'écran, qui suit la vue et ramène au Foyer", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(fleche().hidden).toBe(true);
+    // Le Foyer passé loin au-dessus du haut de l'écran : la flèche au bord du haut, tournée vers lui.
+    glisser(0, -1000);
+    prochaineImage();
+    const auNord = deplacer(ouverte(), 0, -1000, 60);
+    expect(fleche().hidden).toBe(false);
+    expect(fleche().style.transform).toBe(placee(auNord));
+    // Elle suit la vue, à chaque image.
+    glisser(-300, 0);
+    prochaineImage();
+    expect(fleche().style.transform).toBe(placee(deplacer(auNord, -300, 0, 60)));
+    // La toucher ramène au Foyer, qui se voit : elle disparaît.
+    await userEvent.setup().click(fleche());
+    prochaineImage(1000);
+    prochaineImage(1300);
+    expect(auMilieuDeLEcran()).toBe(true);
+    expect(fleche().hidden).toBe(true);
+  });
+
+  it("cesse le mouvement une fois la page quittée", async () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    ailleurs();
+    await revenir();
+    prochaineImage(1000);
+    unmount();
+    expect(aLaProchaineImage.size).toBe(0);
   });
 });

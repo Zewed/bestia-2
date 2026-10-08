@@ -22,6 +22,10 @@
   --hauteur-onglets: 0px;
   /* La hauteur de l'écran entre la barre du haut et le bas de l'écran (ou ses onglets). */
   --hauteur-utile: calc(100dvh - var(--hauteur-barre) - var(--hauteur-onglets) - var(--bord-bas));
+  /* US-0426 : les panneaux ouverts en bas de la carte sur mobile, la légende et la fiche d'une Case, publient ici leur
+     hauteur sur la page ; rien tant qu'ils sont fermés, et sur ordinateur. */
+  --hauteur-legende: 0px;
+  --hauteur-fiche: 0px;
 }
 
 /* Sur mobile, en portrait comme en paysage, la barre du haut reste basse pour laisser la place au jeu. */
