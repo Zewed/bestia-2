@@ -4,24 +4,47 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_effc17d559bdaa 7
 src/app/controle/monde/CarteDuMonde.tsx
   s_97a431cfa65ca7::t_00bb931da48fff 1,6-7
+  s_97a431cfa65ca7::t_c0548d836104fa 1,6-7
 src/app/jeu/carte/Legende.css.test.ts
   s_97a431cfa65ca7::t_cc1a89e5465dda 1-34
+  s_97a431cfa65ca7::t_d80bd25788c444 1-34
 src/app/jeu/carte/Legende.module.css
   s_97a431cfa65ca7::t_4e1a228a8cf7a4 1-105
+  s_97a431cfa65ca7::t_b7f9293c49496b 1-87,89-105
+  s_97a431cfa65ca7::t_fee705241c201a 88
 src/app/jeu/carte/Legende.test.tsx
   s_97a431cfa65ca7::t_7608f3a9a3c49a 1-130
+  s_97a431cfa65ca7::t_b42960dce4b3dd 1-70,72-90,93-130
+  s_97a431cfa65ca7::t_40fd6141eab105 91-92
+  s_97a431cfa65ca7::t_180228139e09ba 71
 src/app/jeu/carte/Legende.tsx
   s_97a431cfa65ca7::t_cd9d8d11af3032 1-134
+  s_97a431cfa65ca7::t_2d399f52fd66df 3
+  s_97a431cfa65ca7::t_efdfaf218e7585 68
+  s_97a431cfa65ca7::t_b0b132421d2f0a 79-80
+  s_97a431cfa65ca7::t_1c5864a61c4f3d 128
+  s_97a431cfa65ca7::t_9eda6db311b4e1 1-2,4-67,69-78,81-127,129-134
 src/app/jeu/carte/dessin.test.ts
   s_97a431cfa65ca7::t_9be5fed7a6267a 4,6,297-356
+  s_97a431cfa65ca7::t_6e4bcc5724be24 297-351,354-356
+  s_97a431cfa65ca7::t_9cc981eb6e89d4 4,6
+  s_97a431cfa65ca7::t_93b054c2afb708 352-353
 src/app/jeu/carte/dessin.ts
   s_97a431cfa65ca7::t_63713f4699b14b 366-440
+  s_97a431cfa65ca7::t_3482e8c52c9c7c 366-440
 src/app/jeu/carte/page.test.tsx
   s_97a431cfa65ca7::t_87a3f7b1457acd 19-35,41-42,71,75-91,106,108
+  s_97a431cfa65ca7::t_88c67dda1621be 106,108
+  s_97a431cfa65ca7::t_7b9663f3d737be 19-35
+  s_97a431cfa65ca7::t_58c1293f7c024b 41-42
+  s_97a431cfa65ca7::t_8b85941ba543ed 71,75-91
 src/app/jeu/carte/page.tsx
   s_97a431cfa65ca7::t_33710a47fa6ce5 7,9,11,19-21,27,32-37
+  s_97a431cfa65ca7::t_482eb71277f3a5 7,9,11
+  s_97a431cfa65ca7::t_4b2c29c3a215a6 19-21,27,32-37
 src/monde/couleurs-de-la-carte.ts
   s_97a431cfa65ca7::t_f44be8d2e43c0f 1-20
+  s_97a431cfa65ca7::t_6e31954c3e5f57 1-20
 ---
 {
   "schema_version": "authorship/3.0.0",
