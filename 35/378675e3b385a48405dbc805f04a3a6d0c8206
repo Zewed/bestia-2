@@ -1,0 +1,33 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_4ba7d443cc230c 393
+docs/stories/README.md
+  s_97a431cfa65ca7::t_3d3ade46ccb849 7
+src/app/jeu/carte/FicheDeLaCase.module.css
+  s_97a431cfa65ca7::t_1c18d85253e3a0 93,95-96,100-101
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_97a431cfa65ca7::t_924e224a4e35ac 6,13,24,82,203-218
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_7bc95e636746e4 4,16-23,85-86,180-186,199
+src/app/jeu/carte/actions.ts
+  s_97a431cfa65ca7::t_fe5ba43bb1fb6a 6,18-19,21
+src/monde/fiche.db.test.ts
+  s_97a431cfa65ca7::t_e0af7601e93f45 6,9,64,71,82,99-100,103,114-151
+src/monde/fiche.ts
+  s_97a431cfa65ca7::t_ff3d43452ad8fe 14-16,20-22,24-25,28-29,34,39-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "35378675e3b385a48405dbc805f04a3a6d0c8206",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
