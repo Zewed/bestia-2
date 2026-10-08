@@ -1,0 +1,62 @@
+src/db/schema.ts
+  s_97a431cfa65ca7::t_e1da3ca53fc917 5
+  s_97a431cfa65ca7::t_c19aaa87572501 31-38,40-45
+src/chefs/chef.ts
+  s_97a431cfa65ca7::t_fe26b8f52193de 70,73-74,76-82
+  s_97a431cfa65ca7::t_f4a1359960965e 6
+  s_97a431cfa65ca7::t_ed862aeabdea83 154
+  s_97a431cfa65ca7::t_70b3afbfab7ea0 155
+  s_97a431cfa65ca7::t_5eca00629e20e1 90-97,100,102,104
+package.json
+  s_97a431cfa65ca7::t_8b37617d9fa25b 30
+src/health.ts
+  s_97a431cfa65ca7::t_f8fc48abc68516 32
+  s_97a431cfa65ca7::t_a94dcfadd34151 4
+src/monde/preparer-couronne.ts
+  s_97a431cfa65ca7::t_c25a69539eccbe 53-65
+  s_97a431cfa65ca7::t_58e797e797d51d 4
+scripts/monde-couronne.ts
+  s_97a431cfa65ca7::t_ffb844163fa3ae 3
+  s_97a431cfa65ca7::t_6f46c6ac493386 7
+  s_97a431cfa65ca7::t_7dd114d27f8aed 18-19,21-25
+src/monde/bascule.ts
+  s_97a431cfa65ca7::t_f52eb7d2261294 73-76,78,80
+  s_97a431cfa65ca7::t_61bc4aada25c4a 90
+  s_97a431cfa65ca7::t_07dd2a4b7d8514 1-72,77,79,81-89,91-103
+src/monde/en-base.ts
+  s_97a431cfa65ca7::t_2de65b4413de63 4
+  s_97a431cfa65ca7::t_04c5053aef9924 8
+  s_97a431cfa65ca7::t_e5a2741398c079 10
+drizzle/0043_monde_ouvert.sql
+  s_97a431cfa65ca7::t_4604077e14eb19 1-9
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_6dc5ad0d295b70 7
+  s_97a431cfa65ca7::t_e0c1c5e312bec0 243-246,253
+  s_97a431cfa65ca7::t_2139ce8938e5b8 262-265
+  s_97a431cfa65ca7::t_0650d35e9e4da7 1-6,8-214,218-242,247-252,254-261,266-295,297-304
+  s_97a431cfa65ca7::t_50a139f4065961 215-217
+  s_97a431cfa65ca7::t_60fbc1c7cb32c9 296
+scripts/monde-basculer.ts
+  s_97a431cfa65ca7::t_839cf2a5591cf2 1-42,44,48-63
+  s_97a431cfa65ca7::t_e0a82f51c20ba4 43,45-47
+drizzle/meta/0043_snapshot.json
+  s_97a431cfa65ca7::t_f431623c4b97c0 1-2348
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_676bfb80cb7b6a 305-311
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "28a92e20973e00da95d4c236f8f072488b5fb0ae",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
