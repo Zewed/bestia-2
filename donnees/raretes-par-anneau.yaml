@@ -1,0 +1,43 @@
+# US-0927 : la Rareté d'une Bête sauvage qui apparaît se tire selon l'Anneau de sa Case, en pourcentages
+# (valeurs provisoires, à régler en jouant). Une ligne par Anneau, de la Couronne (Anneau 1) au Cœur sauvage
+# (Anneau 6, voir ANNEAUX_DU_MONDE dans src/reglages.ts), chacune à 100 en tout.
+# Toutes les Raretés de commune à légendaire apparaissent partout, les communes toujours plus de la moitié du
+# temps ; chaque Rareté au-dessus devient plus fréquente à mesure qu'on approche du Cœur sauvage.
+# Jamais de mythique : elles ne viennent que des Apparitions.
+
+- anneau: 1
+  commune: 80
+  peu_commune: 15
+  rare: 4
+  epique: 0.8
+  legendaire: 0.2
+- anneau: 2
+  commune: 76
+  peu_commune: 17
+  rare: 5.4
+  epique: 1.3
+  legendaire: 0.3
+- anneau: 3
+  commune: 72
+  peu_commune: 19
+  rare: 6.8
+  epique: 1.8
+  legendaire: 0.4
+- anneau: 4
+  commune: 67
+  peu_commune: 21
+  rare: 8.8
+  epique: 2.6
+  legendaire: 0.6
+- anneau: 5
+  commune: 62
+  peu_commune: 23
+  rare: 11
+  epique: 3.2
+  legendaire: 0.8
+- anneau: 6
+  commune: 55
+  peu_commune: 25
+  rare: 14.6
+  epique: 4.4
+  legendaire: 1

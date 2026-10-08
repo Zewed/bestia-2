@@ -5,6 +5,7 @@ import { join } from "node:path";
 import type { Pool } from "pg";
 import { z } from "zod";
 import { identifyDatabase } from "../db/production";
+import { ANNEAUX_DU_MONDE } from "../reglages";
 import { appliquerBareme, BAREME } from "./bareme";
 import { lireFichier, lireJeu, type Jeu } from "./charger";
 
@@ -320,7 +321,44 @@ export function lireDonnees(dossier?: string, { essai = especesDEssaiPermises() 
   }
   verifierProductions(entrees(PRODUCTIONS), { biomes: ids(BIOMES), ressources: ids(RESSOURCES) });
   lireVoisinagesInterdits(dossier);
+  lireRaretesParAnneau(dossier);
   return lots;
+}
+
+/** US-0927 : la part de chaque Rareté parmi les Bêtes sauvages d'un Anneau, en pourcentages, de la commune à la légendaire. */
+export type ChancesDeRarete = { rareteId: string; pourcent: number }[];
+
+/** US-0927 : les Raretés qu'aucune Bête sauvage n'a en apparaissant : les mythiques ne viennent que des Apparitions (étape 63). */
+const JAMAIS_SAUVAGES = ["mythique"];
+
+/**
+ * US-0927 : les chances de chaque Rareté, Anneau par Anneau (raretes-par-anneau.yaml) : une ligne par Anneau, de 1 (la
+ * Couronne) à `anneaux` (le Cœur sauvage), chacune avec une part plus grande que zéro pour chaque Rareté sauf mythique, et
+ * 100 en tout. Rendues dans l'ordre des Anneaux, chaque ligne dans l'ordre des Raretés, de la commune à la plus rare. Rien
+ * ne va en base : les Bêtes sauvages les lisent ici (src/monde/betes-sauvages.ts).
+ */
+export function lireRaretesParAnneau(dossier = "donnees", anneaux = ANNEAUX_DU_MONDE): ChancesDeRarete[] {
+  const raretes = lireJeu(RARETES, dossier)
+    .map((r) => r.id)
+    .filter((id) => !JAMAIS_SAUVAGES.includes(id));
+  const lignes = lireFichier(`${dossier}/raretes-par-anneau.yaml`) as Record<string, unknown>[];
+  const erreurs: string[] = [];
+  if (lignes.length !== anneaux) erreurs.push(`${anneaux} Anneaux attendus, ${lignes.length} lignes`);
+  const chances = lignes.map(({ anneau, ...parts }, i) => {
+    if (anneau !== i + 1) erreurs.push(`ligne n° ${i + 1} : anneau ${i + 1} attendu, pas « ${String(anneau)} »`);
+    for (const id of Object.keys(parts)) {
+      if (!raretes.includes(id)) erreurs.push(`Anneau ${i + 1} : ${JAMAIS_SAUVAGES.includes(id) ? `jamais de ${id} ainsi` : `Rareté inconnue « ${id} »`}`);
+    }
+    const ligne = raretes.map((rareteId) => ({ rareteId, pourcent: parts[rareteId] as number }));
+    for (const { rareteId, pourcent } of ligne) {
+      if (typeof pourcent !== "number" || !(pourcent > 0)) erreurs.push(`Anneau ${i + 1} : ${rareteId} doit avoir une part plus grande que zéro`);
+    }
+    const total = Object.values(parts).reduce<number>((s, part) => s + (typeof part === "number" ? part : 0), 0);
+    if (Math.abs(total - 100) > 1e-9) erreurs.push(`Anneau ${i + 1} : ${+total.toFixed(6)} % en tout, pas 100`);
+    return ligne;
+  });
+  if (erreurs.length > 0) throw new Error(`raretes-par-anneau.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
+  return chances;
 }
 
 /**

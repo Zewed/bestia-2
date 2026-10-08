@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { ANNEAUX_DU_MONDE } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { apparitions, betesSauvages, betesSauvagesDesCases, betesSauvagesDUneCase, emmenerUneBete } from "./betes-sauvages";
 import { creerUnMonde } from "./generer";
@@ -76,7 +77,23 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
     const { libre } = await naitre();
     const betes = await betesSauvagesDUneCase(pool, libre.id, DEBUT, apres(30 * JOUR));
     expect(betes.length).toBeGreaterThan(5);
-    expect(betes).toEqual(betesSauvages(libre.graine, libre, DEBUT, apres(30 * JOUR)));
+    expect(betes).toEqual(betesSauvages({ ...libre, anneau: ANNEAUX_DU_MONDE }, DEBUT, apres(30 * JOUR)));
+  });
+
+  it("tire la Rareté de chaque Bête selon l'Anneau de sa Case, d'après la forme de son Monde (US-0927)", async () => {
+    const rarete = (betes: { rareteId: string }[]) => betes.map((b) => b.rareteId);
+    const auCoeur = await uneCaseLibre();
+    const betes = await betesSauvagesDUneCase(pool, auCoeur.id, DEBUT, apres(120 * JOUR));
+    expect(rarete(betes)).toEqual(rarete(betesSauvages({ ...auCoeur, anneau: ANNEAUX_DU_MONDE }, DEBUT, apres(120 * JOUR))));
+    expect(rarete(betes)).not.toEqual(rarete(betesSauvages({ ...auCoeur, anneau: 1 }, DEBUT, apres(120 * JOUR))));
+    // Une Case de la Couronne hors de la prairie, où aucun Foyer ne naît : l'Anneau 1.
+    const { rows } = await pool.query<CaseEnBase>(
+      "select c.id, c.q, c.r, m.graine::float8 as graine from case_du_monde c join monde m on m.id = c.monde_id where m.id = $1 and c.couronne and c.biome_id <> 'prairie' and c.chef_id is null order by c.id limit 1",
+      [genereId],
+    );
+    expect(rarete(await betesSauvagesDUneCase(pool, rows[0].id, DEBUT, apres(120 * JOUR)))).toEqual(
+      rarete(betesSauvages({ ...rows[0], anneau: 1 }, DEBUT, apres(120 * JOUR))),
+    );
   });
 
   it("n'en fait jamais apparaître sur une Case qui appartient à un Territoire", async () => {

@@ -266,9 +266,10 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0927 · La Rareté tirée selon l'Anneau
 **En tant que** joueur, **je veux** que la Rareté des Bêtes dépende de l'Anneau, **afin de** trouver partout des communes, mais plus de raretés vers le Cœur sauvage.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La Rareté de chaque apparition est tirée selon une table provisoire par Anneau (`donnees/raretes-par-anneau.yaml`). Les communes y passent de 80 % à la Couronne à 55 % au Cœur sauvage, toujours majoritaires, et chaque Rareté plus haute croît vers le Cœur, de 0,2 à 1 % pour les légendaires. Jamais de mythique. Une table invalide est refusée à la mise en ligne. Une simulation d'environ 32 000 Bêtes par Anneau retrouve la table.
 - **Débloquée par** : US-0925
 - **Critères d'acceptation** :
-  - À chaque apparition, la Rareté est tirée selon les pourcentages de l'Anneau de la Case (chiffre à régler).
+  - À chaque apparition, la Rareté est tirée selon les pourcentages de l'Anneau de la Case (provisoires, `donnees/raretes-par-anneau.yaml`).
   - Dans tous les Anneaux, toutes les Raretés de commune à légendaire peuvent apparaître, et les communes restent les plus nombreuses.
   - Plus l'Anneau est proche du Cœur sauvage, plus les Raretés élevées y sont fréquentes.
   - Les Espèces mythiques n'apparaissent jamais ainsi : elles ne viennent que des Apparitions (étape 63).
