@@ -440,8 +440,9 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0443 · Compter les Cases découvertes
 **En tant que** joueur, **je veux** voir combien de Cases j'ai découvertes, **afin de** mesurer mes progrès dans la découverte du Monde.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). En bas à gauche de la carte, une ligne discrète : « 61 Cases découvertes · 0,6 % du Monde ». Elle passe sous la forme « moins de 0,1 % » si besoin, et monte à chaque découverte. Sur mobile, elle reste au-dessus du panneau du bas, et la flèche du Foyer l'évite. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0442
 - **Critères d'acceptation** :
   - La carte affiche le nombre de Cases découvertes.
-  - La part du Monde découverte s'affiche aussi, en pourcentage (à décider).
+  - La part du Monde découverte s'affiche aussi, en pourcentage (décidé le 2026-10-08).
   - Le compteur monte à chaque découverte.

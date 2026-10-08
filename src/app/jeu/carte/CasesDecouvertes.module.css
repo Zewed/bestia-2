@@ -1,0 +1,26 @@
+/*
+ * US-0443 : le nombre de Cases découvertes, une petite ligne discrète en bas à gauche de la carte, à l'écart de ses
+ * boutons (en bas à droite) et de la fiche d'une Case (en haut à gauche, qui passe par-dessus si elle descend jusque-là) ;
+ * sur mobile, au-dessus du panneau ouvert en bas, comme les boutons. Elle laisse la carte se manier au travers.
+ */
+.compteur {
+  position: absolute;
+  bottom: calc(12px + max(var(--hauteur-legende, 0px), var(--hauteur-fiche, 0px)));
+  left: calc(12px + var(--bord-gauche));
+  z-index: 9;
+  /* Jamais sous la colonne des boutons, de 44 px, à 12 px du bord droit : elle passe plutôt à la ligne. */
+  max-width: calc(100% - 80px - var(--bord-gauche) - var(--bord-droit));
+  margin: 0;
+  padding: 3px 9px;
+  border-radius: var(--arrondi-petit);
+  background: color-mix(in oklch, var(--bloc) 85%, transparent);
+  color: var(--texte-2);
+  font-size: var(--taille-etiquette);
+  line-height: 1.5;
+  pointer-events: none;
+}
+
+/* Le nombre de Cases, et la part du Monde, chacun d'un tenant : la ligne ne se coupe qu'entre les deux. */
+.compteur span {
+  white-space: nowrap;
+}

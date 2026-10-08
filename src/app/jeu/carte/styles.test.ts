@@ -77,6 +77,23 @@ describe("les styles de la carte du Monde", () => {
     expect(Number(regle(".fleche svg", fleche).match(/width: (\d+)px;/)?.[1])).toBeLessThanOrEqual(28);
   });
 
+  it("posent le nombre de Cases découvertes en bas à gauche, à l'écart des boutons et sous la fiche, au-dessus du panneau du bas sur mobile (US-0443)", () => {
+    const compteur = regle(".compteur", lire("CasesDecouvertes.module.css"));
+    expect(compteur).toContain("position: absolute;");
+    expect(compteur).toContain("left: calc(12px + var(--bord-gauche));");
+    // À la hauteur des boutons, au-dessus du panneau ouvert en bas, comme eux.
+    expect(compteur).toContain("bottom: calc(12px + max(var(--hauteur-legende, 0px), var(--hauteur-fiche, 0px)));");
+    // Jamais sous la colonne des boutons : sa largeur s'arrête avant eux.
+    expect(compteur).toMatch(/max-width: calc\(100% - 80px - var\(--bord-gauche\) - var\(--bord-droit\)\);/);
+    // Discret, sous la fiche et la légende, et la carte se manie au travers.
+    const fiche = lire("FicheDeLaCase.module.css");
+    expect(Number(compteur.match(/z-index: (\d+);/)?.[1])).toBeLessThan(Number(regle(".fiche", fiche).match(/z-index: (\d+);/)?.[1]));
+    expect(compteur).toContain("font-size: var(--taille-etiquette);");
+    expect(compteur).toContain("pointer-events: none;");
+    // Faute de place, elle ne passe à la ligne qu'entre le nombre de Cases et la part du Monde.
+    expect(regle(".compteur span", lire("CasesDecouvertes.module.css"))).toContain("white-space: nowrap;");
+  });
+
   it("ne montrent sur mobile qu'un panneau en bas à la fois : la fiche d'une Case ouverte masque celui de la légende (US-0431)", () => {
     const mobile = css.match(/@media \(max-width: 820px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
     // Le panneau de la légende, celui que son bouton commande, juste après lui ; la légende reste ouverte ou fermée.

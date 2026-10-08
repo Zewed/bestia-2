@@ -889,6 +889,16 @@ describe("voir une Case découverte sans recharger la page (US-0442)", () => {
     expect(serveur.decouvertesDepuis).toHaveBeenLastCalledWith(2);
   });
 
+  it("compte les Cases découvertes et la part du Monde qu'elles font, et le compte monte à chaque découverte (US-0443)", async () => {
+    render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
+    const compteur = () => document.querySelector("p[data-sur-la-carte]")!;
+    expect(compteur().textContent).toBe("1 Case découverte · 14,3 % du Monde");
+    expect(compteur().hasAttribute("data-sur-la-carte")).toBe(true);
+    serveur.decouvertesDepuis.mockResolvedValueOnce(AVEC_LE_LAC);
+    await attendre(60_000);
+    expect(compteur().textContent).toBe("2 Cases découvertes · 28,6 % du Monde");
+  });
+
   it("ne demande rien tant que l'onglet est caché, et demande dès qu'il redevient visible", async () => {
     render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
     onglet(false);
