@@ -1,5 +1,28 @@
 "$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
 
 [scripts]
-# Commands a fresh workspace runs once: install dependencies, copy env files.
-setup = "npm ci"
+# Ce qu'un espace neuf fait une fois : les dépendances, puis, si la machine sait lancer un Postgres (Docker, ou
+# Postgres installé), une base jetable comme celle de la CI pour les tests sur base et le serveur de dev. Sans Postgres,
+# les tests sur base sont sautés en local et la CI les passe sur chaque envoi.
+setup = """
+set -e
+npm ci
+PG=postgres://postgres:postgres@localhost:5432
+if ! pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+  if command -v docker >/dev/null 2>&1; then
+    docker run -d --name bestia-pg -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=bestia_test -p 5432:5432 postgres:17 >/dev/null 2>&1 || docker start bestia-pg >/dev/null 2>&1 || true
+  elif command -v apt-get >/dev/null 2>&1 && command -v sudo >/dev/null 2>&1; then
+    (sudo -n apt-get install -y -qq postgresql >/dev/null 2>&1 && sudo -n service postgresql start >/dev/null 2>&1 && sudo -n -u postgres psql -qc "alter user postgres password 'postgres'" >/dev/null 2>&1) || true
+  fi
+  for i in $(seq 1 30); do pg_isready -h localhost -p 5432 >/dev/null 2>&1 && break; sleep 1; done
+fi
+if pg_isready -h localhost -p 5432 >/dev/null 2>&1; then
+  for base in bestia_test bestia_dev; do psql "$PG/postgres" -qc "create database $base" >/dev/null 2>&1 || true; done
+  printf 'TEST_DATABASE_URL=%s/bestia_test\\n' "$PG" > .env.test.local
+  printf 'DATABASE_URL=%s/bestia_dev\\nCRON_SECRET=essai-local\\nCONTROLE_MOT_DE_PASSE=essai-local\\nBESTIA_ADRESSE_SITE=http://localhost:3000\\n' "$PG" > .env.development.local
+  npm run db:migrate >/dev/null && npm run db:donnees >/dev/null || true
+  echo "Postgres local prêt : tests sur base et serveur de dev branchés dessus."
+else
+  echo "Pas de Postgres sur cette machine : les tests sur base sont sautés en local ; la CI les passe."
+fi
+"""
