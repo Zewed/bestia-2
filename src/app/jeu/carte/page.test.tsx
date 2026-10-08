@@ -19,11 +19,20 @@ vi.mock("@/monde/carte", () => lecture);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
+// La carte elle-même se vérifie à part (CarteDuJeu.test.tsx) : ici, ce que la page lui donne.
+vi.mock("./CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
 
 import Carte, { metadata } from "./page";
 
-/** La carte d'un joueur d'Aube, réduite à trois Cases de la Couronne, son Foyer au milieu. */
-const CARTE: CarteDuJoueur = { monde: "Aube", foyer: { q: 31, r: -57 }, cases: { q: [30, 31, 32], r: [-57, -57, -57] } };
+/** La carte d'un joueur d'Aube, réduite à trois Cases de la Couronne, son Foyer au milieu entre une forêt et un lac. */
+const CARTE: CarteDuJoueur = {
+  monde: "Aube",
+  foyer: { q: 31, r: -57 },
+  teintes: ["foret", "prairie", "lac"],
+  cases: { q: [30, 31, 32], r: [-57, -57, -57], teinte: [0, 1, 2] },
+};
+/** Ce que la page donne à la carte. */
+const proprietes = (html: string) => JSON.parse(html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"'));
 
 describe("page Carte (US-0417)", () => {
   afterEach(() => {
@@ -46,11 +55,16 @@ describe("page Carte (US-0417)", () => {
     expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><\/main>$/);
   });
 
-  it("dessine la carte du Monde du joueur, lue pour son Territoire, en une image nommée", async () => {
+  it("dessine la carte du Monde du joueur, lue pour son Territoire", async () => {
     connecte();
     const html = renderToStaticMarkup(await Carte());
     expect(lecture.carteDuJoueur).toHaveBeenCalledWith(expect.anything(), 12);
-    expect(html).toMatch(/<canvas[^>]*role="img"[^>]*aria-label="Carte du Monde Aube, votre Foyer au milieu"/);
+    expect(proprietes(html).carte).toEqual(CARTE);
+  });
+
+  it("peint chaque teinte de la couleur de la page de contrôle du Monde (US-0418)", async () => {
+    connecte();
+    expect(proprietes(renderToStaticMarkup(await Carte())).fonds).toEqual(["var(--biome-foret)", "var(--biome-prairie)", "var(--sarcelle-fonce)"]);
   });
 
   it("n'a pas de carte à montrer sans Foyer", async () => {

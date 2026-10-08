@@ -64,6 +64,15 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(places(carte!.cases)).toContain(`${foyer.q},${foyer.r}`);
   });
 
+  it("donne à chaque Case sa teinte : son Biome, ou pour l'eau sa variante (US-0418)", async () => {
+    const { territoireId } = await naitre(genereId);
+    const carte = (await carteDuJoueur(pool, territoireId))!;
+    // Chaque teinte une fois : les huit Biomes de terre et les quatre eaux de ce Monde.
+    expect([...carte.teintes].sort()).toEqual(["banquise", "cote", "desert", "foret", "jungle", "lac", "mer", "montagne", "prairie", "riviere", "savane", "toundra"]);
+    const attendues = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE }).map((c) => (c.biome === "eau" ? c.variante : c.biome));
+    expect(carte.cases.teinte.map((t) => carte.teintes[t])).toEqual(attendues);
+  });
+
   it("sur Aube, qui n'a en base que sa Couronne, montre la Couronne seule", async () => {
     const { territoireId, foyer } = await naitre();
     const carte = await carteDuJoueur(pool, territoireId);
@@ -75,6 +84,9 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte?.foyer).toEqual(foyer);
     expect(places(carte!.cases)).toEqual(rows[0].places);
     expect(carte!.cases.q).toHaveLength(2070);
+    // US-0418 : sa Couronne a ses Biomes et ses lacs.
+    expect([...carte!.teintes].sort()).toEqual(["desert", "foret", "lac", "montagne", "prairie", "savane"]);
+    expect(carte!.cases.teinte).toHaveLength(2070);
   });
 
   it("ne lit rien pour un Territoire qui n'existe pas", async () => {

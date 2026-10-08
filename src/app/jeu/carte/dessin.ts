@@ -11,10 +11,20 @@ export const LARGEUR_DE_CASE = 28;
 export type Vue = { largeur: number; hauteur: number; milieu: Coordonnees; rayon: number };
 
 /** Ce que la carte demande au pinceau d'un <canvas> : une petite partie de CanvasRenderingContext2D. */
-export type Pinceau = Pick<CanvasRenderingContext2D, "fillStyle" | "strokeStyle" | "lineWidth" | "clearRect" | "beginPath" | "moveTo" | "lineTo" | "closePath" | "fill" | "stroke">;
+export type Pinceau = Pick<
+  CanvasRenderingContext2D,
+  "fillStyle" | "strokeStyle" | "lineWidth" | "lineCap" | "lineJoin" | "clearRect" | "beginPath" | "moveTo" | "lineTo" | "quadraticCurveTo" | "arc" | "closePath" | "fill" | "stroke"
+>;
 
-/** Les couleurs de la carte, telles que le <canvas> les comprend : le fond des Cases et leur bord. */
-export type Couleurs = { case: string; bord: string };
+/**
+ * Les couleurs de la carte, telles que le <canvas> les comprend : le fond de chaque teinte, dans l'ordre des
+ * teintes de la carte (US-0418), le bord léger des Cases, et les deux tons des motifs : un sombre pour les teintes
+ * claires, un clair pour les sombres.
+ */
+export type Peinture = { fonds: string[]; bord: string; motifSombre: string; motifClair: string };
+
+/** La carte telle que le serveur l'envoie : ses teintes, et ses Cases en colonnes (src/monde/carte.ts). */
+export type CarteADessiner = { teintes: string[]; cases: { q: number[]; r: number[]; teinte: number[] } };
 
 /** US-0417 : la carte à l'ouverture, sur un écran de `largeur` × `hauteur` pixels : le Foyer au milieu, des Cases de LARGEUR_DE_CASE pixels. */
 export function vueSurLeFoyer(foyer: Coordonnees, largeur: number, hauteur: number): Vue {
@@ -40,19 +50,216 @@ function tracerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
 }
 
 /**
- * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
- * touchent l'écran sont tracées, toutes d'un même tracé : un seul remplissage et un seul trait pour leurs bords.
+ * US-0418 : le motif d'une teinte, posé au milieu de chaque Case de cette teinte : un petit dessin plat, dans le
+ * ton sombre sur les teintes claires et le ton clair sur les sombres, rempli ou tracé d'un trait rond. `dessiner`
+ * l'ajoute au tracé en cours, la Case centrée en (x, y) et de rayon s ; il reste à moins de 0,6 s du centre.
  */
-export function dessinerLaCarte(pinceau: Pinceau, cases: { q: number[]; r: number[] }, vue: Vue, couleurs: Couleurs) {
-  pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
-  pinceau.beginPath();
-  for (let i = 0; i < cases.q.length; i++) {
-    const { x, y } = aLEcran({ q: cases.q[i], r: cases.r[i] }, vue);
-    if (aLaVue(x, y, vue)) tracerLaCase(pinceau, x, y, vue.rayon);
+type Motif = { ton: "sombre" | "clair"; geste: "remplir" | "tracer"; dessiner: (p: Pinceau, x: number, y: number, s: number) => void };
+
+/** Une touffe d'herbe : trois brins qui partent d'un même pied. */
+function touffe(p: Pinceau, x: number, y: number, s: number) {
+  for (const [dx, dy] of [
+    [-0.13, -0.17],
+    [0, -0.24],
+    [0.13, -0.17],
+  ]) {
+    p.moveTo(x, y);
+    p.lineTo(x + dx * s, y + dy * s);
   }
-  pinceau.fillStyle = couleurs.case;
-  pinceau.fill();
-  pinceau.strokeStyle = couleurs.bord;
+}
+
+/** Un sapin : un triangle pointe en haut. */
+function sapin(p: Pinceau, x: number, y: number, s: number) {
+  p.moveTo(x, y - 0.3 * s);
+  p.lineTo(x + 0.16 * s, y + 0.16 * s);
+  p.lineTo(x - 0.16 * s, y + 0.16 * s);
+  p.closePath();
+}
+
+/** Un rond plein de rayon r (en rayons de Case), centré en (x, y). */
+function rond(p: Pinceau, x: number, y: number, r: number) {
+  p.moveTo(x + r, y);
+  p.arc(x, y, r, 0, 2 * Math.PI);
+}
+
+/** Une vague : deux creux de largeur totale 2 l (en pixels), d'amplitude a. */
+function vague(p: Pinceau, x: number, y: number, l: number, a: number) {
+  p.moveTo(x - l, y);
+  p.quadraticCurveTo(x - l / 2, y - a, x, y);
+  p.quadraticCurveTo(x + l / 2, y + a, x + l, y);
+}
+
+/** US-0418 : le motif de chaque Biome de terre et de chaque eau, tous différents. */
+export const MOTIFS: Record<string, Motif> = {
+  // Des touffes d'herbe.
+  prairie: {
+    ton: "sombre",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => {
+      touffe(p, x - 0.26 * s, y + 0.2 * s, s);
+      touffe(p, x + 0.24 * s, y + 0.02 * s, s);
+    },
+  },
+  // Deux sapins.
+  foret: {
+    ton: "sombre",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      sapin(p, x - 0.2 * s, y + 0.06 * s, s);
+      sapin(p, x + 0.2 * s, y - 0.04 * s, s);
+    },
+  },
+  // Des feuillages ronds, serrés.
+  jungle: {
+    ton: "clair",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      rond(p, x - 0.19 * s, y - 0.08 * s, 0.15 * s);
+      rond(p, x + 0.19 * s, y - 0.12 * s, 0.13 * s);
+      rond(p, x + 0.02 * s, y + 0.2 * s, 0.15 * s);
+    },
+  },
+  // Un acacia : une ombrelle plate sur un tronc fin.
+  savane: {
+    ton: "sombre",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      p.moveTo(x - 0.34 * s, y - 0.06 * s);
+      p.quadraticCurveTo(x, y - 0.36 * s, x + 0.34 * s, y - 0.06 * s);
+      p.closePath();
+      p.moveTo(x - 0.035 * s, y - 0.06 * s);
+      p.lineTo(x + 0.035 * s, y - 0.06 * s);
+      p.lineTo(x + 0.035 * s, y + 0.3 * s);
+      p.lineTo(x - 0.035 * s, y + 0.3 * s);
+      p.closePath();
+    },
+  },
+  // Deux dunes.
+  desert: {
+    ton: "sombre",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => {
+      p.moveTo(x - 0.42 * s, y + 0.02 * s);
+      p.quadraticCurveTo(x - 0.2 * s, y - 0.22 * s, x + 0.02 * s, y + 0.02 * s);
+      p.moveTo(x - 0.04 * s, y + 0.3 * s);
+      p.quadraticCurveTo(x + 0.18 * s, y + 0.06 * s, x + 0.4 * s, y + 0.3 * s);
+    },
+  },
+  // Un massif à deux sommets.
+  montagne: {
+    ton: "sombre",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      p.moveTo(x - 0.42 * s, y + 0.24 * s);
+      p.lineTo(x - 0.08 * s, y - 0.32 * s);
+      p.lineTo(x + 0.1 * s, y - 0.02 * s);
+      p.lineTo(x + 0.2 * s, y - 0.16 * s);
+      p.lineTo(x + 0.42 * s, y + 0.24 * s);
+      p.closePath();
+    },
+  },
+  // Des lichens, en points épars.
+  toundra: {
+    ton: "sombre",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      rond(p, x - 0.26 * s, y - 0.1 * s, 0.06 * s);
+      rond(p, x + 0.04 * s, y + 0.18 * s, 0.06 * s);
+      rond(p, x + 0.3 * s, y - 0.14 * s, 0.06 * s);
+      rond(p, x - 0.04 * s, y - 0.32 * s, 0.05 * s);
+    },
+  },
+  // Une fêlure dans la glace.
+  banquise: {
+    ton: "sombre",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => {
+      p.moveTo(x - 0.36 * s, y - 0.18 * s);
+      p.lineTo(x - 0.1 * s, y + 0.02 * s);
+      p.lineTo(x + 0.06 * s, y - 0.12 * s);
+      p.lineTo(x + 0.36 * s, y + 0.18 * s);
+      p.moveTo(x + 0.06 * s, y - 0.12 * s);
+      p.lineTo(x + 0.12 * s, y - 0.36 * s);
+    },
+  },
+  // L'écume du rivage, en trois points.
+  cote: {
+    ton: "clair",
+    geste: "remplir",
+    dessiner: (p, x, y, s) => {
+      rond(p, x - 0.26 * s, y + 0.06 * s, 0.055 * s);
+      rond(p, x, y - 0.06 * s, 0.055 * s);
+      rond(p, x + 0.26 * s, y + 0.06 * s, 0.055 * s);
+    },
+  },
+  // Des ronds dans l'eau.
+  lac: {
+    ton: "clair",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => {
+      p.moveTo(x + 0.3 * s, y);
+      p.arc(x, y, 0.3 * s, 0, 2 * Math.PI);
+      p.moveTo(x + 0.12 * s, y);
+      p.arc(x, y, 0.12 * s, 0, 2 * Math.PI);
+    },
+  },
+  // Le courant, d'une seule longue ondulation.
+  riviere: {
+    ton: "clair",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => vague(p, x, y, 0.44 * s, 0.3 * s),
+  },
+  // Deux vagues.
+  mer: {
+    ton: "clair",
+    geste: "tracer",
+    dessiner: (p, x, y, s) => {
+      vague(p, x - 0.1 * s, y - 0.14 * s, 0.22 * s, 0.22 * s);
+      vague(p, x + 0.1 * s, y + 0.18 * s, 0.22 * s, 0.22 * s);
+    },
+  },
+};
+
+/**
+ * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
+ * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
+ * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
+ */
+export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture) {
+  pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
+  // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
+  const parTeinte = carte.teintes.map((): { x: number; y: number }[] => []);
+  const { q, r, teinte } = carte.cases;
+  for (let i = 0; i < q.length; i++) {
+    const ici = aLEcran({ q: q[i], r: r[i] }, vue);
+    if (aLaVue(ici.x, ici.y, vue)) parTeinte[teinte[i]].push(ici);
+  }
+  parTeinte.forEach((centres, t) => {
+    pinceau.beginPath();
+    for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
+    pinceau.fillStyle = peinture.fonds[t];
+    pinceau.fill();
+  });
+  parTeinte.forEach((centres, t) => {
+    const motif = MOTIFS[carte.teintes[t]];
+    if (!motif || centres.length === 0) return;
+    pinceau.beginPath();
+    for (const { x, y } of centres) motif.dessiner(pinceau, x, y, vue.rayon);
+    const ton = motif.ton === "sombre" ? peinture.motifSombre : peinture.motifClair;
+    if (motif.geste === "remplir") {
+      pinceau.fillStyle = ton;
+      pinceau.fill();
+    } else {
+      pinceau.strokeStyle = ton;
+      pinceau.lineWidth = Math.max(1, vue.rayon * 0.09);
+      pinceau.lineCap = "round";
+      pinceau.lineJoin = "round";
+      pinceau.stroke();
+    }
+  });
+  pinceau.beginPath();
+  for (const centres of parTeinte) for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
+  pinceau.strokeStyle = peinture.bord;
   pinceau.lineWidth = 1;
   pinceau.stroke();
 }

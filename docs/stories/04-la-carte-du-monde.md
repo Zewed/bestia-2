@@ -187,6 +187,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0418 · Dessiner chaque Case selon son Biome
 **En tant que** joueur, **je veux** reconnaître le Biome de chaque Case au premier regard, **afin de** lire la carte sans effort.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque Biome a sa couleur (la même que /controle/monde) et son motif, et les quatre eaux (mer, côte, lac, rivière) les leurs : douze motifs différents, dessinés dans la Case, avec un fin trait clair entre les Cases. Deux couleurs de la palette diffèrent toujours nettement (la paire la plus proche, lac et rivière, reste distincte). Vérifié en vrai sur ordinateur et à 320 px.
 - **Débloquée par** : US-0417
 - **Critères d'acceptation** :
   - Chaque Biome a sa couleur et son motif, dans la direction artistique du prototype.
