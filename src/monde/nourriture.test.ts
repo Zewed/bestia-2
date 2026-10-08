@@ -139,7 +139,11 @@ describe("dire combien de temps tiendra la Nourriture (US-0320)", () => {
 
   it("dit « moins d'une heure » sous une heure", () => {
     expect(tenueDeLaNourriture(0.99)).toBe("Nourriture pour encore moins d'une heure");
-    expect(tenueDeLaNourriture(0)).toBe("Nourriture pour encore moins d'une heure");
+    expect(tenueDeLaNourriture(0.001)).toBe("Nourriture pour encore moins d'une heure");
+  });
+
+  it("dit « Famine » quand la Nourriture ne paie plus du tout l'Entretien (US-0325)", () => {
+    expect(tenueDeLaNourriture(0)).toBe("Famine");
   });
 
   it("passe aux jours au-delà de 48 h : « 3 j 5 h », « 3 j »", () => {

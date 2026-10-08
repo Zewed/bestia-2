@@ -125,10 +125,11 @@ const unite = (nombre: number, symbole: string) => `${nombre} ${symbole}`;
 /**
  * US-0320 : ce que dit la page Habitants : « Nourriture assurée », ou « Nourriture pour encore 7 h », les
  * heures arrondies vers le bas, en jours et heures au-delà de 48 h (« 3 j 5 h ») ; sous une heure,
- * « moins d'une heure ».
+ * « moins d'une heure ». US-0325 : à zéro, la Nourriture ne paie plus l'Entretien : c'est la Famine.
  */
 export function tenueDeLaNourriture(heures: number | null): string {
   if (heures === null) return "Nourriture assurée";
+  if (heures <= 0) return "Famine";
   const entieres = Math.floor(Math.round(heures * MICROSECONDES_PAR_HEURE) / MICROSECONDES_PAR_HEURE);
   if (entieres < 1) return "Nourriture pour encore moins d'une heure";
   return `Nourriture pour encore ${enHeuresOuEnJours(entieres)}`;

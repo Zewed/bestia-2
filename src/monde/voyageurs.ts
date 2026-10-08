@@ -296,7 +296,7 @@ export async function refuserLeVoyageur(base: Pool | PoolClient, territoireId: n
  * une confirmation : compté comme la bande d'alerte de la barre du haut (US-0321), quand la Nourriture ne couvre
  * plus que FAMINE_IMMINENTE_HEURES heures d'Entretien, ou moins, sur les Stocks et l'Entretien lus une fois le
  * Territoire mis à l'heure ; US-0323 : et, entre le seuil et sa marge, tant que le Territoire le retient (`depuis`,
- * famineImminenteDepuis). Pendant une Famine (US-0325, à venir), la Nourriture ne tient plus du tout :
+ * famineImminenteDepuis). Pendant une Famine (US-0325), la Nourriture ne tient plus du tout :
  * l'avertissement reste actif, et l'accueil reste possible, avec la même confirmation.
  */
 export function avertissementDeFamine(stocks: Stock[], entretienParHeure: string, depuis: number | null = null): boolean {
