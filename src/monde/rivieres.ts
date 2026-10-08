@@ -27,17 +27,18 @@ const SINUOSITE = 8;
  * la première Case qui touche une côte ou un lac, ou une autre rivière : elle s'y jette, en un seul point,
  * là où l'autre coule seule depuis au moins RIVIERE_MIN_CASES Cases. Elle est abandonnée, et la source
  * suivante essaie, si elle compte moins de RIVIERE_MIN_CASES Cases, finit entre deux eaux, ôte à une Case
- * de côte sa dernière terre, ou laisse d'une région qu'elle traverse un morceau trop petit.
+ * de côte sa dernière terre, ou laisse d'une région qu'elle traverse un morceau trop petit. US-0413 : elle
+ * contourne les Cases `reservee`, les poches de prairie de la Couronne.
  */
 export function rivieresDuMonde(
   grille: Grille,
   biomes: Biome[],
   variantes: (Variante | null)[],
-  { rayonCoeur, graine }: { rayonCoeur: number; graine: number },
+  { rayonCoeur, graine, reservee = () => false }: { rayonCoeur: number; graine: number; reservee?: (i: number) => boolean },
 ): number[][] {
   const n = grille.cases.length;
   const coeur = (i: number) => dansLeCoeur(grille.cases[i], rayonCoeur);
-  const libre = (i: number) => biomes[i] !== "eau" && biomes[i] !== "montagne" && !coeur(i);
+  const libre = (i: number) => biomes[i] !== "eau" && biomes[i] !== "montagne" && !coeur(i) && !reservee(i);
   const arrivee = (i: number) => variantes[i] === "cote" || variantes[i] === "lac";
   // Chaque étendue d'eau où une rivière peut finir : une mer, par sa côte, ou un lac.
   const etendue = new Int32Array(n).fill(-1);

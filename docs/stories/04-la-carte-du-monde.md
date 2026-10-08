@@ -132,11 +132,12 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0413 · Réserver de bonnes Cases de naissance sur la Couronne
 **En tant que** nouveau joueur, **je veux** naître sur une Case qui me laisse une chance de grandir, **afin de** ne pas être désavantagé dès le départ.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Avant tout le reste, la génération réserve 24 poches de prairie de 40 Cases, régulièrement réparties sur l'anneau du milieu de la Couronne (décalage tiré de la graine), que la mer, les montagnes et les rivières contournent. Seule la prairie de la Couronne reçoit un Foyer, hors du Cœur, à 4 Cases d'écart (`emplacementsDeNaissance`) : 101 à 119 emplacements sur les graines testées, 97 à 121 sur 600, sans trou de plus de 19° sur le tour. La prairie fait 20 à 22 % de la terre ; la forêt grandit d'autant côté froid et côté chaud. Le Monde du jeu et ses naissances ne changent pas. Rien de visible.
 - **Débloquée par** : US-0404, US-0411
 - **Critères d'acceptation** :
   - Seules les Cases de prairie de la Couronne peuvent recevoir un Foyer, comme à l'étape 9 (US-0152) : tous les départs se valent (ADR 0008).
   - La Couronne générée compte assez de prairie pour les naissances, tout autour du Monde.
-  - Deux Foyers sont toujours séparés d'au moins (chiffre à régler) Cases.
+  - Deux Foyers sont toujours séparés d'au moins 4 Cases (provisoire, `ECART_ENTRE_FOYERS`).
 
 ### US-0414 · Faire naître les joueurs sur le Monde généré
 **En tant que** nouveau joueur, **je veux** naître sur une vraie Case du Monde, **afin de** commencer ma partie sur la carte que partagent tous les joueurs.

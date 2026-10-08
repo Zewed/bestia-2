@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COEUR_SAUVAGE_RAYON, MONDE_RAYON } from "@/reglages";
-import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
+import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, eloignementDuCoeur, tourDeLAnneau, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
 describe("géométrie des Cases", () => {
   it("mesure l'anneau d'une Case : sa distance au Cœur sauvage", () => {
@@ -120,5 +120,20 @@ describe("éloignement au Cœur sauvage (US-0405)", () => {
     expect(eloignementDuCoeur(CENTRE, COEUR_SAUVAGE_RAYON)).toBe(0);
     expect(eloignementDuCoeur({ q: 8, r: -8 }, COEUR_SAUVAGE_RAYON)).toBe(1);
     expect(eloignementDuCoeur({ q: 0, r: -60 }, COEUR_SAUVAGE_RAYON)).toBe(53);
+  });
+});
+
+describe("tour d'un anneau (US-0413)", () => {
+  const cle = (c: Coordonnees) => `${c.q},${c.r}`;
+
+  it.each([1, 2, 7, 57])("fait le tour de l'anneau %i de proche en proche : toutes ses Cases, une fois chacune, chacune voisine de la suivante", (k) => {
+    const tour = tourDeLAnneau(k);
+    expect(new Set(tour.map(cle))).toEqual(new Set(casesDesAnneaux(k, k).map(cle)));
+    expect(tour).toHaveLength(6 * k);
+    for (const [i, c] of tour.entries()) expect(distance(c, tour[(i + 1) % tour.length]), cle(c)).toBe(1);
+  });
+
+  it("réduit l'anneau 0 au centre du Monde", () => {
+    expect(tourDeLAnneau(0)).toEqual([CENTRE]);
   });
 });

@@ -29,6 +29,20 @@ export function emplacementsDeFoyers(cases: CaseCandidate[], foyers: Coordonnees
   return emplacements;
 }
 
+/** Une Case d'un Monde, qui sait si elle est dans la Couronne (US-0404). */
+export type CaseDuMonde = CaseCandidate & { anneau: number; couronne: boolean };
+
+/**
+ * US-0413 : les emplacements de naissance d'un Monde généré : les Cases de prairie libres de sa Couronne
+ * où naîtraient ses prochains Foyers, à au moins ECART_ENTRE_FOYERS Cases les uns des autres et des
+ * `foyers` déjà nés, posés un à un comme le fait emplacementsDeFoyers, anneau par anneau depuis le bord
+ * intérieur de la Couronne. Pour la page de contrôle (US-0412) et la naissance sur le Monde généré (US-0414).
+ */
+export function emplacementsDeNaissance(cases: CaseDuMonde[], foyers: Coordonnees[] = []): Coordonnees[] {
+  const couronne = cases.filter((c) => c.couronne).sort((a, b) => a.anneau - b.anneau || a.q - b.q || a.r - b.r);
+  return emplacementsDeFoyers(couronne, foyers);
+}
+
 /**
  * La Case où naît un nouveau chef (US-0153), ou null si la Couronne est pleine. Le premier chef
  * d'un Monde naît sur une Case libre tirée au hasard ; les suivants, au hasard parmi les

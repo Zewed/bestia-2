@@ -34,9 +34,9 @@ async function main() {
     const client = await pool.connect();
     try {
       await client.query("begin");
-      const { cases } = await creerUnMonde(client, { nom, graine });
+      const { cases, emplacements } = await creerUnMonde(client, { nom, graine });
       await client.query("commit");
-      console.log(`Monde « ${nom} » créé : ${cases} Cases, graine ${graine}${tiree ? " (tirée au hasard)" : ""}.`);
+      console.log(`Monde « ${nom} » créé : ${cases} Cases, ${emplacements} emplacements de naissance, graine ${graine}${tiree ? " (tirée au hasard)" : ""}.`);
     } catch (error) {
       await client.query("rollback").catch(() => {});
       throw error;

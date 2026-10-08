@@ -73,6 +73,23 @@ export function casesDesAnneaux(de: number, a: number): Coordonnees[] {
   return cases;
 }
 
+/**
+ * US-0413 : les Cases de l'anneau `k`, dans l'ordre où on en fait le tour : de proche en proche, chacune
+ * voisine de la suivante, la dernière de la première.
+ */
+export function tourDeLAnneau(k: number): Coordonnees[] {
+  if (k === 0) return [{ ...CENTRE }];
+  const tour: Coordonnees[] = [];
+  let c = { q: DIRECTIONS[4].q * k + 0, r: DIRECTIONS[4].r * k + 0 };
+  for (const direction of DIRECTIONS) {
+    for (let pas = 0; pas < k; pas++) {
+      tour.push(c);
+      c = { q: c.q + direction.q + 0, r: c.r + direction.r + 0 };
+    }
+  }
+  return tour;
+}
+
 /** Le centre d'une Case dans le plan, pour une Case de rayon 1 (pointe en haut). */
 export function centre({ q, r }: Coordonnees): { x: number; y: number } {
   return { x: Math.sqrt(3) * (q + r / 2), y: 1.5 * r };

@@ -226,24 +226,40 @@ export function climatMoyen(groupes: number[][], climat: Climat): { temperature:
  * du plus froid au moins froid parmi les froides, du plus sec au plus humide parmi les autres. Chaque
  * Biome reçoit à peu près sa part de PARTS_DES_BIOMES. Les montagnes, elles, forment des chaînes à part
  * (US-0407).
+ *
+ * US-0413 : les poches de prairie de la Couronne (`poches`) se rangent avec les provinces, d'après leur
+ * climat, sans changer de Biome : le froid, le tempéré et le chaud gardent ainsi leurs frontières. Toutes
+ * comptent dans la part de la prairie, que les provinces tempérées prennent d'autant moins : la forêt y
+ * gagne la place que les poches prennent au froid et au chaud.
  */
-export function biomesDesProvinces(membres: number[][], climat: Climat): BiomeDeTerre[] {
-  const { temperature, humidite } = climatMoyen(membres, climat);
-  const tailles = membres.map((m) => m.length);
+export function biomesDesProvinces(membres: number[][], climat: Climat, poches: number[][] = []): BiomeDeTerre[] {
+  const unites = [...membres, ...poches];
+  const { temperature, humidite } = climatMoyen(unites, climat);
+  const tailles = unites.map((m) => m.length);
   const part = PARTS_DES_BIOMES;
   const choix = new Array<BiomeDeTerre>(membres.length);
-  const toutes = membres.map((_, p) => p);
+  const toutes = unites.map((_, p) => p);
   const groupes = partager(toutes, tailles, temperature, [
     ["froid", part.banquise + part.toundra],
     ["tempere", part.prairie + part.foret],
     ["chaud", part.desert + part.savane + part.jungle],
   ] as const);
   const dans = (groupe: string) => toutes.filter((p) => groupes.get(p) === groupe);
-  const ranger = (groupe: number[], mesure: number[], biomes: BiomeDeTerre[]) =>
-    partager(groupe, tailles, mesure, biomes.map((b) => [b, part[b]] as [BiomeDeTerre, number])).forEach((b, p) => (choix[p] = b));
-  ranger(dans("froid"), temperature, ["banquise", "toundra"]);
-  ranger(dans("tempere"), humidite, ["prairie", "foret"]);
-  ranger(dans("chaud"), humidite, ["desert", "savane", "jungle"]);
+  const cases = (groupe: number[]) => groupe.reduce((s, p) => s + tailles[p], 0);
+  const provincesDe = (groupe: number[]) => groupe.filter((p) => p < membres.length);
+  const ranger = (groupe: number[], mesure: number[], parts: [BiomeDeTerre, number][]) =>
+    partager(provincesDe(groupe), tailles, mesure, parts).forEach((b, p) => (choix[p] = b));
+  const selon = (biomes: BiomeDeTerre[]) => biomes.map((b): [BiomeDeTerre, number] => [b, part[b]]);
+  ranger(dans("froid"), temperature, selon(["banquise", "toundra"]));
+  // La prairie du tempéré, moins celle de toutes les poches ; la forêt prend le reste de ses provinces.
+  const tempere = dans("tempere");
+  const enPoches = poches.reduce((s, p) => s + p.length, 0);
+  const prairie = Math.min(cases(provincesDe(tempere)), Math.max(0, (cases(tempere) * part.prairie) / (part.prairie + part.foret) - enPoches));
+  ranger(tempere, humidite, [
+    ["prairie", prairie],
+    ["foret", cases(provincesDe(tempere)) - prairie],
+  ]);
+  ranger(dans("chaud"), humidite, selon(["desert", "savane", "jungle"]));
   return choix;
 }
 

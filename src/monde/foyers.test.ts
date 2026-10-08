@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, ECART_ENTRE_FOYERS, JOUEURS_PAR_MONDE, MONDE_RAYON } from "@/reglages";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
-import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, peutAccueillirUnFoyer } from "./foyers";
+import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers, emplacementsDeNaissance, peutAccueillirUnFoyer } from "./foyers";
 import { genererLeMonde } from "./generer";
-import { anneau, dansLeCoeur, distance } from "./hex";
+import { anneau, casesDesAnneaux, dansLeCoeur, distance } from "./hex";
 
 describe("Cases où un Foyer peut naître (US-0152)", () => {
   const prairie = { q: 0, r: -60, biome: "prairie" };
@@ -98,6 +98,36 @@ describe("aucun Foyer dans le Cœur sauvage (US-0403)", () => {
     const enBase = couronne.map((c) => ({ ...c, coeur: dansLeCoeur(c, COEUR_SAUVAGE_RAYON) }));
     expect(emplacementsDeFoyers(enBase, [])).toEqual(emplacementsDeFoyers(couronne, []));
     for (const hasard of [0, 0.3, 0.9999]) expect(choisirCaseDeNaissance(enBase, [], null, () => hasard)).toMatchObject(choisirCaseDeNaissance(couronne, [], null, () => hasard)!);
+  });
+});
+
+describe("emplacements de naissance d'un Monde généré (US-0413)", () => {
+  /** Un petit Monde de 10 anneaux tout en prairie : sa Couronne fait 2 anneaux, son Cœur sauvage 2. */
+  const petit = casesDesAnneaux(0, 10).map((c) => ({ ...c, anneau: anneau(c), couronne: anneau(c) > 8, coeur: dansLeCoeur(c, 2), biome: "prairie" }));
+
+  it("ne propose que la Couronne : une prairie de l'intérieur ou du Cœur sauvage ne l'est jamais", () => {
+    const emplacements = emplacementsDeNaissance(petit);
+    expect(emplacements.length).toBeGreaterThan(0);
+    for (const e of emplacements) expect(anneau(e)).toBeGreaterThan(8);
+    expect(emplacementsDeNaissance(petit.map((c) => (c.couronne ? { ...c, biome: "foret" } : c)))).toEqual([]);
+  });
+
+  it("pose les Foyers un à un, anneau par anneau depuis le bord intérieur de la Couronne, à 4 Cases au moins l'un de l'autre", () => {
+    const emplacements = emplacementsDeNaissance(petit);
+    const couronne = petit.filter((c) => c.couronne).sort((a, b) => a.anneau - b.anneau || a.q - b.q || a.r - b.r);
+    expect(emplacements).toEqual(emplacementsDeFoyers(couronne, []));
+    expect(emplacements[0]).toEqual({ q: -9, r: 0 });
+    for (const [i, a] of emplacements.entries()) for (const b of emplacements.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(ECART_ENTRE_FOYERS);
+  });
+
+  it("tient compte des Foyers déjà nés et des Cases possédées, dans le désordre où on les donne", () => {
+    const libres = emplacementsDeNaissance(petit);
+    const nes = libres.slice(0, 3);
+    const apres = emplacementsDeNaissance([...petit].reverse(), nes);
+    expect(apres).toEqual(libres.slice(3));
+    for (const e of apres) for (const f of nes) expect(distance(e, f)).toBeGreaterThanOrEqual(ECART_ENTRE_FOYERS);
+    const possedee = petit.map((c) => (c.q === libres[0].q && c.r === libres[0].r ? { ...c, possedee: true } : c));
+    expect(emplacementsDeNaissance(possedee)).not.toContainEqual(libres[0]);
   });
 });
 

@@ -59,7 +59,7 @@ export const MONDE_RAYON = 60;
  * l'intérieur, jamais rétrécir : une Case créée reste.
  */
 export const COURONNE_ANNEAUX = 6;
-/** US-0152 : deux Foyers sont toujours à au moins 4 Cases l'un de l'autre. */
+/** US-0152, US-0413 : deux Foyers sont toujours à au moins 4 Cases l'un de l'autre (valeur provisoire, à régler en jouant). */
 export const ECART_ENTRE_FOYERS = 4;
 /** US-0153 : un nouveau chef naît au hasard parmi les 5 emplacements libres les plus proches du dernier arrivé. */
 export const NAISSANCE_PARMI_LES_PLUS_PROCHES = 5;
@@ -184,3 +184,11 @@ export const RIVIERE_MIN_CASES = 5;
  * (valeur provisoire, à régler en jouant).
  */
 export const HISTORIQUE_VOYAGEURS_JOURS = 7;
+
+/**
+ * US-0413 : la Couronne d'un Monde généré garde 24 poches de prairie, régulièrement réparties sur tout son
+ * tour, où naissent les joueurs (valeur provisoire, à régler en jouant)…
+ */
+export const POCHES_DE_PRAIRIE = 24;
+/** … chacune de 40 Cases d'un seul tenant (valeur provisoire). Elles comptent dans la part de la prairie. */
+export const POCHE_DE_PRAIRIE_CASES = 40;

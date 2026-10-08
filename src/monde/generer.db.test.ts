@@ -1,6 +1,7 @@
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { emplacementsDeNaissance } from "./foyers";
 import { creerUnMonde, genererLeMonde } from "./generer";
 
 describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => {
@@ -38,7 +39,7 @@ describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => 
 
   it("enregistre le Monde, sa graine, la taille de son Cœur sauvage et ses 10 981 Cases, telles que la graine les donne (US-0403)", async () => {
     await surUneBaseNeuve(async (client) => {
-      const { mondeId, cases } = await creerUnMonde(client, { nom, graine: 12345 });
+      const { mondeId, cases, emplacements } = await creerUnMonde(client, { nom, graine: 12345 });
       expect(cases).toBe(10_981);
       const { rows } = await client.query("select nom, graine, rayon, anneaux_couronne as anneaux, rayon_coeur as coeur from monde where id = $1", [mondeId]);
       expect(rows[0]).toEqual({ nom, graine: "12345", rayon: 60, anneaux: 6, coeur: 8 });
@@ -49,6 +50,9 @@ describe.skipIf(!URL_TEST)("créer un Monde généré en base (US-0401)", () => 
       // US-0405 : chaque Case porte en base sa distance au Cœur sauvage, 0 pour les siennes.
       expect(enBase.filter((c) => c.eloignement === 0)).toEqual(enBase.filter((c) => c.coeur));
       expect(Math.max(...enBase.map((c) => c.eloignement))).toBe(53);
+      // US-0413 : la place des naissances, comptée sur les Cases enregistrées.
+      expect(emplacements).toBe(emplacementsDeNaissance(enBase).length);
+      expect(emplacements).toBeGreaterThanOrEqual(90);
     });
   });
 

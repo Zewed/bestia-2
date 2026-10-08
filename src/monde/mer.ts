@@ -24,11 +24,15 @@ const RAMASSEMENT = 0.02;
  * terres, loin du Cœur sauvage et des autres mers, puis se remplit comme un bassin : les Cases les plus
  * basses d'un relief doux d'abord, de proche en proche, jusqu'à sa taille ; elle reste d'un seul tenant
  * et ne touche jamais une autre mer. Une mer qui n'atteint pas sa taille laisse le reste à la suivante.
- * Enfin, une poche de terre trop petite pour une région, enfermée par la mer, devient mer.
+ * Enfin, une poche de terre trop petite pour une région, enfermée par la mer, devient mer. US-0413 : la
+ * mer contourne les Cases `reservee`, les poches de prairie de la Couronne.
  */
-export function merDuMonde(grille: Grille, { rayon, rayonCoeur, graine }: { rayon: number; rayonCoeur: number; graine: number }): boolean[] {
+export function merDuMonde(
+  grille: Grille,
+  { rayon, rayonCoeur, graine, reservee = () => false }: { rayon: number; rayonCoeur: number; graine: number; reservee?: (i: number) => boolean },
+): boolean[] {
   const n = grille.cases.length;
-  const permise = grille.cases.map((c) => eloignementDuCoeur(c, rayonCoeur) >= MER_LOIN_DU_COEUR);
+  const permise = grille.cases.map((c, i) => eloignementDuCoeur(c, rayonCoeur) >= MER_LOIN_DU_COEUR && !reservee(i));
   const dansLesTerres = (i: number) => eloignementDuCoeur(grille.cases[i], rayonCoeur) >= GERME_LOIN_DU_BORD && anneau(grille.cases[i]) <= rayon - GERME_LOIN_DU_BORD;
   const tirage = grille.cases.map((c) => hacher(c.q, c.r, graine, 0x6f));
   const germes: number[] = [];

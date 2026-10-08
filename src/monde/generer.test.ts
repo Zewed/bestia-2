@@ -16,11 +16,17 @@ import {
   MONDE_RAYON,
   PART_BIOME_MAX,
   PART_BIOME_MIN,
+  PARTS_DES_BIOMES,
+  POCHE_DE_PRAIRIE_CASES,
+  POCHES_DE_PRAIRIE,
   REGION_BIOME_MIN_CASES,
   RIVIERE_MIN_CASES,
   RIVIERES_PAR_MONDE,
 } from "@/reglages";
 import { BANDE_DE_CALCUL, graineDuMonde } from "./couronne";
+import { emplacementsDeNaissance } from "./foyers";
+import { pochesDePrairie } from "./poches";
+import { grilleDuMonde } from "./regions";
 import { GRAINE_MAX, genererLeMonde, lireUneGraine, type CaseGeneree } from "./generer";
 import { casesDesAnneaux, CENTRE, centre, distance, eloignementDuCoeur, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
 
@@ -571,5 +577,58 @@ describe("rivières (US-0411)", () => {
     const autour = autourDans(cases);
     const tailleDe = new Map(regionsDe(cases).flatMap((region) => region.map((c) => [cle(c), region.length])));
     for (const c of cases.filter(riviere)) for (const v of autour(c).filter(terre)) expect(tailleDe.get(cle(v)), cle(v)).toBeGreaterThanOrEqual(REGION_BIOME_MIN_CASES);
+  });
+});
+
+describe("bonnes Cases de naissance sur la Couronne (US-0413)", () => {
+  /** L'angle d'une Case vue du milieu du Monde, en degrés, de 0 à 360. */
+  const angle = (c: Coordonnees) => ((Math.atan2(centre(c).y, centre(c).x) * 180) / Math.PI + 360) % 360;
+
+  it("fixe les réglages des naissances : 4 Cases au moins entre deux Foyers, 24 poches de prairie de 40 Cases sur la Couronne", () => {
+    expect([ECART_ENTRE_FOYERS, POCHES_DE_PRAIRIE, POCHE_DE_PRAIRIE_CASES]).toEqual([4, 24, 40]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "ne propose que des Cases de prairie de la Couronne, même quand tout le Monde est proposé : ni le Cœur sauvage, ni l'intérieur (graine %i)",
+    (graine) => {
+      const cases = mondeDe(graine);
+      expect(cases.some((c) => !c.couronne && c.biome === "prairie")).toBe(true);
+      const parCle = new Map(cases.map((c) => [cle(c), c]));
+      for (const e of emplacementsDeNaissance(cases)) {
+        expect(parCle.get(cle(e))?.couronne, cle(e)).toBe(true);
+        expect(parCle.get(cle(e))?.biome, cle(e)).toBe("prairie");
+      }
+    },
+  );
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("y trouve au moins 90 emplacements de naissance, à 4 Cases au moins l'un de l'autre (graine %i)", (graine) => {
+    const emplacements = emplacementsDeNaissance(mondeDe(graine));
+    expect(emplacements.length).toBeGreaterThanOrEqual(JOUEURS_PAR_MONDE);
+    for (const [i, a] of emplacements.entries()) for (const b of emplacements.slice(i + 1)) expect(distance(a, b), `${cle(a)} · ${cle(b)}`).toBeGreaterThanOrEqual(ECART_ENTRE_FOYERS);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])(
+    "les répartit tout autour du Monde, côté froid comme côté chaud : chaque secteur de 60° en compte au moins 10 (graine %i)",
+    (graine) => {
+      const angles = emplacementsDeNaissance(mondeDe(graine)).map(angle);
+      // Un secteur part de chaque emplacement, et de chaque degré rond : aucun n'est laissé de côté.
+      for (const debut of [...angles, ...Array.from({ length: 360 }, (_, i) => i)]) {
+        expect(angles.filter((a) => (a - debut + 360) % 360 < 60).length, `${debut}°`).toBeGreaterThanOrEqual(10);
+      }
+    },
+  );
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("garde ses poches de prairie entières : la mer, les montagnes et les rivières les contournent (graine %i)", (graine) => {
+    const grille = grilleDuMonde(MONDE_RAYON);
+    const poche = pochesDePrairie(grille, { rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, graine });
+    const cases = mondeDe(graine);
+    expect(cases.map(cle)).toEqual(grille.cases.map(cle));
+    expect(cases.filter((c, i) => poche[i] && c.biome !== "prairie").map(cle)).toEqual([]);
+  });
+
+  it.each([...GRAINES, graineDuMonde("Aube")])("compte la prairie des poches dans sa part : la prairie reste autour de ses 20 % de la terre (graine %i)", (graine) => {
+    const terre = mondeDe(graine).filter((c) => c.biome !== "eau");
+    const prairie = terre.filter((c) => c.biome === "prairie").length / terre.length;
+    expect(Math.abs(prairie - PARTS_DES_BIOMES.prairie)).toBeLessThanOrEqual(0.03);
   });
 });
