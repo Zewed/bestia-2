@@ -6,16 +6,27 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_322edfedfe9e61 5
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_2bda9e1ee31ad2 892-901
+  s_97a431cfa65ca7::t_49766d43bc6f11 894
+  s_97a431cfa65ca7::t_6066671d9bb1dd 892-893,895-901
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_c5f895ba8b7fbf 4,9-10,53,71,207
+  s_97a431cfa65ca7::t_66768b09180be9 4,9-10,53,71,207
 src/app/jeu/carte/CasesDecouvertes.module.css
   s_97a431cfa65ca7::t_b0cb34ed4816bf 1-26
+  s_97a431cfa65ca7::t_98ee63a0223139 22-26
+  s_97a431cfa65ca7::t_7794d6f4524868 1-21
 src/app/jeu/carte/CasesDecouvertes.test.tsx
   s_97a431cfa65ca7::t_0c8e9ee4e50e11 1-32
+  s_97a431cfa65ca7::t_68efb76d7cb020 1-28,31-32
+  s_97a431cfa65ca7::t_f99281e990ee94 29-30
 src/app/jeu/carte/CasesDecouvertes.tsx
   s_97a431cfa65ca7::t_750a39b0db7957 1-28
+  s_97a431cfa65ca7::t_d7af81662bd018 18-19,25
+  s_97a431cfa65ca7::t_38274fd44c2b2e 1-17,20-24,26-28
 src/app/jeu/carte/styles.test.ts
   s_97a431cfa65ca7::t_fc25b5d0866b39 80-96
+  s_97a431cfa65ca7::t_7fa88db3ae6fee 80-92,95-96
+  s_97a431cfa65ca7::t_b79312eb00b7df 93-94
 ---
 {
   "schema_version": "authorship/3.0.0",
