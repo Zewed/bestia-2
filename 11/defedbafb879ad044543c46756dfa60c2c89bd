@@ -4,12 +4,22 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_5768afe53bf2d5 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_a130c6be283695 380-400
+  s_97a431cfa65ca7::t_576dfd50252f48 380-393,397,399-400
+  s_97a431cfa65ca7::t_a6891acc3ef7c4 394-396,398
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_4fd93c92139cf9 35-36
+  s_97a431cfa65ca7::t_b82331fc70edb6 35-36
 src/app/jeu/carte/gestes.test.ts
   s_97a431cfa65ca7::t_e35aae22ab45d6 142-146,197-251
+  s_97a431cfa65ca7::t_f00ca407121942 197-226,228-250
+  s_97a431cfa65ca7::t_c7485c91c73ea2 227
+  s_97a431cfa65ca7::t_58ab536465fc9f 142-146
+  s_97a431cfa65ca7::t_01383578ed1b7a 251
 src/app/jeu/carte/gestes.ts
   s_97a431cfa65ca7::t_d3280c62499eee 29-36,51-53,56-64,67,70-72,75-76,78-90,93-96,110,112-114,119-120
+  s_97a431cfa65ca7::t_49e30ad0cc6948 110,112-114,119-120
+  s_97a431cfa65ca7::t_b64fe6ffc578ef 51-53,56-64,67,70-72,75-76,78-90,93-96
+  s_97a431cfa65ca7::t_d65ac615c10ffd 29-36
 ---
 {
   "schema_version": "authorship/3.0.0",
