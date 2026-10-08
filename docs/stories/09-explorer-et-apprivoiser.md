@@ -233,10 +233,11 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0924 · Des Espèces d'essai pour chaque Rareté
 **En tant que** développeur, **je veux** un petit jeu d'Espèces couvrant les Raretés de commune à légendaire, **afin de** tester les apparitions avant l'arrivée des 200 Espèces.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). 15 Espèces provisoires, dans `donnees/especes-essai.yaml` et sans illustration, couvrent les Raretés de commune à légendaire sur 7 Biomes, eau comprise : écureuil, grenouille, gerboise, lemming, marmotte, suricate, renard, loutre, loup, phoque, crocodile, ours brun, lion, smilodon, mammouth. Elles sont chargées en développement et dans les tests, jamais en production ni en prévisualisation. Supprimer le fichier suffit à les retirer, et un test vérifie qu'aucun code ne les cite. Vérifié sur base.
 - **Débloquée par** : Étape 4
 - **Critères d'acceptation** :
-  - Un petit jeu d'Espèces couvre les Raretés de commune à légendaire dans plusieurs Biomes ; Espèces provisoires ou premières Espèces validées du chantier de contenu (à décider).
-  - Ces Espèces ne servent qu'en développement et aux simulations ; en ligne, seules les Espèces déjà chargées apparaissent jusqu'à l'étape 47 (à décider).
+  - Un petit jeu d'Espèces couvre les Raretés de commune à légendaire dans plusieurs Biomes ; des Espèces provisoires, dans un fichier à part (décidé le 2026-10-08).
+  - Ces Espèces ne servent qu'en développement et aux simulations ; en ligne, seules les Espèces déjà chargées apparaissent jusqu'à l'étape 47 (décidé le 2026-10-08).
   - Elles se retirent sans laisser de trace le jour où la liste validée arrive.
 
 ### US-0925 · Des Bêtes sauvages apparaissent de temps en temps

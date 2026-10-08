@@ -3,7 +3,7 @@
 import { loadEnvConfig } from "@next/env";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
 import { chargerJeu } from "../src/donnees/charger";
-import { lireDonnees } from "../src/donnees/jeux";
+import { lireDonneesPour } from "../src/donnees/jeux";
 import { assertEnv } from "../src/env";
 
 async function main() {
@@ -11,9 +11,10 @@ async function main() {
   let pool;
   try {
     assertEnv();
-    // Toutes les données sont validées, et vérifiées entre elles, avant d'écrire quoi que ce soit.
-    const lots = lireDonnees();
     pool = createPool(process.env.DATABASE_URL_UNPOOLED?.trim() || process.env.DATABASE_URL!);
+    // Toutes les données sont validées, et vérifiées entre elles, avant d'écrire quoi que ce soit. US-0924 : les
+    // Espèces d'essai n'en sont qu'en développement, jamais en ligne ni sur la base de production.
+    const lots = await lireDonneesPour(pool);
     const client = await pool.connect();
     try {
       await client.query("begin");

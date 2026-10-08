@@ -1,0 +1,180 @@
+# US-0924 : des Espèces d'essai, provisoires, pour essayer les Bêtes sauvages avant la liste validée des Espèces.
+# Chargées seulement sur le poste local et dans les tests, jamais en ligne (src/donnees/jeux.ts) ; aucun code ne
+# nomme l'une d'elles. Le jour où la liste validée arrive, on supprime ce fichier : rien d'autre ne change.
+# Mêmes champs que especes.yaml ; mesures réelles approchées, sans illustration. Plus une Espèce est forte (son
+# attaque, par le barème), plus elle est rare : de commune à légendaire, jamais mythique.
+
+# Communes : une par Biome qui a des Espèces, en plus des trois de la prairie.
+
+- id: ecureuil
+  nom: Écureuil roux
+  masse_g: 300
+  arme: 0.5
+  vitesse: 20
+  regime: herbivore
+  nourriture_g_par_jour: 50
+  biome: foret
+  rarete: commune
+  source: "Sciurus vulgaris : 250 à 340 g, pointes à 20 km/h, 35 à 80 g de graines par jour."
+
+- id: grenouille
+  nom: Grenouille verte
+  masse_g: 50
+  arme: 0.3
+  vitesse: 8
+  regime: carnivore
+  nourriture_g_par_jour: 5
+  biome: eau
+  rarete: commune
+  source: "Pelophylax kl. esculentus : 20 à 100 g, quelques grammes d'insectes par jour."
+
+- id: gerboise
+  nom: Gerboise d'Égypte
+  masse_g: 55
+  arme: 0.5
+  vitesse: 24
+  regime: herbivore
+  nourriture_g_par_jour: 6
+  biome: desert
+  rarete: commune
+  source: "Jaculus jaculus : 45 à 70 g, bonds jusqu'à 24 km/h, quelques grammes de graines par jour."
+
+- id: lemming
+  nom: Lemming à collier
+  masse_g: 60
+  arme: 0.5
+  vitesse: 8
+  regime: herbivore
+  nourriture_g_par_jour: 30
+  biome: toundra
+  rarete: commune
+  source: "Dicrostonyx groenlandicus : 50 à 110 g, environ la moitié de sa masse en végétaux par jour."
+
+- id: marmotte
+  nom: Marmotte des Alpes
+  masse_g: 5000
+  arme: 0.6
+  vitesse: 16
+  regime: herbivore
+  nourriture_g_par_jour: 600
+  biome: montagne
+  rarete: commune
+  source: "Marmota marmota : 3 à 7 kg, course jusqu'à 16 km/h, 0,5 à 1 kg d'herbes par jour en été."
+
+- id: suricate
+  nom: Suricate
+  masse_g: 730
+  arme: 0.8
+  vitesse: 30
+  regime: carnivore
+  nourriture_g_par_jour: 60
+  biome: savane
+  rarete: commune
+  source: "Suricata suricatta : 620 à 970 g, pointes à 30 km/h, surtout des insectes."
+
+# Peu communes.
+
+- id: renard
+  nom: Renard roux
+  masse_g: 6000
+  arme: 1.2
+  vitesse: 50
+  regime: omnivore
+  nourriture_g_par_jour: 500
+  biome: prairie
+  rarete: peu_commune
+  source: "Vulpes vulpes : 4 à 8 kg, pointes à 50 km/h, environ 500 g de nourriture par jour."
+
+- id: loutre
+  nom: Loutre d'Europe
+  masse_g: 8000
+  arme: 1
+  vitesse: 30
+  regime: carnivore
+  nourriture_g_par_jour: 1000
+  biome: eau
+  rarete: peu_commune
+  source: "Lutra lutra : 7 à 10 kg, environ 1 kg de poisson par jour (12 à 15 % de sa masse)."
+
+# Rares.
+
+- id: loup
+  nom: Loup gris
+  masse_g: 40000
+  arme: 1.5
+  vitesse: 60
+  regime: carnivore
+  nourriture_g_par_jour: 2500
+  biome: foret
+  rarete: rare
+  source: "Canis lupus : 30 à 50 kg, pointes à 60 km/h, 2 à 3 kg de viande par jour en moyenne."
+
+- id: phoque
+  nom: Phoque veau-marin
+  masse_g: 100000
+  arme: 1
+  vitesse: 35
+  regime: carnivore
+  nourriture_g_par_jour: 4000
+  biome: eau
+  rarete: rare
+  source: "Phoca vitulina : 80 à 130 kg, nage jusqu'à 35 km/h, 3 à 5 kg de poisson par jour."
+
+# Épiques.
+
+- id: crocodile
+  nom: Crocodile du Nil
+  masse_g: 400000
+  arme: 2
+  vitesse: 14
+  regime: carnivore
+  nourriture_g_par_jour: 600
+  biome: eau
+  rarete: epique
+  source: "Crocodylus niloticus : 225 à 750 kg, 14 km/h sur terre, à peine la moitié de sa masse par an."
+
+- id: ours_brun
+  nom: Ours brun
+  masse_g: 300000
+  arme: 1.5
+  vitesse: 50
+  regime: omnivore
+  nourriture_g_par_jour: 10000
+  biome: montagne
+  rarete: epique
+  source: "Ursus arctos : 150 à 600 kg, pointes à 50 km/h, une dizaine de kilos de nourriture par jour en moyenne."
+
+- id: lion
+  nom: Lion
+  masse_g: 190000
+  arme: 2
+  vitesse: 80
+  regime: carnivore
+  nourriture_g_par_jour: 7000
+  biome: savane
+  rarete: epique
+  source: "Panthera leo : 150 à 250 kg, pointes à 80 km/h, 5 à 8 kg de viande par jour en moyenne."
+
+# Légendaires : des Espèces disparues, redoutables.
+
+- id: smilodon
+  nom: Smilodon
+  masse_g: 360000
+  arme: 3
+  vitesse: 50
+  regime: carnivore
+  nourriture_g_par_jour: 10000
+  biome: prairie
+  rarete: legendaire
+  source: "Smilodon populator : 220 à 400 kg, des canines de près de 30 cm ; régime estimé d'après les grands félins."
+
+- id: mammouth
+  nom: Mammouth laineux
+  masse_g: 6000000
+  arme: 0.6
+  vitesse: 40
+  regime: herbivore
+  nourriture_g_par_jour: 180000
+  biome: toundra
+  rarete: legendaire
+  source: "Mammuthus primigenius : environ 6 t, comme un éléphant d'Afrique, qui mange 150 à 200 kg de végétaux par jour."

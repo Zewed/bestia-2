@@ -1,6 +1,10 @@
 // Les jeux de données de référence, chargés dans cet ordre (les Espèces renvoient aux
 // Biomes, aux Raretés et aux Rôles). Chaque story qui en a besoin ajoute le sien.
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+import type { Pool } from "pg";
 import { z } from "zod";
+import { identifyDatabase } from "../db/production";
 import { appliquerBareme, BAREME } from "./bareme";
 import { lireFichier, lireJeu, type Jeu } from "./charger";
 
@@ -257,10 +261,27 @@ export const ESPECES: Jeu<EntreeEspece> = {
   },
 };
 
-/** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. */
+/**
+ * US-0924 : des Espèces d'essai, provisoires, pour essayer les Bêtes sauvages avant la liste validée des Espèces : mêmes
+ * champs et même barème, dans un fichier à part. Elles ne se lisent qu'en développement et dans les tests
+ * (especesDEssaiPermises) ; on les retire en supprimant leur fichier, et rien d'autre : aucun code ne les nomme.
+ */
+export const ESPECES_D_ESSAI: Jeu<EntreeEspece> = { ...ESPECES, nom: "Espèces d'essai", fichier: "especes-essai.yaml" };
+
+/**
+ * US-0924 : si les Espèces d'essai se chargent : sur le poste local et dans les tests, où VERCEL_ENV n'est pas posée (ou
+ * vaut development), jamais en ligne, en production comme en prévisualisation, ni sur la base de production
+ * (`baseDeProduction`), quoi que dise l'environnement.
+ */
+export function especesDEssaiPermises(env: Record<string, string | undefined> = process.env, baseDeProduction = false): boolean {
+  return !baseDeProduction && (!env.VERCEL_ENV || env.VERCEL_ENV === "development");
+}
+
+/** Les Espèces ne renvoient qu'à des Biomes, Raretés et Rôles qui existent. US-0924 : `fichier` est celui qui les donne. */
 export function verifierReferences(
   especes: EntreeEspece[],
   connus: { biomes: string[]; raretes: string[]; roles: string[] },
+  fichier = ESPECES.fichier,
 ): void {
   const erreurs: string[] = [];
   for (const e of especes) {
@@ -268,7 +289,13 @@ export function verifierReferences(
     if (!connus.raretes.includes(e.rarete)) erreurs.push(`${e.id} : Rareté inconnue « ${e.rarete} »`);
     if (e.role && !connus.roles.includes(e.role)) erreurs.push(`${e.id} : Rôle inconnu « ${e.role} »`);
   }
-  if (erreurs.length > 0) throw new Error(`especes.yaml est invalide :\n  ${erreurs.join("\n  ")}`);
+  if (erreurs.length > 0) throw new Error(`${fichier} est invalide :\n  ${erreurs.join("\n  ")}`);
+}
+
+/** US-0924 : une Espèce d'essai ne prend jamais l'identifiant d'une Espèce validée, qu'elle remplacerait en base. */
+function verifierEssais(essais: EntreeEspece[], validees: string[]): void {
+  const erreurs = essais.filter((e) => validees.includes(e.id)).map((e) => `${e.id} : déjà une Espèce validée (${ESPECES.fichier})`);
+  if (erreurs.length > 0) throw new Error(`${ESPECES_D_ESSAI.fichier} est invalide :\n  ${erreurs.join("\n  ")}`);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -277,14 +304,31 @@ export const JEUX: Jeu<any>[] = [BIOMES, VARIANTES, RARETES, ROLES, ESPECES, RES
 /**
  * Lit toutes les données de référence et vérifie qu'elles se tiennent entre elles. La mise en
  * ligne passe par ici avant d'écrire quoi que ce soit en base : une erreur de saisie l'arrête.
+ * US-0924 : avec `essai`, les Espèces d'essai suivent les Espèces validées, tant que leur fichier existe.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function lireDonnees(dossier?: string): { jeu: Jeu<any>; entrees: any[] }[] {
-  const lots = JEUX.map((jeu) => ({ jeu, entrees: lireJeu(jeu, dossier) }));
+export function lireDonnees(dossier?: string, { essai = especesDEssaiPermises() }: { essai?: boolean } = {}): { jeu: Jeu<any>; entrees: any[] }[] {
+  const avecEssais = essai && existsSync(join(dossier ?? "donnees", ESPECES_D_ESSAI.fichier));
+  const jeux = avecEssais ? JEUX.flatMap((jeu) => (jeu === ESPECES ? [ESPECES, ESPECES_D_ESSAI] : [jeu])) : JEUX;
+  const lots = jeux.map((jeu) => ({ jeu, entrees: lireJeu(jeu, dossier) }));
   const entrees = <T>(jeu: Jeu<T>) => lots.find((l) => l.jeu === jeu)!.entrees as T[];
   const ids = <T extends { id: string }>(jeu: Jeu<T>) => entrees(jeu).map((e) => e.id);
   verifierReferences(entrees(ESPECES), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) });
+  if (avecEssais) {
+    verifierReferences(entrees(ESPECES_D_ESSAI), { biomes: ids(BIOMES), raretes: ids(RARETES), roles: ids(ROLES) }, ESPECES_D_ESSAI.fichier);
+    verifierEssais(entrees(ESPECES_D_ESSAI), ids(ESPECES));
+  }
   verifierProductions(entrees(PRODUCTIONS), { biomes: ids(BIOMES), ressources: ids(RESSOURCES) });
   lireVoisinagesInterdits(dossier);
   return lots;
+}
+
+/**
+ * US-0924 : les données de référence à écrire dans la base `base` (npm run db:donnees) : les Espèces d'essai seulement si
+ * l'environnement les permet et que la base n'est pas celle de la production, même depuis un poste local branché dessus.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function lireDonneesPour(base: Pool, dossier?: string): Promise<{ jeu: Jeu<any>; entrees: any[] }[]> {
+  const { isProduction } = await identifyDatabase(base);
+  return lireDonnees(dossier, { essai: especesDEssaiPermises(process.env, isProduction) });
 }
