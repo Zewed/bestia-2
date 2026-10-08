@@ -113,7 +113,8 @@ export function lireUneGraine(texte: string): number {
 /**
  * Crée un nouveau Monde (US-0401) dans la transaction de l'appelant : sa fiche, avec sa graine et sa
  * taille (US-0403 : celle de son Cœur sauvage comprise), puis toutes ses Cases, par lots. Un nom déjà
- * pris est refusé avant tout : un Monde existant, à commencer par celui du jeu, n'est jamais touché.
+ * pris est refusé avant tout : un Monde existant, à commencer par celui du jeu, n'est jamais touché ;
+ * US-0416 : un Monde où des joueurs vivent ou ont vécu ne sera jamais régénéré, et le refus le dit.
  * Rend le nouveau Monde, son nombre de Cases et celui de ses emplacements de naissance (US-0413).
  */
 export async function creerUnMonde(
@@ -130,7 +131,14 @@ export async function creerUnMonde(
     "insert into monde (nom, graine, rayon, anneaux_couronne, rayon_coeur) values ($1, $2, $3, $4, $5) on conflict (nom) do nothing returning id",
     [nom, graine, rayon, anneaux, rayonCoeur],
   );
-  if (!rows[0]) throw new Error(`Le nom « ${nom} » est déjà pris par un autre Monde.`);
+  if (!rows[0]) {
+    const { rows: existant } = await client.query<{ habite: boolean }>(
+      "select m.ouvert_le is not null or exists (select 1 from chef where monde_id = m.id) as habite from monde m where m.nom = $1",
+      [nom],
+    );
+    if (existant[0]?.habite) throw new Error(`Des joueurs vivent ou ont vécu sur le Monde « ${nom} » : il ne sera jamais régénéré. Générez-en un nouveau, sous un autre nom.`);
+    throw new Error(`Le nom « ${nom} » est déjà pris par un autre Monde.`);
+  }
   const cases = genererLeMonde({ rayon, anneaux, rayonCoeur, graine });
   const { rowCount } = await client.query(
     `insert into case_du_monde (monde_id, q, r, anneau, couronne, coeur, eloignement, biome_id, variante_id)

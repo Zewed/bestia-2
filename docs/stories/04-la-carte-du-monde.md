@@ -163,6 +163,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0416 · Interdire de régénérer un Monde ouvert
 **En tant que** développeur, **je veux** qu'un Monde où vivent des joueurs ne puisse jamais être régénéré, **afin de** tenir la promesse d'un Monde qui ne se réinitialise jamais.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). `npm run monde:generer` ne crée que des Mondes nouveaux et refuse un nom existant (« … il ne sera jamais régénéré. Générez-en un nouveau, sous un autre nom. ») ; `preparerCouronne` refuse un Monde généré. En base, des déclencheurs refusent d'effacer une Case, de vider la table ou de changer la nature d'une Case (place, anneau, Couronne, Cœur, éloignement, Biome) dès que son Monde a été ouvert ou compte un chef ; qui possède la Case change toujours, et des Cases peuvent encore s'ajouter. En développement, un nouveau Monde se génère à côté du Monde du jeu.
 - **Débloquée par** : US-0414
 - **Critères d'acceptation** :
   - La commande de génération refuse de toucher un Monde qui compte au moins un joueur.

@@ -10,17 +10,22 @@ import { dansLeCoeur, eloignementDuCoeur } from "./hex";
  * l'appelant. La première fois, la taille du Monde est fixée sur sa fiche et son rayon ne change
  * plus, ni celui de son Cœur sauvage (US-0403), dont chaque Case porte sa distance (US-0405) ; la
  * Couronne peut s'élargir vers l'intérieur si les réglages le demandent, jamais rétrécir. Une Case
- * déjà en base n'est jamais touchée. Rend le nombre de Cases ajoutées et leur total.
+ * déjà en base n'est jamais touchée. US-0416 : un Monde généré en entier (il a des Cases hors de sa
+ * Couronne) est refusé : sa Couronne est née avec lui, l'élargir le contredirait. Rend le nombre de
+ * Cases ajoutées et leur total.
  */
 export async function preparerCouronne(client: PoolClient, mondeId: number): Promise<{ ajoutees: number; total: number }> {
   // « for no key update » et non « for update » : il suffit pour passer une préparation à la fois, et
   // laisse naître les chefs pendant ce temps (leur fiche renvoie au Monde, ce qu'un « for update »
   // bloquerait, alors que la préparation attend la Case que la naissance est en train de prendre).
-  const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null; rayonCoeur: number | null; graine: string | null }>(
-    `select nom, rayon, anneaux_couronne as anneaux, rayon_coeur as "rayonCoeur", graine from monde where id = $1 for no key update`,
+  const { rows } = await client.query<{ nom: string; rayon: number | null; anneaux: number | null; rayonCoeur: number | null; graine: string | null; genere: boolean }>(
+    `select nom, rayon, anneaux_couronne as anneaux, rayon_coeur as "rayonCoeur", graine,
+       exists (select 1 from case_du_monde where monde_id = $1 and not couronne) as genere
+     from monde where id = $1 for no key update`,
     [mondeId],
   );
   if (!rows[0]) throw new Error(`Monde ${mondeId} introuvable.`);
+  if (rows[0].genere) throw new Error(`Le Monde « ${rows[0].nom} » est généré en entier : sa Couronne est née avec lui.`);
   let { rayon, anneaux, rayonCoeur } = rows[0];
   // US-0401 : la Couronne est tirée de la graine enregistrée avec le Monde. Un Monde né sans graine
   // reçoit celle dont sa Couronne a toujours été tirée, celle de son nom : aucune Case ne change.
