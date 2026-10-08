@@ -1,0 +1,53 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_a65fe827af9c76 179
+docs/stories/README.md
+  s_97a431cfa65ca7::t_14ccf29d65d895 7
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_31afe97f3c6d69 1-99
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_abdc56e91e3065 1-41
+src/app/jeu/carte/dessin.test.ts
+  s_97a431cfa65ca7::t_7b74c5acd416bd 1-85
+src/app/jeu/carte/dessin.ts
+  s_97a431cfa65ca7::t_f4dca8902f4fb0 1-58
+src/app/jeu/carte/page.module.css
+  s_97a431cfa65ca7::t_a6680584dcbe15 1-21
+src/app/jeu/carte/page.test.tsx
+  s_97a431cfa65ca7::t_10f997171e339b 1-84
+src/app/jeu/carte/page.tsx
+  s_97a431cfa65ca7::t_7f2becfd29e4cc 1-29
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_61bdcb9a0e32fd 119
+src/components/BarreHaut.module.css
+  s_97a431cfa65ca7::t_f828f5ef50d20e 617-618,632,637-640,643,645,652-656
+src/components/BarreHaut.test.tsx
+  s_97a431cfa65ca7::t_2036f52a019f48 40,43-45
+src/components/Navigation.test.tsx
+  s_97a431cfa65ca7::t_237da81d03cd83 19,23,36,82,102,123-126
+src/components/Navigation.tsx
+  s_97a431cfa65ca7::t_8116e64ab2e719 12,15
+src/monde/carte.db.test.ts
+  s_97a431cfa65ca7::t_8e62ab51c6e022 1-83
+src/monde/carte.ts
+  s_97a431cfa65ca7::t_8dbbbc6948113f 1-34
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_923648e7bfce32 5-19,154-173
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_cdedee91c98075 97-109
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9f47aa51bf9068db532a1d1d2acde5462bf86811",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
