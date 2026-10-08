@@ -1,0 +1,49 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_7c5a82feb91092 384
+docs/stories/README.md
+  s_97a431cfa65ca7::t_a50258acc33dc8 7
+src/app/jeu/habitants/AuxPortes.css.test.ts
+  s_97a431cfa65ca7::t_0e14b2502e96ac 49-61
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_ffc3b920cd7239 69-88
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_56de145576d9ab 132,166,171-319,504,545,557,567,604,637,649,723
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_31d78981f1e0fd 11,70-75,84,92,111-129,165-177,190-191,225-227,235-256
+src/app/jeu/habitants/ListeDesHabitants.tsx
+  s_97a431cfa65ca7::t_7ed537655631ca 8,11-12,201,203-205,207,214-215
+src/app/jeu/habitants/MetiersAuChoix.tsx
+  s_97a431cfa65ca7::t_76255a5b8c7604 1-89
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_ee42e6c2e7c23a 68-82
+src/app/jeu/habitants/actions-aux-portes.test.ts
+  s_97a431cfa65ca7::t_d8f3f3f6e3e388 33-34,42-62
+src/app/jeu/habitants/actions-aux-portes.ts
+  s_97a431cfa65ca7::t_8f8800193c380c 13-15,21-25,34-37,39,42-43
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_397d3dc1d10091 797,799-800,804-809
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_663703482d128a 96,110,117,125
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_b1c18ea4a71d62 103-104,106-113,117
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_51f5b78364a5c6 657-716
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_1ded0b0165f6bd 236-237,239,253-256,258-264,269-272,289
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4859e7b54e5719edae8175503eb02d619fe46ad5",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
