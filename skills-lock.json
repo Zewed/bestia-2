@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "skills": {
+    "armada-coordinator": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "armada-cli",
+      "skillPath": "skills/armada-coordinator/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "1e49c4e3b230a0bd61dda85e6fb0e64e89fa65f78654bb2698b753e6e5714c4e"
+    },
+    "armada-runtime-claude-code": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "armada-cli",
+      "skillPath": "skills/armada-runtime-claude-code/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "a1ee4af6a34b709c940c3666fb6921f1eaf9cab035868bb8bb951161861ec454"
+    },
+    "armada-runtime-conductor": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "armada-cli",
+      "skillPath": "skills/armada-runtime-conductor/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "bc96a3c6d9095895e372878a5c8f6b64ab0f52f5330e1cb987aa0cc00e2fa58a"
+    },
+    "armada-runtime-herdr": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "armada-cli",
+      "skillPath": "skills/armada-runtime-herdr/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "2de7ef88b03bde8c98b606dcc8aea16c0c0418f5cf6ebf9c7349eb9a049d2038"
+    },
+    "armada-worker": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "armada-cli",
+      "skillPath": "skills/armada-worker/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "7a47cea8c8dd14d8d752d2d6c1df70e28e5b94773b6faee569473c461f272b37"
+    },
+    "capture-learning-tools": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "github",
+      "skillPath": "skills/capture-learning-tools/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "bda86f4f0810a83de8924f796d311da5e9f810894b0c7fecfaaa5f00146e1207"
+    },
+    "review-code-dev": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "github",
+      "skillPath": "skills/review-code-dev/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "d4f6bb0dac361a6a4422cbe3b4c14a437f117eba9f5bd9a8ea8f97982d1a305d"
+    },
+    "ship-pr-dev": {
+      "source": "The-Vibe-Company/armada",
+      "sourceType": "github",
+      "skillPath": "skills/ship-pr-dev/SKILL.md",
+      "ref": "v0.2.61",
+      "computedHash": "f5e659679da412c54f1a29e536f4d969993448fc56831a25a840539242723d7f"
+    }
+  }
+}
