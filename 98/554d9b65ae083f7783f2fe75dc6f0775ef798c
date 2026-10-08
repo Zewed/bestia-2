@@ -4,18 +4,45 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_841a582d966a97 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_0325bc24e15d10 7,15-16,21-33,44,94,101-109,123,134,150,160-193
+  s_97a431cfa65ca7::t_4dc574819799b7 15-16,21-33
+  s_97a431cfa65ca7::t_aa0460aba48489 134
+  s_97a431cfa65ca7::t_3d67a9071a0bd2 150,160-180,182,184,186-192
+  s_97a431cfa65ca7::t_7faab18682fa31 181,183,185
+  s_97a431cfa65ca7::t_b99e3f4707fc71 44
+  s_97a431cfa65ca7::t_9e0583be4fc65a 94
+  s_97a431cfa65ca7::t_8c9db273f726d0 123
+  s_97a431cfa65ca7::t_ded8a9dfad018b 101-109
+  s_97a431cfa65ca7::t_98e7a959a5d392 7
+  s_97a431cfa65ca7::t_06b6d6e45d1535 193
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_be3e431adc598f 3,6,9-14,28-30,43-44,46,53,55-60,63-66
+  s_97a431cfa65ca7::t_5e5a047ce8d5c5 3,6,9-14,28-30,43-44,46,53,55-60,63-66
 src/app/jeu/carte/dessin.test.ts
   s_97a431cfa65ca7::t_e07466f0ae2b90 6,12-15,19,21,23-26,42-43,59,62-63,81,100,109,130,146,164,173,180-272
+  s_97a431cfa65ca7::t_cf691f0a5e33ed 59
+  s_97a431cfa65ca7::t_d854526f436fa4 42-43
+  s_97a431cfa65ca7::t_562093ddada637 6
+  s_97a431cfa65ca7::t_37b6c84fd5794f 12-15,19,21,23-26
+  s_97a431cfa65ca7::t_1d56607188d5d0 62-63
+  s_97a431cfa65ca7::t_4618c227d3dfe4 180-272
+  s_97a431cfa65ca7::t_b226cf4fa90add 81,100,109,130,146,164,173
 src/app/jeu/carte/dessin.ts
   s_97a431cfa65ca7::t_1f8b4ef4ff29a0 16-33,39,41,43-65,78-83,86,93-130,306-307,309,346-364
+  s_97a431cfa65ca7::t_b5a04aef1a1752 346-364
+  s_97a431cfa65ca7::t_1f61d1d725f1f2 16-33,39,41,43-65
+  s_97a431cfa65ca7::t_04e96d4902ebe3 78-83,86,93-129
+  s_97a431cfa65ca7::t_0a4f70c0c30925 306-307,309
+  s_97a431cfa65ca7::t_dc997ff078ba89 130
 src/app/jeu/carte/page.test.tsx
   s_97a431cfa65ca7::t_8bdfdf162cdeb9 31
+  s_97a431cfa65ca7::t_30f7a4e1333e65 31
 src/monde/carte.db.test.ts
   s_97a431cfa65ca7::t_d2f8623c71291e 76-89
+  s_97a431cfa65ca7::t_b76f622fb022db 76-89
 src/monde/carte.ts
   s_97a431cfa65ca7::t_6195f2f847c455 7-10,15,24-25,28,30,35,41,44
+  s_97a431cfa65ca7::t_55e316b953cd59 24-25,28,30,35,41,44
+  s_97a431cfa65ca7::t_8df8562ec0ea9a 7-10,15
 ---
 {
   "schema_version": "authorship/3.0.0",
