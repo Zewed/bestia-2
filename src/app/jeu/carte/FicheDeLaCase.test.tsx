@@ -3,14 +3,14 @@ import { act, cleanup, render, screen } from "@testing-library/react";
 import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Coordonnees } from "@/monde/hex";
-import type { Fiche } from "@/monde/fiche";
+import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
 import { type Choix, FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { LEGENDE_MONTREE } from "./Legende";
 
 /** Les fiches demandées au serveur : chacune attend qu'on lui réponde, ou qu'on échoue. */
-let demandes: { q: number; r: number; repondre: (fiche: Fiche | null) => void; echouer: () => void }[] = [];
+let demandes: { q: number; r: number; repondre: (fiche: Fiche | FicheInconnue | null) => void; echouer: () => void }[] = [];
 const serveur = vi.hoisted(() => ({ ficheDeLaCase: vi.fn() }));
 vi.mock("./actions", () => serveur);
 
@@ -21,7 +21,7 @@ beforeEach(() => {
   demandes = [];
   serveur.ficheDeLaCase.mockImplementation(
     (q: number, r: number) =>
-      new Promise<Fiche | null>((repondre, echouer) => {
+      new Promise<Fiche | FicheInconnue | null>((repondre, echouer) => {
         demandes.push({ q, r, repondre, echouer: () => echouer(new Error("Le serveur ne répond pas.")) });
       }),
   );
@@ -79,7 +79,7 @@ function Carte({ montrer = () => {}, cases = [ICI] }: { montrer?: (c: Coordonnee
 /** Touche la Case (q, r) sur la carte d'essai. */
 const toucher = (c: Coordonnees) => act(() => screen.getByRole("button", { name: `${c.q},${c.r}` }).click());
 /** La réponse du serveur à la demande n° i (la dernière par défaut). */
-const repondre = (fiche: Fiche | null, i = demandes.length - 1) => act(async () => demandes[i].repondre(fiche));
+const repondre = (fiche: Fiche | FicheInconnue | null, i = demandes.length - 1) => act(async () => demandes[i].repondre(fiche));
 
 describe("la fiche d'une Case (US-0428)", () => {
   it("dit le Biome de la Case et à qui elle est : « Libre », « Votre Foyer » ou le nom du chef", () => {
@@ -197,6 +197,22 @@ describe("situer la Case dans le Monde depuis sa fiche (US-0429)", () => {
     expect(texte({ zone: ZONE_COEUR })).toContain("Les Espèces les plus rares vivent ici.");
     expect(texte({ zone: ZONE_COURONNE })).not.toContain("Espèces");
     expect(texte({ zone: 0 })).not.toContain("Espèces");
+  });
+});
+
+describe("toucher une Case sous le brouillard (US-0438)", () => {
+  /** La fiche d'une Case sous le brouillard, à 12 Cases du Foyer, telle que le serveur la donne : rien d'autre. */
+  const INCONNUE: FicheInconnue = { ...ICI, inconnue: true, distance: 12 };
+
+  it("dit seulement « Case inconnue » et sa distance au Foyer, puis qu'une Expédition pourra la découvrir", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre(INCONNUE);
+    expect(screen.getByRole("heading", { name: "Case inconnue" })).toBeTruthy();
+    expect([...fiche()!.querySelectorAll("h2, p")].map((e) => e.textContent)).toEqual(["Case inconnue", "À 12 Cases de votre Foyer", "Une Expédition pourra la découvrir."]);
+    // Ni Biome, ni propriétaire, ni Couronne ou Cœur sauvage.
+    expect(fiche()!.querySelector("dl")).toBeNull();
+    expect(fiche()!.textContent).not.toMatch(/Propriétaire|Libre|Zone|Couronne|Cœur|Espèces/);
   });
 });
 

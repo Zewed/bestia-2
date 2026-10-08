@@ -390,6 +390,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0438 · Toucher une Case sous le brouillard
 **En tant que** joueur, **je veux** qu'une Case sous le brouillard ne dise rien d'elle, **afin de** garder l'envie d'aller la découvrir.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La fiche d'une Case sous le brouillard dit « Case inconnue », sa distance au Foyer et « Une Expédition pourra la découvrir. », rien d'autre. La réponse vient du serveur. Vérifié en vrai, sur ordinateur et à 390 px.
 - **Débloquée par** : US-0437, US-0428
 - **Critères d'acceptation** :
   - La fiche d'une Case sous le brouillard dit seulement « Case inconnue » et donne sa distance au Foyer.
