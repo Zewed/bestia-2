@@ -27,6 +27,7 @@
     "db:donnees": "tsx scripts/db-donnees.ts",
     "monde:couronne": "tsx scripts/monde-couronne.ts",
     "monde:generer": "tsx scripts/monde-generer.ts",
+    "monde:basculer": "tsx scripts/monde-basculer.ts",
     "attendre-en-ligne": "sh scripts/attendre-mise-en-ligne.sh"
   },
   "dependencies": {

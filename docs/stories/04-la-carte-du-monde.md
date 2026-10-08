@@ -143,6 +143,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0414 · Faire naître les joueurs sur le Monde généré
 **En tant que** nouveau joueur, **je veux** naître sur une vraie Case du Monde, **afin de** commencer ma partie sur la carte que partagent tous les joueurs.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Le Monde du jeu n'est plus « le premier » mais le Monde ouvert, un seul à la fois (`monde.ouvert_le`, `ferme_le`, migration 0043) ; Aube l'est depuis sa naissance : rien n'a changé en production. Les naissances visent le Monde ouvert, sous un verrou commun : dix naissances simultanées sur un Monde généré obtiennent dix Cases différentes, en prairie sur la Couronne, à 4 Cases d'écart. `npm run monde:basculer -- --vers <Monde> [--essai]` ouvre un Monde généré en entier, y place chaque chef existant sur une Case de naissance libre (prairie : production inchangée), rattache son Territoire, et ferme l'ancien Monde ; Stocks, Habitants, Voyageurs, Récits et temps restent intacts, prouvé ligne pour ligne. La bascule de la production attend l'accord d'Antoine.
 - **Débloquée par** : US-0413, Étape 9
 - **Critères d'acceptation** :
   - La naissance de l'étape 9 choisit désormais une Case libre de la Couronne du Monde généré, selon les règles de US-0413.

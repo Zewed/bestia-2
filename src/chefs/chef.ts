@@ -3,13 +3,11 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
+import { MONDE_DU_JEU, VERROU_DES_NAISSANCES } from "@/monde/bascule";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers } from "@/monde/foyers";
 import { maintenant } from "@/temps/horloge";
 import { nomInterditPar, type MotInterdit } from "./interdits";
 import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./nom";
-
-/** Le Monde du jeu : le seul pour l'instant, le premier ouvert. */
-const MONDE_DU_JEU = "(select id from monde order by id limit 1)";
 
 export type ChefDuCompte = { nom: string; territoireId: number | null; recitLu: boolean };
 
@@ -65,19 +63,23 @@ export type Enregistrement =
   | { statut: "pris" }
   | { statut: "complet"; monde: string };
 
-/** La clé du verrou des naissances : une naissance à la fois dans un même Monde. */
-const VERROU_NAISSANCE = 153;
-
 /**
  * Donne au compte son nom de chef dans le Monde du jeu (US-0137), sa Case sur la Couronne
  * (US-0153), et son Territoire, qui n'a qu'une Case : son Foyer, imprenable (US-0155). Tout
  * naît ensemble ou rien. La saisie est nettoyée et repasse par toutes les règles,
- * mots interdits compris (US-0138). Les naissances d'un Monde passent l'une après l'autre : si
+ * mots interdits compris (US-0138). Les naissances passent l'une après l'autre : si
  * deux joueurs veulent le même nom au même instant, un seul l'obtient, l'autre reçoit « pris » ;
  * et deux nouveaux chefs ne visent jamais la même Case. Un double appui du même joueur n'est pas
- * un conflit : il retrouve le chef créé par le premier.
+ * un conflit : il retrouve le chef créé par le premier. US-0414 : le chef naît dans le Monde du
+ * jeu, le Monde ouvert, ou dans le Monde `mondeId` pour les essais.
  */
-export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie: string, hasard: () => number = Math.random): Promise<Enregistrement> {
+export async function enregistrerNomDeChef(
+  pool: Pool,
+  compteId: number,
+  saisie: string,
+  hasard: () => number = Math.random,
+  mondeId: number | null = null,
+): Promise<Enregistrement> {
   const nom = nettoyerNom(saisie);
   const erreur = verifierNomDeChef(nom);
   if (erreur) return { statut: "refuse", erreur };
@@ -85,22 +87,21 @@ export async function enregistrerNomDeChef(pool: Pool, compteId: number, saisie:
   const client = await pool.connect();
   try {
     await client.query("begin");
-    // Le verrou des naissances est pris dans la même requête que le Monde : six allers-retours en tout.
-    const { rows: mondes } = await client.query<{ id: number; nom: string }>(
-      `select id, nom, pg_advisory_xact_lock($1, id) from monde where id = ${MONDE_DU_JEU}`,
-      [VERROU_NAISSANCE],
+    // US-0414 : le Monde n'est lu qu'une fois le verrou des naissances obtenu, avec ce qu'il sait déjà de ce compte et
+    // de ce nom (six allers-retours en tout) : une naissance qui attendait la fin d'une bascule vise le nouveau Monde.
+    await client.query("select pg_advisory_xact_lock($1)", [VERROU_DES_NAISSANCES]);
+    const { rows: mondes } = await client.query<{ id: number; nom: string; existant: string | null; doublon: boolean }>(
+      `select m.id, m.nom, (select nom from chef where compte_id = $1 and monde_id = m.id) as existant,
+         exists (select 1 from chef where monde_id = m.id and cle_nom = $2) as doublon
+       from monde m where m.id = coalesce($3, ${MONDE_DU_JEU})`,
+      [compteId, cleDuNom(nom), mondeId],
     );
     const monde = mondes[0];
-    const { rows: deja } = await client.query<{ existant: string | null; doublon: boolean }>(
-      `select (select nom from chef where compte_id = $1 and monde_id = $2) as existant,
-         exists (select 1 from chef where monde_id = $2 and cle_nom = $3) as doublon`,
-      [compteId, monde.id, cleDuNom(nom)],
-    );
-    if (deja[0].existant !== null) {
+    if (monde.existant !== null) {
       await client.query("commit");
-      return { statut: "enregistre", nom: deja[0].existant };
+      return { statut: "enregistre", nom: monde.existant };
     }
-    if (deja[0].doublon) {
+    if (monde.doublon) {
       await client.query("rollback");
       return { statut: "pris" };
     }
@@ -150,10 +151,8 @@ export async function naitreSurLaCouronne(pool: Pool, compteId: number, hasard: 
   const client = await pool.connect();
   try {
     await client.query("begin");
-    const { rows: mondes } = await client.query<{ id: number; nom: string }>(
-      `select id, nom, pg_advisory_xact_lock($1, id) from monde where id = ${MONDE_DU_JEU}`,
-      [VERROU_NAISSANCE],
-    );
+    await client.query("select pg_advisory_xact_lock($1)", [VERROU_DES_NAISSANCES]);
+    const { rows: mondes } = await client.query<{ id: number; nom: string }>(`select id, nom from monde where id = ${MONDE_DU_JEU}`);
     const monde = mondes[0];
     const { rows: chefs } = await client.query<{ id: number; territoireId: number | null }>(
       `select ch.id, t.id as "territoireId" from chef ch left join territoire t on t.chef_id = ch.id

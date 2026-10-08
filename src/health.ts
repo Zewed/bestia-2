@@ -1,6 +1,7 @@
 import type { Pool } from "pg";
 import { connectionFailureReason, isConnectionError } from "./db";
 import { identifyDatabase } from "./db/production";
+import { MONDE_DU_JEU } from "./monde/bascule";
 import { TACHE_EN_RETARD_MINUTES } from "./reglages";
 import { dernierPassage } from "./temps/absents";
 import { maintenant } from "./temps/horloge";
@@ -28,7 +29,7 @@ export async function checkHealth(getPool: () => Pool): Promise<{ httpStatus: nu
   try {
     const pool = getPool();
     const identity = await identifyDatabase(pool);
-    const monde = await pool.query<{ id: number; nom: string }>("select id, nom from monde order by id limit 1");
+    const monde = await pool.query<{ id: number; nom: string }>(`select id, nom from monde where id = ${MONDE_DU_JEU}`);
     // Le Monde est rattrapé avant d'être lu, comme sur toute page du jeu.
     const calcule = monde.rows[0] ? await rattraper("monde", monde.rows[0].id, { pool }) : null;
     const passe = await dernierPassage(pool);

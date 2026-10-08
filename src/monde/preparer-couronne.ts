@@ -1,6 +1,7 @@
 // Préparer la Couronne du Monde du jeu en base (US-0151). Côté serveur et scripts uniquement.
 import type { PoolClient } from "pg";
 import { COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON } from "@/reglages";
+import { MONDE_DU_JEU } from "./bascule";
 import { casesDeLaCouronne, graineDuMonde } from "./couronne";
 import { dansLeCoeur, eloignementDuCoeur } from "./hex";
 
@@ -48,4 +49,17 @@ export async function preparerCouronne(client: PoolClient, mondeId: number): Pro
     ],
   );
   return { ajoutees: rowCount ?? 0, total: cases.length };
+}
+
+/**
+ * US-0414 : à chaque mise en ligne (npm run monde:couronne), prépare la Couronne du Monde du jeu s'il n'a qu'elle,
+ * comme Aube. Un Monde généré naît avec toutes ses Cases (creerUnMonde) : il en a hors de sa Couronne, et rien ne
+ * lui manque. Rend le nom du Monde, et ce qu'a fait preparerCouronne, ou null pour un Monde généré.
+ */
+export async function preparerLaCouronneDuJeu(client: PoolClient): Promise<{ monde: string; preparee: { ajoutees: number; total: number } | null }> {
+  const { rows } = await client.query<{ id: number; nom: string; genere: boolean }>(
+    `select m.id, m.nom, exists (select 1 from case_du_monde c where c.monde_id = m.id and not c.couronne) as genere from monde m where m.id = ${MONDE_DU_JEU}`,
+  );
+  if (!rows[0]) throw new Error("Aucun Monde ouvert en base : lancez d'abord npm run db:migrate.");
+  return { monde: rows[0].nom, preparee: rows[0].genere ? null : await preparerCouronne(client, rows[0].id) };
 }

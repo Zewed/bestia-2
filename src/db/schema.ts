@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -28,8 +28,21 @@ export const monde = pgTable(
      * Fixée à sa naissance (ou à la préparation de sa Couronne), elle ne change plus.
      */
     rayonCoeur: integer("rayon_coeur"),
+    /**
+     * US-0414 : quand il a été ouvert aux joueurs ; null tant qu'il ne l'a pas été. Le Monde du jeu est le Monde
+     * ouvert et pas encore fermé, un seul à la fois : là naissent les chefs. Aube l'est depuis sa naissance ; une
+     * bascule (npm run monde:basculer) en ouvre un autre, généré en entier, et ferme l'ancien.
+     */
+    ouvertLe: timestamp("ouvert_le", { withTimezone: true }),
+    /** US-0414 : quand une bascule l'a fermé : plus personne n'y naît. Un Monde fermé ne rouvre pas. */
+    fermeLe: timestamp("ferme_le", { withTimezone: true }),
   },
-  (t) => [check("monde_graine_sur_32_bits", sql`${t.graine} between 0 and 4294967295`)],
+  (t) => [
+    check("monde_graine_sur_32_bits", sql`${t.graine} between 0 and 4294967295`),
+    uniqueIndex("monde_un_seul_ouvert")
+      .on(sql`(true)`)
+      .where(sql`${t.ouvertLe} is not null and ${t.fermeLe} is null`),
+  ],
 );
 
 /**

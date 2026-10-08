@@ -1,10 +1,10 @@
 // Prépare la Couronne du Monde du jeu en base : npm run monde:couronne
 // Se relance sans risque (une Case existante n'est jamais touchée) ; il tourne aussi à chaque mise
-// en ligne, après les données de référence, dont il utilise les Biomes.
+// en ligne, après les données de référence, dont il utilise les Biomes. Sur un Monde généré, il ne fait rien.
 import { loadEnvConfig } from "@next/env";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
 import { assertEnv } from "../src/env";
-import { preparerCouronne } from "../src/monde/preparer-couronne";
+import { preparerLaCouronneDuJeu } from "../src/monde/preparer-couronne";
 
 async function main() {
   loadEnvConfig(process.cwd(), true); // en local : .env.development.local passe avant .env.local
@@ -15,12 +15,14 @@ async function main() {
     const client = await pool.connect();
     try {
       await client.query("begin");
-      // Le Monde du jeu : le seul pour l'instant, le premier ouvert.
-      const { rows } = await client.query<{ id: number; nom: string }>("select id, nom from monde order by id limit 1");
-      if (!rows[0]) throw new Error("Aucun Monde en base : lancez d'abord npm run db:migrate.");
-      const { ajoutees, total } = await preparerCouronne(client, rows[0].id);
+      // US-0414 : le Monde du jeu, le Monde ouvert, s'il n'a que sa Couronne ; un Monde généré a déjà toutes ses Cases.
+      const { monde, preparee } = await preparerLaCouronneDuJeu(client);
       await client.query("commit");
-      console.log(`Couronne du Monde « ${rows[0].nom} » : ${ajoutees} Case(s) ajoutée(s), ${total} au total.`);
+      console.log(
+        preparee
+          ? `Couronne du Monde « ${monde} » : ${preparee.ajoutees} Case(s) ajoutée(s), ${preparee.total} au total.`
+          : `Monde « ${monde} » généré en entier : rien à préparer.`,
+      );
     } catch (error) {
       await client.query("rollback").catch(() => {});
       throw error;

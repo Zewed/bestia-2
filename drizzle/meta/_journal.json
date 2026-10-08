@@ -302,6 +302,13 @@
       "when": 1791410105413,
       "tag": "0042_famine_imminente",
       "breakpoints": true
+    },
+    {
+      "idx": 43,
+      "version": "7",
+      "when": 1791444404334,
+      "tag": "0043_monde_ouvert",
+      "breakpoints": true
     }
   ]
 }
