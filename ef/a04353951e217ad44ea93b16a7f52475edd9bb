@@ -1,0 +1,38 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_2a2bbfc4b07df7 247-253
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_97a431cfa65ca7::t_b3f2cfa3d97a00 52-53
+  s_97a431cfa65ca7::t_7a172bd7cea35c 187-199
+src/monde/fiche.db.test.ts
+  s_97a431cfa65ca7::t_83f77dbb8cfae5 108-115
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_061d61e8012d08 182
+  s_97a431cfa65ca7::t_d4b200e8efaca9 13-14
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_e0eb1254565af4 702
+src/monde/anneaux.ts
+  s_97a431cfa65ca7::t_f726f77da20b1e 1-26
+src/monde/anneaux.db.test.ts
+  s_97a431cfa65ca7::t_cb778073f2e33f 1-73
+src/monde/anneaux.test.ts
+  s_97a431cfa65ca7::t_9f04f9b63046b0 1-48,50-56
+  s_97a431cfa65ca7::t_7865bd09f3474e 49
+src/monde/fiche.ts
+  s_97a431cfa65ca7::t_f90f73dc923efb 4,11-12,14,23,26-28,36-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "efa04353951e217ad44ea93b16a7f52475edd9bb",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
