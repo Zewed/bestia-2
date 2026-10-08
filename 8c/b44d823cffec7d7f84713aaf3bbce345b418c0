@@ -4,10 +4,13 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_f8e2b280992ff5 7
 src/monde/betes-sauvages.db.test.ts
   s_97a431cfa65ca7::t_32dab09eb440c3 158-166
+  s_97a431cfa65ca7::t_b52381c99bb26d 158-166
 src/monde/betes-sauvages.test.ts
   s_97a431cfa65ca7::t_6f88455ec36c32 5-10,286-354
+  s_97a431cfa65ca7::t_9f3161c3c0f6d9 5-10,286-354
 src/monde/betes-sauvages.ts
   s_97a431cfa65ca7::t_7378e1e6e08b1d 8-10
+  s_97a431cfa65ca7::t_71f679bd6646f7 8-10
 ---
 {
   "schema_version": "authorship/3.0.0",
