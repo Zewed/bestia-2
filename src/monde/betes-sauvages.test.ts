@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { lireRaretesParAnneau } from "@/donnees/jeux";
 import { ANNEAUX_DU_MONDE, APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
-import { apparitions, betesSauvages, tirerUneRarete } from "./betes-sauvages";
+import { apparitions, betesSauvages, rangerLesEspeces, tirerUneEspece, tirerUneRarete } from "./betes-sauvages";
 import { casesDesAnneaux } from "./hex";
 
 const HEURE = 3_600_000;
@@ -14,7 +14,24 @@ const apres = (ms: number) => new Date(DEBUT.getTime() + ms);
 const GRAINE = 12345;
 const ICI = { q: 7, r: -3 };
 /** La même Case, telle que les Bêtes sauvages la voient : dans la Couronne d'un Monde de graine GRAINE. */
-const LA_CASE = { ...ICI, graine: GRAINE, anneau: 1 };
+const LA_CASE = { ...ICI, graine: GRAINE, anneau: 1, biome: "prairie" };
+/**
+ * Des Espèces pour les essais (US-0928) : une de chaque Rareté en prairie (deux communes) et une mythique ; dans l'eau, une
+ * commune et une rare ; en forêt, une légendaire seule.
+ */
+const CATALOGUE = [
+  { id: "p1", rareteId: "commune", biomeId: "prairie" },
+  { id: "p2", rareteId: "commune", biomeId: "prairie" },
+  { id: "p3", rareteId: "peu_commune", biomeId: "prairie" },
+  { id: "p4", rareteId: "rare", biomeId: "prairie" },
+  { id: "p5", rareteId: "epique", biomeId: "prairie" },
+  { id: "p6", rareteId: "legendaire", biomeId: "prairie" },
+  { id: "p7", rareteId: "mythique", biomeId: "prairie" },
+  { id: "e1", rareteId: "commune", biomeId: "eau" },
+  { id: "e2", rareteId: "rare", biomeId: "eau" },
+  { id: "f1", rareteId: "legendaire", biomeId: "foret" },
+];
+const ESPECES = rangerLesEspeces(CATALOGUE);
 
 describe("des Bêtes sauvages apparaissent de temps en temps (US-0925)", () => {
   afterEach(() => {
@@ -94,8 +111,8 @@ describe("des Bêtes sauvages apparaissent de temps en temps (US-0925)", () => {
 describe("une présence limitée dans le temps (US-0926)", () => {
   const PRESENCE = PRESENCE_D_UNE_BETE_HEURES * HEURE;
   /** Les numéros des Bêtes présentes sur la Case à l'instant `t`. */
-  const presentes = (t: Date, parties?: Map<number, Date>) => betesSauvages(LA_CASE, t, new Date(t.getTime() + 1), { parties }).map((b) => b.numero);
-  const betes = betesSauvages(LA_CASE, DEBUT, apres(30 * JOUR));
+  const presentes = (t: Date, parties?: Map<number, Date>) => betesSauvages(LA_CASE, t, new Date(t.getTime() + 1), ESPECES, { parties }).map((b) => b.numero);
+  const betes = betesSauvages(LA_CASE, DEBUT, apres(30 * JOUR), ESPECES);
 
   it(`garde chaque Bête ${PRESENCE_D_UNE_BETE_HEURES} heures sur sa Case, la même durée pour toutes, puis elle disparaît`, () => {
     expect(betes.length).toBeGreaterThan(10);
@@ -111,13 +128,13 @@ describe("une présence limitée dans le temps (US-0926)", () => {
   it("compte toutes les Bêtes présentes pendant la période, même arrivées avant elle", () => {
     // Une période qui commence une heure après l'arrivée d'une Bête : elle y est encore.
     const de = new Date(betes[5].arrivee.getTime() + HEURE);
-    const pendant = betesSauvages(LA_CASE, de, new Date(de.getTime() + JOUR));
+    const pendant = betesSauvages(LA_CASE, de, new Date(de.getTime() + JOUR), ESPECES);
     expect(pendant.map((b) => b.numero)).toContain(betes[5].numero);
     expect(pendant.map((b) => b.numero)).toEqual(apparitions(GRAINE, ICI, new Date(de.getTime() - PRESENCE + 1), new Date(de.getTime() + JOUR)).map((x) => x.numero));
   });
 
   it("laisse parfois plusieurs Bêtes ensemble sur une même Case", () => {
-    const annee = betesSauvages(LA_CASE, DEBUT, apres(365 * JOUR));
+    const annee = betesSauvages(LA_CASE, DEBUT, apres(365 * JOUR), ESPECES);
     expect(Math.max(...annee.map((b) => presentes(b.arrivee).length))).toBeGreaterThanOrEqual(2);
   });
 
@@ -139,8 +156,8 @@ describe("une présence limitée dans le temps (US-0926)", () => {
     const parties = new Map([[suivie.numero, instant]]);
     expect(presentes(new Date(instant.getTime() - 1), parties)).toContain(suivie.numero);
     expect(presentes(instant, parties)).not.toContain(suivie.numero);
-    expect(betesSauvages(LA_CASE, instant, apres(60 * JOUR), { parties }).map((b) => b.numero)).not.toContain(suivie.numero);
-    expect(betesSauvages(LA_CASE, DEBUT, apres(30 * JOUR), { parties })).toEqual(betes.map((b) => (b === suivie ? { ...b, depart: instant } : b)));
+    expect(betesSauvages(LA_CASE, instant, apres(60 * JOUR), ESPECES, { parties }).map((b) => b.numero)).not.toContain(suivie.numero);
+    expect(betesSauvages(LA_CASE, DEBUT, apres(30 * JOUR), ESPECES, { parties })).toEqual(betes.map((b) => (b === suivie ? { ...b, depart: instant } : b)));
   });
 });
 
@@ -150,7 +167,7 @@ describe("la Rareté tirée selon l'Anneau (US-0927)", () => {
   const simuler = (anneau: number) => {
     const comptes = new Map<string, number>();
     for (const c of casesDesAnneaux(0, 9)) {
-      for (const b of betesSauvages({ ...c, graine: GRAINE, anneau }, DEBUT, apres(120 * JOUR))) comptes.set(b.rareteId, (comptes.get(b.rareteId) ?? 0) + 1);
+      for (const b of betesSauvages({ ...c, graine: GRAINE, anneau, biome: "prairie" }, DEBUT, apres(120 * JOUR), ESPECES)) comptes.set(b.rareteId, (comptes.get(b.rareteId) ?? 0) + 1);
     }
     const total = [...comptes.values()].reduce((s, n) => s + n, 0);
     return { comptes, total, part: (rareteId: string) => (comptes.get(rareteId) ?? 0) / total };
@@ -194,9 +211,71 @@ describe("la Rareté tirée selon l'Anneau (US-0927)", () => {
 
   it("garde la même Rareté à une Bête, quelle que soit la période où on la calcule", () => {
     const anneau6 = { ...LA_CASE, anneau: ANNEAUX_DU_MONDE };
-    const mois = betesSauvages(anneau6, DEBUT, apres(30 * JOUR));
+    const mois = betesSauvages(anneau6, DEBUT, apres(30 * JOUR), ESPECES);
     for (const b of mois) {
-      expect(betesSauvages(anneau6, b.arrivee, new Date(b.arrivee.getTime() + 1)).find((x) => x.numero === b.numero)).toEqual(b);
+      expect(betesSauvages(anneau6, b.arrivee, new Date(b.arrivee.getTime() + 1), ESPECES).find((x) => x.numero === b.numero)).toEqual(b);
     }
+  });
+});
+
+describe("l'Espèce tirée selon le Biome (US-0928)", () => {
+  const chances = lireRaretesParAnneau();
+  const biomeDe = new Map(CATALOGUE.map((e) => [e.id, e.biomeId]));
+  const rareteDe = new Map(CATALOGUE.map((e) => [e.id, e.rareteId]));
+  /** Combien de Bêtes de chaque Espèce apparaissent dans le Biome `biome`, au Cœur sauvage, sur 271 Cases et 120 jours du jeu. */
+  const simuler = (biome: string) => {
+    const comptes = new Map<string, number>();
+    let apparues = 0;
+    for (const c of casesDesAnneaux(0, 9)) {
+      const laCase = { ...c, graine: GRAINE, anneau: ANNEAUX_DU_MONDE, biome };
+      apparues += apparitions(GRAINE, c, DEBUT, apres(120 * JOUR)).length;
+      for (const b of betesSauvages(laCase, apres(PRESENCE_D_UNE_BETE_HEURES * HEURE), apres(120 * JOUR), ESPECES)) {
+        expect(b.rareteId).toBe(rareteDe.get(b.especeId));
+        comptes.set(b.especeId, (comptes.get(b.especeId) ?? 0) + 1);
+      }
+    }
+    return { comptes, apparues, part: (id: string) => (comptes.get(id) ?? 0) / apparues };
+  };
+  /** La chance d'une Rareté au Cœur sauvage. */
+  const auCoeur = (rareteId: string) => chances[ANNEAUX_DU_MONDE - 1].find((c) => c.rareteId === rareteId)!.pourcent / 100;
+  /** À quatre écarts types près : un tirage juste n'en sort pratiquement jamais. */
+  const proche = (observee: number, attendue: number, n: number) => expect(Math.abs(observee - attendue)).toBeLessThan(4 * Math.sqrt((attendue * (1 - attendue)) / n));
+
+  it("tire l'Espèce parmi celles de la Rareté tirée qui vivent dans le Biome de la Case", () => {
+    const { comptes, apparues, part } = simuler("prairie");
+    for (const id of comptes.keys()) expect(biomeDe.get(id)).toBe("prairie");
+    for (const [id, rareteId] of [["p3", "peu_commune"], ["p4", "rare"], ["p5", "epique"], ["p6", "legendaire"]]) proche(part(id), auCoeur(rareteId), apparues);
+  });
+
+  it("donne à chaque Espèce de même Rareté la même chance", () => {
+    const { apparues, part } = simuler("prairie");
+    proche(part("p1"), auCoeur("commune") / 2, apparues);
+    proche(part("p2"), auCoeur("commune") / 2, apparues);
+  });
+
+  it("retombe sur la Rareté inférieure quand le Biome n'en a aucune de la Rareté tirée, jusqu'aux communes", () => {
+    const { comptes, apparues, part } = simuler("eau");
+    expect([...comptes.keys()].sort()).toEqual(["e1", "e2"]);
+    // Les peu communes tirées deviennent des communes ; les épiques et les légendaires, des rares.
+    proche(part("e1"), auCoeur("commune") + auCoeur("peu_commune"), apparues);
+    proche(part("e2"), auCoeur("rare") + auCoeur("epique") + auCoeur("legendaire"), apparues);
+  });
+
+  it("n'amène aucune Bête quand même les communes manquent au Biome", () => {
+    const foret = simuler("foret");
+    expect([...foret.comptes.keys()]).toEqual(["f1"]);
+    proche(foret.part("f1"), auCoeur("legendaire"), foret.apparues);
+    expect(simuler("desert").comptes.size).toBe(0);
+    expect(tirerUneEspece(ESPECES, chances[0], "foret", "rare", 0.5)).toBeNull();
+    expect(tirerUneEspece(ESPECES, chances[0], "lune", "commune", 0.5)).toBeNull();
+  });
+
+  it("ne tire jamais une Espèce mythique, même présente dans le Biome", () => {
+    expect(simuler("prairie").comptes.has("p7")).toBe(false);
+  });
+
+  it("tire de même quel que soit l'ordre où les Espèces arrivent", () => {
+    const melangees = rangerLesEspeces([...CATALOGUE].reverse());
+    expect(betesSauvages(LA_CASE, DEBUT, apres(60 * JOUR), melangees)).toEqual(betesSauvages(LA_CASE, DEBUT, apres(60 * JOUR), ESPECES));
   });
 });

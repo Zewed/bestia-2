@@ -277,12 +277,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0928 · L'Espèce tirée selon le Biome
 **En tant que** joueur, **je veux** croiser sur chaque Case des Espèces qui vivent dans son Biome, **afin de** savoir où chercher l'animal que je veux.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). L'Espèce est tirée parmi celles de la Rareté tirée qui vivent dans le Biome de la Case, et côte, lac, rivière et mer comptent ensemble comme l'eau. À Rareté égale, chaque Espèce a la même chance. Sans Espèce de cette Rareté, le tirage retombe sur la Rareté inférieure, jusqu'aux communes ; sans commune, aucune Bête. Prouvé sur base.
 - **Débloquée par** : US-0927
 - **Critères d'acceptation** :
   - L'Espèce est tirée parmi celles de la Rareté tirée dont le Biome d'Habitat est celui de la Case.
   - Côte, lac, rivière et mer sont des variantes d'un même Biome, l'eau : elles comptent ensemble pour ce tirage.
-  - À Rareté égale, chaque Espèce a la même chance ; une pondération par Espèce (à décider).
-  - Si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes (à décider).
+  - À Rareté égale, chaque Espèce a la même chance ; sans pondération par Espèce (décidé le 2026-10-08).
+  - Si aucune Espèce de la Rareté tirée n'existe pour ce Biome, le tirage retombe sur la Rareté inférieure, jusqu'aux communes, et sans commune pour ce Biome, aucune Bête n'apparaît (décidé le 2026-10-08).
 
 ### US-0929 · La Densité change la fréquence
 **En tant que** joueur, **je veux** que certaines Cases soient plus giboyeuses certains jours, **afin de** ne pas toujours viser les mêmes Cases.

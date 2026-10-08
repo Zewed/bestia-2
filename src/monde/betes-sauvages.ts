@@ -4,7 +4,8 @@
 // jeu, calculée à la demande, pour une Case et une période. Aucune ne se voit sur la carte : seules les Expéditions
 // présentes sur sa Case la verront (étape 40). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
 // seule une Bête partie plus tôt, en suivant une Expédition, laisse une trace en base (bete_partie). US-0927 : sa Rareté
-// se tire selon l'Anneau de sa Case. Côté serveur et scripts uniquement.
+// se tire selon l'Anneau de sa Case ; US-0928 : son Espèce, parmi celles de cette Rareté qui vivent dans le Biome de sa
+// Case. Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type ChancesDeRarete, lireRaretesParAnneau } from "@/donnees/jeux";
 import { APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
@@ -18,7 +19,7 @@ const JOUR_MS = 86_400_000;
 /** Au plus 100 apparitions par Case et par tranche (en moyenne, bien moins d'une), pour que leurs numéros ne se mêlent jamais. */
 const PAR_TRANCHE = 100;
 /** Ce que chaque tranche, puis chaque apparition, tire de son côté. */
-const TIRAGE = { nombre: 1, moment: 2, rarete: 3 } as const;
+const TIRAGE = { nombre: 1, moment: 2, rarete: 3, espece: 4 } as const;
 /** US-0926 : combien de temps une Bête reste sur sa Case, en temps du jeu. */
 const PRESENCE_MS = PRESENCE_D_UNE_BETE_HEURES * TRANCHE_MS;
 
@@ -30,15 +31,33 @@ export type Apparition = { numero: number; arrivee: Date };
 
 /**
  * US-0926 : une Bête sauvage sur sa Case, de son arrivée jusqu'à son départ (exclu) : PRESENCE_D_UNE_BETE_HEURES heures
- * plus tard, la même durée pour toutes, ou plus tôt si elle a suivi une Expédition. US-0927 : sa Rareté.
+ * plus tard, la même durée pour toutes, ou plus tôt si elle a suivi une Expédition. US-0928 : son Espèce, et la Rareté de
+ * celle-ci (US-0927).
  */
-export type BeteSauvage = Apparition & { depart: Date; rareteId: string };
+export type BeteSauvage = Apparition & { depart: Date; especeId: string; rareteId: string };
 
 /**
- * Une Case telle que les Bêtes sauvages la voient : sa place, la graine de son Monde et (US-0927) son Anneau, de 1, la
- * Couronne, à ANNEAUX_DU_MONDE, le Cœur sauvage.
+ * Une Case telle que les Bêtes sauvages la voient : sa place, la graine de son Monde, (US-0927) son Anneau, de 1, la
+ * Couronne, à ANNEAUX_DU_MONDE, le Cœur sauvage, et (US-0928) son Biome : « eau » pour la côte, un lac, une rivière ou la
+ * mer, variantes d'un même Biome.
  */
-export type CaseSauvage = Coordonnees & { graine: number; anneau: number };
+export type CaseSauvage = Coordonnees & { graine: number; anneau: number; biome: string };
+
+/** US-0928 : une Espèce telle que les Bêtes sauvages la tirent : sa Rareté et le Biome de son Habitat. */
+export type EspeceSauvage = { id: string; rareteId: string; biomeId: string };
+
+/** US-0928 : les Espèces rangées par Biome, puis par Rareté, chaque liste dans l'ordre des identifiants. */
+export type EspecesParBiome = ReadonlyMap<string, ReadonlyMap<string, readonly string[]>>;
+
+/** US-0928 : range les Espèces `especes` pour les tirages, une fois pour toutes les Cases calculées ensemble. */
+export function rangerLesEspeces(especes: readonly EspeceSauvage[]): EspecesParBiome {
+  const rangees = new Map<string, Map<string, string[]>>();
+  for (const e of [...especes].sort((a, b) => (a.id < b.id ? -1 : 1))) {
+    const parRarete = rangees.get(e.biomeId) ?? rangees.set(e.biomeId, new Map()).get(e.biomeId)!;
+    parRarete.set(e.rareteId, [...(parRarete.get(e.rareteId) ?? []), e.id]);
+  }
+  return rangees;
+}
 
 /** US-0927 : les chances de chaque Rareté, Anneau par Anneau, lues une fois pour toutes dans les données du jeu. */
 let chancesLues: ChancesDeRarete[] | undefined;
@@ -55,6 +74,26 @@ export function tirerUneRarete(chances: ChancesDeRarete, hasard: number): string
   }
   // Ce que les arrondis laissent au-delà de 100 % revient à la dernière.
   return chances.at(-1)!.rareteId;
+}
+
+/**
+ * US-0928 : l'Espèce que le hasard `hasard`, de 0 à 1, tire parmi celles de la Rareté `rareteId` qui vivent dans le Biome
+ * `biome`, chacune avec la même chance ; s'il n'y en a aucune, parmi celles de la Rareté inférieure (dans l'ordre de
+ * `chances`), et ainsi de suite jusqu'aux communes. null quand même les communes manquent : la Bête n'apparaît pas.
+ */
+export function tirerUneEspece(
+  especes: EspecesParBiome,
+  chances: ChancesDeRarete,
+  biome: string,
+  rareteId: string,
+  hasard: number,
+): { especeId: string; rareteId: string } | null {
+  const duBiome = especes.get(biome);
+  for (let rang = chances.findIndex((c) => c.rareteId === rareteId); rang >= 0; rang--) {
+    const candidates = duBiome?.get(chances[rang].rareteId);
+    if (candidates?.length) return { especeId: candidates[Math.floor(hasard * candidates.length)], rareteId: chances[rang].rareteId };
+  }
+  return null;
 }
 
 /** Le nombre d'apparitions d'une tranche, de moyenne `moyenne` : une loi de Poisson, celle d'apparitions indépendantes. */
@@ -94,50 +133,63 @@ export function apparitions(graine: number, c: Coordonnees, de: Date, a: Date, p
  * US-0926 : les Bêtes sauvages de la Case `laCase` présentes à un moment de [de, a), dans l'ordre de leur arrivée.
  * Chacune reste PRESENCE_D_UNE_BETE_HEURES heures, puis s'en va ; celle qui est partie plus tôt (`parties` : son numéro,
  * l'instant de son départ) n'est plus là dès cet instant. Aucune ne revient : son numéro ne sert qu'une fois. US-0927 : la
- * Rareté de chacune est tirée aux chances de l'Anneau de la Case (`chances`, celles des données du jeu).
+ * Rareté de chacune est tirée aux chances de l'Anneau de la Case (`chances`, celles des données du jeu). US-0928 : puis son
+ * Espèce, parmi `especes` (rangerLesEspeces) ; une apparition sans Espèce possible, même commune, n'amène aucune Bête.
  */
 export function betesSauvages(
   laCase: CaseSauvage,
   de: Date,
   a: Date,
+  especes: EspecesParBiome,
   { parties = new Map(), chances = raretesParAnneau() }: { parties?: ReadonlyMap<number, Date>; chances?: ChancesDeRarete[] } = {},
 ): BeteSauvage[] {
-  const { graine, q, r, anneau } = laCase;
-  return apparitions(graine, laCase, new Date(de.getTime() - PRESENCE_MS + 1), a)
-    .map((x) => {
-      const partie = parties.get(x.numero);
-      const fin = x.arrivee.getTime() + PRESENCE_MS;
-      const rareteId = tirerUneRarete(chances[anneau - 1], hacher(graine, q, r, x.numero, TIRAGE.rarete));
-      return { ...x, depart: new Date(partie ? Math.min(fin, partie.getTime()) : fin), rareteId };
-    })
-    .filter((b) => b.depart.getTime() > de.getTime());
+  const { graine, q, r, anneau, biome } = laCase;
+  return apparitions(graine, laCase, new Date(de.getTime() - PRESENCE_MS + 1), a).flatMap((x) => {
+    const partie = parties.get(x.numero);
+    const depart = Math.min(x.arrivee.getTime() + PRESENCE_MS, partie?.getTime() ?? Infinity);
+    if (depart <= de.getTime()) return [];
+    const tiree = tirerUneRarete(chances[anneau - 1], hacher(graine, q, r, x.numero, TIRAGE.rarete));
+    const espece = tirerUneEspece(especes, chances[anneau - 1], biome, tiree, hacher(graine, q, r, x.numero, TIRAGE.espece));
+    return espece ? [{ ...x, depart: new Date(depart), ...espece }] : [];
+  });
 }
 
-/** Une Case lue en base : sa place, la graine et la forme de son Monde, si elle est libre, et les Bêtes qui en sont parties. */
-type CaseEnBase = Coordonnees & { id: number; graine: string; forme: FormeDuMonde; libre: boolean; parties: { numero: string; partie_le: string }[] };
+/** Une Case lue en base : sa place, son Biome, la graine et la forme de son Monde, si elle est libre, et les Bêtes qui en sont parties. */
+type CaseEnBase = Coordonnees & {
+  id: number;
+  biome: string;
+  graine: string;
+  forme: FormeDuMonde;
+  libre: boolean;
+  parties: { numero: string; partie_le: string }[];
+};
 
 /**
  * US-0925 : les Bêtes sauvages présentes à un moment de [de, a) sur les Cases `caseIds`, Case par Case, chacune calculée
  * seule, à la demande. Aucune sur une Case qui appartient à un Territoire ; une Case inconnue n'en a pas non plus.
  * US-0926 : une Bête partie en suivant une Expédition n'y est plus dès son départ. US-0927 : l'Anneau de chaque Case se
- * tire de la forme de son Monde.
+ * tire de la forme de son Monde. US-0928 : les Espèces sont celles de la base, lues une fois pour toutes les Cases.
  */
 export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: number[], de: Date, a: Date): Promise<Map<number, BeteSauvage[]>> {
-  const { rows } = await base.query<CaseEnBase>(
-    `select c.id, c.q, c.r, m.graine, c.chef_id is null as libre,
-       json_build_object('rayon', m.rayon, 'anneauxCouronne', m.anneaux_couronne, 'rayonCoeur', m.rayon_coeur) as forme,
-       coalesce((select json_agg(json_build_object('numero', p.numero, 'partie_le', p.partie_le)) from bete_partie p where p.case_id = c.id), '[]') as parties
-     from case_du_monde c join monde m on m.id = c.monde_id
-     where c.id = any($1::int[])`,
-    [caseIds],
-  );
-  const parCase = new Map(rows.map((c) => [c.id, c]));
+  const [{ rows }, { rows: especes }] = await Promise.all([
+    base.query<CaseEnBase>(
+      `select c.id, c.q, c.r, c.biome_id as biome, m.graine, c.chef_id is null as libre,
+         json_build_object('rayon', m.rayon, 'anneauxCouronne', m.anneaux_couronne, 'rayonCoeur', m.rayon_coeur) as forme,
+         coalesce((select json_agg(json_build_object('numero', p.numero, 'partie_le', p.partie_le)) from bete_partie p where p.case_id = c.id), '[]') as parties
+       from case_du_monde c join monde m on m.id = c.monde_id
+       where c.id = any($1::int[])`,
+      [caseIds],
+    ),
+    base.query<EspeceSauvage>(`select id, rarete_id as "rareteId", biome_id as "biomeId" from espece`),
+  ]);
+  const [parCase, rangees] = [new Map(rows.map((c) => [c.id, c])), rangerLesEspeces(especes)];
   return new Map(
     caseIds.map((id) => {
       const c = parCase.get(id);
       if (!c?.libre) return [id, []];
+      const laCase = { q: c.q, r: c.r, graine: Number(c.graine), anneau: anneauDUneCase(c, c.forme), biome: c.biome };
       const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(p.partie_le)]));
-      return [id, betesSauvages({ q: c.q, r: c.r, graine: Number(c.graine), anneau: anneauDUneCase(c, c.forme) }, de, a, { parties })];
+      return [id, betesSauvages(laCase, de, a, rangees, { parties })];
     }),
   );
 }
