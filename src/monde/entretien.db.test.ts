@@ -283,7 +283,9 @@ describe.skipIf(!URL_TEST)("l'Entretien des Habitants (US-0316, sur base)", () =
       {
         nom: "les deux Stocks se vident, la Viande d'abord",
         habitants: 20,
-        stocks: { viande: { quantite: "30.123456", reste: "17" }, vegetaux: { quantite: "20.654321", reste: "3599.999999" } },
+        // La Viande vide vers 6 h, les Végétaux vers 16 h : la Famine commence avant la fin, mais le premier départ d'un
+        // Habitant (US-0326), une heure après, tomberait au-delà ; PRODUIRE seul s'y arrêterait sans le faire partir.
+        stocks: { viande: { quantite: "72.123456", reste: "17" }, vegetaux: { quantite: "215.654321", reste: "3599.999999" } },
         apres: (fin) => {
           expect([fin.viande.quantite, fin.vegetaux.quantite]).toEqual(["0.000000", "0.000000"]);
         },

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   avantFamine,
@@ -16,6 +17,10 @@ import styles from "./BarreHaut.module.css";
 
 /** Le plus long délai qu'un minuteur du navigateur sache attendre : au-delà, il partirait aussitôt. */
 const DELAI_MAX_MS = 2_147_483_647;
+/** Une heure, en millisecondes. */
+const HEURE_MS = 3_600_000;
+/** US-0326 : le temps réel laissé au serveur après un départ d'Habitant avant de relire la page. */
+const RELIRE_APRES_MS = 1_000;
 
 /**
  * US-0321 : l'avertissement « famine imminente », une bande d'alerte toute la largeur au bas de la barre du
@@ -62,6 +67,19 @@ export function FamineImminente({
   const bascule = retenue !== null || famine !== null ? 0 : avantFamineImminente(heures, vitesse);
   // US-0325 : l'instant où la Famine commence, en temps réel après la lecture ; 0 quand le Territoire la retient déjà.
   const debutDeFamine = famine !== null ? 0 : avantFamine(heures, vitesse);
+  // US-0326 : en Famine, un Habitant s'en va à chaque heure pleine depuis son début : le prochain départ, en temps réel
+  // après la lecture.
+  const prochainDepart = famine !== null ? ((Math.floor(famine) + 1 - famine) * HEURE_MS) / vitesse : debutDeFamine + HEURE_MS / vitesse;
+  const routeur = useRouter();
+
+  useEffect(() => {
+    // La page se relit juste après, une seconde réelle plus tard, le temps que le serveur l'ait fait partir : le nombre
+    // d'Habitants et les effectifs par Métier baissent aussitôt, et la bande s'en va si ce départ a fini la Famine.
+    const releve = prochainDepart + RELIRE_APRES_MS;
+    if (releve > DELAI_MAX_MS) return;
+    const minuteur = setTimeout(() => routeur.refresh(), Math.ceil(releve));
+    return () => clearTimeout(minuteur);
+  }, [prochainDepart, routeur]);
 
   useEffect(() => {
     const depart = performance.now();

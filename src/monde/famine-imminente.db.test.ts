@@ -153,9 +153,10 @@ describe.skipIf(!URL_TEST)("l'avertissement « famine imminente », tenu par le 
   it("garde l'instant du premier franchissement tant que la famine reste imminente", async () => {
     const t = await vingtHeures();
     await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 9 * HEURE) });
-    await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 30 * HEURE) });
+    // Jusque dans la Famine (US-0325, à 20 h), avant le premier départ d'un Habitant (US-0326, à 21 h).
+    await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 20.75 * HEURE) });
     expect(await depuis(t.territoireId, t.ne)).toBe(HUIT_HEURES);
-    expect(await famineImminenteDepuis(pool, t.territoireId)).toBe(22);
+    expect(await famineImminenteDepuis(pool, t.territoireId)).toBe(12.75);
   });
 
   describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {

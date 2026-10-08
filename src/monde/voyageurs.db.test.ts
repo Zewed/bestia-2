@@ -300,6 +300,8 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       "with partis as (delete from habitant where territoire_id = $1) insert into habitant (territoire_id, prenom) select $1, nom from prenom where nom <> $2",
       [territoireId, liste[7]],
     );
+    // US-0326 : de quoi nourrir tout ce monde, pour qu'aucune Famine n'en fasse partir et ne libère de prénom entre-temps.
+    await pool.query("update stock set quantite = 10000 where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')", [territoireId]);
     const { arrivees: prevu } = prevues(territoireId, ne, apres(ne, 1000 * HEURE));
     await rattraper("territoire", territoireId, { pool, jusqua: new Date(prevu[1].instant) });
     const [premier, second] = await voyageurs(territoireId);

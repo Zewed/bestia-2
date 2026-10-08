@@ -283,10 +283,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0326 · Voir des Habitants s'en aller
 **En tant que** joueur, **je veux** que la Famine fasse partir des Habitants selon une règle claire, **afin de** comprendre ce que me coûte le manque de Nourriture.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Pendant une Famine, un Habitant s'en va à chaque heure pleine (début + 1 h, + 2 h…), à l'instant exact, calculé dans l'évolution du temps : page ouverte, fermée, tâche planifiée ou ×100 donnent les mêmes départs. Les sans Métier partent d'abord, puis le dernier arrivé ; la Famine garde toujours au moins un Habitant. Chaque départ réduit l'Entretien et peut suffire à sortir de la Famine. Un Habitant parti est effacé ; son départ est noté (prénom, Métier, heure). Vérifié en vrai.
 - **Débloquée par** : US-0325
 - **Critères d'acceptation** :
-  - Le nombre de départs suit une seule règle : autant qu'il faut pour que l'Entretien restant soit payé, ou (chiffre à régler) Habitants par heure de Famine (à décider).
-  - L'ordre des départs suit une seule règle : les Habitants sans Métier d'abord, ou au hasard (à décider).
+  - Le nombre de départs suit une seule règle : 1 Habitant par heure de Famine (décidé le 2026-10-08 ; provisoire, `FAMINE_DEPARTS_PAR_HEURE`).
+  - L'ordre des départs suit une seule règle : les Habitants sans Métier d'abord, puis le dernier arrivé (décidé le 2026-10-08).
   - Le nombre d'Habitants et les effectifs par Métier baissent aussitôt.
   - En vitesse accélérée, une Famine provoquée fait partir exactement le nombre d'Habitants prévu.
 

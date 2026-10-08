@@ -1,6 +1,11 @@
 // @vitest-environment jsdom
 import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+
+// US-0326 : le routeur, observé pour voir la page se relire à chaque départ d'un Habitant.
+const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
+
 import { FamineImminente } from "./FamineImminente";
 
 const HEURE = 3_600_000;
@@ -9,6 +14,7 @@ const _ = " ";
 
 afterEach(() => {
   cleanup();
+  routeur.refresh.mockClear();
   vi.useRealTimers();
 });
 
@@ -210,5 +216,34 @@ describe("entrer en Famine (US-0325)", () => {
   it("dit « Famine » dès l'ouverture quand la Nourriture ne paie déjà plus l'Entretien, sans rien de retenu", () => {
     render(<FamineImminente heures={0} />);
     expect(morceaux()).toEqual(["Famine depuis un instant", "Voir"]);
+  });
+});
+
+describe("voir des Habitants s'en aller (US-0326)", () => {
+  it("relit la page juste après chaque départ, une heure pleine après le début de la Famine, au rythme du jeu", async () => {
+    vi.useFakeTimers();
+    // Famine depuis 2 h 30 au temps ×100 : le prochain départ, à 3 h, tombe 18 secondes réelles plus tard.
+    render(<FamineImminente heures={0} famine={2.5} vitesse={100} />);
+    await act(async () => vi.advanceTimersByTime(18_000));
+    expect(routeur.refresh).not.toHaveBeenCalled();
+    // Une seconde après, le temps que le serveur l'ait fait partir.
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("page ouverte, relit aussi la page au premier départ, une heure après le début de la Famine", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={0.5} depuis={11.5} />);
+    await act(async () => vi.advanceTimersByTime(1.5 * HEURE));
+    expect(routeur.refresh).not.toHaveBeenCalled();
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("ne relit rien tant que la Famine n'est pas en vue", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={7} depuis={3} />);
+    await act(async () => vi.advanceTimersByTime(7 * HEURE));
+    expect(routeur.refresh).not.toHaveBeenCalled();
   });
 });

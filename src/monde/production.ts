@@ -4,6 +4,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
+import { faireRepartirUnHabitant } from "./famine";
 
 /**
  * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
@@ -81,7 +82,7 @@ const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE
  * vide, il ne donne plus que sa production, à mesure, et l'autre paie tout le reste de l'Entretien. Au
  * premier pas où l'autre ne le peut plus non plus (d2), il donne tout ce qu'il a ; les deux restent alors à
  * zéro, chacun ne donnant que sa production : un Stock ne descend jamais sous zéro, et ce qui manque n'est
- * pas payé (la Famine viendra plus tard).
+ * pas payé (c'est la Famine, US-0325).
  *
  * Le calcul ne déroule pas les pas : entre deux bascules, apresPas donne l'état d'un coup, et pasImpaye le
  * pas de la bascule. Le résultat est exactement celui du déroulement pas à pas, quel que soit le découpage du
@@ -109,11 +110,18 @@ const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE
  * changement (un Habitant parti, de la Nourriture ajoutée) : l'instant retenu revient alors à null, et une nouvelle
  * Famine peut commencer plus loin, dans le même intervalle. Déjà en Famine en $2 sans être notée (un Habitant de
  * plus, ou un Territoire calculé avant la mise en ligne d'US-0325), elle part de $2 : on ne remonte pas dans le passé.
+ *
+ * US-0326 : en Famine, un Habitant s'en va une heure pile après son début, puis d'heure en heure, tant qu'il en reste
+ * plus d'un. Un départ change l'Entretien, donc la suite du calcul : celui-ci s'arrête au premier départ qui tombe
+ * d'ici $3 et rend l'instant atteint (atteint, en texte à la microseconde) et s'il y a un départ à y appliquer
+ * (depart) ; produire() le fait partir, puis reprend de là. Les départs tombent aux heures pleines depuis le début de
+ * la Famine, que le Territoire retient : les mêmes quel que soit le découpage du temps. Un départ à l'instant $3
+ * même est appliqué dans ce calcul-ci.
  */
 export const PRODUIRE = `
   with production as (${PRODUCTION_DU_TERRITOIRE}),
   entretien as (${ENTRETIEN_DU_TERRITOIRE}),
-  -- Le premier pas du calcul, compté depuis l'origine des temps, et le nombre de pas.
+  -- Le premier pas du calcul, compté depuis l'origine des temps, et le nombre de pas jusqu'à $3.
   pas as (
     select extract(epoch from $2::timestamptz) * 1000000 as t0,
       (extract(epoch from $3::timestamptz) - extract(epoch from $2::timestamptz)) * 1000000 as k
@@ -122,7 +130,7 @@ export const PRODUIRE = `
   etat as (
     select s.ressource_id, r.famille = 'nourriture' as nourriture, s.quantite * 3600000000 + s.reste as s0,
       s.limite * 3600000000 as l, coalesce(production.par_heure, 0) as p, entretien.par_heure as e,
-      case when r.famille = 'nourriture' then entretien.par_heure / 2 else 0 end as c1, pas.t0, pas.k
+      case when r.famille = 'nourriture' then entretien.par_heure / 2 else 0 end as c1, pas.t0
     from stock s join ressource r on r.id = s.ressource_id
       left join production on production.ressource_id = s.ressource_id
       cross join entretien cross join pas
@@ -148,24 +156,38 @@ export const PRODUIRE = `
     select case when sum(fc2) < min(e) then min(f1) else min(f1 + 1 + ${pasImpaye("fs2", "p", "fc3", "l")}) end as pas
     from famine_s2
   ),
+  -- US-0326 : le pas du prochain départ de Famine, compté depuis $2 : une heure pleine après le début de la Famine
+  -- (debut, avant $2 quand elle dure déjà, comme le Territoire le retient), toujours après $2 ; null hors Famine, ou
+  -- quand il ne reste qu'un Habitant.
+  depart as (
+    select case when debut is not null and (select count(*) from habitant where territoire_id = $1) > 1
+        then debut + 3600000000 * greatest(1, div(-debut, 3600000000) + 1)
+      end as pas
+    from (
+      select case when f.pas = 0 and t.famine_depuis is not null then extract(epoch from t.famine_depuis) * 1000000 - pas.t0 else f.pas end as debut
+      from famine f cross join pas left join territoire t on t.id = $1
+    ) en_famine
+  ),
+  -- k : les pas calculés, jusqu'à $3 ou jusqu'au prochain départ s'il tombe avant.
+  fenetre as (select least(pas.k, d.pas) as k, coalesce(d.pas <= pas.k, false) as depart from pas cross join depart d),
   famines as (
     update territoire t set famine_imminente_depuis = case
         when f.pas <= ${FIN_FAMINE_IMMINENTE} and t.famine_imminente_depuis is not null then t.famine_imminente_depuis
-        when f.pas <= ${SEUIL_FAMINE_IMMINENTE} + pas.k
+        when f.pas <= ${SEUIL_FAMINE_IMMINENTE} + w.k
           then $2::timestamptz + make_interval(secs => (greatest(0, f.pas - ${SEUIL_FAMINE_IMMINENTE}) / 1000000)::double precision)
         else null
       end,
-      -- US-0325 : déjà en Famine en $2, elle garde son instant ; sinon, elle commence d'ici $3 ou pas du tout.
+      -- US-0325 : déjà en Famine en $2, elle garde son instant ; sinon, elle commence d'ici la fin du calcul ou pas du tout.
       famine_depuis = case
         when f.pas = 0 and t.famine_depuis is not null then t.famine_depuis
-        when f.pas <= pas.k then $2::timestamptz + f.pas * interval '1 microsecond'
+        when f.pas <= w.k then $2::timestamptz + f.pas * interval '1 microsecond'
         else null
       end
-    from famine f cross join pas
+    from famine f cross join fenetre w
     where t.id = $1
   ),
   -- d1 : le premier pas où l'un des deux Stocks de Nourriture ne peut plus payer sa moitié ; k s'il n'y en a pas.
-  bascule as (select partage.*, least(k, min(da) over (partition by nourriture)) as d1 from partage),
+  bascule as (select partage.*, w.k, least(w.k, min(da) over (partition by nourriture)) as d1 from partage cross join fenetre w),
   -- « materialized » : chaque étape est calculée une fois ; sans cela, Postgres recopierait ses formules dans les suivantes.
   avant_d1 as materialized (select bascule.*, ${apresPas("s0", "p", "c1", "l", "d1")} as s1 from bascule),
   -- Au pas d1, le Stock qui ne peut plus payer donne tout ce qu'il a (s1 + p), l'autre le reste de l'Entretien s'il le peut (c2) ;
@@ -194,33 +216,52 @@ export const PRODUIRE = `
               end
           end as produit
     from avant_d2
+  ),
+  stocks as (
+    update stock s set
+      quantite = div(f.sf, 3600) / 1000000,
+      reste = f.sf - div(f.sf, 3600) * 3600,
+      -- US-0216 : la production entrée, sans en retirer l'Entretien.
+      produit_depuis_visite = s.produit_depuis_visite + f.produit / 1000000,
+      -- US-0228 : l'instant exact où le Stock a atteint sa limite ; null dès qu'il repasse dessous.
+      plein_depuis = case
+        when f.sf < f.l then null
+        when f.s0 >= f.l then coalesce(s.plein_depuis, $2::timestamptz)
+        else $2::timestamptz + make_interval(secs => (case
+          when f.s1 >= f.l then ${auDessus("f.l - f.s0", "f.p - f.c1")}
+          when f.s2 >= f.l then f.d1 + 1
+          else f.d1 + 1 + ${auDessus("f.l - f.s2", "f.p - f.c3")}
+        end / 1000000)::double precision)
+      end
+    from fin f
+    where s.territoire_id = $1 and s.ressource_id = f.ressource_id
   )
-  update stock s set
-    quantite = div(f.sf, 3600) / 1000000,
-    reste = f.sf - div(f.sf, 3600) * 3600,
-    -- US-0216 : la production entrée, sans en retirer l'Entretien.
-    produit_depuis_visite = s.produit_depuis_visite + f.produit / 1000000,
-    -- US-0228 : l'instant exact où le Stock a atteint sa limite ; null dès qu'il repasse dessous.
-    plein_depuis = case
-      when f.sf < f.l then null
-      when f.s0 >= f.l then coalesce(s.plein_depuis, $2::timestamptz)
-      else $2::timestamptz + make_interval(secs => (case
-        when f.s1 >= f.l then ${auDessus("f.l - f.s0", "f.p - f.c1")}
-        when f.s2 >= f.l then f.d1 + 1
-        else f.d1 + 1 + ${auDessus("f.l - f.s2", "f.p - f.c3")}
-      end / 1000000)::double precision)
-    end
-  from fin f
-  where s.territoire_id = $1 and s.ressource_id = f.ressource_id`;
+  -- US-0326 : l'instant atteint, à la microseconde, et s'il faut y faire partir un Habitant.
+  select ($2::timestamptz + k * interval '1 microsecond')::text as atteint, depart from fenetre`;
 
 /**
  * Met à l'heure les Stocks du Territoire entre deux instants : ce que toutes ses Cases produisent, chacune
  * selon son Biome (donnees/biomes.yaml), au prorata du temps écoulé, moins l'Entretien de ses Habitants
  * (US-0316). Le Foyer produit comme une Case ordinaire ; une Ressource que rien ne produit ni ne mange ne
  * bouge pas. Ce qui est produit est aussi compté à part depuis la dernière visite du joueur (US-0216).
+ *
+ * US-0326 : en Famine, le calcul s'arrête à chaque départ d'un Habitant, le fait partir, et reprend de là jusqu'à
+ * `jusqua`. Les départs sont calculés ici plutôt que programmés comme des événements : ils ne se connaissent qu'une
+ * fois la Famine commencée, au milieu d'un calcul, et le mécanisme du temps n'applique à leur instant que les
+ * événements programmés avant le calcul en cours. Après un départ à `jusqua` même, un calcul de durée nulle note
+ * aussitôt ce qu'il change à la Famine.
  */
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
-  await client.query(PRODUIRE, [territoireId, depuis, jusqua]);
+  // Les instants des départs tombent à la microseconde : ils passent en texte, qu'une Date arrondirait.
+  let debut: Date | string = depuis;
+  for (;;) {
+    const calcul: { atteint: string; depart: boolean } | undefined = (
+      await client.query<{ atteint: string; depart: boolean }>(PRODUIRE, [territoireId, debut, jusqua])
+    ).rows[0];
+    if (!calcul?.depart) return;
+    await faireRepartirUnHabitant(client, territoireId, calcul.atteint);
+    debut = calcul.atteint;
+  }
 }
 
 /**
