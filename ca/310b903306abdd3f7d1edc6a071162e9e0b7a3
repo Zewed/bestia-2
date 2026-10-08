@@ -1,0 +1,52 @@
+src/app/jeu/page.module.css
+  s_97a431cfa65ca7::t_9cdcaf7c612447 167-169
+  s_97a431cfa65ca7::t_c099d6dc9c9932 43,45,51
+  s_97a431cfa65ca7::t_958e3e1f1afa4c 185-187
+  s_97a431cfa65ca7::t_c94e1a4b896ecc 18-42,44,46-50,52-73
+src/monde/famine.db.test.ts
+  s_97a431cfa65ca7::t_85e2004ce811d2 372-428
+  s_97a431cfa65ca7::t_a191992a097f24 328
+  s_97a431cfa65ca7::t_67964df34071c0 105-106
+  s_97a431cfa65ca7::t_9355b493b11efa 12
+  s_97a431cfa65ca7::t_fc2f2c93c4b37a 113
+  s_97a431cfa65ca7::t_09af0d3026e2d4 99-103,107-111,114-118
+  s_97a431cfa65ca7::t_7e2fa3177f8ed1 349
+  s_97a431cfa65ca7::t_001f863fd73954 66-98,104,112
+  s_97a431cfa65ca7::t_f78c520115709a 325,334,338
+  s_97a431cfa65ca7::t_90a8ef9cfd3463 124,127-128
+  s_97a431cfa65ca7::t_fde42057a97f64 24-25
+  s_97a431cfa65ca7::t_cc8858da4ce440 10
+  s_97a431cfa65ca7::t_ef0cf175b897bb 33
+  s_97a431cfa65ca7::t_c387551ad435aa 305-312
+  s_97a431cfa65ca7::t_0564f13b64c891 429-430
+src/app/jeu/page.test.tsx
+  s_97a431cfa65ca7::t_6344449e52fcf7 29-30
+  s_97a431cfa65ca7::t_9387956c4d2e19 96-105
+src/monde/famine.test.ts
+  s_97a431cfa65ca7::t_9877d693ada84c 41-43
+  s_97a431cfa65ca7::t_8006417ac94a98 1,3-40,44-49
+  s_97a431cfa65ca7::t_5aab29e165fbc4 2
+src/monde/famine.ts
+  s_97a431cfa65ca7::t_b12f8c84e72288 2,6,12,16-18,34-59,65-68,71-136
+  s_97a431cfa65ca7::t_f404beca2b0e61 3
+src/app/jeu/page.tsx
+  s_97a431cfa65ca7::t_32a817de3bbb58 10
+  s_97a431cfa65ca7::t_d0b56e14662f0d 2
+  s_97a431cfa65ca7::t_ae822e1c7626b0 29-31,40,43-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ca310b903306abdd3f7d1edc6a071162e9e0b7a3",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": null
+    }
+  }
+}
