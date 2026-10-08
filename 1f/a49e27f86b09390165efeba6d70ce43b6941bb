@@ -1,0 +1,27 @@
+src/app/jeu/carte/actions.db.test.ts
+  s_97a431cfa65ca7::t_4ca2bb3ad54dda 1-97
+src/monde/carte.db.test.ts
+  s_97a431cfa65ca7::t_1470a8f54fb255 92-98,100-102,104,117,119-127,131,133-135
+  s_97a431cfa65ca7::t_0f59ca0bed26c1 158-159
+src/app/jeu/carte/page.db.test.tsx
+  s_97a431cfa65ca7::t_b2d9dd8ea3ea22 1-3,5-128
+  s_97a431cfa65ca7::t_f904d13ba45053 4
+src/monde/carte.ts
+  s_97a431cfa65ca7::t_244695ad1a68aa 31,36-37,41-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1fa49e27f86b09390165efeba6d70ce43b6941bb",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
