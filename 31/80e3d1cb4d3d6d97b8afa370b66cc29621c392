@@ -1,0 +1,42 @@
+docs/stories/README.md
+  s_97a431cfa65ca7::t_0dbb77748d5b80 33
+  s_97a431cfa65ca7::t_954696802ace02 7
+src/monde/carte.db.test.ts
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1,6,89-96
+  s_97a431cfa65ca7::t_219ed79951700f 97-98
+src/app/jeu/carte/error.test.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1-23
+src/app/jeu/carte/page.test.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1,41,43,76-84,115,117
+src/app/jeu/carte/page.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 10,21-22,33
+src/app/jeu/carte/Attente.test.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1-30
+src/app/jeu/carte/error.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1-28
+src/app/jeu/carte/Attente.tsx
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1-38
+src/reglages.ts
+  s_97a431cfa65ca7::t_0dbb77748d5b80 219-223
+  s_97a431cfa65ca7::t_60a0838b85105f 224
+src/app/jeu/carte/etats.module.css
+  s_97a431cfa65ca7::t_0dbb77748d5b80 1-60
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_9ecb7e25d09a0d 345,348
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3180e3d1cb4d3d6d97b8afa370b66cc29621c392",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
