@@ -199,3 +199,10 @@ export const POCHE_DE_PRAIRIE_CASES = 40;
  * jouant) : entre 12 et 13 heures, il garde son état, pour ne pas apparaître et disparaître sans cesse au seuil.
  */
 export const FAMINE_IMMINENTE_MARGE_HEURES = 1;
+
+/**
+ * US-0420 : on fait glisser la carte du Monde jusqu'à ce que le milieu de l'écran soit à 2 Cases au-delà de la
+ * Case la plus éloignée du centre, pas plus loin : on ne perd jamais la carte de vue (valeur provisoire, à régler
+ * en jouant).
+ */
+export const CARTE_DEBORD_CASES = 2;

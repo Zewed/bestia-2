@@ -3,8 +3,10 @@
 import { getImageProps } from "next/image";
 import { useEffect, useRef } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
-import { dessinerLaCarte, vueSurLeFoyer, type Hutte } from "./dessin";
+import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
+import { suivreLesGestes } from "./gestes";
 import styles from "./page.module.css";
+import { deplacer, limiteDeLaCarte } from "./vue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -23,11 +25,12 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
 /**
  * US-0417 : la carte du Monde, dessinée sur un <canvas> (10 981 hexagones en SVG pèseraient trop sur une page de
  * jeu), dans toute la place que la page lui donne et nette sur les écrans haute densité. Elle s'ouvre le Foyer au
- * milieu, et s'y recentre quand l'écran change de taille (téléphone tourné, fenêtre élargie). US-0418 : chaque
- * teinte de la carte peinte de la couleur CSS que la page lui donne (`fonds`, dans l'ordre de ses teintes), ses
- * motifs d'Encre ou d'Ivoire légers, et un bord d'Encre à peine marqué entre les Cases. US-0419 : son Foyer
- * marqué d'un repère citron dès l'ouverture, la hutte du chef posée dessus une fois l'illustration chargée ; les
- * Foyers des autres chefs en Encre.
+ * milieu. US-0418 : chaque teinte de la carte peinte de la couleur CSS que la page lui donne (`fonds`, dans l'ordre
+ * de ses teintes), ses motifs d'Encre ou d'Ivoire légers, et un bord d'Encre à peine marqué entre les Cases.
+ * US-0419 : son Foyer marqué d'un repère citron dès l'ouverture, la hutte du chef posée dessus une fois
+ * l'illustration chargée ; les Foyers des autres chefs en Encre. US-0420 : on la fait glisser (gestes.ts), dans les
+ * limites de la vue (vue.ts) ; chaque geste change la vue aussitôt, mais la carte n'est redessinée qu'au rythme de
+ * l'écran. Quand l'écran change de taille (téléphone tourné, fenêtre élargie), elle garde le même endroit au milieu.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -44,13 +47,30 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       repere: couleurCalculee(canvas, "var(--citron)"),
     };
     let hutte: Hutte | null = null;
+    // Ce que montre la carte, d'un geste à l'autre, une fois connue la place qu'elle a ; la limite de son milieu.
+    let vue: Vue | null = null;
+    const limite = limiteDeLaCarte(carte);
     const dessiner = () => {
+      if (vue) dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
+    };
+    // La toile à la taille que la page lui donne, à l'ouverture et à chaque changement : la redimensionner l'efface.
+    const cadrer = () => {
       const { width: largeur, height: hauteur } = canvas.getBoundingClientRect();
       const densite = window.devicePixelRatio || 1;
       canvas.width = Math.round(largeur * densite);
       canvas.height = Math.round(hauteur * densite);
       pinceau.setTransform(densite, 0, 0, densite, 0, 0);
-      dessinerLaCarte(pinceau, carte, vueSurLeFoyer(carte.foyer, largeur, hauteur), peinture, hutte);
+      vue = vue ? { ...vue, largeur, hauteur } : vueSurLeFoyer(carte.foyer, largeur, hauteur);
+      dessiner();
+    };
+    // US-0420 : le dessin demandé pour la prochaine image de l'écran, s'il y en a un : un seul par image.
+    let image = 0;
+    const changer = (nouvelle: Vue) => {
+      vue = nouvelle;
+      image ||= requestAnimationFrame(() => {
+        image = 0;
+        dessiner();
+      });
     };
     const illustration = new Image();
     illustration.onload = () => {
@@ -58,11 +78,16 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       dessiner();
     };
     illustration.src = HUTTE;
-    const suivi = new ResizeObserver(dessiner);
+    const suivi = new ResizeObserver(cadrer);
     suivi.observe(canvas);
+    const arreter = suivreLesGestes(canvas, {
+      deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
+    });
     return () => {
       suivi.disconnect();
       illustration.onload = null;
+      arreter();
+      cancelAnimationFrame(image);
     };
   }, [carte, fonds]);
   return <canvas ref={toile} className={styles.carte} role="img" aria-label={`Carte du Monde ${carte.monde}, votre Foyer au milieu`} />;

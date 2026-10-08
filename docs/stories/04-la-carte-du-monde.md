@@ -207,6 +207,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0420 · Déplacer la carte à la souris
 **En tant que** joueur, **je veux** faire glisser la carte à la souris, **afin de** parcourir le Monde sur ordinateur.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Glisser en gardant le bouton appuyé déplace la carte, chaque Case suivant exactement le pointeur, redessinée au rythme de l'écran ; en deçà de 4 px, c'est un clic, pas un glissement. Le milieu de l'écran ne va pas plus loin que 2 Cases au-delà du bord du Monde, et la carte glisse encore le long de ce bord. Vérifié en vrai.
 - **Débloquée par** : US-0417
 - **Critères d'acceptation** :
   - Glisser en gardant le bouton appuyé déplace la carte, qui suit la souris sans à-coups.
