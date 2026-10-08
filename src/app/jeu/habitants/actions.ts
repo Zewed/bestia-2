@@ -4,7 +4,8 @@ import { refresh } from "next/cache";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
-import { ajouterUnHabitantAuMetier, enregistrerLeMetier, retirerUnHabitantDuMetier } from "@/monde/habitants";
+import { ajouterUnHabitantAuMetier, enregistrerLeMetier, renvoyerLHabitant, retirerUnHabitantDuMetier } from "@/monde/habitants";
+import { maintenant } from "@/temps/horloge";
 
 /** Le plus grand identifiant qu'une colonne integer de Postgres puisse tenir. */
 const IDENTIFIANT_MAX = 2_147_483_647;
@@ -72,5 +73,19 @@ export async function retirerDuMetier(metierId: string): Promise<void> {
   const { territoireId } = await exigerCompte("/jeu/habitants");
   if (territoireId === null || !metierValable(metierId)) return;
   await retirerUnHabitantDuMetier(getPool(), territoireId, metierId);
+  refresh();
+}
+
+/**
+ * US-0330 : le joueur renvoie un Habitant, une fois le renvoi confirmé sur sa ligne : il quitte le Territoire pour de
+ * bon, à l'heure du jeu, et un Récit le dit. La garde a mis le Territoire à l'heure : l'Entretien d'avant le renvoi est
+ * payé au nombre d'Habitants d'avant. Mêmes gardes que pour un Métier : un Habitant d'un autre Territoire n'est pas
+ * touché, et la page relue fait foi, à la place de la ligne retirée d'avance, même quand personne n'est parti.
+ */
+export async function renvoyerUnHabitant(habitantId: number): Promise<void> {
+  if (!entreeDuJeuOuverte()) return;
+  const { territoireId } = await exigerCompte("/jeu/habitants");
+  if (territoireId === null || !identifiantValable(habitantId)) return;
+  await renvoyerLHabitant(getPool(), territoireId, habitantId, maintenant());
   refresh();
 }

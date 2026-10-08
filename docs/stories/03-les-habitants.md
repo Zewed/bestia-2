@@ -326,9 +326,10 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0330 · Laisser partir un Habitant
 **En tant que** joueur, **je veux** pouvoir renvoyer un Habitant de moi-même, **afin de** réduire l'Entretien avant qu'une Famine ne s'installe.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). « Renvoyer » se trouve au bas du choix du Métier de chaque Habitant. Le premier toucher le change en « Confirmer le renvoi » ; le second renvoie l'Habitant. Un toucher ailleurs, Échap ou la perte du focus annulent, sans modale. La ligne, les compteurs, le bandeau des sans Métier et l'Entretien baissent aussitôt, et les Stocks ne bougent pas. Un Récit garde la trace : « Brune a quitté le Territoire », puis « Brune, Chasseur, a quitté le Territoire à la demande du chef. » Le dernier Habitant peut aussi être renvoyé. Renvoyer en pleine Famine peut la finir aussitôt. Vérifié en vrai.
 - **Débloquée par** : US-0326
 - **Critères d'acceptation** :
-  - Le joueur peut renvoyer un Habitant de lui-même (à décider).
+  - Le joueur peut renvoyer un Habitant de lui-même (décidé le 2026-10-08).
   - Si c'est possible, une confirmation est demandée et le départ est définitif.
   - Le nombre d'Habitants, les effectifs et l'Entretien baissent aussitôt.
   - Un récit garde la trace du départ.

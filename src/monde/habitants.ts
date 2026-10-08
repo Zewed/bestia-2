@@ -4,6 +4,7 @@ import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { ENTRETIEN_DU_TERRITOIRE } from "./production";
+import { ecrireUnRecit, type NouveauRecit } from "./recits";
 
 /**
  * Ce que fait un Habitant (US-0303). À ce stade, il est toujours libre : au Foyer et disponible.
@@ -108,6 +109,53 @@ export async function ajouterUnHabitant(base: Pool | PoolClient, territoireId: n
     arriveLe,
   ]);
   return rows[0].id;
+}
+
+/** US-0330 : efface l'Habitant $2 du Territoire $1, et rend son prénom et le nom de son Métier (null sans Métier). */
+const RENVOYER = `
+  with parti as (delete from habitant where id = $2 and territoire_id = $1 returning prenom, metier)
+  select parti.prenom, m.nom as metier from parti left join metier m on m.id = parti.metier`;
+
+/**
+ * US-0330 : le Récit d'un Habitant renvoyé par le chef, daté du renvoi : « Brune a quitté le Territoire », puis son
+ * Métier (« sans Métier » s'il n'en a pas) et que le chef l'a voulu. Comme pour l'accueil, la phrase ne donne de genre
+ * à personne. Rien ne le rattache aux départs de Famine (US-0327) : leur Récit ne le reprend jamais, et le retour du
+ * joueur ne le compte pas parmi eux.
+ */
+export function recitDeRenvoi(prenom: string, metier: string | null, instant: Date): NouveauRecit {
+  return {
+    titre: `${prenom} a quitté le Territoire`,
+    texte: `${prenom}, ${metier ?? "sans Métier"}, a quitté le Territoire à la demande du chef.`,
+    survenuLe: instant,
+  };
+}
+
+/**
+ * US-0330 : le chef renvoie l'Habitant `habitantId` du Territoire, à l'instant `instant` (l'heure du jeu) : il le quitte
+ * pour de bon, et un Récit le dit ; le tout en une transaction. Le nombre d'Habitants, les effectifs par Métier et
+ * l'Entretien baissent aussitôt ; le dernier Habitant peut partir aussi, et le Territoire reste alors sans Habitant
+ * (US-0329). Rend false sans rien changer pour un Habitant d'un autre Territoire, ou déjà parti : renvoyé plusieurs
+ * fois en même temps, il ne part qu'une fois, d'un seul Récit.
+ *
+ * Comme pour l'accueil (US-0338), le Territoire est tenu d'abord, comme le temps qui avance le tient : un renvoi et le
+ * calcul du temps (un départ de Famine) se suivent, et le calcul compte les Habitants d'avant ou d'après le renvoi,
+ * jamais un mélange des deux.
+ */
+export async function renvoyerLHabitant(pool: Pool, territoireId: number, habitantId: number, instant: Date): Promise<boolean> {
+  const client = await pool.connect();
+  try {
+    await client.query("begin");
+    await client.query("select 1 from territoire where id = $1 for no key update", [territoireId]);
+    const { rows } = await client.query<{ prenom: string; metier: string | null }>(RENVOYER, [territoireId, habitantId]);
+    if (rows[0]) await ecrireUnRecit(client, territoireId, recitDeRenvoi(rows[0].prenom, rows[0].metier, instant));
+    await client.query("commit");
+    return rows.length > 0;
+  } catch (erreur) {
+    await client.query("rollback").catch(() => {});
+    throw erreur;
+  } finally {
+    client.release();
+  }
 }
 
 /** Le nombre d'Habitants d'un Territoire, pour le compteur de la barre du haut (US-0304). */

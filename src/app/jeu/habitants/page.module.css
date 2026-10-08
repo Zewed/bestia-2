@@ -310,6 +310,30 @@
   cursor: pointer;
 }
 
+/*
+ * US-0330 : sous les Métiers au choix, à part et à droite, « Renvoyer », discret : du texte dans la couleur d'alerte,
+ * sans cadre ; après un premier toucher, « Confirmer le renvoi », plein, dans la couleur d'alerte.
+ */
+.renvoyer {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin-top: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: var(--arrondi-petit);
+  background: transparent;
+  color: var(--mauvais);
+  font: inherit;
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.renvoyer[data-confirmer] {
+  background: var(--mauvais);
+  color: var(--blanc-chaud);
+}
+
 @media (hover: hover) {
   .choisir:hover,
   .metierAuChoix:enabled:hover,
@@ -317,11 +341,16 @@
     border-color: var(--galet);
     background: var(--bloc-3);
   }
+
+  .renvoyer:not([data-confirmer]):hover {
+    background: var(--mauvais-doux);
+  }
 }
 
 .choisir:focus-visible,
 .metierAuChoix:focus-visible,
-.sansMetierAuChoix:focus-visible {
+.sansMetierAuChoix:focus-visible,
+.renvoyer:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
 }

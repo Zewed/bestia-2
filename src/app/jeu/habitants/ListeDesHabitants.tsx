@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useState, useTransition } from "react";
-import { donnerUnMetier, retirerLeMetier } from "./actions";
+import { type MouseEvent, useEffect, useId, useRef, useState, useTransition } from "react";
+import { donnerUnMetier, renvoyerUnHabitant, retirerLeMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
 import styles from "./page.module.css";
 
@@ -22,6 +22,9 @@ type Effectif = { id: string; nom: string; icone: string | null; metier: string 
 
 /** US-0314 : le paramètre de l'adresse qui porte le filtre. */
 const PARAMETRE_DU_FILTRE = "metier";
+
+/** US-0330 : « de Brune », « d'Arno ». */
+const de = (prenom: string) => (/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.test(prenom) ? `d'${prenom}` : `de ${prenom}`);
 
 /**
  * US-0309 : les effectifs de la liste même, Habitant par Habitant : ceux sans Métier d'abord, puis chaque
@@ -59,9 +62,16 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  *
  * US-0329 : sans aucun Habitant, la liste laisse place à une seule phrase : des Voyageurs finiront par passer aux
  * portes.
+ *
+ * US-0330 : sous les Métiers dépliés, à part et en dernier, « Renvoyer » fait partir l'Habitant pour de bon, après une
+ * confirmation sur place : le premier toucher ne fait que changer le bouton en « Confirmer le renvoi », dans la couleur
+ * d'alerte ; le second renvoie. Un toucher ailleurs, le focus ailleurs ou Échap annulent ; le second clic d'un double
+ * clic ne confirme pas. La ligne part aussitôt, et avec elle les compteurs et le bandeau des sans Métier
+ * (HabitantsMontres), le temps que l'action le renvoie et relise la page, qui fait alors foi ; la main passe à la ligne
+ * qui prend sa place, ou à celle d'avant. Le dernier Habitant se renvoie aussi : la phrase d'US-0329 prend sa place.
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
-  const [affiches, montrerLeMetier] = useHabitantsMontres(habitants);
+  const [affiches, montrerDAvance] = useHabitantsMontres(habitants);
   const recherche = useSearchParams();
   const effectifs = effectifsParMetier(affiches, metiers);
   const filtre = effectifs.find((e) => e.id === recherche.get(PARAMETRE_DU_FILTRE)) ?? null;
@@ -71,6 +81,9 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
   const prefixe = useId();
   const idBouton = (id: number) => `${prefixe}-choisir-${id}`;
   const idChoix = (id: number) => `${prefixe}-metiers-${id}`;
+  // US-0330 : l'Habitant dont le renvoi attend sa confirmation, et le bouton qui la donne.
+  const [aRenvoyer, setARenvoyer] = useState<number | null>(null);
+  const boutonDeConfirmation = useRef<HTMLButtonElement>(null);
 
   // Échap referme le dépliant ouvert sans rien changer, et rend la main à son bouton.
   useEffect(() => {
@@ -84,14 +97,52 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     return () => document.removeEventListener("keydown", fermer);
   }, [ouvert, prefixe]);
 
+  // US-0330 : un toucher ou le focus ailleurs que sur « Confirmer le renvoi », ou Échap, annulent la confirmation.
+  useEffect(() => {
+    if (aRenvoyer === null) return;
+    const ailleurs = (evenement: Event) => {
+      if (!boutonDeConfirmation.current?.contains(evenement.target as Node)) setARenvoyer(null);
+    };
+    const echap = (evenement: KeyboardEvent) => {
+      if (evenement.key === "Escape") setARenvoyer(null);
+    };
+    document.addEventListener("pointerdown", ailleurs);
+    document.addEventListener("focusin", ailleurs);
+    document.addEventListener("keydown", echap);
+    return () => {
+      document.removeEventListener("pointerdown", ailleurs);
+      document.removeEventListener("focusin", ailleurs);
+      document.removeEventListener("keydown", echap);
+    };
+  }, [aRenvoyer]);
+
   /** Donne le Métier `metier` à l'Habitant, ou le remet sans Métier (null, US-0311). */
   function donner(habitant: HabitantAffiche, metier: MetierAuChoix | null) {
     setOuvert(null);
     // Le Métier touché s'en va avec le dépliant : la main revient au bouton de la ligne.
     document.getElementById(idBouton(habitant.id))?.focus();
     demarrer(async () => {
-      montrerLeMetier({ id: habitant.id, metier: metier?.nom ?? null });
+      montrerDAvance({ id: habitant.id, metier: metier?.nom ?? null });
       await (metier ? donnerUnMetier(habitant.id, metier.id) : retirerLeMetier(habitant.id));
+    });
+  }
+
+  /**
+   * US-0330 : le toucher sur « Renvoyer » : le premier demande la confirmation, le second renvoie l'Habitant, sauf s'il
+   * n'est que le second clic d'un double clic.
+   */
+  function renvoyer(habitant: HabitantAffiche, evenement: MouseEvent) {
+    if (aRenvoyer !== habitant.id) return setARenvoyer(habitant.id);
+    if (evenement.detail > 1) return;
+    setARenvoyer(null);
+    setOuvert(null);
+    // La ligne s'en va avec le bouton : la main passe à celle qui prend sa place, ou à celle d'avant.
+    const rang = montres.indexOf(habitant);
+    const voisin = montres[rang + 1] ?? montres[rang - 1];
+    if (voisin) document.getElementById(idBouton(voisin.id))?.focus();
+    demarrer(async () => {
+      montrerDAvance({ id: habitant.id, renvoye: true });
+      await renvoyerUnHabitant(habitant.id);
     });
   }
 
@@ -142,6 +193,7 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
         <ul className={styles.habitants}>
           {montres.map((h) => {
             const deplie = ouvert === h.id;
+            const confirmer = deplie && aRenvoyer === h.id;
             return (
               <li key={h.id} className={styles.habitant}>
                 <span className={styles.prenom}>{h.prenom}</span>
@@ -184,6 +236,19 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
                       </button>
                     ) : null}
                   </div>
+                ) : null}
+                {/* US-0330 : à part des Métiers, en dernier ; un lecteur d'écran entend aussi qui il renvoie. */}
+                {deplie ? (
+                  <button
+                    ref={confirmer ? boutonDeConfirmation : undefined}
+                    type="button"
+                    className={styles.renvoyer}
+                    aria-label={confirmer ? `Confirmer le renvoi ${de(h.prenom)}` : `Renvoyer ${h.prenom}`}
+                    data-confirmer={confirmer ? "" : undefined}
+                    onClick={(evenement) => renvoyer(h, evenement)}
+                  >
+                    {confirmer ? "Confirmer le renvoi" : "Renvoyer"}
+                  </button>
                 ) : null}
               </li>
             );

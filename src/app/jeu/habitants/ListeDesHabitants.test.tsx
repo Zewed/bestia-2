@@ -10,6 +10,7 @@ const actions = vi.hoisted(() => {
     enCours,
     donnerUnMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
     retirerLeMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+    renvoyerUnHabitant: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
   };
 });
 vi.mock("./actions", () => actions);
@@ -63,6 +64,7 @@ afterEach(async () => {
   cleanup();
   actions.donnerUnMetier.mockClear();
   actions.retirerLeMetier.mockClear();
+  actions.renvoyerUnHabitant.mockClear();
   ouvrir();
 });
 
@@ -534,5 +536,173 @@ describe("un Territoire sans Habitant (US-0329)", () => {
       expect(container.textContent, filtre).toBe(AUCUN);
       cleanup();
     }
+  });
+});
+
+describe("renvoyer un Habitant depuis sa ligne (US-0330)", () => {
+  /** Le bouton de renvoi de la ligne d'un Habitant, qu'il dise « Renvoyer » ou « Confirmer le renvoi » ; null, dépliant fermé. */
+  const renvoi = (prenom: string) =>
+    within(ligne(prenom)).queryByRole("button", { name: new RegExp(`^(Renvoyer ${prenom}|Confirmer le renvoi (de |d')${prenom})$`) });
+  /** Ce que dit le bouton de renvoi d'un Habitant, et s'il est dans la couleur d'alerte. */
+  const etatDuRenvoi = (prenom: string) => [renvoi(prenom)?.textContent, renvoi(prenom)?.hasAttribute("data-confirmer")];
+  /** Les prénoms de la liste, dans son ordre. */
+  const prenoms = () =>
+    within(listeDesHabitants())
+      .getAllByRole("listitem")
+      .map((li) => li.querySelector("span")!.textContent);
+  /** Déplie les Métiers de l'Habitant, touche « Renvoyer », puis confirme. */
+  async function renvoyer(prenom: string) {
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier(prenom));
+    await utilisateur.click(renvoi(prenom)!);
+    await utilisateur.click(renvoi(prenom)!);
+  }
+
+  it("met « Renvoyer » sous les Métiers dépliés, à part et en dernier, qui dit pour un lecteur d'écran qui il renvoie ; nulle part ailleurs", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    expect(screen.queryByRole("button", { name: /Renvoyer/ })).toBeNull();
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    const bouton = renvoi("Cael")!;
+    expect(bouton.getAttribute("aria-label")).toBe("Renvoyer Cael");
+    expect(etatDuRenvoi("Cael")).toEqual(["Renvoyer", false]);
+    // À part des Métiers au choix : hors de leur groupe, juste après lui, en dernier sur la ligne.
+    const groupe = within(ligne("Cael")).getByRole("group", { name: "Métier de Cael" });
+    expect(groupe.contains(bouton)).toBe(false);
+    expect(groupe.nextElementSibling).toBe(bouton);
+    expect(ligne("Cael").lastElementChild).toBe(bouton);
+    expect(auChoix("Cael").map((b) => b.textContent)).toEqual([...METIERS.map((m) => m.nom), "Sans Métier"]);
+    // Un Habitant sans Métier se renvoie de même ; un seul dépliant, donc un seul « Renvoyer », à la fois.
+    await utilisateur.click(choisir("Arno"));
+    expect(renvoi("Arno")?.getAttribute("aria-label")).toBe("Renvoyer Arno");
+    expect(renvoi("Cael")).toBeNull();
+  });
+
+  it("le premier toucher ne renvoie personne : le bouton devient « Confirmer le renvoi », dans la couleur d'alerte, et garde la main", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Brune"));
+    await utilisateur.click(renvoi("Brune")!);
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+    expect(prenoms()).toEqual(["Arno", "Brune", "Cael"]);
+    expect(etatDuRenvoi("Brune")).toEqual(["Confirmer le renvoi", true]);
+    // Le bouton dit toujours, pour un lecteur d'écran, qui il renvoie, et « de » s'accorde au prénom.
+    expect(renvoi("Brune")!.getAttribute("aria-label")).toBe("Confirmer le renvoi de Brune");
+    expect(document.activeElement).toBe(renvoi("Brune"));
+    await utilisateur.click(deplier("Arno"));
+    await utilisateur.click(renvoi("Arno")!);
+    expect(renvoi("Arno")!.getAttribute("aria-label")).toBe("Confirmer le renvoi d'Arno");
+  });
+
+  it("le second toucher renvoie l'Habitant : sa ligne part aussitôt avec son dépliant, les compteurs suivent, et l'action reçoit l'Habitant", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 2", "Chasseur 1"]));
+    await renvoyer("Cael");
+    expect(actions.renvoyerUnHabitant).toHaveBeenCalledExactlyOnceWith(42);
+    expect(actions.donnerUnMetier).not.toHaveBeenCalled();
+    expect(actions.retirerLeMetier).not.toHaveBeenCalled();
+    // L'action n'a pas encore répondu : la ligne est déjà partie.
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+    expect(effectifs()).toEqual(expect.arrayContaining(["Sans Métier 2", "Chasseur 0"]));
+    expect(screen.queryByRole("group")).toBeNull();
+    // La main passe à la ligne d'avant, la dernière qui reste.
+    expect(document.activeElement).toBe(choisir("Brune"));
+  });
+
+  it("donne la main à la ligne qui prend la place de l'Habitant renvoyé", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await renvoyer("Arno");
+    expect(prenoms()).toEqual(["Brune", "Cael"]);
+    expect(document.activeElement).toBe(choisir("Brune"));
+  });
+
+  it("ne renvoie personne d'un double clic sur « Renvoyer » : la confirmation reste demandée", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.dblClick(renvoi("Cael")!);
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+    expect(etatDuRenvoi("Cael")).toEqual(["Confirmer le renvoi", true]);
+    await utilisateur.click(renvoi("Cael")!);
+    expect(actions.renvoyerUnHabitant).toHaveBeenCalledExactlyOnceWith(42);
+  });
+
+  it("un toucher ailleurs annule la confirmation ; le toucher suivant sur « Renvoyer » la redemande", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(renvoi("Cael")!);
+    await utilisateur.click(document.body);
+    expect(etatDuRenvoi("Cael")).toEqual(["Renvoyer", false]);
+    await utilisateur.click(renvoi("Cael")!);
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+    expect(etatDuRenvoi("Cael")).toEqual(["Confirmer le renvoi", true]);
+  });
+
+  it("au clavier, passer à un autre bouton annule la confirmation, et Échap la referme avec le dépliant", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    renvoi("Cael")!.focus();
+    await utilisateur.keyboard("{Enter}");
+    expect(etatDuRenvoi("Cael")).toEqual(["Confirmer le renvoi", true]);
+    await utilisateur.tab({ shift: true });
+    expect(etatDuRenvoi("Cael")).toEqual(["Renvoyer", false]);
+    renvoi("Cael")!.focus();
+    await utilisateur.keyboard("{Enter}");
+    await utilisateur.keyboard("{Escape}");
+    expect(renvoi("Cael")).toBeNull();
+    expect(document.activeElement).toBe(deplier("Cael"));
+    await utilisateur.click(deplier("Cael"));
+    expect(etatDuRenvoi("Cael")).toEqual(["Renvoyer", false]);
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+  });
+
+  it("au clavier, Entrée puis Entrée renvoie l'Habitant", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Brune"));
+    renvoi("Brune")!.focus();
+    await utilisateur.keyboard("{Enter}");
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+    await utilisateur.keyboard("{Enter}");
+    expect(actions.renvoyerUnHabitant).toHaveBeenCalledExactlyOnceWith(41);
+    expect(prenoms()).toEqual(["Arno", "Cael"]);
+    expect(document.activeElement).toBe(deplier("Cael"));
+  });
+
+  it("donner un Métier ou refermer le dépliant annule la confirmation", async () => {
+    render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(renvoi("Cael")!);
+    await utilisateur.click(deplier("Cael"));
+    await utilisateur.click(deplier("Cael"));
+    expect(etatDuRenvoi("Cael")).toEqual(["Renvoyer", false]);
+    await utilisateur.click(renvoi("Cael")!);
+    await utilisateur.click(within(ligne("Cael")).getByRole("button", { name: "Mineur" }));
+    expect(actions.donnerUnMetier).toHaveBeenCalledExactlyOnceWith(42, "mineur");
+    expect(actions.renvoyerUnHabitant).not.toHaveBeenCalled();
+    expect(prenoms()).toEqual(["Arno", "Brune", "Cael"]);
+  });
+
+  it("ne remontre pas l'Habitant une fois la page relue sans lui, et le rend quand la page relue le garde", async () => {
+    const { rerender } = render(<ListeDesHabitants habitants={HABITANTS} metiers={METIERS} />);
+    await renvoyer("Cael");
+    rerender(<ListeDesHabitants habitants={HABITANTS.slice(0, 2)} metiers={METIERS} />);
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+    await renvoyer("Brune");
+    expect(prenoms()).toEqual(["Arno"]);
+    // L'action s'achève sans que la page ait changé : Brune est toujours là.
+    await finirLesActions();
+    expect(prenoms()).toEqual(["Arno", "Brune"]);
+  });
+
+  it("renvoyer le dernier Habitant laisse aussitôt la phrase d'un Territoire sans Habitant (US-0329)", async () => {
+    const { container } = render(<ListeDesHabitants habitants={[HABITANTS[2]]} metiers={METIERS} />);
+    await renvoyer("Cael");
+    expect(actions.renvoyerUnHabitant).toHaveBeenCalledExactlyOnceWith(42);
+    expect(container.textContent).toBe("Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes.");
   });
 });

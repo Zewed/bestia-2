@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { habitantsDuTerritoire } from "@/monde/habitants";
+import { recitsDuTerritoire } from "@/monde/recits";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; l'action écrit pour de bon dans la base de test.
@@ -12,9 +13,9 @@ const base = vi.hoisted(() => ({ pool: null as Pool | null }));
 vi.mock("@/db", async (original) => ({ ...(await original<object>()), getPool: () => base.pool }));
 vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
-import { ajouterAuMetier, donnerUnMetier, retirerDuMetier, retirerLeMetier } from "./actions";
+import { ajouterAuMetier, donnerUnMetier, renvoyerUnHabitant, retirerDuMetier, retirerLeMetier } from "./actions";
 
-describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, sur base (US-0308, US-0310, US-0311, US-0312, US-0315)", () => {
+describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, ou le renvoyer, sur base (US-0308, US-0310, US-0311, US-0312, US-0315, US-0330)", () => {
   let pool: Pool;
   const lancement = `donner-metier-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -102,6 +103,24 @@ describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant,
     const lus = (await metiers(joueur)).map(([, metier]) => metier);
     expect(lus.filter((metier) => metier === null)).toEqual([]);
     expect(lus).toHaveLength(3);
+  });
+
+  it("ne renvoie que les Habitants du joueur connecté, jamais ceux d'un autre, même en envoyant leur identifiant ; un Récit dit le départ (US-0330)", async () => {
+    const [joueur, voisin] = [await naitre(), await naitre()];
+    const [sien] = (await metiers(joueur)).map(([id]) => id as number);
+    const [autre] = (await metiers(voisin)).map(([id]) => id as number);
+    garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: joueur, recitLu: true });
+
+    await renvoyerUnHabitant(autre);
+    expect(await metiers(voisin)).toHaveLength(3);
+    expect([await recitsDuTerritoire(pool, joueur), await recitsDuTerritoire(pool, voisin)]).toEqual([[], []]);
+
+    const prenom = (await habitantsDuTerritoire(pool, joueur)).find((h) => h.id === sien)!.prenom;
+    await renvoyerUnHabitant(sien);
+    expect((await metiers(joueur)).map(([id]) => id)).not.toContain(sien);
+    expect(await metiers(joueur)).toHaveLength(2);
+    expect((await recitsDuTerritoire(pool, joueur)).map((r) => r.titre)).toEqual([`${prenom} a quitté le Territoire`]);
+    expect(await metiers(voisin)).toHaveLength(3);
   });
 
   it("refuse sans bruit un Métier qui n'existe pas", async () => {

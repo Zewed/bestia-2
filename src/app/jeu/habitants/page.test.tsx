@@ -39,7 +39,7 @@ const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
-vi.mock("./actions", () => ({ donnerUnMetier: vi.fn(), retirerLeMetier: vi.fn(), ajouterAuMetier: vi.fn(), retirerDuMetier: vi.fn() }));
+vi.mock("./actions", () => ({ donnerUnMetier: vi.fn(), retirerLeMetier: vi.fn(), ajouterAuMetier: vi.fn(), retirerDuMetier: vi.fn(), renvoyerUnHabitant: vi.fn() }));
 // US-0314 : l'adresse de la page, que la liste lit pour son filtre, dès le rendu sur le serveur.
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
@@ -667,6 +667,23 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(sansMetier).toContain("font: inherit;");
     expect(css).toMatch(/\.sansMetierAuChoix:hover/);
     expect(css).toMatch(/\.sansMetierAuChoix:focus-visible/);
+  });
+
+  it("met « Renvoyer » à part sous le dépliant, discret, à droite et dans la couleur d'alerte ; « Confirmer le renvoi » plein, en alerte (US-0330)", () => {
+    const renvoyer = regle(".renvoyer");
+    expect(renvoyer).toContain("grid-column: 1 / -1;");
+    expect(renvoyer).toContain("justify-self: end;");
+    expect(renvoyer).toContain("background: transparent;");
+    expect(renvoyer).toContain("color: var(--mauvais);");
+    expect(renvoyer).toContain("cursor: pointer;");
+    expect(renvoyer).toContain("font: inherit;");
+    // Loin des Métiers au choix, pour ne pas toucher l'un pour l'autre.
+    expect(Number(renvoyer.match(/margin-top: (\d+)px;/)?.[1])).toBeGreaterThanOrEqual(8);
+    const confirmer = regle(".renvoyer[data-confirmer]");
+    expect(confirmer).toContain("background: var(--mauvais);");
+    expect(confirmer).toContain("color: var(--blanc-chaud);");
+    expect(css).toMatch(/\.renvoyer:not\(\[data-confirmer\]\):hover/);
+    expect(regle(".renvoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 
   it("fait passer les compteurs à la ligne sur un écran étroit, chacun son icône à sa taille, et rien qui ne colle au défilement (US-0309)", () => {

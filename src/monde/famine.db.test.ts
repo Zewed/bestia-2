@@ -8,7 +8,7 @@ import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { DEPART_DE_FAMINE, departsNonLus, famineDepuis, recitDesDeparts } from "./famine";
-import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
+import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, renvoyerLHabitant } from "./habitants";
 import { ecrireUnRecit, marquerUnRecitLu } from "./recits";
 import { fixerStock } from "./stocks";
 
@@ -504,6 +504,46 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
       expect((await recitsDeFin(t.territoireId, t.ne)).map((r) => r.texte)).toEqual([
         "La Nourriture paie de nouveau l'Entretien. La Famine a duré 2 h 30 ; 2 Habitants ont quitté le Territoire.",
         "La Nourriture paie de nouveau l'Entretien. La Famine a duré 7 h ; 7 Habitants ont quitté le Territoire.",
+      ]);
+    });
+  });
+
+  describe("renvoyer un Habitant pendant une Famine (US-0330)", () => {
+    /** L'identifiant de l'Habitant du Territoire qui porte ce prénom. */
+    const habitant = async (territoireId: number, prenom: string) =>
+      (await pool.query<{ id: number }>("select id from habitant where territoire_id = $1 and prenom = $2", [territoireId, prenom])).rows[0].id;
+
+    it("n'est pas un départ de Famine : son Récit reste à part, les départs de Famine écrivent le leur, et le retour ne compte qu'eux", async () => {
+      const t = await vingtHeures();
+      await peupler(t.territoireId, VINGT);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 20.5 * HEURE) });
+      // H20, bûcheron, renvoyé par le chef au milieu de la Famine : dix-neuf Habitants ne sont toujours pas nourris.
+      expect(await renvoyerLHabitant(pool, t.territoireId, await habitant(t.territoireId, "H20"), apres(t.ne, 20.5 * HEURE))).toBe(true);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 22 * HEURE) });
+      const partis = await departs(t.territoireId, t.ne);
+      expect(partis.map((d) => [d.prenom, d.instant])).toEqual([
+        ["H14", us(21)],
+        ["H11", us(22)],
+      ]);
+      expect(await recitsDeFamine(t.territoireId, t.ne)).toEqual([recitAttendu(t.ne, partis)]);
+      const { rows } = await pool.query("select titre, texte from recit where territoire_id = $1 and titre = 'H20 a quitté le Territoire'", [t.territoireId]);
+      expect(rows).toEqual([{ titre: "H20 a quitté le Territoire", texte: "H20, Bûcheron, a quitté le Territoire à la demande du chef." }]);
+      expect(await departsNonLus(pool, t.territoireId)).toMatchObject({ habitants: 2 });
+    });
+
+    it("renvoyer assez d'Habitants finit la Famine aussitôt : plus aucun départ, et la fin ne compte que les départs de Famine", async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 21.5 * HEURE) });
+      expect(await restants(t.territoireId)).toHaveLength(19);
+      // Le chef renvoie huit Habitants : les onze qui restent mangent 22 par heure, ce que la prairie produit.
+      const { rows } = await pool.query<{ id: number }>("select id from habitant where territoire_id = $1 order by id desc limit 8", [t.territoireId]);
+      for (const { id } of rows) expect(await renvoyerLHabitant(pool, t.territoireId, id, apres(t.ne, 21.5 * HEURE))).toBe(true);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 30 * HEURE) });
+      expect(await restants(t.territoireId)).toHaveLength(11);
+      expect((await departs(t.territoireId, t.ne)).map((d) => d.instant)).toEqual([us(21)]);
+      expect(await debut(t.territoireId, t.ne)).toBeNull();
+      expect(await recitsDeFin(t.territoireId, t.ne)).toEqual([
+        { texte: "La Nourriture paie de nouveau l'Entretien. La Famine a duré 1 h 30 ; 1 Habitant a quitté le Territoire.", instant: us(21.5) },
       ]);
     });
   });

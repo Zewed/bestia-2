@@ -22,8 +22,11 @@ import {
   nombreSansMetier,
   placesDuTerritoire,
   plusDePlace,
+  recitDeRenvoi,
+  renvoyerLHabitant,
   retirerUnHabitantDuMetier,
 } from "./habitants";
+import { recitsDuTerritoire } from "./recits";
 import { stocksDuTerritoire } from "./stocks";
 import { nombreDeVoyageurs } from "./voyageurs";
 
@@ -35,7 +38,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, US-0329, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, US-0329, US-0330, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -452,5 +455,89 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     expect(await famineDepuis(pool, t)).toBeNull();
     expect(await nombreDHabitants(pool, t)).toBe(0);
     expect(await nombreDeVoyageurs(pool, t)).toBeGreaterThan(0);
+  });
+
+  describe("renvoyer un Habitant (US-0330)", () => {
+    /** Un Territoire tout neuf, ses trois Habitants nommés Arno, Brune (Chasseur) et Cael, du premier arrivé au dernier. */
+    const naitre = async () => {
+      const compte = await nouveauCompte();
+      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+      const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      const [arno, brune, cael] = (await habitants(t)).map((h) => h.id);
+      await pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [arno, "Arno", null]);
+      await pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [brune, "Brune", "chasseur"]);
+      await pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [cael, "Cael", null]);
+      return { t, arno, brune, cael };
+    };
+    /** Les Récits du Territoire, du plus récent au plus ancien : titre, texte, heure du jeu, et s'il a été lu. */
+    const recits = async (territoireId: number) =>
+      (await recitsDuTerritoire(pool, territoireId)).map(({ titre, texte, survenuLe, luLe }) => ({ titre, texte, survenuLe, lu: luLe !== null }));
+    const INSTANT = new Date("2026-10-08T12:05:00Z");
+
+    it("le fait partir pour de bon : le nombre d'Habitants, les effectifs par Métier et l'Entretien baissent aussitôt", async () => {
+      const { t, brune } = await naitre();
+      const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
+      const avant = await stocks();
+      expect(await renvoyerLHabitant(pool, t, brune, INSTANT)).toBe(true);
+      expect((await habitantsDuTerritoire(pool, t)).map((h) => [h.prenom, h.metier])).toEqual([
+        ["Arno", null],
+        ["Cael", null],
+      ]);
+      expect(await nombreDHabitants(pool, t)).toBe(2);
+      expect(await nombreSansMetier(pool, t)).toBe(2);
+      expect(await entretien(t)).toEqual({ habitants: 2, parHabitant: ENTRETIEN_HABITANT_PAR_HEURE, parHeure: 2 * ENTRETIEN_HABITANT_PAR_HEURE });
+      // Rien ne se paie, ni ne se rend.
+      expect(await stocks()).toEqual(avant);
+    });
+
+    it("écrit un Récit non lu, daté du renvoi, qui dit son Métier et que le chef l'a renvoyé, sans lui donner de genre", async () => {
+      const { t, arno, brune } = await naitre();
+      await renvoyerLHabitant(pool, t, brune, INSTANT);
+      expect(await recits(t)).toEqual([
+        { titre: "Brune a quitté le Territoire", texte: "Brune, Chasseur, a quitté le Territoire à la demande du chef.", survenuLe: INSTANT, lu: false },
+      ]);
+      const plusTard = new Date(INSTANT.getTime() + 60_000);
+      await renvoyerLHabitant(pool, t, arno, plusTard);
+      expect((await recits(t))[0]).toEqual({
+        titre: "Arno a quitté le Territoire",
+        texte: "Arno, sans Métier, a quitté le Territoire à la demande du chef.",
+        survenuLe: plusTard,
+        lu: false,
+      });
+      expect(recitDeRenvoi("Ines", "Bûcheron", INSTANT)).toEqual({
+        titre: "Ines a quitté le Territoire",
+        texte: "Ines, Bûcheron, a quitté le Territoire à la demande du chef.",
+        survenuLe: INSTANT,
+      });
+    });
+
+    it("renvoie aussi le dernier Habitant : le Territoire reste sans Habitant (US-0329)", async () => {
+      const { t, arno, brune, cael } = await naitre();
+      for (const id of [arno, brune, cael]) expect(await renvoyerLHabitant(pool, t, id, INSTANT)).toBe(true);
+      expect(await nombreDHabitants(pool, t)).toBe(0);
+      expect(await entretien(t)).toEqual({ habitants: 0, parHabitant: ENTRETIEN_HABITANT_PAR_HEURE, parHeure: 0 });
+      expect(await recits(t)).toHaveLength(3);
+    });
+
+    it("ne touche jamais à l'Habitant d'un autre Territoire, quel que soit l'identifiant envoyé, ni à un Habitant déjà parti", async () => {
+      const [joueur, voisin] = [await naitre(), await naitre()];
+      expect(await renvoyerLHabitant(pool, joueur.t, voisin.arno, INSTANT)).toBe(false);
+      expect(await renvoyerLHabitant(pool, joueur.t, -1, INSTANT)).toBe(false);
+      expect(await nombreDHabitants(pool, voisin.t)).toBe(3);
+      expect(await nombreDHabitants(pool, joueur.t)).toBe(3);
+      expect([await recits(joueur.t), await recits(voisin.t)]).toEqual([[], []]);
+      expect(await renvoyerLHabitant(pool, joueur.t, joueur.arno, INSTANT)).toBe(true);
+      expect(await renvoyerLHabitant(pool, joueur.t, joueur.arno, INSTANT)).toBe(false);
+      expect(await nombreDHabitants(pool, joueur.t)).toBe(2);
+      expect(await recits(joueur.t)).toHaveLength(1);
+    });
+
+    it("renvoyé plusieurs fois en même temps (un double clic, deux appareils), il ne part qu'une fois, d'un seul Récit", async () => {
+      const { t, cael } = await naitre();
+      const renvois = await Promise.all(Array.from({ length: 4 }, () => renvoyerLHabitant(pool, t, cael, INSTANT)));
+      expect(renvois.filter(Boolean)).toHaveLength(1);
+      expect(await nombreDHabitants(pool, t)).toBe(2);
+      expect(await recits(t)).toHaveLength(1);
+    });
   });
 });

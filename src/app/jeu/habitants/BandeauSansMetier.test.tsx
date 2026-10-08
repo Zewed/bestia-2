@@ -10,6 +10,7 @@ const actions = vi.hoisted(() => {
     enCours,
     donnerUnMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
     retirerLeMetier: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
+    renvoyerUnHabitant: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))),
   };
 });
 vi.mock("./actions", () => actions);
@@ -47,6 +48,7 @@ afterEach(async () => {
   cleanup();
   actions.donnerUnMetier.mockClear();
   actions.retirerLeMetier.mockClear();
+  actions.renvoyerUnHabitant.mockClear();
 });
 
 /** Le bandeau, s'il est là, en ses morceaux de texte : le paragraphe qui porte le lien « Voir ». */
@@ -126,5 +128,18 @@ describe("le bandeau des Habitants sans Métier (US-0313)", () => {
     await utilisateur.click(within(ligne("Arno")).getByRole("button", { name: "Mineur" }));
     await utilisateur.click(within(ligne("Arno")).getByRole("button", { name: "Sans Métier" }));
     expect(bandeau()).toEqual(["1 Habitant sans Métier", "Voir"]);
+  });
+
+  it("baisse dès qu'un Habitant sans Métier est renvoyé depuis la liste, et disparaît avec le dernier (US-0330)", async () => {
+    render(page(HABITANTS));
+    const utilisateur = userEvent.setup();
+    for (const prenom of ["Arno", "Brune"]) {
+      await utilisateur.click(within(ligne(prenom)).getByRole("button", { name: "Choisir un Métier" }));
+      await utilisateur.click(within(ligne(prenom)).getByRole("button", { name: `Renvoyer ${prenom}` }));
+      await utilisateur.click(within(ligne(prenom)).getByRole("button", { name: /^Confirmer le renvoi/ }));
+      // L'action n'a pas encore répondu.
+      expect(bandeau()).toEqual(prenom === "Arno" ? ["1 Habitant sans Métier", "Voir"] : null);
+    }
+    expect(actions.renvoyerUnHabitant.mock.calls).toEqual([[40], [41]]);
   });
 });
