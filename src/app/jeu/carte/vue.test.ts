@@ -8,7 +8,7 @@ const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
 const OUVERTE = vueSurLeFoyer(FOYER, 800, 600);
 /** Des Cases en colonnes, comme la carte les reçoit du serveur. */
-const carteDe = (cases: Coordonnees[]) => ({ teintes: ["prairie"], cases: { q: cases.map((c) => c.q), r: cases.map((c) => c.r), teinte: cases.map(() => 0) }, foyer: FOYER, foyers: [] });
+const carteDe = (cases: Coordonnees[]) => ({ teintes: ["prairie"], cases: { q: cases.map((c) => c.q), r: cases.map((c) => c.r), teinte: cases.map(() => 0), zone: cases.map(() => 0) }, foyer: FOYER, foyers: [] });
 /** Une vue posée sur un point quelconque, en Cases non entières. */
 const sur = (milieu: Coordonnees): Vue => ({ ...OUVERTE, milieu });
 
