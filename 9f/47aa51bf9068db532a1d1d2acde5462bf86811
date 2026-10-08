@@ -4,36 +4,60 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_14ccf29d65d895 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_31afe97f3c6d69 1-99
+  s_97a431cfa65ca7::t_1cec7ca685cc90 53
+  s_97a431cfa65ca7::t_c58a0c8289cae6 85-86
+  s_97a431cfa65ca7::t_dcf1ceb62fb711 11-12
+  s_97a431cfa65ca7::t_0b2b8ffc6a4002 31-32
+  s_97a431cfa65ca7::t_27c75428c210e2 1-10,13-30,33-52,54-84,87-99
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_abdc56e91e3065 1-41
+  s_97a431cfa65ca7::t_21a74398e91db3 1-41
 src/app/jeu/carte/dessin.test.ts
   s_97a431cfa65ca7::t_7b74c5acd416bd 1-85
+  s_97a431cfa65ca7::t_f5dcc5f882855b 1-85
 src/app/jeu/carte/dessin.ts
   s_97a431cfa65ca7::t_f4dca8902f4fb0 1-58
+  s_97a431cfa65ca7::t_16b6b338a0e7b2 1-58
 src/app/jeu/carte/page.module.css
   s_97a431cfa65ca7::t_a6680584dcbe15 1-21
+  s_97a431cfa65ca7::t_f63865b36880c7 1-21
 src/app/jeu/carte/page.test.tsx
   s_97a431cfa65ca7::t_10f997171e339b 1-84
+  s_97a431cfa65ca7::t_77b8d06ff655cf 1-84
 src/app/jeu/carte/page.tsx
   s_97a431cfa65ca7::t_7f2becfd29e4cc 1-29
+  s_97a431cfa65ca7::t_5338c408f361b3 1-29
 src/components/ActionsDuJeu.test.tsx
   s_97a431cfa65ca7::t_61bdcb9a0e32fd 119
+  s_97a431cfa65ca7::t_afadd2fbe2d301 119
 src/components/BarreHaut.module.css
   s_97a431cfa65ca7::t_f828f5ef50d20e 617-618,632,637-640,643,645,652-656
+  s_97a431cfa65ca7::t_6b5064e76062be 632
+  s_97a431cfa65ca7::t_856ec012cf5f82 637-640,643,645,652-656
+  s_97a431cfa65ca7::t_24217fb1a455ee 617-618
 src/components/BarreHaut.test.tsx
   s_97a431cfa65ca7::t_2036f52a019f48 40,43-45
+  s_97a431cfa65ca7::t_59e5df6ba57999 40,43
+  s_97a431cfa65ca7::t_ca620e06947430 44-45
 src/components/Navigation.test.tsx
   s_97a431cfa65ca7::t_237da81d03cd83 19,23,36,82,102,123-126
+  s_97a431cfa65ca7::t_afadd2fbe2d301 19,23,36,82,102,123-126
 src/components/Navigation.tsx
   s_97a431cfa65ca7::t_8116e64ab2e719 12,15
+  s_97a431cfa65ca7::t_a09fcfb032b479 12,15
 src/monde/carte.db.test.ts
   s_97a431cfa65ca7::t_8e62ab51c6e022 1-83
+  s_97a431cfa65ca7::t_930b2c07ecf58a 1-83
 src/monde/carte.ts
   s_97a431cfa65ca7::t_8dbbbc6948113f 1-34
+  s_97a431cfa65ca7::t_a421305bd785d8 1-34
 src/monde/hex.test.ts
   s_97a431cfa65ca7::t_923648e7bfce32 5-19,154-173
+  s_97a431cfa65ca7::t_2bd389e0292b8e 154-173
+  s_97a431cfa65ca7::t_92f63ddf5b23f1 5-19
 src/monde/hex.ts
   s_97a431cfa65ca7::t_cdedee91c98075 97-109
+  s_97a431cfa65ca7::t_84fcda4f03ac12 97-109
 ---
 {
   "schema_version": "authorship/3.0.0",
