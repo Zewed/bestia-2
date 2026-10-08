@@ -1,0 +1,41 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_e2be860d57b7ab 225,228,231
+docs/stories/README.md
+  s_97a431cfa65ca7::t_5aaece1682c935 7,22,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_95f1d9ca123c72 5
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_0f1e4e3f62e364 705
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_97a431cfa65ca7::t_a09dd76f1c6430 52-53,187-199
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_73cdfb544a613c 13-14,196
+src/monde/anneaux.db.test.ts
+  s_97a431cfa65ca7::t_74d6a305877b5a 1-73
+src/monde/anneaux.test.ts
+  s_97a431cfa65ca7::t_69063beeff6a51 1-56
+src/monde/anneaux.ts
+  s_97a431cfa65ca7::t_8b11e5615f6ec5 1-26
+src/monde/fiche.db.test.ts
+  s_97a431cfa65ca7::t_26b73f3f7f9455 115-122,157
+src/monde/fiche.ts
+  s_97a431cfa65ca7::t_0a0f0404330ac9 4,11-12,14,27,31,33,42-43,45
+src/reglages.ts
+  s_97a431cfa65ca7::t_4fdf244ac05ba7 253-259
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "70f9ac6b1637b1103670115cc840cf7a55e7eaab",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
