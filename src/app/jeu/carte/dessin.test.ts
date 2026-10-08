@@ -2,16 +2,21 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COULEURS } from "@/monde/couleurs-de-la-carte";
-import { casesDesAnneaux, type Coordonnees } from "@/monde/hex";
+import { anneau, casesDesAnneaux, voisines, type Coordonnees } from "@/monde/hex";
+import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { aLEcran, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau } from "./dessin";
 
 type Point = { x: number; y: number };
-/** Ce qu'un remplissage ou un trait a peint : sa couleur, son épaisseur, et ses tracés, chacun la liste de ses points. */
-type Peint = { geste: "remplir" | "border"; couleur: string; epaisseur: number; traces: Point[][] };
+/**
+ * Ce qu'un remplissage ou un trait a peint : sa couleur, son épaisseur, et ses tracés, chacun la liste de ses points.
+ * US-0433 : pour un trait, ses tirets (vide s'il est plein), leur décalage, ses bouts, et l'opacité du pinceau.
+ */
+type Peint = { geste: "remplir" | "border"; couleur: string; epaisseur: number; traces: Point[][]; tirets: number[]; decalage: number; bouts: string; opacite: number };
 
 /**
  * Un pinceau qui retient ce qu'on lui fait dessiner : chaque effacement, chaque remplissage ou trait avec ses
- * tracés, et chaque image posée avec la découpe (les tracés) qui la borne.
+ * tracés, et chaque image posée avec la découpe (les tracés) qui la borne. Comme un <canvas>, restore() rend
+ * l'opacité et les tirets d'avant save(), et ôte la découpe.
  */
 function pinceauDEssai() {
   const effacements: number[][] = [];
@@ -19,9 +24,17 @@ function pinceauDEssai() {
   const images: { image: unknown; valeurs: number[]; decoupe: Point[][] | null }[] = [];
   let traces: Point[][] = [];
   let decoupe: Point[][] | null = null;
+  let tirets: number[] = [];
+  const mis: { opacite: number; tirets: number[]; decalage: number }[] = [];
+  const peint = (geste: Peint["geste"], couleur: unknown) =>
+    void peints.push({ geste, couleur: String(couleur), epaisseur: pinceau.lineWidth, traces, tirets, decalage: pinceau.lineDashOffset, bouts: pinceau.lineCap, opacite: pinceau.globalAlpha });
   const pinceau: Pinceau = {
-    save: () => {},
-    restore: () => void (decoupe = null),
+    save: () => void mis.push({ opacite: pinceau.globalAlpha, tirets, decalage: pinceau.lineDashOffset }),
+    restore: () => {
+      decoupe = null;
+      const avant = mis.pop();
+      if (avant) [pinceau.globalAlpha, tirets, pinceau.lineDashOffset] = [avant.opacite, avant.tirets, avant.decalage];
+    },
     clip: () => void (decoupe = traces),
     drawImage: (image: unknown, ...valeurs: number[]) => void images.push({ image, valeurs, decoupe }),
     fillStyle: "",
@@ -29,6 +42,9 @@ function pinceauDEssai() {
     lineWidth: 1,
     lineCap: "butt",
     lineJoin: "miter",
+    globalAlpha: 1,
+    lineDashOffset: 0,
+    setLineDash: (valeurs) => void (tirets = [...valeurs]),
     clearRect: (...valeurs) => void effacements.push(valeurs),
     beginPath: () => void (traces = []),
     moveTo: (x, y) => void traces.push([{ x, y }]),
@@ -37,17 +53,21 @@ function pinceauDEssai() {
     // Un rond : son centre, et le point de son bord où il commence.
     arc: (x, y, rayon) => void traces.at(-1)!.push({ x, y }, { x: x + rayon, y }),
     closePath: () => {},
-    fill: () => void peints.push({ geste: "remplir", couleur: String(pinceau.fillStyle), epaisseur: pinceau.lineWidth, traces }),
-    stroke: () => void peints.push({ geste: "border", couleur: String(pinceau.strokeStyle), epaisseur: pinceau.lineWidth, traces }),
+    fill: () => peint("remplir", pinceau.fillStyle),
+    stroke: () => peint("border", pinceau.strokeStyle),
   } as Pinceau;
   return { pinceau, effacements, peints, images };
 }
 
-/** Des Cases en colonnes, comme la carte les reçoit du serveur, toutes de la teinte `teinte` des teintes données. */
-const enColonnes = (cases: Coordonnees[], teinte: (c: Coordonnees) => number = () => 0) => ({
+/**
+ * Des Cases en colonnes, comme la carte les reçoit du serveur, toutes de la teinte `teinte` des teintes données ;
+ * US-0433 : hors de la Couronne et du Cœur sauvage, ou de la zone `zone`.
+ */
+const enColonnes = (cases: Coordonnees[], teinte: (c: Coordonnees) => number = () => 0, zone: (c: Coordonnees) => number = () => 0) => ({
   q: cases.map((c) => c.q),
   r: cases.map((c) => c.r),
   teinte: cases.map(teinte),
+  zone: cases.map(zone),
 });
 /** Le milieu d'un tracé : la moyenne de ses sommets. */
 const milieu = (points: Point[]) => ({
@@ -352,5 +372,111 @@ describe("la carte écrite en SVG, pour sa légende (US-0432)", () => {
     // La tête du repère, d'au moins sa taille au-dessus de la pointe de la Case, est dans le cadre.
     expect(cadre.y).toBeLessThan(-vue.rayon - tailleDuRepere(vue.rayon));
     expect(cadre.y + cadre.hauteur).toBeGreaterThan(vue.rayon);
+  });
+
+  it("écrit les tirets d'un trait, leur décalage et l'opacité du pinceau, que restore() rend comme avant save() (US-0433)", () => {
+    const { traits } = enSvg((p) => {
+      const trait = () => {
+        p.beginPath();
+        p.moveTo(0, 0);
+        p.lineTo(10, 0);
+        p.stroke();
+      };
+      p.save();
+      p.globalAlpha = 0.5;
+      p.setLineDash([3, 2]);
+      p.lineDashOffset = 4;
+      trait();
+      p.restore();
+      trait();
+    });
+    expect(traits.map(({ tirets, decalage, opacite }) => ({ tirets, decalage, opacite }))).toEqual([
+      { tirets: [3, 2], decalage: 4, opacite: 0.5 },
+      { tirets: [], decalage: 0, opacite: 1 },
+    ]);
+  });
+});
+
+describe("les limites de la Couronne et du Cœur sauvage (US-0433)", () => {
+  const vue = vueSurLeFoyer({ q: 0, r: 0 }, 800, 600);
+  // Un petit Monde de 4 Cases de rayon : son Cœur sauvage à moins de 2 Cases du milieu, sa Couronne sur le dernier anneau.
+  const monde = casesDesAnneaux(0, 4);
+  const zoneDe = (c: Coordonnees) => (anneau(c) < 2 ? ZONE_COEUR : anneau(c) === 4 ? ZONE_COURONNE : 0);
+  const carte = { ...FOYER_LOIN, teintes: ["prairie"], cases: enColonnes(monde, () => 0, zoneDe) };
+  /** Les liserés : les traits en tirets. */
+  const liseres = (peints: Peint[]) => peints.filter((p) => p.tirets.length > 0);
+  /** Le milieu, à l'écran, de chaque côté entre une Case de `zone` et une voisine de la carte qui n'en est pas. */
+  const cotes = (zone: number, v = vue) =>
+    monde
+      .filter((c) => zoneDe(c) === zone)
+      .flatMap((c) => voisines(c).filter((voisine) => anneau(voisine) <= 4 && zoneDe(voisine) !== zone).map((voisine) => [aLEcran(c, v), aLEcran(voisine, v)]))
+      .map(([a, b]) => cle({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }))
+      .sort();
+
+  it("trace un liseré sur chaque côté entre une Case de la Couronne et une Case qui n'en est pas, et un autre pour le Cœur sauvage", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(["vert"]));
+    expect(liseres(peints)).toHaveLength(2);
+    const [couronne, coeur] = liseres(peints);
+    // Chaque côté d'un seul trait, d'un sommet de sa Case au suivant : la longueur d'un côté est le rayon d'une Case.
+    for (const trait of [...couronne.traces, ...coeur.traces]) {
+      expect(trait).toHaveLength(2);
+      expect(Math.hypot(trait[1].x - trait[0].x, trait[1].y - trait[0].y)).toBeCloseTo(vue.rayon, 9);
+    }
+    expect(couronne.traces.map((t) => cle(milieu(t))).sort()).toEqual(cotes(ZONE_COURONNE));
+    expect(coeur.traces.map((t) => cle(milieu(t))).sort()).toEqual(cotes(ZONE_COEUR));
+    // Entre les anneaux 3 et 4, et entre les anneaux 1 et 2 : rien au bord de la carte, au-delà duquel il n'y a plus de Case.
+    expect(couronne.traces).toHaveLength(6 * 7);
+    expect(coeur.traces).toHaveLength(6 * 3);
+  });
+
+  it("ne cache pas les Biomes : un trait fin et à demi transparent, posé sur le bord des Cases après leur couleur et leur motif", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(["vert"]));
+    const premier = peints.findIndex((p) => p.tirets.length > 0);
+    expect(peints.slice(0, premier).map((p) => p.couleur)).toEqual(["vert", "encre", "bord"]);
+    for (const lisere of liseres(peints)) {
+      expect(lisere).toMatchObject({ geste: "border", couleur: "Encre" });
+      expect(lisere.epaisseur).toBeLessThanOrEqual(2.5);
+      expect(lisere.opacite).toBeLessThan(1);
+    }
+    // Le pinceau retrouve ensuite son opacité et ses traits pleins.
+    expect(pinceau.globalAlpha).toBe(1);
+    expect(pinceau.lineDashOffset).toBe(0);
+  });
+
+  it("distingue les deux limites : des tirets pour la Couronne, des points ronds pour le Cœur sauvage", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(["vert"]));
+    const [couronne, coeur] = liseres(peints);
+    expect(couronne.tirets[0]).toBeGreaterThan(2 * couronne.epaisseur);
+    expect(coeur.tirets[0]).toBeLessThan(0.1);
+    expect(coeur.bouts).toBe("round");
+  });
+
+  it("garde le même rythme d'un côté à l'autre, à toute taille de Case : chaque côté commence et finit au milieu d'un vide", () => {
+    for (const rayon of [vue.rayon, 8, 3, 30]) {
+      const { pinceau, peints } = pinceauDEssai();
+      dessinerLaCarte(pinceau, carte, { ...vue, rayon }, peinture(["vert"]));
+      expect(liseres(peints)).toHaveLength(2);
+      for (const { tirets, decalage } of liseres(peints)) {
+        const [plein, vide] = tirets;
+        // Un nombre entier de motifs (un trait, un vide) par côté…
+        const motifs = rayon / (plein + vide);
+        expect(motifs).toBeGreaterThanOrEqual(1);
+        expect(motifs).toBeCloseTo(Math.round(motifs), 9);
+        // … et chaque côté commence au milieu d'un vide.
+        expect(decalage).toBeCloseTo(plein + vide / 2, 9);
+      }
+    }
+  });
+
+  it("ne trace aucune limite sur une carte sans Couronne ni Cœur sauvage, ni loin de l'écran", () => {
+    const sansZone = pinceauDEssai();
+    dessinerLaCarte(sansZone.pinceau, { ...carte, cases: enColonnes(monde) }, vue, peinture(["vert"]));
+    expect(liseres(sansZone.peints)).toEqual([]);
+    const loin = pinceauDEssai();
+    dessinerLaCarte(loin.pinceau, carte, vueSurLeFoyer({ q: 60, r: -30 }, 800, 600), peinture(["vert"]));
+    expect(liseres(loin.peints)).toEqual([]);
   });
 });

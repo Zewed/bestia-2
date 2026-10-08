@@ -49,7 +49,7 @@ const CARTE: CarteDuJoueur = {
   foyer: { q: 31, r: -57 },
   foyers: [{ q: 35, r: -58 }],
   teintes: ["foret", "prairie", "lac"],
-  cases: { q: [30, 31, 32], r: [-57, -57, -57], teinte: [0, 1, 2] },
+  cases: { q: [30, 31, 32], r: [-57, -57, -57], teinte: [0, 1, 2], zone: [1, 1, 1] },
 };
 /** Ce que la page donne à la carte. */
 const proprietes = (html: string) => JSON.parse(html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"'));

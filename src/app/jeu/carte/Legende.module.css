@@ -75,6 +75,15 @@
   list-style: none;
 }
 
+/* US-0433 : les repères, dont les deux Cases d'une limite, l'un sous l'autre, leurs noms alignés. */
+.uneColonne {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.uneColonne .echantillon {
+  min-width: 57px;
+}
+
 .liste li {
   display: flex;
   gap: 8px;
@@ -82,10 +91,14 @@
   min-height: 34px;
 }
 
-/* Une Case de la carte, à sa taille ; le repère du Foyer, plus haut, se réduit pour tenir sur la ligne. */
+/*
+ * Une Case de la carte, à sa taille ; le repère du Foyer, plus haut, se réduit pour tenir sur la ligne ; les deux Cases
+ * d'une limite prennent leur largeur.
+ */
 .echantillon {
   flex: none;
-  width: 30px;
+  width: auto;
+  min-width: 30px;
   height: 34px;
 }
 

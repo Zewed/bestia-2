@@ -332,6 +332,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0433 · Voir les limites de la Couronne et du Cœur sauvage
 **En tant que** joueur, **je veux** voir sur la carte où s'arrêtent la Couronne et le Cœur sauvage, **afin de** mesurer le danger d'une région.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque Case connaît sa zone ; sur les arêtes entre la Couronne et le reste du Monde, un liseré d'Encre semi-transparente en tirets de 2 px, et autour du Cœur sauvage des pointillés ronds, dessinés au-dessus des Cases sans les cacher ; la légende gagne ces deux lignes. Sur Aube, qui n'a que sa Couronne, la limite n'apparaît pas (rien n'est dessiné au-delà). Vérifié en vrai.
 - **Débloquée par** : US-0418, US-0432
 - **Critères d'acceptation** :
   - Un léger liseré marque la limite de la Couronne et celle du Cœur sauvage.

@@ -3,6 +3,7 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { couleur } from "@/monde/couleurs-de-la-carte";
+import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { dessinerLaCarte, enSvg, MOTIFS, vueSurLeFoyer } from "./dessin";
 import { Legende } from "./Legende";
 
@@ -37,10 +38,14 @@ const chemins = (nom: string) =>
     const style = (p as SVGPathElement).style;
     return { d: p.getAttribute("d"), couleur: style.fill === "none" ? style.stroke : style.fill };
   });
-/** Une carte d'une seule Case, en (0, 0), à la taille de la carte à l'ouverture, écrite en SVG. */
-const uneCase = (teinte: string, foyer = { q: 1000, r: 0 }, foyers: { q: number; r: number }[] = []) =>
+/**
+ * Une carte écrite en SVG, à la taille de la carte à l'ouverture, toute de la teinte `teinte` : une seule Case en
+ * (0, 0), ou les Cases `cases` ; son Foyer loin, ou en `foyer`. Vue sur 120 pixels de côté : les deux Cases d'une
+ * limite y tiennent.
+ */
+const uneCase = (teinte: string, foyer = { q: 1000, r: 0 }, foyers: { q: number; r: number }[] = [], cases = { q: [0], r: [0], teinte: [0], zone: [0] }) =>
   enSvg((p) =>
-    dessinerLaCarte(p, { teintes: [teinte], cases: { q: [0], r: [0], teinte: [0] }, foyer, foyers }, vueSurLeFoyer({ q: 0, r: 0 }, 0, 0), {
+    dessinerLaCarte(p, { teintes: [teinte], cases, foyer, foyers }, vueSurLeFoyer({ q: 0, r: 0 }, 120, 120), {
       fonds: [couleur(teinte)],
       bord: "color-mix(in oklch, var(--encre) 14%, transparent)",
       motifSombre: "color-mix(in oklch, var(--encre) 26%, transparent)",
@@ -68,7 +73,9 @@ describe("la légende de la carte (US-0432)", () => {
     await userEvent.click(bouton());
     expect(bouton().getAttribute("aria-expanded")).toBe("true");
     expect(panneau().hidden).toBe(false);
-    expect([...panneau().querySelectorAll("li")].map((li) => li.textContent)).toEqual([...TERRE, ...EAUX].map((t) => t.nom).concat("Votre Foyer", "Autres Foyers"));
+    expect([...panneau().querySelectorAll("li")].map((li) => li.textContent)).toEqual(
+      [...TERRE, ...EAUX].map((t) => t.nom).concat("Votre Foyer", "Autres Foyers", "Limite de la Couronne", "Limite du Cœur sauvage"),
+    );
   });
 
   it("montre chaque Biome et chaque eau dans une Case dessinée comme sur la carte : sa couleur, son motif, son bord", async () => {
@@ -90,6 +97,29 @@ describe("la légende de la carte (US-0432)", () => {
     expect(chemins("Votre Foyer").map((c) => c.couleur)).toContain("var(--citron)");
     expect(chemins("Autres Foyers")).toEqual(uneCase("prairie", { q: 1000, r: 0 }, [{ q: 0, r: 0 }]));
     expect(chemins("Autres Foyers").at(-1)!.couleur).toBe("var(--encre)");
+  });
+
+  it("explique les deux liserés : deux Cases, l'une de la Couronne ou du Cœur sauvage, l'autre non, et leur limite entre elles (US-0433)", async () => {
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    for (const [nom, zone] of [
+      ["Limite de la Couronne", ZONE_COURONNE],
+      ["Limite du Cœur sauvage", ZONE_COEUR],
+    ] as const) {
+      const deux = uneCase("prairie", { q: 1000, r: 0 }, [], { q: [0, 1], r: [0, 0], teinte: [0, 0], zone: [zone, 0] });
+      expect(chemins(nom), nom).toEqual(deux);
+      // Les deux Cases, d'un même remplissage.
+      expect(deux[0].d!.match(/M/g)).toHaveLength(2);
+      // Le liseré, en tirets d'Encre à demi transparente.
+      const lisere = entree(nom).querySelector("path:last-of-type") as SVGPathElement;
+      expect(lisere.style.stroke).toBe("var(--encre)");
+      expect(lisere.style.strokeDasharray).not.toBe("");
+      expect(Number(lisere.style.opacity)).toBeLessThan(1);
+    }
+    // Deux liserés différents.
+    expect(entree("Limite de la Couronne").querySelector("path:last-of-type")!.getAttribute("style")).not.toBe(
+      entree("Limite du Cœur sauvage").querySelector("path:last-of-type")!.getAttribute("style"),
+    );
   });
 
   it("se referme d'un geste", async () => {

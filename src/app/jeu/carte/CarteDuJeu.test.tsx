@@ -112,7 +112,7 @@ const CARTE: CarteDuJoueur = {
   foyer: FOYER,
   foyers: [],
   teintes: ["inconnue"],
-  cases: { q: AUTOUR.map((c) => c.q), r: AUTOUR.map((c) => c.r), teinte: AUTOUR.map(() => 0) },
+  cases: { q: AUTOUR.map((c) => c.q), r: AUTOUR.map((c) => c.r), teinte: AUTOUR.map(() => 0), zone: AUTOUR.map(() => 0) },
 };
 const FONDS = ["var(--galet)"];
 /** Le rayon d'une Case à l'écran : la pointe du haut d'une Case est à ce rayon au-dessus de son centre. */

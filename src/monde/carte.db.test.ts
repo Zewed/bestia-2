@@ -5,6 +5,7 @@ import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { carteDuJoueur } from "./carte";
 import { creerUnMonde, genererLeMonde } from "./generer";
+import { ZONE_COEUR, ZONE_COURONNE } from "./zones";
 
 /** Le Monde généré des essais de ce fichier, créé une fois pour toutes dans la base de test : un Monde ne s'efface pas. */
 const MONDE_GENERE = "Essai de la carte (US-0417)";
@@ -73,6 +74,16 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte.cases.teinte.map((t) => carte.teintes[t])).toEqual(attendues);
   });
 
+  it("donne à chaque Case sa zone : la Couronne, le Cœur sauvage, ou ni l'une ni l'autre (US-0433)", async () => {
+    const { territoireId } = await naitre(genereId);
+    const carte = (await carteDuJoueur(pool, territoireId))!;
+    const attendues = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE }).map((c) => (c.couronne ? ZONE_COURONNE : c.coeur ? ZONE_COEUR : 0));
+    expect(carte.cases.zone).toEqual(attendues);
+    // Les 6 anneaux du bord, et les Cases à moins de 8 du milieu.
+    expect(carte.cases.zone.filter((z) => z === ZONE_COURONNE)).toHaveLength(6 * (55 + 60) * 3);
+    expect(carte.cases.zone.filter((z) => z === ZONE_COEUR)).toHaveLength(1 + 3 * 7 * 8);
+  });
+
   it("donne les Foyers des autres chefs de son Monde, sans le sien (US-0419)", async () => {
     const moi = await naitre(genereId);
     const voisin = await naitre(genereId);
@@ -101,6 +112,8 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     // US-0418 : sa Couronne a ses Biomes et ses lacs.
     expect([...carte!.teintes].sort()).toEqual(["desert", "foret", "lac", "montagne", "prairie", "savane"]);
     expect(carte!.cases.teinte).toHaveLength(2070);
+    // US-0433 : toutes de la Couronne.
+    expect(new Set(carte!.cases.zone)).toEqual(new Set([ZONE_COURONNE]));
   });
 
   it("ne lit rien pour un Territoire qui n'existe pas", async () => {

@@ -1,5 +1,6 @@
 // Le dessin de la carte du Monde sur un <canvas> (US-0417), sans rien demander au navigateur : il se vérifie à part.
-import { centre, SOMMETS_DE_CASE, type Coordonnees } from "@/monde/hex";
+import { centre, DIRECTIONS, SOMMETS_DE_CASE, type Coordonnees } from "@/monde/hex";
+import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 
 /** US-0417 : la largeur d'une Case à l'écran, d'un côté plat à l'autre, en pixels : un hexagone confortable. */
 export const LARGEUR_DE_CASE = 28;
@@ -18,6 +19,9 @@ export type Pinceau = Pick<
   | "lineWidth"
   | "lineCap"
   | "lineJoin"
+  | "globalAlpha"
+  | "setLineDash"
+  | "lineDashOffset"
   | "clearRect"
   | "beginPath"
   | "moveTo"
@@ -41,10 +45,15 @@ export type Pinceau = Pick<
 export type Peinture = { fonds: string[]; bord: string; motifSombre: string; motifClair: string; encre: string; repere: string };
 
 /**
- * La carte telle que le serveur l'envoie (src/monde/carte.ts) : ses teintes, ses Cases en colonnes, le Foyer du
- * joueur et ceux des autres chefs.
+ * La carte telle que le serveur l'envoie (src/monde/carte.ts) : ses teintes, ses Cases en colonnes (US-0433 : avec
+ * leur zone), le Foyer du joueur et ceux des autres chefs.
  */
-export type CarteADessiner = { teintes: string[]; cases: { q: number[]; r: number[]; teinte: number[] }; foyer: Coordonnees; foyers: Coordonnees[] };
+export type CarteADessiner = {
+  teintes: string[];
+  cases: { q: number[]; r: number[]; teinte: number[]; zone: number[] };
+  foyer: Coordonnees;
+  foyers: Coordonnees[];
+};
 
 /** US-0419 : l'illustration de la hutte du chef, telle que le navigateur l'a chargée, et sa taille en pixels. */
 export type Hutte = { image: CanvasImageSource; largeur: number; hauteur: number };
@@ -300,9 +309,81 @@ export const MOTIFS: Record<string, Motif> = {
 };
 
 /**
+ * US-0433 : le liseré de chaque limite, d'Encre à demi transparente : des tirets pour la Couronne, des points ronds
+ * pour le Cœur sauvage. `pas` : la longueur d'un motif (un trait et son vide), en fraction du côté d'une Case, qui en
+ * compte ainsi un nombre entier ; `plein` : la part du trait dans le motif (0 : un point).
+ */
+const LISERES = [
+  { zone: ZONE_COURONNE, epaisseur: 2, bouts: "butt", pas: 1 / 2, plein: 0.5 },
+  { zone: ZONE_COEUR, epaisseur: 2.5, bouts: "round", pas: 1 / 3, plein: 0 },
+] as const;
+const OPACITE_DES_LISERES = 0.7;
+
+/** US-0433 : les côtés où s'arrête chaque zone, par carte : calculés une fois, redessinés à chaque image. */
+const limitesDesCartes = new WeakMap<CarteADessiner["cases"], Map<number, [number, number][]>>();
+
+/**
+ * US-0433 : les côtés où s'arrête chaque zone : ceux d'une Case de la zone qui touchent une Case de la carte hors de
+ * la zone, chacun par le rang de sa Case et sa direction (DIRECTIONS). Au-delà du bord de la carte, il n'y a pas de
+ * Case, et pas de limite.
+ */
+function limitesDe(cases: CarteADessiner["cases"]): Map<number, [number, number][]> {
+  const connues = limitesDesCartes.get(cases);
+  if (connues) return connues;
+  const { q, r, zone } = cases;
+  const zones = new Map(q.map((_, i) => [`${q[i]},${r[i]}`, zone[i]]));
+  const limites = new Map(LISERES.map((l): [number, [number, number][]] => [l.zone, []]));
+  for (let i = 0; i < q.length; i++) {
+    const cotes = limites.get(zone[i]);
+    if (!cotes) continue;
+    DIRECTIONS.forEach((d, direction) => {
+      const voisine = zones.get(`${q[i] + d.q},${r[i] + d.r}`);
+      if (voisine !== undefined && voisine !== zone[i]) cotes.push([i, direction]);
+    });
+  }
+  limitesDesCartes.set(cases, limites);
+  return limites;
+}
+
+/**
+ * US-0433 : trace par-dessus les Cases le liseré de chaque limite à l'écran, un côté après l'autre : le côté vers
+ * la voisine de la direction d va du sommet (7 − d) de la Case au suivant. Chaque côté commence au milieu d'un vide :
+ * le rythme ne change pas d'un côté au suivant.
+ */
+function tracerLesLimites(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture) {
+  const limites = limitesDe(carte.cases);
+  const { q, r } = carte.cases;
+  pinceau.save();
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.globalAlpha = OPACITE_DES_LISERES;
+  for (const { zone, epaisseur, bouts, pas, plein } of LISERES) {
+    pinceau.beginPath();
+    let cotes = 0;
+    for (const [i, direction] of limites.get(zone)!) {
+      const { x, y } = aLEcran({ q: q[i], r: r[i] }, vue);
+      if (!aLaVue(x, y, vue)) continue;
+      const [a, b] = [SOMMETS_DE_CASE[(7 - direction) % 6], SOMMETS_DE_CASE[(8 - direction) % 6]];
+      pinceau.moveTo(x + a.x * vue.rayon, y + a.y * vue.rayon);
+      pinceau.lineTo(x + b.x * vue.rayon, y + b.y * vue.rayon);
+      cotes++;
+    }
+    if (cotes === 0) continue;
+    const motif = pas * vue.rayon;
+    const trait = Math.max(0.01, plein * motif);
+    pinceau.setLineDash([trait, motif - trait]);
+    pinceau.lineDashOffset = trait + (motif - trait) / 2;
+    pinceau.lineWidth = epaisseur;
+    pinceau.lineCap = bouts;
+    pinceau.stroke();
+  }
+  pinceau.restore();
+}
+
+/**
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
+ * US-0433 : par-dessus, le liseré des limites de la Couronne et du Cœur sauvage.
  * US-0419 : les Foyers des autres chefs d'un petit hexagone d'Encre ; celui du joueur montre la hutte du chef
  * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron.
  */
@@ -343,6 +424,7 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   pinceau.strokeStyle = peinture.bord;
   pinceau.lineWidth = 1;
   pinceau.stroke();
+  tracerLesLimites(pinceau, carte, vue, peinture);
 
   const autres = carte.foyers.map((c) => aLEcran(c, vue)).filter(({ x, y }) => aLaVue(x, y, vue));
   if (autres.length > 0) {
@@ -366,9 +448,20 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
 
 /**
  * US-0432 : un remplissage ou un trait de la carte, écrit en SVG : son chemin, sa couleur, et pour un trait son
- * épaisseur, ses bouts et ses jointures.
+ * épaisseur, ses bouts et ses jointures. US-0433 : ses tirets (aucun pour un trait plein) et leur décalage, et
+ * l'opacité du pinceau.
  */
-export type TraitSvg = { d: string; geste: "remplir" | "tracer"; couleur: string; epaisseur: number; bouts: CanvasLineCap; jointures: CanvasLineJoin };
+export type TraitSvg = {
+  d: string;
+  geste: "remplir" | "tracer";
+  couleur: string;
+  epaisseur: number;
+  bouts: CanvasLineCap;
+  jointures: CanvasLineJoin;
+  tirets: number[];
+  decalage: number;
+  opacite: number;
+};
 
 /** Un rectangle, en pixels de la carte : son coin en haut à gauche, sa largeur et sa hauteur. */
 export type Cadre = { x: number; y: number; largeur: number; hauteur: number };
@@ -394,9 +487,22 @@ export function enSvg(dessiner: (pinceau: Pinceau) => void): { traits: TraitSvg[
     trace.ouvert = true;
     borner(x, y);
   };
+  // US-0433 : les tirets du pinceau, et ce que save() met de côté pour restore(), comme sur un <canvas>.
+  let tirets: number[] = [];
+  const misDeCote: { opacite: number; tirets: number[]; decalage: number }[] = [];
   // Ce qui est peint étend le cadre, de la moitié de son épaisseur pour un trait.
   const peindre = (geste: TraitSvg["geste"], couleur: string, marge: number) => {
-    traits.push({ d: trace.d, geste, couleur, epaisseur: pinceau.lineWidth, bouts: pinceau.lineCap, jointures: pinceau.lineJoin });
+    traits.push({
+      d: trace.d,
+      geste,
+      couleur,
+      epaisseur: pinceau.lineWidth,
+      bouts: pinceau.lineCap,
+      jointures: pinceau.lineJoin,
+      tirets,
+      decalage: pinceau.lineDashOffset,
+      opacite: pinceau.globalAlpha,
+    });
     tout.gauche = Math.min(tout.gauche, trace.gauche - marge);
     tout.haut = Math.min(tout.haut, trace.haut - marge);
     tout.droite = Math.max(tout.droite, trace.droite + marge);
@@ -408,9 +514,15 @@ export function enSvg(dessiner: (pinceau: Pinceau) => void): { traits: TraitSvg[
     lineWidth: 1,
     lineCap: "butt",
     lineJoin: "miter",
+    globalAlpha: 1,
+    lineDashOffset: 0,
+    setLineDash: (valeurs) => void (tirets = [...valeurs]),
     clearRect: () => {},
-    save: () => {},
-    restore: () => {},
+    save: () => void misDeCote.push({ opacite: pinceau.globalAlpha, tirets, decalage: pinceau.lineDashOffset }),
+    restore: () => {
+      const avant = misDeCote.pop();
+      if (avant) [pinceau.globalAlpha, tirets, pinceau.lineDashOffset] = [avant.opacite, avant.tirets, avant.decalage];
+    },
     clip: () => {},
     drawImage: () => {},
     beginPath: () => void (trace = { d: "", ouvert: false, gauche: Infinity, haut: Infinity, droite: -Infinity, bas: -Infinity }),
