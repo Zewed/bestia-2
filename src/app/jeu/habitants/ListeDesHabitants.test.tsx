@@ -515,3 +515,24 @@ describe("filtrer la liste par Métier (US-0314)", () => {
     }
   });
 });
+
+describe("un Territoire sans Habitant (US-0329)", () => {
+  const AUCUN = "Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes.";
+
+  it("dit, à la place des compteurs et de la liste, qu'il n'y a aucun Habitant et que des Voyageurs finiront par passer", () => {
+    const { container } = render(<ListeDesHabitants habitants={[]} metiers={METIERS} />);
+    expect(container.textContent).toBe(AUCUN);
+    expect(screen.getByText(AUCUN).tagName).toBe("P");
+    expect(screen.queryAllByRole("list")).toEqual([]);
+    expect(screen.queryAllByRole("button")).toEqual([]);
+  });
+
+  it("le dit aussi quand l'adresse porte un filtre, sans « Personne n'est sans Métier. »", () => {
+    for (const filtre of ["?metier=sans", "?metier=chasseur"]) {
+      ouvrir(filtre);
+      const { container } = render(<ListeDesHabitants habitants={[]} metiers={METIERS} />);
+      expect(container.textContent, filtre).toBe(AUCUN);
+      cleanup();
+    }
+  });
+});

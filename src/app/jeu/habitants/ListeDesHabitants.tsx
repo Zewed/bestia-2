@@ -56,6 +56,9 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  *
  * US-0313 : dans la page, les Habitants montrés, Métier donné d'avance compris, sont ceux qu'elle partage avec le
  * bandeau des sans Métier (HabitantsMontres).
+ *
+ * US-0329 : sans aucun Habitant, la liste laisse place à une seule phrase : des Voyageurs finiront par passer aux
+ * portes.
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
   const [affiches, montrerLeMetier] = useHabitantsMontres(habitants);
@@ -102,6 +105,11 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     else parametres.set(PARAMETRE_DU_FILTRE, id);
     const suite = parametres.toString();
     window.history.replaceState(null, "", suite ? `?${suite}` : window.location.pathname);
+  }
+
+  // US-0329 : sans Habitant, ni compteurs à zéro ni filtre : une phrase, à leur place et à celle de la liste.
+  if (affiches.length === 0) {
+    return <p className={styles.personne}>Aucun Habitant pour l&apos;instant. Des Voyageurs finiront par passer aux portes.</p>;
   }
 
   return (

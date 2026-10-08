@@ -72,7 +72,7 @@ const COLONNE = { "--largeur": 4 } as CSSProperties;
  * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), qui
  * filtrent la liste (US-0314), puis une ligne par Habitant avec son prénom, son Métier et son état, dans
  * l'ordre de la lecture (US-0303), d'où l'on donne un Métier à un Habitant sans Métier (US-0308), en change
- * (US-0310) ou le retire (US-0311) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
+ * (US-0310) ou le retire (US-0311), et, sans aucun Habitant, une phrase à sa place (US-0329) ; à côté, ou dessous sur mobile, leur Entretien par heure (US-0318) et combien de temps la Nourriture le paiera
  * (US-0320), d'après les Stocks lus une fois le Territoire mis à l'heure, puis les huit Métiers (US-0307), où
  * l'on répartit les Habitants avec « − » et « + » (US-0312).
  * Tout est lu à chaque affichage.
@@ -104,9 +104,8 @@ export default async function Habitants() {
               <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
               {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
             </div>
-            {habitants.length > 0 ? (
-              <ListeDesHabitants habitants={montres} metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))} />
-            ) : null}
+            {/* US-0329 : sans Habitant, la liste dit à sa place que des Voyageurs finiront par passer. */}
+            <ListeDesHabitants habitants={montres} metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))} />
           </Bloc>
           <div className={styles.colonne} style={COLONNE} data-etroit="">
             {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}

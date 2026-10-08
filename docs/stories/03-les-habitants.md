@@ -316,9 +316,10 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0329 · Afficher un Territoire sans Habitant
 **En tant que** joueur, **je veux** comprendre quoi faire si je n'ai plus aucun Habitant, **afin de** pouvoir toujours relancer mon Territoire.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Sans Habitant, la page Habitants n'affiche ni compteurs ni bandeau : « Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes. » La Famine garde toujours au moins un Habitant (US-0326) : le Territoire ne se vide que par des renvois (US-0330). La production du Foyer continue, sans Entretien ni Famine, et les Voyageurs se présentent toujours. Vérifié en vrai.
 - **Débloquée par** : US-0326
 - **Critères d'acceptation** :
-  - La Famine peut faire partir le dernier Habitant, ou elle en garde toujours au moins un (à décider).
+  - La Famine garde toujours au moins un Habitant (décidé le 2026-10-08).
   - Sans Habitant, la page Habitants affiche un état vide qui explique que des Voyageurs finiront par passer.
   - La production continue du Foyer se poursuit même sans Habitant.
 

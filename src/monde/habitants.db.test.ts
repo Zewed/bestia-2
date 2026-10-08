@@ -12,6 +12,7 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { famineDepuis } from "./famine";
 import {
   ajouterUnHabitantAuMetier,
   enregistrerLeMetier,
@@ -24,6 +25,7 @@ import {
   retirerUnHabitantDuMetier,
 } from "./habitants";
 import { stocksDuTerritoire } from "./stocks";
+import { nombreDeVoyageurs } from "./voyageurs";
 
 /** L'instruction de la migration US-0303 qui nomme les Habitants déjà là. */
 function nommerLesHabitantsDejaLa(): string {
@@ -33,7 +35,7 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
-describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, sur base)", () => {
+describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, US-0329, sur base)", () => {
   let pool: Pool;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
@@ -432,5 +434,23 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     await rattraper("territoire", t, { pool, jusqua: new Date(debut.getTime() + 3_600_000) });
     const apres = (await nourriture()).reduce((somme, s) => somme + Number(s.quantite), 0);
     expect(apres).toBeCloseTo(200 + production - lu.parHeure, 6);
+  });
+
+  it("fait produire le Foyer d'un Territoire sans Habitant, sans Entretien ni Famine, et des Voyageurs s'y présentent toujours (US-0329)", async () => {
+    const compte = await nouveauCompte();
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    await pool.query("delete from habitant where territoire_id = $1", [t]);
+    await pool.query("update stock set quantite = 100, reste = 0, plein_depuis = null where territoire_id = $1", [t]);
+    const avant = await stocksDuTerritoire(pool, t);
+    // Le Foyer produit de chaque Ressource, et personne n'en mange.
+    expect(avant.map((s) => [s.id, Number(s.parHeure) > 0, Number(s.entretienParHeure)])).toEqual(avant.map((s) => [s.id, true, 0]));
+    const debut = await lireMarquePage(pool, "territoire", t);
+    // Douze heures de jeu : la première arrivée d'un Voyageur tombe d'ici là, de 4 à 12 h après la naissance.
+    await rattraper("territoire", t, { pool, jusqua: new Date(debut.getTime() + 12 * 3_600_000) });
+    expect((await stocksDuTerritoire(pool, t)).map((s) => [s.id, Number(s.quantite)])).toEqual(avant.map((s) => [s.id, 100 + 12 * Number(s.parHeure)]));
+    expect(await famineDepuis(pool, t)).toBeNull();
+    expect(await nombreDHabitants(pool, t)).toBe(0);
+    expect(await nombreDeVoyageurs(pool, t)).toBeGreaterThan(0);
   });
 });

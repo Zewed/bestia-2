@@ -208,9 +208,33 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(lignes(renderToStaticMarkup(await Habitants())).map((l) => l.split(" · ")[0])).toEqual(["Joran", "Fenn", "Ilda"]);
   });
 
-  it("ne montre pas de liste vide quand il n'y a aucun Habitant", async () => {
+  it("ne montre pas de liste vide quand il n'y a aucun Habitant : US-0329, une phrase dit que des Voyageurs finiront par passer", async () => {
     connecte(0);
-    expect(renderToStaticMarkup(await Habitants())).toMatch(/<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>0 Habitant sur 5 places<\/p><\/div><\/section>/);
+    expect(renderToStaticMarkup(await Habitants())).toMatch(
+      /<section[^>]*--largeur:8[^>]*><div[^>]*><p[^>]*>0 Habitant sur 5 places<\/p><\/div><p[^>]*>Aucun Habitant pour l&#x27;instant\. Des Voyageurs finiront par passer aux portes\.<\/p><\/section>/,
+    );
+  });
+
+  it("sans Habitant, ne compte rien d'autre : ni bandeau des sans Métier, ni compteurs à zéro, ni filtre (US-0329)", async () => {
+    connecte(0);
+    const html = renderToStaticMarkup(await Habitants());
+    expect(morceaux(html)).toEqual([
+      "Habitants",
+      "0 Habitant sur 5 places",
+      "Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes.",
+      "Aux portes",
+      "Historique",
+      "Personne aux portes pour l'instant.",
+      "Entretien",
+      "0 Habitant × 2 Nourriture = ",
+      "0 Nourriture par heure",
+      "Nourriture assurée",
+      "Métiers",
+      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, `Servira ${m.servira}.`]),
+    ]);
+    // Les seuls boutons : « − » et « + » de chaque Métier, tous grisés faute d'Habitant.
+    expect(repartitions(html)).toEqual(HUIT_METIERS.map((m) => [m.nom, 0, "grisé", "grisé"]));
+    expect([...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)]).toHaveLength(2 * HUIT_METIERS.length);
   });
 
   it("accorde le nombre : « 1 Habitant », « 0 Habitant »", async () => {
