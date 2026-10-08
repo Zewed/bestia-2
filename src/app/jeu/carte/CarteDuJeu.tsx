@@ -10,6 +10,7 @@ import { suivreLesGestes } from "./gestes";
 import { glisser } from "./mouvement";
 import styles from "./page.module.css";
 import { avancer, cadrer, deplacer, limiteDeLaCarte, retourAuFoyer, zoomer, zoomPossible } from "./vue";
+import { retenirLaVue, vueRetenue } from "./vue-retenue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -39,6 +40,7 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * pinçant à deux doigts, autour du point entre eux. US-0425 : et aux boutons « + » et « − », autour du milieu de
  * l'écran, chacun grisé quand sa limite est atteinte, quel que soit le geste qui l'a atteinte. US-0426 : le bouton du
  * Foyer, ou la flèche qui le montre quand il est hors de l'écran, y ramène la carte en glissant ; un geste l'arrête.
+ * US-0427 : pendant la visite, elle se rouvre là où on l'a laissée, au même zoom (vue-retenue.ts).
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -64,10 +66,12 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     // Ce que montre la carte, d'un geste à l'autre, une fois connue la place qu'elle a ; la limite de son milieu.
     let vue: Vue | null = null;
     const limite = limiteDeLaCarte(carte);
+    // US-0426 : la flèche du Foyer suit chaque dessin. US-0427 : la vue retenue à chaque dessin, au plus un par image.
     const dessiner = () => {
       if (!vue) return;
       dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
+      retenirLaVue(carte, vue);
     };
     // US-0425 : les boutons de zoom grisés ou non selon la vue, sans rien redessiner s'ils ne changent pas.
     const griser = () => {
@@ -76,14 +80,14 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       setZoom((avant) => (avant.rapprocher === possible.rapprocher && avant.eloigner === possible.eloigner ? avant : possible));
     };
     // La toile à la taille que la page lui donne, à l'ouverture et à chaque changement : la redimensionner l'efface.
-    // US-0423 : le zoom ramené dans les bornes de cette taille.
+    // US-0423 : le zoom ramené dans les bornes de cette taille. US-0427 : à l'ouverture, la vue retenue s'il y en a une.
     const redimensionner = () => {
       const { width: largeur, height: hauteur } = canvas.getBoundingClientRect();
       const densite = window.devicePixelRatio || 1;
       canvas.width = Math.round(largeur * densite);
       canvas.height = Math.round(hauteur * densite);
       pinceau.setTransform(densite, 0, 0, densite, 0, 0);
-      vue = cadrer(vue ?? vueSurLeFoyer(carte.foyer, largeur, hauteur), largeur, hauteur);
+      vue = cadrer(vue ?? vueRetenue(carte, largeur, hauteur) ?? vueSurLeFoyer(carte.foyer, largeur, hauteur), largeur, hauteur);
       dessiner();
       griser();
     };

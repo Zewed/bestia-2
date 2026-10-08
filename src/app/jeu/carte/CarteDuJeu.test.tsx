@@ -6,7 +6,7 @@ import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, bornesDuZoom, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
+import { avancer, bornesDuZoom, cadrer, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de
@@ -23,6 +23,8 @@ let images: { src: string; naturalWidth: number; naturalHeight: number; onload: 
 let aLaProchaineImage = new Map<number, FrameRequestCallback>();
 
 beforeEach(() => {
+  // US-0427 : chaque essai est une nouvelle visite.
+  sessionStorage.clear();
   toile.gestes = [];
   toile.departs = [];
   toile.effacements = 0;
@@ -557,5 +559,84 @@ describe("revenir au Foyer (US-0426)", () => {
     prochaineImage(1000);
     unmount();
     expect(aLaProchaineImage.size).toBe(0);
+  });
+});
+
+describe("retrouver la carte là où on l'a laissée (US-0427)", () => {
+  /** La carte glissée puis rapprochée deux fois autour du milieu de l'écran, dessinée ; la vue où on la laisse. */
+  const laisser = () => {
+    pointeur("pointerdown", 400, 300);
+    pointeur("pointermove", 340, 330);
+    pointeur("pointerup", 340, 330);
+    fireEvent.wheel(screen.getByRole("application", { name: "Carte du Monde" }), { deltaY: -300, clientX: 400, clientY: 364 });
+    prochaineImage();
+    return zoomer(deplacer(ouverte(), -60, 30, 60), 2, 400, 300, 60);
+  };
+
+  it("se rouvre au même endroit et au même zoom en y revenant pendant la même visite", () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const laissee = laisser();
+    expect(dessineeLa(laissee)).toBe(true);
+    // Le joueur va voir ses Habitants, puis revient sur la carte.
+    unmount();
+    toile.departs = [];
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(dessineeLa(laissee)).toBe(true);
+    expect(auMilieuDeLEcran()).toBe(false);
+  });
+
+  it("retrouve le même endroit au milieu sur un écran qui a changé de taille entre-temps", () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const laissee = laisser();
+    unmount();
+    Object.assign(ecran, { largeur: 375, hauteur: 559 });
+    toile.departs = [];
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    // Le zoom ramené dans les bornes de ce plus petit écran, comme à chaque changement de taille.
+    const retrouvee = cadrer(laissee, 375, 559);
+    expect(retrouvee.milieu).toEqual(laissee.milieu);
+    expect(dessineeLa(retrouvee)).toBe(true);
+  });
+
+  it("se rouvre sur le Foyer à une nouvelle visite : un nouvel onglet ne retient rien", () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    laisser();
+    unmount();
+    sessionStorage.clear();
+    toile.departs = [];
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(auMilieuDeLEcran()).toBe(true);
+  });
+
+  it("ne reprend jamais la vue d'un autre Monde", () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    laisser();
+    unmount();
+    toile.departs = [];
+    render(<CarteDuJeu carte={{ ...CARTE, monde: "Carte-0417" }} fonds={FONDS} />);
+    expect(auMilieuDeLEcran()).toBe(true);
+  });
+
+  it("retient la vue au plus une fois par image de l'écran, quel que soit le nombre de gestes", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const retenir = vi.spyOn(Storage.prototype, "setItem");
+    pointeur("pointerdown", 400, 300);
+    for (let x = 390; x > 300; x -= 10) pointeur("pointermove", x, 300);
+    fireEvent.wheel(screen.getByRole("application", { name: "Carte du Monde" }), { deltaY: -100, clientX: 400, clientY: 364 });
+    expect(retenir).not.toHaveBeenCalled();
+    prochaineImage();
+    expect(retenir).toHaveBeenCalledTimes(1);
+  });
+
+  it("s'ouvre sur le Foyer, et se manie, quand l'onglet ne peut rien retenir", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("stockage interdit");
+    });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("stockage interdit");
+    });
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(auMilieuDeLEcran()).toBe(true);
+    expect(dessineeLa(laisser())).toBe(true);
   });
 });

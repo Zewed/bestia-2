@@ -278,10 +278,11 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0427 · Retrouver la carte là où on l'a laissée
 **En tant que** joueur, **je veux** retrouver la carte au même endroit quand j'y reviens, **afin de** ne pas refaire le chemin à chaque fois.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Dans le même onglet, la carte se rouvre au même endroit et au même zoom (vue retenue en coordonnées du Monde dans `sessionStorage`, ramenée aux bornes d'un écran plus petit). Un nouvel onglet, un autre Monde ou un autre Foyer se rouvrent sur le Foyer, comme lorsque le stockage est indisponible. Vérifié en vrai.
 - **Débloquée par** : US-0426
 - **Critères d'acceptation** :
   - En revenant sur la carte pendant la même visite, on retrouve le même endroit et le même zoom.
-  - À une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée (à décider).
+  - À une nouvelle visite, la carte se rouvre sur le Foyer plutôt que là où on l'avait laissée (décidé le 2026-10-08).
 
 ### US-0428 · Ouvrir la fiche d'une Case
 **En tant que** joueur, **je veux** toucher une Case pour ouvrir sa fiche, **afin de** connaître son Biome et son propriétaire.
