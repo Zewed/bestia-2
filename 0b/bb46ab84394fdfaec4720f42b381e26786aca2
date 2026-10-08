@@ -6,20 +6,31 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_992f27b5e41eb8 5
 src/app/jeu/habitants/AuxPortes.css.test.ts
   s_97a431cfa65ca7::t_9e504f8f2044fc 102-106
+  s_97a431cfa65ca7::t_6ac7b7977fc924 102-106
 src/app/jeu/habitants/AuxPortes.module.css
   s_97a431cfa65ca7::t_9b92c0dbd1519d 158-169
+  s_97a431cfa65ca7::t_3c4f14d7f4fdcb 158-169
 src/app/jeu/habitants/AuxPortes.test.tsx
   s_97a431cfa65ca7::t_4afbb055a0490c 329-391
+  s_97a431cfa65ca7::t_d9f9cdff87f880 329-391
 src/app/jeu/habitants/AuxPortes.tsx
   s_97a431cfa65ca7::t_ccda48096d9533 65-68,76,83,174,219
+  s_97a431cfa65ca7::t_888315337cd4bb 65-68,76,83,174,219
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_fce57b0394eac8 38-40,845-857
+  s_97a431cfa65ca7::t_232c71aafd97da 845-857
+  s_97a431cfa65ca7::t_0e07332087735d 38-40
 src/app/jeu/habitants/page.tsx
   s_97a431cfa65ca7::t_da35dd4c4acfb6 5,85,93,115,122
+  s_97a431cfa65ca7::t_fdea0534da7d45 5,85,93,115,122
 src/monde/voyageurs.db.test.ts
   s_97a431cfa65ca7::t_85a6df10478c0c 56-57,59,66,69,932-1008
+  s_97a431cfa65ca7::t_dae01935b0a1b5 932-1008
+  s_97a431cfa65ca7::t_9e66d2fae32afd 56-57,59,66,69
 src/monde/voyageurs.ts
   s_97a431cfa65ca7::t_14f51396497c5a 40-41,53,62-67
+  s_97a431cfa65ca7::t_0c07e9002e39f3 40-41,53,62-64,67
+  s_97a431cfa65ca7::t_bfa1d1f316ba7b 65-66
 ---
 {
   "schema_version": "authorship/3.0.0",
