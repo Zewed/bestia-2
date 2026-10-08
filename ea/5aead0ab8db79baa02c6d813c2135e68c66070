@@ -1,0 +1,33 @@
+src/app/jeu/carte/vue-retenue.ts
+  s_97a431cfa65ca7::t_0233a8ef9cd1ba 1-36
+src/app/jeu/carte/vue-retenue.test.ts
+  s_97a431cfa65ca7::t_a5a5a47864ca62 1-54
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_a61f69fd80a87d 90
+  s_97a431cfa65ca7::t_ed971e18d86e59 83
+  s_97a431cfa65ca7::t_ae4d92e989501b 69
+  s_97a431cfa65ca7::t_cc3cf823b7111d 13
+  s_97a431cfa65ca7::t_513f256589f719 43
+  s_97a431cfa65ca7::t_0121408eef99fa 74
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_2020e6d0c1537e 9
+  s_97a431cfa65ca7::t_a013a428123113 595-598
+  s_97a431cfa65ca7::t_1e211d324efa8f 564-594,599-642
+  s_97a431cfa65ca7::t_b102ba0904e1e3 26-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ea5aead0ab8db79baa02c6d813c2135e68c66070",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
