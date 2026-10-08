@@ -134,6 +134,14 @@ agent = "claude"
 model = "opus-5-5-1m"
 effort = "high"
 
+# Un worker sous-agent de la session Claude Code du coordinateur, dans son propre worktree : en attendant Conductor,
+# ou pour un ticket court. Il meurt avec la session du coordinateur.
+[conductor.profiles.local]
+runtime = "claude-code"
+agent = "claude"
+model = "opus"
+effort = "high"
+
 # Herdr profiles use one of its supported harnesses and are selected with the
 # same label and `when` rules as Conductor. Every extra argument is passed to
 # the selected harness exactly as written.

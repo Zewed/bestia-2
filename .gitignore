@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Local agent run artifacts (ship-pr-dev)
 plans/ship-pr-dev/
+
+# Les worktrees des workers sous-agents (Armada, runtime claude-code).
+.claude/worktrees/
