@@ -18,11 +18,51 @@
   overflow-wrap: anywhere;
 }
 
-/* Son Biome, en titre. */
+/* Son Biome, en titre, à côté de la croix. */
 .biome {
   margin-bottom: 10px;
+  padding-right: 32px;
   font-size: 18px;
   font-weight: var(--graisse-titre);
+}
+
+/* US-0430 : sa croix, de 44 px, en haut à droite. */
+.fermer {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: none;
+  color: var(--texte-discret);
+  cursor: pointer;
+}
+
+.fermer svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+
+@media (hover: hover) {
+  .fermer:hover {
+    background: var(--survol);
+    color: var(--encre);
+  }
+}
+
+.fermer:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: -2px;
 }
 
 /* Chaque ligne : sa petite étiquette, puis ce qu'elle dit. */

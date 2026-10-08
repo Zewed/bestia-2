@@ -308,6 +308,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0430 · Fermer la fiche d'une Case
 **En tant que** joueur, **je veux** fermer la fiche d'une Case facilement, **afin de** revenir à la carte sans détour.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La fiche se ferme par sa croix de 44 px, par Échap (le focus revient à la carte) ou par un toucher sur la carte hors de la Case. Toucher une autre Case remplace la fiche. Fermer retire le surlignage, et une réponse du serveur arrivée trop tard est ignorée. Vérifié en vrai.
 - **Débloquée par** : US-0428
 - **Critères d'acceptation** :
   - La fiche se ferme par sa croix, par la touche Échap, ou en touchant la carte hors de la Case.

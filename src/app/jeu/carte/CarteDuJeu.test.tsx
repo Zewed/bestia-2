@@ -649,12 +649,19 @@ describe("retrouver la carte là où on l'a laissée (US-0427)", () => {
   });
 });
 
+/** US-0428 : où tombe le centre d'une Case dans la page, la carte ouverte : sous la barre du haut, de 64 pixels. */
+const dansLaPage = (c: { q: number; r: number }) => ({ x: aLEcran(c, ouverte()).x, y: aLEcran(c, ouverte()).y + 64 });
+/** US-0428 : un clic de la souris sur la carte ouverte, au centre de la Case c. */
+const cliquer = (c: { q: number; r: number }) => {
+  const { x, y } = dansLaPage(c);
+  pointeur("pointerdown", x, y);
+  pointeur("pointerup", x, y);
+};
+/** US-0428 : si la carte surligne une Case : un trait citron, que seul le surlignage trace (le repère du Foyer est rempli). */
+const surlignee = () => toile.gestes.includes("border var(--citron)");
+const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
+
 describe("ouvrir la fiche d'une Case (US-0428)", () => {
-  /** Où tombe le centre d'une Case dans la page, la carte ouverte : sous la barre du haut, de 64 pixels. */
-  const dansLaPage = (c: { q: number; r: number }) => ({ x: aLEcran(c, ouverte()).x, y: aLEcran(c, ouverte()).y + 64 });
-  /** Si la carte surligne une Case : un trait citron, que seul le surlignage trace (le repère du Foyer est rempli). */
-  const surlignee = () => toile.gestes.includes("border var(--citron)");
-  const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
   /** La Case au sud-ouest du Foyer, une forêt libre, à une Case de lui. */
   const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 1 };
 
@@ -742,5 +749,65 @@ describe("ouvrir la fiche d'une Case (US-0428)", () => {
     const aCoteDeLaFiche = flecheVersLeFoyer(vue, FOYER, [{ gauche: 12, haut: 12, droite: 312, bas: 512 }], 22);
     expect(aCoteDeLaFiche!.x).toBeGreaterThan(312 + 22 - 1e-9);
     expect(fleche.style.transform).toBe(enStyle(aCoteDeLaFiche));
+  });
+});
+
+describe("fermer la fiche d'une Case (US-0430)", () => {
+  it("la ferme en touchant la carte hors de ses Cases, et retire le surlignage", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    cliquer(AUTOUR[1]);
+    toile.gestes = [];
+    cliquer({ q: FOYER.q, r: FOYER.r - 3 });
+    expect(fiche()).toBeNull();
+    expect(surlignee()).toBe(false);
+    expect(toile.gestes).not.toEqual([]);
+  });
+
+  it("la ferme par sa croix, ou par Échap, en retirant le surlignage, et rend la main à la carte", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const user = userEvent.setup();
+    cliquer(AUTOUR[1]);
+    toile.gestes = [];
+    await user.click(screen.getByRole("button", { name: "Fermer la fiche" }));
+    expect(fiche()).toBeNull();
+    expect(surlignee()).toBe(false);
+    expect(document.activeElement).toBe(screen.getByRole("application", { name: "Carte du Monde" }));
+    await user.keyboard("{Enter}");
+    expect(fiche()).not.toBeNull();
+    toile.gestes = [];
+    await user.keyboard("{Escape}");
+    expect(fiche()).toBeNull();
+    expect(surlignee()).toBe(false);
+  });
+
+  it("remplace la fiche quand on touche une autre Case, au lieu d'en ouvrir une deuxième ; la même Case la garde", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    cliquer(AUTOUR[1]);
+    cliquer(AUTOUR[1]);
+    cliquer(AUTOUR[5]);
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([AUTOUR[1], AUTOUR[5]]);
+    expect(screen.getAllByRole("region", { name: "Fiche de la Case" })).toHaveLength(1);
+    expect(surlignee()).toBe(true);
+  });
+
+  it("rend sa place à la flèche du Foyer une fois fermée (US-0426)", () => {
+    // La fiche le long du bord gauche de la carte ; rien d'autre n'a de place à l'écran.
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return (this.tagName === "SECTION" ? { left: 12, top: 76, width: 300, height: 500, right: 312, bottom: 576 } : { left: 0, top: 0, width: 0, height: 0, right: 0, bottom: 0 }) as DOMRect;
+    });
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    cliquer(AUTOUR[5]);
+    // La fiche ouverte, le Foyer passé loin à gauche de l'écran : la flèche au bord gauche, à côté de la fiche.
+    pointeur("pointerdown", 600, 300);
+    pointeur("pointermove", 0, 300);
+    pointeur("pointerup", 0, 300);
+    prochaineImage();
+    const vue = deplacer(ouverte(), -600, 0, 60);
+    const enStyle = (ou: { x: number; y: number; angle: number } | null) => `translate(${ou!.x}px, ${ou!.y}px) rotate(${ou!.angle}rad)`;
+    const fleche = document.querySelector<HTMLButtonElement>("button[aria-hidden]")!;
+    expect(fleche.style.transform).toBe(enStyle(flecheVersLeFoyer(vue, FOYER, [{ gauche: 12, haut: 12, droite: 312, bas: 512 }], 22)));
+    fireEvent.keyDown(document.body, { key: "Escape" });
+    expect(fiche()).toBeNull();
+    expect(fleche.style.transform).toBe(enStyle(flecheVersLeFoyer(vue, FOYER, [], 22)));
   });
 });

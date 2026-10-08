@@ -52,19 +52,25 @@ const FORET: Fiche = { ...ICI, biome: "Forêt", chef: null, aVous: false, zone: 
 /** La fiche de la Case, telle que la carte la montre. */
 const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
-/** La carte et la fiche de sa Case choisie, la carte glissant au besoin (`montrer`), avec des boutons pour choisir une Case. */
+/**
+ * La carte et la fiche de sa Case choisie, la carte glissant au besoin (`montrer`), avec un bouton pour choisir chaque
+ * Case, et un pour toucher la carte hors de ses Cases.
+ */
 function Carte({ montrer = () => {}, cases = [ICI] }: { montrer?: (c: Coordonnees, cache: { x: number; y: number; largeur: number; hauteur: number }) => void; cases?: Coordonnees[] }) {
-  const { choix, choisir } = useFicheDeLaCase();
+  const { choix, choisir, fermer } = useFicheDeLaCase();
   const carte = useRef<HTMLCanvasElement>(null);
   return (
     <>
-      <canvas ref={carte} />
+      <canvas ref={carte} tabIndex={0} />
       {cases.map((c) => (
         <button key={`${c.q},${c.r}`} type="button" onClick={() => choisir(c)}>
           {`${c.q},${c.r}`}
         </button>
       ))}
-      {choix ? <FicheDeLaCase choix={choix} carte={carte} montrer={montrer} /> : null}
+      <button type="button" onClick={() => choisir(null)}>
+        dehors
+      </button>
+      {choix ? <FicheDeLaCase choix={choix} carte={carte} montrer={montrer} fermer={fermer} /> : null}
     </>
   );
 }
@@ -77,14 +83,14 @@ describe("la fiche d'une Case (US-0428)", () => {
   it("dit le Biome de la Case et à qui elle est : « Libre », « Votre Foyer » ou le nom du chef", () => {
     const choix = (f: Fiche): Choix => ({ case: ICI, fiche: f, echec: false });
     const carte = { current: null };
-    const { rerender } = render(<FicheDeLaCase choix={choix(FORET)} carte={carte} montrer={() => {}} />);
+    const { rerender } = render(<FicheDeLaCase choix={choix(FORET)} carte={carte} montrer={() => {}} fermer={() => {}} />);
     expect(screen.getByRole("heading", { name: "Forêt" })).toBeTruthy();
     expect(fiche()!.textContent).toContain("Libre");
-    rerender(<FicheDeLaCase choix={choix({ ...FORET, biome: "Prairie", chef: "Ourse", aVous: true })} carte={carte} montrer={() => {}} />);
+    rerender(<FicheDeLaCase choix={choix({ ...FORET, biome: "Prairie", chef: "Ourse", aVous: true })} carte={carte} montrer={() => {}} fermer={() => {}} />);
     expect(screen.getByRole("heading", { name: "Prairie" })).toBeTruthy();
     expect(fiche()!.textContent).toContain("Votre Foyer");
     expect(fiche()!.textContent).not.toContain("Ourse");
-    rerender(<FicheDeLaCase choix={choix({ ...FORET, biome: "Lac", chef: "Loutre" })} carte={carte} montrer={() => {}} />);
+    rerender(<FicheDeLaCase choix={choix({ ...FORET, biome: "Lac", chef: "Loutre" })} carte={carte} montrer={() => {}} fermer={() => {}} />);
     expect(screen.getByRole("heading", { name: "Lac" })).toBeTruthy();
     expect(fiche()!.textContent).toContain("Loutre");
     expect(fiche()!.textContent).not.toContain("Libre");
@@ -165,7 +171,7 @@ describe("la fiche d'une Case (US-0428)", () => {
 describe("situer la Case dans le Monde depuis sa fiche (US-0429)", () => {
   /** Le texte de la fiche de `f`, déjà donnée par le serveur. */
   const texte = (f: Partial<Fiche>) => {
-    render(<FicheDeLaCase choix={{ case: ICI, fiche: { ...FORET, ...f }, echec: false }} carte={{ current: null }} montrer={() => {}} />);
+    render(<FicheDeLaCase choix={{ case: ICI, fiche: { ...FORET, ...f }, echec: false }} carte={{ current: null }} montrer={() => {}} fermer={() => {}} />);
     const contenu = fiche()!.textContent!;
     cleanup();
     return contenu;
@@ -189,5 +195,71 @@ describe("situer la Case dans le Monde depuis sa fiche (US-0429)", () => {
     expect(texte({ zone: ZONE_COEUR })).toContain("Les Espèces les plus rares vivent ici.");
     expect(texte({ zone: ZONE_COURONNE })).not.toContain("Espèces");
     expect(texte({ zone: 0 })).not.toContain("Espèces");
+  });
+});
+
+describe("fermer la fiche d'une Case (US-0430)", () => {
+  const croix = () => screen.getByRole("button", { name: "Fermer la fiche" });
+  const carte = () => document.querySelector("canvas")!;
+  const echap = () => act(() => void document.activeElement!.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
+
+  it("se ferme par sa croix, même en attendant le serveur, et rend la main à la carte", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    act(() => croix().click());
+    expect(fiche()).toBeNull();
+    expect(document.activeElement).toBe(carte());
+    toucher(ICI);
+    await repondre(FORET);
+    act(() => croix().click());
+    expect(fiche()).toBeNull();
+  });
+
+  it("se ferme à Échap, sur la carte ou dans la fiche, et rend la main à la carte", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre(FORET);
+    act(() => croix().focus());
+    echap();
+    expect(fiche()).toBeNull();
+    expect(document.activeElement).toBe(carte());
+    toucher(ICI);
+    act(() => carte().focus());
+    echap();
+    expect(fiche()).toBeNull();
+    expect(document.activeElement).toBe(carte());
+  });
+
+  it("laisse Échap à ce qui a le regard ailleurs dans la page, comme le menu du chef", async () => {
+    const ailleurs = document.body.appendChild(document.createElement("button"));
+    render(<Carte />);
+    toucher(ICI);
+    act(() => ailleurs.focus());
+    echap();
+    expect(fiche()).not.toBeNull();
+    expect(document.activeElement).toBe(ailleurs);
+    ailleurs.remove();
+  });
+
+  it("se ferme en touchant la carte hors de ses Cases", () => {
+    render(<Carte />);
+    toucher(ICI);
+    act(() => screen.getByRole("button", { name: "dehors" }).click());
+    expect(fiche()).toBeNull();
+  });
+
+  it("ignore une réponse arrivée après qu'on a choisi une autre Case, ou fermé la fiche", async () => {
+    const autre = { q: 4, r: -5 };
+    render(<Carte cases={[ICI, autre]} />);
+    toucher(ICI);
+    toucher(autre);
+    await repondre(FORET, 0);
+    expect(screen.queryByRole("heading")).toBeNull();
+    await repondre({ ...FORET, ...autre, biome: "Désert" }, 1);
+    expect(screen.getByRole("heading", { name: "Désert" })).toBeTruthy();
+    toucher(ICI);
+    act(() => croix().click());
+    await repondre(FORET, 2);
+    expect(fiche()).toBeNull();
   });
 });
