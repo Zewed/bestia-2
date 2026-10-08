@@ -4,18 +4,39 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_1fa6504d2fdc92 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_3202d59eb9942b 9,70-71,350-392
+  s_97a431cfa65ca7::t_7d9e7140e72edc 9
+  s_97a431cfa65ca7::t_442555c6c907c5 70-71
+  s_97a431cfa65ca7::t_26816d69b988ca 350-392
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_2b75a3391fd06e 9,34-35,59-60,66,84,89
+  s_97a431cfa65ca7::t_646d7a2603b93b 84,89
+  s_97a431cfa65ca7::t_9c08da31ee0855 34-35
+  s_97a431cfa65ca7::t_ca236b32abef98 59-60
+  s_97a431cfa65ca7::t_b44feb4ab79d86 66
+  s_97a431cfa65ca7::t_2cef5bc4a77138 9
 src/app/jeu/carte/gestes.test.ts
   s_97a431cfa65ca7::t_3176e7a6de23b4 15,141-194
+  s_97a431cfa65ca7::t_bdcf2bb096d3ba 15
+  s_97a431cfa65ca7::t_118ab373205762 141-178,181,183-194
+  s_97a431cfa65ca7::t_f9871065bd83f1 179-180,182
 src/app/jeu/carte/gestes.ts
   s_97a431cfa65ca7::t_b94421f2cc58ae 11-12,18-28,42-43,75-95,97,103-107,109
+  s_97a431cfa65ca7::t_8edfe0db0f4edd 75-95,97,103-107,109
+  s_97a431cfa65ca7::t_606d6a53ff9e66 11-12,18-27
+  s_97a431cfa65ca7::t_158137de6b206d 42-43
+  s_97a431cfa65ca7::t_458d76790b6a6b 28
 src/app/jeu/carte/vue.test.ts
   s_97a431cfa65ca7::t_0d8889b2c6d90d 3,5,86-136
+  s_97a431cfa65ca7::t_2afe38abd8de3e 86-105,110,112-115,117-136
+  s_97a431cfa65ca7::t_e3b8d318331b67 106-109,111,116
+  s_97a431cfa65ca7::t_610427fbfdb7d1 3,5
 src/app/jeu/carte/vue.ts
   s_97a431cfa65ca7::t_e44b0d52238bc0 5,66-103
+  s_97a431cfa65ca7::t_240cb5ba49cba1 5
+  s_97a431cfa65ca7::t_efa240c2f3599f 66-103
 src/reglages.ts
   s_97a431cfa65ca7::t_aae999d902a87c 211-216
+  s_97a431cfa65ca7::t_1d56b1496e325e 211-216
 ---
 {
   "schema_version": "authorship/3.0.0",
