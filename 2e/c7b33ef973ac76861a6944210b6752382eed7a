@@ -1,0 +1,39 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_bff6b76b4d4fe6 210
+docs/stories/README.md
+  s_97a431cfa65ca7::t_f8e2acb726781c 7,33
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_7a7b130d1c6f8f 7-8,10-14,21-22,27,29-37,57,127-147,232-295
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_db401c253874bd 6-7,9,28-33,50-52,54-57,63-73,81,83-85,89-90
+src/app/jeu/carte/gestes.test.ts
+  s_97a431cfa65ca7::t_41ff1211bea40e 1-83
+src/app/jeu/carte/gestes.ts
+  s_97a431cfa65ca7::t_bcf682c724c2e1 1-54
+src/app/jeu/carte/page.module.css
+  s_97a431cfa65ca7::t_90734dd1d2f28b 7,12-17
+src/app/jeu/carte/styles.test.ts
+  s_97a431cfa65ca7::t_16fe9a9b8c5c63 1-16
+src/app/jeu/carte/vue.test.ts
+  s_97a431cfa65ca7::t_5f023a2986fdde 1-58
+src/app/jeu/carte/vue.ts
+  s_97a431cfa65ca7::t_49b1f9c621a9e6 1-55
+src/reglages.ts
+  s_97a431cfa65ca7::t_0ca9ced96ace38 202-208
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2ec7b33ef973ac76861a6944210b6752382eed7a",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
