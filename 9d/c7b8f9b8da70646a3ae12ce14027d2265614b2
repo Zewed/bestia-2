@@ -4,12 +4,18 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_ed209c5afd8d41 7
 src/app/jeu/carte/actions.db.test.ts
   s_97a431cfa65ca7::t_a7f55bdeabcbde 1-97
+  s_97a431cfa65ca7::t_4ca2bb3ad54dda 1-97
 src/app/jeu/carte/page.db.test.tsx
   s_97a431cfa65ca7::t_6b439168a2b172 1-128
+  s_97a431cfa65ca7::t_b2d9dd8ea3ea22 1-3,5-128
+  s_97a431cfa65ca7::t_f904d13ba45053 4
 src/monde/carte.db.test.ts
   s_97a431cfa65ca7::t_09bde3afd54ac3 92-98,100-102,104,117,119-127,131,133-135,158-159
+  s_97a431cfa65ca7::t_1470a8f54fb255 92-98,100-102,104,117,119-127,131,133-135
+  s_97a431cfa65ca7::t_0f59ca0bed26c1 158-159
 src/monde/carte.ts
   s_97a431cfa65ca7::t_1365d6c5026664 31,36-37,41-42
+  s_97a431cfa65ca7::t_244695ad1a68aa 31,36-37,41-42
 ---
 {
   "schema_version": "authorship/3.0.0",
