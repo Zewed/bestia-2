@@ -6,7 +6,7 @@ import { creerCompte } from "@/comptes/compte";
 import { ABORDS_DU_FOYER_CASES, CARTE_UTILISABLE_SECONDES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { casesDecouvertes, decouvrir } from "./brouillard";
-import { carteDuJoueur } from "./carte";
+import { type CarteDuJoueur, carteDuJoueur, decouvertesDuJoueur } from "./carte";
 import { BROUILLARD } from "./couleurs-de-la-carte";
 import { creerUnMonde, genererLeMonde } from "./generer";
 import { distance } from "./hex";
@@ -161,5 +161,43 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
 
   it("ne lit rien pour un Territoire qui n'existe pas", async () => {
     expect(await carteDuJoueur(pool, -1)).toBeNull();
+    expect(await decouvertesDuJoueur(pool, -1, 0)).toBeNull();
+  });
+
+  describe("les Cases découvertes depuis la lecture de la carte (US-0442)", () => {
+    /** Le nombre de Cases découvertes d'une carte : celles qui ne sont pas sous le brouillard. */
+    const nombre = (carte: CarteDuJoueur) => carte.cases.teinte.filter((t) => carte.teintes[t] !== BROUILLARD).length;
+    /** Les Cases découvertes d'une carte, en colonnes, chacune de sa teinte et de sa zone, et les Foyers des autres chefs. */
+    const decouvertesDe = (carte: CarteDuJoueur) => {
+      const rangs = carte.cases.teinte.flatMap((t, i) => (carte.teintes[t] === BROUILLARD ? [] : [i]));
+      const { q, r, teinte, zone } = carte.cases;
+      return { cases: { q: rangs.map((i) => q[i]), r: rangs.map((i) => r[i]), teinte: rangs.map((i) => carte.teintes[teinte[i]]), zone: rangs.map((i) => zone[i]) }, foyers: carte.foyers };
+    };
+
+    it("ne rend rien tant que le joueur n'a rien découvert de plus que la carte n'en sait, même en redécouvrant ses Cases", async () => {
+      const moi = await naitre(genereId);
+      const connues = nombre((await carteDuJoueur(pool, moi.territoireId))!);
+      expect(connues).toBeGreaterThan(10);
+      expect(await decouvertesDuJoueur(pool, moi.territoireId, connues)).toBeNull();
+      expect(await decouvrir(pool, moi.territoireId, [moi.foyer])).toBe(0);
+      expect(await decouvertesDuJoueur(pool, moi.territoireId, connues)).toBeNull();
+    });
+
+    it("rend, après une découverte faite à côté, les Cases découvertes telles que la carte les dessine, et les Foyers parmi elles", async () => {
+      const moi = await naitre(genereId);
+      let voisin = await naitre(genereId);
+      for (let i = 0; i < 8 && distance(voisin.foyer, moi.foyer) <= ABORDS_DU_FOYER_CASES; i++) voisin = await naitre(genereId);
+      const connues = nombre((await carteDuJoueur(pool, moi.territoireId))!);
+      // Une Expédition, plus tard : le milieu du Monde et le Foyer d'un voisin, sous le brouillard jusque-là.
+      expect(await decouvrir(pool, moi.territoireId, [{ q: 0, r: 0 }, voisin.foyer])).toBe(2);
+      const decouvertes = await decouvertesDuJoueur(pool, moi.territoireId, connues);
+      const carte = (await carteDuJoueur(pool, moi.territoireId))!;
+      expect(decouvertes).toEqual(decouvertesDe(carte));
+      expect(decouvertes!.cases.q).toHaveLength(connues + 2);
+      expect(decouvertes!.foyers).toContainEqual(voisin.foyer);
+      expect(decouvertes!.cases.zone[decouvertes!.cases.q.findIndex((q, i) => q === 0 && decouvertes!.cases.r[i] === 0)]).toBe(ZONE_COEUR);
+      // Ce nombre-là connu, plus rien de nouveau.
+      expect(await decouvertesDuJoueur(pool, moi.territoireId, connues + 2)).toBeNull();
+    });
   });
 });

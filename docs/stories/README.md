@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0439** · Ne rien laisser passer de ce que cache le brouillard ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
+Dernière story livrée : **US-0442** · Découvrir des Cases d'une seule façon ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
 
 ## Sommaire
 

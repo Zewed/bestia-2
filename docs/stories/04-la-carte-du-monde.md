@@ -430,6 +430,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0442 · Découvrir des Cases d'une seule façon
 **En tant que** développeur, **je veux** une seule façon de découvrir des Cases, **afin de** la réutiliser pour les Expéditions et les Avant-postes sans rien réécrire.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Seul `decouvrir` écrit les Cases découvertes ; la naissance et la bascule passent par lui, et redécouvrir une Case ne change rien. La carte ouverte demande les nouvelles découvertes au serveur toutes les 60 secondes, tant que l'onglet est visible (`CARTE_DECOUVERTES_SECONDES`), et dès qu'il le redevient. Elle les dessine aussitôt, sans recharger la page. Vérifié en vrai.
 - **Débloquée par** : US-0441
 - **Critères d'acceptation** :
   - Les abords du Foyer sont découverts par cette seule façon de faire.

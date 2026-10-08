@@ -5,6 +5,7 @@ import { creerCompte } from "@/comptes/compte";
 import { decouvrir } from "@/monde/brouillard";
 import { creerUnMonde } from "@/monde/generer";
 import { type Coordonnees, distance } from "@/monde/hex";
+import { ZONE_COEUR } from "@/monde/zones";
 import { ABORDS_DU_FOYER_CASES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 
@@ -14,13 +15,13 @@ vi.mock("@/comptes/garde", () => garde);
 const base = vi.hoisted(() => ({ pool: null as Pool | null }));
 vi.mock("@/db", async (original) => ({ ...(await original<object>()), getPool: () => base.pool }));
 
-import { ficheDeLaCase } from "./actions";
+import { decouvertesDepuis, ficheDeLaCase } from "./actions";
 
 /** Le Monde généré des essais de la carte (src/monde/carte.db.test.ts), créé une fois pour toutes dans la base de test. */
 const MONDE_GENERE = "Essai de la carte (US-0417)";
 const GRAINE = 417;
 
-describe.skipIf(!URL_TEST)("les actions de la carte appelées directement, sur base (US-0439)", () => {
+describe.skipIf(!URL_TEST)("les actions de la carte appelées directement, sur base (US-0439, US-0442)", () => {
   let pool: Pool;
   let genereId: number;
   const lancement = `actions-carte-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -93,5 +94,21 @@ describe.skipIf(!URL_TEST)("les actions de la carte appelées directement, sur b
     const fiche = await ficheDeLaCase(voisin.foyer.q, voisin.foyer.r);
     expect(fiche).toEqual({ ...voisin.foyer, inconnue: true, distance: distance(voisin.foyer, moi.foyer) });
     expect(JSON.stringify(fiche)).not.toContain(voisin.nom);
+  });
+
+  it("rend à la carte ouverte les Cases découvertes à côté depuis sa lecture, et rien tant qu'il n'y en a pas (US-0442)", async () => {
+    const moi = await naitre();
+    connecter(moi.territoireId);
+    const { rows } = await pool.query<{ n: number }>("select count(*)::int as n from case_decouverte where territoire_id = $1", [moi.territoireId]);
+    const connues = rows[0].n;
+    expect(await decouvertesDepuis(connues)).toBeNull();
+    // Une découverte faite à côté, pendant que la carte est ouverte : le milieu du Monde.
+    await decouvrir(pool, moi.territoireId, [{ q: 0, r: 0 }]);
+    const nouvelles = (await decouvertesDepuis(connues))!;
+    expect(nouvelles.cases.q).toHaveLength(connues + 1);
+    const milieu = nouvelles.cases.q.findIndex((q, i) => q === 0 && nouvelles.cases.r[i] === 0);
+    const { rows: lu } = await pool.query<{ teinte: string }>("select coalesce(variante_id, biome_id) as teinte from case_du_monde where monde_id = $1 and q = 0 and r = 0", [genereId]);
+    expect([nouvelles.cases.teinte[milieu], nouvelles.cases.zone[milieu]]).toEqual([lu[0].teinte, ZONE_COEUR]);
+    expect(await decouvertesDepuis(connues + 1)).toBeNull();
   });
 });
