@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
+import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
 import type { Fiche } from "@/monde/fiche";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
@@ -12,7 +13,7 @@ import { avancer, bornesDuZoom, cadrer, deplacer, devoiler, enChemin, flecheVers
 
 /** US-0428 : les fiches de Case demandées au serveur, chacune avec de quoi lui répondre. */
 let fiches: { q: number; r: number; repondre: (fiche: Fiche | null) => void }[] = [];
-const serveur = vi.hoisted(() => ({ ficheDeLaCase: vi.fn() }));
+const serveur = vi.hoisted(() => ({ ficheDeLaCase: vi.fn(), decouvertesDepuis: vi.fn() }));
 vi.mock("./actions", () => serveur);
 
 /**
@@ -39,6 +40,8 @@ beforeEach(() => {
   aLaProchaineImage = new Map();
   fiches = [];
   serveur.ficheDeLaCase.mockImplementation((q: number, r: number) => new Promise((repondre) => void fiches.push({ q, r, repondre })));
+  serveur.decouvertesDepuis.mockReset();
+  serveur.decouvertesDepuis.mockResolvedValue(null);
   let demandes = 0;
   vi.stubGlobal("requestAnimationFrame", (rappel: FrameRequestCallback) => {
     aLaProchaineImage.set(++demandes, rappel);
@@ -845,5 +848,80 @@ describe("fermer la fiche d'une Case (US-0430)", () => {
     fireEvent.keyDown(document.body, { key: "Escape" });
     expect(fiche()).toBeNull();
     expect(fleche.style.transform).toBe(enStyle(flecheVersLeFoyer(vue, FOYER, [], 22)));
+  });
+});
+
+describe("voir une Case découverte sans recharger la page (US-0442)", () => {
+  /** Le Foyer découvert, en prairie ; ses six voisines sous le brouillard. */
+  const BRUMEUSE: CarteDuJoueur = { ...CARTE, teintes: ["prairie", BROUILLARD], cases: { ...CARTE.cases, teinte: AUTOUR.map((c) => (c.q === FOYER.q && c.r === FOYER.r ? 0 : 1)) } };
+  const FONDS_BRUMEUSE = ["var(--biome-prairie)", "var(--sur-encre-pale)"];
+  /** Ce que le serveur répond une fois la Case AUTOUR[2], un lac, découverte à côté : toutes les Cases découvertes. */
+  const AVEC_LE_LAC = { cases: { q: [FOYER.q, AUTOUR[2].q], r: [FOYER.r, AUTOUR[2].r], teinte: ["prairie", "lac"], zone: [0, 0] }, foyers: [] };
+  /** L'onglet caché ou visible, comme le navigateur le dit à la page. */
+  const onglet = (visible: boolean) =>
+    act(() => {
+      Object.defineProperty(document, "visibilityState", { value: visible ? "visible" : "hidden", configurable: true });
+      document.dispatchEvent(new Event("visibilitychange"));
+    });
+  /** Le temps qui passe, en millisecondes, et ce que le serveur répond entre-temps. */
+  const attendre = (ms: number) => act(async () => void vi.advanceTimersByTime(ms));
+
+  beforeEach(() => void vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] }));
+  afterEach(() => {
+    vi.useRealTimers();
+    Object.defineProperty(document, "visibilityState", { value: "visible", configurable: true });
+  });
+
+  it("demande au serveur toutes les 60 secondes les Cases découvertes au-delà de celles qu'elle connaît, et dessine aussitôt les nouvelles", async () => {
+    render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
+    expect(toile.gestes).toContain("remplir var(--sur-encre-pale)");
+    await attendre(59_000);
+    expect(serveur.decouvertesDepuis).not.toHaveBeenCalled();
+    serveur.decouvertesDepuis.mockResolvedValueOnce(AVEC_LE_LAC);
+    toile.gestes = [];
+    await attendre(1_000);
+    expect(serveur.decouvertesDepuis).toHaveBeenCalledExactlyOnceWith(1);
+    // Le lac, de sa couleur, dessiné aussitôt : sans geste du joueur, sans relire la page.
+    expect(toile.gestes).toContain("remplir var(--sarcelle-fonce)");
+    expect(toile.gestes).toContain("remplir var(--sur-encre-pale)");
+    // Elle en connaît maintenant deux.
+    await attendre(60_000);
+    expect(serveur.decouvertesDepuis).toHaveBeenLastCalledWith(2);
+  });
+
+  it("compte les Cases découvertes et la part du Monde qu'elles font, et le compte monte à chaque découverte (US-0443)", async () => {
+    render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
+    const compteur = () => document.querySelector("p[data-sur-la-carte]")!;
+    expect(compteur().textContent).toBe("1 Case découverte · 14,3 % du Monde");
+    expect(compteur().hasAttribute("data-sur-la-carte")).toBe(true);
+    serveur.decouvertesDepuis.mockResolvedValueOnce(AVEC_LE_LAC);
+    await attendre(60_000);
+    expect(compteur().textContent).toBe("2 Cases découvertes · 28,6 % du Monde");
+  });
+
+  it("ne demande rien tant que l'onglet est caché, et demande dès qu'il redevient visible", async () => {
+    render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
+    onglet(false);
+    await attendre(180_000);
+    expect(serveur.decouvertesDepuis).not.toHaveBeenCalled();
+    onglet(true);
+    expect(serveur.decouvertesDepuis).toHaveBeenCalledExactlyOnceWith(1);
+  });
+
+  it("ne redessine rien quand rien n'est découvert, ne demande qu'une fois à la fois, et plus rien une fois la page quittée", async () => {
+    const { unmount } = render(<CarteDuJeu carte={BRUMEUSE} fonds={FONDS_BRUMEUSE} />);
+    const effacements = toile.effacements;
+    await attendre(60_000);
+    expect(serveur.decouvertesDepuis).toHaveBeenCalledTimes(1);
+    expect(toile.effacements).toBe(effacements);
+    // Une réponse qui tarde : l'onglet qui revient ne redemande pas en même temps.
+    serveur.decouvertesDepuis.mockReturnValueOnce(new Promise(() => {}));
+    await attendre(60_000);
+    onglet(true);
+    expect(serveur.decouvertesDepuis).toHaveBeenCalledTimes(2);
+    unmount();
+    await attendre(120_000);
+    onglet(true);
+    expect(serveur.decouvertesDepuis).toHaveBeenCalledTimes(2);
   });
 });

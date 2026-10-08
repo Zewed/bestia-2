@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-238 points au total.
+237 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -17,7 +17,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
 
 - [US-0435](04-la-carte-du-monde.md) · Garder la carte fluide sur mobile : déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir.
-- [US-0443](04-la-carte-du-monde.md) · Compter les Cases découvertes : la part du Monde découverte s'affiche aussi, en pourcentage.
 
 ## [Jalon 5 · Récolter](05-recolter.md)
 

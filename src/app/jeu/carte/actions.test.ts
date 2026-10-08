@@ -5,8 +5,10 @@ vi.mock("@/comptes/garde", () => garde);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 const lecture = vi.hoisted(() => ({ ficheDUneCase: vi.fn() }));
 vi.mock("@/monde/fiche", () => lecture);
+const carte = vi.hoisted(() => ({ decouvertesDuJoueur: vi.fn() }));
+vi.mock("@/monde/carte", () => carte);
 
-import { ficheDeLaCase } from "./actions";
+import { decouvertesDepuis, ficheDeLaCase } from "./actions";
 
 /** La fiche d'une forêt libre, à 7 Cases du Foyer, telle que la base la lit. */
 const FICHE = { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7 };
@@ -62,5 +64,43 @@ describe("lire la fiche d'une Case (US-0428)", () => {
     vi.stubEnv("VERCEL_ENV", "production");
     expect(await ficheDeLaCase(3, -5)).toBeNull();
     expect(garde.exigerCompte).not.toHaveBeenCalled();
+  });
+});
+
+describe("les Cases découvertes depuis la lecture de la carte (US-0442)", () => {
+  /** Les Cases découvertes d'un joueur, telles que la base les lit. */
+  const DECOUVERTES = { cases: { q: [3], r: [-5], teinte: ["foret"], zone: [0] }, foyers: [] };
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    garde.exigerCompte.mockReset();
+    carte.decouvertesDuJoueur.mockReset();
+  });
+
+  it("passe par la garde, puis lit les Cases découvertes du Territoire du joueur, à partir du nombre que la carte en sait", async () => {
+    garde.exigerCompte.mockResolvedValue({ territoireId: 12 });
+    carte.decouvertesDuJoueur.mockResolvedValue(DECOUVERTES);
+    expect(await decouvertesDepuis(61)).toEqual(DECOUVERTES);
+    expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/carte");
+    expect(carte.decouvertesDuJoueur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 61);
+  });
+
+  it.each([[-1], [1.5], [Number.NaN], [Number.POSITIVE_INFINITY], [2 ** 31], ["61" as unknown as number], [null as unknown as number]])(
+    "ignore un nombre qui n'en est pas un : %s",
+    async (connues) => {
+      garde.exigerCompte.mockResolvedValue({ territoireId: 12 });
+      expect(await decouvertesDepuis(connues)).toBeNull();
+      expect(carte.decouvertesDuJoueur).not.toHaveBeenCalled();
+    },
+  );
+
+  it("ne rend rien à un chef sans Territoire, ni en production tant que l'entrée du jeu est fermée", async () => {
+    garde.exigerCompte.mockResolvedValue({ territoireId: null });
+    expect(await decouvertesDepuis(61)).toBeNull();
+    vi.stubEnv("VERCEL_ENV", "production");
+    garde.exigerCompte.mockClear();
+    expect(await decouvertesDepuis(61)).toBeNull();
+    expect(garde.exigerCompte).not.toHaveBeenCalled();
+    expect(carte.decouvertesDuJoueur).not.toHaveBeenCalled();
   });
 });

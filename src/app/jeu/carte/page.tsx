@@ -16,8 +16,8 @@ export const metadata: Metadata = { title: "Carte" };
 
 /**
  * La carte du Monde (US-0417), ouverte depuis la navigation : le Monde du joueur dans toute la place sous la barre
- * du haut, son Foyer au milieu, sans un mot de plus. Toutes les Cases sont visibles en attendant le brouillard
- * (étape 20). US-0418 : chaque Biome, et chaque eau, de sa couleur sur la page de contrôle du Monde. US-0432 : sa
+ * du haut, son Foyer au milieu, sans un mot de plus. US-0437 : les Cases que le joueur n'a pas découvertes sous le
+ * brouillard. US-0418 : chaque Biome, et chaque eau, de sa couleur sur la page de contrôle du Monde. US-0432 : sa
  * légende, les Biomes de terre puis les eaux de leur nom en base. US-0434 : son attente, jusqu'à ce qu'elle soit
  * dessinée ; si sa lecture échoue, error.tsx. Sans session, la garde mène à la connexion, qui ramène ici.
  */

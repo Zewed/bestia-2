@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { COULEURS } from "@/monde/couleurs-de-la-carte";
+import { BROUILLARD, COULEURS } from "@/monde/couleurs-de-la-carte";
 import { anneau, casesDesAnneaux, voisines, type Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { aLEcran, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau } from "./dessin";
@@ -312,6 +312,80 @@ describe("couleurs des Biomes sur la carte (US-0418)", () => {
         expect(ecart, `${a} et ${b}`).toBeGreaterThanOrEqual(0.07);
       }
     }
+  });
+
+  it("donne au brouillard un neutre de la palette, qui se distingue de chaque teinte et du fond de la page au-delà du Monde (US-0437)", () => {
+    const [, chroma] = palette.get(COULEURS[BROUILLARD].match(/var\((--[\w-]+)\)/)![1])!;
+    expect(chroma).toBeLessThanOrEqual(0.02);
+    for (const teinte of Object.keys(MOTIFS)) {
+      expect(Math.hypot(...oklab(BROUILLARD).map((v, k) => v - oklab(teinte)[k])), teinte).toBeGreaterThanOrEqual(0.07);
+    }
+    const [l, c, h] = palette.get("--fond")!;
+    const fond = [l, c * Math.cos((h * Math.PI) / 180), c * Math.sin((h * Math.PI) / 180)];
+    expect(Math.hypot(...oklab(BROUILLARD).map((v, k) => v - fond[k]))).toBeGreaterThanOrEqual(0.07);
+  });
+});
+
+describe("le brouillard (US-0437)", () => {
+  const vue = vueSurLeFoyer({ q: 0, r: 0 }, 800, 600);
+  // Un petit Monde de 4 Cases de rayon : découvert jusqu'à 2 Cases du milieu, sous le brouillard au-delà.
+  const monde = casesDesAnneaux(0, 4);
+  const decouverte = (c: Coordonnees) => anneau(c) <= 2;
+  // Les teintes de la carte : la prairie, la forêt, puis le brouillard.
+  const TEINTES = ["prairie", "foret", BROUILLARD];
+  const teinteDe = (c: Coordonnees) => (!decouverte(c) ? 2 : c.q > 0 ? 1 : 0);
+  const FONDS = ["vert", "sapin", "brume"];
+  /** La carte : sa Couronne sur les deux derniers anneaux, sous le brouillard, et le premier qui y touche, découvert. */
+  const zoneDe = (c: Coordonnees) => (anneau(c) >= 2 ? ZONE_COURONNE : 0);
+  const carte = { ...FOYER_LOIN, teintes: TEINTES, cases: enColonnes(monde, teinteDe, zoneDe) };
+  const auCentre = (cases: Coordonnees[]) => cases.map((c) => cle(aLEcran(c, vue))).sort();
+  const centres = (p: Peint) => p.traces.map((t) => cle(milieu(t))).sort();
+
+  it("peint toutes les Cases sous le brouillard d'une seule teinte unie, d'un seul geste, sans motif ni bord entre elles", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(FONDS));
+    const brume = peints.filter((p) => p.couleur === "brume");
+    expect(brume).toHaveLength(1);
+    expect(brume[0].geste).toBe("remplir");
+    expect(centres(brume[0])).toEqual(auCentre(monde.filter((c) => !decouverte(c))));
+    // Aucun motif ni aucun bord ne touche une Case sous le brouillard : rien que les Cases découvertes.
+    const cachees = new Set(auCentre(monde.filter((c) => !decouverte(c))));
+    const bord = peints.find((p) => p.couleur === "bord")!;
+    expect(centres(bord)).toEqual(auCentre(monde.filter(decouverte)));
+    for (const motif of peints.filter((p) => ["encre", "ivoire"].includes(p.couleur))) {
+      for (const point of motif.traces.flat()) {
+        const [proche] = monde.map((c) => ({ c, d: Math.hypot(point.x - aLEcran(c, vue).x, point.y - aLEcran(c, vue).y) })).sort((a, b) => a.d - b.d);
+        expect(cachees.has(cle(aLEcran(proche.c, vue)))).toBe(false);
+      }
+    }
+  });
+
+  it("ne trace aucun liseré sous le brouillard ni à son bord : seulement entre deux Cases découvertes", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(FONDS));
+    const [couronne, ...autres] = peints.filter((p) => p.tirets.length > 0);
+    expect(autres).toEqual([]);
+    // Entre l'anneau 1, découvert, et l'anneau 2, découvert et de la Couronne : ses 6 × 3 côtés, et rien au-delà.
+    const attendus = monde
+      .filter((c) => anneau(c) === 2)
+      .flatMap((c) => voisines(c).filter((v) => anneau(v) === 1).map((v) => [aLEcran(c, vue), aLEcran(v, vue)]))
+      .map(([a, b]) => cle({ x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }))
+      .sort();
+    expect(couronne.traces.map((t) => cle(milieu(t))).sort()).toEqual(attendus);
+    expect(attendus).toHaveLength(6 * 3);
+  });
+
+  it("ne laisse rien deviner de ce qu'il cache : sa zone et un Foyer dessous ne changent rien au dessin", () => {
+    const sous = { q: 4, r: -1 };
+    const montre = pinceauDEssai();
+    dessinerLaCarte(montre.pinceau, { ...carte, foyers: [sous], cases: enColonnes(monde, teinteDe, (c) => (decouverte(c) ? zoneDe(c) : anneau(c) === 4 ? ZONE_COEUR : 0)) }, vue, peinture(FONDS));
+    const cache = pinceauDEssai();
+    dessinerLaCarte(cache.pinceau, { ...carte, cases: enColonnes(monde, teinteDe, (c) => (decouverte(c) ? zoneDe(c) : 0)) }, vue, peinture(FONDS));
+    expect(montre.peints).toEqual(cache.peints);
+    // Un Foyer d'un autre chef sur une Case découverte, lui, se voit.
+    const voisin = pinceauDEssai();
+    dessinerLaCarte(voisin.pinceau, { ...carte, foyers: [sous, { q: 1, r: 0 }] }, vue, peinture(FONDS));
+    expect(voisin.peints.filter((p) => p.couleur === "Encre" && p.geste === "remplir").map(centres)).toEqual([auCentre([{ q: 1, r: 0 }])]);
   });
 });
 

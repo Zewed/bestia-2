@@ -27,6 +27,33 @@ describe("une Case découverte le reste pour toujours (US-0441)", () => {
   });
 });
 
+describe("une seule façon de découvrir des Cases (US-0442)", () => {
+  /** Tout le code du jeu, de ses scripts et de ses migrations, hors des tests, et ce qu'il dit. */
+  const sources = ["src", "scripts", "drizzle"].flatMap((dossier) =>
+    readdirSync(join(process.cwd(), dossier), { recursive: true })
+      .map(String)
+      .filter((f) => /\.(ts|tsx|sql)$/.test(f) && !/\.test\.tsx?$/.test(f))
+      .map((f) => ({ fichier: join(dossier, f), texte: readFileSync(join(process.cwd(), dossier, f), "utf8") })),
+  );
+
+  it("n'écrit dans le brouillard que par decouvrir ; seule la migration 0045 l'a fait autrement, une fois, pour les Territoires déjà nés", () => {
+    const ecrit = [/\binsert\s+into\s+"?case_decouverte\b/i, /\.insert\(\s*caseDecouverte\b/, /\bcopy\s+"?case_decouverte\b/i];
+    expect(sources.filter(({ texte }) => ecrit.some((motif) => motif.test(texte))).map(({ fichier }) => fichier)).toEqual(["src/monde/brouillard.ts", "drizzle/0045_brouillard.sql"]);
+    // Dans brouillard.ts, une seule instruction : celle de decouvrir.
+    const brouillard = sources.find(({ fichier }) => fichier === "src/monde/brouillard.ts")!.texte;
+    expect(brouillard.match(/insert\s+into\s+case_decouverte/gi)).toHaveLength(1);
+  });
+
+  it("découvre les abords du Foyer par elle à la naissance et à la bascule d'un Monde, et nulle part autrement", () => {
+    const appels = sources.filter(({ fichier, texte }) => fichier !== "src/monde/brouillard.ts" && /\babordsDuFoyer\(/.test(texte));
+    expect(appels.map(({ fichier }) => fichier).sort()).toEqual(["src/chefs/chef.ts", "src/monde/bascule.ts"]);
+    for (const { fichier, texte } of appels) {
+      const lignes = texte.split("\n").filter((l) => /\babordsDuFoyer\(/.test(l));
+      for (const ligne of lignes) expect(ligne, fichier).toMatch(/\bawait decouvrir\(client, [^,]+, abordsDuFoyer\(/);
+    }
+  });
+});
+
 describe("les abords d'un Foyer (US-0436)", () => {
   it(`sont les Cases à ${ABORDS_DU_FOYER_CASES} Cases du Foyer ou moins, lui compris, et elles seules`, () => {
     const foyer = { q: 37, r: -52 };

@@ -244,3 +244,9 @@ export const CARTE_TOUCHER_PIXELS = { souris: 4, doigt: 8 };
  * elle revient (valeur provisoire, à régler en jouant).
  */
 export const CARTE_FICHE_FERMETURE_PIXELS = 60;
+
+/**
+ * US-0442 : la carte ouverte demande au serveur les Cases découvertes depuis sa lecture toutes les 60 secondes tant
+ * que l'onglet est visible, et dès qu'il le redevient (valeur provisoire, à régler en jouant).
+ */
+export const CARTE_DECOUVERTES_SECONDES = 60;

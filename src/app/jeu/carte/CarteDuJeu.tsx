@@ -1,10 +1,13 @@
 "use client";
 
 import { getImageProps } from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
+import { couleur } from "@/monde/couleurs-de-la-carte";
 import type { Coordonnees } from "@/monde/hex";
 import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
+import { CasesDecouvertes } from "./CasesDecouvertes";
+import { nombreDeDecouvertes, useDecouvertes } from "./decouvertes";
 import { type Cadre, dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
 import { FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
@@ -46,7 +49,8 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * US-0427 : pendant la visite, elle se rouvre là où on l'a laissée, au même zoom (vue-retenue.ts). US-0428 : toucher
  * une Case (ou Entrée) ouvre sa fiche (FicheDeLaCase), la Case surlignée ; la carte glisse pour que la fiche ne la
  * cache pas, et la flèche du Foyer la contourne. US-0430 : toucher la carte hors de ses Cases la ferme, et le
- * surlignage s'en va avec elle.
+ * surlignage s'en va avec elle. US-0442 : une Case découverte pendant qu'elle est ouverte y apparaît sans recharger
+ * la page (useDecouvertes). US-0443 : en bas à gauche, combien le joueur en a découvert, et quelle part du Monde.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -61,6 +65,15 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
   const { choix, choisir, fermer } = useFicheDeLaCase();
   const choisie = useRef<Coordonnees | null>(null);
   const pourLaFiche = useRef<{ redessiner: () => void; montrer: (c: Coordonnees, cache: Cadre) => void }>({ redessiner: () => {}, montrer: () => {} });
+  // US-0442 : la carte à jour des Cases découvertes depuis sa lecture, redessinée dès qu'il y en a ; avant le dessin
+  // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle.
+  const decouverte = useDecouvertes(carte);
+  const decouvertes = useMemo(() => nombreDeDecouvertes(decouverte), [decouverte]);
+  const aDessiner = useRef(decouverte);
+  useEffect(() => {
+    aDessiner.current = decouverte;
+    pourLaFiche.current.redessiner();
+  }, [decouverte]);
   useEffect(() => {
     const canvas = toile.current;
     const pinceau = canvas?.getContext("2d");
@@ -80,7 +93,10 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     // US-0426 : la flèche du Foyer suit chaque dessin. US-0427 : la vue retenue à chaque dessin, au plus un par image.
     const dessiner = () => {
       if (!vue) return;
-      dessinerLaCarte(pinceau, carte, vue, peinture, hutte, choisie.current);
+      // US-0442 : une teinte découverte depuis la lecture de la page, de la couleur que la page lui aurait donnée.
+      const { teintes } = aDessiner.current;
+      for (let t = peinture.fonds.length; t < teintes.length; t++) peinture.fonds.push(couleurCalculee(canvas, couleur(teintes[t])));
+      dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
       retenirLaVue(carte, vue);
     };
@@ -188,6 +204,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
       <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
       <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
+      <CasesDecouvertes nombre={decouvertes} total={decouverte.cases.q.length} />
       {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} fermer={fermer} /> : null}
     </div>
   );

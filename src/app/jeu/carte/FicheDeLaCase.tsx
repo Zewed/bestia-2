@@ -1,7 +1,7 @@
 "use client";
 
 import { type PointerEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
-import type { Fiche } from "@/monde/fiche";
+import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
@@ -13,8 +13,14 @@ import { LEGENDE_MONTREE } from "./Legende";
 /** US-0429 : où est la Case dans le Monde, selon sa zone. */
 const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne", [ZONE_COEUR]: "Cœur sauvage", 0: "Entre la Couronne et le Cœur sauvage" };
 
-/** La Case choisie sur la carte, et sa fiche : null tant que le serveur ne l'a pas donnée ; `echec` s'il n'a pas pu. */
-export type Choix = { case: Coordonnees; fiche: Fiche | null; echec: boolean };
+/** US-0429 : « À 7 Cases de votre Foyer ». */
+const aDistance = (n: number) => `À ${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
+
+/**
+ * La Case choisie sur la carte, et sa fiche : null tant que le serveur ne l'a pas donnée ; `echec` s'il n'a pas pu.
+ * US-0438 : une Case sous le brouillard a une fiche inconnue.
+ */
+export type Choix = { case: Coordonnees; fiche: Fiche | FicheInconnue | null; echec: boolean };
 
 /**
  * US-0428 : la Case que le joueur choisit sur la carte (`choisir`), et sa fiche, demandée au serveur dès qu'elle est
@@ -76,6 +82,8 @@ function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElemen
  * légende, qu'on ferme en le faisant glisser vers le bas au-delà de CARTE_FICHE_FERMETURE_PIXELS (en deçà, il
  * revient) ; tant qu'il est ouvert, il publie sa hauteur dans --hauteur-fiche, sur la racine de la page, pour les
  * boutons de la carte et la flèche du Foyer. Un seul panneau en bas à la fois : la légende qui s'y montre la ferme.
+ * US-0438 : d'une Case sous le brouillard, seulement « Case inconnue », sa distance au Foyer, et qu'une Expédition
+ * pourra la découvrir, comme le serveur la donne.
  */
 export function FicheDeLaCase({
   choix,
@@ -169,7 +177,13 @@ export function FicheDeLaCase({
           <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" />
         </svg>
       </button>
-      {fiche ? (
+      {fiche && "inconnue" in fiche ? (
+        <>
+          <h2 className={styles.biome}>Case inconnue</h2>
+          <p className={styles.distance}>{aDistance(fiche.distance)}</p>
+          <p className={styles.expedition}>Une Expédition pourra la découvrir.</p>
+        </>
+      ) : fiche ? (
         <>
           <h2 className={styles.biome}>{fiche.biome}</h2>
           <dl className={styles.details}>
@@ -182,7 +196,7 @@ export function FicheDeLaCase({
               <dd>{ZONES[fiche.zone]}</dd>
             </div>
           </dl>
-          {fiche.distance > 0 ? <p className={styles.distance}>{`À ${fiche.distance} Case${fiche.distance > 1 ? "s" : ""} de votre Foyer`}</p> : null}
+          {fiche.distance > 0 ? <p className={styles.distance}>{aDistance(fiche.distance)}</p> : null}
           {fiche.zone === ZONE_COEUR ? <p className={styles.rares}>Les Espèces les plus rares vivent ici.</p> : null}
         </>
       ) : echec ? (

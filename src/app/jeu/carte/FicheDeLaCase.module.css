@@ -90,13 +90,15 @@
   margin: 0;
 }
 
-/* US-0429 : la distance au Foyer, puis ce qui vit au Cœur sauvage. */
+/* US-0429 : la distance au Foyer, puis ce qui vit au Cœur sauvage. US-0438 : ou ce qui découvrira une Case inconnue. */
 .distance,
-.rares {
+.rares,
+.expedition {
   margin-top: 10px;
 }
 
-.rares {
+.rares,
+.expedition {
   color: var(--texte-2);
 }
 

@@ -1,4 +1,5 @@
 // Le dessin de la carte du Monde sur un <canvas> (US-0417), sans rien demander au navigateur : il se vérifie à part.
+import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
 import { centre, DIRECTIONS, SOMMETS_DE_CASE, type Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 
@@ -319,26 +320,39 @@ const LISERES = [
 ] as const;
 const OPACITE_DES_LISERES = 0.7;
 
+/** US-0437 : le rang de chaque Case de la carte, par sa place « q,r », par forme de carte : calculé une fois. */
+const rangsDesCartes = new WeakMap<number[], Map<string, number>>();
+
+/** US-0437 : le rang de chaque Case de la carte dans ses colonnes, par sa place « q,r ». */
+export function rangsDesCases(cases: CarteADessiner["cases"]): Map<string, number> {
+  const connus = rangsDesCartes.get(cases.q);
+  if (connus) return connus;
+  const rangs = new Map(cases.q.map((q, i) => [`${q},${cases.r[i]}`, i]));
+  rangsDesCartes.set(cases.q, rangs);
+  return rangs;
+}
+
 /** US-0433 : les côtés où s'arrête chaque zone, par carte : calculés une fois, redessinés à chaque image. */
 const limitesDesCartes = new WeakMap<CarteADessiner["cases"], Map<number, [number, number][]>>();
 
 /**
  * US-0433 : les côtés où s'arrête chaque zone : ceux d'une Case de la zone qui touchent une Case de la carte hors de
  * la zone, chacun par le rang de sa Case et sa direction (DIRECTIONS). Au-delà du bord de la carte, il n'y a pas de
- * Case, et pas de limite.
+ * Case, et pas de limite. US-0437 : sous le brouillard non plus, ni à son bord : il ne laisse rien deviner.
  */
-function limitesDe(cases: CarteADessiner["cases"]): Map<number, [number, number][]> {
+function limitesDe({ teintes, cases }: CarteADessiner): Map<number, [number, number][]> {
   const connues = limitesDesCartes.get(cases);
   if (connues) return connues;
-  const { q, r, zone } = cases;
-  const zones = new Map(q.map((_, i) => [`${q[i]},${r[i]}`, zone[i]]));
+  const { q, r, teinte, zone } = cases;
+  const brume = teintes.indexOf(BROUILLARD);
+  const rangs = rangsDesCases(cases);
   const limites = new Map(LISERES.map((l): [number, [number, number][]] => [l.zone, []]));
   for (let i = 0; i < q.length; i++) {
     const cotes = limites.get(zone[i]);
-    if (!cotes) continue;
+    if (!cotes || teinte[i] === brume) continue;
     DIRECTIONS.forEach((d, direction) => {
-      const voisine = zones.get(`${q[i] + d.q},${r[i] + d.r}`);
-      if (voisine !== undefined && voisine !== zone[i]) cotes.push([i, direction]);
+      const voisine = rangs.get(`${q[i] + d.q},${r[i] + d.r}`);
+      if (voisine !== undefined && teinte[voisine] !== brume && zone[voisine] !== zone[i]) cotes.push([i, direction]);
     });
   }
   limitesDesCartes.set(cases, limites);
@@ -351,7 +365,7 @@ function limitesDe(cases: CarteADessiner["cases"]): Map<number, [number, number]
  * le rythme ne change pas d'un côté au suivant.
  */
 function tracerLesLimites(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture) {
-  const limites = limitesDe(carte.cases);
+  const limites = limitesDe(carte);
   const { q, r } = carte.cases;
   pinceau.save();
   pinceau.strokeStyle = peinture.encre;
@@ -402,13 +416,16 @@ function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, r
  * US-0433 : par-dessus, le liseré des limites de la Couronne et du Cœur sauvage.
  * US-0419 : les Foyers des autres chefs d'un petit hexagone d'Encre ; celui du joueur montre la hutte du chef
  * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron. US-0428 : la Case
- * `choisie` surlignée, sous ce seul repère.
+ * `choisie` surlignée, sous ce seul repère. US-0437 : les Cases sous le brouillard (de la teinte BROUILLARD), d'une
+ * brume unie, d'un seul geste : sans motif, ni bord entre elles, ni liseré, ni Foyer d'un autre chef. Le Foyer du
+ * joueur, lui, est toujours découvert.
  */
 export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture, hutte: Hutte | null = null, choisie: Coordonnees | null = null) {
   pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
   // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
   const parTeinte = carte.teintes.map((): { x: number; y: number }[] => []);
   const { q, r, teinte } = carte.cases;
+  const brume = carte.teintes.indexOf(BROUILLARD);
   for (let i = 0; i < q.length; i++) {
     const ici = aLEcran({ q: q[i], r: r[i] }, vue);
     if (aLaVue(ici.x, ici.y, vue)) parTeinte[teinte[i]].push(ici);
@@ -436,14 +453,26 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
       pinceau.stroke();
     }
   });
-  pinceau.beginPath();
-  for (const centres of parTeinte) for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
-  pinceau.strokeStyle = peinture.bord;
-  pinceau.lineWidth = 1;
-  pinceau.stroke();
+  const bordees = parTeinte.filter((centres, t) => t !== brume && centres.length > 0);
+  if (bordees.length > 0) {
+    pinceau.beginPath();
+    for (const centres of bordees) for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
+    pinceau.strokeStyle = peinture.bord;
+    pinceau.lineWidth = 1;
+    pinceau.stroke();
+  }
   tracerLesLimites(pinceau, carte, vue, peinture);
 
-  const autres = carte.foyers.map((c) => aLEcran(c, vue)).filter(({ x, y }) => aLaVue(x, y, vue));
+  // US-0437 : les autres Foyers des seules Cases découvertes de la carte.
+  const rangs = rangsDesCases(carte.cases);
+  const decouverte = ({ q, r }: Coordonnees) => {
+    const i = rangs.get(`${q},${r}`);
+    return i !== undefined && teinte[i] !== brume;
+  };
+  const autres = carte.foyers
+    .filter(decouverte)
+    .map((c) => aLEcran(c, vue))
+    .filter(({ x, y }) => aLaVue(x, y, vue));
   if (autres.length > 0) {
     pinceau.beginPath();
     for (const { x, y } of autres) tracerLaCase(pinceau, x, y, 0.42 * vue.rayon);

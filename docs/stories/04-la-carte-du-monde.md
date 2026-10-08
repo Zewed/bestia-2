@@ -380,6 +380,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0437 · Dessiner le brouillard
 **En tant que** joueur, **je veux** distinguer au premier regard les Cases découvertes de celles sous le brouillard, **afin de** voir ce qu'il me reste à explorer.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une Case sous le brouillard est peinte d'une brume unie, sans motif ni bord, d'un neutre distinct de toutes les teintes de Biome et d'eau. Sous la brume, on ne voit ni liseré de la Couronne ou du Cœur sauvage, ni Foyer d'un autre chef, et rien ne se devine à son bord. La légende ajoute « Brouillard » aux Repères. Vérifié en vrai.
 - **Débloquée par** : US-0436, US-0432
 - **Critères d'acceptation** :
   - Une Case sous le brouillard est dessinée d'un aspect uniforme, sans son Biome ni son propriétaire.
@@ -389,6 +390,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0438 · Toucher une Case sous le brouillard
 **En tant que** joueur, **je veux** qu'une Case sous le brouillard ne dise rien d'elle, **afin de** garder l'envie d'aller la découvrir.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La fiche d'une Case sous le brouillard dit « Case inconnue », sa distance au Foyer et « Une Expédition pourra la découvrir. », rien d'autre. La réponse vient du serveur. Vérifié en vrai, sur ordinateur et à 390 px.
 - **Débloquée par** : US-0437, US-0428
 - **Critères d'acceptation** :
   - La fiche d'une Case sous le brouillard dit seulement « Case inconnue » et donne sa distance au Foyer.
@@ -398,6 +400,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0439 · Ne rien laisser passer de ce que cache le brouillard
 **En tant que** développeur, **je veux** que le navigateur ne reçoive jamais ce que cache le brouillard, **afin de** rendre la triche impossible.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Pour une Case non découverte, la page ne reçoit que sa place et la brume : ni Biome, ni zone, ni Foyer. La liste des teintes envoyée ne contient que celles des Cases découvertes. Demander directement la fiche d'une Case cachée renvoie « Case inconnue », sans nom de chef. Prouvé sur base, en inspectant ce que reçoit la page et par l'action appelée directement.
 - **Débloquée par** : US-0438
 - **Critères d'acceptation** :
   - Le navigateur ne reçoit ni le Biome ni le propriétaire d'une Case sous le brouillard du joueur.
@@ -427,6 +430,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0442 · Découvrir des Cases d'une seule façon
 **En tant que** développeur, **je veux** une seule façon de découvrir des Cases, **afin de** la réutiliser pour les Expéditions et les Avant-postes sans rien réécrire.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Seul `decouvrir` écrit les Cases découvertes ; la naissance et la bascule passent par lui, et redécouvrir une Case ne change rien. La carte ouverte demande les nouvelles découvertes au serveur toutes les 60 secondes, tant que l'onglet est visible (`CARTE_DECOUVERTES_SECONDES`), et dès qu'il le redevient. Elle les dessine aussitôt, sans recharger la page. Vérifié en vrai.
 - **Débloquée par** : US-0441
 - **Critères d'acceptation** :
   - Les abords du Foyer sont découverts par cette seule façon de faire.
@@ -436,8 +440,9 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0443 · Compter les Cases découvertes
 **En tant que** joueur, **je veux** voir combien de Cases j'ai découvertes, **afin de** mesurer mes progrès dans la découverte du Monde.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). En bas à gauche de la carte, une ligne discrète : « 61 Cases découvertes · 0,6 % du Monde ». Elle passe sous la forme « moins de 0,1 % » si besoin, et monte à chaque découverte. Sur mobile, elle reste au-dessus du panneau du bas, et la flèche du Foyer l'évite. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0442
 - **Critères d'acceptation** :
   - La carte affiche le nombre de Cases découvertes.
-  - La part du Monde découverte s'affiche aussi, en pourcentage (à décider).
+  - La part du Monde découverte s'affiche aussi, en pourcentage (décidé le 2026-10-08).
   - Le compteur monte à chaque découverte.

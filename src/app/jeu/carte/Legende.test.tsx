@@ -2,7 +2,7 @@
 import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { couleur } from "@/monde/couleurs-de-la-carte";
+import { BROUILLARD, couleur } from "@/monde/couleurs-de-la-carte";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { dessinerLaCarte, enSvg, MOTIFS, vueSurLeFoyer } from "./dessin";
 import { Legende, LEGENDE_MONTREE } from "./Legende";
@@ -106,7 +106,7 @@ describe("la légende de la carte (US-0432)", () => {
     expect(bouton().getAttribute("aria-expanded")).toBe("true");
     expect(panneau().hidden).toBe(false);
     expect([...panneau().querySelectorAll("li")].map((li) => li.textContent)).toEqual(
-      [...TERRE, ...EAUX].map((t) => t.nom).concat("Votre Foyer", "Autres Foyers", "Limite de la Couronne", "Limite du Cœur sauvage"),
+      [...TERRE, ...EAUX].map((t) => t.nom).concat("Votre Foyer", "Autres Foyers", "Limite de la Couronne", "Limite du Cœur sauvage", "Brouillard"),
     );
   });
 
@@ -152,6 +152,14 @@ describe("la légende de la carte (US-0432)", () => {
     expect(entree("Limite de la Couronne").querySelector("path:last-of-type")!.getAttribute("style")).not.toBe(
       entree("Limite du Cœur sauvage").querySelector("path:last-of-type")!.getAttribute("style"),
     );
+  });
+
+  it("ajoute le brouillard en dernier : une Case de sa teinte unie, sans motif ni bord, comme sur la carte (US-0437)", async () => {
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    expect(chemins("Brouillard")).toEqual(uneCase(BROUILLARD));
+    expect(chemins("Brouillard")).toEqual([expect.objectContaining({ couleur: couleur(BROUILLARD) })]);
+    expect(within(panneau()).getByText("Brouillard").closest("ul")!.previousElementSibling!.textContent).toBe("Repères");
   });
 
   it("se referme d'un geste", async () => {
