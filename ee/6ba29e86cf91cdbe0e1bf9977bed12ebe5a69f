@@ -1,0 +1,50 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_20fd93806d62a5 187-188
+  s_97a431cfa65ca7::t_a788038cdd7084 62,189-194
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_b67de646da1c7a 135,140
+docs/stories/README.md
+  s_97a431cfa65ca7::t_984cd92c026aaa 7,33
+scripts/monde-generer.ts
+  s_97a431cfa65ca7::t_ae31333a383b73 37,39
+src/monde/foyers.test.ts
+  s_97a431cfa65ca7::t_fc4910a57c9389 4,6,104-133
+src/monde/foyers.ts
+  s_97a431cfa65ca7::t_882b8a9ff1f0b9 32-45
+src/monde/generer.db.test.ts
+  s_97a431cfa65ca7::t_1706b81ba1b187 4,42,53-55
+src/monde/generer.test.ts
+  s_97a431cfa65ca7::t_9d50cb55b783e4 19-21,27-29,582-634
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_9a4929c845106a 8,12-13,23-27,47-49,51,54-55,64,117,128,152
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_8aba39e8513b3f 5,125-139
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_7800b8cdf4ec0e 76-92
+src/monde/mer.ts
+  s_97a431cfa65ca7::t_6ed086cb964bf4 27-28,30-33,35
+src/monde/poches.test.ts
+  s_97a431cfa65ca7::t_054c997ad4fb86 1-44
+src/monde/poches.ts
+  s_97a431cfa65ca7::t_ba1c12ef58d4bd 1-52
+src/monde/regions.ts
+  s_97a431cfa65ca7::t_336a95e12088ba 229-233,235-238,241,248-262
+src/monde/rivieres.ts
+  s_97a431cfa65ca7::t_fa54005b38e5b5 30-31,37,41
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ee6ba29e86cf91cdbe0e1bf9977bed12ebe5a69f",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
