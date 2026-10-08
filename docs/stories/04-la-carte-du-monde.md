@@ -228,9 +228,10 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0422 · Déplacer la carte au clavier
 **En tant que** joueur, **je veux** déplacer la carte avec les flèches du clavier, **afin de** parcourir le Monde sans souris.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La carte se sélectionne au clavier (Tab, contour visible, nommée « Carte du Monde ») ; chaque flèche la déplace de 3 Cases, sans faire défiler la page (sauf avec Alt, Ctrl ou Cmd) ; mêmes limites qu'à la souris. Vérifié en vrai.
 - **Débloquée par** : US-0420
 - **Critères d'acceptation** :
-  - Quand la carte est sélectionnée, chaque flèche la déplace de (chiffre à régler) Cases.
+  - Quand la carte est sélectionnée, chaque flèche la déplace de 3 Cases (provisoire, `CARTE_PAS_CLAVIER_CASES`).
   - Les flèches ne font pas défiler la page pendant ce temps.
   - Les limites sont les mêmes qu'à la souris.
 

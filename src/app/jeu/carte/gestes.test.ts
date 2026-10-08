@@ -12,7 +12,7 @@ beforeEach(() => {
   document.body.append(carte);
   // jsdom ne sait pas capturer un pointeur : on retient seulement qu'on le lui a demandé.
   carte.setPointerCapture = vi.fn();
-  commandes = { deplacer: vi.fn() };
+  commandes = { deplacer: vi.fn(), avancer: vi.fn() };
   arreter = suivreLesGestes(carte, commandes);
 });
 afterEach(() => {
@@ -115,5 +115,26 @@ describe("glisser la carte au doigt (US-0421)", () => {
     pointeur("pointercancel", 230, 300, doigt);
     pointeur("pointermove", 260, 300, doigt);
     expect(deplacements()).toEqual([[30, 0]]);
+  });
+});
+
+describe("la carte au clavier (US-0422)", () => {
+  /** Une touche appuyée sur la carte sélectionnée ; rend si le navigateur garde son effet ordinaire. */
+  const touche = (key: string, en: KeyboardEventInit = {}) => carte.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true, ...en }));
+  const pas = () => commandes.avancer.mock.calls.map(([colonnes, rangees]) => [colonnes, rangees]);
+
+  it("avance d'un pas à chaque flèche, vers l'endroit qu'elle montre, sans faire défiler la page", () => {
+    expect([touche("ArrowRight"), touche("ArrowLeft"), touche("ArrowDown"), touche("ArrowUp")]).toEqual([false, false, false, false]);
+    expect(pas()).toEqual([
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]);
+  });
+
+  it("laisse les autres touches, et les flèches avec Alt, Ctrl ou Cmd, au navigateur", () => {
+    expect([touche("Tab"), touche("a"), touche("ArrowLeft", { altKey: true }), touche("ArrowRight", { ctrlKey: true }), touche("ArrowUp", { metaKey: true })]).toEqual([true, true, true, true, true]);
+    expect(pas()).toEqual([]);
   });
 });

@@ -1,11 +1,17 @@
 // Les gestes du joueur sur la carte du Monde (US-0420), traduits en demandes à la carte : la déplacer de tant de
-// pixels. Ils ne savent rien de la vue elle-même (vue.ts) ; ils se vérifient avec des événements simulés.
+// pixels, ou d'un pas au clavier. Ils ne savent rien de la vue elle-même (vue.ts) ; ils se vérifient avec des
+// événements simulés.
 
 /** Ce que les gestes demandent à la carte. */
 export type Commandes = {
   /** US-0420 : la faire glisser de (dx, dy) pixels, ce qu'il y avait sous le pointeur restant sous lui. */
   deplacer: (dx: number, dy: number) => void;
+  /** US-0422 : la faire avancer d'un pas, en colonnes vers l'est (1) ou l'ouest (-1), en rangées vers le sud (1) ou le nord (-1). */
+  avancer: (colonnes: number, rangees: number) => void;
 };
+
+/** US-0422 : où chaque flèche du clavier fait regarder la carte, en colonnes et en rangées. */
+const FLECHES: Record<string, [number, number]> = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowUp: [0, -1] };
 
 /**
  * US-0420 : de combien de pixels un pointeur appuyé doit bouger avant qu'on le prenne pour un glissement : en
@@ -19,7 +25,8 @@ export const SEUIL_DE_GLISSEMENT = { souris: 4, doigt: 8 };
  * la fonction rendue. Glisser en gardant le bouton principal appuyé déplace la carte, d'autant que la souris
  * depuis l'endroit où il a été appuyé, une fois passé le seuil de glissement ; la carte garde la souris quand
  * elle sort de l'écran en chemin. US-0421 : de même au doigt, ces mêmes événements du navigateur valant pour la
- * souris, le doigt et le stylet.
+ * souris, le doigt et le stylet. US-0422 : la carte sélectionnée, chaque flèche du clavier la fait avancer d'un
+ * pas ; avec Alt, Ctrl ou Cmd, la flèche reste au navigateur (revenir à la page d'avant…).
  */
 export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () => void {
   // Le pointeur appuyé sur la carte : là où il a été appuyé, sa dernière position prise en compte, son seuil de
@@ -44,15 +51,23 @@ export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () 
   const lever = (e: PointerEvent) => {
     if (appuye?.id === e.pointerId) appuye = null;
   };
+  // US-0422 : une flèche fait avancer la carte d'un pas ; la page, elle, ne défile pas.
+  const appuyer = (e: KeyboardEvent) => {
+    const sens = FLECHES[e.key];
+    if (!sens || e.altKey || e.ctrlKey || e.metaKey) return;
+    e.preventDefault();
+    commandes.avancer(...sens);
+  };
 
-  const ecoutes = [
+  const ecoutes: [string, (e: never) => void][] = [
     ["pointerdown", poser],
     ["pointermove", bouger],
     ["pointerup", lever],
     ["pointercancel", lever],
-  ] as const;
-  for (const [type, rappel] of ecoutes) element.addEventListener(type, rappel);
+    ["keydown", appuyer],
+  ];
+  for (const [type, rappel] of ecoutes) element.addEventListener(type, rappel as EventListener);
   return () => {
-    for (const [type, rappel] of ecoutes) element.removeEventListener(type, rappel);
+    for (const [type, rappel] of ecoutes) element.removeEventListener(type, rappel as EventListener);
   };
 }

@@ -19,4 +19,9 @@ describe("les styles de la carte du Monde", () => {
     // Ni bulle de menu ni loupe quand le doigt s'attarde sur la carte.
     expect(regle(".carte")).toContain("-webkit-touch-callout: none;");
   });
+
+  it("montrent la carte sélectionnée au clavier d'un contour d'Encre, tracé dedans : la page coupe ce qui dépasse (US-0422)", () => {
+    expect(regle(".carte:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    expect(regle(".carte:focus-visible")).toContain("outline-offset: -2px;");
+  });
 });

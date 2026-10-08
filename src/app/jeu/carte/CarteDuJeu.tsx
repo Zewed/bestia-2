@@ -6,7 +6,7 @@ import type { CarteDuJoueur } from "@/monde/carte";
 import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
 import { suivreLesGestes } from "./gestes";
 import styles from "./page.module.css";
-import { deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, deplacer, limiteDeLaCarte } from "./vue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -31,6 +31,7 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * l'illustration chargée ; les Foyers des autres chefs en Encre. US-0420 : on la fait glisser (gestes.ts), dans les
  * limites de la vue (vue.ts) ; chaque geste change la vue aussitôt, mais la carte n'est redessinée qu'au rythme de
  * l'écran. Quand l'écran change de taille (téléphone tourné, fenêtre élargie), elle garde le même endroit au milieu.
+ * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -82,6 +83,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     suivi.observe(canvas);
     const arreter = suivreLesGestes(canvas, {
       deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
+      avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
     });
     return () => {
       suivi.disconnect();
@@ -90,5 +92,6 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       cancelAnimationFrame(image);
     };
   }, [carte, fonds]);
-  return <canvas ref={toile} className={styles.carte} role="img" aria-label={`Carte du Monde ${carte.monde}, votre Foyer au milieu`} />;
+  // US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent.
+  return <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />;
 }

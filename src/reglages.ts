@@ -206,3 +206,5 @@ export const FAMINE_IMMINENTE_MARGE_HEURES = 1;
  * en jouant).
  */
 export const CARTE_DEBORD_CASES = 2;
+/** US-0422 : chaque flèche du clavier déplace la carte de 3 Cases (valeur provisoire, à régler en jouant). */
+export const CARTE_PAS_CLAVIER_CASES = 3;

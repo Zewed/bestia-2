@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { anneau, casesDesAnneaux, type Coordonnees } from "@/monde/hex";
-import { CARTE_DEBORD_CASES } from "@/reglages";
+import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES } from "@/reglages";
 import { aLEcran, vueSurLeFoyer, type Vue } from "./dessin";
-import { borner, deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, borner, deplacer, limiteDeLaCarte } from "./vue";
 
 const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
@@ -54,5 +54,32 @@ describe("glisser la carte (US-0420)", () => {
     expect(anneau(longe)).toBeCloseTo(62, 9);
     expect(longe.q).toBeCloseTo(62, 9);
     expect(longe.r).toBeGreaterThan(-31);
+  });
+});
+
+describe("la carte au clavier (US-0422)", () => {
+  it(`avance de ${CARTE_PAS_CLAVIER_CASES} Cases par flèche : de 3 colonnes vers l'est ou l'ouest, de 3 rangées vers le sud ou le nord`, () => {
+    expect(CARTE_PAS_CLAVIER_CASES).toBe(3);
+    const proche = (vue: Vue, c: Coordonnees) => {
+      expect(vue.milieu.q).toBeCloseTo(c.q, 9);
+      expect(vue.milieu.r).toBeCloseTo(c.r, 9);
+    };
+    proche(avancer(OUVERTE, 1, 0, 62), { q: 34, r: -57 });
+    proche(avancer(OUVERTE, -1, 0, 62), { q: 28, r: -57 });
+    // Trois rangées plus bas, droit sous le Foyer : une demi-Case à gauche par rangée, en coordonnées.
+    proche(avancer(OUVERTE, 0, 1, 62), { q: 29.5, r: -54 });
+    proche(avancer(OUVERTE, 0, -1, 62), { q: 32.5, r: -60 });
+    // À l'écran, le Foyer s'en va d'autant de l'autre côté, quel que soit le zoom.
+    for (const vue of [OUVERTE, { ...OUVERTE, rayon: 40 }]) {
+      expect(aLEcran(FOYER, avancer(vue, 1, 0, 62)).x).toBeCloseTo(400 - 3 * Math.sqrt(3) * vue.rayon, 9);
+      expect(aLEcran(FOYER, avancer(vue, 0, 1, 62)).y).toBeCloseTo(300 - 3 * 1.5 * vue.rayon, 9);
+    }
+  });
+
+  it("garde les mêmes limites qu'à la souris", () => {
+    let vue = OUVERTE;
+    for (let i = 0; i < 40; i++) vue = avancer(vue, 0, -1, 62);
+    expect(anneau(vue.milieu)).toBeCloseTo(62, 9);
+    expect(vue.milieu.r).toBeCloseTo(-62, 9);
   });
 });

@@ -2,7 +2,7 @@
 // taille sont les Cases. Des calculs seuls, sans rien demander au navigateur : ils se vérifient à part. Le dessin
 // (dessin.ts) reçoit la vue telle quelle ; son milieu est une Case en coordonnées non entières, entre deux Cases.
 import { anneau, centre, DIRECTIONS, type Coordonnees } from "@/monde/hex";
-import { CARTE_DEBORD_CASES } from "@/reglages";
+import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES } from "@/reglages";
 import type { CarteADessiner, Vue } from "./dessin";
 
 /** Un point du plan de `centre`, où une Case a un rayon de 1. */
@@ -52,4 +52,14 @@ export function borner(vue: Vue, limite: number): Vue {
 export function deplacer(vue: Vue, dx: number, dy: number, limite: number): Vue {
   const ici = centre(vue.milieu);
   return borner({ ...vue, milieu: depuisLePlan({ x: ici.x - dx / vue.rayon, y: ici.y - dy / vue.rayon }) }, limite);
+}
+
+/**
+ * US-0422 : la vue après un appui sur une flèche du clavier : elle regarde CARTE_PAS_CLAVIER_CASES Cases plus loin,
+ * en colonnes vers l'est (1) ou l'ouest (-1), en rangées vers le sud (1) ou le nord (-1), dans les mêmes limites.
+ */
+export function avancer(vue: Vue, colonnes: number, rangees: number, limite: number): Vue {
+  // D'une colonne à l'autre, la largeur d'une Case ; d'une rangée à l'autre, une fois et demie son rayon.
+  const [colonne, rangee] = [Math.sqrt(3) * vue.rayon, 1.5 * vue.rayon];
+  return deplacer(vue, -colonnes * CARTE_PAS_CLAVIER_CASES * colonne, -rangees * CARTE_PAS_CLAVIER_CASES * rangee, limite);
 }

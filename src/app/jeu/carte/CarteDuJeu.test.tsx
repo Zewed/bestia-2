@@ -1,11 +1,12 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
-import { deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, deplacer, limiteDeLaCarte } from "./vue";
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de
@@ -147,9 +148,11 @@ const pointeur = (type: "pointerdown" | "pointermove" | "pointerup", x: number, 
   });
 
 describe("la carte du Monde (US-0417)", () => {
-  it("est une image du Monde du joueur pour les lecteurs d'écran", () => {
+  it("se présente aux lecteurs d'écran comme la carte du Monde, qui se manie au clavier (US-0422)", () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
-    expect(screen.getByRole("img", { name: "Carte du Monde Aube, votre Foyer au milieu" }).tagName).toBe("CANVAS");
+    const carte = screen.getByRole("application", { name: "Carte du Monde" });
+    expect(carte.tagName).toBe("CANVAS");
+    expect(carte.getAttribute("aria-roledescription")).toBe("carte");
   });
 
   it("dessine les Cases dès l'ouverture, le Foyer au milieu, nette sur un écran haute densité", () => {
@@ -308,5 +311,38 @@ describe("glisser la carte à la souris (US-0420)", () => {
     expect(aLaProchaineImage.size).toBe(0);
     canvas.dispatchEvent(new PointerEvent("pointermove", { clientX: 500, clientY: 300, pointerId: 1, pointerType: "mouse" }));
     expect(aLaProchaineImage.size).toBe(0);
+  });
+});
+
+describe("déplacer la carte au clavier (US-0422)", () => {
+  it("se sélectionne au clavier, puis chaque flèche la déplace de 3 Cases, sans faire défiler la page", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const user = userEvent.setup();
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole("application", { name: "Carte du Monde" }));
+    await user.keyboard("{ArrowRight}");
+    prochaineImage();
+    // Le Foyer s'en va de 3 Cases vers la gauche : on regarde 3 Cases plus à l'est.
+    const versLEst = avancer(ouverte(), 1, 0, 60);
+    expect(aLEcran(FOYER, versLEst).x).toBeCloseTo(ecran.largeur / 2 - 3 * LARGEUR_DE_CASE, 9);
+    expect(dessineeLa(versLEst)).toBe(true);
+    await user.keyboard("{ArrowDown}{ArrowDown}");
+    prochaineImage();
+    expect(dessineeLa(avancer(avancer(versLEst, 0, 1, 60), 0, 1, 60))).toBe(true);
+    // La page garde sa place : la flèche ne lui revient pas.
+    expect(fireEvent.keyDown(document.activeElement!, { key: "ArrowUp" })).toBe(false);
+  });
+
+  it("garde les mêmes limites qu'à la souris", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const carte = screen.getByRole("application", { name: "Carte du Monde" });
+    let attendue = ouverte();
+    for (let i = 0; i < 10; i++) {
+      fireEvent.keyDown(carte, { key: "ArrowUp" });
+      attendue = avancer(attendue, 0, -1, 60);
+    }
+    prochaineImage();
+    expect(attendue.milieu.r).toBeCloseTo(-60, 9);
+    expect(dessineeLa(attendue)).toBe(true);
   });
 });
