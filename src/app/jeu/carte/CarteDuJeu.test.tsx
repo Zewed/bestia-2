@@ -6,7 +6,7 @@ import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, bornesDuZoom, deplacer, limiteDeLaCarte, zoomer } from "./vue";
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de
@@ -67,7 +67,8 @@ beforeEach(() => {
     },
   });
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(pinceau as unknown as CanvasRenderingContext2D);
-  vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ width: ecran.largeur, height: ecran.hauteur }) as DOMRect);
+  // La carte sous la barre du haut, de 64 pixels.
+  vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ left: 0, top: 64, width: ecran.largeur, height: ecran.hauteur }) as DOMRect);
   // La couleur calculée d'une expression CSS sur le <canvas> : l'expression elle-même, pour reconnaître chaque couleur qu'il reçoit.
   const calculer = window.getComputedStyle.bind(window);
   vi.spyOn(window, "getComputedStyle").mockImplementation((element, pseudo) => {
@@ -344,5 +345,48 @@ describe("déplacer la carte au clavier (US-0422)", () => {
     prochaineImage();
     expect(attendue.milieu.r).toBeCloseTo(-60, 9);
     expect(dessineeLa(attendue)).toBe(true);
+  });
+});
+
+describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
+  it("zoome autour du pointeur, redessinée à la prochaine image, sans que la page zoome ni défile", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const carte = screen.getByRole("application", { name: "Carte du Monde" });
+    // La Case à l'est du Foyer, sous le pointeur : elle y reste.
+    const { x, y } = aLEcran(AUTOUR[1], ouverte());
+    expect(fireEvent.wheel(carte, { deltaY: -300, clientX: x, clientY: y + 64 })).toBe(false);
+    prochaineImage();
+    const rapprochee = zoomer(ouverte(), 2, x, y, 60);
+    expect(rapprochee.rayon).toBeCloseTo(2 * RAYON, 9);
+    expect(dessineeLa(rapprochee, AUTOUR[1])).toBe(true);
+    expect(aLEcran(AUTOUR[1], rapprochee).x).toBeCloseTo(x, 9);
+    // Le geste de zoom du pavé tactile, une molette avec Ctrl, éloigne de même.
+    expect(fireEvent.wheel(carte, { deltaY: 100, ctrlKey: true, clientX: x, clientY: y + 64 })).toBe(false);
+    prochaineImage();
+    expect(dessineeLa(zoomer(rapprochee, 0.5, x, y, 60), AUTOUR[1])).toBe(true);
+  });
+
+  it("s'arrête à la vue large et à la vue rapprochée", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const carte = screen.getByRole("application", { name: "Carte du Monde" });
+    fireEvent.wheel(carte, { deltaY: 100_000, clientX: 400, clientY: 364 });
+    prochaineImage();
+    expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(ecran.largeur, ecran.hauteur).min })).toBe(true);
+    fireEvent.wheel(carte, { deltaY: -100_000, clientX: 400, clientY: 364 });
+    prochaineImage();
+    expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(ecran.largeur, ecran.hauteur).max })).toBe(true);
+  });
+
+  it("s'ouvre dans les bornes du zoom, et y reste quand l'écran change de taille", () => {
+    Object.assign(ecran, { largeur: 4000, hauteur: 3000 });
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    // Sur un très grand écran, les Cases grossissent pour ne pas en montrer plus de 40 au bord.
+    expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(4000, 3000).min })).toBe(true);
+    fireEvent.wheel(screen.getByRole("application", { name: "Carte du Monde" }), { deltaY: -100_000, clientX: 2000, clientY: 1564 });
+    prochaineImage();
+    Object.assign(ecran, { largeur: 375, hauteur: 559 });
+    toile.departs = [];
+    act(() => suivi!.annoncer());
+    expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(375, 559).max })).toBe(true);
   });
 });

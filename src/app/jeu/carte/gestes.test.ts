@@ -12,7 +12,7 @@ beforeEach(() => {
   document.body.append(carte);
   // jsdom ne sait pas capturer un pointeur : on retient seulement qu'on le lui a demandé.
   carte.setPointerCapture = vi.fn();
-  commandes = { deplacer: vi.fn(), avancer: vi.fn() };
+  commandes = { deplacer: vi.fn(), avancer: vi.fn(), zoomer: vi.fn() };
   arreter = suivreLesGestes(carte, commandes);
 });
 afterEach(() => {
@@ -136,5 +136,59 @@ describe("la carte au clavier (US-0422)", () => {
   it("laisse les autres touches, et les flèches avec Alt, Ctrl ou Cmd, au navigateur", () => {
     expect([touche("Tab"), touche("a"), touche("ArrowLeft", { altKey: true }), touche("ArrowRight", { ctrlKey: true }), touche("ArrowUp", { metaKey: true })]).toEqual([true, true, true, true, true]);
     expect(pas()).toEqual([]);
+  });
+});
+
+describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
+  beforeEach(() => {
+    // La carte sous la barre du haut : les pointeurs sont repérés depuis son coin en haut à gauche.
+    carte.getBoundingClientRect = () => ({ left: 10, top: 64, width: 800, height: 600 }) as DOMRect;
+  });
+  /** Un tour de molette sur la carte, en (x, y) dans la page ; rend si le navigateur garde son effet ordinaire. */
+  const molette = (x: number, y: number, en: WheelEventInit) => carte.dispatchEvent(new WheelEvent("wheel", { clientX: x, clientY: y, bubbles: true, cancelable: true, ...en }));
+  const zooms = () => commandes.zoomer.mock.calls.map(([facteur, x, y]) => [Number(facteur.toFixed(6)), x, y]);
+
+  it("rapproche en tournant la molette vers l'avant, éloigne vers l'arrière, autour du pointeur, d'autant plus qu'elle tourne", () => {
+    molette(210, 164, { deltaY: -100 });
+    molette(210, 164, { deltaY: 100 });
+    molette(30, 70, { deltaY: -300 });
+    expect(zooms()).toEqual([
+      [Number((2 ** (1 / 3)).toFixed(6)), 200, 100],
+      [Number((2 ** (-1 / 3)).toFixed(6)), 200, 100],
+      [2, 20, 6],
+    ]);
+  });
+
+  it("compte une molette qui tourne par lignes comme une qui tourne par pixels", () => {
+    molette(210, 164, { deltaY: -3, deltaMode: WheelEvent.DOM_DELTA_LINE });
+    expect(zooms()).toEqual([[Number((2 ** (120 / 300)).toFixed(6)), 200, 100]]);
+  });
+
+  it("suit le geste de zoom du pavé tactile, plus fin, que le navigateur annonce comme une molette avec Ctrl", () => {
+    molette(210, 164, { deltaY: -10, ctrlKey: true });
+    molette(210, 164, { deltaY: 25, ctrlKey: true });
+    expect(zooms()).toEqual([
+      [Number((2 ** 0.1).toFixed(6)), 200, 100],
+      [Number((2 ** -0.25).toFixed(6)), 200, 100],
+    ]);
+  });
+
+  it("ne laisse jamais la page zoomer ni défiler à la place", () => {
+    expect([molette(210, 164, { deltaY: -100 }), molette(210, 164, { deltaY: 10, ctrlKey: true })]).toEqual([false, false]);
+    // Le navigateur ne laisse empêcher son effet qu'à un écouteur qui le dit à l'avance.
+    const ecouter = vi.spyOn(EventTarget.prototype, "addEventListener");
+    suivreLesGestes(document.createElement("canvas"), commandes)();
+    expect(ecouter).toHaveBeenCalledWith("wheel", expect.any(Function), { passive: false });
+    ecouter.mockRestore();
+  });
+
+  it("suit aussi le pincement du pavé tactile sous Safari, qui l'annonce à sa façon, sans zoomer la page", () => {
+    /** Un geste Safari sur la carte, à l'échelle `scale` depuis son début ; rend si le navigateur garde son effet ordinaire. */
+    const geste = (type: string, scale: number) => carte.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), { scale, clientX: 410, clientY: 364 }));
+    expect([geste("gesturestart", 1), geste("gesturechange", 1.2), geste("gesturechange", 1.5), geste("gestureend", 1.5)]).toEqual([false, false, false, false]);
+    expect(zooms()).toEqual([
+      [1.2, 400, 300],
+      [1.25, 400, 300],
+    ]);
   });
 });

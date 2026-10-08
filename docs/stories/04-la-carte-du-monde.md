@@ -238,10 +238,11 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0423 · Zoomer à la molette ou au pavé tactile
 **En tant que** joueur, **je veux** zoomer à la molette ou au pavé tactile, **afin de** passer d'une vue d'ensemble au détail d'une Case.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La molette et le geste de zoom du pavé tactile zooment en continu autour du pointeur (la Case sous le pointeur reste en place), d'une vue large de 40 Cases de rayon (sur la plus petite dimension) à une vue rapprochée de 4 Cases ; la page elle-même ne zoome ni ne défile (Safari compris). Vérifié en vrai.
 - **Débloquée par** : US-0420
 - **Critères d'acceptation** :
   - La molette et le geste de zoom du pavé tactile zooment autour du pointeur.
-  - Le zoom va d'une vue large de (chiffre à régler) Cases de rayon à une vue rapprochée de (chiffre à régler) Cases.
+  - Le zoom va d'une vue large de 40 Cases de rayon à une vue rapprochée de 4 Cases (provisoire, `CARTE_ZOOM_LARGE_CASES`, `CARTE_ZOOM_PROCHE_CASES`).
   - La page elle-même ne zoome pas.
 
 ### US-0424 · Zoomer en pinçant

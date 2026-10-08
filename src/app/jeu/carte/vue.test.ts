@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { anneau, casesDesAnneaux, type Coordonnees } from "@/monde/hex";
-import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES } from "@/reglages";
+import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
 import { aLEcran, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, borner, deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, borner, bornesDuZoom, cadrer, deplacer, limiteDeLaCarte, zoomer } from "./vue";
 
 const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
@@ -81,5 +81,56 @@ describe("la carte au clavier (US-0422)", () => {
     for (let i = 0; i < 40; i++) vue = avancer(vue, 0, -1, 62);
     expect(anneau(vue.milieu)).toBeCloseTo(62, 9);
     expect(vue.milieu.r).toBeCloseTo(-62, 9);
+  });
+});
+
+describe("zoomer (US-0423)", () => {
+  /** Combien de Cases couvre la moitié de la plus petite dimension de l'écran, à ce zoom. */
+  const casesAuBord = (vue: Vue) => Math.min(vue.largeur, vue.hauteur) / 2 / (Math.sqrt(3) * vue.rayon);
+
+  it(`va d'une vue large de ${CARTE_ZOOM_LARGE_CASES} Cases de rayon à une vue rapprochée de ${CARTE_ZOOM_PROCHE_CASES} Cases`, () => {
+    expect([CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES]).toEqual([40, 4]);
+    for (const [largeur, hauteur] of [
+      [800, 600],
+      [375, 559],
+    ]) {
+      const vue = vueSurLeFoyer(FOYER, largeur, hauteur);
+      expect(casesAuBord(zoomer(vue, 1000, 10, 10, 62))).toBeCloseTo(4, 9);
+      expect(casesAuBord(zoomer(vue, 0.001, 10, 10, 62))).toBeCloseTo(40, 9);
+      const { min, max } = bornesDuZoom(largeur, hauteur);
+      expect(casesAuBord({ ...vue, rayon: min })).toBeCloseTo(40, 9);
+      expect(casesAuBord({ ...vue, rayon: max })).toBeCloseTo(4, 9);
+    }
+  });
+
+  it("zoome autour du point visé : ce qui était sous le pointeur y reste, jusqu'aux limites du zoom", () => {
+    const auMilieu = sur({ q: 2, r: -1 });
+    const c = { q: -4, r: 4 };
+    const { x, y } = aLEcran(c, auMilieu);
+    for (const facteur of [1.7, 0.6, 1000, 0.001]) {
+      const vue = zoomer(auMilieu, facteur, x, y, 62);
+      expect(aLEcran(c, vue).x).toBeCloseTo(x, 9);
+      expect(aLEcran(c, vue).y).toBeCloseTo(y, 9);
+    }
+    // Dans ses limites, le zoom est celui demandé.
+    expect(zoomer(auMilieu, 1.7, x, y, 62).rayon).toBeCloseTo(1.7 * auMilieu.rayon, 9);
+  });
+
+  it("garde le milieu de l'écran dans les limites de la carte", () => {
+    // Dézoomer au bord du Monde, le pointeur loin du milieu, ne fait pas sortir le milieu.
+    const auBord = sur({ q: 62, r: -31 });
+    expect(anneau(zoomer(auBord, 0.5, 0, 0, 62).milieu)).toBeLessThanOrEqual(62 + 1e-9);
+  });
+
+  it("garde le même endroit au milieu quand l'écran change de taille, le zoom ramené dans ses nouvelles limites", () => {
+    const proche = zoomer(OUVERTE, 1000, 400, 300, 62);
+    const tourne = cadrer(proche, 300, 200);
+    expect(tourne.milieu).toEqual(proche.milieu);
+    expect([tourne.largeur, tourne.hauteur]).toEqual([300, 200]);
+    expect(tourne.rayon).toBeCloseTo(bornesDuZoom(300, 200).max, 9);
+    // À l'ouverture sur un très grand écran, les Cases grossissent pour n'en montrer que 40 au bord.
+    expect(casesAuBord(cadrer(vueSurLeFoyer(FOYER, 4000, 3000), 4000, 3000))).toBeCloseTo(40, 9);
+    // Une carte encore sans place à l'écran garde son zoom.
+    expect(cadrer(OUVERTE, 0, 0).rayon).toBe(OUVERTE.rayon);
   });
 });

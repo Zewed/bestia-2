@@ -6,7 +6,7 @@ import type { CarteDuJoueur } from "@/monde/carte";
 import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
 import { suivreLesGestes } from "./gestes";
 import styles from "./page.module.css";
-import { avancer, deplacer, limiteDeLaCarte } from "./vue";
+import { avancer, cadrer, deplacer, limiteDeLaCarte, zoomer } from "./vue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -31,7 +31,8 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * l'illustration chargée ; les Foyers des autres chefs en Encre. US-0420 : on la fait glisser (gestes.ts), dans les
  * limites de la vue (vue.ts) ; chaque geste change la vue aussitôt, mais la carte n'est redessinée qu'au rythme de
  * l'écran. Quand l'écran change de taille (téléphone tourné, fenêtre élargie), elle garde le même endroit au milieu.
- * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches.
+ * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches. US-0423 : elle zoome à
+ * la molette ou au pavé tactile, autour du pointeur, entre la vue large et la vue rapprochée.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -55,13 +56,14 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       if (vue) dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
     };
     // La toile à la taille que la page lui donne, à l'ouverture et à chaque changement : la redimensionner l'efface.
-    const cadrer = () => {
+    // US-0423 : le zoom ramené dans les bornes de cette taille.
+    const redimensionner = () => {
       const { width: largeur, height: hauteur } = canvas.getBoundingClientRect();
       const densite = window.devicePixelRatio || 1;
       canvas.width = Math.round(largeur * densite);
       canvas.height = Math.round(hauteur * densite);
       pinceau.setTransform(densite, 0, 0, densite, 0, 0);
-      vue = vue ? { ...vue, largeur, hauteur } : vueSurLeFoyer(carte.foyer, largeur, hauteur);
+      vue = cadrer(vue ?? vueSurLeFoyer(carte.foyer, largeur, hauteur), largeur, hauteur);
       dessiner();
     };
     // US-0420 : le dessin demandé pour la prochaine image de l'écran, s'il y en a un : un seul par image.
@@ -79,11 +81,12 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       dessiner();
     };
     illustration.src = HUTTE;
-    const suivi = new ResizeObserver(cadrer);
+    const suivi = new ResizeObserver(redimensionner);
     suivi.observe(canvas);
     const arreter = suivreLesGestes(canvas, {
       deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
       avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
+      zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
     });
     return () => {
       suivi.disconnect();

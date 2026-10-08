@@ -208,3 +208,9 @@ export const FAMINE_IMMINENTE_MARGE_HEURES = 1;
 export const CARTE_DEBORD_CASES = 2;
 /** US-0422 : chaque flèche du clavier déplace la carte de 3 Cases (valeur provisoire, à régler en jouant). */
 export const CARTE_PAS_CLAVIER_CASES = 3;
+/**
+ * US-0423 : le zoom de la carte va d'une vue large, où la moitié de sa plus petite dimension à l'écran couvre
+ * 40 Cases, à une vue rapprochée où elle n'en couvre que 4 (valeurs provisoires, à régler en jouant).
+ */
+export const CARTE_ZOOM_LARGE_CASES = 40;
+export const CARTE_ZOOM_PROCHE_CASES = 4;
