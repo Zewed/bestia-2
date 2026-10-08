@@ -1,0 +1,35 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_e52a42826798c5 443,447
+docs/stories/README.md
+  s_97a431cfa65ca7::t_79df5e6605f189 7,17,31
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_322edfedfe9e61 5
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_2bda9e1ee31ad2 892-901
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_c5f895ba8b7fbf 4,9-10,53,71,207
+src/app/jeu/carte/CasesDecouvertes.module.css
+  s_97a431cfa65ca7::t_b0cb34ed4816bf 1-26
+src/app/jeu/carte/CasesDecouvertes.test.tsx
+  s_97a431cfa65ca7::t_0c8e9ee4e50e11 1-32
+src/app/jeu/carte/CasesDecouvertes.tsx
+  s_97a431cfa65ca7::t_750a39b0db7957 1-28
+src/app/jeu/carte/styles.test.ts
+  s_97a431cfa65ca7::t_fc25b5d0866b39 80-96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f8e9a42a994141365cc2140afa94a7f41b55be63",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
