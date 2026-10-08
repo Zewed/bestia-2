@@ -23,11 +23,14 @@ const voyageurs = vi.hoisted(() => ({ nombreDeVoyageurs: vi.fn(async () => 0) })
 vi.mock("@/monde/voyageurs", () => voyageurs);
 const production = vi.hoisted(() => ({ famineImminenteDepuis: vi.fn(async (): Promise<number | null> => null) }));
 vi.mock("@/monde/production", () => production);
+const famine = vi.hoisted(() => ({ famineDepuis: vi.fn(async (): Promise<number | null> => null) }));
+vi.mock("@/monde/famine", () => famine);
 
 import {
   entretienALHeure,
   exigerCompte,
   exigerCompteSansChef,
+  famineALHeure,
   famineImminenteALHeure,
   habitantsALHeure,
   joueurConnecte,
@@ -170,6 +173,17 @@ describe("garde du jeu", () => {
     expect(await famineImminenteALHeure(18)).toBe(3);
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 18);
     expect(production.famineImminenteDepuis).toHaveBeenCalledWith(expect.anything(), 18);
+    expect(ordre).toEqual(["rattrapage", "lecture"]);
+  });
+
+  it("lit depuis quand le Territoire est en Famine après l'avoir mis à l'heure : une Famine commencée pendant l'absence compte dès l'ouverture (US-0325)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    famine.famineDepuis.mockImplementationOnce(async () => (ordre.push("lecture"), 2));
+    expect(await famineALHeure(19)).toBe(2);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 19);
+    expect(famine.famineDepuis).toHaveBeenCalledWith(expect.anything(), 19);
     expect(ordre).toEqual(["rattrapage", "lecture"]);
   });
 

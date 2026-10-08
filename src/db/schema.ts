@@ -447,6 +447,11 @@ export const territoire = pgTable("territoire", {
    * FAMINE_IMMINENTE_HEURES heures d'Entretien ; null tant qu'elle ne l'est pas. Le mécanisme du temps le tient à jour.
    */
   famineImminenteDepuis: timestamp("famine_imminente_depuis", { withTimezone: true }),
+  /**
+   * US-0325 : l'instant exact du jeu où la Famine a commencé, la Nourriture ne suffisant plus à payer l'Entretien ;
+   * null hors Famine. Le mécanisme du temps le tient à jour, comme famineImminenteDepuis.
+   */
+  famineDepuis: timestamp("famine_depuis", { withTimezone: true }),
 });
 
 /**

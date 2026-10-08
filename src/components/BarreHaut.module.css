@@ -540,6 +540,16 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0325 : en Famine, la même bande à la même place, plus marquée : « FAMINE » en capitales espacées, un peu plus grand. */
+.famine[data-famine] {
+  font-size: 15px;
+}
+
+.famine[data-famine] .titreFamine {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
 /* Le point entre l'alerte et le temps qui reste ne sert qu'aux yeux : un lecteur d'écran ne le dit pas. */
 .tenueFamine::before {
   content: "·" / "";
@@ -581,6 +591,10 @@
   .voirFamine {
     grid-column: 2;
     grid-row: 1 / span 2;
+  }
+
+  .famine[data-famine] {
+    font-size: 14px;
   }
 }
 

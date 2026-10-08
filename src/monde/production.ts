@@ -1,5 +1,6 @@
 // La production continue du Territoire (US-0210) et l'Entretien de ses Habitants (US-0316), appliqués
-// ensemble par le mécanisme unique du temps, qui tient aussi l'avertissement « famine imminente » (US-0322).
+// ensemble par le mécanisme unique du temps, qui tient aussi l'avertissement « famine imminente » (US-0322) et la
+// Famine (US-0325).
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
@@ -101,6 +102,13 @@ const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE
  * $3, ce temps ne fait que baisser : il ne remonte que par un changement fait en $2 (un Habitant parti, de la
  * Nourriture ajoutée), et le retrait se fait donc en $2, à l'instant même du changement ; l'avertissement peut
  * ensuite reparaître au seuil, dans le même intervalle.
+ *
+ * US-0325 : la Famine commence au pas exact où ce temps tombe à zéro, la Viande et les Végétaux ensemble ne payant
+ * plus l'Entretien en entier : son instant est noté s'il tombe d'ici $3. Elle dure tant que la Nourriture ne le paie
+ * pas : les deux Stocks restent vides, et chacun ne donne que sa production. Elle ne finit donc qu'en $2, par un
+ * changement (un Habitant parti, de la Nourriture ajoutée) : l'instant retenu revient alors à null, et une nouvelle
+ * Famine peut commencer plus loin, dans le même intervalle. Déjà en Famine en $2 sans être notée (un Habitant de
+ * plus, ou un Territoire calculé avant la mise en ligne d'US-0325), elle part de $2 : on ne remonte pas dans le passé.
  */
 export const PRODUIRE = `
   with production as (${PRODUCTION_DU_TERRITOIRE}),
@@ -133,17 +141,24 @@ export const PRODUIRE = `
     from famine_s1
   ),
   famine_s2 as materialized (select famine_pas.*, ${unPas("fs1", "p", "fc2", "l")} as fs2 from famine_pas),
-  -- Quand les deux ne peuvent plus payer leur moitié au même pas, la Nourriture manque dès f1 (« is not distinct
-  -- from » : bool_and passerait sur le Stock qui paie toujours sa moitié, dont da est null).
+  -- La Nourriture manque dès f1 quand ce qu'y donnent les deux Stocks n'atteint pas l'Entretien : ni l'un ni l'autre ne
+  -- peut payer sa moitié, ou l'autre ne peut pas payer tout le reste (US-0325 : deux Stocks vides, dont l'un produit au
+  -- moins sa moitié, mais pas l'Entretien à eux deux).
   famine as (
-    select case when bool_and(da is not distinct from f1) then min(f1) else min(f1 + 1 + ${pasImpaye("fs2", "p", "fc3", "l")}) end as pas
+    select case when sum(fc2) < min(e) then min(f1) else min(f1 + 1 + ${pasImpaye("fs2", "p", "fc3", "l")}) end as pas
     from famine_s2
   ),
-  famine_imminente as (
+  famines as (
     update territoire t set famine_imminente_depuis = case
         when f.pas <= ${FIN_FAMINE_IMMINENTE} and t.famine_imminente_depuis is not null then t.famine_imminente_depuis
         when f.pas <= ${SEUIL_FAMINE_IMMINENTE} + pas.k
           then $2::timestamptz + make_interval(secs => (greatest(0, f.pas - ${SEUIL_FAMINE_IMMINENTE}) / 1000000)::double precision)
+        else null
+      end,
+      -- US-0325 : déjà en Famine en $2, elle garde son instant ; sinon, elle commence d'ici $3 ou pas du tout.
+      famine_depuis = case
+        when f.pas = 0 and t.famine_depuis is not null then t.famine_depuis
+        when f.pas <= pas.k then $2::timestamptz + f.pas * interval '1 microsecond'
         else null
       end
     from famine f cross join pas

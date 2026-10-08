@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import {
   entretienALHeure,
+  famineALHeure,
   famineImminenteALHeure,
   habitantsALHeure,
   joueurConnecte,
@@ -33,6 +34,7 @@ import { Ressources } from "./Ressources";
  * lus avec le reste ; tant que la Nourriture baisse, il est posé, prêt à paraître page ouverte au seuil.
  * US-0322 : avec depuis quand le Territoire retient la famine imminente, lu avec le reste après le rattrapage.
  * US-0323 : la Nourriture assurée, le danger est passé : l'avertissement n'est plus posé, même retenu.
+ * US-0325 : en Famine, la même bande dit « Famine », avec depuis quand le Territoire la retient, lu avec le reste.
  */
 export async function ActionsDuJeu() {
   await connection();
@@ -41,7 +43,7 @@ export async function ActionsDuJeu() {
   if (!joueur) return null;
   if (!joueur.nomDeChef) return <BoutonDeconnexion />;
   const territoireId = joueur.recitLu ? joueur.territoireId : null;
-  const [stocks, habitants, recitsNonLus, voyageurs, sansMetier, entretien, famineImminente] =
+  const [stocks, habitants, recitsNonLus, voyageurs, sansMetier, entretien, famineImminente, enFamine] =
     territoireId !== null
       ? await Promise.all([
           stocksALHeure(territoireId),
@@ -51,8 +53,9 @@ export async function ActionsDuJeu() {
           sansMetierALHeure(territoireId),
           entretienALHeure(territoireId),
           famineImminenteALHeure(territoireId),
+          famineALHeure(territoireId),
         ])
-      : [null, null, null, null, null, null, null];
+      : [null, null, null, null, null, null, null, null];
   // US-0321 : dans combien d'heures de jeu la Nourriture ne paiera plus l'Entretien ; null quand elle est assurée.
   const famine = stocks && entretien !== null ? nourriturePourEncoreDesStocks(stocks, entretien) : null;
   return (
@@ -69,7 +72,13 @@ export async function ActionsDuJeu() {
       <MenuChef nom={joueur.nomDeChef} />
       {/* US-0321 : comme les quantités, l'avertissement repart du nouveau temps à chaque recalage de la barre. */}
       {famine !== null ? (
-        <FamineImminente key={`famine-${famine}-${famineImminente}`} heures={famine} depuis={famineImminente} vitesse={vitesse()} />
+        <FamineImminente
+          key={`famine-${famine}-${famineImminente}-${enFamine}`}
+          heures={famine}
+          depuis={famineImminente}
+          famine={enFamine}
+          vitesse={vitesse()}
+        />
       ) : null}
     </>
   );

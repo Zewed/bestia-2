@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
+  avantFamine,
   avantFamineImminente,
   depuisCombienDeTemps,
+  depuisFamine,
   depuisFamineImminente,
   famineImminenteRetenue,
   nourritureRestante,
@@ -36,29 +38,58 @@ const DELAI_MAX_MS = 2_147_483_647;
  * état, pour ne pas clignoter autour du seuil. Page ouverte, ce sont les nouvelles valeurs du serveur qui l'ôtent
  * (recalage de la barre, action), le temps restant ne faisant que baisser entre-temps. Le joueur ne peut pas le
  * masquer : la bande n'est qu'un lien vers la page Habitants.
+ *
+ * US-0325 : en Famine, « famine imminente » laisse la place à « Famine depuis 2 h · Voir », au même endroit, dans la
+ * même couleur, plus marquée. `famine` : depuis combien d'heures de jeu le Territoire retient la Famine, à la lecture.
+ * Page ouverte, la bande bascule à l'instant même où la Nourriture ne paie plus l'Entretien, même en temps accéléré.
  */
-export function FamineImminente({ heures, depuis = null, vitesse = 1 }: { heures: number; depuis?: number | null; vitesse?: number }) {
+export function FamineImminente({
+  heures,
+  depuis = null,
+  famine = null,
+  vitesse = 1,
+}: {
+  heures: number;
+  depuis?: number | null;
+  famine?: number | null;
+  vitesse?: number;
+}) {
   // Le temps réel écoulé depuis l'arrivée des valeurs du serveur.
   const [ecoule, setEcoule] = useState(0);
   // US-0323 : retenue par le Territoire, la famine imminente le reste jusqu'à 13 heures de Nourriture ; au-delà, le
   // danger est passé, et l'avertissement ne reparaît qu'au seuil.
   const retenue = famineImminenteRetenue(heures, depuis);
-  const bascule = retenue !== null ? 0 : avantFamineImminente(heures, vitesse);
+  const bascule = retenue !== null || famine !== null ? 0 : avantFamineImminente(heures, vitesse);
+  // US-0325 : l'instant où la Famine commence, en temps réel après la lecture ; 0 quand le Territoire la retient déjà.
+  const debutDeFamine = famine !== null ? 0 : avantFamine(heures, vitesse);
 
   useEffect(() => {
     const depart = performance.now();
     const battement = setInterval(() => setEcoule(performance.now() - depart), 1000);
     // À l'instant où la Nourriture passe le seuil, jamais avant : le navigateur arrondit le délai d'un minuteur à la
-    // milliseconde inférieure, et son horloge peut devancer d'un rien celle de la page.
-    const apparition =
-      bascule > 0 && bascule <= DELAI_MAX_MS ? setTimeout(() => setEcoule(Math.max(bascule, performance.now() - depart)), Math.ceil(bascule)) : undefined;
+    // milliseconde inférieure, et son horloge peut devancer d'un rien celle de la page. US-0325 : de même à l'instant
+    // où la Nourriture ne paie plus l'Entretien.
+    const aLInstant = (instant: number) =>
+      instant > 0 && instant <= DELAI_MAX_MS ? setTimeout(() => setEcoule(Math.max(instant, performance.now() - depart)), Math.ceil(instant)) : undefined;
+    const [apparition, entreeEnFamine] = [aLInstant(bascule), aLInstant(debutDeFamine)];
     return () => {
       clearInterval(battement);
       clearTimeout(apparition);
+      clearTimeout(entreeEnFamine);
     };
-  }, [bascule]);
+  }, [bascule, debutDeFamine]);
 
   if (ecoule < bascule) return null;
+  if (ecoule >= debutDeFamine) {
+    return (
+      <Link href="/jeu/habitants" className={styles.famine} data-alerte-famine="" data-famine="">
+        <span>
+          <strong className={styles.titreFamine}>Famine</strong> {depuisCombienDeTemps(depuisFamine(heures, famine, ecoule, vitesse))}
+        </span>{" "}
+        <span className={styles.voirFamine}>Voir</span>
+      </Link>
+    );
+  }
   return (
     <Link href="/jeu/habitants" className={styles.famine} data-alerte-famine="">
       {/* Des espaces entre les morceaux, pour qu'un lecteur d'écran ne les colle pas. */}

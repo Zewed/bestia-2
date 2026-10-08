@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 import {
+  avantFamine,
   avantFamineImminente,
   depuisCombienDeTemps,
+  depuisFamine,
   depuisFamineImminente,
   famineImminenteRetenue,
   nourriturePourEncore,
@@ -237,5 +239,30 @@ describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {
   it("ne retient rien que le Territoire ne retienne", () => {
     expect(famineImminenteRetenue(7, null)).toBeNull();
     expect(famineImminenteRetenue(12.5, null)).toBeNull();
+  });
+});
+
+describe("la Famine (US-0325)", () => {
+  const HEURE = 3_600_000;
+
+  it("commence quand la Nourriture ne paie plus l'Entretien : dit dans combien de temps réel, au rythme du jeu, aussitôt si c'est déjà le cas", () => {
+    expect(avantFamine(7, 1)).toBe(7 * HEURE);
+    expect(avantFamine(7, 100)).toBe((7 * HEURE) / 100);
+    expect(avantFamine(0, 100)).toBe(0);
+  });
+
+  it("part de ce que le Territoire retient, et le fait monter au rythme du jeu", () => {
+    expect(depuisFamine(0, 2, 0, 1)).toBe(2);
+    expect(depuisFamine(0, 2, HEURE, 1)).toBe(3);
+    expect(depuisFamine(0, 2, HEURE / 100, 100)).toBe(3);
+  });
+
+  it("sans rien de retenu, compte depuis l'instant où la Nourriture ne paie plus l'Entretien, page ouverte", () => {
+    // 7 h de Nourriture : la Famine commence au bout de 7 h de jeu, puis le temps court.
+    expect(depuisFamine(7, null, 7 * HEURE, 1)).toBe(0);
+    expect(depuisFamine(7, null, 7.5 * HEURE, 1)).toBe(0.5);
+    expect(depuisFamine(7, null, (7.5 * HEURE) / 100, 100)).toBeCloseTo(0.5, 12);
+    // Déjà là à la lecture : depuis la lecture, comme le fera le prochain rattrapage.
+    expect(depuisFamine(0, null, HEURE, 1)).toBe(1);
   });
 });

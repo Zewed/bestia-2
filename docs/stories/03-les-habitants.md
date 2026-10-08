@@ -272,10 +272,11 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0325 · Entrer en Famine
 **En tant que** joueur, **je veux** voir clairement quand mon Territoire entre en Famine, **afin de** réagir au plus vite.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Le Territoire retient l'instant exact où la Nourriture ne paie plus l'Entretien (`territoire.famine_depuis`, migration 0044), calculé dans la même avancée du temps que la famine imminente : quand la Viande et les Végétaux ensemble ne suffisent plus. La bande de la barre devient « FAMINE depuis 2 h · Voir », à l'instant exact page ouverte, en ×100 compris. Vérifié en vrai.
 - **Débloquée par** : US-0321
 - **Critères d'acceptation** :
   - La Famine commence à l'heure où la Nourriture ne suffit plus à payer l'Entretien.
-  - Un Habitant mange indifféremment de la Viande ou des Végétaux : la Famine ne commence que quand les deux ensemble ne suffisent plus (à décider).
+  - Un Habitant mange indifféremment de la Viande ou des Végétaux : la Famine ne commence que quand les deux ensemble ne suffisent plus (décidé le 2026-10-08).
   - Dans la barre du haut, « famine imminente » laisse la place à « Famine ».
   - En vitesse accélérée, la Famine commence exactement au moment prévu.
 

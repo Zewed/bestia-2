@@ -88,6 +88,25 @@ export function depuisFamineImminente(heures: number, depuis: number | null, eco
 }
 
 /**
+ * US-0325 : dans combien de millisecondes réelles, après la lecture des Stocks, la Famine commence, au rythme du jeu
+ * (`vitesse`) : quand la Nourriture ne paie plus l'Entretien, au bout de `heures` ; 0 si c'est déjà le cas.
+ */
+export function avantFamine(heures: number, vitesse: number): number {
+  return Math.max(0, (heures * HEURE_MS) / vitesse);
+}
+
+/**
+ * US-0325 : depuis combien d'heures de jeu la Famine dure, `ecoule` millisecondes réelles après la lecture des Stocks,
+ * au rythme du jeu. `depuis` : ce que le Territoire retient à la lecture (famineDepuis) ; sans rien de retenu, depuis
+ * l'instant où la Nourriture ne paie plus l'Entretien, page ouverte, ou depuis la lecture si c'était déjà le cas :
+ * c'est l'instant que le prochain rattrapage retiendra.
+ */
+export function depuisFamine(heures: number, depuis: number | null, ecoule: number, vitesse: number): number {
+  const passe = (vitesse * ecoule) / HEURE_MS;
+  return depuis !== null ? depuis + passe : Math.max(0, passe - heures);
+}
+
+/**
  * US-0323 : ce que le Territoire retient de la famine imminente (`depuis`, famineImminenteDepuis) vaut tant que
  * la Nourriture ne couvre pas plus de FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES heures (`heures`) ;
  * au-delà, le danger est passé : null, comme le mécanisme du temps (PRODUIRE) le notera au prochain rattrapage.

@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
+import { famineDepuis } from "@/monde/famine";
 import { entretienDesHabitants, nombreDHabitants, nombreSansMetier } from "@/monde/habitants";
 import { famineImminenteDepuis } from "@/monde/production";
 import { nombreDeRecitsNonLus } from "@/monde/recits";
@@ -142,4 +143,14 @@ export async function entretienALHeure(territoireId: number): Promise<string> {
 export async function famineImminenteALHeure(territoireId: number): Promise<number | null> {
   await mettreALHeure(territoireId);
   return famineImminenteDepuis(getPool(), territoireId);
+}
+
+/**
+ * US-0325 : depuis combien d'heures de jeu le Territoire est en Famine (null hors Famine), pour la bande de la barre
+ * du haut, lu après sa mise à l'heure : une Famine commencée pendant l'absence est notée par le rattrapage, à son
+ * instant exact, et dite dès l'ouverture.
+ */
+export async function famineALHeure(territoireId: number): Promise<number | null> {
+  await mettreALHeure(territoireId);
+  return famineDepuis(getPool(), territoireId);
 }

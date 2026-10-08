@@ -39,11 +39,11 @@ describe("l'avertissement « famine imminente » (US-0321)", () => {
     expect(document.body.textContent).toBe("");
   });
 
-  it("dit « moins d'une heure » quand la Nourriture est presque épuisée, et s'y tient à zéro", async () => {
+  it("dit « moins d'une heure » quand la Nourriture est presque épuisée, jusqu'à la Famine (US-0325)", async () => {
     vi.useFakeTimers();
     render(<FamineImminente heures={0.5} />);
     expect(morceaux()[1]).toBe("Nourriture pour encore moins d'une heure");
-    await act(async () => vi.advanceTimersByTime(HEURE));
+    await act(async () => vi.advanceTimersByTime(HEURE / 2 - 1_000));
     expect(morceaux()[1]).toBe("Nourriture pour encore moins d'une heure");
   });
 
@@ -159,5 +159,56 @@ describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {
     // Rien de ce qu'on touche ne la retire : elle mène ailleurs, et revient sur chaque page.
     await act(async () => avertissement()!.click());
     expect(avertissement()).not.toBeNull();
+  });
+});
+
+describe("entrer en Famine (US-0325)", () => {
+  it("dit « Famine » à la place de « famine imminente », depuis quand, et « Voir », au même endroit et vers la même page", () => {
+    render(<FamineImminente heures={0} depuis={14} famine={2.4} />);
+    expect(morceaux()).toEqual([`Famine depuis 2${_}h`, "Voir"]);
+    expect(avertissement()?.querySelector("strong")?.textContent).toBe("Famine");
+    expect(screen.getByRole("link", { name: `Famine depuis 2${_}h Voir` }).getAttribute("href")).toBe("/jeu/habitants");
+  });
+
+  it("est plus marquée que la famine imminente", () => {
+    render(<FamineImminente heures={0} famine={2} />);
+    expect(avertissement()?.hasAttribute("data-famine")).toBe(true);
+    cleanup();
+    render(<FamineImminente heures={7} depuis={3} />);
+    expect(avertissement()?.hasAttribute("data-famine")).toBe(false);
+  });
+
+  it("fait monter le « depuis » en direct, au rythme du jeu", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={0} famine={2.5} vitesse={100} />);
+    await act(async () => vi.advanceTimersByTime(HEURE / 100));
+    expect(morceaux()).toEqual([`Famine depuis 3${_}h`, "Voir"]);
+  });
+
+  it("page ouverte, laisse « famine imminente » à « Famine » à l'instant où la Nourriture ne paie plus l'Entretien", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={2} depuis={10} />);
+    await act(async () => vi.advanceTimersByTime(2 * HEURE - 1_000));
+    expect(morceaux()).toEqual([`Famine imminente depuis 11${_}h`, "Nourriture pour encore moins d'une heure", "Voir"]);
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(morceaux()).toEqual(["Famine depuis un instant", "Voir"]);
+    expect(avertissement()?.hasAttribute("data-famine")).toBe(true);
+    await act(async () => vi.advanceTimersByTime(HEURE));
+    expect(morceaux()[0]).toBe(`Famine depuis 1${_}h`);
+  });
+
+  it("bascule exactement au moment prévu en vitesse accélérée, entre deux battements de la seconde", async () => {
+    vi.useFakeTimers();
+    // 36 secondes de Nourriture, au temps ×100 : la Famine commence au bout de 360 ms réelles.
+    render(<FamineImminente heures={0.01} depuis={11.99} vitesse={100} />);
+    await act(async () => vi.advanceTimersByTime(359));
+    expect(morceaux()[0]).toBe(`Famine imminente depuis 11${_}h`);
+    await act(async () => vi.advanceTimersByTime(1));
+    expect(morceaux()).toEqual(["Famine depuis un instant", "Voir"]);
+  });
+
+  it("dit « Famine » dès l'ouverture quand la Nourriture ne paie déjà plus l'Entretien, sans rien de retenu", () => {
+    render(<FamineImminente heures={0} />);
+    expect(morceaux()).toEqual(["Famine depuis un instant", "Voir"]);
   });
 });

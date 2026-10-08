@@ -17,6 +17,7 @@ const garde = vi.hoisted(() => ({
   sansMetierALHeure: vi.fn(async () => 0),
   entretienALHeure: vi.fn(async () => "6.000000"),
   famineImminenteALHeure: vi.fn(async (): Promise<number | null> => null),
+  famineALHeure: vi.fn(async (): Promise<number | null> => null),
 }));
 vi.mock("@/comptes/garde", () => garde);
 // US-0321 : le vrai avertissement, observé pour voir ce que la barre lui confie.
@@ -43,6 +44,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     garde.sansMetierALHeure.mockClear();
     garde.entretienALHeure.mockClear();
     garde.famineImminenteALHeure.mockClear();
+    garde.famineALHeure.mockClear();
     famine.FamineImminente.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
@@ -357,6 +359,45 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       await rendu();
       expect(garde.entretienALHeure).not.toHaveBeenCalled();
       expect(garde.famineImminenteALHeure).not.toHaveBeenCalled();
+      expect(garde.famineALHeure).not.toHaveBeenCalled();
+    });
+
+    it("dit « Famine » quand le Territoire est en Famine, depuis quand il la retient après le rattrapage (US-0325)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      garde.stocksALHeure.mockResolvedValueOnce(nourriture("0.000000", "0.000000"));
+      garde.entretienALHeure.mockResolvedValueOnce("40.000000");
+      garde.famineImminenteALHeure.mockResolvedValueOnce(14);
+      garde.famineALHeure.mockResolvedValueOnce(2);
+      const html = await rendu();
+      expect(garde.famineALHeure).toHaveBeenCalledWith(12);
+      expect(famine.FamineImminente.mock.lastCall?.[0]).toMatchObject({ heures: 0, famine: 2 });
+      expect(avertissement(html)?.[2].replace(/<[^>]+>/g, "")).toBe("Famine depuis 2 h Voir");
+      expect(avertissement(html)?.[1]).toMatch(/data-famine=""/);
+    });
+
+    it("lit depuis quand en même temps que les Stocks et le reste de la barre, et repart des nouvelles valeurs quand la Famine commence (US-0325)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      const lectures: string[] = [];
+      let finir = () => {};
+      garde.stocksALHeure.mockImplementationOnce(async () => {
+        lectures.push("stocks");
+        await new Promise<void>((fin) => (finir = fin));
+        return [];
+      });
+      garde.famineALHeure.mockImplementationOnce(async () => (lectures.push("famine"), null));
+      const rendue = rendu();
+      await vi.waitFor(() => expect(lectures).toEqual(["stocks", "famine"]));
+      finir();
+      await rendue;
+      const cle = async (depuis: number | null) => {
+        garde.stocksALHeure.mockResolvedValueOnce(nourriture("0.000000", "0.000000"));
+        garde.entretienALHeure.mockResolvedValueOnce("40.000000");
+        garde.famineALHeure.mockResolvedValueOnce(depuis);
+        const element = await ActionsDuJeu();
+        const enfants = (element as { props: { children: { type: unknown; key: string | null }[] } }).props.children;
+        return enfants.find((enfant) => enfant?.type === famine.FamineImminente)?.key;
+      };
+      expect(await cle(null)).not.toBe(await cle(0.5));
     });
   });
 
