@@ -5,6 +5,8 @@ import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { ficheDUneCase } from "./fiche";
 import { creerUnMonde } from "./generer";
+import { distance } from "./hex";
+import { ZONE_COEUR, ZONE_COURONNE } from "./zones";
 
 /** Le Monde généré des essais de la carte (carte.db.test.ts), créé une fois pour toutes dans la base de test : un Monde ne s'efface pas. */
 const MONDE_GENERE = "Essai de la carte (US-0417)";
@@ -86,5 +88,21 @@ describe.skipIf(!URL_TEST)("la fiche d'une Case (US-0428, sur base)", () => {
 
   it("ne lit rien pour un Territoire qui n'existe pas", async () => {
     expect(await ficheDUneCase(pool, -1, { q: 0, r: 0 })).toBeNull();
+  });
+
+  it("dit si la Case est de la Couronne, du Cœur sauvage, ou entre les deux (US-0429)", async () => {
+    const moi = await naitre(genereId);
+    expect(await ficheDUneCase(pool, moi.territoireId, moi.foyer)).toMatchObject({ zone: ZONE_COURONNE });
+    expect(await ficheDUneCase(pool, moi.territoireId, { q: 0, r: 0 })).toMatchObject({ zone: ZONE_COEUR });
+    expect(await ficheDUneCase(pool, moi.territoireId, await uneCase("not couronne and not coeur"))).toMatchObject({ zone: 0 });
+  });
+
+  it("donne la distance de la Case au Foyer du joueur, en Cases, par la seule formule du jeu (US-0429)", async () => {
+    const moi = await naitre(genereId);
+    expect(await ficheDUneCase(pool, moi.territoireId, moi.foyer)).toMatchObject({ distance: 0 });
+    for (const c of [{ q: 0, r: 0 }, await uneCase("anneau = 50"), await uneCase("variante_id = 'lac'")]) {
+      expect(await ficheDUneCase(pool, moi.territoireId, c)).toMatchObject({ distance: distance(c, moi.foyer) });
+    }
+    expect(distance({ q: 0, r: 0 }, moi.foyer)).toBeGreaterThanOrEqual(55);
   });
 });

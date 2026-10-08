@@ -3,9 +3,13 @@
 import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import type { Fiche } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
+import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { ficheDeLaCase } from "./actions";
 import type { Cadre } from "./dessin";
 import styles from "./FicheDeLaCase.module.css";
+
+/** US-0429 : où est la Case dans le Monde, selon sa zone. */
+const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne", [ZONE_COEUR]: "Cœur sauvage", 0: "Entre la Couronne et le Cœur sauvage" };
 
 /** La Case choisie sur la carte, et sa fiche : null tant que le serveur ne l'a pas donnée ; `echec` s'il n'a pas pu. */
 export type Choix = { case: Coordonnees; fiche: Fiche | null; echec: boolean };
@@ -46,7 +50,8 @@ function surLaCarte(element: Element, carte: Element | null): Cadre {
 
 /**
  * US-0428 : la fiche de la Case choisie (`choix`) : son Biome, puis à qui elle est, « Libre », « Votre Foyer » ou le
- * nom du chef. Sur ordinateur, un bloc flottant en haut à gauche de la carte (la légende est à droite) : à
+ * nom du chef. US-0429 : sa zone, sa distance au Foyer (sauf pour le Foyer lui-même) et, au Cœur sauvage, ce qui y
+ * vit. Sur ordinateur, un bloc flottant en haut à gauche de la carte (la légende est à droite) : à
  * l'ouverture, à chaque Case et chaque fois que sa taille change, elle demande à la carte de montrer la Case hors
  * d'elle (`montrer`). Vide en attendant le serveur ; les lecteurs d'écran l'entendent une fois remplie. Elle se
  * déclare posée sur la carte : la flèche du Foyer la contourne.
@@ -78,7 +83,13 @@ export function FicheDeLaCase({ choix, carte, montrer }: { choix: Choix; carte: 
               <dt>Propriétaire</dt>
               <dd>{fiche.aVous ? "Votre Foyer" : (fiche.chef ?? "Libre")}</dd>
             </div>
+            <div>
+              <dt>Zone</dt>
+              <dd>{ZONES[fiche.zone]}</dd>
+            </div>
           </dl>
+          {fiche.distance > 0 ? <p className={styles.distance}>{`À ${fiche.distance} Case${fiche.distance > 1 ? "s" : ""} de votre Foyer`}</p> : null}
+          {fiche.zone === ZONE_COEUR ? <p className={styles.rares}>Les Espèces les plus rares vivent ici.</p> : null}
         </>
       ) : echec ? (
         <p className={styles.echec}>La fiche n&apos;a pas pu s&apos;ouvrir.</p>

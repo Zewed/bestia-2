@@ -8,8 +8,8 @@ vi.mock("@/monde/fiche", () => lecture);
 
 import { ficheDeLaCase } from "./actions";
 
-/** La fiche d'une forêt libre, telle que la base la lit. */
-const FICHE = { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false };
+/** La fiche d'une forêt libre, à 7 Cases du Foyer, telle que la base la lit. */
+const FICHE = { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7 };
 
 describe("lire la fiche d'une Case (US-0428)", () => {
   afterEach(() => {

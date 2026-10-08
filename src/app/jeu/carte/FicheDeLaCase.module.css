@@ -50,6 +50,16 @@
   margin: 0;
 }
 
+/* US-0429 : la distance au Foyer, puis ce qui vit au Cœur sauvage. */
+.distance,
+.rares {
+  margin-top: 10px;
+}
+
+.rares {
+  color: var(--texte-2);
+}
+
 .echec {
   color: var(--texte-discret);
 }

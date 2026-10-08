@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Coordonnees } from "@/monde/hex";
 import type { Fiche } from "@/monde/fiche";
+import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { type Choix, FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 
 /** Les fiches demandées au serveur : chacune attend qu'on lui réponde, ou qu'on échoue. */
@@ -46,8 +47,8 @@ afterEach(() => {
 });
 
 const ICI = { q: 3, r: -5 };
-/** La fiche d'une forêt libre. */
-const FORET: Fiche = { ...ICI, biome: "Forêt", chef: null, aVous: false };
+/** La fiche d'une forêt libre, entre la Couronne et le Cœur sauvage, à 7 Cases du Foyer. */
+const FORET: Fiche = { ...ICI, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7 };
 /** La fiche de la Case, telle que la carte la montre. */
 const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
@@ -158,5 +159,35 @@ describe("la fiche d'une Case (US-0428)", () => {
     toucher(ICI);
     await repondre(null);
     expect(suivi!.arrete).toBe(true);
+  });
+});
+
+describe("situer la Case dans le Monde depuis sa fiche (US-0429)", () => {
+  /** Le texte de la fiche de `f`, déjà donnée par le serveur. */
+  const texte = (f: Partial<Fiche>) => {
+    render(<FicheDeLaCase choix={{ case: ICI, fiche: { ...FORET, ...f }, echec: false }} carte={{ current: null }} montrer={() => {}} />);
+    const contenu = fiche()!.textContent!;
+    cleanup();
+    return contenu;
+  };
+
+  it("dit si la Case est de la Couronne, du Cœur sauvage, ou entre les deux", () => {
+    expect(texte({ zone: ZONE_COURONNE })).toContain("Couronne");
+    expect(texte({ zone: ZONE_COURONNE })).not.toContain("Cœur");
+    expect(texte({ zone: ZONE_COEUR })).toContain("Cœur sauvage");
+    expect(texte({ zone: ZONE_COEUR })).not.toContain("Couronne");
+    expect(texte({ zone: 0 })).toContain("Entre la Couronne et le Cœur sauvage");
+  });
+
+  it("donne la distance de la Case au Foyer, en Cases ; rien de plus pour le Foyer lui-même", () => {
+    expect(texte({ distance: 7 })).toContain("À 7 Cases de votre Foyer");
+    expect(texte({ distance: 1 })).toContain("À 1 Case de votre Foyer");
+    expect(texte({ distance: 0, aVous: true })).not.toMatch(/Cases? de votre Foyer/);
+  });
+
+  it("dit, d'une Case du Cœur sauvage seulement, que les Espèces les plus rares y vivent", () => {
+    expect(texte({ zone: ZONE_COEUR })).toContain("Les Espèces les plus rares vivent ici.");
+    expect(texte({ zone: ZONE_COURONNE })).not.toContain("Espèces");
+    expect(texte({ zone: 0 })).not.toContain("Espèces");
   });
 });

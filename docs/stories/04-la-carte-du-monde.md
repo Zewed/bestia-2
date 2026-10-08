@@ -298,6 +298,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0429 · Situer une Case dans le Monde depuis sa fiche
 **En tant que** joueur, **je veux** voir sur la fiche où se trouve la Case dans le Monde, **afin de** juger si elle est proche de chez moi ou du Cœur sauvage.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La fiche dit « Couronne », « Cœur sauvage » ou « Entre la Couronne et le Cœur sauvage », et la distance au Foyer (« À 7 Cases de votre Foyer », rien pour le Foyer lui-même). Pour une Case du Cœur sauvage, elle ajoute « Les Espèces les plus rares vivent ici. » Vérifié en vrai.
 - **Débloquée par** : US-0428, US-0404, US-0405
 - **Critères d'acceptation** :
   - La fiche dit si la Case appartient à la Couronne ou au Cœur sauvage.

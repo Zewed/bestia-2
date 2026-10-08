@@ -655,8 +655,8 @@ describe("ouvrir la fiche d'une Case (US-0428)", () => {
   /** Si la carte surligne une Case : un trait citron, que seul le surlignage trace (le repère du Foyer est rempli). */
   const surlignee = () => toile.gestes.includes("border var(--citron)");
   const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
-  /** La Case au sud-ouest du Foyer, une forêt libre. */
-  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false };
+  /** La Case au sud-ouest du Foyer, une forêt libre, à une Case de lui. */
+  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 1 };
 
   it("ouvre d'un clic la fiche de la Case, surlignée aussitôt, et la remplit à la réponse du serveur", async () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
