@@ -1,0 +1,31 @@
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_d9ccf67e409689 308
+docs/stories/README.md
+  s_97a431cfa65ca7::t_492b301004c5d4 7
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_d3eb4a454b476a 378-393
+src/monde/famine.db.test.ts
+  s_97a431cfa65ca7::t_6343dee1369371 114-122,313-314,336,443-509
+src/monde/famine.test.ts
+  s_97a431cfa65ca7::t_46fbd8f8db2b85 2,44-68
+src/monde/famine.ts
+  s_97a431cfa65ca7::t_76a559fa8a9a6f 3,139-191
+src/monde/production.ts
+  s_97a431cfa65ca7::t_72f96e71b4c721 7,120-123,243-247,259,265-266,268-269
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d751bc85b794e2ed60c00b16df4b82897e81b737",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
