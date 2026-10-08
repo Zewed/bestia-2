@@ -8,6 +8,7 @@ import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ALERTE_MINUTES } from "@/reglage
 import { formaterDuree } from "@/temps/affichage";
 import { accueillirUnVoyageur, refuserUnVoyageur } from "./actions-aux-portes";
 import styles from "./AuxPortes.module.css";
+import { BoutonDuMetier, type MetierAuChoix, MetiersAuChoix } from "./MetiersAuChoix";
 
 /** US-0340 : ce que mangera un Habitant de plus, en Nourriture par heure, à la française : « 2 ». */
 const ENTRETIEN_EN_PLUS = quantiteExacte(String(ENTRETIEN_HABITANT_PAR_HEURE));
@@ -66,6 +67,12 @@ function depuisQuand(ms: number): string {
  * US-0341 : pendant une Famine (`famine`, lue par le serveur), aucun Voyageur ne se présente ; une phrase, une seule
  * fois en tête de la partie, dit que les Voyageurs évitent un Territoire en Famine, à la place de « Personne aux
  * portes pour l'instant. » quand personne n'attend. Ceux qui attendaient déjà restent jusqu'au bout de leur attente.
+ *
+ * US-0335 : au-dessus des boutons, le Métier qu'aura le Voyageur une fois accueilli, « Sans Métier » d'abord : le même
+ * bouton que sur la ligne d'un Habitant, qui déplie dessous les `metiers` au choix, un seul dépliant à la fois ; Échap
+ * ou un second toucher le referment. Toucher un Métier le choisit, sans accueillir personne, et la main revient au
+ * bouton ; « Sans Métier », en dernier, le retire. « Accueillir » accueille avec le Métier choisi, confirmé de même
+ * quand la famine est imminente. Sans Métiers à proposer, rien à choisir : il arrive sans Métier.
  */
 export function AuxPortes({
   voyageurs,
@@ -74,6 +81,7 @@ export function AuxPortes({
   placesLibres,
   famineImminente = false,
   famine = false,
+  metiers = [],
 }: {
   voyageurs: VoyageurAffiche[];
   maintenant: Date;
@@ -81,6 +89,7 @@ export function AuxPortes({
   placesLibres: number;
   famineImminente?: boolean;
   famine?: boolean;
+  metiers?: MetierAuChoix[];
 }) {
   // Les choix dont l'action n'a pas encore répondu : leurs lignes sont retirées d'avance ; un accueil prend déjà sa place.
   const [enCours, choisir] = useOptimistic<Choix[], Choix>([], (actuels, choix) => [...actuels, choix]);
@@ -98,6 +107,25 @@ export function AuxPortes({
   // US-0340 : le Voyageur dont l'accueil attend sa confirmation, et le bouton qui la donne.
   const [aConfirmer, setAConfirmer] = useState<number | null>(null);
   const boutonDeConfirmation = useRef<HTMLButtonElement>(null);
+
+  // US-0335 : le Métier choisi pour chaque Voyageur (aucun tant qu'il n'y en a pas), et le Voyageur dont les Métiers sont dépliés.
+  const [choisis, setChoisis] = useState<ReadonlyMap<number, MetierAuChoix>>(new Map());
+  const [deplie, setDeplie] = useState<number | null>(null);
+  const prefixe = useId();
+  const idBouton = (id: number) => `${prefixe}-metier-${id}`;
+  const idDepliant = (id: number) => `${prefixe}-metiers-${id}`;
+
+  // US-0335 : Échap referme le dépliant ouvert sans rien changer, et rend la main à son bouton.
+  useEffect(() => {
+    if (deplie === null) return;
+    function fermer(evenement: KeyboardEvent) {
+      if (evenement.key !== "Escape") return;
+      setDeplie(null);
+      document.getElementById(`${prefixe}-metier-${deplie}`)?.focus();
+    }
+    document.addEventListener("keydown", fermer);
+    return () => document.removeEventListener("keydown", fermer);
+  }, [deplie, prefixe]);
 
   useEffect(() => {
     const depart = performance.now();
@@ -134,6 +162,19 @@ export function AuxPortes({
     decider(voyageur, true);
   }
 
+  /** US-0335 : choisit le Métier qu'aura le Voyageur une fois accueilli, ou le retire (null), et referme le dépliant. */
+  function choisirLeMetier(voyageur: VoyageurAffiche, metier: MetierAuChoix | null) {
+    setDeplie(null);
+    // Le Métier touché s'en va avec le dépliant : la main revient au bouton de la ligne.
+    document.getElementById(idBouton(voyageur.id))?.focus();
+    setChoisis((actuels) => {
+      const suivants = new Map(actuels);
+      if (metier) suivants.set(voyageur.id, metier);
+      else suivants.delete(voyageur.id);
+      return suivants;
+    });
+  }
+
   /**
    * Accueille ou refuse le Voyageur : sa ligne disparaît aussitôt, le temps que l'action réponde. US-0339 : un
    * second toucher avant la réponse (un double clic, plus rapide que la ligne) ne relance rien pour ce Voyageur.
@@ -146,7 +187,8 @@ export function AuxPortes({
     demarrer(async () => {
       try {
         choisir({ id: voyageur.id, accueil });
-        const rendu = accueil ? await accueillirUnVoyageur(voyageur.id) : await refuserUnVoyageur(voyageur.id);
+        // US-0335 : avec le Métier choisi sur sa ligne, ou sans Métier.
+        const rendu = accueil ? await accueillirUnVoyageur(voyageur.id, choisis.get(voyageur.id)?.id ?? null) : await refuserUnVoyageur(voyageur.id);
         if (rendu === "reparti") setAnnonce("Ce Voyageur est déjà reparti.");
       } finally {
         enVol.current.delete(voyageur.id);
@@ -180,6 +222,9 @@ export function AuxPortes({
             const alerte = Math.ceil(reste / 60_000) < VOYAGEUR_ALERTE_MINUTES;
             // US-0340 : sans place, rien à confirmer ; une page relue sans l'avertissement n'en demande plus.
             const confirmer = famineImminente && !plein && aConfirmer === v.id;
+            // US-0335 : le Métier choisi pour lui, et si les Métiers sont dépliés sous sa ligne.
+            const metier = choisis.get(v.id);
+            const ouvert = metiers.length > 0 && deplie === v.id;
             return (
               <li key={v.id} className={styles.voyageur}>
                 <span className={styles.prenom}>{v.prenom}</span>
@@ -187,6 +232,28 @@ export function AuxPortes({
                 <span className={styles.depart} data-alerte={alerte ? "" : undefined}>
                   {reste > 0 ? `repart dans ${formaterDuree(reste / 3_600_000)}` : "sur le départ"}
                 </span>
+                {/* US-0335 : le Métier qu'il aura, au choix ; un lecteur d'écran entend aussi de qui il s'agit. */}
+                {metiers.length > 0 ? (
+                  <BoutonDuMetier
+                    id={idBouton(v.id)}
+                    texte={metier?.nom ?? "Sans Métier"}
+                    etiquette={`Métier ${de(v.prenom)} : ${metier?.nom ?? "Sans Métier"}`}
+                    deplie={ouvert}
+                    depliant={idDepliant(v.id)}
+                    className={styles.metier}
+                    onClick={() => setDeplie(ouvert ? null : v.id)}
+                  />
+                ) : null}
+                {ouvert ? (
+                  <MetiersAuChoix
+                    id={idDepliant(v.id)}
+                    etiquette={`Métier ${de(v.prenom)}`}
+                    metiers={metiers}
+                    actuel={metier?.nom ?? null}
+                    className={styles.metiers}
+                    choisir={(m) => choisirLeMetier(v, m)}
+                  />
+                ) : null}
                 <div className={styles.choix}>
                   {/* Deux boutons par ligne : un lecteur d'écran entend aussi qui il accueille, ou refuse. */}
                   <button

@@ -46,6 +46,19 @@ describe("la partie « Aux portes » sur mobile (US-0343)", () => {
   });
 });
 
+describe("la partie « Aux portes », le Métier choisi à l'accueil (US-0335)", () => {
+  it("pose le bouton du Métier sur sa propre ligne, sous le prénom et le compte à rebours, sur mobile aussi", () => {
+    // Plus précis que la règle de la liste qui, sur mobile, le range sous le prénom (page.module.css).
+    expect(regle(".voyageur > .metier")).toMatch(/grid-row: auto;[^}]*grid-column: 1 \/ -1;/);
+  });
+
+  it("déplie les Métiers sur deux colonnes dans une ligne trop étroite pour quatre, comme sur un petit écran", () => {
+    const etroit = [...CSS.matchAll(/@container \(max-width: (\d+)px\) \{([\s\S]*?)\n\}/g)].find(([, , regles]) => regles.includes(".metiers"));
+    expect(Number(etroit?.[1])).toBe(479);
+    expect(etroit?.[2]).toMatch(/\.voyageur > \.metiers \{[^}]*grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/);
+  });
+});
+
 describe("la partie « Aux portes », quand la place manque (US-0338)", () => {
   it("grise visiblement « Accueillir » éteint, qui ne change plus au survol", () => {
     expect(regle(".accueillir:disabled")).toMatch(/background: var\(--bloc-3\);[^}]*color: var\(--texte-pale\);[^}]*cursor: not-allowed;/);

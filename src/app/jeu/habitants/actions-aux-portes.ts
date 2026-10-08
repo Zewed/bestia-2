@@ -10,9 +10,17 @@ import { maintenant } from "@/temps/horloge";
 /** Le plus grand identifiant qu'une colonne integer de Postgres puisse tenir. */
 const IDENTIFIANT_MAX = 2_147_483_647;
 
+/** US-0335 : l'identifiant d'un Métier, écrit comme dans donnees/ (minuscules sans accent), et pas plus long qu'il n'en faut. */
+const IDENTIFIANT_DE_METIER = /^[a-z0-9_]{1,64}$/;
+
 /** Vrai pour un identifiant que la colonne integer d'un Voyageur peut tenir. */
 function identifiantValable(voyageurId: number): boolean {
   return Number.isInteger(voyageurId) && voyageurId > 0 && voyageurId <= IDENTIFIANT_MAX;
+}
+
+/** US-0335 : vrai pour aucun Métier (null), ou pour un identifiant de Métier écrit comme dans donnees/. */
+function metierValable(metierId: string | null): boolean {
+  return metierId === null || (typeof metierId === "string" && IDENTIFIANT_DE_METIER.test(metierId));
 }
 
 /**
@@ -23,12 +31,16 @@ function identifiantValable(voyageurId: number): boolean {
  * n'est pas touché, quel que soit l'identifiant envoyé. La page est ensuite relue, même quand le Voyageur
  * n'attendait plus : c'est elle qui fait foi, à la place de la ligne retirée d'avance. US-0337 : rend ce qu'a donné
  * l'accueil, pour que la page dise pourquoi un Voyageur déjà reparti n'a pas été accueilli.
+ *
+ * US-0335 : avec le Métier choisi sur sa ligne (`metierId`, null : sans Métier), que le nouvel Habitant exerce
+ * aussitôt ; l'accueil vérifie, dans sa transaction, que c'est l'un des huit. Un identifiant mal écrit n'accueille
+ * personne.
  */
-export async function accueillirUnVoyageur(voyageurId: number): Promise<Accueil | undefined> {
+export async function accueillirUnVoyageur(voyageurId: number, metierId: string | null = null): Promise<Accueil | undefined> {
   if (!entreeDuJeuOuverte()) return;
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  if (territoireId === null || !identifiantValable(voyageurId)) return;
-  const accueil = await accueillirLeVoyageur(getPool(), territoireId, voyageurId, maintenant());
+  if (territoireId === null || !identifiantValable(voyageurId) || !metierValable(metierId)) return;
+  const accueil = await accueillirLeVoyageur(getPool(), territoireId, voyageurId, maintenant(), metierId);
   refresh();
   return accueil;
 }

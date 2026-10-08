@@ -100,13 +100,21 @@ export async function retirerUnHabitantDuMetier(base: Pool | PoolClient, territo
 /**
  * US-0334 : un nouvel Habitant au Territoire, sans Métier, du prénom donné, arrivé à `arriveLe`, l'heure du
  * jeu ; rend son identifiant. Il compte aussitôt dans le nombre d'Habitants et dans l'Entretien. Appelée avec
- * le client d'une transaction, elle tient dedans.
+ * le client d'une transaction, elle tient dedans. US-0335 : ou avec le Métier `metierId` (null : sans Métier),
+ * qu'il exerce dès son arrivée ; la clé étrangère vers `metier` refuse un Métier inconnu.
  */
-export async function ajouterUnHabitant(base: Pool | PoolClient, territoireId: number, prenom: string, arriveLe: Date): Promise<number> {
-  const { rows } = await base.query<{ id: number }>("insert into habitant (territoire_id, prenom, arrive_le) values ($1, $2, $3) returning id", [
+export async function ajouterUnHabitant(
+  base: Pool | PoolClient,
+  territoireId: number,
+  prenom: string,
+  arriveLe: Date,
+  metierId: string | null = null,
+): Promise<number> {
+  const { rows } = await base.query<{ id: number }>("insert into habitant (territoire_id, prenom, arrive_le, metier) values ($1, $2, $3, $4) returning id", [
     territoireId,
     prenom,
     arriveLe,
+    metierId,
   ]);
   return rows[0].id;
 }

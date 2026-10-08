@@ -30,7 +30,8 @@ describe("accueillir un Voyageur (US-0334)", () => {
     const avant = Date.now();
     expect(await accueillirUnVoyageur(70)).toBe("accueilli");
     expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/habitants");
-    expect(voyageurs.accueillirLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70, expect.any(Date));
+    // US-0335 : sans Métier choisi, il arrive sans Métier.
+    expect(voyageurs.accueillirLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70, expect.any(Date), null);
     const instant = (voyageurs.accueillirLeVoyageur.mock.lastCall as unknown as [unknown, number, number, Date])[3].getTime();
     expect(instant).toBeGreaterThanOrEqual(avant);
     expect(instant).toBeLessThanOrEqual(Date.now());
@@ -38,8 +39,27 @@ describe("accueillir un Voyageur (US-0334)", () => {
     expect(cache.refresh).toHaveBeenCalledTimes(1);
   });
 
-  it.each([["reparti"], ["plus-de-place"]])(
-    "rend, après avoir relu la page, pourquoi le Voyageur n'a pas été accueilli : %s (US-0337, US-0338)",
+  it("accueille avec le Métier choisi, qui passe tel quel à l'accueil, vérifié dans sa transaction (US-0335)", async () => {
+    garde.exigerCompte.mockResolvedValue(CONNECTE);
+    expect(await accueillirUnVoyageur(70, "chasseur")).toBe("accueilli");
+    expect(voyageurs.accueillirLeVoyageur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, 70, expect.any(Date), "chasseur");
+    expect(cache.refresh).toHaveBeenCalledTimes(1);
+    await accueillirUnVoyageur(71, null);
+    expect(voyageurs.accueillirLeVoyageur).toHaveBeenLastCalledWith(expect.anything(), 12, 71, expect.any(Date), null);
+  });
+
+  it.each([["Chasseur"], [""], ["chasseur; drop"], ["a".repeat(65)], [42 as unknown as string], [{} as unknown as string]])(
+    "n'accueille personne pour un Métier qui n'est pas écrit comme un identifiant de Métier : %s (US-0335)",
+    async (metier) => {
+      garde.exigerCompte.mockResolvedValue(CONNECTE);
+      expect(await accueillirUnVoyageur(70, metier)).toBeUndefined();
+      expect(voyageurs.accueillirLeVoyageur).not.toHaveBeenCalled();
+      expect(cache.refresh).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each([["reparti"], ["plus-de-place"], ["metier-inconnu"]])(
+    "rend, après avoir relu la page, pourquoi le Voyageur n'a pas été accueilli : %s (US-0337, US-0338, US-0335)",
     async (raison) => {
       garde.exigerCompte.mockResolvedValue(CONNECTE);
       voyageurs.accueillirLeVoyageur.mockResolvedValueOnce(raison);

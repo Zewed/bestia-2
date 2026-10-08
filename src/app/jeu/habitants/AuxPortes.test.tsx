@@ -129,7 +129,7 @@ describe("accueillir un Voyageur (US-0334)", () => {
   it("toucher « Accueillir » retire aussitôt la ligne, sans attendre l'action, qui reçoit le Voyageur", async () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
     await userEvent.setup().click(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }));
-    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71, null);
     // L'action n'a pas encore répondu : la ligne est déjà partie, les autres restent dans leur ordre.
     expect(prenoms()).toEqual(["Ines", "Ilda"]);
   });
@@ -163,8 +163,157 @@ describe("accueillir un Voyageur (US-0334)", () => {
     const utilisateur = userEvent.setup();
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
     await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Accueillir Ilda" }));
-    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [72]]);
+    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70, null], [72, null]]);
     expect(prenoms()).toEqual(["Joran"]);
+  });
+});
+
+describe("donner un Métier dès l'accueil (US-0335)", () => {
+  /** Les huit Métiers, dans leur ordre, chacun avec son icône. */
+  const METIERS = [
+    ["explorateur", "Explorateur"],
+    ["chasseur", "Chasseur"],
+    ["cueilleur", "Cueilleur"],
+    ["bucheron", "Bûcheron"],
+    ["mineur", "Mineur"],
+    ["chercheur", "Chercheur"],
+    ["batisseur", "Bâtisseur"],
+    ["eleveur", "Éleveur"],
+  ].map(([id, nom]) => ({ id, nom, icone: `/illustrations/metiers/${id}.webp` }));
+  /** Le bouton qui déplie les Métiers sur la ligne d'un Voyageur. */
+  const deplier = (prenom: string) => within(ligne(prenom)).getAllByRole("button").find((b) => b.hasAttribute("aria-expanded"))!;
+  /** Les Métiers dépliés sous la ligne d'un Voyageur. */
+  const auChoix = (prenom: string) => {
+    const groupe = within(ligne(prenom)).queryByRole("group");
+    return groupe ? within(groupe).getAllByRole("button") : [];
+  };
+  /** Choisit le Métier `nom` sur la ligne du Voyageur `prenom`. */
+  async function choisir(prenom: string, nom: string) {
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier(prenom));
+    await utilisateur.click(within(ligne(prenom)).getByRole("button", { name: nom }));
+  }
+
+  it("met sur la ligne de chaque Voyageur, au-dessus d'« Accueillir », le Métier qu'il aura : « Sans Métier » par défaut, à la flèche du choix d'un Métier", () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    for (const { prenom } of TROIS) {
+      const bouton = deplier(prenom);
+      expect([bouton.textContent, bouton.getAttribute("aria-expanded"), bouton.getAttribute("type")]).toEqual(["Sans Métier", "false", "button"]);
+      expect(bouton.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+      expect(within(ligne(prenom)).getAllByRole("button").map((b) => b.textContent)).toEqual(["Sans Métier", "Accueillir", "Refuser"]);
+    }
+    // Un lecteur d'écran entend aussi de qui il s'agit, et ce que dit le bouton.
+    expect(TROIS.map(({ prenom }) => deplier(prenom).getAttribute("aria-label"))).toEqual([
+      "Métier d'Ines : Sans Métier",
+      "Métier de Joran : Sans Métier",
+      "Métier d'Ilda : Sans Métier",
+    ]);
+  });
+
+  it("déplie sous le bouton les huit Métiers, chacun un bouton à son icône muette et à son nom, sans « Sans Métier » tant qu'aucun n'est choisi", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    await userEvent.setup().click(deplier("Joran"));
+    expect(deplier("Joran").getAttribute("aria-expanded")).toBe("true");
+    const groupe = within(ligne("Joran")).getByRole("group", { name: "Métier de Joran" });
+    expect(deplier("Joran").getAttribute("aria-controls")).toBe(groupe.id);
+    expect(auChoix("Joran").map((b) => [b.textContent, b.querySelector("img")?.getAttribute("alt"), b.getAttribute("aria-pressed")])).toEqual(
+      METIERS.map((m) => [m.nom, "", "false"]),
+    );
+    // Entre le bouton du Métier et « Accueillir ».
+    expect(deplier("Joran").nextElementSibling).toBe(groupe);
+    expect(groupe.nextElementSibling?.contains(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }))).toBe(true);
+    expect(auChoix("Ines")).toEqual([]);
+  });
+
+  it("toucher un Métier le choisit, sans accueillir personne : le bouton le montre, le dépliant se referme, et la main revient au bouton", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    await choisir("Joran", "Chasseur");
+    expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+    expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
+    expect([deplier("Joran").textContent, deplier("Joran").getAttribute("aria-label"), deplier("Joran").getAttribute("aria-expanded")]).toEqual([
+      "Chasseur",
+      "Métier de Joran : Chasseur",
+      "false",
+    ]);
+    expect(auChoix("Joran")).toEqual([]);
+    expect(document.activeElement).toBe(deplier("Joran"));
+    // Les autres lignes gardent le leur.
+    expect([deplier("Ines").textContent, deplier("Ilda").textContent]).toEqual(["Sans Métier", "Sans Métier"]);
+  });
+
+  it("« Accueillir » accueille avec le Métier choisi ; sans choix, le Voyageur arrive sans Métier", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await choisir("Joran", "Bûcheron");
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }));
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([
+      [71, "bucheron"],
+      [70, null],
+    ]);
+    expect(prenoms()).toEqual(["Ilda"]);
+  });
+
+  it("change d'avis : le Métier choisi est pressé et hors d'atteinte, un autre le remplace, et « Sans Métier », en dernier, le retire", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await choisir("Ilda", "Mineur");
+    await utilisateur.click(deplier("Ilda"));
+    expect(auChoix("Ilda").map((b) => [b.textContent, b.getAttribute("aria-pressed"), (b as HTMLButtonElement).disabled])).toEqual([
+      ...METIERS.map((m) => [m.nom, m.nom === "Mineur" ? "true" : "false", m.nom === "Mineur"]),
+      ["Sans Métier", null, false],
+    ]);
+    await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Éleveur" }));
+    expect(deplier("Ilda").textContent).toBe("Éleveur");
+    await utilisateur.click(deplier("Ilda"));
+    await utilisateur.click(within(within(ligne("Ilda")).getByRole("group")).getByRole("button", { name: "Sans Métier" }));
+    expect(deplier("Ilda").textContent).toBe("Sans Métier");
+    await utilisateur.click(within(ligne("Ilda")).getByRole("button", { name: "Accueillir Ilda" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(72, null);
+  });
+
+  it("referme le dépliant d'un second toucher, ou d'Échap qui rend la main au bouton, sans rien changer ; un seul dépliant à la fois", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(deplier("Ines"));
+    await utilisateur.click(deplier("Ines"));
+    expect(auChoix("Ines")).toEqual([]);
+    await utilisateur.click(deplier("Ines"));
+    await utilisateur.click(deplier("Ilda"));
+    expect([auChoix("Ines").length, auChoix("Ilda").length]).toEqual([0, 8]);
+    within(ligne("Ilda")).getByRole("button", { name: "Chasseur" }).focus();
+    await utilisateur.keyboard("{Escape}");
+    expect(auChoix("Ilda")).toEqual([]);
+    expect(document.activeElement).toBe(deplier("Ilda"));
+    expect(TROIS.map(({ prenom }) => deplier(prenom).textContent)).toEqual(["Sans Métier", "Sans Métier", "Sans Métier"]);
+    expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+  });
+
+  it("garde la même confirmation quand la famine est imminente : le second toucher accueille avec le Métier choisi", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} famineImminente />);
+    const utilisateur = userEvent.setup();
+    await choisir("Joran", "Cueilleur");
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Accueillir Joran" }));
+    expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
+    expect(within(ligne("Joran")).getByRole("alert").textContent).toBe(`Famine imminente : un Habitant de plus mangera ${ENTRETIEN_HABITANT_PAR_HEURE} Nourriture par heure.`);
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Confirmer l'accueil de Joran" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71, "cueilleur");
+  });
+
+  it("garde le Métier choisi sur la ligne d'un Voyageur que la page relue montre encore, l'accueil n'ayant pas eu lieu", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={METIERS} />);
+    const utilisateur = userEvent.setup();
+    await choisir("Ines", "Chercheur");
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    await finirLesActions("plus-de-place");
+    expect(deplier("Ines").textContent).toBe("Chercheur");
+  });
+
+  it("ne propose aucun Métier quand il n'y en a aucun à proposer : le Voyageur arrive sans Métier", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} metiers={[]} />);
+    expect(within(ligne("Ines")).getAllByRole("button").map((b) => b.textContent)).toEqual(["Accueillir", "Refuser"]);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70, null);
   });
 });
 
@@ -352,7 +501,7 @@ describe("fermer les portes pendant une Famine (US-0341)", () => {
     // L'accueil reste possible, confirmé comme sous l'avertissement « famine imminente » (US-0340).
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Confirmer l'accueil d'Ines" }));
-    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70, null);
   });
 
   it("le garde seul, sans « Personne aux portes pour l'instant. », quand le dernier Voyageur qui attendait s'en va", async () => {
@@ -393,7 +542,7 @@ describe("ne jamais accueillir deux fois (US-0339)", () => {
   it("n'envoie qu'un accueil pour un double clic sur « Accueillir »", async () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
     await userEvent.setup().dblClick(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
-    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70, null);
   });
 
   it("ne relance rien pour un Voyageur dont un choix est en cours, même touché de nouveau avant que sa ligne parte", () => {
@@ -405,7 +554,7 @@ describe("ne jamais accueillir deux fois (US-0339)", () => {
       accueillir.click();
       refuser.click();
     });
-    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70, null);
     expect(actions.refuserUnVoyageur).not.toHaveBeenCalled();
   });
 
@@ -415,7 +564,7 @@ describe("ne jamais accueillir deux fois (US-0339)", () => {
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
     await finirLesActions("plus-de-place");
     await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
-    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70], [70]]);
+    expect(actions.accueillirUnVoyageur.mock.calls).toEqual([[70, null], [70, null]]);
   });
 });
 
@@ -452,7 +601,7 @@ describe("mesurer l'Entretien en plus avant d'accueillir (US-0340)", () => {
   it("accueille dès le premier toucher, sans confirmation, tant que l'avertissement « famine imminente » n'est pas actif", async () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente={false} />);
     await userEvent.setup().click(accueil("Joran"));
-    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71, null);
     expect(prenoms()).toEqual(["Ines", "Ilda"]);
   });
 
@@ -485,7 +634,7 @@ describe("mesurer l'Entretien en plus avant d'accueillir (US-0340)", () => {
       const utilisateur = userEvent.setup();
       await utilisateur.click(accueil("Joran"));
       await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Confirmer l'accueil de Joran" }));
-      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71, null);
       expect(prenoms()).toEqual(["Ines", "Ilda"]);
       expect(alertes()).toEqual([]);
     });
@@ -497,7 +646,7 @@ describe("mesurer l'Entretien en plus avant d'accueillir (US-0340)", () => {
       expect(actions.accueillirUnVoyageur).not.toHaveBeenCalled();
       expect(accueils()[1]).toEqual(["Confirmer l'accueil", true]);
       await utilisateur.click(accueil("Joran"));
-      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(71, null);
     });
 
     it("« Refuser » annule la confirmation : sur la même ligne, il refuse le Voyageur sans l'accueillir", async () => {
@@ -571,7 +720,7 @@ describe("mesurer l'Entretien en plus avant d'accueillir (US-0340)", () => {
       rerender(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={new Date(MAINTENANT.getTime() + 2_000)} famineImminente={false} />);
       expect(accueils()[1]).toEqual(["Accueillir", false]);
       await utilisateur.click(accueil("Ilda"));
-      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(72);
+      expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(72, null);
     });
   });
 });

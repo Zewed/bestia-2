@@ -381,6 +381,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0335 · Donner un Métier dès l'accueil
 **En tant que** joueur, **je veux** choisir le Métier d'un Voyageur au moment où je l'accueille, **afin de** mettre le nouvel Habitant au travail tout de suite.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Sur la ligne de chaque Voyageur, au-dessus de « Accueillir », un bouton « Sans Métier » déplie les huit Métiers, comme le choix du Métier de la liste des Habitants. Choisir un Métier n'accueille personne ; « Accueillir » fait entrer le nouvel Habitant avec le Métier choisi, ou sans Métier. La confirmation en famine imminente ne change pas. Les compteurs par Métier, le bandeau des sans Métier et la barre suivent aussitôt. Côté serveur, un Métier inconnu ne change rien et le Voyageur continue d'attendre. Vérifié en vrai.
 - **Débloquée par** : US-0334, US-0308
 - **Critères d'acceptation** :
   - Au moment d'accueillir, on peut choisir l'un des huit Métiers.

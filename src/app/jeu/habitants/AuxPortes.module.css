@@ -67,6 +67,26 @@
 }
 
 /*
+ * US-0335 : sous la ligne, à gauche, le Métier qu'aura le Voyageur, au bouton qui choisit le Métier d'un Habitant
+ * (page.module.css) ; sur sa propre ligne, même sur mobile, où ce bouton passe sinon sous le prénom.
+ */
+.voyageur > .metier {
+  grid-row: auto;
+  grid-column: 1 / -1;
+  margin-top: 6px;
+}
+
+/*
+ * US-0335 : dessous, les Métiers dépliés ; dans une ligne trop étroite pour quatre Métiers côte à côte (la colonne de
+ * l'ordinateur, un téléphone), deux par ligne, comme sur un petit écran : « Explorateur » tient en entier.
+ */
+@container (max-width: 479px) {
+  .voyageur > .metiers {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+/*
  * US-0334, US-0336 : sous la ligne, sur toute sa largeur, ce qu'on peut faire du Voyageur, en boutons d'au moins
  * 44 px de haut qui se partagent la place, écartés pour ne pas toucher l'un pour l'autre : « Accueillir », le
  * principal, en Encre ; « Refuser », le secondaire, cerné d'un trait. US-0343 : 12 px d'écart au moins, au pouce.

@@ -654,6 +654,66 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       expect(await voyageursAuxPortes(pool, territoireId)).toEqual([]);
     });
 
+    describe("avec un Métier choisi à l'accueil (US-0335)", () => {
+      /** Le nombre d'Habitants du Territoire par Métier, sous son nom (« sans » : sans Métier), comme les compteurs de la page. */
+      const effectifs = async (territoireId: number) => {
+        const compte = new Map<string, number>();
+        for (const h of await habitantsDuTerritoire(pool, territoireId)) compte.set(h.metier ?? "sans", (compte.get(h.metier ?? "sans") ?? 0) + 1);
+        return Object.fromEntries(compte);
+      };
+
+      it("fait du Voyageur un Habitant qui exerce aussitôt le Métier choisi, et le compte parmi les siens", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        const avant = await habitants(territoireId);
+        const sans = (await effectifs(territoireId)).sans;
+
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE), "chasseur")).toBe("accueilli");
+        expect(await habitants(territoireId)).toEqual([...avant, ["Ines", "Chasseur", apres(ne, 4 * HEURE)]]);
+        expect(await effectifs(territoireId)).toEqual({ sans, Chasseur: 1 });
+        expect(await sort(ines)).toEqual(["accueilli", apres(ne, 4 * HEURE)]);
+      });
+
+      it("le fait arriver sans Métier quand aucun n'est choisi", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        const sans = (await effectifs(territoireId)).sans;
+
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE), null)).toBe("accueilli");
+        expect((await habitants(territoireId)).at(-1)).toEqual(["Ines", null, apres(ne, 4 * HEURE)]);
+        expect(await effectifs(territoireId)).toEqual({ sans: sans + 1 });
+      });
+
+      it("refuse un Métier inconnu, et le dit : rien ne change, et le Voyageur attend toujours", async () => {
+        const { territoireId, ne } = await naitre();
+        const ines = await presenter(territoireId, "Ines", apres(ne, HEURE));
+        const avant = await tout(territoireId);
+
+        for (const inconnu of ["dresseur", "Chasseur", ""]) {
+          expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE), inconnu), inconnu).toBe("metier-inconnu");
+        }
+        expect(await tout(territoireId)).toEqual(avant);
+        expect(await sort(ines)).toEqual([null, null]);
+        // Il peut toujours être accueilli, avec un vrai Métier.
+        expect(await accueillirLeVoyageur(pool, territoireId, ines, apres(ne, 4 * HEURE), "eleveur")).toBe("accueilli");
+        expect((await habitants(territoireId)).at(-1)).toEqual(["Ines", "Éleveur", apres(ne, 4 * HEURE)]);
+      });
+
+      it("garde les autres refus de l'accueil : un Voyageur d'un autre Territoire, ou faute de place, ne devient rien, Métier choisi ou non", async () => {
+        const [joueur, voisin] = [await naitre(), await naitre()];
+        const brune = await presenter(voisin.territoireId, "Brune", apres(voisin.ne, HEURE));
+        const autres = await tout(voisin.territoireId);
+        expect(await accueillirLeVoyageur(pool, joueur.territoireId, brune, apres(joueur.ne, 4 * HEURE), "mineur")).toBe("absent");
+        expect(await tout(voisin.territoireId)).toEqual(autres);
+
+        const ines = await presenter(joueur.territoireId, "Ines", apres(joueur.ne, HEURE));
+        await pool.query("insert into habitant (territoire_id, prenom) select $1, 'Arno' from generate_series(1, $2)", [joueur.territoireId, PLACES_DU_FOYER]);
+        const siens = await tout(joueur.territoireId);
+        expect(await accueillirLeVoyageur(pool, joueur.territoireId, ines, apres(joueur.ne, 4 * HEURE), "mineur")).toBe("plus-de-place");
+        expect(await tout(joueur.territoireId)).toEqual(siens);
+      });
+    });
+
     /** US-0338 : fait venir au Territoire des Habitants, sans passer par les portes, jusqu'à en compter `nombre`. */
     const remplir = async (territoireId: number, nombre: number) =>
       pool.query(

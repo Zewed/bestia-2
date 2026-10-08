@@ -794,10 +794,17 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
     const html = renderToStaticMarkup(await Habitants());
     expect(voyageurs.voyageursAuxPortes).toHaveBeenCalledWith(expect.anything(), 12);
     // US-0334, US-0336 : chaque ligne finit par « Accueillir » et « Refuser » ; US-0340 : puis l'Entretien en plus.
+    // US-0335 : au-dessus des boutons, le Métier qu'aura le Voyageur, « Sans Métier » d'abord.
     expect(lignesAuxPortes(html)).toEqual([
-      "Joran · arrivé il y a 5 h · repart dans 7 h · Accueillir · Refuser · Mangera 2 Nourriture par heure",
-      "Ilda · arrivé il y a 2 h · repart dans 10 h · Accueillir · Refuser · Mangera 2 Nourriture par heure",
+      "Joran · arrivé il y a 5 h · repart dans 7 h · Sans Métier · Accueillir · Refuser · Mangera 2 Nourriture par heure",
+      "Ilda · arrivé il y a 2 h · repart dans 10 h · Sans Métier · Accueillir · Refuser · Mangera 2 Nourriture par heure",
     ]);
+  });
+
+  it("confie à « Aux portes » les huit Métiers au choix de la liste, pour en donner un dès l'accueil (US-0335)", async () => {
+    await connecte(["Joran", 5]);
+    renderToStaticMarkup(await Habitants());
+    expect(portes.AuxPortes.mock.lastCall?.[0].metiers).toEqual(HUIT_METIERS.map((m) => ({ id: m.id, nom: m.nom, icone: `/illustrations/metiers/${m.id}.webp` })));
   });
 
   it("confie au compte à rebours l'heure et la vitesse du jeu, telles que le serveur les tient (US-0333)", async () => {

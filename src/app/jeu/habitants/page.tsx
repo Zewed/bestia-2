@@ -93,6 +93,7 @@ export default async function Habitants() {
     territoireId === null ? null : famineALHeure(territoireId),
   ]);
   const montres = habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }));
+  const auChoix = metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }));
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Habitants</h1>
@@ -106,13 +107,14 @@ export default async function Habitants() {
               {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
             </div>
             {/* US-0329 : sans Habitant, la liste dit à sa place que des Voyageurs finiront par passer. */}
-            <ListeDesHabitants habitants={montres} metiers={metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }))} />
+            <ListeDesHabitants habitants={montres} metiers={auChoix} />
           </Bloc>
           <div className={styles.colonne} style={COLONNE} data-etroit="">
             {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
             {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
             {/* US-0340 : la famine imminente lui fait confirmer, sur les Stocks et l'Entretien lus à l'heure. */}
             {/* US-0341 : pendant une Famine, lue à l'heure, les Voyageurs évitent le Territoire. */}
+            {/* US-0335 : les mêmes Métiers au choix que la liste, pour en donner un dès l'accueil. */}
             <AuxPortes
               voyageurs={voyageurs}
               maintenant={maintenant()}
@@ -120,6 +122,7 @@ export default async function Habitants() {
               placesLibres={places - habitants.length}
               famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure, famineDepuis)}
               famine={famine !== null}
+              metiers={auChoix}
             />
             {entretien ? (
               <Bloc titre="Entretien">

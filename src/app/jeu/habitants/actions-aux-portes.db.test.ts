@@ -65,6 +65,21 @@ describe.skipIf(!URL_TEST)("les Voyageurs aux portes, accueillis ou refusés, su
     expect((await recitsDuTerritoire(pool, joueur)).map((r) => [r.titre, r.survenuLe])).toEqual([["Ines a rejoint le Territoire", nouveau.arriveLe]]);
   });
 
+  it("lui donne dès l'accueil le Métier choisi, ou aucun ; un Métier inconnu n'accueille personne (US-0335)", async () => {
+    const joueur = await naitre();
+    const [ines, joran, ilda] = [await presenter(joueur, "Ines"), await presenter(joueur, "Joran"), await presenter(joueur, "Ilda")];
+    connecter(joueur);
+    /** Les Habitants, du premier arrivé au dernier : prénom et Métier (les trois du départ ont un prénom tiré au hasard). */
+    const metiers = async () => (await habitantsDuTerritoire(pool, joueur)).sort((a, b) => a.id - b.id).map((h) => [h.prenom, h.metier]);
+    const trois = await metiers();
+
+    expect(await accueillirUnVoyageur(ines, "cueilleur")).toBe("accueilli");
+    expect(await accueillirUnVoyageur(joran)).toBe("accueilli");
+    expect(await accueillirUnVoyageur(ilda, "dresseur")).toBe("metier-inconnu");
+    expect(await metiers()).toEqual([...trois, ["Ines", "Cueilleur"], ["Joran", null]]);
+    expect((await prenoms(joueur)).portes).toEqual(["Ilda"]);
+  });
+
   it("n'accueille que les Voyageurs aux portes du joueur connecté, jamais ceux d'un autre, même en envoyant leur identifiant", async () => {
     const [joueur, voisin] = [await naitre(), await naitre()];
     const ines = await presenter(joueur, "Ines");

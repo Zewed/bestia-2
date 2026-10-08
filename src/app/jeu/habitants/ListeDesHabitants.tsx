@@ -5,13 +5,13 @@ import { useSearchParams } from "next/navigation";
 import { type MouseEvent, useEffect, useId, useRef, useState, useTransition } from "react";
 import { donnerUnMetier, renvoyerUnHabitant, retirerLeMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
+import { BoutonDuMetier, type MetierAuChoix, MetiersAuChoix } from "./MetiersAuChoix";
 import styles from "./page.module.css";
+
+export type { MetierAuChoix };
 
 /** Un Habitant tel que la liste le montre : son prénom, le nom de son Métier (null sans Métier) et son état. */
 export type HabitantAffiche = { id: number; prenom: string; metier: string | null; etat: string };
-
-/** US-0308 : un Métier qu'on peut donner, son icône déjà nommée par le serveur. */
-export type MetierAuChoix = { id: string; nom: string; icone: string };
 
 /**
  * US-0309 : un compteur : « Sans Métier », ou un Métier avec son icône, le Métier qu'il compte tel que la
@@ -198,45 +198,21 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
               <li key={h.id} className={styles.habitant}>
                 <span className={styles.prenom}>{h.prenom}</span>
                 {metiers.length > 0 ? (
-                  <button
-                    type="button"
+                  <BoutonDuMetier
                     id={idBouton(h.id)}
-                    className={styles.choisir}
-                    aria-expanded={deplie}
-                    aria-controls={deplie ? idChoix(h.id) : undefined}
+                    texte={h.metier ?? "Choisir un Métier"}
+                    deplie={deplie}
+                    depliant={idChoix(h.id)}
                     onClick={() => setOuvert(deplie ? null : h.id)}
-                  >
-                    {h.metier ?? "Choisir un Métier"}
-                    <svg viewBox="0 0 12 12" className={styles.fleche} aria-hidden="true">
-                      <path d="M2.5 4.5 6 8l3.5-3.5" />
-                    </svg>
-                  </button>
+                  />
                 ) : (
                   <span className={styles.metier} data-sans-metier={h.metier === null ? "" : undefined}>
                     {h.metier ?? "sans Métier"}
                   </span>
                 )}
                 <span className={styles.etat}>{h.etat}</span>
-                {deplie ? (
-                  <div id={idChoix(h.id)} role="group" aria-label={`Métier de ${h.prenom}`} className={styles.choix}>
-                    {metiers.map((m) => {
-                      // US-0310 : le Métier qu'il exerce déjà est marqué, et ne se redonne pas.
-                      const actuel = m.nom === h.metier;
-                      return (
-                        <button key={m.id} type="button" className={styles.metierAuChoix} aria-pressed={actuel} disabled={actuel} onClick={() => donner(h, m)}>
-                          {/* Le nom est écrit juste à côté : l'icône est muette. */}
-                          <Image src={m.icone} alt="" width={28} height={28} className={styles.iconeAuChoix} />
-                          {m.nom}
-                        </button>
-                      );
-                    })}
-                    {h.metier !== null ? (
-                      <button type="button" className={styles.sansMetierAuChoix} onClick={() => donner(h, null)}>
-                        Sans Métier
-                      </button>
-                    ) : null}
-                  </div>
-                ) : null}
+                {/* US-0310 : le Métier qu'il exerce déjà est marqué, et ne se redonne pas. */}
+                {deplie ? <MetiersAuChoix id={idChoix(h.id)} etiquette={`Métier de ${h.prenom}`} metiers={metiers} actuel={h.metier} choisir={(m) => donner(h, m)} /> : null}
                 {/* US-0330 : à part des Métiers, en dernier ; un lecteur d'écran entend aussi qui il renvoie. */}
                 {deplie ? (
                   <button
