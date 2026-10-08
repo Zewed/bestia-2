@@ -4,26 +4,50 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_6c142b39bf79ec 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_661738384960f9 7,16,43-44,853-917
+  s_97a431cfa65ca7::t_36a69a9e1fda11 853-855,857-917
+  s_97a431cfa65ca7::t_7d86df63cd9aae 7
+  s_97a431cfa65ca7::t_f252b621bcdfce 16,43-44
+  s_97a431cfa65ca7::t_20a77028330561 856
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_cc45300a20fff3 6,9,51-52,67-74,94-97
+  s_97a431cfa65ca7::t_f2d2ed7f6fa383 67-74
+  s_97a431cfa65ca7::t_492b9faa0d7fde 94-97
+  s_97a431cfa65ca7::t_cbe93b594fb6d2 6,9
+  s_97a431cfa65ca7::t_a0029246780546 51-52
 src/app/jeu/carte/actions.db.test.ts
   s_97a431cfa65ca7::t_49aea9c44f96db 8,18,24,98-113
+  s_97a431cfa65ca7::t_dd44d63297a0e0 8,18,24
+  s_97a431cfa65ca7::t_5ccc70ad6a644e 98-113
 src/app/jeu/carte/actions.test.ts
   s_97a431cfa65ca7::t_a6aca07d0af850 8-9,11,69-106
+  s_97a431cfa65ca7::t_6a2f7e6e1bf24f 69-106
+  s_97a431cfa65ca7::t_0963fa0fd621e2 8-9,11
 src/app/jeu/carte/actions.ts
   s_97a431cfa65ca7::t_ae848cfc54b813 6,28-39
+  s_97a431cfa65ca7::t_97b767b7b4639b 6
+  s_97a431cfa65ca7::t_02ebaa61872559 28-39
 src/app/jeu/carte/decouvertes.test.ts
   s_97a431cfa65ca7::t_ee235716ab8e9e 1-48
+  s_97a431cfa65ca7::t_c990a664ed5f1b 1-48
 src/app/jeu/carte/decouvertes.ts
   s_97a431cfa65ca7::t_1dbe774b470536 1-75
+  s_97a431cfa65ca7::t_2a4605fa0933ee 1-44,46-75
+  s_97a431cfa65ca7::t_ff7a24e21927e0 45
 src/monde/brouillard.test.ts
   s_97a431cfa65ca7::t_6125908bc79388 30-56
+  s_97a431cfa65ca7::t_d77aeb86f86ca2 30-56
 src/monde/carte.db.test.ts
   s_97a431cfa65ca7::t_46981b9d3a6a95 9,164-201
+  s_97a431cfa65ca7::t_79f4dcd4926327 9,164-201
 src/monde/carte.ts
   s_97a431cfa65ca7::t_ba1c832dd20b24 23-30,47,54,62-95
+  s_97a431cfa65ca7::t_1e324ad20d0d88 69-73,82,88
+  s_97a431cfa65ca7::t_25bda335a6c4f8 78-79
+  s_97a431cfa65ca7::t_bb2f7c17e4e378 23-30,47,54,62-68,74-77,80-81,83-87,89-94
+  s_97a431cfa65ca7::t_a1ee179e7df743 95
 src/reglages.ts
   s_97a431cfa65ca7::t_31dc30edd71869 247-252
+  s_97a431cfa65ca7::t_25bda335a6c4f8 247-252
 ---
 {
   "schema_version": "authorship/3.0.0",
