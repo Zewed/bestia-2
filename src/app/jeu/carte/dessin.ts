@@ -363,3 +363,78 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   pinceau.stroke();
   poserLeRepere(pinceau, peinture, foyer.x, foyer.y, vue.rayon);
 }
+
+/**
+ * US-0432 : un remplissage ou un trait de la carte, écrit en SVG : son chemin, sa couleur, et pour un trait son
+ * épaisseur, ses bouts et ses jointures.
+ */
+export type TraitSvg = { d: string; geste: "remplir" | "tracer"; couleur: string; epaisseur: number; bouts: CanvasLineCap; jointures: CanvasLineJoin };
+
+/** Un rectangle, en pixels de la carte : son coin en haut à gauche, sa largeur et sa hauteur. */
+export type Cadre = { x: number; y: number; largeur: number; hauteur: number };
+
+/** Un nombre d'un chemin SVG, au centième de pixel, jamais « -0 ». */
+const auCentieme = (n: number) => String(Math.round(n * 100) / 100 + 0);
+
+/**
+ * US-0432 : ce que `dessiner` fait d'un pinceau de la carte, écrit en chemins SVG plutôt que peint : la légende
+ * montre ainsi les Cases, leurs motifs et le repère du Foyer avec les gestes mêmes de la carte. Le cadre entoure tout
+ * ce qui est rempli ou tracé, traits compris. Les images (la hutte) n'y viennent pas.
+ */
+export function enSvg(dessiner: (pinceau: Pinceau) => void): { traits: TraitSvg[]; cadre: Cadre } {
+  const traits: TraitSvg[] = [];
+  const tout = { gauche: Infinity, haut: Infinity, droite: -Infinity, bas: -Infinity };
+  // Le tracé en cours : son chemin, s'il a un point courant, et les bornes de ses points.
+  let trace = { d: "", ouvert: false, gauche: Infinity, haut: Infinity, droite: -Infinity, bas: -Infinity };
+  const borner = (x: number, y: number) => {
+    trace = { ...trace, gauche: Math.min(trace.gauche, x), haut: Math.min(trace.haut, y), droite: Math.max(trace.droite, x), bas: Math.max(trace.bas, y) };
+  };
+  const point = (commande: string, x: number, y: number) => {
+    trace.d += `${commande}${auCentieme(x)} ${auCentieme(y)}`;
+    trace.ouvert = true;
+    borner(x, y);
+  };
+  // Ce qui est peint étend le cadre, de la moitié de son épaisseur pour un trait.
+  const peindre = (geste: TraitSvg["geste"], couleur: string, marge: number) => {
+    traits.push({ d: trace.d, geste, couleur, epaisseur: pinceau.lineWidth, bouts: pinceau.lineCap, jointures: pinceau.lineJoin });
+    tout.gauche = Math.min(tout.gauche, trace.gauche - marge);
+    tout.haut = Math.min(tout.haut, trace.haut - marge);
+    tout.droite = Math.max(tout.droite, trace.droite + marge);
+    tout.bas = Math.max(tout.bas, trace.bas + marge);
+  };
+  const pinceau: Pinceau = {
+    fillStyle: "",
+    strokeStyle: "",
+    lineWidth: 1,
+    lineCap: "butt",
+    lineJoin: "miter",
+    clearRect: () => {},
+    save: () => {},
+    restore: () => {},
+    clip: () => {},
+    drawImage: () => {},
+    beginPath: () => void (trace = { d: "", ouvert: false, gauche: Infinity, haut: Infinity, droite: -Infinity, bas: -Infinity }),
+    moveTo: (x, y) => point("M", x, y),
+    lineTo: (x, y) => point(trace.ouvert ? "L" : "M", x, y),
+    quadraticCurveTo: (cx, cy, x, y) => {
+      borner(cx, cy);
+      trace.d += `Q${auCentieme(cx)} ${auCentieme(cy)} `;
+      point("", x, y);
+    },
+    // Comme sur un <canvas> : une ligne jusqu'au début de l'arc, puis l'arc dans le sens des aiguilles d'une montre,
+    // en quarts de cercle au plus, que le SVG ne confond jamais avec l'arc de l'autre côté.
+    arc: (x, y, rayon, debut, fin) => {
+      const au = (angle: number) => [x + rayon * Math.cos(angle), y + rayon * Math.sin(angle)] as const;
+      point(trace.ouvert ? "L" : "M", ...au(debut));
+      const quarts = Math.max(1, Math.ceil((fin - debut) / (Math.PI / 2) - 1e-9));
+      for (let i = 1; i <= quarts; i++) point(`A${auCentieme(rayon)} ${auCentieme(rayon)} 0 0 1 `, ...au(debut + ((fin - debut) * i) / quarts));
+      borner(x - rayon, y - rayon);
+      borner(x + rayon, y + rayon);
+    },
+    closePath: () => void (trace.d += "Z"),
+    fill: () => peindre("remplir", String(pinceau.fillStyle), 0),
+    stroke: () => peindre("tracer", String(pinceau.strokeStyle), pinceau.lineWidth / 2),
+  };
+  dessiner(pinceau);
+  return { traits, cadre: { x: tout.gauche, y: tout.haut, largeur: tout.droite - tout.gauche, hauteur: tout.bas - tout.haut } };
+}

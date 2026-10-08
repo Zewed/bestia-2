@@ -322,6 +322,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0432 · Consulter la légende de la carte
 **En tant que** joueur, **je veux** une légende qui explique les couleurs et les repères de la carte, **afin de** ne jamais hésiter sur le Biome d'une Case.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Un bouton « Légende » (44 px) en haut à droite de la carte ouvre un panneau flottant sur ordinateur, un panneau en bas (au plus 45 % de la hauteur, au-dessus des onglets) sur mobile : les 8 Biomes et les 4 eaux, chacun avec un échantillon dessiné par les mêmes fonctions que la carte (couleur, motif, bordure), puis « Votre Foyer » et « Autres Foyers ». Il s'ouvre et se ferme d'un geste, et l'appareil se souvient de son état. Vérifié en vrai.
 - **Débloquée par** : US-0418
 - **Critères d'acceptation** :
   - Un bouton « Légende » ouvre la liste des Biomes et des quatre eaux avec leur couleur, ainsi que le repère du Foyer.

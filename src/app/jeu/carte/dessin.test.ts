@@ -1,9 +1,9 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { COULEURS } from "@/app/controle/monde/CarteDuMonde";
+import { COULEURS } from "@/monde/couleurs-de-la-carte";
 import { casesDesAnneaux, type Coordonnees } from "@/monde/hex";
-import { aLEcran, dessinerLaCarte, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau } from "./dessin";
+import { aLEcran, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau } from "./dessin";
 
 type Point = { x: number; y: number };
 /** Ce qu'un remplissage ou un trait a peint : sa couleur, son épaisseur, et ses tracés, chacun la liste de ses points. */
@@ -292,5 +292,65 @@ describe("couleurs des Biomes sur la carte (US-0418)", () => {
         expect(ecart, `${a} et ${b}`).toBeGreaterThanOrEqual(0.07);
       }
     }
+  });
+});
+
+describe("la carte écrite en SVG, pour sa légende (US-0432)", () => {
+  /** Une vue de la carte centrée sur la Case (0, 0), posée en (0, 0) : rien d'autre n'y touche. */
+  const vue = vueSurLeFoyer({ q: 0, r: 0 }, 0, 0);
+  /** Les nombres d'un chemin SVG, dans l'ordre. */
+  const nombres = (d: string) => [...d.matchAll(/-?[\d.]+/g)].map(([n]) => Number(n));
+
+  it("écrit chaque remplissage et chaque trait de la carte en chemin SVG, de sa couleur, dans l'ordre où la carte les peint", () => {
+    const { traits } = enSvg((p) => dessinerLaCarte(p, { ...FOYER_LOIN, teintes: ["foret"], cases: enColonnes([{ q: 0, r: 0 }]) }, vue, peinture(["vert"])));
+    expect(traits.map((t) => `${t.geste} ${t.couleur}`)).toEqual(["remplir vert", "remplir encre", "tracer bord"]);
+    // L'hexagone de la Case : six sommets autour de son centre, la pointe en haut ; son bord suit le même chemin.
+    const [fond, , bord] = traits;
+    expect(fond.d).toMatch(/^M[^A-Z]+(L[^A-Z]+){5}Z$/);
+    const sommets = nombres(fond.d);
+    for (let i = 0; i < 12; i += 2) expect(Math.hypot(sommets[i], sommets[i + 1])).toBeCloseTo(vue.rayon, 2);
+    expect(sommets.slice(0, 2).map((n) => Math.round(n))).toEqual([0, -Math.round(vue.rayon)]);
+    expect(bord).toMatchObject({ d: fond.d, epaisseur: 1 });
+  });
+
+  it("écrit les ronds en arcs, et garde les bouts et les jointures arrondis des motifs", () => {
+    const { traits } = enSvg((p) => {
+      p.beginPath();
+      p.moveTo(10, 0);
+      p.arc(0, 0, 10, 0, 2 * Math.PI);
+      p.lineCap = "round";
+      p.lineJoin = "round";
+      p.lineWidth = 2;
+      p.strokeStyle = "ivoire";
+      p.stroke();
+    });
+    expect(traits).toHaveLength(1);
+    expect(traits[0]).toMatchObject({ geste: "tracer", couleur: "ivoire", epaisseur: 2, bouts: "round", jointures: "round" });
+    // Un tour entier en quarts de cercle, dans le sens des aiguilles d'une montre : chacun finit sur le cercle.
+    const arcs = [...traits[0].d.matchAll(/A([^A-Z]+)/g)].map(([, a]) => nombres(a));
+    expect(arcs).toHaveLength(4);
+    for (const [rx, ry, rotation, grand, sens, x, y] of arcs) {
+      expect([rx, ry, rotation, grand, sens]).toEqual([10, 10, 0, 0, 1]);
+      expect(Math.hypot(x, y)).toBeCloseTo(10, 2);
+    }
+    expect(arcs.at(-1)!.slice(5)).toEqual([10, 0]);
+  });
+
+  it("donne le cadre de tout ce qui est dessiné, traits compris", () => {
+    const { cadre } = enSvg((p) => dessinerLaCarte(p, { ...FOYER_LOIN, teintes: SANS_MOTIF, cases: enColonnes([{ q: 0, r: 0 }]) }, vue, peinture(["blanc"])));
+    // L'hexagone, LARGEUR_DE_CASE de large et deux rayons de haut, et la moitié de son bord d'un pixel tout autour.
+    expect(cadre.x).toBeCloseTo(-LARGEUR_DE_CASE / 2 - 0.5, 9);
+    expect(cadre.y).toBeCloseTo(-vue.rayon - 0.5, 9);
+    expect(cadre.largeur).toBeCloseTo(LARGEUR_DE_CASE + 1, 9);
+    expect(cadre.hauteur).toBeCloseTo(2 * vue.rayon + 1, 9);
+  });
+
+  it("met dans le cadre le repère du Foyer, dont la tête dépasse au-dessus de sa Case", () => {
+    const carte = { teintes: ["prairie"], cases: enColonnes([{ q: 0, r: 0 }]), foyer: { q: 0, r: 0 }, foyers: [] };
+    const { traits, cadre } = enSvg((p) => dessinerLaCarte(p, carte, vue, peinture(["vert"])));
+    expect(traits.slice(-3).map((t) => `${t.geste} ${t.couleur}`)).toEqual(["remplir citron", "tracer Encre", "remplir Encre"]);
+    // La tête du repère, d'au moins sa taille au-dessus de la pointe de la Case, est dans le cadre.
+    expect(cadre.y).toBeLessThan(-vue.rayon - tailleDuRepere(vue.rayon));
+    expect(cadre.y + cadre.hauteur).toBeGreaterThan(vue.rayon);
   });
 });

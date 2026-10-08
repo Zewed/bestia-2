@@ -1,24 +1,10 @@
+import { couleur } from "@/monde/couleurs-de-la-carte";
 import { centre, voisines, type Coordonnees } from "@/monde/hex";
 import type { CaseDeCarte } from "./bilan";
 import styles from "./monde.module.css";
 
-/** La couleur de chaque Biome et de chaque eau, prise dans la palette ; une teinte inconnue reste en gris galet. */
-export const COULEURS: Record<string, string> = {
-  prairie: "var(--biome-prairie)",
-  foret: "var(--biome-foret)",
-  jungle: "var(--biome-jungle)",
-  savane: "var(--biome-savane)",
-  desert: "var(--biome-desert)",
-  montagne: "var(--biome-montagne)",
-  toundra: "var(--biome-toundra)",
-  banquise: "var(--biome-banquise)",
-  eau: "var(--biome-eau)",
-  mer: "var(--biome-eau)",
-  cote: "var(--ardoise)",
-  lac: "var(--sarcelle-fonce)",
-  riviere: "var(--ciel-fonce)",
-};
-export const couleur = (teinte: string) => COULEURS[teinte] ?? "var(--galet)";
+/** La couleur de chaque Biome et de chaque eau, la même que sur la carte du jeu (US-0432 : partagée avec elle). */
+export { couleur };
 
 /** La teinte d'une Case sur la carte : sa variante d'eau, sinon son Biome. */
 export const teinteDe = (c: { biome: string; variante: string | null }) => (c.biome === "eau" && c.variante ? c.variante : c.biome);

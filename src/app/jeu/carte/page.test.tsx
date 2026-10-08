@@ -16,11 +16,30 @@ const chefs = vi.hoisted(() => ({
 vi.mock("@/chefs/chef", () => chefs);
 const lecture = vi.hoisted(() => ({ carteDuJoueur: vi.fn(async (): Promise<CarteDuJoueur | null> => null) }));
 vi.mock("@/monde/carte", () => lecture);
+// US-0432 : les Biomes en base, dans leur ordre, l'eau avec ses variantes.
+const donnees = vi.hoisted(() => ({
+  biomesEnBase: vi.fn(async () => [
+    { id: "prairie", nom: "Prairie", variantes: [], production: [{ ressource: "Viande", parHeure: "8" }] },
+    { id: "foret", nom: "Forêt", variantes: [], production: [] },
+    {
+      id: "eau",
+      nom: "Eau",
+      variantes: [
+        { id: "cote", nom: "Côte" },
+        { id: "lac", nom: "Lac" },
+      ],
+      production: [],
+    },
+  ]),
+}));
+vi.mock("@/donnees/en-base", () => donnees);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 // La carte elle-même se vérifie à part (CarteDuJeu.test.tsx) : ici, ce que la page lui donne.
 vi.mock("./CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
+// La légende aussi (Legende.test.tsx).
+vi.mock("./Legende", () => ({ Legende: (proprietes: object) => <aside data-legende={JSON.stringify(proprietes)} /> }));
 
 import Carte, { metadata } from "./page";
 
@@ -49,11 +68,27 @@ describe("page Carte (US-0417)", () => {
     lecture.carteDuJoueur.mockResolvedValue(carte);
   };
 
-  it("titre l'onglet « Carte », et le dit aux lecteurs d'écran sans phrase de plus : la carte suffit", async () => {
+  it("titre l'onglet « Carte », et le dit aux lecteurs d'écran sans phrase de plus : la carte et sa légende suffisent", async () => {
     connecte();
     expect(metadata.title).toBe("Carte");
     const html = renderToStaticMarkup(await Carte());
-    expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><\/main>$/);
+    expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><aside[^>]*><\/aside><\/main>$/);
+  });
+
+  it("pose la légende de la carte : les Biomes de terre puis les eaux, dans leur ordre, de leur nom en base (US-0432)", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Carte());
+    const legende = JSON.parse(html.match(/data-legende="([^"]*)"/)![1].replace(/&quot;/g, '"'));
+    expect(legende).toEqual({
+      terre: [
+        { teinte: "prairie", nom: "Prairie" },
+        { teinte: "foret", nom: "Forêt" },
+      ],
+      eaux: [
+        { teinte: "cote", nom: "Côte" },
+        { teinte: "lac", nom: "Lac" },
+      ],
+    });
   });
 
   it("dessine la carte du Monde du joueur, lue pour son Territoire", async () => {
@@ -68,9 +103,9 @@ describe("page Carte (US-0417)", () => {
     expect(proprietes(renderToStaticMarkup(await Carte())).fonds).toEqual(["var(--biome-foret)", "var(--biome-prairie)", "var(--sarcelle-fonce)"]);
   });
 
-  it("n'a pas de carte à montrer sans Foyer", async () => {
+  it("n'a pas de carte à montrer sans Foyer, ni de légende", async () => {
     connecte(null);
-    expect(renderToStaticMarkup(await Carte())).not.toContain("<canvas");
+    expect(renderToStaticMarkup(await Carte())).not.toMatch(/<canvas|<aside/);
   });
 
   it("prend toute la place sous la barre du haut, sans défiler", () => {
