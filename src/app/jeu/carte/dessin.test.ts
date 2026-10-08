@@ -480,3 +480,44 @@ describe("les limites de la Couronne et du Cœur sauvage (US-0433)", () => {
     expect(liseres(loin.peints)).toEqual([]);
   });
 });
+
+describe("la Case choisie, surlignée (US-0428)", () => {
+  const FOYER = { q: -47, r: 56 };
+  const vue = vueSurLeFoyer(FOYER, 800, 600);
+  const autour = casesDesAnneaux(0, 6).map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r }));
+  const carte = { teintes: ["prairie"], cases: enColonnes(autour), foyer: FOYER, foyers: [{ q: -43, r: 55 }] };
+  const HUTTE = { image: "hutte" as unknown as CanvasImageSource, largeur: 384, hauteur: 256 };
+  /** Les traits qui cernent la seule Case c : un hexagone autour de son centre. */
+  const cernent = (peints: Peint[], c: Coordonnees) =>
+    peints.filter((p) => p.geste === "border" && p.traces.length === 1 && p.traces[0].length === 6 && cle(milieu(p.traces[0])) === cle(aLEcran(c, vue)));
+
+  it("cerne la Case choisie d'un trait citron bordé d'Encre, plus épais que tout autre trait de la carte, à sa taille", () => {
+    const choisie = { q: FOYER.q + 2, r: FOYER.r - 1 };
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(["vert"]), HUTTE, choisie);
+    const [bord, trait] = cernent(peints, choisie);
+    expect([bord.couleur, trait.couleur]).toEqual(["Encre", "citron"]);
+    expect(bord.traces).toBe(trait.traces);
+    expect(bord.epaisseur).toBeGreaterThan(trait.epaisseur);
+    expect(trait.epaisseur).toBeGreaterThan(Math.max(...peints.filter((p) => p.geste === "border" && p !== bord && p !== trait).map((p) => p.epaisseur)));
+    // Sur le bord même de la Case : son premier sommet est sa pointe du haut.
+    const { x, y } = aLEcran(choisie, vue);
+    expect(cle(bord.traces[0][0])).toBe(cle({ x, y: y - vue.rayon }));
+  });
+
+  it("surligne le Foyer choisi par-dessus sa hutte et son contour, sous son repère", () => {
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, carte, vue, peinture(["vert"]), HUTTE, FOYER);
+    expect(cernent(peints, FOYER).map((p) => p.couleur)).toEqual(["Encre", "Encre", "citron"]);
+    expect(peints.slice(-5).map((p) => `${p.geste} ${p.couleur}`)).toEqual(["border Encre", "border citron", "remplir citron", "border Encre", "remplir Encre"]);
+  });
+
+  it("ne surligne rien sans Case choisie, ni une Case loin de l'écran", () => {
+    const sans = pinceauDEssai();
+    dessinerLaCarte(sans.pinceau, carte, vue, peinture(["vert"]), HUTTE);
+    const loin = pinceauDEssai();
+    dessinerLaCarte(loin.pinceau, carte, vue, peinture(["vert"]), HUTTE, { q: 0, r: 0 });
+    expect(loin.peints).toEqual(sans.peints);
+    expect(sans.peints.filter((p) => p.geste === "border" && p.couleur === "citron")).toEqual([]);
+  });
+});

@@ -3,7 +3,7 @@
 // (dessin.ts) reçoit la vue telle quelle ; son milieu est une Case en coordonnées non entières, entre deux Cases.
 import { anneau, centre, DIRECTIONS, type Coordonnees } from "@/monde/hex";
 import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
-import { aLEcran, type CarteADessiner, type Vue, vueSurLeFoyer } from "./dessin";
+import { aLEcran, type Cadre, type CarteADessiner, type Vue, vueSurLeFoyer } from "./dessin";
 
 /** Un point du plan de `centre`, où une Case a un rayon de 1. */
 type Point = { x: number; y: number };
@@ -169,4 +169,54 @@ export function flecheVersLeFoyer(vue: Vue, foyer: Coordonnees, obstacles: Recta
   for (const o of obstacles) t = Math.min(t, entreeDans(milieuX, milieuY, dx, dy, { gauche: o.gauche - marge, haut: o.haut - marge, droite: o.droite + marge, bas: o.bas + marge }));
   if (!Number.isFinite(t) || t <= 0) return null;
   return { x: milieuX + t * dx, y: milieuY + t * dy, angle: Math.atan2(dy, dx) };
+}
+
+/** US-0428 : la Case entière dont l'hexagone contient la Case non entière c : arrondie sur ses trois axes, dont la somme est nulle. */
+function arrondir({ q, r }: Coordonnees): Coordonnees {
+  const s = -q - r;
+  const [qe, re, se] = [Math.round(q), Math.round(r), Math.round(s)];
+  const [dq, dr, ds] = [Math.abs(qe - q), Math.abs(re - r), Math.abs(se - s)];
+  // La coordonnée la plus mal arrondie se déduit des deux autres ; + 0 : jamais de « -0 ».
+  if (dq > dr && dq > ds) return { q: -re - se + 0, r: re + 0 };
+  if (dr > ds) return { q: qe + 0, r: -qe - se + 0 };
+  return { q: qe + 0, r: re + 0 };
+}
+
+/**
+ * US-0428 : la Case de la carte sous le point (x, y), en pixels depuis son coin en haut à gauche : celle dont
+ * l'hexagone le contient ; null hors de ses Cases (au-delà du bord du Monde).
+ */
+export function caseSous(carte: CarteADessiner, vue: Vue, x: number, y: number): Coordonnees | null {
+  const ici = centre(vue.milieu);
+  const c = arrondir(depuisLePlan({ x: ici.x + (x - vue.largeur / 2) / vue.rayon, y: ici.y + (y - vue.hauteur / 2) / vue.rayon }));
+  const { q, r } = carte.cases;
+  for (let i = 0; i < q.length; i++) if (q[i] === c.q && r[i] === c.r) return c;
+  return null;
+}
+
+/** US-0428 : l'écart laissé entre la Case choisie et la fiche qui la cachait, ou le bord de l'écran, en pixels. */
+const MARGE_AUTOUR_DE_LA_CASE = 12;
+
+/**
+ * US-0428 : la vue où la Case c n'est plus sous `cache` (sa fiche, un rectangle de la carte en pixels depuis son coin
+ * en haut à gauche) : la carte glisse juste assez, du côté qui demande le moins, pour que l'hexagone de la Case en
+ * sorte sans quitter l'écran, à MARGE_AUTOUR_DE_LA_CASE pixels de l'un et de l'autre. La même vue si la Case n'est
+ * pas cachée, ou ne peut pas être montrée ; le milieu reste dans les limites de la carte.
+ */
+export function devoiler(vue: Vue, c: Coordonnees, cache: Cadre, limite: number): Vue {
+  const { x, y } = aLEcran(c, vue);
+  // L'hexagone, pointe en haut, et sa marge : sa demi-largeur et sa demi-hauteur.
+  const [l, h] = [(Math.sqrt(3) / 2) * vue.rayon + MARGE_AUTOUR_DE_LA_CASE, vue.rayon + MARGE_AUTOUR_DE_LA_CASE];
+  if (x + l <= cache.x || x - l >= cache.x + cache.largeur || y + h <= cache.y || y - h >= cache.y + cache.hauteur) return vue;
+  // Vers la gauche, la droite, le haut ou le bas : chacun tant que la Case reste à l'écran de ce côté.
+  const [gauche, droite, haut, bas] = [cache.x - (x + l), cache.x + cache.largeur - (x - l), cache.y - (y + h), cache.y + cache.hauteur - (y - h)];
+  const glissements = [
+    ...(x + gauche - l >= 0 ? [[gauche, 0]] : []),
+    ...(x + droite + l <= vue.largeur ? [[droite, 0]] : []),
+    ...(y + haut - h >= 0 ? [[0, haut]] : []),
+    ...(y + bas + h <= vue.hauteur ? [[0, bas]] : []),
+  ];
+  if (glissements.length === 0) return vue;
+  const [dx, dy] = glissements.reduce((a, b) => (Math.hypot(a[0], a[1]) <= Math.hypot(b[0], b[1]) ? a : b));
+  return deplacer(vue, dx, dy, limite);
 }

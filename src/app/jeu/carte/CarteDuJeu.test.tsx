@@ -1,12 +1,18 @@
 // @vitest-environment jsdom
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
+import type { Fiche } from "@/monde/fiche";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, bornesDuZoom, cadrer, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
+import { avancer, bornesDuZoom, cadrer, deplacer, devoiler, enChemin, flecheVersLeFoyer, limiteDeLaCarte, zoomer } from "./vue";
+
+/** US-0428 : les fiches de Case demandées au serveur, chacune avec de quoi lui répondre. */
+let fiches: { q: number; r: number; repondre: (fiche: Fiche | null) => void }[] = [];
+const serveur = vi.hoisted(() => ({ ficheDeLaCase: vi.fn() }));
+vi.mock("./actions", () => serveur);
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de
@@ -30,6 +36,8 @@ beforeEach(() => {
   toile.effacements = 0;
   images = [];
   aLaProchaineImage = new Map();
+  fiches = [];
+  serveur.ficheDeLaCase.mockImplementation((q: number, r: number) => new Promise((repondre) => void fiches.push({ q, r, repondre })));
   let demandes = 0;
   vi.stubGlobal("requestAnimationFrame", (rappel: FrameRequestCallback) => {
     aLaProchaineImage.set(++demandes, rappel);
@@ -638,5 +646,101 @@ describe("retrouver la carte là où on l'a laissée (US-0427)", () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
     expect(auMilieuDeLEcran()).toBe(true);
     expect(dessineeLa(laisser())).toBe(true);
+  });
+});
+
+describe("ouvrir la fiche d'une Case (US-0428)", () => {
+  /** Où tombe le centre d'une Case dans la page, la carte ouverte : sous la barre du haut, de 64 pixels. */
+  const dansLaPage = (c: { q: number; r: number }) => ({ x: aLEcran(c, ouverte()).x, y: aLEcran(c, ouverte()).y + 64 });
+  /** Si la carte surligne une Case : un trait citron, que seul le surlignage trace (le repère du Foyer est rempli). */
+  const surlignee = () => toile.gestes.includes("border var(--citron)");
+  const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
+  /** La Case au sud-ouest du Foyer, une forêt libre. */
+  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false };
+
+  it("ouvre d'un clic la fiche de la Case, surlignée aussitôt, et la remplit à la réponse du serveur", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(fiche()).toBeNull();
+    const { x, y } = dansLaPage(AUTOUR[1]);
+    pointeur("pointerdown", x + 2, y - 1);
+    pointeur("pointerup", x + 3, y - 1);
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([AUTOUR[1]]);
+    expect(surlignee()).toBe(true);
+    expect(fiche()).not.toBeNull();
+    await act(async () => fiches[0].repondre(FORET));
+    expect(within(fiche()!).getByRole("heading", { name: "Forêt" })).toBeTruthy();
+  });
+
+  it("l'ouvre aussi d'un toucher du doigt", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const { x, y } = dansLaPage(AUTOUR[4]);
+    pointeur("pointerdown", x, y, { pointerType: "touch", pointerId: 5 });
+    pointeur("pointerup", x + 5, y + 4, { pointerType: "touch", pointerId: 5 });
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([AUTOUR[4]]);
+  });
+
+  it("n'ouvre pas de fiche en faisant glisser la carte", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const { x, y } = dansLaPage(AUTOUR[1]);
+    pointeur("pointerdown", x, y);
+    pointeur("pointermove", x + 40, y);
+    pointeur("pointerup", x + 40, y);
+    prochaineImage();
+    expect(fiches).toEqual([]);
+    expect(fiche()).toBeNull();
+    expect(surlignee()).toBe(false);
+  });
+
+  it("ouvre au clavier, à Entrée, la fiche de la Case au milieu de la carte", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    fireEvent.keyDown(screen.getByRole("application", { name: "Carte du Monde" }), { key: "Enter" });
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([FOYER]);
+  });
+
+  it("n'ouvre rien hors des Cases du Monde", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const { x, y } = dansLaPage({ q: FOYER.q, r: FOYER.r - 3 });
+    pointeur("pointerdown", x, y);
+    pointeur("pointerup", x, y);
+    expect(fiches).toEqual([]);
+    expect(fiche()).toBeNull();
+  });
+
+  it("fait glisser la carte juste assez pour que la fiche, à côté, ne cache pas la Case choisie", () => {
+    // La fiche en haut à gauche de la carte, assez grande pour couvrir la Case à l'ouest du Foyer.
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 12, top: 76, width: 380, height: 300 } as DOMRect);
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const { x, y } = dansLaPage(AUTOUR[0]);
+    pointeur("pointerdown", x, y);
+    pointeur("pointerup", x, y);
+    const montree = devoiler(ouverte(), AUTOUR[0], { x: 12, y: 12, largeur: 380, hauteur: 300 }, 60);
+    expect(montree).not.toBe(ouverte());
+    prochaineImage();
+    expect(dessineeLa(montree, AUTOUR[0])).toBe(true);
+  });
+
+  it("fait passer la flèche du Foyer à côté de la fiche, sans la cacher dessous (US-0426)", () => {
+    // Une carte de 30 Cases autour du Foyer, et la fiche le long du bord gauche ; rien d'autre n'a de place à l'écran.
+    const autour = casesDesAnneaux(0, 30).map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r }));
+    const grande = { ...CARTE, cases: { q: autour.map((c) => c.q), r: autour.map((c) => c.r), teinte: autour.map(() => 0), zone: autour.map(() => 0) } };
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+      return (this.tagName === "SECTION" ? { left: 12, top: 76, width: 300, height: 500, right: 312, bottom: 576 } : { left: 0, top: 0, width: 0, height: 0, right: 0, bottom: 0 }) as DOMRect;
+    });
+    render(<CarteDuJeu carte={grande} fonds={FONDS} />);
+    // Le Foyer passé loin à gauche de l'écran : la flèche au bord gauche, là où se posera la fiche.
+    pointeur("pointerdown", 400, 300);
+    pointeur("pointermove", -400, 300);
+    pointeur("pointerup", -400, 300);
+    prochaineImage();
+    const vue = deplacer(ouverte(), -800, 0, limiteDeLaCarte(grande));
+    const enStyle = (ou: { x: number; y: number; angle: number } | null) => `translate(${ou!.x}px, ${ou!.y}px) rotate(${ou!.angle}rad)`;
+    const fleche = document.querySelector<HTMLButtonElement>("button[aria-hidden]")!;
+    expect(fleche.style.transform).toBe(enStyle(flecheVersLeFoyer(vue, FOYER, [], 22)));
+    pointeur("pointerdown", 380, 364);
+    pointeur("pointerup", 380, 364);
+    expect(fiche()).not.toBeNull();
+    const aCoteDeLaFiche = flecheVersLeFoyer(vue, FOYER, [{ gauche: 12, haut: 12, droite: 312, bas: 512 }], 22);
+    expect(aCoteDeLaFiche!.x).toBeGreaterThan(312 + 22 - 1e-9);
+    expect(fleche.style.transform).toBe(enStyle(aCoteDeLaFiche));
   });
 });

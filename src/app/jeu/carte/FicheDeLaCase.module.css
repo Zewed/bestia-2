@@ -1,0 +1,90 @@
+/*
+ * US-0428 : la fiche d'une Case, sur ordinateur un bloc Bento flottant en haut à gauche de la carte, à hauteur du
+ * bouton de la légende, qui est à droite ; elle défile si elle dépasse la carte.
+ */
+.fiche {
+  position: absolute;
+  top: 12px;
+  left: calc(12px + var(--bord-gauche));
+  z-index: 10;
+  width: 300px;
+  max-width: calc(100% - 24px - var(--bord-gauche) - var(--bord-droit));
+  max-height: calc(100% - 24px);
+  overflow-y: auto;
+  padding: var(--marge-bloc);
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  overflow-wrap: anywhere;
+}
+
+/* Son Biome, en titre. */
+.biome {
+  margin-bottom: 10px;
+  font-size: 18px;
+  font-weight: var(--graisse-titre);
+}
+
+/* Chaque ligne : sa petite étiquette, puis ce qu'elle dit. */
+.details {
+  display: grid;
+  gap: 6px;
+}
+
+.details > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+}
+
+.details dt {
+  color: var(--texte-discret);
+  font-size: var(--taille-etiquette);
+  font-weight: var(--graisse-titre);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+}
+
+.details dd {
+  margin: 0;
+}
+
+.echec {
+  color: var(--texte-discret);
+}
+
+/* En attendant le serveur : la place du titre et d'une ligne, qui palpitent. */
+.attente {
+  display: grid;
+  gap: 12px;
+}
+
+.attente span {
+  height: 14px;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-3);
+  animation: palpiter 1.2s ease-in-out infinite;
+}
+
+.attente span:first-child {
+  width: 45%;
+  height: 20px;
+}
+
+@keyframes palpiter {
+  0%,
+  100% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attente span {
+    animation: none;
+  }
+}

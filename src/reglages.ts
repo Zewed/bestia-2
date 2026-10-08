@@ -232,3 +232,10 @@ export const CARTE_RETOUR_AU_FOYER_MS = 300;
  * découvert ceux des Territoires déjà nés avec la même valeur : la changer ne change que les naissances à venir.
  */
 export const ABORDS_DU_FOYER_CASES = 4;
+
+/**
+ * US-0428 : un appui sur la carte relâché sans avoir bougé de 4 pixels à la souris (ou au stylet), de 8 au doigt, qui
+ * bouge davantage en se posant, est un toucher : il ouvre la fiche de la Case. Au-delà, c'est un glissement (US-0420,
+ * US-0421), qui n'en ouvre pas (valeurs provisoires, à régler en jouant).
+ */
+export const CARTE_TOUCHER_PIXELS = { souris: 4, doigt: 8 };

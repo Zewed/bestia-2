@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { CARTE_TOUCHER_PIXELS } from "@/reglages";
 import { SEUIL_DE_GLISSEMENT, suivreLesGestes, type Commandes } from "./gestes";
 
 /** La carte à l'écran, et ce que les gestes lui ont demandé. */
@@ -12,7 +13,7 @@ beforeEach(() => {
   document.body.append(carte);
   // jsdom ne sait pas capturer un pointeur : on retient seulement qu'on le lui a demandé.
   carte.setPointerCapture = vi.fn();
-  commandes = { deplacer: vi.fn(), avancer: vi.fn(), zoomer: vi.fn() };
+  commandes = { deplacer: vi.fn(), avancer: vi.fn(), zoomer: vi.fn(), toucher: vi.fn() };
   arreter = suivreLesGestes(carte, commandes);
 });
 afterEach(() => {
@@ -247,5 +248,63 @@ describe("zoomer en pinçant (US-0424)", () => {
     pointeur("pointerdown", 300, 300, doigt(2));
     expect([geste("gesturestart", 1), geste("gesturechange", 1.5), geste("gestureend", 1.5)]).toEqual([false, false, false]);
     expect(zooms()).toEqual([]);
+  });
+});
+
+describe("toucher une Case (US-0428)", () => {
+  beforeEach(() => {
+    carte.getBoundingClientRect = () => ({ left: 10, top: 64, width: 800, height: 600 }) as DOMRect;
+  });
+  const doigt = (pointerId: number) => ({ pointerType: "touch", pointerId });
+  /** Les touchers demandés à la carte, en pixels depuis son coin en haut à gauche. */
+  const touchers = () => commandes.toucher.mock.calls.map(([x, y]) => [x, y]);
+
+  it("prend un clic pour un toucher, là où le bouton a été appuyé, même si la main tremble un peu", () => {
+    expect(SEUIL_DE_GLISSEMENT).toBe(CARTE_TOUCHER_PIXELS);
+    pointeur("pointerdown", 110, 164);
+    pointeur("pointermove", 112, 165);
+    pointeur("pointerup", 113, 166);
+    expect(touchers()).toEqual([[100, 100]]);
+    expect(deplacements()).toEqual([]);
+  });
+
+  it(`au doigt aussi, qui bouge davantage en se posant : moins de ${CARTE_TOUCHER_PIXELS.doigt} pixels`, () => {
+    pointeur("pointerdown", 210, 364, doigt(4));
+    pointeur("pointermove", 215, 368, doigt(4));
+    pointeur("pointerup", 215, 368, doigt(4));
+    expect(touchers()).toEqual([[200, 300]]);
+  });
+
+  it("ne prend pas un glissement pour un toucher, même revenu à son point de départ", () => {
+    pointeur("pointerdown", 110, 164);
+    pointeur("pointermove", 150, 164);
+    pointeur("pointermove", 110, 164);
+    pointeur("pointerup", 110, 164);
+    expect(touchers()).toEqual([]);
+  });
+
+  it("ne prend jamais un pincement pour un toucher, même sans que les doigts bougent", () => {
+    pointeur("pointerdown", 110, 164, doigt(1));
+    pointeur("pointerdown", 310, 164, doigt(2));
+    pointeur("pointerup", 310, 164, doigt(2));
+    pointeur("pointerup", 110, 164, doigt(1));
+    pointeur("pointerdown", 110, 164, doigt(1));
+    pointeur("pointerdown", 310, 164, doigt(2));
+    pointeur("pointerup", 110, 164, doigt(1));
+    pointeur("pointerup", 310, 164, doigt(2));
+    expect(touchers()).toEqual([]);
+  });
+
+  it("ne prend pas pour un toucher un geste que le navigateur interrompt, ni un autre bouton que le principal", () => {
+    pointeur("pointerdown", 110, 164, doigt(1));
+    pointeur("pointercancel", 110, 164, doigt(1));
+    pointeur("pointerdown", 110, 164, { button: 2 });
+    pointeur("pointerup", 110, 164, { button: 2 });
+    expect(touchers()).toEqual([]);
+  });
+
+  it("touche la Case au milieu de la carte à Entrée, la carte sélectionnée au clavier", () => {
+    carte.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));
+    expect(touchers()).toEqual([[400, 300]]);
   });
 });

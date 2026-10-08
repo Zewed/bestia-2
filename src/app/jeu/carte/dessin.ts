@@ -380,14 +380,31 @@ function tracerLesLimites(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, pei
 }
 
 /**
+ * US-0428 : surligne la Case dont le centre tombe en (x, y) : son hexagone cerné d'un trait citron bordé d'Encre, plus
+ * épais que tout autre trait de la carte, comme le repère du Foyer : il se voit sur les teintes claires et sombres.
+ */
+function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, rayon: number) {
+  pinceau.beginPath();
+  tracerLaCase(pinceau, x, y, rayon);
+  pinceau.lineJoin = "round";
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.lineWidth = 6;
+  pinceau.stroke();
+  pinceau.strokeStyle = peinture.repere;
+  pinceau.lineWidth = 3;
+  pinceau.stroke();
+}
+
+/**
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
  * US-0433 : par-dessus, le liseré des limites de la Couronne et du Cœur sauvage.
  * US-0419 : les Foyers des autres chefs d'un petit hexagone d'Encre ; celui du joueur montre la hutte du chef
- * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron.
+ * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron. US-0428 : la Case
+ * `choisie` surlignée, sous ce seul repère.
  */
-export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture, hutte: Hutte | null = null) {
+export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture, hutte: Hutte | null = null, choisie: Coordonnees | null = null) {
   pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
   // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
   const parTeinte = carte.teintes.map((): { x: number; y: number }[] => []);
@@ -435,15 +452,19 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   }
 
   const foyer = aLEcran(carte.foyer, vue);
-  if (!aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon))) return;
-  if (hutte) poserLaHutte(pinceau, hutte, foyer.x, foyer.y, vue.rayon);
-  pinceau.beginPath();
-  tracerLaCase(pinceau, foyer.x, foyer.y, vue.rayon);
-  pinceau.strokeStyle = peinture.encre;
-  pinceau.lineWidth = 2;
-  pinceau.lineJoin = "round";
-  pinceau.stroke();
-  poserLeRepere(pinceau, peinture, foyer.x, foyer.y, vue.rayon);
+  const foyerEnVue = aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon));
+  if (foyerEnVue) {
+    if (hutte) poserLaHutte(pinceau, hutte, foyer.x, foyer.y, vue.rayon);
+    pinceau.beginPath();
+    tracerLaCase(pinceau, foyer.x, foyer.y, vue.rayon);
+    pinceau.strokeStyle = peinture.encre;
+    pinceau.lineWidth = 2;
+    pinceau.lineJoin = "round";
+    pinceau.stroke();
+  }
+  const ici = choisie && aLEcran(choisie, vue);
+  if (ici && aLaVue(ici.x, ici.y, vue)) surligner(pinceau, peinture, ici.x, ici.y, vue.rayon);
+  if (foyerEnVue) poserLeRepere(pinceau, peinture, foyer.x, foyer.y, vue.rayon);
 }
 
 /**

@@ -287,6 +287,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0428 · Ouvrir la fiche d'une Case
 **En tant que** joueur, **je veux** toucher une Case pour ouvrir sa fiche, **afin de** connaître son Biome et son propriétaire.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Toucher ou cliquer une Case la surligne aussitôt (un trait citron bordé d'Encre) et ouvre sa fiche : son Biome, ou pour l'eau sa variante, et son propriétaire (« Libre », « Votre Foyer » ou le nom du chef). Au clavier, Entrée ouvre la fiche de la Case du milieu. La fiche est lue sur le serveur, à partir du Monde et du Foyer du joueur, jamais du navigateur. Un glissement ou un pincement n'ouvre rien, pas plus qu'un toucher hors du Monde. Sur ordinateur, la fiche flotte en haut à gauche de la carte, et la carte glisse juste assez pour que la fiche ne cache pas la Case. Vérifié en vrai.
 - **Débloquée par** : US-0421
 - **Critères d'acceptation** :
   - Toucher ou cliquer une Case ouvre sa fiche, avec son Biome et son propriétaire : « Libre », « Votre Foyer » ou le nom du chef.

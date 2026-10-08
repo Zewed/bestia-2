@@ -1,15 +1,17 @@
 "use client";
 
 import { getImageProps } from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
+import type { Coordonnees } from "@/monde/hex";
 import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
-import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
+import { type Cadre, dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
+import { FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
 import { suivreLesGestes } from "./gestes";
 import { glisser } from "./mouvement";
 import styles from "./page.module.css";
-import { avancer, cadrer, deplacer, limiteDeLaCarte, retourAuFoyer, zoomer, zoomPossible } from "./vue";
+import { avancer, cadrer, caseSous, deplacer, devoiler, limiteDeLaCarte, retourAuFoyer, zoomer, zoomPossible } from "./vue";
 import { retenirLaVue, vueRetenue } from "./vue-retenue";
 
 /**
@@ -40,7 +42,9 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * pinçant à deux doigts, autour du point entre eux. US-0425 : et aux boutons « + » et « − », autour du milieu de
  * l'écran, chacun grisé quand sa limite est atteinte, quel que soit le geste qui l'a atteinte. US-0426 : le bouton du
  * Foyer, ou la flèche qui le montre quand il est hors de l'écran, y ramène la carte en glissant ; un geste l'arrête.
- * US-0427 : pendant la visite, elle se rouvre là où on l'a laissée, au même zoom (vue-retenue.ts).
+ * US-0427 : pendant la visite, elle se rouvre là où on l'a laissée, au même zoom (vue-retenue.ts). US-0428 : toucher
+ * une Case (ou Entrée) ouvre sa fiche (FicheDeLaCase), la Case surlignée ; la carte glisse pour que la fiche ne la
+ * cache pas, et la flèche du Foyer la contourne.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -50,6 +54,11 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
   // US-0426 : le retour au Foyer, et la flèche qui le montre.
   const revenirAuFoyer = useRef(() => {});
   const fleche = useRef<HTMLButtonElement>(null);
+  // US-0428 : la Case choisie et sa fiche ; ce que la fiche demande à la carte : se redessiner, la Case surlignée, et
+  // glisser pour que la fiche (`cache`, en pixels de la carte) ne la cache pas.
+  const { choix, choisir } = useFicheDeLaCase();
+  const choisie = useRef<Coordonnees | null>(null);
+  const pourLaFiche = useRef<{ redessiner: () => void; montrer: (c: Coordonnees, cache: Cadre) => void }>({ redessiner: () => {}, montrer: () => {} });
   useEffect(() => {
     const canvas = toile.current;
     const pinceau = canvas?.getContext("2d");
@@ -69,7 +78,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     // US-0426 : la flèche du Foyer suit chaque dessin. US-0427 : la vue retenue à chaque dessin, au plus un par image.
     const dessiner = () => {
       if (!vue) return;
-      dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
+      dessinerLaCarte(pinceau, carte, vue, peinture, hutte, choisie.current);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
       retenirLaVue(carte, vue);
     };
@@ -116,6 +125,10 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
       avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
       zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
+      toucher: (x, y) => {
+        const c = vue && caseSous(carte, vue, x, y);
+        if (c) choisir(c);
+      },
     });
     zoomerAuMilieu.current = (facteur) => vue && changer(zoomer(vue, facteur, vue.largeur / 2, vue.hauteur / 2, limite));
     // US-0426 : le retour au Foyer, chaque vue dessinée aussitôt, à l'image de l'écran du mouvement, à la taille de la carte.
@@ -130,6 +143,15 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
         griser();
       });
     };
+    // US-0428 : la carte redessinée (la flèche du Foyer reposée) quand la fiche change, glissée si elle cache la Case.
+    pourLaFiche.current = {
+      redessiner: dessiner,
+      montrer: (c, cache) => {
+        const montree = vue && devoiler(vue, c, cache, limite);
+        if (montree && montree !== vue) changer(montree);
+        else dessiner();
+      },
+    };
     return () => {
       suivi.disconnect();
       illustration.onload = null;
@@ -138,14 +160,23 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       mouvement();
       zoomerAuMilieu.current = () => {};
       revenirAuFoyer.current = () => {};
+      pourLaFiche.current = { redessiner: () => {}, montrer: () => {} };
     };
-  }, [carte, fonds]);
+  }, [carte, fonds, choisir]);
+  // US-0428 : la Case choisie surlignée aussitôt, et plus du tout une fois la fiche fermée.
+  const laCase = choix?.case ?? null;
+  useEffect(() => {
+    choisie.current = laCase;
+    pourLaFiche.current.redessiner();
+  }, [laCase]);
+  const montrer = useCallback((c: Coordonnees, cache: Cadre) => pourLaFiche.current.montrer(c, cache), []);
   return (
     <div className={styles.cadre}>
       {/* US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent. */}
       <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
       <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
       <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
+      {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} /> : null}
     </div>
   );
 }

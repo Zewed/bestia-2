@@ -1,6 +1,7 @@
 // Les gestes du joueur sur la carte du Monde (US-0420), traduits en demandes à la carte : la déplacer de tant de
 // pixels, ou d'un pas au clavier. Ils ne savent rien de la vue elle-même (vue.ts) ; ils se vérifient avec des
 // événements simulés.
+import { CARTE_TOUCHER_PIXELS } from "@/reglages";
 
 /** Ce que les gestes demandent à la carte. */
 export type Commandes = {
@@ -10,6 +11,8 @@ export type Commandes = {
   avancer: (colonnes: number, rangees: number) => void;
   /** US-0423 : la zoomer d'un facteur (plus de 1 : rapprocher) autour du point (x, y), en pixels depuis son coin en haut à gauche. */
   zoomer: (facteur: number, x: number, y: number) => void;
+  /** US-0428 : un toucher (ou un clic) en (x, y), en pixels depuis son coin en haut à gauche. */
+  toucher: (x: number, y: number) => void;
 };
 
 /** US-0422 : où chaque flèche du clavier fait regarder la carte, en colonnes et en rangées. */
@@ -37,9 +40,9 @@ function milieuEntre(a: Point, b: Point): Point {
 /**
  * US-0420 : de combien de pixels un pointeur appuyé doit bouger avant qu'on le prenne pour un glissement : en
  * deçà, c'est un clic, même si la main tremble un peu. US-0421 : un doigt bouge davantage en se posant qu'une
- * souris (ou un stylet) : un toucher bref ne déplace rien.
+ * souris (ou un stylet) : un toucher bref ne déplace rien. US-0428 : en deçà, relâché, c'est un toucher.
  */
-export const SEUIL_DE_GLISSEMENT = { souris: 4, doigt: 8 };
+export const SEUIL_DE_GLISSEMENT = CARTE_TOUCHER_PIXELS;
 
 /**
  * US-0420 : suit les gestes du joueur sur la carte (`element`) et les transmet à `commandes`, jusqu'à l'appel de
@@ -50,7 +53,9 @@ export const SEUIL_DE_GLISSEMENT = { souris: 4, doigt: 8 };
  * pas ; avec Alt, Ctrl ou Cmd, la flèche reste au navigateur (revenir à la page d'avant…). US-0423 : la molette et
  * le geste de zoom du pavé tactile la zooment autour du pointeur, à la place de la page. US-0424 : deux doigts
  * posés la zooment d'autant qu'ils s'écartent ou se rapprochent, autour du point entre eux, qu'elle suit ; un
- * troisième ne compte pas, et le doigt qui reste quand l'autre se lève continue de la faire glisser.
+ * troisième ne compte pas, et le doigt qui reste quand l'autre se lève continue de la faire glisser. US-0428 : un
+ * pointeur seul relâché avant le seuil de glissement touche la carte là où il s'est posé ; un pincement n'est jamais un
+ * toucher. Entrée, la carte sélectionnée, touche son milieu.
  */
 export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () => void {
   // Les pointeurs posés sur la carte, deux au plus, à leur dernière position prise en compte, dans la page.
@@ -91,14 +96,22 @@ export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () 
   };
   const lever = (e: PointerEvent) => {
     if (!poses.delete(e.pointerId)) return;
+    // US-0428 : un pointeur seul, relâché sans avoir glissé : un toucher, là où il s'était posé.
+    if (e.type === "pointerup" && poses.size === 0 && glissement && !glissement.glisse) commandes.toucher(...surLaCarte(glissement.depart));
     // US-0424 : le doigt qui reste après un pincement fait glisser la carte dès qu'il bouge, sans à-coup.
     const [reste] = poses.values();
     glissement = reste ? { depart: reste, seuil: 0, glisse: true } : null;
   };
-  // US-0422 : une flèche fait avancer la carte d'un pas ; la page, elle, ne défile pas.
+  // US-0422 : une flèche fait avancer la carte d'un pas ; la page, elle, ne défile pas. US-0428 : Entrée touche son milieu.
   const appuyer = (e: KeyboardEvent) => {
+    if (e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key === "Enter") {
+      const { width, height } = element.getBoundingClientRect();
+      commandes.toucher(width / 2, height / 2);
+      return;
+    }
     const sens = FLECHES[e.key];
-    if (!sens || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (!sens) return;
     e.preventDefault();
     commandes.avancer(...sens);
   };

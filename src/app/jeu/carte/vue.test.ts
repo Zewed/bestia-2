@@ -1,8 +1,23 @@
 import { describe, expect, it } from "vitest";
-import { anneau, casesDesAnneaux, type Coordonnees } from "@/monde/hex";
+import { anneau, casesDesAnneaux, type Coordonnees, SOMMETS_DE_CASE, voisines } from "@/monde/hex";
 import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
 import { aLEcran, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, borner, bornesDuZoom, cadrer, deplacer, enChemin, flecheVersLeFoyer, limiteDeLaCarte, type Rectangle, retourAuFoyer, zoomer, zoomPossible } from "./vue";
+import {
+  avancer,
+  borner,
+  bornesDuZoom,
+  cadrer,
+  caseSous,
+  deplacer,
+  devoiler,
+  enChemin,
+  flecheVersLeFoyer,
+  limiteDeLaCarte,
+  type Rectangle,
+  retourAuFoyer,
+  zoomer,
+  zoomPossible,
+} from "./vue";
 
 const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
@@ -258,5 +273,91 @@ describe("la flèche du Foyer hors de l'écran (US-0426)", () => {
 
   it("n'a pas de place sur une carte trop petite pour elle", () => {
     expect(flecheVersLeFoyer(cadrer(foyerEn(-600, 300), 40, 40), FOYER, [], MARGE)).toBeNull();
+  });
+});
+
+describe("la Case sous un point de la carte (US-0428)", () => {
+  /** Le Foyer, ses voisines et leurs voisines. */
+  const CARTE = carteDe(casesDesAnneaux(0, 2).map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r })));
+  /** Le point de l'écran à la fraction `t` du chemin du point a au point b. */
+  const entre = (a: { x: number; y: number }, b: { x: number; y: number }, t: number) => ({ x: a.x + t * (b.x - a.x), y: a.y + t * (b.y - a.y) });
+
+  it("trouve la Case dont l'hexagone contient le point, jusqu'à son bord, quels que soient le glissement et le zoom", () => {
+    for (const vue of [OUVERTE, deplacer(zoomer(OUVERTE, 2.3, 120, 80, 62), 33, -71, 62)]) {
+      const ici = aLEcran(FOYER, vue);
+      expect(caseSous(CARTE, vue, ici.x, ici.y)).toEqual(FOYER);
+      // Tout près de chacun de ses sommets, c'est encore le Foyer.
+      for (const s of SOMMETS_DE_CASE) {
+        const p = entre(ici, { x: ici.x + s.x * vue.rayon, y: ici.y + s.y * vue.rayon }, 0.95);
+        expect(caseSous(CARTE, vue, p.x, p.y)).toEqual(FOYER);
+      }
+      // De part et d'autre du côté partagé avec chaque voisine, qui passe à mi-chemin des deux centres.
+      for (const v of voisines(FOYER)) {
+        const [avant, apres] = [entre(ici, aLEcran(v, vue), 0.45), entre(ici, aLEcran(v, vue), 0.55)];
+        expect(caseSous(CARTE, vue, avant.x, avant.y)).toEqual(FOYER);
+        expect(caseSous(CARTE, vue, apres.x, apres.y)).toEqual(v);
+      }
+    }
+  });
+
+  it("ne trouve rien hors des Cases de la carte : au-delà du bord du Monde", () => {
+    const loin = aLEcran({ q: FOYER.q, r: FOYER.r - 3 }, OUVERTE);
+    expect(caseSous(CARTE, OUVERTE, loin.x, loin.y)).toBeNull();
+    expect(caseSous(CARTE, OUVERTE, -5000, 300)).toBeNull();
+  });
+});
+
+describe("montrer la Case choisie hors de sa fiche (US-0428)", () => {
+  /** Toutes les Cases d'un Monde de 60 Cases de rayon, et la carte d'un ordinateur ouverte en son milieu. */
+  const MONDE = carteDe(casesDesAnneaux(0, 60));
+  const AU_MILIEU = sur({ q: 0, r: 0 });
+  /** La place que prend l'hexagone d'une Case à l'écran, dans la vue. */
+  const boite = (c: Coordonnees, vue: Vue) => {
+    const { x, y } = aLEcran(c, vue);
+    const [l, h] = [(Math.sqrt(3) / 2) * vue.rayon, vue.rayon];
+    return { gauche: x - l, droite: x + l, haut: y - h, bas: y + h };
+  };
+  /** Si l'hexagone de la Case, dans la vue, touche le cadre. */
+  const sous = (c: Coordonnees, vue: Vue, cadre: { x: number; y: number; largeur: number; hauteur: number }) => {
+    const b = boite(c, vue);
+    return b.droite > cadre.x && b.gauche < cadre.x + cadre.largeur && b.bas > cadre.y && b.haut < cadre.y + cadre.hauteur;
+  };
+  /** Si l'hexagone de la Case est tout entier à l'écran. */
+  const entiere = (c: Coordonnees, vue: Vue) => {
+    const b = boite(c, vue);
+    return b.gauche >= 0 && b.droite <= vue.largeur && b.haut >= 0 && b.bas <= vue.hauteur;
+  };
+  /** La fiche sur ordinateur, en haut à gauche de la carte. */
+  const FICHE = { x: 12, y: 12, largeur: 300, hauteur: 180 };
+
+  it("laisse la carte telle quelle quand la fiche ne cache pas la Case", () => {
+    expect(devoiler(AU_MILIEU, { q: 0, r: 0 }, FICHE, 62)).toBe(AU_MILIEU);
+  });
+
+  it("fait glisser la carte juste assez pour que la Case sorte de sous la fiche, du côté le plus proche", () => {
+    // Une Case sous le coin en bas à droite de la fiche : la sortir par le bas demande le moins.
+    const basse = caseSous(MONDE, AU_MILIEU, 280, 180)!;
+    const montree = devoiler(AU_MILIEU, basse, FICHE, 62);
+    expect(sous(basse, AU_MILIEU, FICHE)).toBe(true);
+    expect(sous(basse, montree, FICHE)).toBe(false);
+    expect(entiere(basse, montree)).toBe(true);
+    expect(aLEcran(basse, montree).x).toBeCloseTo(aLEcran(basse, AU_MILIEU).x, 9);
+    expect(boite(basse, montree).haut).toBeCloseTo(FICHE.y + FICHE.hauteur + 12, 9);
+    // Une Case sous son bord droit, en haut : on la sort par la droite.
+    const haute = caseSous(MONDE, AU_MILIEU, 300, 40)!;
+    const aDroite = devoiler(AU_MILIEU, haute, FICHE, 62);
+    expect(sous(haute, aDroite, FICHE)).toBe(false);
+    expect(aLEcran(haute, aDroite).y).toBeCloseTo(aLEcran(haute, AU_MILIEU).y, 9);
+    expect(boite(haute, aDroite).gauche).toBeCloseTo(FICHE.x + FICHE.largeur + 12, 9);
+  });
+
+  it("garde la Case à l'écran : elle ne sort pas du côté où l'écran s'arrête", () => {
+    // Une Case contre le bord gauche, sous la fiche : la sortir par la gauche la mettrait hors de l'écran.
+    const contre = caseSous(MONDE, AU_MILIEU, 14, 30)!;
+    const montree = devoiler(AU_MILIEU, contre, FICHE, 62);
+    expect(sous(contre, montree, FICHE)).toBe(false);
+    expect(entiere(contre, montree)).toBe(true);
+    // Une fiche qui couvre toute la carte : rien à faire.
+    expect(devoiler(AU_MILIEU, { q: 0, r: 0 }, { x: 0, y: 0, largeur: 800, hauteur: 600 }, 62)).toBe(AU_MILIEU);
   });
 });
