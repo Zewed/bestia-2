@@ -4,22 +4,41 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_f8e2acb726781c 7,33
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_7a7b130d1c6f8f 7-8,10-14,21-22,27,29-37,57,127-147,232-295
+  s_97a431cfa65ca7::t_83673879b98117 57
+  s_97a431cfa65ca7::t_04611bcf9478c9 37
+  s_97a431cfa65ca7::t_c26dbc850f491d 7-8,10-14
+  s_97a431cfa65ca7::t_7ac1f9c0c75e2e 127-147
+  s_97a431cfa65ca7::t_904963a17f6ab8 232-262,264,266,268,271-295
+  s_97a431cfa65ca7::t_b0d0e7364e71a6 21-22,27,29-36
+  s_97a431cfa65ca7::t_7fc2dfe60004fb 263,265,267,269-270
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_db401c253874bd 6-7,9,28-33,50-52,54-57,63-73,81,83-85,89-90
+  s_97a431cfa65ca7::t_76b181610b8832 28-33
+  s_97a431cfa65ca7::t_106bd133f46103 50-52,54-57,63-73,81,83-85,89-90
+  s_97a431cfa65ca7::t_cef70c5801918b 6-7,9
 src/app/jeu/carte/gestes.test.ts
   s_97a431cfa65ca7::t_41ff1211bea40e 1-83
+  s_97a431cfa65ca7::t_9f3ea08fa6227a 1,4-6,8-83
+  s_97a431cfa65ca7::t_ad9972c25d0c29 2-3,7
 src/app/jeu/carte/gestes.ts
   s_97a431cfa65ca7::t_bcf682c724c2e1 1-54
+  s_97a431cfa65ca7::t_fc80796dc68753 1-54
 src/app/jeu/carte/page.module.css
   s_97a431cfa65ca7::t_90734dd1d2f28b 7,12-17
+  s_97a431cfa65ca7::t_fd537fe95ca67d 7,12-17
 src/app/jeu/carte/styles.test.ts
   s_97a431cfa65ca7::t_16fe9a9b8c5c63 1-16
+  s_97a431cfa65ca7::t_09222896518a84 1-16
 src/app/jeu/carte/vue.test.ts
   s_97a431cfa65ca7::t_5f023a2986fdde 1-58
+  s_97a431cfa65ca7::t_44eec7de5e91d3 1-51,54,57-58
+  s_97a431cfa65ca7::t_22bb7e03f6bb6f 52-53,55-56
 src/app/jeu/carte/vue.ts
   s_97a431cfa65ca7::t_49b1f9c621a9e6 1-55
+  s_97a431cfa65ca7::t_477a7e4dfd5592 1-55
 src/reglages.ts
   s_97a431cfa65ca7::t_0ca9ced96ace38 202-208
+  s_97a431cfa65ca7::t_a227489511ab53 202-208
 ---
 {
   "schema_version": "authorship/3.0.0",
