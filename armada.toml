@@ -1,0 +1,153 @@
+# Armada configuration: one project = one repository + one tracker program root.
+# No secrets here: sign in with `armada login`; set worker secrets on Organization > Keys.
+
+[project]
+name = "Bestia 2"
+slug = "bestia-2"          # stable id: lowercase letters, digits and dashes
+
+[tracker]
+program_root = "THE-1355"  # Linear issue at the root of the program
+spec_titles = "N"       # "N/M" keeps totals and updates them when adding a spec
+language = "fr"          # language of owner-facing output
+ready_label = "ready-for-agent"
+# parked_label = "parked"  # a ticket with this label is parked on purpose: never listed as work to start
+
+[tracker.labels]
+phase_group = "Agent phase"
+runtime_group = "Agent runtime"
+runtimes = ["Claude Code", "Codex", "Conductor", "Herdr"]
+
+[github]
+repository = "Zewed/bestia-2"
+
+# Optional features: uncomment the examples you need; `armada doctor` lists suggestions.
+# Owner alerts and digests are configured on Organization > Notifications, not in TOML.
+# Set an HTTPS webhook, language, time zone, quiet hours and digest times/days there; send a test.
+# Name coordinator roles with `armada coordinator use backend` or ARMADA_COORDINATOR=backend.
+
+# After merges, watch each declared target and pause merges if deploy or smoke fails.
+[[deploy.target]]
+name = "vercel"
+branch = "main"
+github_environment = "Production"
+smoke = "curl -fsS https://bestia-2.vercel.app/sante"
+timeout_minutes = 20
+pause_on_failure = true
+
+# [[deploy.target]]
+# name = "api"
+# branch = "main"  # omit to watch any merged base branch
+# paths = ["cmd/**", "internal/**"]  # optional: only watch merges touching these globs
+# github_environment = "production"
+## Alternative to github_environment (choose exactly one live source):
+## live_sha_command = 'cd "$DEPLOY_LINK_DIR" && hosting-cli live-sha'
+## requires_env = ["DEPLOY_LINK_DIR"]
+## On each coordinator machine: armada config set deploy.env.DEPLOY_LINK_DIR /path/to/linked-service
+## Machine settings win over the process environment; missing settings skip without a hold.
+# smoke = "curl -fsS https://example.test/health"
+# timeout_minutes = 20  # 1–120; smoke shares this deadline
+# pause_on_failure = true
+
+[git]
+sign = "inherit"        # "off" disables commit signing only in new Herdr worktrees, when branch rules allow it
+
+# A root-cause ticket is required for every known flaky failure. Rerun failed jobs once
+# with `armada ci why <pr> --rerun`; unknown failures are refused.
+# [ci]
+# failure_patterns = ["FAIL (.+)"]  # optional test-name regex; exactly one capture group
+# [[ci.known_failure]]
+# check = "test"  # exact check run name
+# pattern = "flaky_suite > times out on cold start"  # regex over failing test names or error block
+# ticket = "ABC-123"
+
+[gates]
+# required_checks = ["test"]  # CI checks that must be green before a hand-back (default: every check)
+
+[merge]
+# Queue intent: `armada merge --when-green <pr...>`; retest serially with `armada merge --drain`.
+# queue_retest = "ci" # fresh-main CI before each queued merge; "local" uses gates.local_commands
+# Files that concern every working PR, in addition to overlapping files (default: CI workflows).
+notify_paths = [".github/workflows/**", "package.json", "package-lock.json", "drizzle/**", "src/db/schema.ts"]
+
+[policy]
+silence_minutes = 15     # silence since the newest report, heartbeat or answer
+launch_grace_minutes = 15 # extra allowance before the first report or heartbeat; defaults to silence_minutes
+ci_wait_minutes = 45     # shipping --stage ci has this silence allowance
+quiet_minutes = 45       # alive but without a report: a coordinator-only note
+coordinator_minutes = 10 # an inbox item open longer than this shows "waiting for the coordinator"
+# not_started_minutes = 10 # a launched worker that has not claimed after this long shows as not started
+plans = "pre-approved"   # les décisions de jeu sont tranchées dans chaque ticket : le worker poste son plan et avance
+# validation_samples = 4  # images per owner question; 1–8
+# attachments_per_ticket = 20
+# attachments_project_mb = 200
+# attachments_retention_days = 30
+# pre_approved_label = "plan-approved"      # a ticket with this label skips the approval
+# approval_label = "needs-plan-approval"    # a ticket with this label waits for it; wins over the other
+# Which merges need your approval, in plain words; without it the coordinator merges everything on its own.
+# The coordinator judges it per pull request and sends you one approval link for the others.
+# merge_approval = "merge on your own, except front-end changes: send me a link to check them first"
+
+# Kinds of tickets whose work you validate before it goes on: the coordinator judges at launch
+# which apply, and the worker shows you its work with `armada validate` and waits for your decision.
+# [[policy.validation]]
+# when = "a design ticket: a mockup, a visual direction or the look of a new screen"
+# then = "produce the design, attach it, ask the owner to validate it on Armada, and stop until they decide; never merge or build it on your own"
+
+# Live checks run in the worker checkout at the PR head before hand-back.
+# [[acceptance]]
+# name = "production build"
+# command = "docker build -f deploy/Dockerfile ." # secrets: use "armada run -- ..."
+# paths = ["deploy/**", "Dockerfile", "package.json"] # omit for every PR; *, ** and ?
+# timeout_minutes = 15                          # positive integer, maximum 120
+# max_runs = 3                                  # per check and ticket; coordinator grants more
+
+# Long runs go through `armada job` on a runner that survives the terminal.
+# Commands run with sh -c here, with ARMADA_JOB_ID, ARMADA_JOB_REF,
+# ARMADA_TICKET and ARMADA_PROJECT set. No provider is required.
+# [jobs.eval]
+# start = "./scripts/start-eval.sh"   # returns within 2 min; last stdout line is the runner reference
+# status = "./scripts/job-status.sh" # last line: running|succeeded|failed [progress, e.g. 37/120 cases]
+# stop = "./scripts/stop-eval.sh"     # exit 0 means stopped
+# silence_minutes = 15              # inbox alarm without news; watch polls at half this interval
+# max_hours = 12                     # overdue, never auto-stopped
+# Remote runner: set ARMADA_API_KEY as its secret (organization API key), armada login --api-key.
+# Push news: armada job beat "$ARMADA_JOB_ID" --progress "40/120" [--state succeeded|failed].
+# Declare the shared resources workers reserve through Armada (optional).
+[[reservations]]
+key = "migration"
+what = "le prochain numéro de migration Drizzle (drizzle/00NN_*.sql)"
+numbered = true
+
+[brief]
+extra = "docs/conventions-des-workers.md"  # les conventions de Bestia 2, dans chaque brief
+
+# Launch with `armada launch <ticket> --runtime conductor`; the brief carries the sign-in token.
+# How `armada brief` configures workers on Conductor. Every value is passed explicitly;
+# `conductor model` lists each agent's model ids and effort levels.
+[conductor]
+# project_id = "00000000-0000-4000-8000-000000000001"  # optional explicit Conductor project
+# base_branch = "main"  # optional; otherwise the repository default
+default_profile = "opus"  # Bestia 2 est en TypeScript de bout en bout : un seul profil
+
+[conductor.profiles.opus]
+agent = "claude"
+model = "opus-5-5-1m"
+effort = "high"
+
+# Herdr profiles use one of its supported harnesses and are selected with the
+# same label and `when` rules as Conductor. Every extra argument is passed to
+# the selected harness exactly as written.
+# [herdr]
+# default_profile = "claude"
+
+# [herdr.profiles.claude]
+# harness = "claude"       # "claude", "codex", "opencode" or "deepseek" (OpenCode + DeepSeek model)
+# model = "sonnet"
+# effort = "high"
+# permissions = "ask"      # normal harness approvals; use "full" for the native bypass/auto flag
+# extra_args = ["--verbose"]
+# when = "a ticket best handled by Claude"
+
+# [[herdr.routing]]
+# labels = ["herdr"]
+# profile = "claude"
