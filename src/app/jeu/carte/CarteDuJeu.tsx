@@ -1,9 +1,16 @@
 "use client";
 
+import { getImageProps } from "next/image";
 import { useEffect, useRef } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
-import { dessinerLaCarte, vueSurLeFoyer } from "./dessin";
+import { dessinerLaCarte, vueSurLeFoyer, type Hutte } from "./dessin";
 import styles from "./page.module.css";
+
+/**
+ * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
+ * servie par Next en petit : assez pour une Case nette sur un écran haute densité.
+ */
+const HUTTE = getImageProps({ src: "/illustrations/foyer/prairie.webp", alt: "", width: 192, height: 128 }).props.src;
 
 /** La couleur que donne une expression CSS sur la page (« var(--trait) »), telle que le <canvas> la comprend. */
 function couleurCalculee(element: HTMLElement, expression: string): string {
@@ -18,7 +25,9 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * jeu), dans toute la place que la page lui donne et nette sur les écrans haute densité. Elle s'ouvre le Foyer au
  * milieu, et s'y recentre quand l'écran change de taille (téléphone tourné, fenêtre élargie). US-0418 : chaque
  * teinte de la carte peinte de la couleur CSS que la page lui donne (`fonds`, dans l'ordre de ses teintes), ses
- * motifs d'Encre ou d'Ivoire légers, et un bord d'Encre à peine marqué entre les Cases.
+ * motifs d'Encre ou d'Ivoire légers, et un bord d'Encre à peine marqué entre les Cases. US-0419 : son Foyer
+ * marqué d'un repère citron dès l'ouverture, la hutte du chef posée dessus une fois l'illustration chargée ; les
+ * Foyers des autres chefs en Encre.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -31,18 +40,30 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       bord: couleurCalculee(canvas, "color-mix(in oklch, var(--encre) 14%, transparent)"),
       motifSombre: couleurCalculee(canvas, "color-mix(in oklch, var(--encre) 26%, transparent)"),
       motifClair: couleurCalculee(canvas, "color-mix(in oklch, var(--ivoire) 45%, transparent)"),
+      encre: couleurCalculee(canvas, "var(--encre)"),
+      repere: couleurCalculee(canvas, "var(--citron)"),
     };
+    let hutte: Hutte | null = null;
     const dessiner = () => {
       const { width: largeur, height: hauteur } = canvas.getBoundingClientRect();
       const densite = window.devicePixelRatio || 1;
       canvas.width = Math.round(largeur * densite);
       canvas.height = Math.round(hauteur * densite);
       pinceau.setTransform(densite, 0, 0, densite, 0, 0);
-      dessinerLaCarte(pinceau, carte, vueSurLeFoyer(carte.foyer, largeur, hauteur), peinture);
+      dessinerLaCarte(pinceau, carte, vueSurLeFoyer(carte.foyer, largeur, hauteur), peinture, hutte);
     };
+    const illustration = new Image();
+    illustration.onload = () => {
+      hutte = { image: illustration, largeur: illustration.naturalWidth, hauteur: illustration.naturalHeight };
+      dessiner();
+    };
+    illustration.src = HUTTE;
     const suivi = new ResizeObserver(dessiner);
     suivi.observe(canvas);
-    return () => suivi.disconnect();
+    return () => {
+      suivi.disconnect();
+      illustration.onload = null;
+    };
   }, [carte, fonds]);
   return <canvas ref={toile} className={styles.carte} role="img" aria-label={`Carte du Monde ${carte.monde}, votre Foyer au milieu`} />;
 }

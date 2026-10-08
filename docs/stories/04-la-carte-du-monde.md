@@ -197,6 +197,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0419 · Repérer son Foyer sur la carte
 **En tant que** joueur, **je veux** repérer mon Foyer tout de suite sur la carte, **afin de** toujours retrouver mon chez-moi d'un coup d'œil.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). La Case du Foyer montre l'illustration de la hutte, découpée à l'hexagone et cernée d'Encre, sous une épingle citron dont la tête ne descend jamais sous 9 px : quand les Cases rapetissent (le zoom viendra avec US-0423), elle grossit par rapport à elles. Les Foyers des autres joueurs sont un petit hexagone d'Encre, sans hutte ni épingle. Vérifié en vrai.
 - **Débloquée par** : US-0418, Étape 9
 - **Critères d'acceptation** :
   - La Case du Foyer montre l'illustration de la hutte du chef.

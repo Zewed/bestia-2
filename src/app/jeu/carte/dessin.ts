@@ -13,18 +13,56 @@ export type Vue = { largeur: number; hauteur: number; milieu: Coordonnees; rayon
 /** Ce que la carte demande au pinceau d'un <canvas> : une petite partie de CanvasRenderingContext2D. */
 export type Pinceau = Pick<
   CanvasRenderingContext2D,
-  "fillStyle" | "strokeStyle" | "lineWidth" | "lineCap" | "lineJoin" | "clearRect" | "beginPath" | "moveTo" | "lineTo" | "quadraticCurveTo" | "arc" | "closePath" | "fill" | "stroke"
+  | "fillStyle"
+  | "strokeStyle"
+  | "lineWidth"
+  | "lineCap"
+  | "lineJoin"
+  | "clearRect"
+  | "beginPath"
+  | "moveTo"
+  | "lineTo"
+  | "quadraticCurveTo"
+  | "arc"
+  | "closePath"
+  | "fill"
+  | "stroke"
+  | "save"
+  | "restore"
+  | "clip"
+  | "drawImage"
 >;
 
 /**
  * Les couleurs de la carte, telles que le <canvas> les comprend : le fond de chaque teinte, dans l'ordre des
  * teintes de la carte (US-0418), le bord léger des Cases, et les deux tons des motifs : un sombre pour les teintes
- * claires, un clair pour les sombres.
+ * claires, un clair pour les sombres. US-0419 : l'Encre des Foyers, et le citron du repère de son Foyer.
  */
-export type Peinture = { fonds: string[]; bord: string; motifSombre: string; motifClair: string };
+export type Peinture = { fonds: string[]; bord: string; motifSombre: string; motifClair: string; encre: string; repere: string };
 
-/** La carte telle que le serveur l'envoie : ses teintes, et ses Cases en colonnes (src/monde/carte.ts). */
-export type CarteADessiner = { teintes: string[]; cases: { q: number[]; r: number[]; teinte: number[] } };
+/**
+ * La carte telle que le serveur l'envoie (src/monde/carte.ts) : ses teintes, ses Cases en colonnes, le Foyer du
+ * joueur et ceux des autres chefs.
+ */
+export type CarteADessiner = { teintes: string[]; cases: { q: number[]; r: number[]; teinte: number[] }; foyer: Coordonnees; foyers: Coordonnees[] };
+
+/** US-0419 : l'illustration de la hutte du chef, telle que le navigateur l'a chargée, et sa taille en pixels. */
+export type Hutte = { image: CanvasImageSource; largeur: number; hauteur: number };
+
+/**
+ * US-0419 : la part de l'illustration du Foyer (foyer/prairie.webp, 3 × 2) où se tient la hutte, en fractions de sa
+ * largeur : d'un peu avant le bord gauche du toit à un peu après le bord droit, depuis le haut. La hauteur suit, aux
+ * proportions d'une Case (√3 × 2) : la hutte n'est jamais étirée.
+ */
+const HUTTE_RECADREE = { gauche: 0.314, largeur: 0.521 };
+
+/**
+ * US-0419 : le rayon de la tête du repère du Foyer, en pixels : un peu plus que la moitié d'une Case, jamais moins
+ * de 9 pixels. Il grossit donc par rapport aux Cases quand on dézoome : le Foyer se voit à tout zoom.
+ */
+export function tailleDuRepere(rayon: number): number {
+  return Math.max(9, 0.55 * rayon);
+}
 
 /** US-0417 : la carte à l'ouverture, sur un écran de `largeur` × `hauteur` pixels : le Foyer au milieu, des Cases de LARGEUR_DE_CASE pixels. */
 export function vueSurLeFoyer(foyer: Coordonnees, largeur: number, hauteur: number): Vue {
@@ -37,16 +75,57 @@ export function aLEcran(c: Coordonnees, vue: Vue): { x: number; y: number } {
   return { x: vue.largeur / 2 + (ici.x - milieu.x) * vue.rayon, y: vue.hauteur / 2 + (ici.y - milieu.y) * vue.rayon };
 }
 
-/** Si une Case dont le centre tombe en (x, y) touche l'écran : les autres ne sont pas dessinées. */
-function aLaVue(x: number, y: number, vue: Vue): boolean {
-  return x > -vue.rayon && x < vue.largeur + vue.rayon && y > -vue.rayon && y < vue.hauteur + vue.rayon;
+/**
+ * Si une Case dont le centre tombe en (x, y) touche l'écran : les autres ne sont pas dessinées. `marge` : jusqu'où
+ * son dessin déborde de son centre, en pixels (son rayon, ou plus pour le repère du Foyer).
+ */
+function aLaVue(x: number, y: number, vue: Vue, marge = vue.rayon): boolean {
+  return x > -marge && x < vue.largeur + marge && y > -marge && y < vue.hauteur + marge;
 }
 
-/** Ajoute au tracé en cours l'hexagone d'une Case, centré en (x, y). */
+/** Ajoute au tracé en cours l'hexagone d'une Case, centré en (x, y), de rayon `rayon` en pixels. */
 function tracerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
   pinceau.moveTo(x + SOMMETS_DE_CASE[0].x * rayon, y + SOMMETS_DE_CASE[0].y * rayon);
   for (const s of SOMMETS_DE_CASE.slice(1)) pinceau.lineTo(x + s.x * rayon, y + s.y * rayon);
   pinceau.closePath();
+}
+
+/** US-0419 : pose l'illustration de la hutte sur la Case du Foyer, centrée en (x, y), découpée à sa forme. */
+function poserLaHutte(pinceau: Pinceau, hutte: Hutte, x: number, y: number, rayon: number) {
+  const largeur = hutte.largeur * HUTTE_RECADREE.largeur;
+  const hauteur = (largeur * 2) / Math.sqrt(3);
+  pinceau.save();
+  pinceau.beginPath();
+  tracerLaCase(pinceau, x, y, rayon);
+  pinceau.clip();
+  pinceau.drawImage(hutte.image, hutte.largeur * HUTTE_RECADREE.gauche, 0, largeur, hauteur, x - (Math.sqrt(3) / 2) * rayon, y - rayon, Math.sqrt(3) * rayon, 2 * rayon);
+  pinceau.restore();
+}
+
+/**
+ * US-0419 : le repère du Foyer, centré en (x, y) : une épingle citron cernée d'Encre, la pointe sur le toit de la
+ * hutte et la tête au-dessus de la Case, un œil d'Encre au milieu. Sa tête fait tailleDuRepere pixels de rayon.
+ */
+function poserLeRepere(pinceau: Pinceau, peinture: Peinture, x: number, y: number, rayon: number) {
+  const taille = tailleDuRepere(rayon);
+  const pointe = y - 0.45 * rayon;
+  const tete = pointe - 1.8 * taille;
+  // Les deux côtés de l'épingle touchent la tête là où ils lui sont tangents, de part et d'autre du bas.
+  const ecart = Math.acos(1 / 1.8);
+  pinceau.beginPath();
+  pinceau.moveTo(x, pointe);
+  pinceau.arc(x, tete, taille, Math.PI / 2 + ecart, Math.PI / 2 - ecart + 2 * Math.PI);
+  pinceau.closePath();
+  pinceau.fillStyle = peinture.repere;
+  pinceau.fill();
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.lineWidth = 2;
+  pinceau.lineJoin = "round";
+  pinceau.stroke();
+  pinceau.beginPath();
+  rond(pinceau, x, tete, 0.38 * taille);
+  pinceau.fillStyle = peinture.encre;
+  pinceau.fill();
 }
 
 /**
@@ -224,8 +303,10 @@ export const MOTIFS: Record<string, Motif> = {
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
+ * US-0419 : les Foyers des autres chefs d'un petit hexagone d'Encre ; celui du joueur montre la hutte du chef
+ * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron.
  */
-export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture) {
+export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture, hutte: Hutte | null = null) {
   pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
   // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
   const parTeinte = carte.teintes.map((): { x: number; y: number }[] => []);
@@ -262,4 +343,23 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   pinceau.strokeStyle = peinture.bord;
   pinceau.lineWidth = 1;
   pinceau.stroke();
+
+  const autres = carte.foyers.map((c) => aLEcran(c, vue)).filter(({ x, y }) => aLaVue(x, y, vue));
+  if (autres.length > 0) {
+    pinceau.beginPath();
+    for (const { x, y } of autres) tracerLaCase(pinceau, x, y, 0.42 * vue.rayon);
+    pinceau.fillStyle = peinture.encre;
+    pinceau.fill();
+  }
+
+  const foyer = aLEcran(carte.foyer, vue);
+  if (!aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon))) return;
+  if (hutte) poserLaHutte(pinceau, hutte, foyer.x, foyer.y, vue.rayon);
+  pinceau.beginPath();
+  tracerLaCase(pinceau, foyer.x, foyer.y, vue.rayon);
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.lineWidth = 2;
+  pinceau.lineJoin = "round";
+  pinceau.stroke();
+  poserLeRepere(pinceau, peinture, foyer.x, foyer.y, vue.rayon);
 }

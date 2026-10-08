@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { CarteDuJeu } from "./CarteDuJeu";
-import { LARGEUR_DE_CASE } from "./dessin";
+import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer } from "./dessin";
 
 /** Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), et le départ de chaque tracé. */
 const toile = vi.hoisted(() => ({ gestes: [] as string[], departs: [] as [number, number][] }));
@@ -12,10 +12,25 @@ const toile = vi.hoisted(() => ({ gestes: [] as string[], departs: [] as [number
 const ecran = { largeur: 800, hauteur: 600 };
 /** Le suivi de taille du <canvas> : le dernier posé, pour annoncer un changement de taille comme le navigateur. */
 let suivi: { annoncer: () => void; suivis: Element[]; arrete: boolean } | null = null;
+/** Les illustrations que la carte a demandé de charger, à charger à la main comme le ferait le navigateur. */
+let images: { src: string; naturalWidth: number; naturalHeight: number; onload: (() => void) | null }[] = [];
 
 beforeEach(() => {
   toile.gestes = [];
   toile.departs = [];
+  images = [];
+  vi.stubGlobal(
+    "Image",
+    class {
+      src = "";
+      naturalWidth = 384;
+      naturalHeight = 256;
+      onload: (() => void) | null = null;
+      constructor() {
+        images.push(this);
+      }
+    },
+  );
   const reglages: Record<string, unknown> = {};
   const pinceau = new Proxy(reglages, {
     get: (_, nom: string) =>
@@ -26,6 +41,7 @@ beforeEach(() => {
             if (nom === "setTransform") toile.gestes.push(`${nom} ${valeurs.join(" ")}`);
             if (nom === "fill") toile.gestes.push(`remplir ${reglages.fillStyle}`);
             if (nom === "stroke") toile.gestes.push(`border ${reglages.strokeStyle}`);
+            if (nom === "drawImage") toile.gestes.push(`poser ${(valeurs[0] as unknown as { src: string }).src}`);
           },
     set: (_, nom: string, valeur) => {
       reglages[nom] = valeur;
@@ -75,15 +91,22 @@ const AUTOUR = casesDesAnneaux(0, 1).map((c) => ({ q: c.q + FOYER.q, r: c.r + FO
 const CARTE: CarteDuJoueur = {
   monde: "Aube",
   foyer: FOYER,
+  foyers: [],
   teintes: ["inconnue"],
   cases: { q: AUTOUR.map((c) => c.q), r: AUTOUR.map((c) => c.r), teinte: AUTOUR.map(() => 0) },
 };
 const FONDS = ["var(--galet)"];
 /** Le rayon d'une Case à l'écran : la pointe du haut d'une Case est à ce rayon au-dessus de son centre. */
 const RAYON = LARGEUR_DE_CASE / Math.sqrt(3);
-/** Les Cases tracées, chacune une fois : le départ de leur hexagone, en haut. */
-const casesTracees = () => new Set(toile.departs.map(([x, y]) => `${x.toFixed(6)},${y.toFixed(6)}`));
-const auMilieuDeLEcran = () => casesTracees().has(`${(ecran.largeur / 2).toFixed(6)},${(ecran.hauteur / 2 - RAYON).toFixed(6)}`);
+/** Les départs des tracés, chacun une fois : celui de l'hexagone d'une Case est son sommet du haut. */
+const departs = () => new Set(toile.departs.map(([x, y]) => `${x.toFixed(6)},${y.toFixed(6)}`));
+/** Le sommet du haut d'une Case, à l'écran tel qu'il est. */
+const sommet = (c: { q: number; r: number }) => {
+  const { x, y } = aLEcran(c, vueSurLeFoyer(FOYER, ecran.largeur, ecran.hauteur));
+  return `${x.toFixed(6)},${(y - RAYON).toFixed(6)}`;
+};
+const toutesTracees = () => AUTOUR.every((c) => departs().has(sommet(c)));
+const auMilieuDeLEcran = () => departs().has(`${(ecran.largeur / 2).toFixed(6)},${(ecran.hauteur / 2 - RAYON).toFixed(6)}`);
 
 describe("la carte du Monde (US-0417)", () => {
   it("est une image du Monde du joueur pour les lecteurs d'écran", () => {
@@ -97,7 +120,7 @@ describe("la carte du Monde (US-0417)", () => {
     // Deux pixels de l'écran par pixel de la page : la toile est deux fois plus grande, et le dessin mis à l'échelle.
     expect([canvas.width, canvas.height]).toEqual([1600, 1200]);
     expect(toile.gestes[0]).toBe("setTransform 2 0 0 2 0 0");
-    expect(casesTracees().size).toBe(7);
+    expect(toutesTracees()).toBe(true);
     expect(auMilieuDeLEcran()).toBe(true);
   });
 
@@ -108,6 +131,7 @@ describe("la carte du Monde (US-0417)", () => {
     toile.departs = [];
     act(() => suivi!.annoncer());
     expect([container.querySelector("canvas")!.width, container.querySelector("canvas")!.height]).toEqual([1125, 1677]);
+    expect(toutesTracees()).toBe(true);
     expect(auMilieuDeLEcran()).toBe(true);
   });
 
@@ -123,7 +147,7 @@ describe("les Biomes sur la carte (US-0418)", () => {
   it("peint chaque teinte de la couleur que la page lui donne, ses motifs d'Encre ou d'Ivoire légers, et un bord d'Encre à peine marqué", () => {
     const carte: CarteDuJoueur = { ...CARTE, teintes: ["prairie", "mer"], cases: { ...CARTE.cases, teinte: AUTOUR.map((c) => (c.r === FOYER.r ? 0 : 1)) } };
     render(<CarteDuJeu carte={carte} fonds={["var(--biome-prairie)", "var(--biome-eau)"]} />);
-    expect(toile.gestes.slice(1)).toEqual([
+    expect(toile.gestes.slice(1, 6)).toEqual([
       "remplir var(--biome-prairie)",
       "remplir var(--biome-eau)",
       // La prairie a un motif sombre, la mer un motif clair.
@@ -131,5 +155,39 @@ describe("les Biomes sur la carte (US-0418)", () => {
       "border color-mix(in oklch, var(--ivoire) 45%, transparent)",
       "border color-mix(in oklch, var(--encre) 14%, transparent)",
     ]);
+  });
+});
+
+describe("son Foyer sur la carte (US-0419)", () => {
+  it("charge l'illustration de la hutte du chef, celle de l'écran du Foyer, en petit", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(images).toHaveLength(1);
+    expect(decodeURIComponent(images[0].src)).toMatch(/^\/_next\/image\?url=\/illustrations\/foyer\/prairie\.webp&w=\d+&q=\d+$/);
+    expect(Number(images[0].src.match(/&w=(\d+)/)![1])).toBeLessThanOrEqual(384);
+  });
+
+  it("marque son Foyer d'un repère citron cerné d'Encre dès l'ouverture, puis y pose la hutte une fois chargée", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(toile.gestes.slice(-3)).toEqual(["remplir var(--citron)", "border var(--encre)", "remplir var(--encre)"]);
+    expect(toile.gestes.filter((g) => g.startsWith("poser"))).toEqual([]);
+    toile.gestes = [];
+    act(() => images[0].onload!());
+    expect(toile.gestes.filter((g) => g.startsWith("poser"))).toEqual([`poser ${images[0].src}`]);
+    expect(toile.gestes.slice(-3)).toEqual(["remplir var(--citron)", "border var(--encre)", "remplir var(--encre)"]);
+  });
+
+  it("marque les Foyers des autres joueurs d'Encre, sans hutte ni repère de plus", () => {
+    render(<CarteDuJeu carte={{ ...CARTE, foyers: [AUTOUR[1], AUTOUR[4]] }} fonds={FONDS} />);
+    toile.gestes = [];
+    act(() => images[0].onload!());
+    // Un remplissage d'Encre pour les deux autres Foyers, un pour l'œil du repère ; une hutte et un repère, au sien.
+    expect(toile.gestes.filter((g) => g === "remplir var(--encre)")).toHaveLength(2);
+    expect(toile.gestes.filter((g) => g.startsWith("poser") || g === "remplir var(--citron)")).toHaveLength(2);
+  });
+
+  it("ne dessine plus rien de la hutte une fois la page quittée", () => {
+    const { unmount } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    unmount();
+    expect(images[0].onload).toBeNull();
   });
 });

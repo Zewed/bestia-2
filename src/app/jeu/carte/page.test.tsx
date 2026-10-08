@@ -28,6 +28,7 @@ import Carte, { metadata } from "./page";
 const CARTE: CarteDuJoueur = {
   monde: "Aube",
   foyer: { q: 31, r: -57 },
+  foyers: [{ q: 35, r: -58 }],
   teintes: ["foret", "prairie", "lac"],
   cases: { q: [30, 31, 32], r: [-57, -57, -57], teinte: [0, 1, 2] },
 };

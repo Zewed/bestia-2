@@ -73,6 +73,20 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte.cases.teinte.map((t) => carte.teintes[t])).toEqual(attendues);
   });
 
+  it("donne les Foyers des autres chefs de son Monde, sans le sien (US-0419)", async () => {
+    const moi = await naitre(genereId);
+    const voisin = await naitre(genereId);
+    const carte = (await carteDuJoueur(pool, moi.territoireId))!;
+    expect(carte.foyers).toContainEqual(voisin.foyer);
+    expect(carte.foyers).not.toContainEqual(moi.foyer);
+    // Tous les autres Foyers de ce Monde, et eux seuls, rangés par q puis r.
+    const { rows } = await pool.query<{ q: number; r: number }>(
+      `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id where c.monde_id = $1 and t.id <> $2 order by c.q, c.r`,
+      [genereId, moi.territoireId],
+    );
+    expect(carte.foyers).toEqual(rows);
+  });
+
   it("sur Aube, qui n'a en base que sa Couronne, montre la Couronne seule", async () => {
     const { territoireId, foyer } = await naitre();
     const carte = await carteDuJoueur(pool, territoireId);
