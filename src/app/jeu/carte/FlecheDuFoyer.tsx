@@ -43,8 +43,10 @@ export function placerLaFleche(fleche: HTMLElement | null, toile: HTMLElement, v
 export function FlecheDuFoyer({ ref, revenir }: { ref: Ref<HTMLButtonElement>; revenir: () => void }) {
   return (
     <button ref={ref} type="button" className={styles.fleche} hidden tabIndex={-1} aria-hidden="true" onClick={revenir}>
-      <svg viewBox="0 0 24 24" focusable="false">
-        <path d="M21 12 5 20l3.5-8L5 4Z" />
+      {/* Une pastille, et non une pointe seule qu'on prendrait pour le pointeur de la souris. */}
+      <svg viewBox="0 0 28 28" focusable="false">
+        <circle cx="14" cy="14" r="12" />
+        <path d="m12 8.5 6 5.5-6 5.5" />
       </svg>
     </button>
   );

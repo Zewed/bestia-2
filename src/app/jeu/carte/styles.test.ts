@@ -62,7 +62,7 @@ describe("les styles de la carte du Monde", () => {
     expect(regle(".repere path", zoom)).toContain("stroke: var(--encre);");
   });
 
-  it("posent une petite flèche citron cernée d'Encre, à toucher du doigt, et rien quand le Foyer se voit (US-0426)", () => {
+  it("posent une petite pastille citron cernée d'Encre, sa pointe d'Encre, à toucher du doigt, et rien quand le Foyer se voit (US-0426)", () => {
     const bouton = regle(".fleche", fleche);
     expect(bouton).toContain("position: absolute;");
     expect(bouton).toContain("width: 44px;");
@@ -71,7 +71,8 @@ describe("les styles de la carte du Monde", () => {
     expect(bouton).toContain("margin: -22px 0 0 -22px;");
     expect(bouton).toContain("cursor: pointer;");
     expect(regle(".fleche[hidden]", fleche)).toContain("display: none;");
-    expect(regle(".fleche path", fleche)).toContain("fill: var(--citron);");
+    expect(regle(".fleche circle", fleche)).toContain("fill: var(--citron);");
+    expect(regle(".fleche circle", fleche)).toContain("stroke: var(--encre);");
     expect(regle(".fleche path", fleche)).toContain("stroke: var(--encre);");
     expect(Number(regle(".fleche svg", fleche).match(/width: (\d+)px;/)?.[1])).toBeLessThanOrEqual(28);
   });
