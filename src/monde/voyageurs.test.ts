@@ -154,6 +154,13 @@ describe("l'avertissement « famine imminente » au moment d'accueillir (US-0340
     expect(avertissementDeFamine(stocks("0.000000", "22.000000"), "24.000000")).toBe(true);
   });
 
+  // US-0323 : à 13 h tout juste (Végétaux 26, −2 par heure), dans la marge : actif seulement si le Territoire le retient.
+  it("le reste dans la marge du seuil tant que le Territoire retient l'avertissement, comme la bande", () => {
+    expect(avertissementDeFamine(stocks("0.000000", "26.000000"), "24.000000", null)).toBe(false);
+    expect(avertissementDeFamine(stocks("0.000000", "26.000000"), "24.000000", 2)).toBe(true);
+    expect(avertissementDeFamine(stocks("0.000000", "30.000000"), "24.000000", 2)).toBe(false);
+  });
+
   it("le reste quand la Nourriture est épuisée, comme pendant une Famine : l'accueil demande la même confirmation", () => {
     expect(avertissementDeFamine(stocks("0.000000", "0.000000"), "24.000000")).toBe(true);
   });

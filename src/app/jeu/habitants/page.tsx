@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { CSSProperties } from "react";
-import { exigerCompte, stocksALHeure } from "@/comptes/garde";
+import { exigerCompte, famineImminenteALHeure, stocksALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
@@ -82,13 +82,14 @@ export default async function Habitants() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  const [habitants, places, entretien, metiers, stocks, voyageurs] = await Promise.all([
+  const [habitants, places, entretien, metiers, stocks, voyageurs, famineDepuis] = await Promise.all([
     territoireId === null ? [] : habitantsDuTerritoire(getPool(), territoireId),
     territoireId === null ? 0 : placesDuTerritoire(getPool(), territoireId),
     territoireId === null ? null : entretienDesHabitants(getPool(), territoireId),
     lesMetiers(getPool()),
     territoireId === null ? [] : stocksALHeure(territoireId),
     territoireId === null ? [] : voyageursAuxPortes(getPool(), territoireId),
+    territoireId === null ? null : famineImminenteALHeure(territoireId),
   ]);
   const montres = habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }));
   return (
@@ -116,7 +117,7 @@ export default async function Habitants() {
               maintenant={maintenant()}
               vitesse={vitesse()}
               placesLibres={places - habitants.length}
-              famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure)}
+              famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure, famineDepuis)}
             />
             {entretien ? (
               <Bloc titre="Entretien">

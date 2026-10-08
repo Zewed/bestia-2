@@ -33,6 +33,8 @@ vi.mock("@/monde/metiers", async (original) => ({ ...(await original<object>()),
 type Stock = import("@/monde/stocks").Stock;
 const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async (): Promise<Stock[]> => []) }));
 vi.mock("@/monde/stocks", () => stocks);
+// US-0323 : l'avertissement de famine que le Territoire retient, lu par la vraie garde ; rien de retenu ici.
+vi.mock("@/monde/production", async (original) => ({ ...(await original<object>()), famineImminenteDepuis: vi.fn(async () => null) }));
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
