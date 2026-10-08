@@ -1,0 +1,30 @@
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_b41bfe1967402f 294-322
+src/chefs/nom.ts
+  s_97a431cfa65ca7::t_2b8820aaa95835 15-19
+src/app/jeu/nom-de-chef/actions.test.ts
+  s_97a431cfa65ca7::t_ee52a24252aec4 9
+  s_97a431cfa65ca7::t_61c0291f99f27a 73-76
+src/chefs/chef.ts
+  s_97a431cfa65ca7::t_1fcaffe3515032 64
+  s_97a431cfa65ca7::t_6a8458198125b9 114
+src/app/jeu/nom-de-chef/actions.ts
+  s_97a431cfa65ca7::t_5228984936fbf6 5
+  s_97a431cfa65ca7::t_a5ec6465177ef4 39
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e51e8060616df02e5e702267d55b5deceb2d1bf8",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
