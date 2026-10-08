@@ -6,28 +6,56 @@ docs/stories/a-decider.md
   s_97a431cfa65ca7::t_1cf30dc15ae4ef 5
 src/app/jeu/habitants/BandeauSansMetier.test.tsx
   s_97a431cfa65ca7::t_e31d9acc1e9f86 13,51,132-144
+  s_97a431cfa65ca7::t_b6dc2f3e60d306 132-144
+  s_97a431cfa65ca7::t_dc6b9ce1fb1dcb 13
+  s_97a431cfa65ca7::t_75fc6b0ca7b2b6 51
 src/app/jeu/habitants/HabitantsMontres.tsx
   s_97a431cfa65ca7::t_6ae6b2401e1925 12-16,27,29-31,33-35,46,49,54-55,58
+  s_97a431cfa65ca7::t_83a9556d31a88a 12-16,27,29-30,46,49,54-55,58
+  s_97a431cfa65ca7::t_498d35668b0f8e 31,33-35
 src/app/jeu/habitants/ListeDesHabitants.test.tsx
   s_97a431cfa65ca7::t_99792f34929f7e 13,67,541-708
+  s_97a431cfa65ca7::t_372e782a354c66 544-545
+  s_97a431cfa65ca7::t_5c545587e3361d 541-543,546-660,674-708
+  s_97a431cfa65ca7::t_ad51cea293f18e 13
+  s_97a431cfa65ca7::t_88b2b7e4a5c909 661-673
+  s_97a431cfa65ca7::t_a9ad1d5dd00cd0 67
 src/app/jeu/habitants/ListeDesHabitants.tsx
   s_97a431cfa65ca7::t_0820c2624f03f4 5-6,26-28,65-71,74,84-86,100-118,125,130-148,196,240-252
+  s_97a431cfa65ca7::t_65c0feebfdf459 5-6,26-28,65-71,74,84-86,100-118,125,130-148,196,240-251
+  s_97a431cfa65ca7::t_21efec6e74af26 252
 src/app/jeu/habitants/actions.db.test.ts
   s_97a431cfa65ca7::t_529aef5af1c087 6,16,18,108-125
+  s_97a431cfa65ca7::t_5c5da1061dca4c 16,18
+  s_97a431cfa65ca7::t_6798d6d2ff7b3e 108-125
+  s_97a431cfa65ca7::t_e83eceaaba9e4f 6
 src/app/jeu/habitants/actions.test.ts
   s_97a431cfa65ca7::t_be3e8a8840eed9 10,16,193-244
+  s_97a431cfa65ca7::t_471836f89e3613 10,16,193-243
+  s_97a431cfa65ca7::t_13e19d7fc263f6 244
 src/app/jeu/habitants/actions.ts
   s_97a431cfa65ca7::t_9b0196cb7a00c4 7-8,78-91
+  s_97a431cfa65ca7::t_c84304ec519282 78-91
+  s_97a431cfa65ca7::t_a5249bfe610d7c 7-8
 src/app/jeu/habitants/page.module.css
   s_97a431cfa65ca7::t_c922e1f9954f70 313-336,344-347,352-353
+  s_97a431cfa65ca7::t_c8c2b540acd248 313-336,344-347,352-353
 src/app/jeu/habitants/page.test.tsx
   s_97a431cfa65ca7::t_1793d54092a431 42,672-688
+  s_97a431cfa65ca7::t_a2000dda18d3d2 672-688
+  s_97a431cfa65ca7::t_ef2208a464b487 42
 src/monde/famine.db.test.ts
   s_97a431cfa65ca7::t_8a8da9adc02e85 11,510-549
+  s_97a431cfa65ca7::t_7e0efbf744c380 11
+  s_97a431cfa65ca7::t_f65ed4dab26e6b 510-549
 src/monde/habitants.db.test.ts
   s_97a431cfa65ca7::t_93635fdd6f5abf 25-26,29,41,459-542
+  s_97a431cfa65ca7::t_eff8cd0b59577f 459-542
+  s_97a431cfa65ca7::t_c08eb6b1f448f4 25-26,29,41
 src/monde/habitants.ts
   s_97a431cfa65ca7::t_a01736698a0d5f 7,114-160
+  s_97a431cfa65ca7::t_f50f5a7ce1e7f1 7
+  s_97a431cfa65ca7::t_d0c4366aef59a2 114-160
 ---
 {
   "schema_version": "authorship/3.0.0",
