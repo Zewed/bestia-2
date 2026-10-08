@@ -3,6 +3,7 @@ src/app/jeu/carte/FicheDeLaCase.css.test.ts
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_22211215a6b164 652-663
   s_97a431cfa65ca7::t_dd411f9b029eb0 754-791,813
+  s_97a431cfa65ca7::t_7558cc03ced2f9 792-812
 src/app/jeu/carte/FicheDeLaCase.test.tsx
   s_97a431cfa65ca7::t_275a706589a6e3 55-58,60,64,70-73
   s_97a431cfa65ca7::t_900a2d7bc523ff 86,89,93,174
@@ -16,6 +17,7 @@ src/app/jeu/carte/FicheDeLaCase.tsx
   s_97a431cfa65ca7::t_402e8f75bb2390 110-113
   s_97a431cfa65ca7::t_5d0524ec404c24 70-80,82-83,85,88-90
   s_97a431cfa65ca7::t_c796c4c33198eb 84,86
+  s_97a431cfa65ca7::t_f320d0f889eb0c 66-68
 src/app/jeu/carte/FicheDeLaCase.module.css
   s_97a431cfa65ca7::t_10b64d6bd12fcb 21,24,29-66
   s_97a431cfa65ca7::t_6eff1bc30bcca8 67
@@ -23,6 +25,7 @@ src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_27c0eabfa88763 60
   s_97a431cfa65ca7::t_14c2fc947dc454 129
   s_97a431cfa65ca7::t_330d62c6720943 177
+  s_97a431cfa65ca7::t_ac11a59c1b003d 47-48
 ---
 {
   "schema_version": "authorship/3.0.0",
