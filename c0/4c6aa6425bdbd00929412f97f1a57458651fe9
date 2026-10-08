@@ -1,0 +1,39 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_0be80989e872e4 383
+docs/stories/README.md
+  s_97a431cfa65ca7::t_455232308e47fc 7
+src/app/jeu/carte/Legende.css.test.ts
+  s_97a431cfa65ca7::t_dc612816ad57cf 6,27-28
+src/app/jeu/carte/Legende.test.tsx
+  s_97a431cfa65ca7::t_97fbf8d8a2c010 5,109,157-164
+src/app/jeu/carte/Legende.tsx
+  s_97a431cfa65ca7::t_2c1959ad59b14d 4,129-130,210-213
+src/app/jeu/carte/dessin.test.ts
+  s_97a431cfa65ca7::t_4e7a8fbc87543a 4,316-389
+src/app/jeu/carte/dessin.ts
+  s_97a431cfa65ca7::t_a1fda1a61d1f98 2,323-334,341,343,346-348,352,354-355,368,419-421,428,456-463,466-475
+src/app/jeu/carte/page.tsx
+  s_97a431cfa65ca7::t_0f8c9ffdf4a046 19-20
+src/monde/carte.db.test.ts
+  s_97a431cfa65ca7::t_582f1f603b5d0e 6,8,10,12,73-74,76-79,81-89,137-139,141-142
+src/monde/carte.ts
+  s_97a431cfa65ca7::t_ac57473c48abf0 4,25-30,37-38,42,46
+src/monde/couleurs-de-la-carte.ts
+  s_97a431cfa65ca7::t_e5afa0f666a6e0 4-13,28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c04c6aa6425bdbd00929412f97f1a57458651fe9",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
