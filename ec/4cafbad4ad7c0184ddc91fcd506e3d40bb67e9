@@ -1,0 +1,41 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_9fa1d93eb79d74 335
+docs/stories/README.md
+  s_97a431cfa65ca7::t_c03f6d920ea7fe 7
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_8f62e1223a8381 115
+src/app/jeu/carte/Legende.module.css
+  s_97a431cfa65ca7::t_50036eba74208e 78-86,94-97,100-101
+src/app/jeu/carte/Legende.test.tsx
+  s_97a431cfa65ca7::t_8f81532ae5c585 6,41-46,48,76-78,102-124
+src/app/jeu/carte/Legende.tsx
+  s_97a431cfa65ca7::t_b9aebe85920ed0 3,6-7,46-70,73-75,77-80,82-89,91,97-98,102,110-111,151,161-168
+src/app/jeu/carte/dessin.test.ts
+  s_97a431cfa65ca7::t_b497cafb8470ca 5-6,10-14,18-19,27-30,32-37,45-47,56-57,62-66,70,376-481
+src/app/jeu/carte/dessin.ts
+  s_97a431cfa65ca7::t_29089902c47d2e 2-3,22-24,48-49,51-56,311-381,386,427,451-452,454-464,490-492,495-505,517-519,521-525
+src/app/jeu/carte/page.test.tsx
+  s_97a431cfa65ca7::t_34bec2d79ad2b8 52
+src/monde/carte.db.test.ts
+  s_97a431cfa65ca7::t_2c7934724e680b 8,77-86,115-116
+src/monde/carte.ts
+  s_97a431cfa65ca7::t_b04b7fdb613770 5,11-12,19,27-28,31,35-36,45,48
+src/monde/zones.ts
+  s_97a431cfa65ca7::t_6783f35c0dc381 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ec4cafbad4ad7c0184ddc91fcd506e3d40bb67e9",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
