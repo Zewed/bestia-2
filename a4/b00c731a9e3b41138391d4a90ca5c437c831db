@@ -1,0 +1,64 @@
+src/app/jeu/habitants/page.tsx
+  s_97a431cfa65ca7::t_99dd4826d3beb1 117,125
+  s_97a431cfa65ca7::t_bb7a369a3f7436 96
+  s_97a431cfa65ca7::t_37b0be16b9790d 110
+src/app/jeu/habitants/AuxPortes.test.tsx
+  s_97a431cfa65ca7::t_5eefe5251ac755 205-210
+  s_97a431cfa65ca7::t_a5369f94d4c451 132,166,504,545,557,567,604,637,649,723
+  s_97a431cfa65ca7::t_755620dd486e16 171-204,211-319
+src/app/jeu/habitants/actions-aux-portes.test.ts
+  s_97a431cfa65ca7::t_c22f6695aa1576 42-62
+  s_97a431cfa65ca7::t_30d4303173a96e 33-34
+src/app/jeu/habitants/AuxPortes.module.css
+  s_97a431cfa65ca7::t_d5c0e10c69d336 69-88
+src/app/jeu/habitants/actions-aux-portes.db.test.ts
+  s_97a431cfa65ca7::t_65e749f8693287 72-74,79
+  s_97a431cfa65ca7::t_112c349419ab24 68-71,75-78,80-82
+src/app/jeu/habitants/actions-aux-portes.ts
+  s_97a431cfa65ca7::t_a956bf60743042 34-37,39,42-43
+  s_97a431cfa65ca7::t_a3849d9b9acac0 13-15,21-23
+  s_97a431cfa65ca7::t_01feccef9023ba 24-25
+src/app/jeu/habitants/ListeDesHabitants.tsx
+  s_97a431cfa65ca7::t_8fc486b4481ea2 8,11-12
+  s_97a431cfa65ca7::t_350d27f753a52a 201,203-205,207
+  s_97a431cfa65ca7::t_40ded2aeb7015f 214-215
+src/app/jeu/habitants/page.test.tsx
+  s_97a431cfa65ca7::t_b78dc3bab4f6cd 808-809
+  s_97a431cfa65ca7::t_112fd30dfeaa12 797,799-800,804-807
+src/monde/voyageurs.db.test.ts
+  s_97a431cfa65ca7::t_8ed49aa0500fef 657-716
+src/app/jeu/habitants/AuxPortes.css.test.ts
+  s_97a431cfa65ca7::t_ca9a2679a27069 49-61
+src/app/jeu/habitants/AuxPortes.tsx
+  s_97a431cfa65ca7::t_fba91ffd9ac69a 165-177
+  s_97a431cfa65ca7::t_1e337dfabe38ff 11
+  s_97a431cfa65ca7::t_9b79b7dc07bcbe 225-227
+  s_97a431cfa65ca7::t_be2e42a6a4142f 70-75,84,92
+  s_97a431cfa65ca7::t_9bd6ded1b5ad07 190-191
+  s_97a431cfa65ca7::t_e0f38e8db10fab 235-256
+  s_97a431cfa65ca7::t_1c4d2f33550a3d 111-129
+src/monde/voyageurs.ts
+  s_97a431cfa65ca7::t_ad46244b8ce5c9 289
+  s_97a431cfa65ca7::t_fac54361b31c51 253-256,258-264,269-272
+  s_97a431cfa65ca7::t_3d2a081b3a5759 236-237,239
+src/app/jeu/habitants/MetiersAuChoix.tsx
+  s_97a431cfa65ca7::t_d66089c713c2b6 1-89
+src/monde/habitants.ts
+  s_97a431cfa65ca7::t_cf815cf8261b72 103-104,106-113,117
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a4b00c731a9e3b41138391d4a90ca5c437c831db",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "unknown"
+      },
+      "human_author": null
+    }
+  }
+}
