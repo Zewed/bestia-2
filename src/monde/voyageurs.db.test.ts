@@ -53,18 +53,20 @@ function prevues(territoireId: number, ne: Date, jusqua: Date) {
  * Voyageur venu à chaque arrivée qui trouve moins de VOYAGEURS_EN_ATTENTE_MAX Voyageurs aux portes, son départ
  * programmé dès son arrivée ATTENTE plus tard, et traité à son instant (US-0337) ; ceux qui attendent encore aux
  * portes, et ceux repartis, avec l'instant de leur arrivée et celui de leur départ. `sansDepart` : les arrivées de
- * Voyageurs déjà aux portes, venus sans passer par le temps, qui ne repartent pas.
+ * Voyageurs déjà aux portes, venus sans passer par le temps, qui ne repartent pas. US-0341 : `famine`, la Famine du
+ * Territoire, de son début compris à sa fin exclue : une arrivée qui y tombe est perdue, comme aux portes pleines.
  */
-function attendu(territoireId: number, ne: Date, jusqua: Date, sansDepart: number[] = []) {
+function attendu(territoireId: number, ne: Date, jusqua: Date, sansDepart: number[] = [], famine?: { debut: number; fin: number }) {
   const { arrivees, suivante } = prevues(territoireId, ne, jusqua);
   const [portes, venus, repartis]: number[][] = [[], [], []];
   // Ceux dont l'attente s'achève à `instant` repartent, dans l'ordre de leurs départs, avant une arrivée du même instant.
   const partir = (instant: number) => {
     while (portes.length > 0 && portes[0] + ATTENTE <= instant) repartis.push(portes.shift()!);
   };
+  const enFamine = (instant: number) => famine !== undefined && instant >= famine.debut && instant < famine.fin;
   for (const a of arrivees) {
     partir(a.instant);
-    if (sansDepart.length + portes.length < VOYAGEURS_EN_ATTENTE_MAX) {
+    if (!enFamine(a.instant) && sansDepart.length + portes.length < VOYAGEURS_EN_ATTENTE_MAX) {
       portes.push(a.instant);
       venus.push(a.instant);
     }
@@ -926,5 +928,82 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
       await presenter(territoireId, "Ines", apres(ne, HEURE));
       expect(await voyageursPasses(pool, territoireId, apres(ne, 2 * HEURE))).toEqual([]);
     });
+  });
+
+  describe("les portes fermées pendant une Famine (US-0341)", () => {
+    /** La Famine d'un Territoire affamé (affamer), de son début à sa fin, et la fin de l'absence, après sa naissance. */
+    const [DEBUT, FIN, ABSENCE] = [13 * HEURE, 42 * HEURE, 60 * HEURE];
+    /**
+     * Un Territoire tout neuf que la Famine prend 13 h après sa naissance et quitte 29 h plus tard, au milieu d'une
+     * absence de 60 h. Quarante Habitants mangent 80 par heure ; la Viande, vide, ne donne que ses 8 de production, et
+     * les Végétaux, 754, paient les 72 qui restent en en produisant 14 : 58 par heure, 13 h tout juste. Un Habitant part
+     * ensuite à chaque heure pleine ; au 29e départ, à 42 h, les onze qui restent mangent 22 par heure, ce que la prairie
+     * produit. La première arrivée, de 4 à 12 h après la naissance, tombe avant la Famine ; au moins deux tombent pendant,
+     * dont les écarts ne dépassent pas 12 h, et au moins une après.
+     */
+    const affamer = async () => {
+      const t = await naitre();
+      await pool.query(
+        "with partis as (delete from habitant where territoire_id = $1) insert into habitant (territoire_id, prenom) select $1, 'Essai' from generate_series(1, 40)",
+        [t.territoireId],
+      );
+      await pool.query(
+        `update stock set quantite = case ressource_id when 'viande' then 0 else 754 end, reste = 0, plein_depuis = null
+         where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')`,
+        [t.territoireId],
+      );
+      return t;
+    };
+    /** Ce que la base doit tenir à `jusqua` : les arrivées tombées pendant la Famine sont perdues. */
+    const prevu = ({ territoireId, ne }: { territoireId: number; ne: Date }, jusqua = apres(ne, ABSENCE)) =>
+      attendu(territoireId, ne, jusqua, [], { debut: ne.getTime() + DEBUT, fin: ne.getTime() + FIN });
+    /**
+     * Au retour : la Famine a bien duré de 13 à 42 h ; aucun Voyageur ne s'est présenté pendant, alors que des arrivées y
+     * sont tombées, chacune perdue et la suivante programmée ; celui qui attendait déjà est resté jusqu'au bout de son
+     * attente ; et les arrivées ont repris après.
+     */
+    const auRetour = async (t: { territoireId: number; ne: Date }) => {
+      const fin = (await recitsDuTerritoire(pool, t.territoireId)).filter((r) => r.titre === "Fin de la Famine");
+      expect(fin.map((r) => [r.survenuLe.getTime() - t.ne.getTime(), r.texte])).toEqual([
+        [FIN, "La Nourriture paie de nouveau l'Entretien. La Famine a duré 29 h ; 29 Habitants ont quitté le Territoire."],
+      ]);
+      const lu = await etat(t.territoireId);
+      expect(lu).toEqual(prevu(t));
+      const pendant = (instant: number) => instant >= t.ne.getTime() + DEBUT && instant < t.ne.getTime() + FIN;
+      expect(lu.arrivees.filter(([, instant]) => pendant(instant!)).length).toBeGreaterThanOrEqual(2);
+      const venus = [...lu.voyageurs, ...lu.repartis.map(([arrive]) => arrive)];
+      expect(venus.filter(pendant)).toEqual([]);
+      const [premier] = lu.repartis;
+      expect(premier[0]).toBeLessThan(t.ne.getTime() + DEBUT);
+      expect(premier[1]).toBe(premier[0] + ATTENTE);
+      expect(premier[1]).toBeGreaterThan(t.ne.getTime() + DEBUT);
+      expect(venus.some((instant) => instant >= t.ne.getTime() + FIN)).toBe(true);
+    };
+
+    it("page fermée : au retour, un seul rattrapage ne fait venir personne pendant la Famine, et les arrivées reprennent après", async () => {
+      const t = await affamer();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ABSENCE) });
+      await auRetour(t);
+    });
+
+    it("page ouverte : à chaque rattrapage, les arrivées prévues jusque-là, celles de la Famine perdues, et la même fin", async () => {
+      const t = await affamer();
+      for (let ms = 37 * MINUTE + 7_919; ms < ABSENCE; ms += 37 * MINUTE + 7_919) {
+        await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ms) });
+        expect(await etat(t.territoireId), `${(ms / HEURE).toFixed(2)} h`).toEqual(prevu(t, apres(t.ne, ms)));
+      }
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ABSENCE) });
+      await auRetour(t);
+    }, 120_000);
+
+    it("tâche planifiée passée au milieu, dont deux fois pendant la Famine : même fin qu'à la page fermée", async () => {
+      const t = await affamer();
+      for (const h of [5, 13.5, 27.25, 41.99, 50]) {
+        const passage = await rattraperLesAbsents({ pool, maintenant: apres(t.ne, h * HEURE), parmi: { territoire: [t.territoireId] } });
+        expect(passage, `passage à ${h} h`).toMatchObject({ rattrapes: 1, echecs: 0 });
+      }
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ABSENCE) });
+      await auRetour(t);
+    }, 60_000);
   });
 });

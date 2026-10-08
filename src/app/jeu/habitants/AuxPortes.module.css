@@ -155,6 +155,18 @@
   color: var(--texte-discret);
 }
 
+/*
+ * US-0341 : pendant une Famine, pourquoi personne ne vient, en discret comme quand personne n'attend, une seule fois en
+ * tête de la partie ; au-dessus des Voyageurs qui attendaient déjà, un peu à l'écart.
+ */
+.famine {
+  color: var(--texte-discret);
+}
+
+.famine:not(:last-child) {
+  margin-bottom: 10px;
+}
+
 /* US-0338 : en tête de la partie, une seule fois, pourquoi « Accueillir » est grisé, aux couleurs de « Plus de place ». */
 .plusDePlace {
   margin-bottom: 10px;

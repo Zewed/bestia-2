@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import type { CSSProperties } from "react";
-import { exigerCompte, famineImminenteALHeure, stocksALHeure } from "@/comptes/garde";
+import { exigerCompte, famineALHeure, famineImminenteALHeure, stocksALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { Grille } from "@/components/Grille";
@@ -82,7 +82,7 @@ export default async function Habitants() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/habitants");
-  const [habitants, places, entretien, metiers, stocks, voyageurs, famineDepuis] = await Promise.all([
+  const [habitants, places, entretien, metiers, stocks, voyageurs, famineDepuis, famine] = await Promise.all([
     territoireId === null ? [] : habitantsDuTerritoire(getPool(), territoireId),
     territoireId === null ? 0 : placesDuTerritoire(getPool(), territoireId),
     territoireId === null ? null : entretienDesHabitants(getPool(), territoireId),
@@ -90,6 +90,7 @@ export default async function Habitants() {
     territoireId === null ? [] : stocksALHeure(territoireId),
     territoireId === null ? [] : voyageursAuxPortes(getPool(), territoireId),
     territoireId === null ? null : famineImminenteALHeure(territoireId),
+    territoireId === null ? null : famineALHeure(territoireId),
   ]);
   const montres = habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }));
   return (
@@ -111,12 +112,14 @@ export default async function Habitants() {
             {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
             {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
             {/* US-0340 : la famine imminente lui fait confirmer, sur les Stocks et l'Entretien lus à l'heure. */}
+            {/* US-0341 : pendant une Famine, lue à l'heure, les Voyageurs évitent le Territoire. */}
             <AuxPortes
               voyageurs={voyageurs}
               maintenant={maintenant()}
               vitesse={vitesse()}
               placesLibres={places - habitants.length}
               famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure, famineDepuis)}
+              famine={famine !== null}
             />
             {entretien ? (
               <Bloc titre="Entretien">

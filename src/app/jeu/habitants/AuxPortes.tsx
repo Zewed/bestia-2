@@ -62,6 +62,10 @@ function depuisQuand(ms: number): string {
  * l'accueil », dans la couleur d'alerte, et une phrase, annoncée, dit ce que l'Habitant mangera ; le second toucher
  * accueille. « Refuser », un toucher ailleurs, le focus ailleurs ou Échap annulent ; le second clic d'un double clic
  * ne confirme pas. Pendant une Famine, l'avertissement reste actif : l'accueil reste possible, confirmé de même.
+ *
+ * US-0341 : pendant une Famine (`famine`, lue par le serveur), aucun Voyageur ne se présente ; une phrase, une seule
+ * fois en tête de la partie, dit que les Voyageurs évitent un Territoire en Famine, à la place de « Personne aux
+ * portes pour l'instant. » quand personne n'attend. Ceux qui attendaient déjà restent jusqu'au bout de leur attente.
  */
 export function AuxPortes({
   voyageurs,
@@ -69,12 +73,14 @@ export function AuxPortes({
   vitesse = 1,
   placesLibres,
   famineImminente = false,
+  famine = false,
 }: {
   voyageurs: VoyageurAffiche[];
   maintenant: Date;
   vitesse?: number;
   placesLibres: number;
   famineImminente?: boolean;
+  famine?: boolean;
 }) {
   // Les choix dont l'action n'a pas encore répondu : leurs lignes sont retirées d'avance ; un accueil prend déjà sa place.
   const [enCours, choisir] = useOptimistic<Choix[], Choix>([], (actuels, choix) => [...actuels, choix]);
@@ -165,6 +171,7 @@ export function AuxPortes({
           Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là.
         </p>
       ) : null}
+      {famine ? <p className={styles.famine}>Les Voyageurs évitent un Territoire en Famine.</p> : null}
       {affiches.length > 0 ? (
         <ul className={styles.voyageurs}>
           {affiches.map((v) => {
@@ -209,7 +216,7 @@ export function AuxPortes({
             );
           })}
         </ul>
-      ) : (
+      ) : famine ? null : (
         <p className={styles.personne}>Personne aux portes pour l&apos;instant.</p>
       )}
     </Bloc>

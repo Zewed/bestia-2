@@ -99,4 +99,9 @@ describe("la partie « Aux portes », l'Entretien en plus et la confirmation (US
     expect(confirmation).toContain("grid-column: 1 / -1;");
     expect(confirmation).toMatch(/color: var\(--mauvais\);[^}]*font-weight: var\(--graisse-titre\);/);
   });
+
+  it("met la phrase de la Famine en discret, comme quand personne n'attend, à l'écart des Voyageurs qui attendaient déjà (US-0341)", () => {
+    expect(regle(".famine")).toContain("color: var(--texte-discret);");
+    expect(pixels(".famine:not(:last-child)", "margin-bottom")).toBeGreaterThanOrEqual(8);
+  });
 });

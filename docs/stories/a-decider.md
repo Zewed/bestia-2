@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-241 points au total.
+240 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -13,7 +13,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 3 · Les Habitants](03-les-habitants.md)
 
-- [US-0341](03-les-habitants.md) · Fermer les portes aux Voyageurs pendant une Famine : aucun nouveau Voyageur ne se présente pendant une Famine.
 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
 

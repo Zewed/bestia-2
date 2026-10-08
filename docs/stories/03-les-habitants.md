@@ -442,9 +442,10 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0341 · Fermer les portes aux Voyageurs pendant une Famine
 **En tant que** joueur, **je veux** comprendre pourquoi personne ne vient pendant une Famine, **afin de** ne pas croire que le jeu s'est arrêté.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une arrivée qui tombe pendant une Famine est perdue, comme quand les portes sont pleines, et la suivante reste programmée : les arrivées reprennent à la fin de la Famine. C'est la Famine de l'instant exact de l'arrivée qui compte, page ouverte, page fermée ou par la tâche planifiée. Les Voyageurs déjà là restent jusqu'au bout de leur attente. En tête de « Aux portes », en discret : « Les Voyageurs évitent un Territoire en Famine. », à la place de « Personne aux portes pour l'instant. » quand personne n'attend. Vérifié en vrai.
 - **Débloquée par** : US-0331, US-0325
 - **Critères d'acceptation** :
-  - Aucun nouveau Voyageur ne se présente pendant une Famine (à décider).
+  - Aucun nouveau Voyageur ne se présente pendant une Famine (décidé le 2026-10-08).
   - Les Voyageurs qui attendaient déjà restent jusqu'à la fin de leur attente.
   - La partie « Aux portes » explique que les Voyageurs évitent un Territoire en Famine.
 

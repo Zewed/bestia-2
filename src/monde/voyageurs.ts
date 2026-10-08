@@ -37,7 +37,8 @@ export function ecartAvantVoyageur(territoireId: number, numero: number): number
  * US-0331 : un Voyageur se présente au Territoire $1 à l'instant $2, avec un prénom tiré au hasard dans la
  * table prenom, différent de ceux de ses Habitants et des Voyageurs qui attendent (si tous sont pris, un
  * prénom déjà porté plutôt que rien) ; s'il en attend déjà $3, personne ne se présente. Rend son identifiant
- * quand il se présente. US-0337 : seuls comptent ceux qui attendent encore aux portes.
+ * quand il se présente. US-0337 : seuls comptent ceux qui attendent encore aux portes. US-0341 : un Territoire
+ * en Famine, à cet instant, n'en voit venir aucun.
  */
 const FAIRE_ENTRER = `
   insert into voyageur (territoire_id, prenom, arrive_le)
@@ -49,6 +50,7 @@ const FAIRE_ENTRER = `
     limit 1
   ) tire
   where (select count(*) from voyageur where territoire_id = $1 and sort is null) < $3
+    and (select famine_depuis from territoire where id = $1) is null
   returning id`;
 
 /**
@@ -57,6 +59,12 @@ const FAIRE_ENTRER = `
  * programmée : le temps qui avance l'applique à son tour, dans la même avancée si elle tombe avant sa fin.
  * US-0337 : le Voyageur qui se présente reçoit aussitôt son départ, au bout de son attente, programmé avant
  * l'arrivée suivante : tombés au même instant, le départ passe le premier et libère sa place.
+ *
+ * US-0341 : pendant une Famine, personne ne vient non plus : les Voyageurs évitent un Territoire en Famine. Le
+ * temps qui avance a mis le Territoire à l'heure de l'arrivée avant de l'appliquer (PRODUIRE) : la Famine qu'il
+ * retient (famine_depuis) est celle de cet instant exact, quel que soit le découpage du temps ; commencée à cet
+ * instant même, elle compte, finie à cet instant même, non. L'arrivée est perdue comme aux portes pleines, et la
+ * suivante reste programmée ; ceux qui attendaient déjà restent jusqu'au bout de leur attente.
  */
 export async function arriveeDUnVoyageur(client: PoolClient, territoireId: number, evenement: Evenement): Promise<void> {
   const numero = evenement.donnees.numero;

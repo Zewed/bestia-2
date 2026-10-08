@@ -35,6 +35,9 @@ const stocks = vi.hoisted(() => ({ stocksDuTerritoire: vi.fn(async (): Promise<S
 vi.mock("@/monde/stocks", () => stocks);
 // US-0323 : l'avertissement de famine que le Territoire retient, lu par la vraie garde ; rien de retenu ici.
 vi.mock("@/monde/production", async (original) => ({ ...(await original<object>()), famineImminenteDepuis: vi.fn(async () => null) }));
+// US-0341 : la Famine que le Territoire retient, lue par la vraie garde ; aucune, sauf quand un essai en met une.
+const famine = vi.hoisted(() => ({ famineDepuis: vi.fn(async (): Promise<number | null> => null) }));
+vi.mock("@/monde/famine", async (original) => ({ ...(await original<object>()), ...famine }));
 const temps = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/temps/rattraper", () => temps);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
@@ -837,6 +840,19 @@ describe("page Habitants, les Voyageurs aux portes (US-0332, US-0333)", () => {
       expect(portes.AuxPortes.mock.lastCall?.[0].famineImminente, vegetaux).toBe(avertissement);
     }
     expect(stocks.stocksDuTerritoire).toHaveBeenLastCalledWith(expect.anything(), 12);
+  });
+
+  it("confie à « Aux portes » la Famine du Territoire, lue une fois mis à l'heure : les Voyageurs l'évitent (US-0341)", async () => {
+    await connecte();
+    renderToStaticMarkup(await Habitants());
+    expect(portes.AuxPortes.mock.lastCall?.[0].famine).toBe(false);
+    famine.famineDepuis.mockResolvedValueOnce(2.5);
+    temps.rattraper.mockClear();
+    const html = auxPortes(renderToStaticMarkup(await Habitants()));
+    expect(portes.AuxPortes.mock.lastCall?.[0].famine).toBe(true);
+    expect(famine.famineDepuis).toHaveBeenLastCalledWith(expect.anything(), 12);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 12);
+    expect(html).toMatch(/Historique<\/a><p[^>]*>Les Voyageurs évitent un Territoire en Famine\.<\/p><\/section>$/);
   });
 
   it("affiche « Personne aux portes pour l'instant. » quand personne n'attend", async () => {

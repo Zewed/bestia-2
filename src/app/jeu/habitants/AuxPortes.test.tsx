@@ -326,6 +326,69 @@ describe("bloquer l'accueil quand la place manque (US-0338)", () => {
   });
 });
 
+describe("fermer les portes pendant une Famine (US-0341)", () => {
+  const PHRASE = "Les Voyageurs évitent un Territoire en Famine.";
+  /** Chaque élément de la partie, sa balise et son texte. */
+  const elements = () => [...partie().children].map((e) => [e.tagName, e.textContent]);
+
+  it("dit, quand personne n'attend, que les Voyageurs évitent un Territoire en Famine, à la place de « Personne aux portes pour l'instant. »", () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={[]} maintenant={MAINTENANT} famine />);
+    expect(elements()).toEqual([
+      ["H2", "Aux portes"],
+      ["A", "Historique"],
+      ["P", PHRASE],
+    ]);
+  });
+
+  it("le dit une seule fois, en tête de la partie, au-dessus des Voyageurs qui attendaient déjà, qu'on peut toujours accueillir ou refuser", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famine famineImminente />);
+    expect(within(partie()).getAllByText(PHRASE)).toHaveLength(1);
+    expect(elements().map(([balise]) => balise)).toEqual(["H2", "A", "P", "UL"]);
+    expect(elements()[2][1]).toBe(PHRASE);
+    expect(prenoms()).toEqual(["Ines", "Joran", "Ilda"]);
+    const utilisateur = userEvent.setup();
+    await utilisateur.click(within(ligne("Joran")).getByRole("button", { name: "Refuser Joran" }));
+    expect(actions.refuserUnVoyageur).toHaveBeenCalledExactlyOnceWith(71);
+    // L'accueil reste possible, confirmé comme sous l'avertissement « famine imminente » (US-0340).
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Accueillir Ines" }));
+    await utilisateur.click(within(ligne("Ines")).getByRole("button", { name: "Confirmer l'accueil d'Ines" }));
+    expect(actions.accueillirUnVoyageur).toHaveBeenCalledExactlyOnceWith(70);
+  });
+
+  it("le garde seul, sans « Personne aux portes pour l'instant. », quand le dernier Voyageur qui attendait s'en va", async () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={[TROIS[0]]} maintenant={MAINTENANT} famine />);
+    await userEvent.setup().click(within(ligne("Ines")).getByRole("button", { name: "Refuser Ines" }));
+    expect(elements()).toEqual([
+      ["H2", "Aux portes"],
+      ["A", "Historique"],
+      ["P", PHRASE],
+    ]);
+  });
+
+  it("le dit sous la phrase de la place qui manque, quand les deux valent", () => {
+    render(<AuxPortes placesLibres={0} voyageurs={TROIS} maintenant={MAINTENANT} famine />);
+    expect(elements().map(([balise, texte]) => (balise === "P" ? texte : balise))).toEqual([
+      "H2",
+      "A",
+      "Plus de place au Foyer. Des huttes en ajouteront quand les constructions seront là.",
+      PHRASE,
+      "UL",
+    ]);
+  });
+
+  it("ne dit rien hors Famine", () => {
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} famineImminente />);
+    expect(within(partie()).queryByText(PHRASE)).toBeNull();
+    cleanup();
+    render(<AuxPortes placesLibres={LIBRES} voyageurs={[]} maintenant={MAINTENANT} famine={false} />);
+    expect(elements()).toEqual([
+      ["H2", "Aux portes"],
+      ["A", "Historique"],
+      ["P", "Personne aux portes pour l'instant."],
+    ]);
+  });
+});
+
 describe("ne jamais accueillir deux fois (US-0339)", () => {
   it("n'envoie qu'un accueil pour un double clic sur « Accueillir »", async () => {
     render(<AuxPortes placesLibres={LIBRES} voyageurs={TROIS} maintenant={MAINTENANT} />);
