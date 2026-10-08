@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-237 points au total.
+236 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -97,7 +97,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0919](09-explorer-et-apprivoiser.md) · Plusieurs Expéditions à la fois : un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs.
 - [US-0920](09-explorer-et-apprivoiser.md) · Rappeler une Expédition à l'aller : rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt.
 - [US-0921](09-explorer-et-apprivoiser.md) · Ceux qui sont partis mangent toujours : en cas de Famine pendant une Expédition, si un explorateur absent peut s'en aller, et, une fois que les Bêtes mangeront, si des Bêtes de l'escorte peuvent retourner au sauvage sur place.
-- [US-0923](09-explorer-et-apprivoiser.md) · Les Anneaux, de la Couronne au Cœur sauvage : afficher l'Anneau dans la fiche d'une Case révélée.
 - [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : un petit jeu d'Espèces couvre les Raretés de commune à légendaire dans plusieurs Biomes ; Espèces provisoires ou premières Espèces validées du chantier de contenu.
 - [US-0924](09-explorer-et-apprivoiser.md) · Des Espèces d'essai pour chaque Rareté : ces Espèces ne servent qu'en développement et aux simulations ; en ligne, seules les Espèces déjà chargées apparaissent jusqu'à l'étape 47.
 - [US-0925](09-explorer-et-apprivoiser.md) · Des Bêtes sauvages apparaissent de temps en temps : chaque Case hors des Territoires voit apparaître des Bêtes sauvages de temps en temps, selon une fréquence moyenne (chiffre à régler) ; les Cases des Territoires.

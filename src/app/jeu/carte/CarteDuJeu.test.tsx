@@ -702,7 +702,7 @@ const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
 describe("ouvrir la fiche d'une Case (US-0428)", () => {
   /** La Case au sud-ouest du Foyer, une forêt libre, à une Case de lui. */
-  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 1 };
+  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 1, anneau: 2 };
 
   it("ouvre d'un clic la fiche de la Case, surlignée aussitôt, et la remplit à la réponse du serveur", async () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);

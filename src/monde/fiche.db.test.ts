@@ -112,6 +112,14 @@ describe.skipIf(!URL_TEST)("la fiche d'une Case (US-0428, sur base)", () => {
     expect(distance({ q: 0, r: 0 }, moi.foyer)).toBeGreaterThanOrEqual(55);
   });
 
+  it("donne l'Anneau de la Case, de la Couronne (1) au Cœur sauvage (6) (US-0923)", async () => {
+    const moi = await naitre(genereId);
+    await decouvrir(pool, moi.territoireId, [{ q: 0, r: 0 }, { q: 30, r: 0 }]);
+    expect(await ficheDUneCase(pool, moi.territoireId, moi.foyer)).toMatchObject({ zone: ZONE_COURONNE, anneau: 1 });
+    expect(await ficheDUneCase(pool, moi.territoireId, { q: 0, r: 0 })).toMatchObject({ zone: ZONE_COEUR, anneau: 6 });
+    // Le 30e anneau de Cases, au milieu des 47 qui séparent la Couronne du Cœur sauvage : l'Anneau 4.
+    expect(await ficheDUneCase(pool, moi.territoireId, { q: 30, r: 0 })).toMatchObject({ zone: 0, anneau: 4 });
+  });
 
   describe("une Case sous le brouillard du joueur (US-0438)", () => {
     /** Ce que la fiche d'une Case cachée doit dire : sa place et sa distance au Foyer, rien d'autre. */
@@ -146,7 +154,7 @@ describe.skipIf(!URL_TEST)("la fiche d'une Case (US-0428, sur base)", () => {
       const moi = await naitre(genereId);
       const lac = await cachee(moi.foyer, "variante_id = 'lac'");
       await decouvrir(pool, moi.territoireId, [lac]);
-      expect(await ficheDUneCase(pool, moi.territoireId, lac)).toEqual({ ...lac, biome: "Lac", chef: null, aVous: false, zone: expect.any(Number), distance: distance(lac, moi.foyer) });
+      expect(await ficheDUneCase(pool, moi.territoireId, lac)).toEqual({ ...lac, biome: "Lac", chef: null, aVous: false, zone: expect.any(Number), distance: distance(lac, moi.foyer), anneau: expect.any(Number) });
     });
   });
 });

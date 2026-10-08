@@ -250,3 +250,10 @@ export const CARTE_FICHE_FERMETURE_PIXELS = 60;
  * que l'onglet est visible, et dès qu'il le redevient (valeur provisoire, à régler en jouant).
  */
 export const CARTE_DECOUVERTES_SECONDES = 60;
+
+/**
+ * US-0923 : chaque Monde se partage en 6 Anneaux (valeur provisoire, à régler en jouant), de la Couronne, l'Anneau 1, au
+ * Cœur sauvage, l'Anneau 6 ; les anneaux de Cases entre les deux se répartissent sur les autres (src/monde/anneaux.ts).
+ * Rien n'en est gardé en base : la changer change les Anneaux de tous les Mondes, déjà nés compris.
+ */
+export const ANNEAUX_DU_MONDE = 6;

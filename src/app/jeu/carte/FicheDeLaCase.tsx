@@ -10,8 +10,8 @@ import type { Cadre } from "./dessin";
 import styles from "./FicheDeLaCase.module.css";
 import { LEGENDE_MONTREE } from "./Legende";
 
-/** US-0429 : où est la Case dans le Monde, selon sa zone. */
-const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne", [ZONE_COEUR]: "Cœur sauvage", 0: "Entre la Couronne et le Cœur sauvage" };
+/** US-0429 : où est la Case dans le Monde, selon sa zone. US-0923 : entre la Couronne et le Cœur sauvage, son Anneau suffit. */
+const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne · ", [ZONE_COEUR]: "Cœur sauvage · ", 0: "" };
 
 /** US-0429 : « À 7 Cases de votre Foyer ». */
 const aDistance = (n: number) => `À ${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
@@ -193,7 +193,7 @@ export function FicheDeLaCase({
             </div>
             <div>
               <dt>Zone</dt>
-              <dd>{ZONES[fiche.zone]}</dd>
+              <dd>{`${ZONES[fiche.zone]}Anneau ${fiche.anneau}`}</dd>
             </div>
           </dl>
           {fiche.distance > 0 ? <p className={styles.distance}>{aDistance(fiche.distance)}</p> : null}

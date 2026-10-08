@@ -49,8 +49,8 @@ afterEach(() => {
 });
 
 const ICI = { q: 3, r: -5 };
-/** La fiche d'une forêt libre, entre la Couronne et le Cœur sauvage, à 7 Cases du Foyer. */
-const FORET: Fiche = { ...ICI, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7 };
+/** La fiche d'une forêt libre, entre la Couronne et le Cœur sauvage (dans l'Anneau 3), à 7 Cases du Foyer. */
+const FORET: Fiche = { ...ICI, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7, anneau: 3 };
 /** La fiche de la Case, telle que la carte la montre. */
 const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
@@ -184,7 +184,19 @@ describe("situer la Case dans le Monde depuis sa fiche (US-0429)", () => {
     expect(texte({ zone: ZONE_COURONNE })).not.toContain("Cœur");
     expect(texte({ zone: ZONE_COEUR })).toContain("Cœur sauvage");
     expect(texte({ zone: ZONE_COEUR })).not.toContain("Couronne");
-    expect(texte({ zone: 0 })).toContain("Entre la Couronne et le Cœur sauvage");
+    expect(texte({ zone: 0 })).not.toMatch(/Couronne|Cœur/);
+  });
+
+  it("donne son Anneau sur la ligne de sa zone (US-0923)", () => {
+    const zone = (f: Partial<Fiche>) => {
+      render(<FicheDeLaCase choix={{ case: ICI, fiche: { ...FORET, ...f }, echec: false }} carte={{ current: null }} montrer={() => {}} fermer={() => {}} />);
+      const ligne = screen.getByText("Zone").nextElementSibling!.textContent;
+      cleanup();
+      return ligne;
+    };
+    expect(zone({ zone: ZONE_COURONNE, anneau: 1 })).toBe("Couronne · Anneau 1");
+    expect(zone({ zone: 0, anneau: 3 })).toBe("Anneau 3");
+    expect(zone({ zone: ZONE_COEUR, anneau: 6 })).toBe("Cœur sauvage · Anneau 6");
   });
 
   it("donne la distance de la Case au Foyer, en Cases ; rien de plus pour le Foyer lui-même", () => {

@@ -222,12 +222,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0923 · Les Anneaux, de la Couronne au Cœur sauvage
 **En tant que** joueur, **je veux** que le Monde soit plus sauvage à mesure qu'on approche du Cœur sauvage, **afin de** trouver des Bêtes plus rares en m'aventurant plus loin.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque Case appartient à l'un des 6 Anneaux, numérotés de la Couronne (Anneau 1) au Cœur sauvage (Anneau 6). Les bandes intermédiaires se partagent en 12, 12, 12 et 11 anneaux de Cases, les plus larges à l'extérieur. L'Anneau se calcule à partir de la distance au centre et de la forme du Monde, sans rien garder en base : la même graine donne les mêmes Anneaux. La fiche d'une Case découverte dit « Couronne · Anneau 1 », « Anneau 3 » ou « Cœur sauvage · Anneau 6 » ; celle d'une Case inconnue n'en dit rien. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : Étape 18
 - **Critères d'acceptation** :
-  - Chaque Case appartient à un Anneau selon sa distance au Cœur sauvage ; le nombre d'Anneaux (chiffre à régler).
+  - Chaque Case appartient à un Anneau selon sa distance au Cœur sauvage ; 6 Anneaux (provisoire, `ANNEAUX_DU_MONDE`).
   - La Couronne forme l'Anneau le plus extérieur, le Cœur sauvage le plus intérieur.
   - La même graine donne toujours les mêmes Anneaux.
-  - Afficher l'Anneau dans la fiche d'une Case révélée (à décider).
+  - La fiche d'une Case révélée affiche son Anneau (décidé le 2026-10-08).
 
 ### US-0924 · Des Espèces d'essai pour chaque Rareté
 **En tant que** développeur, **je veux** un petit jeu d'Espèces couvrant les Raretés de commune à légendaire, **afin de** tester les apparitions avant l'arrivée des 200 Espèces.
