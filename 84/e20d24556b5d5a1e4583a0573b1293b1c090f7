@@ -4,26 +4,52 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_defe695b8fb501 7
 next.config.ts
   s_97a431cfa65ca7::t_96dbb3d0f6f79f 10-11
+  s_97a431cfa65ca7::t_707f45573d6db5 10-11
 src/app/controle/monde/CarteDuMonde.tsx
   s_97a431cfa65ca7::t_08d707da496c7b 1-97
+  s_97a431cfa65ca7::t_e585fcf3d0f805 2-41,43-46,51-86,88-97
+  s_97a431cfa65ca7::t_13d97f47f3fd3a 87
+  s_97a431cfa65ca7::t_74044c5e1f652e 42,47-50
+  s_97a431cfa65ca7::t_7a8345977709a2 1
 src/app/controle/monde/bilan.test.ts
   s_97a431cfa65ca7::t_67a8ad4c06a1ad 1-70
+  s_97a431cfa65ca7::t_0c6b13664d0d8c 1-39,43-44,46-50,55-62,64-70
+  s_97a431cfa65ca7::t_474fc3c5bd9ad4 40-42,45,51-54,63
 src/app/controle/monde/bilan.ts
   s_97a431cfa65ca7::t_000a8354150651 1-81
+  s_97a431cfa65ca7::t_6e2ad4d2ab75a0 1-81
 src/app/controle/monde/en-base.db.test.ts
   s_97a431cfa65ca7::t_1f536bbf7a03bb 1-75
+  s_97a431cfa65ca7::t_b1a7bc8eeadd0f 1-75
 src/app/controle/monde/en-base.ts
   s_97a431cfa65ca7::t_eec3f0db574ae2 1-32
+  s_97a431cfa65ca7::t_aa25481e87ead0 1-32
 src/app/controle/monde/monde.module.css
   s_97a431cfa65ca7::t_b903b687fe7bfa 1-229
+  s_97a431cfa65ca7::t_41923c193245fb 107
+  s_97a431cfa65ca7::t_8c68d7ba8cccb5 96,100,102
+  s_97a431cfa65ca7::t_a93c0cb971665a 1-95,97-99,101,103-106,108-198,203-229
+  s_97a431cfa65ca7::t_af1d1aba8c75b0 199-202
 src/app/controle/monde/page.test.tsx
   s_97a431cfa65ca7::t_c6579923a22f0d 1-174
+  s_97a431cfa65ca7::t_108b00a35fad72 42,81,95,108,119,133,138,149,163,169
+  s_97a431cfa65ca7::t_707f45573d6db5 127-128,157
+  s_97a431cfa65ca7::t_8ec06ef739f77c 1-40,43-80,83-84,86-94,96,98-107,109-112,114-118,120-123,125-126,129-132,134-137,139-148,150-151,153-156,158-162,164-168,170-174
+  s_97a431cfa65ca7::t_13d97f47f3fd3a 41,82
+  s_97a431cfa65ca7::t_16bce2f3342c6e 85,97,113,124
+  s_97a431cfa65ca7::t_f9c3d2b71b4085 152
 src/app/controle/monde/page.tsx
   s_97a431cfa65ca7::t_3e381e9888d687 1-188
+  s_97a431cfa65ca7::t_707f45573d6db5 127
+  s_97a431cfa65ca7::t_b4a417c2b33ef5 45,47,49,53-54,57
+  s_97a431cfa65ca7::t_af1d1aba8c75b0 135,160
+  s_97a431cfa65ca7::t_a39737af6e4c11 1-44,46,48,50-52,55-56,58-126,128-134,136-159,161-188
 src/app/controle/page.test.tsx
   s_97a431cfa65ca7::t_46688bbe8beeec 210-215
+  s_97a431cfa65ca7::t_707f45573d6db5 210-215
 src/app/controle/page.tsx
   s_97a431cfa65ca7::t_443350d2b58c7f 3,170-173
+  s_97a431cfa65ca7::t_707f45573d6db5 3,170-173
 ---
 {
   "schema_version": "authorship/3.0.0",
