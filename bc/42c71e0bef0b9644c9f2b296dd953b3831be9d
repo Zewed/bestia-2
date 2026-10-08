@@ -6,6 +6,8 @@ src/monde/fiche.db.test.ts
   s_97a431cfa65ca7::t_fd50ec72922f43 1-2,4-23,26-27,29-90
 src/app/jeu/carte/FicheDeLaCase.tsx
   s_97a431cfa65ca7::t_40416f80cd240c 1-50,53-71,73-93
+  s_97a431cfa65ca7::t_9c80d3f35722e0 51-52
+  s_97a431cfa65ca7::t_7bdfa181fb8783 72
 src/app/jeu/carte/gestes.test.ts
   s_97a431cfa65ca7::t_0ad3208d5691d4 16
   s_97a431cfa65ca7::t_7bc30f5fc6bfb1 253-310
@@ -28,6 +30,8 @@ src/app/jeu/carte/vue.test.ts
   s_97a431cfa65ca7::t_038cdd8b45d772 334,339-341,344,347-348,350,356-357,361
   s_97a431cfa65ca7::t_f3c43c9f4ff548 166,279-310,312,314-333,335-338,342-343,345-346,349,351-355,358-360,362-363
   s_97a431cfa65ca7::t_79f7de960aea56 311,313
+  s_97a431cfa65ca7::t_c00c94fbbea6fa 5-20
+  s_97a431cfa65ca7::t_2a2f26e034e585 278
 src/app/jeu/carte/actions.test.ts
   s_97a431cfa65ca7::t_f37684a2f915a0 1-66
 src/app/jeu/carte/actions.ts
@@ -38,19 +42,27 @@ src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_5176daa2324225 7,11-12,14-15
   s_97a431cfa65ca7::t_f91d68020a935b 2
   s_97a431cfa65ca7::t_737e37c4a133d5 39-40
+  s_97a431cfa65ca7::t_7a71c07d568f2a 739-740
+  s_97a431cfa65ca7::t_3ea784944dc927 721-738,741-745
+  s_97a431cfa65ca7::t_2e57ef25051321 651
+  s_97a431cfa65ca7::t_009a3e4e63222e 10
 src/app/jeu/carte/CarteDuJeu.tsx
   s_97a431cfa65ca7::t_7419805e21b9e9 57-61
   s_97a431cfa65ca7::t_559523417cbe36 128-131,147-151,153-154,163,165-172,179
   s_97a431cfa65ca7::t_1a6843b138bdc7 4,6,8-9
+  s_97a431cfa65ca7::t_58cc2b109647ae 14,45-47,81,146,152
 src/app/jeu/carte/vue.ts
   s_97a431cfa65ca7::t_d9a2008e6dc592 177-182
   s_97a431cfa65ca7::t_139a57bc4f564e 114,174-176,183-222
+  s_97a431cfa65ca7::t_25ef75c2a2bf77 6
+  s_97a431cfa65ca7::t_a3f9c4e0d17e37 173
 src/app/jeu/carte/dessin.ts
   s_97a431cfa65ca7::t_b3ca1cdb87665d 455-467
   s_97a431cfa65ca7::t_7023515b22fa29 383-397,404-405,407
   s_4ce34ec42d9105::t_5f2d22d042db34 382
 src/reglages.ts
   s_97a431cfa65ca7::t_ab3a4f91e69c0f 225,236-241
+  s_97a431cfa65ca7::t_edac2e8d16b297 235
 ---
 {
   "schema_version": "authorship/3.0.0",
