@@ -377,6 +377,27 @@ describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
     expect(dessineeLa({ ...ouverte(), rayon: bornesDuZoom(ecran.largeur, ecran.hauteur).max })).toBe(true);
   });
 
+  it("zoome aussi en pinçant à deux doigts, autour du point entre eux, dans les mêmes bornes (US-0424)", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const [un, deux] = [{ pointerType: "touch", pointerId: 1 }, { pointerType: "touch", pointerId: 2 }];
+    // Les deux doigts de part et d'autre de la Case à l'est du Foyer, puis écartés d'autant chacun.
+    const { x, y } = aLEcran(AUTOUR[1], ouverte());
+    pointeur("pointerdown", x - 50, y + 64, un);
+    pointeur("pointerdown", x + 50, y + 64, deux);
+    pointeur("pointermove", x - 100, y + 64, un);
+    pointeur("pointermove", x + 100, y + 64, deux);
+    prochaineImage();
+    const pincee = zoomer(ouverte(), 2, x, y, 60);
+    expect(pincee.rayon).toBeCloseTo(2 * RAYON, 6);
+    expect(aLEcran(AUTOUR[1], pincee).x).toBeCloseTo(x, 6);
+    expect(departs().has(`${x.toFixed(6)},${(y - pincee.rayon).toFixed(6)}`)).toBe(true);
+    // Écartés bien plus loin, ils s'arrêtent à la vue rapprochée, la même Case entre eux.
+    pointeur("pointermove", x - 1000, y + 64, un);
+    pointeur("pointermove", x + 1000, y + 64, deux);
+    prochaineImage();
+    expect(departs().has(`${x.toFixed(6)},${(y - bornesDuZoom(ecran.largeur, ecran.hauteur).max).toFixed(6)}`)).toBe(true);
+  });
+
   it("s'ouvre dans les bornes du zoom, et y reste quand l'écran change de taille", () => {
     Object.assign(ecran, { largeur: 4000, hauteur: 3000 });
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);

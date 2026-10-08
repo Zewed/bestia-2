@@ -32,7 +32,8 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * limites de la vue (vue.ts) ; chaque geste change la vue aussitôt, mais la carte n'est redessinée qu'au rythme de
  * l'écran. Quand l'écran change de taille (téléphone tourné, fenêtre élargie), elle garde le même endroit au milieu.
  * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches. US-0423 : elle zoome à
- * la molette ou au pavé tactile, autour du pointeur, entre la vue large et la vue rapprochée.
+ * la molette ou au pavé tactile, autour du pointeur, entre la vue large et la vue rapprochée. US-0424 : de même en
+ * pinçant à deux doigts, autour du point entre eux.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);

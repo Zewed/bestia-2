@@ -26,6 +26,14 @@ const PIXELS_PAR_LIGNE = 40;
 /** US-0423 : le pincement du pavé tactile tel que Safari l'annonce, hors des événements standard : son échelle depuis son début. */
 type GesteSafari = Event & { scale: number; clientX: number; clientY: number };
 
+/** Un point de la page, en pixels. */
+type Point = { x: number; y: number };
+
+/** US-0424 : le point à mi-chemin entre deux doigts. */
+function milieuEntre(a: Point, b: Point): Point {
+  return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+}
+
 /**
  * US-0420 : de combien de pixels un pointeur appuyé doit bouger avant qu'on le prenne pour un glissement : en
  * deçà, c'est un clic, même si la main tremble un peu. US-0421 : un doigt bouge davantage en se posant qu'une
@@ -40,30 +48,52 @@ export const SEUIL_DE_GLISSEMENT = { souris: 4, doigt: 8 };
  * elle sort de l'écran en chemin. US-0421 : de même au doigt, ces mêmes événements du navigateur valant pour la
  * souris, le doigt et le stylet. US-0422 : la carte sélectionnée, chaque flèche du clavier la fait avancer d'un
  * pas ; avec Alt, Ctrl ou Cmd, la flèche reste au navigateur (revenir à la page d'avant…). US-0423 : la molette et
- * le geste de zoom du pavé tactile la zooment autour du pointeur, à la place de la page.
+ * le geste de zoom du pavé tactile la zooment autour du pointeur, à la place de la page. US-0424 : deux doigts
+ * posés la zooment d'autant qu'ils s'écartent ou se rapprochent, autour du point entre eux, qu'elle suit ; un
+ * troisième ne compte pas, et le doigt qui reste quand l'autre se lève continue de la faire glisser.
  */
 export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () => void {
-  // Le pointeur appuyé sur la carte : là où il a été appuyé, sa dernière position prise en compte, son seuil de
-  // glissement, et s'il glisse.
-  let appuye: { id: number; depart: { x: number; y: number }; dernier: { x: number; y: number }; seuil: number; glisse: boolean } | null = null;
+  // Les pointeurs posés sur la carte, deux au plus, à leur dernière position prise en compte, dans la page.
+  const poses = new Map<number, Point>();
+  // Le glissement d'un pointeur seul : là où il s'est posé, son seuil de glissement, et s'il glisse déjà.
+  let glissement: { depart: Point; seuil: number; glisse: boolean } | null = null;
+  // US-0423 : un point de la page, repéré depuis le coin en haut à gauche de la carte.
+  const surLaCarte = (p: Point) => {
+    const { left, top } = element.getBoundingClientRect();
+    return [p.x - left, p.y - top] as const;
+  };
 
   const poser = (e: PointerEvent) => {
-    if (appuye || e.button !== 0) return;
+    if (e.button !== 0 || poses.size === 2 || (poses.size === 1 && e.pointerType !== "touch")) return;
     element.setPointerCapture(e.pointerId);
     const ici = { x: e.clientX, y: e.clientY };
-    const seuil = e.pointerType === "touch" ? SEUIL_DE_GLISSEMENT.doigt : SEUIL_DE_GLISSEMENT.souris;
-    appuye = { id: e.pointerId, depart: ici, dernier: ici, seuil, glisse: false };
+    poses.set(e.pointerId, ici);
+    // US-0424 : un second doigt fait un pincement, pas un glissement.
+    glissement = poses.size === 1 ? { depart: ici, seuil: e.pointerType === "touch" ? SEUIL_DE_GLISSEMENT.doigt : SEUIL_DE_GLISSEMENT.souris, glisse: false } : null;
   };
   const bouger = (e: PointerEvent) => {
-    if (appuye?.id !== e.pointerId) return;
+    const avant = poses.get(e.pointerId);
+    if (!avant) return;
     const ici = { x: e.clientX, y: e.clientY };
-    if (!appuye.glisse && Math.hypot(ici.x - appuye.depart.x, ici.y - appuye.depart.y) < appuye.seuil) return;
-    appuye.glisse = true;
-    commandes.deplacer(ici.x - appuye.dernier.x, ici.y - appuye.dernier.y);
-    appuye.dernier = ici;
+    if (glissement) {
+      if (!glissement.glisse && Math.hypot(ici.x - glissement.depart.x, ici.y - glissement.depart.y) < glissement.seuil) return;
+      glissement.glisse = true;
+      commandes.deplacer(ici.x - avant.x, ici.y - avant.y);
+    } else {
+      // US-0424 : le doigt qui bouge, face à l'autre : le zoom autour de leur milieu d'avant, puis la carte qui suit ce milieu.
+      const autre = [...poses].find(([id]) => id !== e.pointerId)![1];
+      const [milieuAvant, milieuApres] = [milieuEntre(avant, autre), milieuEntre(ici, autre)];
+      const [ecartAvant, ecartApres] = [Math.hypot(avant.x - autre.x, avant.y - autre.y), Math.hypot(ici.x - autre.x, ici.y - autre.y)];
+      if (ecartAvant > 0 && ecartApres > 0) commandes.zoomer(ecartApres / ecartAvant, ...surLaCarte(milieuAvant));
+      commandes.deplacer(milieuApres.x - milieuAvant.x, milieuApres.y - milieuAvant.y);
+    }
+    poses.set(e.pointerId, ici);
   };
   const lever = (e: PointerEvent) => {
-    if (appuye?.id === e.pointerId) appuye = null;
+    if (!poses.delete(e.pointerId)) return;
+    // US-0424 : le doigt qui reste après un pincement fait glisser la carte dès qu'il bouge, sans à-coup.
+    const [reste] = poses.values();
+    glissement = reste ? { depart: reste, seuil: 0, glisse: true } : null;
   };
   // US-0422 : une flèche fait avancer la carte d'un pas ; la page, elle, ne défile pas.
   const appuyer = (e: KeyboardEvent) => {
@@ -72,25 +102,22 @@ export function suivreLesGestes(element: HTMLElement, commandes: Commandes): () 
     e.preventDefault();
     commandes.avancer(...sens);
   };
-  // US-0423 : un point de la page, repéré depuis le coin en haut à gauche de la carte.
-  const surLaCarte = (e: { clientX: number; clientY: number }) => {
-    const { left, top } = element.getBoundingClientRect();
-    return [e.clientX - left, e.clientY - top] as const;
-  };
   // US-0423 : la molette, ou le geste de zoom du pavé tactile (une molette avec Ctrl), zoome autour du pointeur,
   // d'autant plus qu'elle tourne ; ni la page ni son zoom ne bougent.
   const tourner = (e: WheelEvent) => {
     e.preventDefault();
     const pixels = e.deltaMode === WheelEvent.DOM_DELTA_PIXEL ? e.deltaY : e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * PIXELS_PAR_LIGNE : e.deltaY * element.clientHeight;
-    commandes.zoomer(2 ** (-pixels / MOLETTE_PIXELS_PAR_DOUBLEMENT[e.ctrlKey ? "pave" : "molette"]), ...surLaCarte(e));
+    commandes.zoomer(2 ** (-pixels / MOLETTE_PIXELS_PAR_DOUBLEMENT[e.ctrlKey ? "pave" : "molette"]), ...surLaCarte({ x: e.clientX, y: e.clientY }));
   };
-  // US-0423 : sous Safari, le pincement du pavé tactile, son échelle comptée depuis le début du geste.
+  // US-0423 : sous Safari, le pincement du pavé tactile, son échelle comptée depuis le début du geste. US-0424 :
+  // Safari annonce aussi ainsi le pincement à deux doigts sur l'écran, déjà suivi par ses doigts posés : le zoom du
+  // navigateur est empêché, sans zoomer deux fois.
   let echelle = 1;
   const pincerSousSafari = (e: GesteSafari) => {
     e.preventDefault();
     if (e.type === "gesturestart") echelle = 1;
-    if (e.type !== "gesturechange") return;
-    commandes.zoomer(e.scale / echelle, ...surLaCarte(e));
+    if (e.type !== "gesturechange" || poses.size > 0) return;
+    commandes.zoomer(e.scale / echelle, ...surLaCarte({ x: e.clientX, y: e.clientY }));
     echelle = e.scale;
   };
 

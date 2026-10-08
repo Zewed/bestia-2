@@ -248,6 +248,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0424 · Zoomer en pinçant
 **En tant que** joueur, **je veux** zoomer en pinçant l'écran, **afin de** naviguer sur mon téléphone comme sur n'importe quelle carte.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Pincer à deux doigts zoome autour du point situé entre eux et le suit ; le zoom du navigateur ne se déclenche pas sur la carte ; le doigt qui reste continue de glisser sans à-coup ; mêmes limites qu'à la molette. Vérifié en vrai (pincement simulé).
 - **Débloquée par** : US-0421, US-0423
 - **Critères d'acceptation** :
   - Pincer à deux doigts zoome autour du point situé entre les deux doigts.

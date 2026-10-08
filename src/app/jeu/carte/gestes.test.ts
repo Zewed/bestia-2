@@ -139,6 +139,11 @@ describe("la carte au clavier (US-0422)", () => {
   });
 });
 
+/** Les zooms demandés à la carte : le facteur, et le point autour duquel zoomer, en pixels depuis son coin. */
+const zooms = () => commandes.zoomer.mock.calls.map(([facteur, x, y]) => [Number(facteur.toFixed(6)), x, y]);
+/** Un geste Safari sur la carte, à l'échelle `scale` depuis son début ; rend si le navigateur garde son effet ordinaire. */
+const geste = (type: string, scale: number) => carte.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), { scale, clientX: 410, clientY: 364 }));
+
 describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
   beforeEach(() => {
     // La carte sous la barre du haut : les pointeurs sont repérés depuis son coin en haut à gauche.
@@ -146,7 +151,6 @@ describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
   });
   /** Un tour de molette sur la carte, en (x, y) dans la page ; rend si le navigateur garde son effet ordinaire. */
   const molette = (x: number, y: number, en: WheelEventInit) => carte.dispatchEvent(new WheelEvent("wheel", { clientX: x, clientY: y, bubbles: true, cancelable: true, ...en }));
-  const zooms = () => commandes.zoomer.mock.calls.map(([facteur, x, y]) => [Number(facteur.toFixed(6)), x, y]);
 
   it("rapproche en tournant la molette vers l'avant, éloigne vers l'arrière, autour du pointeur, d'autant plus qu'elle tourne", () => {
     molette(210, 164, { deltaY: -100 });
@@ -183,12 +187,65 @@ describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
   });
 
   it("suit aussi le pincement du pavé tactile sous Safari, qui l'annonce à sa façon, sans zoomer la page", () => {
-    /** Un geste Safari sur la carte, à l'échelle `scale` depuis son début ; rend si le navigateur garde son effet ordinaire. */
-    const geste = (type: string, scale: number) => carte.dispatchEvent(Object.assign(new Event(type, { bubbles: true, cancelable: true }), { scale, clientX: 410, clientY: 364 }));
     expect([geste("gesturestart", 1), geste("gesturechange", 1.2), geste("gesturechange", 1.5), geste("gestureend", 1.5)]).toEqual([false, false, false, false]);
     expect(zooms()).toEqual([
       [1.2, 400, 300],
       [1.25, 400, 300],
     ]);
+  });
+});
+
+describe("zoomer en pinçant (US-0424)", () => {
+  beforeEach(() => {
+    carte.getBoundingClientRect = () => ({ left: 10, top: 64, width: 800, height: 600 }) as DOMRect;
+  });
+  const doigt = (pointerId: number) => ({ pointerType: "touch", pointerId });
+
+  it("zoome autour du point entre les deux doigts, d'autant qu'ils s'écartent ou se rapprochent, et le suit", () => {
+    pointeur("pointerdown", 100, 300, doigt(1));
+    pointeur("pointerdown", 300, 300, doigt(2));
+    // Le second doigt s'écarte : de 200 à 300 pixels entre eux, leur milieu passe de (200, 300) à (250, 300).
+    pointeur("pointermove", 400, 300, doigt(2));
+    expect(zooms()).toEqual([[1.5, 190, 236]]);
+    expect(deplacements()).toEqual([[50, 0]]);
+    // Le premier se rapproche : de 300 à 150 pixels, leur milieu passe à (325, 300).
+    pointeur("pointermove", 250, 300, doigt(1));
+    expect(zooms()).toEqual([
+      [1.5, 190, 236],
+      [0.5, 240, 236],
+    ]);
+    expect(deplacements()).toEqual([
+      [50, 0],
+      [75, 0],
+    ]);
+  });
+
+  it("ne prend pas le pincement pour un glissement du premier doigt, et laisse le doigt qui reste glisser sans à-coup", () => {
+    pointeur("pointerdown", 100, 300, doigt(1));
+    pointeur("pointermove", 103, 302, doigt(1));
+    pointeur("pointerdown", 300, 300, doigt(2));
+    expect(deplacements()).toEqual([]);
+    pointeur("pointermove", 103, 340, doigt(1));
+    pointeur("pointerup", 103, 340, doigt(1));
+    commandes.deplacer.mockClear();
+    // Le second doigt, seul, déplace la carte dès qu'il bouge, depuis là où il est.
+    pointeur("pointermove", 302, 300, doigt(2));
+    expect(deplacements()).toEqual([[2, 0]]);
+  });
+
+  it("ne tient compte que de deux doigts", () => {
+    pointeur("pointerdown", 100, 300, doigt(1));
+    pointeur("pointerdown", 300, 300, doigt(2));
+    pointeur("pointerdown", 500, 500, doigt(3));
+    pointeur("pointermove", 600, 600, doigt(3));
+    expect(zooms()).toEqual([]);
+    expect(deplacements()).toEqual([]);
+  });
+
+  it("empêche le zoom du navigateur pendant le pincement, sans zoomer deux fois sous Safari, qui l'annonce aussi à sa façon", () => {
+    pointeur("pointerdown", 100, 300, doigt(1));
+    pointeur("pointerdown", 300, 300, doigt(2));
+    expect([geste("gesturestart", 1), geste("gesturechange", 1.5), geste("gestureend", 1.5)]).toEqual([false, false, false]);
+    expect(zooms()).toEqual([]);
   });
 });
