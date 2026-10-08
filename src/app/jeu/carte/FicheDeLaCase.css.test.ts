@@ -20,6 +20,26 @@ describe("la fiche d'une Case à l'écran (US-0428)", () => {
   });
 });
 
+describe("la fiche d'une Case sur mobile (US-0431)", () => {
+  const mobile = CSS.match(/@media \(max-width: 820px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+
+  it("s'ouvre comme la légende dans un panneau en bas, au-dessus des onglets, sur moins de la moitié de la carte", () => {
+    const fiche = regle(".fiche", mobile);
+    expect(fiche).toMatch(/position: fixed;[^}]*top: auto;[^}]*right: 0;[^}]*bottom: calc\(var\(--hauteur-onglets\) \+ var\(--bord-bas\)\);[^}]*left: 0;/);
+    expect(fiche).toMatch(/width: auto;[^}]*max-width: none;[^}]*max-height: calc\(0\.45 \* var\(--hauteur-utile\)\);/);
+    expect(fiche).toContain("border-radius: var(--arrondi) var(--arrondi) 0 0;");
+    // Elle se prend au doigt pour la faire glisser : ni la page ne défile, ni le texte ne se sélectionne.
+    expect(fiche).toMatch(/touch-action: none;[^}]*user-select: none;/);
+  });
+
+  it("montre une poignée sur mobile seulement, et revient en douceur, sauf mouvement réduit", () => {
+    expect(regle(".poignee")).toContain("display: none;");
+    expect(regle(".poignee", mobile)).toContain("display: block;");
+    expect(regle(".fiche", mobile)).toContain("transition: transform");
+    expect(CSS).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[^@]*\.fiche \{[^}]*transition: none;/);
+  });
+});
+
 describe("fermer la fiche d'une Case (US-0430)", () => {
   it("a une croix de 44 px, en haut à droite de la fiche, qui se voit au clavier", () => {
     const croix = regle(".fermer");

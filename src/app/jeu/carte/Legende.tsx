@@ -35,6 +35,12 @@ function retenirLaLegende(ouverte: boolean): void {
 const MOBILE = "(max-width: 820px)";
 
 /**
+ * US-0431 : ce que la légende dit à la page quand elle se montre : sur mobile, un seul panneau en bas de la carte à
+ * la fois, et la fiche d'une Case ouverte là se ferme (FicheDeLaCase).
+ */
+export const LEGENDE_MONTREE = "bestia:legende-montree";
+
+/**
  * US-0426 : publie sur la page (--hauteur-legende) la hauteur du panneau ouvert en bas de la carte, sur mobile : les
  * boutons de la carte et la flèche du Foyer restent au-dessus. Rien quand il est fermé, ni sur ordinateur.
  */
@@ -123,7 +129,8 @@ function Groupe({ titre, uneColonne = false, children }: { titre: string; uneCol
  * autres chefs ; US-0433 : et les liserés des limites de la Couronne et du Cœur sauvage. Un geste l'ouvre, un autre
  * la ferme ; l'appareil retient si elle était ouverte. Sur ordinateur, un
  * panneau flottant sous le bouton ; sur mobile, un panneau en bas, au-dessus des onglets, qui laisse voir la carte.
- * US-0426 : elle se déclare posée sur la carte, et publie la hauteur de son panneau ouvert en bas.
+ * US-0426 : elle se déclare posée sur la carte, et publie la hauteur de son panneau ouvert en bas. US-0431 : sur
+ * mobile, elle cède sa place en bas à la fiche d'une Case, et la reprend dès qu'on touche son bouton.
  */
 export function Legende({ terre, eaux }: { terre: TeinteNommee[]; eaux: TeinteNommee[] }) {
   const [ouverte, setOuverte] = useState(false);
@@ -150,7 +157,12 @@ export function Legende({ terre, eaux }: { terre: TeinteNommee[]; eaux: TeinteNo
     };
   }, []);
 
+  // US-0431 : sur mobile, la fiche d'une Case ouverte masque le panneau (page.module.css) : le bouton ferme alors la
+  // fiche et montre la légende, sans la refermer ; elle le dit à chaque fois qu'elle se montre.
   const basculer = () => {
+    const masquee = ouverte && getComputedStyle(refPanneau.current!).display === "none";
+    if (!ouverte || masquee) document.dispatchEvent(new Event(LEGENDE_MONTREE));
+    if (masquee) return;
     setOuverte(!ouverte);
     retenirLaLegende(!ouverte);
   };

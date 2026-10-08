@@ -239,3 +239,8 @@ export const ABORDS_DU_FOYER_CASES = 4;
  * US-0421), qui n'en ouvre pas (valeurs provisoires, à régler en jouant).
  */
 export const CARTE_TOUCHER_PIXELS = { souris: 4, doigt: 8 };
+/**
+ * US-0431 : sur mobile, la fiche d'une Case qu'on fait glisser vers le bas de plus de 60 pixels se ferme ; en deçà,
+ * elle revient (valeur provisoire, à régler en jouant).
+ */
+export const CARTE_FICHE_FERMETURE_PIXELS = 60;

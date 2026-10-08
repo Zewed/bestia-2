@@ -34,6 +34,16 @@
   outline-offset: -2px;
 }
 
+/*
+ * US-0431 : sur mobile, un seul panneau en bas de l'écran à la fois : tant que la fiche d'une Case est ouverte, le
+ * panneau de la légende (celui que son bouton commande, juste après lui) s'efface ; la légende reste ouverte ou fermée.
+ */
+@media (max-width: 820px) {
+  .page:has([data-fiche-de-la-case]) [aria-controls] + [id] {
+    display: none;
+  }
+}
+
 /* Un texte pour les lecteurs d'écran seulement. */
 .annonce {
   position: absolute;

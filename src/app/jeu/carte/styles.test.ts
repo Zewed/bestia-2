@@ -76,4 +76,10 @@ describe("les styles de la carte du Monde", () => {
     expect(regle(".fleche path", fleche)).toContain("stroke: var(--encre);");
     expect(Number(regle(".fleche svg", fleche).match(/width: (\d+)px;/)?.[1])).toBeLessThanOrEqual(28);
   });
+
+  it("ne montrent sur mobile qu'un panneau en bas à la fois : la fiche d'une Case ouverte masque celui de la légende (US-0431)", () => {
+    const mobile = css.match(/@media \(max-width: 820px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    // Le panneau de la légende, celui que son bouton commande, juste après lui ; la légende reste ouverte ou fermée.
+    expect(regle(".page:has([data-fiche-de-la-case]) [aria-controls] + [id]", mobile)).toContain("display: none;");
+  });
 });

@@ -360,4 +360,17 @@ describe("montrer la Case choisie hors de sa fiche (US-0428)", () => {
     // Une fiche qui couvre toute la carte : rien à faire.
     expect(devoiler(AU_MILIEU, { q: 0, r: 0 }, { x: 0, y: 0, largeur: 800, hauteur: 600 }, 62)).toBe(AU_MILIEU);
   });
+
+  it("sur mobile, sous la fiche en bas de l'écran, fait remonter la carte juste assez (US-0431)", () => {
+    // Un téléphone de 390 pixels de large, la carte de 600 de haut, la fiche sur ses 250 pixels du bas.
+    const telephone = { ...AU_MILIEU, largeur: 390, hauteur: 600 };
+    const enBas = { x: 0, y: 350, largeur: 390, hauteur: 250 };
+    const basse = caseSous(MONDE, telephone, 200, 500)!;
+    const montree = devoiler(telephone, basse, enBas, 62);
+    expect(sous(basse, montree, enBas)).toBe(false);
+    expect(aLEcran(basse, montree).x).toBeCloseTo(aLEcran(basse, telephone).x, 9);
+    expect(boite(basse, montree).bas).toBeCloseTo(enBas.y - 12, 9);
+    // Au-dessus d'elle, rien ne bouge.
+    expect(devoiler(telephone, caseSous(MONDE, telephone, 200, 200)!, enBas, 62)).toBe(telephone);
+  });
 });

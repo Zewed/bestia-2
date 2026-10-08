@@ -318,6 +318,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0431 · Lire la fiche d'une Case sur mobile
 **En tant que** joueur, **je veux** que la fiche d'une Case s'ouvre en bas de l'écran sur mon téléphone, **afin de** garder la carte sous les yeux.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Sur mobile, la fiche s'ouvre dans un panneau en bas, au-dessus des onglets, à la place de la légende. Si la Case tombait dessous, la carte glisse pour qu'on la voie. Glisser le panneau vers le bas au-delà de 60 px le ferme, sinon il revient. Les boutons de la carte et la flèche du Foyer restent au-dessus du panneau, et la carte se manie au-dessus. Toucher « Légende » ferme la fiche et montre la légende. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0428
 - **Critères d'acceptation** :
   - Sur mobile, la fiche s'ouvre dans un panneau en bas de l'écran, sans cacher la Case choisie.

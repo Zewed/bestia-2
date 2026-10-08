@@ -5,7 +5,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Coordonnees } from "@/monde/hex";
 import type { Fiche } from "@/monde/fiche";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
+import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
 import { type Choix, FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
+import { LEGENDE_MONTREE } from "./Legende";
 
 /** Les fiches demandées au serveur : chacune attend qu'on lui réponde, ou qu'on échoue. */
 let demandes: { q: number; r: number; repondre: (fiche: Fiche | null) => void; echouer: () => void }[] = [];
@@ -261,5 +263,87 @@ describe("fermer la fiche d'une Case (US-0430)", () => {
     act(() => croix().click());
     await repondre(FORET, 2);
     expect(fiche()).toBeNull();
+  });
+});
+
+describe("lire la fiche d'une Case sur mobile (US-0431)", () => {
+  beforeEach(() => {
+    // jsdom ne sait pas capturer un pointeur : la fiche peut le lui demander, sans effet.
+    HTMLElement.prototype.setPointerCapture = () => {};
+    vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({ left: 0, top: 420, width: 390, height: 180 } as DOMRect);
+  });
+  afterEach(() => document.documentElement.style.removeProperty("--hauteur-fiche"));
+  /** La fiche ouverte sur un téléphone : la feuille de style la pose en bas de l'écran, en position fixe. */
+  const ouvrirEnBas = async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre(FORET);
+    fiche()!.style.position = "fixed";
+    act(() => suivi!.annoncer());
+  };
+  /** Un pointeur qui se pose, bouge ou se lève sur la fiche, à la hauteur y : le doigt par défaut. */
+  const pointeur = (type: "pointerdown" | "pointermove" | "pointerup" | "pointercancel", y: number, cible: Element = fiche()!) =>
+    act(() => void cible.dispatchEvent(new PointerEvent(type, { clientX: 200, clientY: y, pointerId: 3, pointerType: "touch", button: type === "pointermove" ? -1 : 0, bubbles: true })));
+  const hauteurPubliee = () => document.documentElement.style.getPropertyValue("--hauteur-fiche");
+
+  it("dit sa hauteur aux boutons de la carte tant qu'elle est ouverte en bas de l'écran, et plus du tout une fois fermée", async () => {
+    await ouvrirEnBas();
+    expect(hauteurPubliee()).toBe("180px");
+    act(() => screen.getByRole("button", { name: "Fermer la fiche" }).click());
+    expect(hauteurPubliee()).toBe("");
+  });
+
+  it("ne la dit pas sur ordinateur, où elle flotte en haut à gauche", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre(FORET);
+    act(() => suivi!.annoncer());
+    expect(hauteurPubliee()).toBe("");
+  });
+
+  it("se ferme quand on la fait glisser vers le bas au-delà du seuil ; en deçà, elle revient", async () => {
+    await ouvrirEnBas();
+    pointeur("pointerdown", 450);
+    pointeur("pointermove", 450 + CARTE_FICHE_FERMETURE_PIXELS - 10);
+    // Elle suit le doigt, vers le bas seulement.
+    expect(fiche()!.style.transform).toBe(`translateY(${CARTE_FICHE_FERMETURE_PIXELS - 10}px)`);
+    pointeur("pointerup", 450 + CARTE_FICHE_FERMETURE_PIXELS - 10);
+    expect(fiche()).not.toBeNull();
+    expect(fiche()!.style.transform).toBe("");
+    pointeur("pointerdown", 450);
+    pointeur("pointermove", 300);
+    expect(fiche()!.style.transform).toBe("translateY(0px)");
+    pointeur("pointermove", 450 + CARTE_FICHE_FERMETURE_PIXELS + 10);
+    pointeur("pointerup", 450 + CARTE_FICHE_FERMETURE_PIXELS + 10);
+    expect(fiche()).toBeNull();
+  });
+
+  it("se ferme quand la légende se montre en bas de l'écran : un seul panneau à la fois ; pas sur ordinateur", async () => {
+    const legendeMontree = () => act(() => void document.dispatchEvent(new Event(LEGENDE_MONTREE)));
+    await ouvrirEnBas();
+    fiche()!.style.position = "";
+    legendeMontree();
+    expect(fiche()).not.toBeNull();
+    fiche()!.style.position = "fixed";
+    legendeMontree();
+    expect(fiche()).toBeNull();
+    expect(hauteurPubliee()).toBe("");
+  });
+
+  it("revient quand le navigateur interrompt le geste ; sa croix et l'ordinateur ne la font pas glisser", async () => {
+    await ouvrirEnBas();
+    pointeur("pointerdown", 450);
+    pointeur("pointermove", 450 + CARTE_FICHE_FERMETURE_PIXELS + 10);
+    pointeur("pointercancel", 450 + CARTE_FICHE_FERMETURE_PIXELS + 10);
+    expect(fiche()).not.toBeNull();
+    expect(fiche()!.style.transform).toBe("");
+    pointeur("pointerdown", 450, screen.getByRole("button", { name: "Fermer la fiche" }));
+    pointeur("pointermove", 600);
+    expect(fiche()!.style.transform).toBe("");
+    pointeur("pointerup", 600);
+    fiche()!.style.position = "";
+    pointeur("pointerdown", 450);
+    pointeur("pointermove", 600);
+    expect(fiche()!.style.transform).toBe("");
   });
 });

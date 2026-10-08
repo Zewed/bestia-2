@@ -1,12 +1,14 @@
 "use client";
 
-import { type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { type PointerEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import type { Fiche } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
+import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
 import { ficheDeLaCase } from "./actions";
 import type { Cadre } from "./dessin";
 import styles from "./FicheDeLaCase.module.css";
+import { LEGENDE_MONTREE } from "./Legende";
 
 /** US-0429 : où est la Case dans le Monde, selon sa zone. */
 const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne", [ZONE_COEUR]: "Cœur sauvage", 0: "Entre la Couronne et le Cœur sauvage" };
@@ -51,6 +53,11 @@ function surLaCarte(element: Element, carte: Element | null): Cadre {
   return { x: ici.left - origine.left, y: ici.top - origine.top, largeur: ici.width, hauteur: ici.height };
 }
 
+/** US-0431 : si la fiche est en bas de l'écran, comme sur mobile, où la feuille de style la pose en position fixe. */
+function enBas(element: Element): boolean {
+  return getComputedStyle(element).position === "fixed";
+}
+
 /** US-0430 : ferme la fiche, et rend la main à la carte. */
 function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElement | null>) {
   fermer();
@@ -65,7 +72,10 @@ function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElemen
  * d'elle (`montrer`). Vide en attendant le serveur ; les lecteurs d'écran l'entendent une fois remplie. Elle se
  * déclare posée sur la carte : la flèche du Foyer la contourne. US-0430 : elle se ferme (`fermer`) par sa croix, ou
  * par Échap, le regard sur la carte, ses boutons ou la fiche (ailleurs, Échap revient à ce qui l'a, comme le menu du
- * chef) ; la main revient alors à la carte.
+ * chef) ; la main revient alors à la carte. US-0431 : sur mobile, un panneau en bas de l'écran, comme celui de la
+ * légende, qu'on ferme en le faisant glisser vers le bas au-delà de CARTE_FICHE_FERMETURE_PIXELS (en deçà, il
+ * revient) ; tant qu'il est ouvert, il publie sa hauteur dans --hauteur-fiche, sur la racine de la page, pour les
+ * boutons de la carte et la flèche du Foyer. Un seul panneau en bas à la fois : la légende qui s'y montre la ferme.
  */
 export function FicheDeLaCase({
   choix,
@@ -89,23 +99,71 @@ export function FicheDeLaCase({
     document.addEventListener("keydown", echap);
     return () => document.removeEventListener("keydown", echap);
   }, [carte, fermer]);
+  // US-0431 : un seul panneau en bas de l'écran à la fois : la légende qui s'y montre ferme la fiche.
+  useEffect(() => {
+    const ceder = () => {
+      if (panneau.current && enBas(panneau.current)) fermer();
+    };
+    document.addEventListener(LEGENDE_MONTREE, ceder);
+    return () => document.removeEventListener(LEGENDE_MONTREE, ceder);
+  }, [fermer]);
   const laCase = choix.case;
   // La Case montrée, pour le suivi de taille : la dernière choisie.
   const montree = useRef(laCase);
   useEffect(() => {
     const element = panneau.current!;
-    const suivi = new ResizeObserver(() => montrer(montree.current, surLaCarte(element, carte.current)));
+    const racine = document.documentElement.style;
+    const suivi = new ResizeObserver(() => {
+      // US-0431 : en bas de l'écran, elle dit sa hauteur aux boutons de la carte, qui restent au-dessus d'elle.
+      if (enBas(element)) racine.setProperty("--hauteur-fiche", `${element.getBoundingClientRect().height}px`);
+      else racine.removeProperty("--hauteur-fiche");
+      montrer(montree.current, surLaCarte(element, carte.current));
+    });
     suivi.observe(element);
-    return () => suivi.disconnect();
+    return () => {
+      suivi.disconnect();
+      racine.removeProperty("--hauteur-fiche");
+    };
   }, [carte, montrer]);
   useEffect(() => {
     montree.current = laCase;
     montrer(laCase, surLaCarte(panneau.current!, carte.current));
   }, [laCase, carte, montrer]);
 
+  // US-0431 : la fiche tirée vers le bas, en bas de l'écran : par quel pointeur, d'où, et de combien de pixels.
+  const [tirage, setTirage] = useState<{ pointeur: number; depart: number; descente: number } | null>(null);
+  const poser = (evenement: PointerEvent<HTMLElement>) => {
+    if (evenement.button !== 0 || (evenement.target as Element).closest("button") || !enBas(evenement.currentTarget)) return;
+    evenement.currentTarget.setPointerCapture(evenement.pointerId);
+    setTirage({ pointeur: evenement.pointerId, depart: evenement.clientY, descente: 0 });
+  };
+  const tirer = (evenement: PointerEvent<HTMLElement>) => {
+    if (tirage?.pointeur === evenement.pointerId) setTirage({ ...tirage, descente: Math.max(0, evenement.clientY - tirage.depart) });
+  };
+  const lacher = (evenement: PointerEvent<HTMLElement>) => {
+    if (tirage?.pointeur !== evenement.pointerId) return;
+    setTirage(null);
+    if (evenement.type === "pointerup" && evenement.clientY - tirage.depart > CARTE_FICHE_FERMETURE_PIXELS) fermer();
+  };
+
   const { fiche, echec } = choix;
   return (
-    <section ref={panneau} className={styles.fiche} aria-label="Fiche de la Case" aria-live="polite" aria-busy={!fiche && !echec} data-sur-la-carte="">
+    <section
+      ref={panneau}
+      className={styles.fiche}
+      aria-label="Fiche de la Case"
+      aria-live="polite"
+      aria-busy={!fiche && !echec}
+      // US-0431 : la légende s'efface sur mobile tant qu'elle est ouverte. US-0428 : la flèche vers le Foyer l'évite.
+      data-fiche-de-la-case=""
+      data-sur-la-carte=""
+      style={tirage ? { transform: `translateY(${tirage.descente}px)`, transition: "none" } : undefined}
+      onPointerDown={poser}
+      onPointerMove={tirer}
+      onPointerUp={lacher}
+      onPointerCancel={lacher}
+    >
+      <div className={styles.poignee} aria-hidden="true" />
       <button type="button" className={styles.fermer} aria-label="Fermer la fiche" onClick={() => fermerVersLaCarte(fermer, carte)}>
         <svg viewBox="0 0 12 12" aria-hidden="true">
           <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" />

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { couleur } from "@/monde/couleurs-de-la-carte";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { dessinerLaCarte, enSvg, MOTIFS, vueSurLeFoyer } from "./dessin";
-import { Legende } from "./Legende";
+import { Legende, LEGENDE_MONTREE } from "./Legende";
 
 /** Les Biomes de terre et les quatre eaux, dans leur ordre, avec leur nom affiché, comme la page les lit en base. */
 const TERRE = [
@@ -244,5 +244,35 @@ describe("la légende ouverte en bas de la carte sur mobile (US-0426)", () => {
   it("se déclare posée sur la carte : la flèche du Foyer ne passe pas dessous", () => {
     render(<Legende terre={TERRE} eaux={EAUX} />);
     expect(bouton().parentElement!.hasAttribute("data-sur-la-carte")).toBe(true);
+  });
+});
+
+describe("un seul panneau en bas de la carte à la fois, sur mobile (US-0431)", () => {
+  it("dit à la page qu'elle se montre quand on l'ouvre, pour fermer la fiche d'une Case ouverte en bas", async () => {
+    const montree = vi.fn();
+    document.addEventListener(LEGENDE_MONTREE, montree);
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    expect(montree).toHaveBeenCalledTimes(1);
+    // Visible, elle se referme d'un geste, sans rien dire.
+    await userEvent.click(bouton());
+    expect(bouton().getAttribute("aria-expanded")).toBe("false");
+    expect(montree).toHaveBeenCalledTimes(1);
+    document.removeEventListener(LEGENDE_MONTREE, montree);
+  });
+
+  it("masquée par la fiche d'une Case, se montre au lieu de se refermer : elle reste ouverte, et l'appareil le retient", async () => {
+    const montree = vi.fn();
+    document.addEventListener(LEGENDE_MONTREE, montree);
+    render(<Legende terre={TERRE} eaux={EAUX} />);
+    await userEvent.click(bouton());
+    // La fiche d'une Case ouverte en bas de l'écran masque son panneau, comme le fait page.module.css.
+    panneau().style.display = "none";
+    await userEvent.click(bouton());
+    expect(montree).toHaveBeenCalledTimes(2);
+    expect(bouton().getAttribute("aria-expanded")).toBe("true");
+    expect(panneau().hidden).toBe(false);
+    expect(localStorage.getItem(CLE)).toBe("ouverte");
+    document.removeEventListener(LEGENDE_MONTREE, montree);
   });
 });
