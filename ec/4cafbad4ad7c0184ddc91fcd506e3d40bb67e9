@@ -4,24 +4,64 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_c03f6d920ea7fe 7
 src/app/jeu/carte/CarteDuJeu.test.tsx
   s_97a431cfa65ca7::t_8f62e1223a8381 115
+  s_97a431cfa65ca7::t_34c6a4f43e4c88 115
 src/app/jeu/carte/Legende.module.css
   s_97a431cfa65ca7::t_50036eba74208e 78-86,94-97,100-101
+  s_97a431cfa65ca7::t_04d46a01761c1a 78,81-84
+  s_97a431cfa65ca7::t_2197ad169df341 79-80,85-86,94-97,100-101
 src/app/jeu/carte/Legende.test.tsx
   s_97a431cfa65ca7::t_8f81532ae5c585 6,41-46,48,76-78,102-124
+  s_97a431cfa65ca7::t_ccfcf35182b3e1 43-44,48
+  s_97a431cfa65ca7::t_2020a67ec2228a 102-108,113-124
+  s_97a431cfa65ca7::t_dcb97eb08eb4bf 109-112
+  s_97a431cfa65ca7::t_213540aa24ac87 41-42,45-46
+  s_97a431cfa65ca7::t_24a59cae40d75f 76-78
+  s_97a431cfa65ca7::t_b22762710474ca 6
 src/app/jeu/carte/Legende.tsx
   s_97a431cfa65ca7::t_b9aebe85920ed0 3,6-7,46-70,73-75,77-80,82-89,91,97-98,102,110-111,151,161-168
+  s_97a431cfa65ca7::t_c1c3135782ac56 82-89
+  s_97a431cfa65ca7::t_8797d1065c711a 3,6-7
+  s_97a431cfa65ca7::t_015161348751fc 46-47
+  s_97a431cfa65ca7::t_64fa7e8f70a796 48-51,59-65,69,97-98,102
+  s_97a431cfa65ca7::t_730bbbd2f3a70d 110-111
+  s_97a431cfa65ca7::t_acea9264c5492f 151,161-168
+  s_97a431cfa65ca7::t_5a6209181db9aa 70,73-75,77-78,80,91
+  s_97a431cfa65ca7::t_d836ab0059e97b 53-58,66-68
+  s_97a431cfa65ca7::t_ba5e66c8625a01 79
+  s_97a431cfa65ca7::t_a7de826057b771 52
 src/app/jeu/carte/dessin.test.ts
   s_97a431cfa65ca7::t_b497cafb8470ca 5-6,10-14,18-19,27-30,32-37,45-47,56-57,62-66,70,376-481
+  s_97a431cfa65ca7::t_5083f7c58bf4d1 10-14,18-19,27-30,32-37,45-47,56-57,62-66,70
+  s_97a431cfa65ca7::t_2eb699d64babbe 444-445
+  s_97a431cfa65ca7::t_d08700fda6110b 376-443,446-481
+  s_97a431cfa65ca7::t_0e896750073253 5-6
 src/app/jeu/carte/dessin.ts
   s_97a431cfa65ca7::t_29089902c47d2e 2-3,22-24,48-49,51-56,311-381,386,427,451-452,454-464,490-492,495-505,517-519,521-525
+  s_97a431cfa65ca7::t_21829fbf2b1eba 490-492,495-505
+  s_97a431cfa65ca7::t_fb14853c821b55 427
+  s_97a431cfa65ca7::t_3a3f2bb2fb91cc 48-49,51-56
+  s_97a431cfa65ca7::t_ad55e420f775fd 517-519,521-525
+  s_97a431cfa65ca7::t_b77131b2426f90 386
+  s_97a431cfa65ca7::t_a09960fa190828 451-452,454-464
+  s_97a431cfa65ca7::t_db8dfaf9f03808 2-3
+  s_97a431cfa65ca7::t_f376569720ad16 22-24
+  s_97a431cfa65ca7::t_503f5397e0883c 311-381
 src/app/jeu/carte/page.test.tsx
   s_97a431cfa65ca7::t_34bec2d79ad2b8 52
+  s_97a431cfa65ca7::t_0bf6d68891785d 52
 src/monde/carte.db.test.ts
   s_97a431cfa65ca7::t_2c7934724e680b 8,77-86,115-116
+  s_97a431cfa65ca7::t_7a188cc2e689a8 115-116
+  s_97a431cfa65ca7::t_9cffb5be5e81e0 8
+  s_97a431cfa65ca7::t_37c5bef4bb78be 77-86
 src/monde/carte.ts
   s_97a431cfa65ca7::t_b04b7fdb613770 5,11-12,19,27-28,31,35-36,45,48
+  s_97a431cfa65ca7::t_e23890756679b5 27-28,31,35-36,45,48
+  s_97a431cfa65ca7::t_9f4dd392bcbd4f 11-12,19
+  s_97a431cfa65ca7::t_df81d87bb691de 5
 src/monde/zones.ts
   s_97a431cfa65ca7::t_6783f35c0dc381 1-5
+  s_97a431cfa65ca7::t_ad905fdcee21a5 1-5
 ---
 {
   "schema_version": "authorship/3.0.0",
