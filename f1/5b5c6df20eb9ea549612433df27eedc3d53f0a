@@ -1,0 +1,45 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 195-200
+  s_97a431cfa65ca7::t_c051e6ea41f825 201
+src/monde/production.ts
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 5,65-66,98-103,144
+src/monde/famine-imminente.db.test.ts
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 5,14,160-213
+  s_97a431cfa65ca7::t_923ccbd58b3a0c 214
+src/components/FamineImminente.tsx
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 5-12,33-38,43-46,66
+src/components/FamineImminente.test.tsx
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 131-163
+src/components/ActionsDuJeu.tsx
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 35
+src/monde/nourriture.test.ts
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 2,7,223-240
+  s_97a431cfa65ca7::t_40126f55d84b8c 241
+src/components/ActionsDuJeu.test.tsx
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 327-349
+src/monde/nourriture.ts
+  s_97a431cfa65ca7::t_9ccd5a1136cc15 2,90-97
+  s_97a431cfa65ca7::t_acf9f40c115541 98-99
+docs/stories/03-les-habitants.md
+  s_97a431cfa65ca7::t_ab73f08ddcc9e8 251,255-256
+docs/stories/README.md
+  s_97a431cfa65ca7::t_63b9ba00c7d381 7,16,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_6f6aaeb489d8f8 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f15b5c6df20eb9ea549612433df27eedc3d53f0a",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
