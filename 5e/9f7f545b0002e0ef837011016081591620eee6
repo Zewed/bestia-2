@@ -1,0 +1,39 @@
+src/monde/brouillard.db.test.ts
+  s_97a431cfa65ca7::t_d6c6f1d24aeb8a 73,99,167,170,264-265
+  s_97a431cfa65ca7::t_56af78cb74bae5 405-407
+  s_97a431cfa65ca7::t_0a1ac29a912690 29-31
+  s_97a431cfa65ca7::t_84d2683b4210d2 393,396-404,408,410
+  s_97a431cfa65ca7::t_0eee1a9f9a41bd 10,15,17
+  s_97a431cfa65ca7::t_31123348ed7a81 168,171,273,279-280,315,320,322,326
+  s_97a431cfa65ca7::t_cf7762ce2a764d 295,297-314,316-319,321,323-325,327-331,336,338-339,341-392,394-395,409,411-447
+  s_97a431cfa65ca7::t_317b08538fb6d7 9
+  s_97a431cfa65ca7::t_74aeda92419623 332-333
+  s_97a431cfa65ca7::t_136e292cbcae69 288,293-294
+  s_97a431cfa65ca7::t_ec5ab1879f1dfa 334-335,337,340
+  s_97a431cfa65ca7::t_bfba61db1d210e 296
+src/monde/brouillard.ts
+  s_97a431cfa65ca7::t_8fb27454892587 43-46
+  s_97a431cfa65ca7::t_f8acdb70056df5 54-58,61-62,64-66,70
+  s_97a431cfa65ca7::t_e4bf2a09062080 53
+src/monde/brouillard.test.ts
+  s_97a431cfa65ca7::t_c8a37d5f895ba8 1-2,8-28
+  s_97a431cfa65ca7::t_33242fd9c65143 29
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_f50d39ac14a80f 245
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5e9f7f545b0002e0ef837011016081591620eee6",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
