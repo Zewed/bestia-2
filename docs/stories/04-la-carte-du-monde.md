@@ -258,6 +258,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0425 · Zoomer avec des boutons
 **En tant que** joueur, **je veux** des boutons pour zoomer, **afin de** pouvoir zoomer même sans molette ni pincement.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Deux boutons « + » et « − » de 44 px, en bas à droite de la carte (au-dessus des onglets sur mobile), zooment d'un cran (×1,5) autour du milieu de l'écran et se grisent quand leur limite est atteinte, y compris à la molette. Vérifié en vrai.
 - **Débloquée par** : US-0423
 - **Critères d'acceptation** :
   - Deux boutons « + » et « − » restent visibles sur la carte, à portée de pouce sur mobile.

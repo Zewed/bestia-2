@@ -82,6 +82,16 @@ function dansLesBornes(rayon: number, largeur: number, hauteur: number): number 
 }
 
 /**
+ * US-0425 : si l'on peut encore rapprocher la carte, ou l'éloigner, ou si le zoom est à sa borne (à un milliardième
+ * près, les calculs n'y arrivant pas toujours tout juste). Une carte sans place à l'écran ne zoome pas.
+ */
+export function zoomPossible(vue: Vue): { rapprocher: boolean; eloigner: boolean } {
+  if (Math.min(vue.largeur, vue.hauteur) <= 0) return { rapprocher: false, eloigner: false };
+  const { min, max } = bornesDuZoom(vue.largeur, vue.hauteur);
+  return { rapprocher: vue.rayon < max * (1 - 1e-9), eloigner: vue.rayon > min * (1 + 1e-9) };
+}
+
+/**
  * US-0423 : la vue sur une carte de `largeur` × `hauteur` pixels, à l'ouverture ou quand l'écran change de taille :
  * le même endroit au milieu, le zoom ramené dans ses bornes pour cette taille.
  */

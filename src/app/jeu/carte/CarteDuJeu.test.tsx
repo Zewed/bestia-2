@@ -398,6 +398,38 @@ describe("zoomer à la molette ou au pavé tactile (US-0423)", () => {
     expect(departs().has(`${x.toFixed(6)},${(y - bornesDuZoom(ecran.largeur, ecran.hauteur).max).toFixed(6)}`)).toBe(true);
   });
 
+  it("zoome d'un cran autour du milieu de l'écran à chaque appui sur « + » ou « − », grisés quand leur limite est atteinte (US-0425)", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    const user = userEvent.setup();
+    const [plus, moins] = [screen.getByRole<HTMLButtonElement>("button", { name: "Zoomer" }), screen.getByRole<HTMLButtonElement>("button", { name: "Dézoomer" })];
+    expect([plus.disabled, moins.disabled]).toEqual([false, false]);
+    // La carte déplacée d'abord : le zoom se fait autour du milieu de l'écran, pas du Foyer.
+    pointeur("pointerdown", 400, 300);
+    pointeur("pointermove", 460, 300);
+    pointeur("pointerup", 460, 300);
+    await user.click(plus);
+    prochaineImage();
+    const deplacee = deplacer(ouverte(), 60, 0, 60);
+    expect(dessineeLa(zoomer(deplacee, 1.5, ecran.largeur / 2, ecran.hauteur / 2, 60))).toBe(true);
+    // Jusqu'à la vue rapprochée : « + » se grise.
+    for (let i = 0; i < 10 && !plus.disabled; i++) await user.click(plus);
+    expect([plus.disabled, moins.disabled]).toEqual([true, false]);
+    prochaineImage();
+    const { min, max } = bornesDuZoom(ecran.largeur, ecran.hauteur);
+    expect(dessineeLa({ ...deplacee, rayon: max })).toBe(true);
+    // Puis jusqu'à la vue large : « − » se grise à son tour.
+    for (let i = 0; i < 20 && !moins.disabled; i++) await user.click(moins);
+    expect([plus.disabled, moins.disabled]).toEqual([false, true]);
+    prochaineImage();
+    expect(dessineeLa({ ...deplacee, rayon: min })).toBe(true);
+  });
+
+  it("grise aussi « + » ou « − » quand la molette ou les doigts atteignent la limite (US-0425)", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    fireEvent.wheel(screen.getByRole("application", { name: "Carte du Monde" }), { deltaY: -100_000, clientX: 400, clientY: 364 });
+    expect(screen.getByRole<HTMLButtonElement>("button", { name: "Zoomer" }).disabled).toBe(true);
+  });
+
   it("s'ouvre dans les bornes du zoom, et y reste quand l'écran change de taille", () => {
     Object.assign(ecran, { largeur: 4000, hauteur: 3000 });
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);

@@ -1,0 +1,51 @@
+/*
+ * US-0425 : « + » au-dessus de « − », en bas à droite de la carte, à portée de pouce sur mobile, où la carte s'arrête
+ * au-dessus des onglets ; à l'écart de l'encoche d'un téléphone tourné.
+ */
+.zoom {
+  position: absolute;
+  right: calc(12px + var(--bord-droit));
+  bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Chacun sa surface de 44 px, comme les « − » et « + » des Métiers ; grisé, il reste à sa place sans réagir. */
+.bouton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
+  font: inherit;
+  font-size: 22px;
+  font-weight: var(--graisse-titre);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.bouton:disabled {
+  border-color: var(--trait-doux);
+  background: var(--bloc-2);
+  color: var(--galet);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .bouton:enabled:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.bouton:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}

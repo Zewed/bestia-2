@@ -1,12 +1,13 @@
 "use client";
 
 import { getImageProps } from "next/image";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
+import { BoutonsDeZoom } from "./BoutonsDeZoom";
 import { dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
 import { suivreLesGestes } from "./gestes";
 import styles from "./page.module.css";
-import { avancer, cadrer, deplacer, limiteDeLaCarte, zoomer } from "./vue";
+import { avancer, cadrer, deplacer, limiteDeLaCarte, zoomer, zoomPossible } from "./vue";
 
 /**
  * US-0419 : l'illustration de la hutte du chef, celle de l'écran du Foyer (tous les Foyers naissent en prairie),
@@ -33,10 +34,14 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * l'écran. Quand l'écran change de taille (téléphone tourné, fenêtre élargie), elle garde le même endroit au milieu.
  * US-0421 : de même au doigt. US-0422 : sélectionnée au clavier, elle avance aux flèches. US-0423 : elle zoome à
  * la molette ou au pavé tactile, autour du pointeur, entre la vue large et la vue rapprochée. US-0424 : de même en
- * pinçant à deux doigts, autour du point entre eux.
+ * pinçant à deux doigts, autour du point entre eux. US-0425 : et aux boutons « + » et « − », autour du milieu de
+ * l'écran, chacun grisé quand sa limite est atteinte, quel que soit le geste qui l'a atteinte.
  */
 export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
   const toile = useRef<HTMLCanvasElement>(null);
+  // US-0425 : si l'on peut encore rapprocher ou éloigner la carte, et le zoom d'un cran autour du milieu de l'écran.
+  const [zoom, setZoom] = useState({ rapprocher: true, eloigner: true });
+  const zoomerAuMilieu = useRef<(facteur: number) => void>(() => {});
   useEffect(() => {
     const canvas = toile.current;
     const pinceau = canvas?.getContext("2d");
@@ -56,6 +61,12 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
     const dessiner = () => {
       if (vue) dessinerLaCarte(pinceau, carte, vue, peinture, hutte);
     };
+    // US-0425 : les boutons de zoom grisés ou non selon la vue, sans rien redessiner s'ils ne changent pas.
+    const griser = () => {
+      if (!vue) return;
+      const possible = zoomPossible(vue);
+      setZoom((avant) => (avant.rapprocher === possible.rapprocher && avant.eloigner === possible.eloigner ? avant : possible));
+    };
     // La toile à la taille que la page lui donne, à l'ouverture et à chaque changement : la redimensionner l'efface.
     // US-0423 : le zoom ramené dans les bornes de cette taille.
     const redimensionner = () => {
@@ -66,6 +77,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       pinceau.setTransform(densite, 0, 0, densite, 0, 0);
       vue = cadrer(vue ?? vueSurLeFoyer(carte.foyer, largeur, hauteur), largeur, hauteur);
       dessiner();
+      griser();
     };
     // US-0420 : le dessin demandé pour la prochaine image de l'écran, s'il y en a un : un seul par image.
     let image = 0;
@@ -75,6 +87,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
         image = 0;
         dessiner();
       });
+      griser();
     };
     const illustration = new Image();
     illustration.onload = () => {
@@ -89,13 +102,20 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
       zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
     });
+    zoomerAuMilieu.current = (facteur) => vue && changer(zoomer(vue, facteur, vue.largeur / 2, vue.hauteur / 2, limite));
     return () => {
       suivi.disconnect();
       illustration.onload = null;
       arreter();
       cancelAnimationFrame(image);
+      zoomerAuMilieu.current = () => {};
     };
   }, [carte, fonds]);
-  // US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent.
-  return <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />;
+  return (
+    <div className={styles.cadre}>
+      {/* US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent. */}
+      <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
+      <BoutonsDeZoom {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} />
+    </div>
+  );
 }

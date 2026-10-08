@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { anneau, casesDesAnneaux, type Coordonnees } from "@/monde/hex";
 import { CARTE_DEBORD_CASES, CARTE_PAS_CLAVIER_CASES, CARTE_ZOOM_LARGE_CASES, CARTE_ZOOM_PROCHE_CASES } from "@/reglages";
 import { aLEcran, vueSurLeFoyer, type Vue } from "./dessin";
-import { avancer, borner, bornesDuZoom, cadrer, deplacer, limiteDeLaCarte, zoomer } from "./vue";
+import { avancer, borner, bornesDuZoom, cadrer, deplacer, limiteDeLaCarte, zoomer, zoomPossible } from "./vue";
 
 const FOYER = { q: 31, r: -57 };
 /** La carte d'un écran d'ordinateur ouverte sur le Foyer. */
@@ -132,5 +132,19 @@ describe("zoomer (US-0423)", () => {
     expect(casesAuBord(cadrer(vueSurLeFoyer(FOYER, 4000, 3000), 4000, 3000))).toBeCloseTo(40, 9);
     // Une carte encore sans place à l'écran garde son zoom.
     expect(cadrer(OUVERTE, 0, 0).rayon).toBe(OUVERTE.rayon);
+  });
+});
+
+describe("les bornes du zoom atteintes (US-0425)", () => {
+  it("dit si l'on peut encore rapprocher ou éloigner la carte", () => {
+    expect(zoomPossible(OUVERTE)).toEqual({ rapprocher: true, eloigner: true });
+    expect(zoomPossible(zoomer(OUVERTE, 1000, 400, 300, 62))).toEqual({ rapprocher: false, eloigner: true });
+    expect(zoomPossible(zoomer(OUVERTE, 0.001, 400, 300, 62))).toEqual({ rapprocher: true, eloigner: false });
+    // Un cran de trop arrive juste à la borne, sans la dépasser : c'est la borne.
+    let vue = OUVERTE;
+    for (let i = 0; i < 20; i++) vue = zoomer(vue, 1.5, 400, 300, 62);
+    expect(zoomPossible(vue).rapprocher).toBe(false);
+    // Une carte sans place à l'écran ne zoome pas.
+    expect(zoomPossible(cadrer(OUVERTE, 0, 0))).toEqual({ rapprocher: false, eloigner: false });
   });
 });

@@ -4,6 +4,12 @@
   overflow: hidden;
 }
 
+/* US-0425 : la carte et ses boutons de zoom, posés par-dessus, dans toute la place de la page. */
+.cadre {
+  position: relative;
+  height: 100%;
+}
+
 /*
  * US-0420 : la carte se prend à la main pour la faire glisser, sans rien sélectionner de la page en chemin.
  * US-0421 : au doigt, c'est elle qui glisse, pas la page ; ni bulle de menu ni loupe quand il s'attarde.

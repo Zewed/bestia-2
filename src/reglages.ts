@@ -214,3 +214,5 @@ export const CARTE_PAS_CLAVIER_CASES = 3;
  */
 export const CARTE_ZOOM_LARGE_CASES = 40;
 export const CARTE_ZOOM_PROCHE_CASES = 4;
+/** US-0425 : chaque appui sur « + » ou « − » zoome la carte d'un cran : ses Cases une fois et demie plus grandes, ou plus petites. */
+export const CARTE_CRAN_DE_ZOOM = 1.5;
