@@ -4,16 +4,29 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_3d3ade46ccb849 7
 src/app/jeu/carte/FicheDeLaCase.module.css
   s_97a431cfa65ca7::t_1c18d85253e3a0 93,95-96,100-101
+  s_97a431cfa65ca7::t_8a02dc9f35d723 93,95-96,100-101
 src/app/jeu/carte/FicheDeLaCase.test.tsx
   s_97a431cfa65ca7::t_924e224a4e35ac 6,13,24,82,203-218
+  s_97a431cfa65ca7::t_609c90beafdb9e 203-218
+  s_97a431cfa65ca7::t_57c6684a70f573 13,82
+  s_97a431cfa65ca7::t_26115577f9d5ae 6
+  s_97a431cfa65ca7::t_03de6e97744291 24
 src/app/jeu/carte/FicheDeLaCase.tsx
   s_97a431cfa65ca7::t_7bc95e636746e4 4,16-23,85-86,180-186,199
+  s_97a431cfa65ca7::t_930eacf9f2f046 85-86
+  s_97a431cfa65ca7::t_8a02dc9f35d723 4,16-23,180-186,199
 src/app/jeu/carte/actions.ts
   s_97a431cfa65ca7::t_fe5ba43bb1fb6a 6,18-19,21
+  s_97a431cfa65ca7::t_a5413e59bdb451 6
+  s_97a431cfa65ca7::t_0dcd6a46c19a6e 18-19,21
 src/monde/fiche.db.test.ts
   s_97a431cfa65ca7::t_e0af7601e93f45 6,9,64,71,82,99-100,103,114-151
+  s_97a431cfa65ca7::t_45fa8c384080e3 115,119-120,124,129,131-142,147
+  s_97a431cfa65ca7::t_c775b7b912248c 6,9,64,71,82,99-100,103,114,116-118,121-123,125-128,130,143-146,148-150
+  s_97a431cfa65ca7::t_fc1c655dcd2f4a 151
 src/monde/fiche.ts
   s_97a431cfa65ca7::t_ff3d43452ad8fe 14-16,20-22,24-25,28-29,34,39-40
+  s_97a431cfa65ca7::t_6706f280902a88 14-16,20-22,24-25,28-29,34,39-40
 ---
 {
   "schema_version": "authorship/3.0.0",
