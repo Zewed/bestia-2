@@ -207,6 +207,12 @@ describe("page de contrôle", () => {
     expect(html).toMatch(/Emplacements de Foyer<span class="[^"]*alerte[^"]*">1<\/span>/);
   });
 
+  it("mène au contrôle du Monde entier (US-0412)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    monde.couronneEnBase.mockResolvedValue(COURONNE);
+    expect(renderToStaticMarkup(await ouvrir())).toContain('<a href="/controle/monde">Le Monde entier</a>');
+  });
+
   it("dit comment préparer la Couronne quand elle n'est pas encore en base", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue({ monde: "Aube", cases: [] });

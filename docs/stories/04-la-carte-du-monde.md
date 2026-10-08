@@ -122,6 +122,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0412 · Contrôler le Monde généré sur une page interne
 **En tant que** développeur, **je veux** voir le Monde entier sur une page de contrôle, **afin de** juger d'un coup d'œil si ses Biomes sont crédibles.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une page interne /controle/monde (comme /controle : mot de passe, 404 en production) : un champ « Graine » génère le Monde à la volée, sans l'enregistrer, et la liste des Mondes en base l'affiche à partir de ses Cases. La carte entière sans brouillard, une couleur par Biome et par eau (mer, côte, lac, rivière), la Couronne et le Cœur cernés, les emplacements de naissance marqués ; à côté, la part de chaque Biome, le nombre de lacs et de rivières, les emplacements libres et les voisinages interdits trouvés. Un lien « Le Monde entier » y mène depuis /controle.
 - **Débloquée par** : US-0405, US-0411
 - **Critères d'acceptation** :
   - Une page de contrôle interne montre le Monde entier, sans brouillard, coloré par Biome, avec la Couronne et le Cœur sauvage.

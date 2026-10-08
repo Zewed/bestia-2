@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { Bloc } from "@/components/Bloc";
@@ -166,6 +167,10 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
           ) : (
             <p className={styles.note}>Aucune Case de la Couronne en base : lancez npm run monde:couronne.</p>
           )}
+          {/* US-0412 : le Monde entier, généré à la volée ou lu en base. */}
+          <p className={styles.note}>
+            <Link href="/controle/monde">Le Monde entier</Link>
+          </p>
         </Bloc>
         <Bloc titre={`Biomes en base · ${biomes.length}`}>
           {biomes.length === 0 ? (

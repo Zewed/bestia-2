@@ -7,6 +7,8 @@ const nextConfig: NextConfig = {
     // Seules les illustrations du jeu passent par l'optimiseur, sans paramètres d'adresse.
     localPatterns: [{ pathname: "/illustrations/**", search: "" }],
   },
+  // US-0412 : le contrôle du Monde lit à la demande les voisinages interdits des Biomes, dans les données du jeu.
+  outputFileTracingIncludes: { "/controle/monde": ["./donnees/biomes.yaml"] },
 };
 
 export default nextConfig;
