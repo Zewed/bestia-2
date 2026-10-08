@@ -4,14 +4,22 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_34b8e8019f0a00 7
 src/app/jeu/nom-de-chef/actions.test.ts
   s_97a431cfa65ca7::t_0f5196074fdcb9 9,73-76
+  s_97a431cfa65ca7::t_ee52a24252aec4 9
+  s_97a431cfa65ca7::t_61c0291f99f27a 73-76
 src/app/jeu/nom-de-chef/actions.ts
   s_97a431cfa65ca7::t_dfabe0521d9201 5,39
+  s_97a431cfa65ca7::t_5228984936fbf6 5
+  s_97a431cfa65ca7::t_a5ec6465177ef4 39
 src/chefs/chef.ts
   s_97a431cfa65ca7::t_dc04ce8731f784 64,114
+  s_97a431cfa65ca7::t_1fcaffe3515032 64
+  s_97a431cfa65ca7::t_6a8458198125b9 114
 src/chefs/nom.ts
   s_97a431cfa65ca7::t_62cdc2865927cc 15-19
+  s_97a431cfa65ca7::t_2b8820aaa95835 15-19
 src/monde/bascule.db.test.ts
   s_97a431cfa65ca7::t_b517a34ebd25a6 294-322
+  s_97a431cfa65ca7::t_b41bfe1967402f 294-322
 ---
 {
   "schema_version": "authorship/3.0.0",
