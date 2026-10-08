@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { FAMINE_IMMINENTE_HEURES } from "@/reglages";
+import { FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 import {
   avantFamineImminente,
   depuisCombienDeTemps,
   depuisFamineImminente,
+  famineImminenteRetenue,
   nourriturePourEncore,
   nourriturePourEncoreDesStocks,
   nourritureRestante,
@@ -217,5 +218,24 @@ describe("depuis quand la famine est imminente (US-0322)", () => {
   it("passe aux jours au-delà de 48 h, comme le temps qui reste : « 2 j 5 h », « 3 j »", () => {
     expect(depuisCombienDeTemps(53.5)).toBe(`depuis 2${_}j${_}5${_}h`);
     expect(depuisCombienDeTemps(72)).toBe(`depuis 3${_}j`);
+  });
+});
+
+describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {
+  it("garde la famine imminente que le Territoire retient tant que la Nourriture ne couvre pas plus de 13 heures", () => {
+    expect(FAMINE_IMMINENTE_MARGE_HEURES).toBe(1);
+    expect(famineImminenteRetenue(7, 3)).toBe(3);
+    expect(famineImminenteRetenue(12.5, 3)).toBe(3);
+    expect(famineImminenteRetenue(13, 3)).toBe(3);
+  });
+
+  it("la lâche au-delà de 13 heures", () => {
+    expect(famineImminenteRetenue(13.01, 3)).toBeNull();
+    expect(famineImminenteRetenue(40, 3)).toBeNull();
+  });
+
+  it("ne retient rien que le Territoire ne retienne", () => {
+    expect(famineImminenteRetenue(7, null)).toBeNull();
+    expect(famineImminenteRetenue(12.5, null)).toBeNull();
   });
 });

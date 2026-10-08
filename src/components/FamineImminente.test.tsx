@@ -128,3 +128,36 @@ describe("trouver l'avertissement en revenant (US-0322)", () => {
     }
   });
 });
+
+describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {
+  it("reste là entre 12 et 13 heures de Nourriture, tant que le Territoire retient la famine imminente", () => {
+    render(<FamineImminente heures={12.9} depuis={2} />);
+    expect(morceaux()).toEqual([`Famine imminente depuis 2${_}h`, `Nourriture pour encore 12${_}h`, "Voir"]);
+  });
+
+  it("ne paraît pas entre 12 et 13 heures si le Territoire ne la retient pas : la marge ne sert qu'à la garder", () => {
+    render(<FamineImminente heures={12.9} depuis={null} />);
+    expect(avertissement()).toBeNull();
+  });
+
+  it("disparaît quand la Nourriture couvre plus de 13 heures, puis reparaît au seuil, depuis ce nouvel instant", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={13.5} depuis={2} />);
+    expect(avertissement()).toBeNull();
+    await act(async () => vi.advanceTimersByTime(1.5 * HEURE - 1_000));
+    expect(avertissement()).toBeNull();
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(morceaux()).toEqual(["Famine imminente depuis un instant", `Nourriture pour encore 12${_}h`, "Voir"]);
+  });
+
+  it("ne peut pas être masqué : aucun bouton, la bande n'est qu'un lien vers la page Habitants", async () => {
+    vi.useFakeTimers();
+    render(<FamineImminente heures={7.5} depuis={3} />);
+    expect(screen.queryAllByRole("button")).toEqual([]);
+    expect(screen.getAllByRole("link")).toEqual([avertissement()]);
+    expect(document.body.textContent).not.toMatch(/masquer|fermer|ignorer|×/i);
+    // Rien de ce qu'on touche ne la retire : elle mène ailleurs, et revient sur chaque page.
+    await act(async () => avertissement()!.click());
+    expect(avertissement()).not.toBeNull();
+  });
+});

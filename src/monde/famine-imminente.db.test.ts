@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { definirAncre } from "@/temps/horloge";
 import { lireMarquePage } from "@/temps/marque-page";
@@ -10,7 +11,7 @@ import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { entretienDesHabitants } from "./habitants";
 import { nourriturePourEncoreDesStocks } from "./nourriture";
 import { famineImminenteDepuis } from "./production";
-import { stocksDuTerritoire } from "./stocks";
+import { fixerStock, stocksDuTerritoire } from "./stocks";
 
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
@@ -155,5 +156,60 @@ describe.skipIf(!URL_TEST)("l'avertissement « famine imminente », tenu par le 
     await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 30 * HEURE) });
     expect(await depuis(t.territoireId, t.ne)).toBe(HUIT_HEURES);
     expect(await famineImminenteDepuis(pool, t.territoireId)).toBe(22);
+  });
+
+  describe("retirer l'avertissement quand le danger est passé (US-0323)", () => {
+    /** Vingt Habitants, la famine imminente depuis 8 h et, à 9 h, la Viande vide et 198 Végétaux : 11 h de Nourriture. */
+    const imminenteANeufHeures = async () => {
+      const t = await vingtHeures();
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 9 * HEURE) });
+      expect(await depuis(t.territoireId, t.ne)).toBe(HUIT_HEURES);
+      return t;
+    };
+    /** Comme la page de contrôle : le Territoire mis à l'heure, puis ses Végétaux fixés (à −18 par heure, 18 par heure tenue). */
+    const fixerLesVegetaux = async (t: { territoireId: number; ne: Date }, ms: number, quantite: string) => {
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, ms) });
+      expect(await fixerStock(pool, t.territoireId, "vegetaux", quantite)).not.toBeNull();
+    };
+
+    it("le retire dès que la Nourriture est assurée", async () => {
+      const t = await imminenteANeufHeures();
+      // Trois Habitants : la production (8 + 14) couvre leur Entretien (6).
+      await pool.query("delete from habitant where territoire_id = $1 and id not in (select id from habitant where territoire_id = $1 order by id limit 3)", [
+        t.territoireId,
+      ]);
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 9 * HEURE + 1) });
+      expect(await depuis(t.territoireId, t.ne)).toBeNull();
+      expect(await famineImminenteDepuis(pool, t.territoireId)).toBeNull();
+    });
+
+    it("le garde quand la Nourriture remonte entre 12 et 13 heures, le retire au-delà de 13", async () => {
+      expect(FAMINE_IMMINENTE_MARGE_HEURES).toBe(1);
+      const t = await imminenteANeufHeures();
+      await fixerLesVegetaux(t, 9 * HEURE, "234"); // 13 h tout juste
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 9 * HEURE + 1) });
+      expect(await depuis(t.territoireId, t.ne)).toBe(HUIT_HEURES);
+      await fixerLesVegetaux(t, 9 * HEURE + MINUTE, "234.018"); // 13 h et 3,6 secondes
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 9 * HEURE + MINUTE + 1) });
+      expect(await depuis(t.territoireId, t.ne)).toBeNull();
+    });
+
+    it("le note de nouveau au seuil, à son nouvel instant exact, une fois retiré", async () => {
+      const t = await imminenteANeufHeures();
+      await fixerLesVegetaux(t, 9 * HEURE, "243"); // 13 h 30
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 10 * HEURE) });
+      expect(await depuis(t.territoireId, t.ne)).toBeNull();
+      // Sous le seuil 1 h 30 après les Végétaux fixés : à 10 h 30.
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 11 * HEURE) });
+      expect(await depuis(t.territoireId, t.ne)).toBe(String(10.5 * 3_600_000_000));
+      expect(await famineImminenteDepuis(pool, t.territoireId)).toBe(0.5);
+    });
+
+    it("ne le note pas entre 12 et 13 heures s'il n'était pas là : la marge ne sert qu'à le garder", async () => {
+      const t = await vingtHeures();
+      // 7 h 30 après la naissance, la Nourriture tient 12 h 30.
+      await rattraper("territoire", t.territoireId, { pool, jusqua: apres(t.ne, 7.5 * HEURE) });
+      expect(await depuis(t.territoireId, t.ne)).toBeNull();
+    });
   });
 });

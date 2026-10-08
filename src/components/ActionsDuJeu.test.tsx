@@ -324,6 +324,29 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       expect(await cle(null)).not.toBe(await cle(0.5));
     });
 
+    it("retire l'avertissement dès que la Nourriture est assurée, même retenu par le Territoire (US-0323)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      garde.stocksALHeure.mockResolvedValueOnce(nourriture("10.000000", "7.500000"));
+      garde.entretienALHeure.mockResolvedValueOnce("22.000000");
+      garde.famineImminenteALHeure.mockResolvedValueOnce(2);
+      expect(avertissement(await rendu())).toBeNull();
+      expect(famine.FamineImminente).not.toHaveBeenCalled();
+    });
+
+    it("garde l'avertissement retenu entre 12 et 13 heures de Nourriture, le retire au-delà (US-0323)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      // Douze Habitants : la Viande et les Végétaux tiennent ensemble la moitié de leur somme, en heures.
+      const avec = async (viande: string, depuis: number | null) => {
+        garde.stocksALHeure.mockResolvedValueOnce(nourriture(viande, "7.500000"));
+        garde.entretienALHeure.mockResolvedValueOnce("24.000000");
+        garde.famineImminenteALHeure.mockResolvedValueOnce(depuis);
+        return avertissement(await rendu())?.[2].replace(/<[^>]+>/g, "") ?? null;
+      };
+      expect(await avec("17.500000", 2)).toBe("Famine imminente depuis 2 h Nourriture pour encore 12 h Voir");
+      expect(await avec("17.500000", null)).toBeNull();
+      expect(await avec("19.500000", 2)).toBeNull();
+    });
+
     it("ne lit pas l'Entretien avant le récit d'arrivée, ni sans Territoire", async () => {
       joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
       await rendu();

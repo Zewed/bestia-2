@@ -192,3 +192,10 @@ export const HISTORIQUE_VOYAGEURS_JOURS = 7;
 export const POCHES_DE_PRAIRIE = 24;
 /** … chacune de 40 Cases d'un seul tenant (valeur provisoire). Elles comptent dans la part de la prairie. */
 export const POCHE_DE_PRAIRIE_CASES = 40;
+
+/**
+ * US-0323 : une fois paru, l'avertissement « famine imminente » ne disparaît que quand la Nourriture est assurée
+ * ou qu'elle couvre plus de FAMINE_IMMINENTE_HEURES + 1 heures d'Entretien (valeur provisoire, à régler en
+ * jouant) : entre 12 et 13 heures, il garde son état, pour ne pas apparaître et disparaître sans cesse au seuil.
+ */
+export const FAMINE_IMMINENTE_MARGE_HEURES = 1;

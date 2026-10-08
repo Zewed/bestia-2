@@ -32,6 +32,7 @@ import { Ressources } from "./Ressources";
  * US-0321 : au bas de la barre, l'avertissement « famine imminente », compté sur les Stocks et l'Entretien
  * lus avec le reste ; tant que la Nourriture baisse, il est posé, prêt à paraître page ouverte au seuil.
  * US-0322 : avec depuis quand le Territoire retient la famine imminente, lu avec le reste après le rattrapage.
+ * US-0323 : la Nourriture assurée, le danger est passé : l'avertissement n'est plus posé, même retenu.
  */
 export async function ActionsDuJeu() {
   await connection();

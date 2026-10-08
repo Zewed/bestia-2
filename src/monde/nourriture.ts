@@ -1,5 +1,5 @@
 // Combien de temps la Nourriture d'un Territoire tiendra (US-0320) : un calcul pur, sans base.
-import { FAMINE_IMMINENTE_HEURES } from "@/reglages";
+import { FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 
 /** US-0320 : un Stock de Nourriture tel que le calcul le prend : sa quantité, sa production par heure et sa limite. */
 export type StockDeNourriture = { quantite: number; parHeure: number; limite: number };
@@ -85,6 +85,16 @@ export function nourritureRestante(heures: number, ecoule: number, vitesse: numb
 export function depuisFamineImminente(heures: number, depuis: number | null, ecoule: number, vitesse: number): number {
   const passe = (vitesse * ecoule) / HEURE_MS;
   return depuis !== null ? depuis + passe : Math.max(0, passe - Math.max(0, heures - FAMINE_IMMINENTE_HEURES));
+}
+
+/**
+ * US-0323 : ce que le Territoire retient de la famine imminente (`depuis`, famineImminenteDepuis) vaut tant que
+ * la Nourriture ne couvre pas plus de FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES heures (`heures`) ;
+ * au-delà, le danger est passé : null, comme le mécanisme du temps (PRODUIRE) le notera au prochain rattrapage.
+ * Quand la Nourriture est assurée, l'avertissement n'est pas posé du tout (ActionsDuJeu).
+ */
+export function famineImminenteRetenue(heures: number, depuis: number | null): number | null {
+  return heures <= FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES ? depuis : null;
 }
 
 /** La plus petite durée du jeu, la microseconde, en heures : en deçà, l'écart n'est qu'une erreur d'arrondi du calcul. */

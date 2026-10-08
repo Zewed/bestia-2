@@ -2,7 +2,7 @@
 // ensemble par le mécanisme unique du temps, qui tient aussi l'avertissement « famine imminente » (US-0322).
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES } from "@/reglages";
+import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 
 /**
  * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
@@ -62,6 +62,8 @@ const auDessus = (x: string, y: string) => `(div(${x}, ${y}) + case when mod(${x
 
 /** US-0322 : le seuil de l'avertissement « famine imminente », en pas d'une microseconde. */
 const SEUIL_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES} * 3600000000`;
+/** US-0323 : au-delà, en pas d'une microseconde, le danger est passé et l'avertissement est retiré. */
+const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES} * 3600000000`;
 
 /**
  * La mise à l'heure des Stocks du Territoire $1 entre les instants $2 et $3 : la production (US-0210) et
@@ -93,6 +95,12 @@ const SEUIL_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES} * 3600000000`;
  * reste imminente. Déjà sous le seuil en $2 sans être noté (un Habitant de plus, ou un Territoire calculé avant
  * la mise en ligne d'US-0322), l'avertissement part de $2 : on ne remonte pas dans le passé. C'est le même pas
  * quel que soit le découpage du temps : page ouverte, fermée ou tâche planifiée donnent le même instant.
+ *
+ * US-0323 : l'avertissement est retiré (remis à null) dès que la Nourriture est assurée, ou qu'elle couvre plus de
+ * FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES heures ; entre les deux, il garde son état. Entre $2 et
+ * $3, ce temps ne fait que baisser : il ne remonte que par un changement fait en $2 (un Habitant parti, de la
+ * Nourriture ajoutée), et le retrait se fait donc en $2, à l'instant même du changement ; l'avertissement peut
+ * ensuite reparaître au seuil, dans le même intervalle.
  */
 export const PRODUIRE = `
   with production as (${PRODUCTION_DU_TERRITOIRE}),
@@ -133,7 +141,7 @@ export const PRODUIRE = `
   ),
   famine_imminente as (
     update territoire t set famine_imminente_depuis = case
-        when f.pas <= ${SEUIL_FAMINE_IMMINENTE} and t.famine_imminente_depuis is not null then t.famine_imminente_depuis
+        when f.pas <= ${FIN_FAMINE_IMMINENTE} and t.famine_imminente_depuis is not null then t.famine_imminente_depuis
         when f.pas <= ${SEUIL_FAMINE_IMMINENTE} + pas.k
           then $2::timestamptz + make_interval(secs => (greatest(0, f.pas - ${SEUIL_FAMINE_IMMINENTE}) / 1000000)::double precision)
         else null

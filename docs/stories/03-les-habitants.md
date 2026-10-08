@@ -248,11 +248,12 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0323 · Retirer l'avertissement quand le danger est passé
 **En tant que** joueur, **je veux** que l'avertissement disparaisse dès que ma Nourriture suffit de nouveau, **afin de** ne pas m'inquiéter pour rien.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). L'avertissement paraît à 12 h de Nourriture ou moins, et ne disparaît que quand la Nourriture est assurée ou couvre plus de 13 h : entre les deux, il garde l'état retenu par le Territoire, sans clignoter autour du seuil. Le retrait se calcule aussi à l'instant exact par le mécanisme du temps ; page ouverte, il paraît au prochain recalage de la barre (5 min), au retour sur l'onglet ou après une action. Aucun bouton pour le masquer. Vérifié en vrai (12 h 30 : il reste ; 13 h 30 : il disparaît).
 - **Débloquée par** : US-0321
 - **Critères d'acceptation** :
   - L'avertissement disparaît dès que le solde redevient positif, ou que la Nourriture couvre de nouveau plus que le seuil.
-  - Une marge de (chiffre à régler) heures évite qu'il apparaisse et disparaisse sans cesse autour du seuil.
-  - Tant que le danger est là, le joueur ne peut pas le masquer (à décider).
+  - Une marge de 1 heure (provisoire, `FAMINE_IMMINENTE_MARGE_HEURES`) évite qu'il apparaisse et disparaisse sans cesse autour du seuil.
+  - Tant que le danger est là, le joueur ne peut pas le masquer (décidé le 2026-10-08).
 
 ## Étape 16 · La Famine
 

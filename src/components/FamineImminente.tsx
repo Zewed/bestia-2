@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { avantFamineImminente, depuisCombienDeTemps, depuisFamineImminente, nourritureRestante, tenueDeLaNourriture } from "@/monde/nourriture";
+import {
+  avantFamineImminente,
+  depuisCombienDeTemps,
+  depuisFamineImminente,
+  famineImminenteRetenue,
+  nourritureRestante,
+  tenueDeLaNourriture,
+} from "@/monde/nourriture";
 import styles from "./BarreHaut.module.css";
 
 /** Le plus long délai qu'un minuteur du navigateur sache attendre : au-delà, il partirait aussitôt. */
@@ -23,11 +30,20 @@ const DELAI_MAX_MS = 2_147_483_647;
  * d'heures de jeu le Territoire retient la famine imminente, à la lecture ; un seuil franchi pendant l'absence
  * est ainsi là dès l'ouverture, avec son instant exact. Page ouverte, le « depuis » monte en direct. Rien n'est
  * envoyé hors de la page : les notifications du navigateur viendront à l'étape 64.
+ *
+ * US-0323 : il disparaît dès que le danger est passé : la Nourriture assurée (ActionsDuJeu ne le pose plus) ou
+ * couvrant plus de FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE_HEURES heures ; entre les deux, il garde son
+ * état, pour ne pas clignoter autour du seuil. Page ouverte, ce sont les nouvelles valeurs du serveur qui l'ôtent
+ * (recalage de la barre, action), le temps restant ne faisant que baisser entre-temps. Le joueur ne peut pas le
+ * masquer : la bande n'est qu'un lien vers la page Habitants.
  */
 export function FamineImminente({ heures, depuis = null, vitesse = 1 }: { heures: number; depuis?: number | null; vitesse?: number }) {
   // Le temps réel écoulé depuis l'arrivée des valeurs du serveur.
   const [ecoule, setEcoule] = useState(0);
-  const bascule = depuis !== null ? 0 : avantFamineImminente(heures, vitesse);
+  // US-0323 : retenue par le Territoire, la famine imminente le reste jusqu'à 13 heures de Nourriture ; au-delà, le
+  // danger est passé, et l'avertissement ne reparaît qu'au seuil.
+  const retenue = famineImminenteRetenue(heures, depuis);
+  const bascule = retenue !== null ? 0 : avantFamineImminente(heures, vitesse);
 
   useEffect(() => {
     const depart = performance.now();
@@ -47,7 +63,7 @@ export function FamineImminente({ heures, depuis = null, vitesse = 1 }: { heures
     <Link href="/jeu/habitants" className={styles.famine} data-alerte-famine="">
       {/* Des espaces entre les morceaux, pour qu'un lecteur d'écran ne les colle pas. */}
       <span>
-        <strong className={styles.titreFamine}>Famine imminente</strong> {depuisCombienDeTemps(depuisFamineImminente(heures, depuis, ecoule, vitesse))}
+        <strong className={styles.titreFamine}>Famine imminente</strong> {depuisCombienDeTemps(depuisFamineImminente(heures, retenue, ecoule, vitesse))}
       </span>{" "}
       <span className={styles.tenueFamine}>{tenueDeLaNourriture(nourritureRestante(heures, ecoule, vitesse))}</span>{" "}
       <span className={styles.voirFamine}>Voir</span>
