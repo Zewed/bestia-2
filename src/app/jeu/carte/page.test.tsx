@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -38,8 +38,9 @@ vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 // La carte elle-même se vérifie à part (CarteDuJeu.test.tsx) : ici, ce que la page lui donne.
 vi.mock("./CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
-// La légende aussi (Legende.test.tsx).
+// La légende aussi (Legende.test.tsx), et l'attente (Attente.test.tsx).
 vi.mock("./Legende", () => ({ Legende: (proprietes: object) => <aside data-legende={JSON.stringify(proprietes)} /> }));
+vi.mock("./Attente", () => ({ Attente: () => <div data-attente="" /> }));
 
 import Carte, { metadata } from "./page";
 
@@ -72,7 +73,15 @@ describe("page Carte (US-0417)", () => {
     connecte();
     expect(metadata.title).toBe("Carte");
     const html = renderToStaticMarkup(await Carte());
-    expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><aside[^>]*><\/aside><\/main>$/);
+    expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><div data-attente=""><\/div><aside[^>]*><\/aside><\/main>$/);
+  });
+
+  it("attend la carte dans un bloc Bento, posé avec elle et caché dès qu'elle est dessinée (US-0434)", async () => {
+    connecte();
+    // L'attente vient avec la page : aucune frontière de chargement ne retarde la carte (Attente.test.tsx).
+    expect(renderToStaticMarkup(await Carte())).toContain("<canvas data-proprietes=");
+    expect(renderToStaticMarkup(await Carte())).toMatch(/<\/canvas><div data-attente=""><\/div>/);
+    expect(existsSync(join(process.cwd(), "src/app/jeu/carte/loading.tsx"))).toBe(false);
   });
 
   it("pose la légende de la carte : les Biomes de terre puis les eaux, dans leur ordre, de leur nom en base (US-0432)", async () => {
@@ -103,9 +112,9 @@ describe("page Carte (US-0417)", () => {
     expect(proprietes(renderToStaticMarkup(await Carte())).fonds).toEqual(["var(--biome-foret)", "var(--biome-prairie)", "var(--sarcelle-fonce)"]);
   });
 
-  it("n'a pas de carte à montrer sans Foyer, ni de légende", async () => {
+  it("n'a pas de carte à montrer sans Foyer, ni de légende, ni rien à attendre", async () => {
     connecte(null);
-    expect(renderToStaticMarkup(await Carte())).not.toMatch(/<canvas|<aside/);
+    expect(renderToStaticMarkup(await Carte())).not.toMatch(/<canvas|<aside|data-attente/);
   });
 
   it("prend toute la place sous la barre du haut, sans défiler", () => {

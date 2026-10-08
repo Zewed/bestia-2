@@ -1,0 +1,60 @@
+/* US-0434 : l'attente et l'échec de la carte, dans un bloc Bento qui prend sa place. */
+.etat {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  height: 100%;
+  text-align: center;
+}
+
+/* L'attente couvre la place de la carte, sous la barre du haut et au-dessus des onglets… */
+.attente {
+  position: fixed;
+  top: var(--hauteur-barre);
+  right: var(--bord-droit);
+  bottom: calc(var(--hauteur-onglets) + var(--bord-bas));
+  left: var(--bord-gauche);
+  padding: var(--ecart);
+}
+
+/* … jusqu'à ce que la carte soit dessinée : son <canvas> n'a d'attribut width qu'une fois qu'elle lui a donné sa taille. */
+main:has(canvas[width]) .attente {
+  display: none;
+}
+
+/* L'échec, à la place de la carte. */
+.erreur {
+  height: 100%;
+  padding: var(--ecart);
+}
+
+/* Trois Cases qui palpitent l'une après l'autre. */
+.case {
+  animation: palpiter 1.2s ease-in-out infinite;
+}
+
+.case:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.case:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes palpiter {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .case {
+    animation: none;
+  }
+}

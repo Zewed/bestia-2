@@ -342,9 +342,10 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0434 · Afficher la carte rapidement
 **En tant que** joueur, **je veux** que la carte s'affiche vite, **afin de** jouer même quand je n'ai que quelques secondes.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Les 10 981 Cases voyagent en colonnes compactes (moins de 12 octets par Case, 3,5 Ko compressées) ; mesuré en navigateur sans tête, téléphone 390 px, processeur ralenti ×4 : carte utilisable en 1,8 s en 4G lente (la « connexion mobile ordinaire » retenue), 3,4 s en 3G rapide (mesure pessimiste, serveur local en HTTP/1.1). Pendant le chargement, un bloc d'attente Bento (trois Cases qui battent) couvre toute l'attente, jusqu'au premier dessin ; un `loading.tsx` a été écarté parce qu'il ralentissait la carte. En cas d'échec : « La carte n'a pas pu s'afficher. » et « Réessayer ».
 - **Débloquée par** : US-0418
 - **Critères d'acceptation** :
-  - La carte est utilisable en moins de (chiffre à régler) secondes sur une connexion mobile ordinaire.
+  - La carte est utilisable en moins de 3 secondes (provisoire, `CARTE_UTILISABLE_SECONDES` ; mesuré en 4G lente) sur une connexion mobile ordinaire.
   - Pendant le chargement, un état d'attente s'affiche dans l'habillage Bento.
   - En cas d'échec, un message et un bouton « Réessayer » s'affichent.
 

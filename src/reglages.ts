@@ -216,3 +216,9 @@ export const CARTE_ZOOM_LARGE_CASES = 40;
 export const CARTE_ZOOM_PROCHE_CASES = 4;
 /** US-0425 : chaque appui sur « + » ou « − » zoome la carte d'un cran : ses Cases une fois et demie plus grandes, ou plus petites. */
 export const CARTE_CRAN_DE_ZOOM = 1.5;
+
+/**
+ * US-0434 : la carte du Monde est utilisable en moins de 3 secondes sur une connexion mobile ordinaire (valeur
+ * provisoire, à régler en jouant), mesurée sur le profil « Slow 4G » de Chrome : 150 ms d'aller-retour, 1,6 Mb/s.
+ */
+export const CARTE_UTILISABLE_SECONDES = 3;

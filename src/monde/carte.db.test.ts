@@ -1,7 +1,9 @@
+import { gzipSync } from "node:zlib";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { CARTE_UTILISABLE_SECONDES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { carteDuJoueur } from "./carte";
 import { creerUnMonde, genererLeMonde } from "./generer";
@@ -82,6 +84,16 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     // Les 6 anneaux du bord, et les Cases à moins de 8 du milieu.
     expect(carte.cases.zone.filter((z) => z === ZONE_COURONNE)).toHaveLength(6 * (55 + 60) * 3);
     expect(carte.cases.zone.filter((z) => z === ZONE_COEUR)).toHaveLength(1 + 3 * 7 * 8);
+  });
+
+  it("voyage léger, même pour les 10 981 Cases d'un Monde généré (US-0434)", async () => {
+    const { territoireId } = await naitre(genereId);
+    const envoyee = JSON.stringify(await carteDuJoueur(pool, territoireId));
+    // En colonnes, quatre petits nombres par Case : moins de 12 octets chacune.
+    expect(envoyee.length).toBeLessThan(12 * 10_981);
+    // Compressée comme le serveur l'envoie, elle passe à 1,6 Mb/s (le profil « Slow 4G » de Chrome, une connexion
+    // mobile ordinaire) en moins d'un vingtième du temps dans lequel la carte doit être utilisable.
+    expect((gzipSync(envoyee).length * 8) / 1.6e6).toBeLessThan(CARTE_UTILISABLE_SECONDES / 20);
   });
 
   it("donne les Foyers des autres chefs de son Monde, sans le sien (US-0419)", async () => {
