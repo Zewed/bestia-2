@@ -9,10 +9,14 @@ const PAGE_HABITANTS = "/jeu/habitants";
 /** La page Récits (US-0324), dont l'entrée porte le nombre de Récits non lus. */
 const PAGE_RECITS = "/jeu/recits";
 
-/** Les pages du jeu qu'on ouvre depuis la navigation, dans leur ordre ; la carte du Monde juste après le Foyer (US-0417). */
+/**
+ * Les pages du jeu qu'on ouvre depuis la navigation, dans leur ordre ; la carte du Monde juste après le Foyer (US-0417).
+ * US-0901 : puis l'écran d'Expédition, le même que depuis la fiche d'une Case, sans destination choisie.
+ */
 const ENTREES_DU_JEU = [
   { chemin: "/jeu", libelle: "Foyer" },
   { chemin: "/jeu/carte", libelle: "Carte" },
+  { chemin: "/jeu/expeditions/nouvelle", libelle: "Expéditions" },
   { chemin: PAGE_HABITANTS, libelle: "Habitants" },
   { chemin: PAGE_RECITS, libelle: "Récits" },
 ] as const;

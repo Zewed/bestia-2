@@ -28,21 +28,23 @@ describe("barre du haut", () => {
     expect(lire("src/components/BarreHaut.module.css")).toMatch(/@media \(max-width: 820px\) \{[\s\S]*\.navigation \{[^}]*position: fixed;[^}]*bottom: 0;[^}]*var\(--bord-bas\)/);
   });
 
-  it("sur un petit écran d'ordinateur, passe les ressources en bande sous la barre, la navigation restant en haut (US-0324)", () => {
+  it("sur un petit écran d'ordinateur, sous 1 400 px depuis la cinquième entrée (US-0901), passe les ressources en bande sous la barre, la navigation restant en haut (US-0324)", () => {
     const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
-    expect(lire("src/styles/formes.css")).toMatch(/@media \(max-width: 1279px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 44px;/);
+    expect(lire("src/styles/formes.css")).toMatch(/@media \(max-width: 1399px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 44px;/);
     const css = lire("src/components/BarreHaut.module.css");
-    const petit = css.slice(css.indexOf("@media (min-width: 821px) and (max-width: 1279px)"), css.indexOf("@media (max-width: 820px)"));
+    const petit = css.slice(css.indexOf("@media (min-width: 821px) and (max-width: 1399px)"), css.indexOf("@media (max-width: 820px)"));
+    expect(petit).not.toBe("");
     expect(petit).toMatch(/\.ressources \{[^}]*grid-column: 1 \/ -1;[^}]*grid-row: 2;/);
     expect(petit).not.toMatch(/\.navigation/);
   });
 
-  it("sur mobile, pose quatre onglets égaux en bas de l'écran : Foyer, Carte, Habitants, Récits (US-0324, US-0417)", () => {
+  it("sur mobile, pose cinq onglets en bas de l'écran : Foyer, Carte, Expéditions, Habitants, Récits (US-0324, US-0417, US-0901)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
     const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
-    expect(mobile).toMatch(/\.entrees \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
-    // Quatre onglets de 80 px sur 320 px : le nom en 13 px, pour que « Habitants » et son point, « Récits » et « 99+ » y tiennent.
-    expect(mobile).toMatch(/\.entree \{[^}]*font-size: 13px;/);
+    // À parts égales, sauf un nom qui n'y tiendrait pas : 1fr ne descend pas sous la largeur de son contenu.
+    expect(mobile).toMatch(/\.entrees \{[^}]*grid-template-columns: repeat\(5, 1fr\);/);
+    // 64 px en moyenne sur 320 px : le nom en 12 px, pour que « Expéditions », « Habitants » et son point, « Récits » et « 99+ » y tiennent.
+    expect(mobile).toMatch(/\.entree \{[^}]*font-size: 12px;/);
     // Le trait de l'entrée affichée souligne son nom, pas la pastille des Récits non lus.
     expect(css).toMatch(/\.entree\[aria-current="page"\] \.libelle \{[^}]*text-decoration: underline/);
   });

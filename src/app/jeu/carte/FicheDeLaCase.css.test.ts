@@ -49,3 +49,13 @@ describe("fermer la fiche d'une Case (US-0430)", () => {
     expect(regle(".fermer:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 });
+
+describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
+  it("se touche au pouce : un bouton de 44 px de haut, toute la largeur de la fiche, qui se voit au clavier", () => {
+    const envoyer = regle(".envoyer");
+    expect(envoyer).toMatch(/display: flex;[^}]*min-height: 44px;/);
+    expect(envoyer).toContain("width: 100%;");
+    expect(envoyer).toContain("cursor: pointer;");
+    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
+  });
+});

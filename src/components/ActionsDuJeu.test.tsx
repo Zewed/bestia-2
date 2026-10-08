@@ -119,6 +119,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     expect(liens).toEqual([
       ["Foyer", "/jeu", false],
       ["Carte", "/jeu/carte", false],
+      ["Expéditions", "/jeu/expeditions/nouvelle", false],
       ["Habitants", "/jeu/habitants", true],
       ["Récits", "/jeu/recits", false],
     ]);

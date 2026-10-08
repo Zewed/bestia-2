@@ -106,6 +106,35 @@
   color: var(--texte-discret);
 }
 
+/* US-0901 : « Envoyer une Expédition », au pied de la fiche, au pouce : toute sa largeur, sur l'Encre. */
+.envoyer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 14px;
+  padding: 0 14px;
+  border-radius: var(--arrondi-moyen);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font-weight: var(--graisse-titre);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .envoyer:hover {
+    background: var(--encre-survol);
+  }
+}
+
+.envoyer:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* En attendant le serveur : la place du titre et d'une ligne, qui palpitent. */
 .attente {
   display: grid;

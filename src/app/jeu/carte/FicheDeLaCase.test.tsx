@@ -228,6 +228,36 @@ describe("toucher une Case sous le brouillard (US-0438)", () => {
   });
 });
 
+describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
+  const envoyer = () => screen.queryByRole("link", { name: "Envoyer une Expédition" });
+
+  it("propose « Envoyer une Expédition », qui ouvre l'écran d'Expédition avec cette Case pour destination", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre(FORET);
+    expect(envoyer()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
+    expect(fiche()!.contains(envoyer())).toBe(true);
+  });
+
+  it("le propose aussi pour une Case sous le brouillard", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre({ ...ICI, inconnue: true, distance: 12 });
+    expect(envoyer()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
+  });
+
+  it("ne le propose ni sur le Foyer du joueur, qui ne peut pas être une destination (US-0907), ni avant la fiche", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    expect(envoyer()).toBeNull();
+    await act(async () => demandes[0].echouer());
+    expect(envoyer()).toBeNull();
+    toucher(ICI);
+    await repondre({ ...FORET, biome: "Prairie", chef: "Ourse", aVous: true, distance: 0 });
+    expect(envoyer()).toBeNull();
+  });
+});
+
 describe("fermer la fiche d'une Case (US-0430)", () => {
   const croix = () => screen.getByRole("button", { name: "Fermer la fiche" });
   const carte = () => document.querySelector("canvas")!;
@@ -358,7 +388,7 @@ describe("lire la fiche d'une Case sur mobile (US-0431)", () => {
     expect(hauteurPubliee()).toBe("");
   });
 
-  it("revient quand le navigateur interrompt le geste ; sa croix et l'ordinateur ne la font pas glisser", async () => {
+  it("revient quand le navigateur interrompt le geste ; sa croix, son lien vers l'Expédition (US-0901) et l'ordinateur ne la font pas glisser", async () => {
     await ouvrirEnBas();
     pointeur("pointerdown", 450);
     pointeur("pointermove", 450 + CARTE_FICHE_FERMETURE_PIXELS + 10);
@@ -366,6 +396,11 @@ describe("lire la fiche d'une Case sur mobile (US-0431)", () => {
     expect(fiche()).not.toBeNull();
     expect(fiche()!.style.transform).toBe("");
     pointeur("pointerdown", 450, screen.getByRole("button", { name: "Fermer la fiche" }));
+    pointeur("pointermove", 600);
+    expect(fiche()!.style.transform).toBe("");
+    pointeur("pointerup", 600);
+    // US-0901 : « Envoyer une Expédition » non plus : le doigt qui le touche ouvre l'écran d'Expédition.
+    pointeur("pointerdown", 450, screen.getByRole("link", { name: "Envoyer une Expédition" }));
     pointeur("pointermove", 600);
     expect(fiche()!.style.transform).toBe("");
     pointeur("pointerup", 600);
