@@ -4,7 +4,9 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { MONDE_DU_JEU, VERROU_DES_NAISSANCES } from "@/monde/bascule";
+import { abordsDuFoyer, decouvrir } from "@/monde/brouillard";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers } from "@/monde/foyers";
+import type { Coordonnees } from "@/monde/hex";
 import { maintenant } from "@/temps/horloge";
 import { nomInterditPar, type MotInterdit } from "./interdits";
 import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./nom";
@@ -71,7 +73,8 @@ export type Enregistrement =
  * deux joueurs veulent le même nom au même instant, un seul l'obtient, l'autre reçoit « pris » ;
  * et deux nouveaux chefs ne visent jamais la même Case. Un double appui du même joueur n'est pas
  * un conflit : il retrouve le chef créé par le premier. US-0414 : le chef naît dans le Monde du
- * jeu, le Monde ouvert, ou dans le Monde `mondeId` pour les essais.
+ * jeu, le Monde ouvert, ou dans le Monde `mondeId` pour les essais. US-0436 : son Territoire naît
+ * en ne découvrant que les abords de son Foyer ; tout le reste du Monde est sous le brouillard.
  */
 export async function enregistrerNomDeChef(
   pool: Pool,
@@ -88,7 +91,8 @@ export async function enregistrerNomDeChef(
   try {
     await client.query("begin");
     // US-0414 : le Monde n'est lu qu'une fois le verrou des naissances obtenu, avec ce qu'il sait déjà de ce compte et
-    // de ce nom (six allers-retours en tout) : une naissance qui attendait la fin d'une bascule vise le nouveau Monde.
+    // de ce nom (sept allers-retours en tout, abords du Foyer compris) : une naissance qui attendait la fin d'une
+    // bascule vise le nouveau Monde.
     await client.query("select pg_advisory_xact_lock($1)", [VERROU_DES_NAISSANCES]);
     const { rows: mondes } = await client.query<{ id: number; nom: string; existant: string | null; doublon: boolean }>(
       `select m.id, m.nom, (select nom from chef where compte_id = $1 and monde_id = m.id) as existant,
@@ -115,17 +119,20 @@ export async function enregistrerNomDeChef(
     }
     // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête. Le marque-page
     // du temps du Territoire part de sa naissance, à l'heure du jeu (US-0156).
-    const { rowCount } = await client.query(
+    const { rows } = await client.query<{ id: number }>(
       `with nouveau as (
          insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $2, $3, $4) returning id
        ), prise as (
          update case_du_monde set chef_id = (select id from nouveau), imprenable = true
          where id = $5 and chef_id is null returning id
        )
-       insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select nouveau.id, prise.id, $6, $6 from nouveau, prise`,
+       insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select nouveau.id, prise.id, $6, $6 from nouveau, prise
+       returning id`,
       [compteId, monde.id, nom, cleDuNom(nom), naissance.id, maintenant()],
     );
-    if (rowCount !== 1) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
+    if (!rows[0]) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
+    // US-0436 : le Territoire naît en ne découvrant que les abords de son Foyer, dans la même transaction.
+    await decouvrir(client, rows[0].id, abordsDuFoyer(naissance));
     await client.query("commit");
     return { statut: "enregistre", nom };
   } catch (refus) {
@@ -179,6 +186,8 @@ export async function naitreSurLaCouronne(pool: Pool, compteId: number, hasard: 
       [chef.id, naissance.id, maintenant()],
     );
     if (!rows[0]) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
+    // US-0436 : comme à une naissance ordinaire, il ne découvre que les abords de son Foyer.
+    await decouvrir(client, rows[0].id, abordsDuFoyer(naissance));
     await client.query("commit");
     return rows[0].id;
   } catch (erreur) {
@@ -192,9 +201,9 @@ export async function naitreSurLaCouronne(pool: Pool, compteId: number, hasard: 
 /**
  * La Case libre de la Couronne où naît le nouveau chef (US-0153), ou null si elle est pleine,
  * loin des Foyers des Territoires déjà nés et près du dernier arrivé ; avec le nombre de places
- * de Foyer qui resteront ensuite (US-0159).
+ * de Foyer qui resteront ensuite (US-0159). US-0436 : et sa place, pour en découvrir les abords.
  */
-async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () => number): Promise<{ id: number; restantes: number } | null> {
+async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () => number): Promise<(Coordonnees & { id: number; restantes: number }) | null> {
   // Seules les prairies libres peuvent accueillir un Foyer : inutile de lire le reste de la Couronne.
   const { rows } = await client.query<{ libres: { id: number; q: number; r: number; biome: string }[] | null; foyers: { q: number; r: number }[] | null }>(
     `select
@@ -211,5 +220,5 @@ async function caseDeNaissance(client: PoolClient, mondeId: number, hasard: () =
   if (!choisie) return null;
   // Les places qui resteront après cette naissance, estimées comme sur la page de contrôle.
   const restantes = emplacementsDeFoyers(libres.filter((c) => c.id !== choisie.id), [choisie, ...foyers]).length;
-  return { id: choisie.id, restantes };
+  return { id: choisie.id, q: choisie.q, r: choisie.r, restantes };
 }

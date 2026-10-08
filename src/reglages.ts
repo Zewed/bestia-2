@@ -225,3 +225,10 @@ export const CARTE_UTILISABLE_SECONDES = 3;
 
 /** US-0426 : le retour de la carte sur le Foyer glisse en 300 ms, en douceur (valeur provisoire, à régler en jouant). */
 export const CARTE_RETOUR_AU_FOYER_MS = 300;
+
+/**
+ * US-0436 : au départ, un joueur ne découvre que les abords de son Foyer : les Cases à 4 Cases de lui ou moins
+ * (valeur provisoire, à régler en jouant). Toutes les autres restent sous le brouillard. La migration 0045 a
+ * découvert ceux des Territoires déjà nés avec la même valeur : la changer ne change que les naissances à venir.
+ */
+export const ABORDS_DU_FOYER_CASES = 4;

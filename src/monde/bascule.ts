@@ -1,5 +1,6 @@
 // Le Monde du jeu, et la bascule vers un Monde généré (US-0414). Côté serveur et scripts uniquement.
 import type { PoolClient } from "pg";
+import { abordsDuFoyer, decouvrir } from "./brouillard";
 import { choisirCaseDeNaissance, emplacementsDeFoyers, type CaseCandidate } from "./foyers";
 import type { Coordonnees } from "./hex";
 
@@ -32,7 +33,9 @@ export type Bascule = {
  * US-0413 (en prairie, à ECART_ENTRE_FOYERS Cases des autres), dans l'ordre de leurs naissances et comme elles :
  * près du dernier arrivé. Son Territoire est rattaché à cette Case, rien d'autre ne change : Stocks, Habitants,
  * Voyageurs, Récits et marque-page restent les siens, et sa production continue aussi, une prairie pour une
- * prairie. Un chef encore sans Foyer (US-0160) recevra le sien à son retour, comme une naissance. Refuse, avant
+ * prairie. US-0436 : sur le nouveau Monde, chaque Territoire ne découvre que les abords de son nouveau Foyer ; ce
+ * qu'il avait découvert de l'ancien reste à lui, sans plus se montrer. Un chef encore sans Foyer (US-0160) recevra
+ * le sien à son retour, comme une naissance. Refuse, avant
  * d'écrire quoi que ce soit, un Monde qui a déjà été ouvert, qui compte déjà des chefs, qui n'est pas généré en
  * entier, ou qui n'a pas la place de tous les chefs.
  */
@@ -88,7 +91,12 @@ export async function basculerLeMonde(client: PoolClient, vers: string, hasard: 
     paires,
   );
   if (rowCount !== avecFoyer.length) throw new Error(`Des Cases d'« ${cible.nom} » n'étaient plus libres.`);
-  await client.query("update territoire t set foyer_case_id = p.case_id from unnest($1::int[], $2::int[]) as p(chef, case_id) where t.chef_id = p.chef", paires);
+  const { rows: rattaches } = await client.query<{ id: number; chef: number }>(
+    "update territoire t set foyer_case_id = p.case_id from unnest($1::int[], $2::int[]) as p(chef, case_id) where t.chef_id = p.chef returning t.id, p.chef",
+    paires,
+  );
+  // US-0436 : sur le nouveau Monde, chaque Territoire ne découvre que les abords de son nouveau Foyer, comme à une naissance.
+  for (const t of rattaches) await decouvrir(client, t.id, abordsDuFoyer(nouvelles[avecFoyer.findIndex((ch) => ch.id === t.chef)]));
   await client.query("update chef set monde_id = $2 where monde_id = $1", [jeu[0].id, cible.id]);
   // L'ancien Monde est fermé avant que le nouveau ouvre : la base n'en accepte jamais deux ouverts.
   await client.query("update monde set ferme_le = now() where id = $1", [jeu[0].id]);

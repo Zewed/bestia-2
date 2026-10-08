@@ -10,8 +10,9 @@ export const CENTRE: Coordonnees = { q: 0, r: 0 };
 
 /**
  * US-0402 : la distance entre deux Cases, en nombre de Cases à franchir de l'une à l'autre. C'est la
- * seule façon de la compter dans le jeu (trajets, brouillard, Couronne) ; seule la contrainte
- * case_anneau_exact de la base refait le même calcul, pour vérifier l'anneau de chaque Case.
+ * seule façon de la compter dans le jeu (trajets, brouillard, Couronne) ; seules la contrainte
+ * case_anneau_exact de la base, pour vérifier l'anneau de chaque Case, et la migration 0045, pour les
+ * abords des Foyers déjà nés (US-0436), refont le même calcul.
  */
 export function distance(a: Coordonnees, b: Coordonnees): number {
   const dq = a.q - b.q;

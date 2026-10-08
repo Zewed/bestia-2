@@ -366,9 +366,10 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0436 · Ne voir d'abord que les abords de son Foyer
 **En tant que** nouveau joueur, **je veux** ne voir au départ que les Cases proches de mon Foyer, **afin de** garder au Monde tout son mystère.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une Case est découverte quand elle est enregistrée pour le Territoire (migration 0045, table `case_decouverte`). Un Territoire naît avec les Cases à 4 Cases ou moins de son Foyer découvertes, dans la même transaction que sa naissance. La migration les a données aux Territoires déjà nés ; son calcul en SQL est le miroir de `distance` et donne exactement les mêmes Cases. Une bascule de Monde découvre les abords du nouveau Foyer. La carte montre encore tout : le dessin du brouillard vient avec US-0437. Vérifié sur base.
 - **Débloquée par** : US-0417
 - **Critères d'acceptation** :
-  - Au départ, seules les Cases à (chiffre à régler) Cases du Foyer ou moins sont découvertes.
+  - Au départ, seules les Cases à 4 Cases (provisoire, `ABORDS_DU_FOYER_CASES`) du Foyer ou moins sont découvertes.
   - Toutes les autres Cases sont sous le brouillard.
   - Les joueurs nés avant cette étape découvrent eux aussi les abords de leur Foyer, et rien de plus.
 

@@ -578,3 +578,22 @@ export const voyageur = pgTable(
     check("voyageur_sort_date", sql`(${t.sort} is null) = (${t.sortLe} is null)`),
   ],
 );
+
+/**
+ * Le brouillard d'un Territoire (US-0436, US-0440) : une ligne par Case qu'il a découverte, à lui seul ; toute Case
+ * sans ligne est pour lui sous le brouillard. Il naît avec les abords de son Foyer (src/monde/brouillard.ts), et
+ * ses lignes partent avec lui. US-0441 : seul le fait d'être découverte est gardé, jamais un instantané de la Case :
+ * son Biome et son propriétaire se lisent toujours en direct, et une Case découverte le reste pour toujours.
+ */
+export const caseDecouverte = pgTable(
+  "case_decouverte",
+  {
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    caseId: integer("case_id")
+      .notNull()
+      .references(() => caseDuMonde.id),
+  },
+  (t) => [primaryKey({ columns: [t.territoireId, t.caseId] })],
+);

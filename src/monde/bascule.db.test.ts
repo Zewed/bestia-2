@@ -2,8 +2,10 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { calculerEmpreinte } from "@/comptes/empreinte";
+import { ABORDS_DU_FOYER_CASES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { basculerLeMonde, MONDE_DU_JEU } from "./bascule";
+import { casesDecouvertes } from "./brouillard";
 import { choisirCaseDeNaissance } from "./foyers";
 import { creerUnMonde } from "./generer";
 import { distance, type Coordonnees } from "./hex";
@@ -229,6 +231,19 @@ describe.skipIf(!URL_TEST)("naître sur le Monde généré, et y basculer les ch
       await basculerLeMonde(client, String(genereId));
       expect(await territoires(client, comptes)).toEqual(avant);
       for (const compte of comptes) expect(await chefDuCompte(client as unknown as Pool, compte)).toMatchObject({ territoireId: expect.any(Number), recitLu: true });
+    });
+  }, 60_000);
+
+  it("leur fait découvrir les abords de leur nouveau Foyer, et rien d'autre du nouveau Monde (US-0436)", async () => {
+    await dansUnJeuDEssai(async (client, essai) => {
+      const comptes = await chefsNes(client, essai, ["Ourse", "Lynx", "Castor"]);
+      await basculerLeMonde(client, MONDE_GENERE);
+      const { rows: cases } = await client.query<Coordonnees>("select q, r from case_du_monde where monde_id = $1", [genereId]);
+      for (const { territoire, q, r } of await foyers(client, comptes)) {
+        const attendues = cases.filter((c) => distance(c, { q, r }) <= ABORDS_DU_FOYER_CASES).sort((a, b) => a.q - b.q || a.r - b.r);
+        expect(attendues.length).toBeGreaterThan(10);
+        expect(await casesDecouvertes(client, territoire)).toEqual(attendues);
+      }
     });
   }, 60_000);
 
