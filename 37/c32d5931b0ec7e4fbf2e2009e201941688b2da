@@ -1,0 +1,47 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_72ff27b2aa4130 146
+docs/stories/README.md
+  s_97a431cfa65ca7::t_aa66e2648cb30a 7
+drizzle/0043_monde_ouvert.sql
+  s_97a431cfa65ca7::t_c410fe70645342 1-9
+drizzle/meta/0043_snapshot.json
+  s_97a431cfa65ca7::t_0fc11d3f16bc6e 1-2348
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_de0dfb7d393952 305-311
+package.json
+  s_97a431cfa65ca7::t_85de1d3747ef24 30
+scripts/monde-basculer.ts
+  s_97a431cfa65ca7::t_bf705c23f96401 1-63
+scripts/monde-couronne.ts
+  s_97a431cfa65ca7::t_60a747c3e325ad 3,7,18-19,21-25
+src/chefs/chef.ts
+  s_97a431cfa65ca7::t_d910d7ae9a3e2d 6,70,73-74,76-82,90-97,100,102,104,154-155
+src/db/schema.ts
+  s_97a431cfa65ca7::t_d01cfd032e269a 5,31-38,40-45
+src/health.ts
+  s_97a431cfa65ca7::t_c0780700304fe3 4,32
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_dd1202fe87946c 1-304
+src/monde/bascule.ts
+  s_97a431cfa65ca7::t_1d0798877ce273 1-103
+src/monde/en-base.ts
+  s_97a431cfa65ca7::t_b36be4e88ede46 4,8,10
+src/monde/preparer-couronne.ts
+  s_97a431cfa65ca7::t_ecf0a01cc092c9 4,53-65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "37c32d5931b0ec7e4fbf2e2009e201941688b2da",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
