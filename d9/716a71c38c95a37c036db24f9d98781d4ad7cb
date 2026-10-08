@@ -1,0 +1,45 @@
+src/app/jeu/carte/BoutonsDeZoom.test.tsx
+  s_97a431cfa65ca7::t_991a05874c42ab 32-33,35,37
+  s_97a431cfa65ca7::t_2202600af737a7 1-31,34,36,38-41
+src/reglages.ts
+  s_97a431cfa65ca7::t_0eec287c439ad2 217-218
+src/app/jeu/carte/page.module.css
+  s_97a431cfa65ca7::t_067ec7ed8203f9 7-12
+src/app/jeu/carte/vue.test.ts
+  s_97a431cfa65ca7::t_c92153f49ac7e4 137-150
+  s_97a431cfa65ca7::t_ce92dd719d6941 5
+src/app/jeu/carte/vue.ts
+  s_97a431cfa65ca7::t_5b66d4fbe97d4b 85-93
+  s_97a431cfa65ca7::t_c4b3a82e9dd903 84
+src/app/jeu/carte/styles.test.ts
+  s_97a431cfa65ca7::t_86ecee2b6293d5 5-9
+  s_97a431cfa65ca7::t_b18f1f8ae62502 30-50
+src/app/jeu/carte/BoutonsDeZoom.module.css
+  s_97a431cfa65ca7::t_06bebe84447a8b 1-51
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_604731fed98e2d 64-69
+  s_97a431cfa65ca7::t_897a1ba5f9e788 80,90
+  s_97a431cfa65ca7::t_464f2060ff0b84 4,6,10
+  s_97a431cfa65ca7::t_fff520177472ba 37-38,42-44
+  s_97a431cfa65ca7::t_4b24f8b39087a7 105,111,114-120
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_65a61733b10968 401-432
+src/app/jeu/carte/BoutonsDeZoom.tsx
+  s_97a431cfa65ca7::t_50f4bf9579f4a8 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d9716a71c38c95a37c036db24f9d98781d4ad7cb",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
