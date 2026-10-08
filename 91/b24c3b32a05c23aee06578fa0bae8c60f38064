@@ -1,0 +1,45 @@
+src/reglages.ts
+  s_97a431cfa65ca7::t_083dd5fff3cea9 228-234
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_19e96be9c3c9e5 369,372
+docs/stories/README.md
+  s_97a431cfa65ca7::t_8e19db2aab5343 7,33
+drizzle/0045_brouillard.sql
+  s_97a431cfa65ca7::t_c4db4e0ce7ba43 1-22
+drizzle/meta/0045_snapshot.json
+  s_97a431cfa65ca7::t_46dcc87f5ff41f 1-2414
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_ac80941c004737 319-325
+src/chefs/chef.ts
+  s_97a431cfa65ca7::t_f61d143a4fad44 7,9,76-77,94-95,122,129-130,133-135,189-190,204,206,223
+src/db/schema.ts
+  s_97a431cfa65ca7::t_e9265e88ee3f70 581-599
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_a45c3a9651e733 5,8,237-249
+src/monde/bascule.ts
+  s_97a431cfa65ca7::t_8085abce347aef 3,36-38,94-99
+src/monde/brouillard.db.test.ts
+  s_97a431cfa65ca7::t_fff5477f240aa0 1-183
+src/monde/brouillard.test.ts
+  s_97a431cfa65ca7::t_2c886b328b30e5 1-26
+src/monde/brouillard.ts
+  s_97a431cfa65ca7::t_5b3433fd8d659d 1-67
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_bd4bb5cdbdaaf3 13-15
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "91b24c3b32a05c23aee06578fa0bae8c60f38064",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
