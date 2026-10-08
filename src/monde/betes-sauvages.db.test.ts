@@ -155,6 +155,15 @@ describe.skipIf(!URL_TEST)("les Bêtes sauvages d'une Case en base (US-0925)", (
     expect(ensemble.get(-1)).toEqual([]);
   });
 
+  it("calcule une Case seule comme toutes les Cases d'un Monde à la fois : le résultat ne change pas (US-0930)", async () => {
+    const { rows } = await pool.query<{ id: number }>("select id from case_du_monde where monde_id = $1 order by id", [genereId]);
+    const ids = rows.map((c) => c.id);
+    const toutes = await betesSauvagesDesCases(pool, ids, DEBUT, apres(JOUR));
+    expect(toutes.size).toBe(ids.length);
+    expect([...toutes.values()].flat().length).toBeGreaterThan(1000);
+    for (const id of ids.filter((_, i) => i % 211 === 0)) expect(await betesSauvagesDUneCase(pool, id, DEBUT, apres(JOUR)), `${id}`).toEqual(toutes.get(id));
+  });
+
   describe("une Bête qui suit une Expédition (US-0926)", () => {
     /** Une période propre à chaque lancement, des années plus tard : les Bêtes emmenées d'un essai ne croisent pas les autres. */
     const PERIODE = new Date(Date.UTC(2031, 0, 1) + Math.floor(Math.random() * 3650) * JOUR + 1234);

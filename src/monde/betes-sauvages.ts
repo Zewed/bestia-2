@@ -5,7 +5,9 @@
 // présentes sur sa Case la verront (étape 40). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
 // seule une Bête partie plus tôt, en suivant une Expédition, laisse une trace en base (bete_partie). US-0927 : sa Rareté
 // se tire selon l'Anneau de sa Case ; US-0928 : son Espèce, parmi celles de cette Rareté qui vivent dans le Biome de sa
-// Case. Côté serveur et scripts uniquement.
+// Case. US-0930 : tout se compte en temps du jeu, par tranches fixes : pour une Case et une période, les mêmes Bêtes,
+// qu'on les calcule en direct ou au rattrapage, d'un bloc ou par morceaux, seule ou avec tout le Monde ; la vitesse
+// accélérée du temps accélère d'autant leurs apparitions et leurs durées. Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type ChancesDeRarete, lireRaretesParAnneau } from "@/donnees/jeux";
 import { APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";

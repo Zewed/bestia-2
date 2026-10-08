@@ -299,6 +299,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0930 · Des apparitions identiques en direct et au rattrapage
 **En tant que** développeur, **je veux** que les apparitions d'une Case se calculent toujours de la même façon, **afin de** garder un Monde juste, qu'on le regarde en direct, au rattrapage ou par la tâche planifiée.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Les mêmes Bêtes (Espèce, moment, durée) apparaissent quel que soit le découpage du temps (5 min, l'heure, le jour, au hasard), et qu'on calcule une Case seule ou tout le Monde. Une heure à vitesse ×100 donne exactement les mêmes Bêtes que 100 heures à vitesse ×1. Le calcul coûte environ 0,007 ms pour une Case et un jour, 56 ms pour les 10 981 Cases d'un Monde. Prouvé par les tests.
 - **Débloquée par** : US-0925, Étape 3
 - **Critères d'acceptation** :
   - Pour une Case et une période données, les Bêtes apparues (Espèce, moment, durée) sont les mêmes quelle que soit la façon dont le temps a été rattrapé.

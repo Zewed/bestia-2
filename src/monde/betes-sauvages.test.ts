@@ -2,8 +2,12 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { lireRaretesParAnneau } from "@/donnees/jeux";
-import { ANNEAUX_DU_MONDE, APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
-import { apparitions, betesSauvages, rangerLesEspeces, tirerUneEspece, tirerUneRarete } from "./betes-sauvages";
+import { ANNEAUX_DU_MONDE, APPARITIONS_PAR_CASE_PAR_JOUR, COEUR_SAUVAGE_RAYON, COURONNE_ANNEAUX, MONDE_RAYON, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
+import { definirAncre, maintenant } from "@/temps/horloge";
+import { anneauDUneCase } from "./anneaux";
+import { apparitions, type BeteSauvage, betesSauvages, rangerLesEspeces, tirerUneEspece, tirerUneRarete } from "./betes-sauvages";
+import { hacher } from "./couronne";
+import { genererLeMonde } from "./generer";
 import { casesDesAnneaux } from "./hex";
 
 const HEURE = 3_600_000;
@@ -277,5 +281,74 @@ describe("l'Espèce tirée selon le Biome (US-0928)", () => {
   it("tire de même quel que soit l'ordre où les Espèces arrivent", () => {
     const melangees = rangerLesEspeces([...CATALOGUE].reverse());
     expect(betesSauvages(LA_CASE, DEBUT, apres(60 * JOUR), melangees)).toEqual(betesSauvages(LA_CASE, DEBUT, apres(60 * JOUR), ESPECES));
+  });
+});
+
+describe("des apparitions identiques en direct et au rattrapage (US-0930)", () => {
+  /** Les Bêtes vues en parcourant [de, a) par morceaux, coupés aux instants `coupures`, chacune une fois, dans l'ordre de leur arrivée. */
+  const parMorceaux = (de: Date, a: Date, coupures: number[]) => {
+    const bornes = [de.getTime(), ...coupures.filter((t) => t > de.getTime() && t < a.getTime()).sort((x, y) => x - y), a.getTime()];
+    const vues = new Map<number, BeteSauvage>();
+    for (let i = 1; i < bornes.length; i++) {
+      for (const b of betesSauvages(LA_CASE, new Date(bornes[i - 1]), new Date(bornes[i]), ESPECES)) vues.set(b.numero, b);
+    }
+    return [...vues.values()].sort((x, y) => x.numero - y.numero);
+  };
+
+  it("donne pour une Case et une période les mêmes Bêtes (Espèce, moment, durée), quel que soit le découpage du temps", () => {
+    const [de, a] = [DEBUT, apres(30 * JOUR)];
+    const dUnBloc = betesSauvages(LA_CASE, de, a, ESPECES);
+    expect(dUnBloc.length).toBeGreaterThan(20);
+    // Par pas de cinq minutes, comme la tâche planifiée ; par heures ; par jours ; à des instants quelconques.
+    const pas = (ms: number) => Array.from({ length: Math.ceil((a.getTime() - de.getTime()) / ms) }, (_, i) => de.getTime() + i * ms);
+    const auHasard = Array.from({ length: 40 }, (_, i) => de.getTime() + Math.floor(hacher(i, 930) * (a.getTime() - de.getTime())));
+    for (const coupures of [pas(5 * 60_000), pas(HEURE), pas(JOUR), auHasard]) expect(parMorceaux(de, a, coupures)).toEqual(dUnBloc);
+    // Les arrivées se mettent bout à bout, jour après jour, sans manque ni doublon.
+    const parJour = pas(JOUR).flatMap((t) => apparitions(GRAINE, ICI, new Date(t), new Date(Math.min(t + JOUR, a.getTime()))));
+    expect(parJour).toEqual(apparitions(GRAINE, ICI, de, a));
+  });
+
+  it("calcule une Case seule comme au milieu de tout le Monde : le reste du Monde n'y change rien, et c'est vite fait", () => {
+    const forme = { rayon: MONDE_RAYON, anneauxCouronne: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON };
+    const monde = genererLeMonde({ rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: 417 });
+    const laCase = (c: (typeof monde)[number]) => ({ q: c.q, r: c.r, graine: 417, anneau: anneauDUneCase(c, forme), biome: c.biome });
+    const debut = performance.now();
+    const toutLeMonde = monde.map((c) => betesSauvages(laCase(c), DEBUT, apres(JOUR), ESPECES));
+    // Un jour de tout le Monde, près de onze mille Cases, se calcule en un instant ; une Case seule, à plus forte raison.
+    expect(performance.now() - debut).toBeLessThan(3000);
+    expect(toutLeMonde.flat().length).toBeGreaterThan(1000);
+    for (let i = 0; i < monde.length; i += 97) expect(betesSauvages(laCase(monde[i]), DEBUT, apres(JOUR), ESPECES)).toEqual(toutLeMonde[i]);
+  });
+
+  it("accélère les apparitions et leurs durées avec la vitesse du temps : à ×100, une heure réelle en vaut cent du jeu", () => {
+    vi.useFakeTimers();
+    const reel = Date.UTC(2026, 9, 8, 12);
+    /** Les Bêtes de la Case pendant `heures` heures réelles à la vitesse `facteur`, l'horloge du jeu partant de DEBUT. */
+    const pendant = (facteur: number, heures: number) => {
+      definirAncre({ facteur, reel, jeu: DEBUT.getTime() });
+      vi.setSystemTime(reel);
+      const de = maintenant();
+      vi.setSystemTime(reel + heures * HEURE);
+      return betesSauvages(LA_CASE, de, maintenant(), ESPECES);
+    };
+    try {
+      const enCentHeures = pendant(1, 100);
+      expect(enCentHeures.length).toBeGreaterThan(2);
+      expect(pendant(100, 1)).toEqual(enCentHeures);
+      // À ×100, une Bête ne reste que 3 minutes 36 secondes réelles sur sa Case.
+      const b = enCentHeures.find((x) => x.arrivee >= DEBUT)!;
+      const auReel = (jeu: Date) => reel + (jeu.getTime() - DEBUT.getTime()) / 100;
+      const presente = (instantReel: number) => {
+        vi.setSystemTime(instantReel);
+        const t = maintenant();
+        return betesSauvages(LA_CASE, t, new Date(t.getTime() + 1), ESPECES).some((x) => x.numero === b.numero);
+      };
+      definirAncre({ facteur: 100, reel, jeu: DEBUT.getTime() });
+      expect(presente(auReel(b.arrivee) + 1000)).toBe(true);
+      expect(presente(auReel(b.arrivee) + 3.5 * 60_000)).toBe(true);
+      expect(presente(auReel(b.arrivee) + 3.7 * 60_000)).toBe(false);
+    } finally {
+      definirAncre(null);
+    }
   });
 });
