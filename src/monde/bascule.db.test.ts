@@ -291,6 +291,35 @@ describe.skipIf(!URL_TEST)("naître sur le Monde généré, et y basculer les ch
     });
   }, 60_000);
 
+  it("refuse la naissance, sans erreur ni Foyer, quand plus aucune Case de la Couronne du Monde généré ouvert ne respecte les règles (US-0415)", async () => {
+    await dansUnJeuDEssai(async (client, essai) => {
+      await basculerLeMonde(client, MONDE_GENERE);
+      const [premier, ancien, tardif] = await nouveauxComptes(client, 3);
+      expect(await enregistrerNomDeChef(essai.pool, premier, "Ourse")).toEqual({ statut: "enregistre", nom: "Ourse" });
+      // Un chef d'avant les Foyers (US-0160), qui n'en a toujours pas.
+      await client.query(`insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, ${MONDE_DU_JEU}, 'Ancien', 'ancien')`, [ancien]);
+      // Toute la prairie libre de la Couronne est prise, sauf autour du Foyer d'Ourse : trop près de lui pour un autre Foyer.
+      const [foyer] = await foyers(client, [premier]);
+      const { rows: libres } = await client.query<Coordonnees & { id: number }>(
+        "select id, q, r from case_du_monde where monde_id = $1 and couronne and biome_id = 'prairie' and chef_id is null",
+        [genereId],
+      );
+      const loin = libres.filter((c) => distance(c, foyer) >= 4).map((c) => c.id);
+      const pres = libres.length - loin.length;
+      expect(pres).toBeGreaterThan(0);
+      const { rows: plein } = await client.query("select id from chef where monde_id = $1 and nom = 'Ourse'", [genereId]);
+      await client.query("update case_du_monde set chef_id = $1 where id = any($2)", [plein[0].id, loin]);
+      const compter = async () => (await client.query("select (select count(*)::int from chef) as chefs, (select count(*)::int from territoire) as territoires")).rows[0];
+      const avant = await compter();
+      expect(await enregistrerNomDeChef(essai.pool, tardif, "Tardif")).toEqual({ statut: "complet" });
+      expect(await naitreSurLaCouronne(essai.pool, ancien)).toBeNull();
+      expect(await compter()).toEqual(avant);
+      expect(await chefDuCompte(client as unknown as Pool, tardif)).toBeNull();
+      const { rows } = await client.query("select count(*)::int as n from case_du_monde where monde_id = $1 and couronne and biome_id = 'prairie' and chef_id is null", [genereId]);
+      expect(rows[0].n).toBe(pres);
+    });
+  }, 60_000);
+
   it("prépare encore la Couronne d'un Monde du jeu qui n'a qu'elle, comme Aube, mais rien sur un Monde généré, né avec toutes ses Cases", async () => {
     await dansUnJeuDEssai(async (client, essai) => {
       expect(await preparerLaCouronneDuJeu(client)).toEqual({ monde: essai.nom, preparee: { ajoutees: 0, total: 2070 } });

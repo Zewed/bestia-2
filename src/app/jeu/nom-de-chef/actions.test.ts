@@ -6,7 +6,7 @@ const chefs = vi.hoisted(() => ({ nomDejaPris: vi.fn(), nomInterdit: vi.fn(async
 vi.mock("@/chefs/chef", () => chefs);
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 
-import { NOM_DEJA_PRIS, NOM_NON_AUTORISE } from "@/chefs/nom";
+import { MONDE_COMPLET, NOM_DEJA_PRIS, NOM_NON_AUTORISE } from "@/chefs/nom";
 import { validerNomDeChef, verifierNomLibre } from "./actions";
 
 describe("vérifier qu'un nom de chef est libre (US-0135)", () => {
@@ -70,9 +70,10 @@ describe("valider le nom de chef (US-0139)", () => {
     expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: NOM_NON_AUTORISE });
   });
 
-  it("dit que le Monde est complet quand il n'y a plus de place pour un Foyer (US-0153, US-0159)", async () => {
-    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "complet", monde: "Aube" });
-    expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: "Aube est complet. Un nouveau Monde ouvre bientôt." });
+  it("dit que le Monde est complet quand il n'y a plus de place pour un Foyer, et qu'un autre ouvrira (US-0153, US-0415)", async () => {
+    chefs.enregistrerNomDeChef.mockResolvedValue({ statut: "complet" });
+    expect(await valider("Ourse")).toEqual({ nom: "Ourse", erreur: MONDE_COMPLET });
+    expect(MONDE_COMPLET).toBe("Le Monde est complet : il n'y a plus de place pour un nouveau Foyer. Un autre Monde ouvrira plus tard.");
   });
 
   it("dit qu'un nom est pris, le message étant choisi par l'écran", async () => {

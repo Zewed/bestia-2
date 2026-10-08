@@ -61,7 +61,7 @@ export type Enregistrement =
   | { statut: "enregistre"; nom: string }
   | { statut: "refuse"; erreur: string }
   | { statut: "pris" }
-  | { statut: "complet"; monde: string };
+  | { statut: "complet" };
 
 /**
  * Donne au compte son nom de chef dans le Monde du jeu (US-0137), sa Case sur la Couronne
@@ -111,7 +111,7 @@ export async function enregistrerNomDeChef(
     if (alerte) console.error(alerte);
     if (!naissance) {
       await client.query("rollback");
-      return { statut: "complet", monde: monde.nom };
+      return { statut: "complet" };
     }
     // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête. Le marque-page
     // du temps du Territoire part de sa naissance, à l'heure du jeu (US-0156).

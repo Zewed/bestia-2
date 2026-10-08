@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { enregistrerNomDeChef, nomDejaPris, nomInterdit } from "@/chefs/chef";
-import { mondeComplet, NOM_DEJA_PRIS, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "@/chefs/nom";
+import { MONDE_COMPLET, NOM_DEJA_PRIS, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "@/chefs/nom";
 import { exigerCompteSansChef } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
@@ -36,7 +36,7 @@ export async function validerNomDeChef(_precedent: EtatValidation, donnees: Form
   const resultat = await enregistrerNomDeChef(getPool(), compte.id, nom);
   if (resultat.statut === "refuse") return { nom, erreur: resultat.erreur };
   if (resultat.statut === "pris") return { nom, pris: true };
-  if (resultat.statut === "complet") return { nom, erreur: mondeComplet(resultat.monde) };
+  if (resultat.statut === "complet") return { nom, erreur: MONDE_COMPLET };
   redirect("/jeu/arrivee");
 }
 

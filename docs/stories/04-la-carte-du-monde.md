@@ -154,6 +154,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0415 · Refuser la naissance quand la Couronne est pleine
 **En tant que** nouveau joueur, **je veux** un message clair si le Monde n'a plus de place pour moi, **afin de** ne pas rester bloqué sans comprendre.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Quand il ne reste aucune Case de prairie de la Couronne à 4 Cases de tout Foyer, le Monde est plein : le nouveau joueur lit « Le Monde est complet : il n'y a plus de place pour un nouveau Foyer. Un autre Monde ouvrira plus tard. » sous le champ de son nom, « Valider » grisé ; aucun chef ni Territoire n'est créé, aucune erreur n'est levée. Prouvé sur un Monde généré ouvert et plein.
 - **Débloquée par** : US-0414
 - **Critères d'acceptation** :
   - Quand plus aucune Case de la Couronne ne respecte les règles de naissance, le Monde est plein.
