@@ -4,32 +4,73 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_b09ea02b281aae 7
 drizzle/0042_famine_imminente.sql
   s_97a431cfa65ca7::t_89a40ff3b1d4e8 1-4
+  s_97a431cfa65ca7::t_bcff9f7d50f315 1-4
 drizzle/meta/0042_snapshot.json
   s_97a431cfa65ca7::t_11bf14241c11ae 1-2319
+  s_97a431cfa65ca7::t_130f7e0b38a0a9 1-2319
 drizzle/meta/_journal.json
   s_97a431cfa65ca7::t_bd2d4492ed397e 298-304
+  s_97a431cfa65ca7::t_b8dafc968ee0fd 298-304
 src/components/ActionsDuJeu.test.tsx
   s_97a431cfa65ca7::t_80730258c65daf 19,45,245,287-326,335
+  s_97a431cfa65ca7::t_c37b28d1f5e314 295
+  s_97a431cfa65ca7::t_a9e12c84c87542 19
+  s_97a431cfa65ca7::t_a851f68b7cc408 245
+  s_97a431cfa65ca7::t_b3f98f9f482289 335
+  s_97a431cfa65ca7::t_26e6cbfbf6da53 45
+  s_97a431cfa65ca7::t_2718db64a970a5 287-294,296-326
 src/components/ActionsDuJeu.tsx
   s_97a431cfa65ca7::t_ec2a12a3d13b56 2-11,34,43,52,54,70-72
+  s_97a431cfa65ca7::t_94bd49553c13a5 34
+  s_97a431cfa65ca7::t_fc13fed9d061db 52,54
+  s_97a431cfa65ca7::t_1062dca3e869a0 43
+  s_97a431cfa65ca7::t_4b73bed59c9503 2-11
+  s_97a431cfa65ca7::t_7d67e15c66d62c 70-72
 src/components/FamineImminente.test.tsx
   s_97a431cfa65ca7::t_6e29c52da7beee 23,28,68,81-130
+  s_97a431cfa65ca7::t_6e663e34ff637c 23,68
+  s_97a431cfa65ca7::t_268601c11c6147 28
+  s_97a431cfa65ca7::t_e635f2bb57f94f 81-130
 src/components/FamineImminente.tsx
   s_97a431cfa65ca7::t_cfd5f015198998 5,21-25,27,30,49-51
+  s_97a431cfa65ca7::t_3b724bfac47551 5,21-25,27,30,50-51
+  s_97a431cfa65ca7::t_9c83aca9126285 49
 src/comptes/garde.test.ts
   s_97a431cfa65ca7::t_b4211bfc29d364 24-38,165-175
+  s_97a431cfa65ca7::t_14e40718cafe99 24-38
+  s_97a431cfa65ca7::t_973516d28fc56a 165-175
 src/comptes/garde.ts
   s_97a431cfa65ca7::t_c3a82e8b397c17 11,136-145
+  s_97a431cfa65ca7::t_590b44f70e2490 11
+  s_97a431cfa65ca7::t_994eab11b7cb5c 136-145
 src/db/schema.ts
   s_97a431cfa65ca7::t_42ac0dbda327c2 432-436
+  s_97a431cfa65ca7::t_463f3d30744044 432-436
 src/monde/famine-imminente.db.test.ts
   s_97a431cfa65ca7::t_5ca8ff6739928b 1-159
+  s_97a431cfa65ca7::t_5cd0d3b6dd55f7 127-128
+  s_97a431cfa65ca7::t_ee292807baf000 25-26,28,35-36,38
+  s_97a431cfa65ca7::t_ffb893e2c5a649 134,142-151
+  s_97a431cfa65ca7::t_871cd991514b7a 1-9,12,14-24,27,29-34,37,39-126,129-133,152-159
+  s_97a431cfa65ca7::t_54cefab4cce7b7 10-11,13
+  s_97a431cfa65ca7::t_62e1c39210f1b8 135-141
 src/monde/nourriture.test.ts
   s_97a431cfa65ca7::t_f73d3b747bfc49 5-6,180-221
+  s_97a431cfa65ca7::t_79b284957c4154 184
+  s_97a431cfa65ca7::t_b2c8e49796620e 5-6
+  s_97a431cfa65ca7::t_6bce84ea99271b 180-183,185-221
 src/monde/nourriture.ts
   s_97a431cfa65ca7::t_30f2a36fd721bc 79-89,105-110,112-124
+  s_97a431cfa65ca7::t_adabb4dd98875e 105-110,112-124
+  s_97a431cfa65ca7::t_438bd33a07b82c 79-89
 src/monde/production.ts
   s_97a431cfa65ca7::t_8d95ec2ddde9dc 2,4-5,63-65,87-95,116-143,202-213
+  s_97a431cfa65ca7::t_c14329101e3411 116-127,130,132-143
+  s_97a431cfa65ca7::t_474643cd5d80e7 87-95
+  s_97a431cfa65ca7::t_79f46e9465b048 2,4-5
+  s_97a431cfa65ca7::t_dbe1ecedb718cc 128-129,131
+  s_97a431cfa65ca7::t_37b31216344b40 63-65
+  s_97a431cfa65ca7::t_49a889614f9710 202-213
 ---
 {
   "schema_version": "authorship/3.0.0",
