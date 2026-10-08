@@ -3,10 +3,13 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { CARTE_UTILISABLE_SECONDES } from "@/reglages";
+import { ABORDS_DU_FOYER_CASES, CARTE_UTILISABLE_SECONDES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { casesDecouvertes, decouvrir } from "./brouillard";
 import { carteDuJoueur } from "./carte";
+import { BROUILLARD } from "./couleurs-de-la-carte";
 import { creerUnMonde, genererLeMonde } from "./generer";
+import { distance } from "./hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "./zones";
 
 /** Le Monde généré des essais de ce fichier, créé une fois pour toutes dans la base de test : un Monde ne s'efface pas. */
@@ -67,13 +70,23 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(places(carte!.cases)).toContain(`${foyer.q},${foyer.r}`);
   });
 
-  it("donne à chaque Case sa teinte : son Biome, ou pour l'eau sa variante (US-0418)", async () => {
-    const { territoireId } = await naitre(genereId);
+  it("donne à chaque Case découverte sa teinte : son Biome, ou pour l'eau sa variante (US-0418) ; aux autres, le brouillard (US-0437)", async () => {
+    const { territoireId, foyer } = await naitre(genereId);
     const carte = (await carteDuJoueur(pool, territoireId))!;
-    // Chaque teinte une fois : les huit Biomes de terre et les quatre eaux de ce Monde.
-    expect([...carte.teintes].sort()).toEqual(["banquise", "cote", "desert", "foret", "jungle", "lac", "mer", "montagne", "prairie", "riviere", "savane", "toundra"]);
-    const attendues = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE }).map((c) => (c.biome === "eau" ? c.variante : c.biome));
+    const monde = genererLeMonde({ rayon: 60, anneaux: 6, rayonCoeur: 8, graine: GRAINE });
+    const teinte = (c: (typeof monde)[number]) => (c.biome === "eau" ? c.variante : c.biome);
+    // Au départ, les abords de son Foyer, lui compris ; tout le reste sous le brouillard.
+    const attendues = monde.map((c) => (distance(c, foyer) <= ABORDS_DU_FOYER_CASES ? teinte(c) : BROUILLARD));
     expect(carte.cases.teinte.map((t) => carte.teintes[t])).toEqual(attendues);
+    expect(carte.teintes[carte.cases.teinte[places(carte.cases).indexOf(`${foyer.q},${foyer.r}`)]]).toBe("prairie");
+    // Chaque teinte une fois : celles des Cases découvertes, et le brouillard.
+    expect([...carte.teintes].sort()).toEqual([...new Set(attendues)].sort());
+    // Une Case découverte ensuite, loin de son Foyer, montre sa teinte à la lecture suivante.
+    const loin = monde.find((c) => c.biome === "eau" && c.variante === "mer")!;
+    expect(distance(loin, foyer)).toBeGreaterThan(ABORDS_DU_FOYER_CASES);
+    await decouvrir(pool, territoireId, [loin]);
+    const apres = (await carteDuJoueur(pool, territoireId))!;
+    expect(apres.cases.teinte.map((t) => apres.teintes[t])).toEqual(monde.map((c, i) => (c === loin ? "mer" : attendues[i])));
   });
 
   it("donne à chaque Case sa zone : la Couronne, le Cœur sauvage, ou ni l'une ni l'autre (US-0433)", async () => {
@@ -121,9 +134,12 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte?.foyer).toEqual(foyer);
     expect(places(carte!.cases)).toEqual(rows[0].places);
     expect(carte!.cases.q).toHaveLength(2070);
-    // US-0418 : sa Couronne a ses Biomes et ses lacs.
-    expect([...carte!.teintes].sort()).toEqual(["desert", "foret", "lac", "montagne", "prairie", "savane"]);
+    // US-0418 : sa Couronne a ses Biomes et ses lacs ; US-0437 : on n'en voit que les abords de son Foyer, le reste sous le brouillard.
+    expect(carte!.teintes).toContain(BROUILLARD);
+    for (const teinte of carte!.teintes) expect([BROUILLARD, "desert", "foret", "lac", "montagne", "prairie", "savane"]).toContain(teinte);
     expect(carte!.cases.teinte).toHaveLength(2070);
+    const decouvertes = await casesDecouvertes(pool, territoireId);
+    expect(carte!.cases.teinte.filter((t) => carte!.teintes[t] !== BROUILLARD)).toHaveLength(decouvertes.length);
     // US-0433 : toutes de la Couronne.
     expect(new Set(carte!.cases.zone)).toEqual(new Set([ZONE_COURONNE]));
   });

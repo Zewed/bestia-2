@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { couleur } from "@/monde/couleurs-de-la-carte";
+import { BROUILLARD, couleur } from "@/monde/couleurs-de-la-carte";
 import { Legende } from "./Legende";
 
 /** Un fichier du projet, lu tel qu'il est écrit. */
@@ -24,8 +24,8 @@ describe("la légende de la carte à l'écran (US-0432)", () => {
     const teintes = ["prairie", "jungle", "lac"].map((teinte) => ({ teinte, nom: teinte }));
     const html = renderToStaticMarkup(createElement(Legende, { terre: teintes.slice(0, 2), eaux: teintes.slice(2) }));
     const couleurs = new Set([...html.matchAll(/(?:fill|stroke):([^;"]+)/g)].map(([, c]) => c).filter((c) => c !== "none"));
-    // Hors le fond de chaque teinte, que la page donne aux deux.
-    const fonds = new Set(teintes.map((t) => couleur(t.teinte)));
+    // Hors le fond de chaque teinte, brouillard compris (US-0437), que la page donne aux deux.
+    const fonds = new Set([...teintes.map((t) => couleur(t.teinte)), couleur(BROUILLARD)]);
     const autres = [...couleurs].filter((c) => !fonds.has(c));
     expect(autres.length).toBeGreaterThanOrEqual(5);
     const carte = lire("src/app/jeu/carte/CarteDuJeu.tsx");

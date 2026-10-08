@@ -1,7 +1,7 @@
 "use client";
 
 import { type CSSProperties, type ReactNode, useEffect, useId, useRef, useState } from "react";
-import { couleur } from "@/monde/couleurs-de-la-carte";
+import { BROUILLARD, couleur } from "@/monde/couleurs-de-la-carte";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { type CarteADessiner, dessinerLaCarte, enSvg, type Peinture, type TraitSvg, vueSurLeFoyer } from "./dessin";
@@ -126,8 +126,8 @@ function Groupe({ titre, uneColonne = false, children }: { titre: string; uneCol
 /**
  * US-0432 : la légende de la carte, derrière un bouton « Légende » en haut à droite : chaque Biome de terre et chaque
  * eau, dans leur ordre, chacun dans une Case dessinée comme sur la carte, puis le repère de son Foyer et les Foyers des
- * autres chefs ; US-0433 : et les liserés des limites de la Couronne et du Cœur sauvage. Un geste l'ouvre, un autre
- * la ferme ; l'appareil retient si elle était ouverte. Sur ordinateur, un
+ * autres chefs ; US-0433 : et les liserés des limites de la Couronne et du Cœur sauvage ; US-0437 : enfin le brouillard.
+ * Un geste l'ouvre, un autre la ferme ; l'appareil retient si elle était ouverte. Sur ordinateur, un
  * panneau flottant sous le bouton ; sur mobile, un panneau en bas, au-dessus des onglets, qui laisse voir la carte.
  * US-0426 : elle se déclare posée sur la carte, et publie la hauteur de son panneau ouvert en bas. US-0431 : sur
  * mobile, elle cède sa place en bas à la fiche d'une Case, et la reprend dès qu'on touche son bouton.
@@ -206,6 +206,10 @@ export function Legende({ terre, eaux }: { terre: TeinteNommee[]; eaux: TeinteNo
           <li>
             <Echantillon teinte="prairie" cases={deuxCases(ZONE_COEUR)} />
             Limite du Cœur sauvage
+          </li>
+          <li>
+            <Echantillon teinte={BROUILLARD} />
+            Brouillard
           </li>
         </Groupe>
       </div>

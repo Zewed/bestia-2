@@ -380,6 +380,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0437 · Dessiner le brouillard
 **En tant que** joueur, **je veux** distinguer au premier regard les Cases découvertes de celles sous le brouillard, **afin de** voir ce qu'il me reste à explorer.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une Case sous le brouillard est peinte d'une brume unie, sans motif ni bord, d'un neutre distinct de toutes les teintes de Biome et d'eau. Sous la brume, on ne voit ni liseré de la Couronne ou du Cœur sauvage, ni Foyer d'un autre chef, et rien ne se devine à son bord. La légende ajoute « Brouillard » aux Repères. Vérifié en vrai.
 - **Débloquée par** : US-0436, US-0432
 - **Critères d'acceptation** :
   - Une Case sous le brouillard est dessinée d'un aspect uniforme, sans son Biome ni son propriétaire.
