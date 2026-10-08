@@ -1,0 +1,31 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_9cb1bbf48bf0c0 220
+docs/stories/README.md
+  s_97a431cfa65ca7::t_f7e083991d4f96 7
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_3b7917a7f98a5d 285-301
+src/app/jeu/carte/gestes.test.ts
+  s_97a431cfa65ca7::t_f65768c60935aa 3,84-119
+src/app/jeu/carte/gestes.ts
+  s_97a431cfa65ca7::t_8b97985370b138 12-13,15,21-22,25-27,33-34,39
+src/app/jeu/carte/page.module.css
+  s_97a431cfa65ca7::t_a53d961b853d98 7-10,17-18
+src/app/jeu/carte/styles.test.ts
+  s_97a431cfa65ca7::t_8da1bff4461018 16-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e5f85598e4d9f0227fcb34191efe1a2f01152cbc",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
