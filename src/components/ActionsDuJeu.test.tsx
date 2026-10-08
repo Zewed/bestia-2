@@ -16,6 +16,7 @@ const garde = vi.hoisted(() => ({
   voyageursALHeure: vi.fn(async () => 0),
   sansMetierALHeure: vi.fn(async () => 0),
   entretienALHeure: vi.fn(async () => "6.000000"),
+  famineImminenteALHeure: vi.fn(async (): Promise<number | null> => null),
 }));
 vi.mock("@/comptes/garde", () => garde);
 // US-0321 : le vrai avertissement, observé pour voir ce que la barre lui confie.
@@ -41,6 +42,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     garde.voyageursALHeure.mockClear();
     garde.sansMetierALHeure.mockClear();
     garde.entretienALHeure.mockClear();
+    garde.famineImminenteALHeure.mockClear();
     famine.FamineImminente.mockClear();
   });
   const joueur = (chef: { nomDeChef: string | null; territoireId?: number | null; recitLu?: boolean }) =>
@@ -240,7 +242,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       expect(garde.entretienALHeure).toHaveBeenCalledWith(12);
       const lu = avertissement(html);
       expect(lu?.[1]).toMatch(/href="\/jeu\/habitants"/);
-      expect(lu?.[2].replace(/<[^>]+>/g, "|").split("|").filter((t) => t.trim())).toEqual(["Famine imminente", "Nourriture pour encore 8 h", "Voir"]);
+      expect(lu?.[2].replace(/<[^>]+>/g, "|").split("|").filter((t) => t.trim())).toEqual(["Famine imminente", " depuis un instant", "Nourriture pour encore 8 h", "Voir"]);
       // Après le nom du chef : c'est la dernière chose de la barre.
       expect(html.indexOf("data-alerte-famine")).toBeGreaterThan(html.indexOf("Ourse"));
       expect(html).toMatch(/<\/a>$/);
@@ -282,6 +284,46 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       await rendue;
     });
 
+    it("dit depuis quand la famine est imminente, comme le Territoire le retient après le rattrapage (US-0322)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      garde.stocksALHeure.mockResolvedValueOnce(nourriture("10.000000", "7.500000"));
+      garde.entretienALHeure.mockResolvedValueOnce("24.000000");
+      garde.famineImminenteALHeure.mockResolvedValueOnce(3.25);
+      const html = await rendu();
+      expect(garde.famineImminenteALHeure).toHaveBeenCalledWith(12);
+      expect(famine.FamineImminente.mock.lastCall?.[0]).toMatchObject({ depuis: 3.25 });
+      expect(avertissement(html)?.[2].replace(/<[^>]+>/g, "")).toBe("Famine imminente depuis 3\u00a0h Nourriture pour encore 8\u00a0h Voir");
+    });
+
+    it("lit depuis quand en même temps que les Stocks et le reste de la barre (US-0322)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      const lectures: string[] = [];
+      let finir = () => {};
+      garde.stocksALHeure.mockImplementationOnce(async () => {
+        lectures.push("stocks");
+        await new Promise<void>((fin) => (finir = fin));
+        return [];
+      });
+      garde.famineImminenteALHeure.mockImplementationOnce(async () => (lectures.push("famine imminente"), null));
+      const rendue = rendu();
+      await vi.waitFor(() => expect(lectures).toEqual(["stocks", "famine imminente"]));
+      finir();
+      await rendue;
+    });
+
+    it("repart des nouvelles valeurs quand le Territoire retient la famine imminente : la clé change avec elle (US-0322)", async () => {
+      joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: true });
+      const cle = async (depuis: number | null) => {
+        garde.stocksALHeure.mockResolvedValueOnce(nourriture("10.000000", "7.500000"));
+        garde.entretienALHeure.mockResolvedValueOnce("24.000000");
+        garde.famineImminenteALHeure.mockResolvedValueOnce(depuis);
+        const element = await ActionsDuJeu();
+        const enfants = (element as { props: { children: { type: unknown; key: string | null }[] } }).props.children;
+        return enfants.find((enfant) => enfant?.type === famine.FamineImminente)?.key;
+      };
+      expect(await cle(null)).not.toBe(await cle(0.5));
+    });
+
     it("ne lit pas l'Entretien avant le récit d'arrivée, ni sans Territoire", async () => {
       joueur({ nomDeChef: "Ourse", territoireId: 12, recitLu: false });
       await rendu();
@@ -290,6 +332,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
       joueur({ nomDeChef: null });
       await rendu();
       expect(garde.entretienALHeure).not.toHaveBeenCalled();
+      expect(garde.famineImminenteALHeure).not.toHaveBeenCalled();
     });
   });
 

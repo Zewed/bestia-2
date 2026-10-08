@@ -1,5 +1,14 @@
 import { connection } from "next/server";
-import { entretienALHeure, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, sansMetierALHeure, stocksALHeure, voyageursALHeure } from "@/comptes/garde";
+import {
+  entretienALHeure,
+  famineImminenteALHeure,
+  habitantsALHeure,
+  joueurConnecte,
+  recitsNonLusALHeure,
+  sansMetierALHeure,
+  stocksALHeure,
+  voyageursALHeure,
+} from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { nourriturePourEncoreDesStocks } from "@/monde/nourriture";
 import { vitesse } from "@/temps/horloge";
@@ -22,6 +31,7 @@ import { Ressources } from "./Ressources";
  *
  * US-0321 : au bas de la barre, l'avertissement « famine imminente », compté sur les Stocks et l'Entretien
  * lus avec le reste ; tant que la Nourriture baisse, il est posé, prêt à paraître page ouverte au seuil.
+ * US-0322 : avec depuis quand le Territoire retient la famine imminente, lu avec le reste après le rattrapage.
  */
 export async function ActionsDuJeu() {
   await connection();
@@ -30,7 +40,7 @@ export async function ActionsDuJeu() {
   if (!joueur) return null;
   if (!joueur.nomDeChef) return <BoutonDeconnexion />;
   const territoireId = joueur.recitLu ? joueur.territoireId : null;
-  const [stocks, habitants, recitsNonLus, voyageurs, sansMetier, entretien] =
+  const [stocks, habitants, recitsNonLus, voyageurs, sansMetier, entretien, famineImminente] =
     territoireId !== null
       ? await Promise.all([
           stocksALHeure(territoireId),
@@ -39,8 +49,9 @@ export async function ActionsDuJeu() {
           voyageursALHeure(territoireId),
           sansMetierALHeure(territoireId),
           entretienALHeure(territoireId),
+          famineImminenteALHeure(territoireId),
         ])
-      : [null, null, null, null, null, null];
+      : [null, null, null, null, null, null, null];
   // US-0321 : dans combien d'heures de jeu la Nourriture ne paiera plus l'Entretien ; null quand elle est assurée.
   const famine = stocks && entretien !== null ? nourriturePourEncoreDesStocks(stocks, entretien) : null;
   return (
@@ -56,7 +67,9 @@ export async function ActionsDuJeu() {
       {stocks ? <Presence key={`presence-${stocks.map((s) => s.quantite).join("|")}`} /> : null}
       <MenuChef nom={joueur.nomDeChef} />
       {/* US-0321 : comme les quantités, l'avertissement repart du nouveau temps à chaque recalage de la barre. */}
-      {famine !== null ? <FamineImminente key={`famine-${famine}`} heures={famine} vitesse={vitesse()} /> : null}
+      {famine !== null ? (
+        <FamineImminente key={`famine-${famine}-${famineImminente}`} heures={famine} depuis={famineImminente} vitesse={vitesse()} />
+      ) : null}
     </>
   );
 }

@@ -429,6 +429,11 @@ export const territoire = pgTable("territoire", {
   recitLuLe: timestamp("recit_lu_le", { withTimezone: true }),
   /** US-0216 : la dernière fois que le joueur avait une page du jeu ouverte ; null avant sa première visite notée. */
   vuLe: timestamp("vu_le", { withTimezone: true }),
+  /**
+   * US-0322 : l'instant exact du jeu où la famine est devenue imminente, la Nourriture ne couvrant plus que
+   * FAMINE_IMMINENTE_HEURES heures d'Entretien ; null tant qu'elle ne l'est pas. Le mécanisme du temps le tient à jour.
+   */
+  famineImminenteDepuis: timestamp("famine_imminente_depuis", { withTimezone: true }),
 });
 
 /**

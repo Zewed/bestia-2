@@ -21,8 +21,21 @@ const recits = vi.hoisted(() => ({ nombreDeRecitsNonLus: vi.fn(async () => 0) })
 vi.mock("@/monde/recits", () => recits);
 const voyageurs = vi.hoisted(() => ({ nombreDeVoyageurs: vi.fn(async () => 0) }));
 vi.mock("@/monde/voyageurs", () => voyageurs);
+const production = vi.hoisted(() => ({ famineImminenteDepuis: vi.fn(async (): Promise<number | null> => null) }));
+vi.mock("@/monde/production", () => production);
 
-import { entretienALHeure, exigerCompte, exigerCompteSansChef, habitantsALHeure, joueurConnecte, recitsNonLusALHeure, sansMetierALHeure, stocksALHeure, voyageursALHeure } from "./garde";
+import {
+  entretienALHeure,
+  exigerCompte,
+  exigerCompteSansChef,
+  famineImminenteALHeure,
+  habitantsALHeure,
+  joueurConnecte,
+  recitsNonLusALHeure,
+  sansMetierALHeure,
+  stocksALHeure,
+  voyageursALHeure,
+} from "./garde";
 
 describe("garde du jeu", () => {
   const connecte = (chef: { nom: string; territoireId?: number | null; recitLu?: boolean } | null) => {
@@ -146,6 +159,17 @@ describe("garde du jeu", () => {
     expect(await entretienALHeure(17)).toBe("24.000000");
     expect(temps.rattraper).toHaveBeenCalledWith("territoire", 17);
     expect(habitants.entretienDesHabitants).toHaveBeenCalledWith(expect.anything(), 17);
+    expect(ordre).toEqual(["rattrapage", "lecture"]);
+  });
+
+  it("lit depuis quand la famine est imminente après avoir mis le Territoire à l'heure : un seuil franchi pendant l'absence compte dès l'ouverture (US-0322)", async () => {
+    temps.rattraper.mockClear();
+    const ordre: string[] = [];
+    temps.rattraper.mockImplementationOnce(async () => (ordre.push("rattrapage"), new Date()));
+    production.famineImminenteDepuis.mockImplementationOnce(async () => (ordre.push("lecture"), 3));
+    expect(await famineImminenteALHeure(18)).toBe(3);
+    expect(temps.rattraper).toHaveBeenCalledWith("territoire", 18);
+    expect(production.famineImminenteDepuis).toHaveBeenCalledWith(expect.anything(), 18);
     expect(ordre).toEqual(["rattrapage", "lecture"]);
   });
 

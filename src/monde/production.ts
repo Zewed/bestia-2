@@ -1,8 +1,8 @@
 // La production continue du Territoire (US-0210) et l'Entretien de ses Habitants (US-0316), appliqués
-// ensemble par le mécanisme unique du temps.
+// ensemble par le mécanisme unique du temps, qui tient aussi l'avertissement « famine imminente » (US-0322).
 import "server-only";
-import type { PoolClient } from "pg";
-import { ENTRETIEN_HABITANT_PAR_HEURE } from "@/reglages";
+import type { Pool, PoolClient } from "pg";
+import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES } from "@/reglages";
 
 /**
  * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
@@ -60,6 +60,9 @@ const compteur = (s: string, c: string, t: string) => `div(${s} + (${c}) * (${t}
 /** x ÷ y arrondi au-dessus, exactement. */
 const auDessus = (x: string, y: string) => `(div(${x}, ${y}) + case when mod(${x}, ${y}) = 0 then 0 else 1 end)`;
 
+/** US-0322 : le seuil de l'avertissement « famine imminente », en pas d'une microseconde. */
+const SEUIL_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES} * 3600000000`;
+
 /**
  * La mise à l'heure des Stocks du Territoire $1 entre les instants $2 et $3 : la production (US-0210) et
  * l'Entretien des Habitants (US-0316), ensemble, en décimaux exacts.
@@ -81,6 +84,15 @@ const auDessus = (x: string, y: string) => `(div(${x}, ${y}) + case when mod(${x
  * pas de la bascule. Le résultat est exactement celui du déroulement pas à pas, quel que soit le découpage du
  * temps : mille calculs d'une minute donnent exactement un calcul de mille minutes, reste compris. Les bornes
  * $2 et $3 tombent toujours sur un pas, les instants du jeu étant comptés en microsecondes.
+ *
+ * US-0322 : la même mise à l'heure tient l'avertissement « famine imminente » du Territoire. Elle déroule la
+ * même règle depuis $2, sans s'arrêter à $3, jusqu'au pas où l'Entretien ne sera plus payé en entier : la
+ * Nourriture tient jusque-là (comme nourriturePourEncore). Entre $2 et $3, rien ne change les débits : ce temps
+ * baisse d'un pas à chaque pas, et la famine devient imminente au pas exact où il ne vaut plus que
+ * FAMINE_IMMINENTE_HEURES heures. Si ce pas tombe avant $3, son instant est noté, et gardé tant que la famine
+ * reste imminente. Déjà sous le seuil en $2 sans être noté (un Habitant de plus, ou un Territoire calculé avant
+ * la mise en ligne d'US-0322), l'avertissement part de $2 : on ne remonte pas dans le passé. C'est le même pas
+ * quel que soit le découpage du temps : page ouverte, fermée ou tâche planifiée donnent le même instant.
  */
 export const PRODUIRE = `
   with production as (${PRODUCTION_DU_TERRITOIRE}),
@@ -101,6 +113,34 @@ export const PRODUIRE = `
     where s.territoire_id = $1
   ),
   partage as (select etat.*, ${pasImpaye("s0", "p", "c1", "l")} as da from etat),
+  -- US-0322 : le pas, compté depuis $2, où la Nourriture ne paiera plus l'Entretien en entier, au-delà de $3 s'il le
+  -- faut : f1, le premier où un Stock de Nourriture ne peut plus payer sa moitié (null : la Nourriture est assurée),
+  -- puis, comme d1 et d2 plus bas, celui où l'autre ne peut plus payer tout le reste.
+  famine_d1 as materialized (select partage.*, min(da) over () as f1 from partage where nourriture),
+  famine_s1 as materialized (select famine_d1.*, ${apresPas("s0", "p", "c1", "l", "f1")} as fs1 from famine_d1),
+  famine_pas as (
+    select famine_s1.*,
+      case when da = f1 then fs1 + p else least(fs1 + p, e - (sum(fs1 + p) over () - (fs1 + p))) end as fc2,
+      case when da = f1 then p else e - (sum(p) over () - p) end as fc3
+    from famine_s1
+  ),
+  famine_s2 as materialized (select famine_pas.*, ${unPas("fs1", "p", "fc2", "l")} as fs2 from famine_pas),
+  -- Quand les deux ne peuvent plus payer leur moitié au même pas, la Nourriture manque dès f1 (« is not distinct
+  -- from » : bool_and passerait sur le Stock qui paie toujours sa moitié, dont da est null).
+  famine as (
+    select case when bool_and(da is not distinct from f1) then min(f1) else min(f1 + 1 + ${pasImpaye("fs2", "p", "fc3", "l")}) end as pas
+    from famine_s2
+  ),
+  famine_imminente as (
+    update territoire t set famine_imminente_depuis = case
+        when f.pas <= ${SEUIL_FAMINE_IMMINENTE} and t.famine_imminente_depuis is not null then t.famine_imminente_depuis
+        when f.pas <= ${SEUIL_FAMINE_IMMINENTE} + pas.k
+          then $2::timestamptz + make_interval(secs => (greatest(0, f.pas - ${SEUIL_FAMINE_IMMINENTE}) / 1000000)::double precision)
+        else null
+      end
+    from famine f cross join pas
+    where t.id = $1
+  ),
   -- d1 : le premier pas où l'un des deux Stocks de Nourriture ne peut plus payer sa moitié ; k s'il n'y en a pas.
   bascule as (select partage.*, least(k, min(da) over (partition by nourriture)) as d1 from partage),
   -- « materialized » : chaque étape est calculée une fois ; sans cela, Postgres recopierait ses formules dans les suivantes.
@@ -158,4 +198,16 @@ export const PRODUIRE = `
  */
 export async function produire(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
   await client.query(PRODUIRE, [territoireId, depuis, jusqua]);
+}
+
+/**
+ * US-0322 : depuis combien d'heures de jeu la famine est imminente, à l'instant jusqu'où le Territoire est
+ * calculé, celui de ses Stocks ; null quand elle ne l'est pas.
+ */
+export async function famineImminenteDepuis(base: Pool | PoolClient, territoireId: number): Promise<number | null> {
+  const { rows } = await base.query<{ heures: string | null }>(
+    "select extract(epoch from calcule_jusqu_a - famine_imminente_depuis) / 3600 as heures from territoire where id = $1",
+    [territoireId],
+  );
+  return rows[0]?.heures == null ? null : Number(rows[0].heures);
 }

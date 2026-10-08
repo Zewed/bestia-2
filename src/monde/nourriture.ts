@@ -76,6 +76,17 @@ export function nourritureRestante(heures: number, ecoule: number, vitesse: numb
   return Math.max(0, heures - (vitesse * ecoule) / HEURE_MS);
 }
 
+/**
+ * US-0322 : depuis combien d'heures de jeu la famine est imminente, `ecoule` millisecondes réelles après la
+ * lecture des Stocks, au rythme du jeu. `depuis` : ce que le Territoire retient à la lecture (famineImminenteDepuis) ;
+ * sans rien de retenu, depuis le passage du seuil, page ouverte, ou depuis la lecture si la Nourriture était déjà
+ * dessous : c'est l'instant que le prochain rattrapage retiendra.
+ */
+export function depuisFamineImminente(heures: number, depuis: number | null, ecoule: number, vitesse: number): number {
+  const passe = (vitesse * ecoule) / HEURE_MS;
+  return depuis !== null ? depuis + passe : Math.max(0, passe - Math.max(0, heures - FAMINE_IMMINENTE_HEURES));
+}
+
 /** La plus petite durée du jeu, la microseconde, en heures : en deçà, l'écart n'est qu'une erreur d'arrondi du calcul. */
 const MICROSECONDES_PAR_HEURE = 3_600_000_000;
 
@@ -91,7 +102,24 @@ export function tenueDeLaNourriture(heures: number | null): string {
   if (heures === null) return "Nourriture assurée";
   const entieres = Math.floor(Math.round(heures * MICROSECONDES_PAR_HEURE) / MICROSECONDES_PAR_HEURE);
   if (entieres < 1) return "Nourriture pour encore moins d'une heure";
-  if (entieres <= 48) return `Nourriture pour encore ${unite(entieres, "h")}`;
+  return `Nourriture pour encore ${enHeuresOuEnJours(entieres)}`;
+}
+
+/** Des heures entières : « 7 h » jusqu'à 48 h, puis en jours et heures, « 3 j 5 h », « 3 j ». */
+function enHeuresOuEnJours(entieres: number): string {
+  if (entieres <= 48) return unite(entieres, "h");
   const [jours, reste] = [Math.floor(entieres / 24), entieres % 24];
-  return `Nourriture pour encore ${unite(jours, "j")}${reste ? ` ${unite(reste, "h")}` : ""}`;
+  return `${unite(jours, "j")}${reste ? ` ${unite(reste, "h")}` : ""}`;
+}
+
+/**
+ * US-0322 : depuis quand la famine est imminente : « depuis un instant » sous une minute, puis « depuis 45 min »,
+ * « depuis 3 h », et en jours au-delà de 48 h comme le temps qui reste. Arrondi vers le bas, et non au-dessus
+ * comme formaterDuree, qui dit une durée à venir : on ne dit jamais plus long que ce qui s'est passé.
+ */
+export function depuisCombienDeTemps(heures: number): string {
+  const minutes = Math.floor(Math.round(heures * MICROSECONDES_PAR_HEURE) / (MICROSECONDES_PAR_HEURE / 60));
+  if (minutes < 1) return "depuis un instant";
+  if (minutes < 60) return `depuis ${unite(minutes, "min")}`;
+  return `depuis ${enHeuresOuEnJours(Math.floor(minutes / 60))}`;
 }

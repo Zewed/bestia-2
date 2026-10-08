@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { FAMINE_IMMINENTE_HEURES } from "@/reglages";
 import {
   avantFamineImminente,
+  depuisCombienDeTemps,
+  depuisFamineImminente,
   nourriturePourEncore,
   nourriturePourEncoreDesStocks,
   nourritureRestante,
@@ -173,5 +175,47 @@ describe("la famine imminente (US-0321)", () => {
     expect(nourritureRestante(7.5, HEURE / 100, 100)).toBe(6.5);
     expect(nourritureRestante(7.5, 0, 100)).toBe(7.5);
     expect(nourritureRestante(0.5, HEURE, 1)).toBe(0);
+  });
+});
+
+describe("depuis quand la famine est imminente (US-0322)", () => {
+  const HEURE = 3_600_000;
+  /** Une espace insécable entre un nombre et son unité. */
+  const _ = "\u00a0";
+
+  it("part de ce que le Territoire retient, et le fait monter au rythme du jeu", () => {
+    expect(depuisFamineImminente(7, 3, 0, 1)).toBe(3);
+    expect(depuisFamineImminente(7, 3, HEURE, 1)).toBe(4);
+    expect(depuisFamineImminente(7, 3, HEURE / 100, 100)).toBe(4);
+  });
+
+  it("sans rien de retenu, compte depuis le passage du seuil, page ouverte", () => {
+    // 13 h de Nourriture : le seuil est passé au bout d'une heure de jeu, puis le temps court.
+    expect(depuisFamineImminente(13, null, HEURE, 1)).toBe(0);
+    expect(depuisFamineImminente(13, null, 1.5 * HEURE, 1)).toBe(0.5);
+    expect(depuisFamineImminente(13, null, (1.5 * HEURE) / 100, 100)).toBeCloseTo(0.5, 12);
+  });
+
+  it("sans rien de retenu mais déjà sous le seuil, compte depuis la lecture, comme le fera le prochain rattrapage", () => {
+    expect(depuisFamineImminente(7, null, 0, 1)).toBe(0);
+    expect(depuisFamineImminente(7, null, HEURE, 1)).toBe(1);
+  });
+
+  it("dit « depuis un instant » sous une minute, puis les minutes, puis les heures, arrondies vers le bas", () => {
+    expect(depuisCombienDeTemps(0)).toBe("depuis un instant");
+    expect(depuisCombienDeTemps(59 / 3600)).toBe("depuis un instant");
+    expect(depuisCombienDeTemps(1 / 60)).toBe(`depuis 1${_}min`);
+    expect(depuisCombienDeTemps(45.9 / 60)).toBe(`depuis 45${_}min`);
+    expect(depuisCombienDeTemps(1)).toBe(`depuis 1${_}h`);
+    expect(depuisCombienDeTemps(3.99)).toBe(`depuis 3${_}h`);
+    expect(depuisCombienDeTemps(48.5)).toBe(`depuis 48${_}h`);
+    // Une erreur d'arrondi du calcul, sous la microseconde, ne fait pas perdre une minute.
+    expect(depuisCombienDeTemps(31 / 60 - 1e-15)).toBe(`depuis 31${_}min`);
+    expect(depuisCombienDeTemps(2.9999999999999996)).toBe(`depuis 3${_}h`);
+  });
+
+  it("passe aux jours au-delà de 48 h, comme le temps qui reste : « 2 j 5 h », « 3 j »", () => {
+    expect(depuisCombienDeTemps(53.5)).toBe(`depuis 2${_}j${_}5${_}h`);
+    expect(depuisCombienDeTemps(72)).toBe(`depuis 3${_}j`);
   });
 });

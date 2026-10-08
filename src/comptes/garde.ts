@@ -8,6 +8,7 @@ import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
 import { entretienDesHabitants, nombreDHabitants, nombreSansMetier } from "@/monde/habitants";
+import { famineImminenteDepuis } from "@/monde/production";
 import { nombreDeRecitsNonLus } from "@/monde/recits";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { nombreDeVoyageurs } from "@/monde/voyageurs";
@@ -131,4 +132,14 @@ export async function sansMetierALHeure(territoireId: number): Promise<number> {
 export async function entretienALHeure(territoireId: number): Promise<string> {
   await mettreALHeure(territoireId);
   return (await entretienDesHabitants(getPool(), territoireId)).parHeure;
+}
+
+/**
+ * US-0322 : depuis combien d'heures de jeu la famine est imminente (null si elle ne l'est pas), pour
+ * l'avertissement de la barre du haut, lu après la mise à l'heure du Territoire : un seuil franchi pendant
+ * l'absence est noté par le rattrapage, à son instant exact, et l'avertissement est là dès l'ouverture.
+ */
+export async function famineImminenteALHeure(territoireId: number): Promise<number | null> {
+  await mettreALHeure(territoireId);
+  return famineImminenteDepuis(getPool(), territoireId);
 }

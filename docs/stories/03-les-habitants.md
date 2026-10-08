@@ -238,6 +238,7 @@ Le Territoire se peuple : le joueur voit ses premiers Habitants, leur donne un M
 ### US-0322 · Trouver l'avertissement en revenant
 **En tant que** joueur, **je veux** voir l'avertissement dès mon retour s'il s'est déclenché pendant mon absence, **afin de** ne pas le découvrir trop tard.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Le Territoire retient l'instant exact où sa Nourriture est passée sous le seuil de 12 h (colonne `famine_imminente_depuis`, migration 0042), calculé par le mécanisme du temps au fil de chaque avancée : le même à la microseconde que la page soit restée ouverte, fermée, que la tâche planifiée soit passée, ou en ×100. Au retour, la bande dit « Famine imminente depuis 3 h · Nourriture pour encore 8 h », et le « depuis » monte en direct page ouverte. Un Territoire déjà sous le seuil à la mise en ligne reçoit son état au premier rattrapage, compté depuis ce rattrapage. Rien n'est envoyé hors de la page. Vérifié en vrai.
 - **Débloquée par** : US-0321
 - **Critères d'acceptation** :
   - Si le seuil a été franchi pendant l'absence, l'avertissement est affiché dès l'ouverture de la page, une fois le rattrapage fait.

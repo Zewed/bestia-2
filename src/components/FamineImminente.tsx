@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { avantFamineImminente, nourritureRestante, tenueDeLaNourriture } from "@/monde/nourriture";
+import { avantFamineImminente, depuisCombienDeTemps, depuisFamineImminente, nourritureRestante, tenueDeLaNourriture } from "@/monde/nourriture";
 import styles from "./BarreHaut.module.css";
 
 /** Le plus long délai qu'un minuteur du navigateur sache attendre : au-delà, il partirait aussitôt. */
@@ -18,11 +18,16 @@ const DELAI_MAX_MS = 2_147_483_647;
  * baisse en direct au rythme du jeu (`vitesse`), sur l'horloge du navigateur comme les quantités de la barre
  * (US-0213) ; la bande paraît à l'instant même où il passe le seuil, même en temps accéléré, sans attendre le
  * battement suivant. De nouvelles valeurs arrivent avec une nouvelle clé (ActionsDuJeu) : tout repart d'elles.
+ *
+ * US-0322 : il dit aussi depuis quand il est actif, « Famine imminente depuis 3 h ». `depuis` : depuis combien
+ * d'heures de jeu le Territoire retient la famine imminente, à la lecture ; un seuil franchi pendant l'absence
+ * est ainsi là dès l'ouverture, avec son instant exact. Page ouverte, le « depuis » monte en direct. Rien n'est
+ * envoyé hors de la page : les notifications du navigateur viendront à l'étape 64.
  */
-export function FamineImminente({ heures, vitesse = 1 }: { heures: number; vitesse?: number }) {
+export function FamineImminente({ heures, depuis = null, vitesse = 1 }: { heures: number; depuis?: number | null; vitesse?: number }) {
   // Le temps réel écoulé depuis l'arrivée des valeurs du serveur.
   const [ecoule, setEcoule] = useState(0);
-  const bascule = avantFamineImminente(heures, vitesse);
+  const bascule = depuis !== null ? 0 : avantFamineImminente(heures, vitesse);
 
   useEffect(() => {
     const depart = performance.now();
@@ -41,7 +46,9 @@ export function FamineImminente({ heures, vitesse = 1 }: { heures: number; vites
   return (
     <Link href="/jeu/habitants" className={styles.famine} data-alerte-famine="">
       {/* Des espaces entre les morceaux, pour qu'un lecteur d'écran ne les colle pas. */}
-      <strong className={styles.titreFamine}>Famine imminente</strong>{" "}
+      <span>
+        <strong className={styles.titreFamine}>Famine imminente</strong> {depuisCombienDeTemps(depuisFamineImminente(heures, depuis, ecoule, vitesse))}
+      </span>{" "}
       <span className={styles.tenueFamine}>{tenueDeLaNourriture(nourritureRestante(heures, ecoule, vitesse))}</span>{" "}
       <span className={styles.voirFamine}>Voir</span>
     </Link>
