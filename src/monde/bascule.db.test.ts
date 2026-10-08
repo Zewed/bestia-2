@@ -242,7 +242,7 @@ describe.skipIf(!URL_TEST)("naître sur le Monde généré, et y basculer les ch
       for (const { territoire, q, r } of await foyers(client, comptes)) {
         const attendues = cases.filter((c) => distance(c, { q, r }) <= ABORDS_DU_FOYER_CASES).sort((a, b) => a.q - b.q || a.r - b.r);
         expect(attendues.length).toBeGreaterThan(10);
-        expect(await casesDecouvertes(client, territoire)).toEqual(attendues);
+        expect((await casesDecouvertes(client, territoire)).map(({ q, r }) => ({ q, r }))).toEqual(attendues);
       }
     });
   }, 60_000);

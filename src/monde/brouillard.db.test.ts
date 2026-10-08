@@ -6,12 +6,15 @@ import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
-import { ABORDS_DU_FOYER_CASES } from "@/reglages";
+import { ABORDS_DU_FOYER_CASES, ECART_ENTRE_FOYERS } from "@/reglages";
+import { rattraper } from "@/temps/rattraper";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { MONDE_DU_JEU, VERROU_DES_NAISSANCES } from "./bascule";
 import { abordsDuFoyer, casesDecouvertes, decouvrir } from "./brouillard";
 import { peutAccueillirUnFoyer } from "./foyers";
+import { habitantsDuTerritoire, renvoyerLHabitant } from "./habitants";
 import { casesDesAnneaux, type Coordonnees, distance } from "./hex";
+import { accueillirLeVoyageur, refuserLeVoyageur } from "./voyageurs";
 
 /** L'instruction de la migration US-0436 qui découvre les abords du Foyer des Territoires déjà nés. */
 function abordsDesTerritoiresDejaNes(): string {
@@ -22,6 +25,9 @@ function abordsDesTerritoiresDejaNes(): string {
 
 /** Des Cases rangées par q puis r, comme les rend casesDecouvertes. */
 const rangees = (cases: Coordonnees[]) => [...cases].sort((a, b) => a.q - b.q || a.r - b.r);
+
+/** La place de chaque Case que le Territoire a découverte, sans ce qu'on y voit (US-0441), dans l'ordre de casesDecouvertes. */
+const placesDecouvertes = async (base: Pool | PoolClient, territoireId: number) => (await casesDecouvertes(base, territoireId)).map(({ q, r }) => ({ q, r }));
 
 describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
   let pool: Pool;
@@ -64,7 +70,7 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
     it(`découvre à la naissance les Cases de son Monde à ${ABORDS_DU_FOYER_CASES} Cases du Foyer ou moins, le Foyer compris`, async () => {
       const territoireId = await naitre();
       const { foyer } = await sonMonde(pool, territoireId);
-      const decouvertes = await casesDecouvertes(pool, territoireId);
+      const decouvertes = await placesDecouvertes(pool, territoireId);
       expect(decouvertes).toEqual(await abordsAttendus(pool, territoireId));
       expect(decouvertes).toContainEqual(foyer);
       // Sur la Couronne d'Aube, la seule partie du Monde en base, une bonne part des abords existe.
@@ -90,7 +96,7 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       const nom = nomUnique();
       await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), $2, $3)", [compte.id, nom, cleDuNom(nom)]);
       const territoireId = (await naitreSurLaCouronne(pool, compte.id))!;
-      expect(await casesDecouvertes(pool, territoireId)).toEqual(await abordsAttendus(pool, territoireId));
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(await abordsAttendus(pool, territoireId));
     });
 
     it("ne rend rien pour un Territoire inconnu", async () => {
@@ -158,11 +164,11 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
           await client.query("begin");
           // Un Territoire né avant le brouillard : aucune Case découverte.
           await client.query("delete from case_decouverte where territoire_id = $1", [ancien]);
-          expect(await casesDecouvertes(client, ancien)).toEqual([]);
-          const avant = await casesDecouvertes(client, voisin);
+          expect(await placesDecouvertes(client, ancien)).toEqual([]);
+          const avant = await placesDecouvertes(client, voisin);
           await client.query(abordsDesTerritoiresDejaNes());
-          expect(await casesDecouvertes(client, ancien)).toEqual(await abordsAttendus(client, ancien));
-          expect(await casesDecouvertes(client, voisin)).toEqual(avant);
+          expect(await placesDecouvertes(client, ancien)).toEqual(await abordsAttendus(client, ancien));
+          expect(await placesDecouvertes(client, voisin)).toEqual(avant);
         } finally {
           await client.query("rollback");
           client.release();
@@ -255,8 +261,8 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       expect(siennes.size).toBeGreaterThan(0);
       expect(autres.size).toBeGreaterThan(0);
       expect([...siennes].filter((c) => autres.has(c))).toEqual([]);
-      expect(await casesDecouvertes(pool, premier.territoireId)).toEqual(await abordsAttendus(pool, premier.territoireId));
-      expect(await casesDecouvertes(pool, second.territoireId)).toEqual(await abordsAttendus(pool, second.territoireId));
+      expect(await placesDecouvertes(pool, premier.territoireId)).toEqual(await abordsAttendus(pool, premier.territoireId));
+      expect(await placesDecouvertes(pool, second.territoireId)).toEqual(await abordsAttendus(pool, second.territoireId));
     });
 
     it("une Case découverte par un joueur reste cachée pour les autres, même pour son voisin", async () => {
@@ -264,14 +270,14 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       const second = await naitreLoin(premier.foyer);
       // Un voisin, né comme dans le jeu, près du dernier arrivé : ses abords recouvrent en partie ceux du second.
       const voisin = await naitre();
-      const avant = { second: await casesDecouvertes(pool, second.territoireId), voisin: await casesDecouvertes(pool, voisin) };
+      const avant = { second: await placesDecouvertes(pool, second.territoireId), voisin: await placesDecouvertes(pool, voisin) };
       // Le premier découvre le Foyer du second et ses abords, comme le fera une Expédition.
       expect(await decouvrir(pool, premier.territoireId, abordsDuFoyer(second.foyer))).toBe(avant.second.length);
       const siennes = await cles(premier.territoireId);
       for (const c of avant.second) expect(siennes.has(`${c.q},${c.r}`)).toBe(true);
       // Les autres n'en voient rien de plus.
-      expect(await casesDecouvertes(pool, second.territoireId)).toEqual(avant.second);
-      expect(await casesDecouvertes(pool, voisin)).toEqual(avant.voisin);
+      expect(await placesDecouvertes(pool, second.territoireId)).toEqual(avant.second);
+      expect(await placesDecouvertes(pool, voisin)).toEqual(avant.voisin);
     });
 
     it("part avec son Territoire, et lui seul", async () => {
@@ -279,12 +285,166 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
       const parti = (await chefDuCompte(pool, compte.id))!.territoireId!;
       const reste = await naitre();
-      const avant = await casesDecouvertes(pool, reste);
+      const avant = await placesDecouvertes(pool, reste);
       expect((await casesDecouvertes(pool, parti)).length).toBeGreaterThan(0);
       await pool.query("delete from compte where id = $1", [compte.id]);
       const { rows } = await pool.query<{ n: number }>("select count(*)::int as n from case_decouverte where territoire_id = $1", [parti]);
       expect(rows[0].n).toBe(0);
-      expect(await casesDecouvertes(pool, reste)).toEqual(avant);
+      // Le Foyer parti, s'il était dans ses abords, y reste découvert, désormais libre (US-0441).
+      expect(await placesDecouvertes(pool, reste)).toEqual(avant);
+    });
+  });
+
+  describe("garder visibles les Cases déjà vues (US-0441)", () => {
+    const HEURE = 3_600_000;
+    /** Le Foyer du Territoire, et une Case de son Monde loin de lui, hors de ses abords. */
+    const foyerEtLoin = async (territoireId: number) => {
+      const { foyer, cases } = await sonMonde(pool, territoireId);
+      const [loin] = cases.filter((c) => distance(c, foyer) > 3 * ABORDS_DU_FOYER_CASES).sort((a, b) => a.q - b.q || a.r - b.r);
+      return { foyer, loin };
+    };
+    /** Ce que le Territoire voit d'une Case découverte, ou undefined si elle est sous le brouillard. */
+    const vue = async (base: Pool | PoolClient, territoireId: number, c: Coordonnees) =>
+      (await casesDecouvertes(base, territoireId)).find((d) => d.q === c.q && d.r === c.r);
+
+    it("reste découverte d'une visite à l'autre et sur tous les appareils", async () => {
+      const territoireId = await naitre();
+      const { loin } = await foyerEtLoin(territoireId);
+      expect(await vue(pool, territoireId, loin)).toBeUndefined();
+      expect(await decouvrir(pool, territoireId, [loin])).toBe(1);
+      const decouvertes = await placesDecouvertes(pool, territoireId);
+      expect(decouvertes).toContainEqual(expect.objectContaining(loin));
+      // Un autre appareil : d'autres connexions ; puis une autre visite, plus tard, le Territoire mis à l'heure.
+      const autre = poolDeTest();
+      try {
+        expect(await placesDecouvertes(autre, territoireId)).toEqual(decouvertes);
+        await rattraper("territoire", territoireId, { pool: autre, jusqua: new Date(Date.now() + 6 * HEURE) });
+        expect(await placesDecouvertes(autre, territoireId)).toEqual(decouvertes);
+      } finally {
+        await autre.end();
+      }
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(decouvertes);
+    });
+
+    it("montre toujours le propriétaire du moment, lu en direct, même sans y retourner", async () => {
+      const territoireId = await naitre();
+      const { foyer } = await foyerEtLoin(territoireId);
+      const { rows: moi } = await pool.query<{ nom: string }>("select ch.nom from territoire t join chef ch on ch.id = t.chef_id where t.id = $1", [territoireId]);
+      expect(await vue(pool, territoireId, foyer)).toEqual({ ...foyer, biome: "prairie", proprietaire: moi[0].nom });
+      // Une Case libre de ses abords, prise ensuite par un autre chef (comme le fera un Avant-poste), puis rendue libre ;
+      // à moins de ECART_ENTRE_FOYERS Cases de son Foyer, aucune naissance d'un autre fichier ne peut la prendre entre-temps.
+      const { rows: libres } = await pool.query<Coordonnees & { id: number }>(
+        "select c.id, c.q, c.r from case_decouverte d join case_du_monde c on c.id = d.case_id where d.territoire_id = $1 and c.chef_id is null order by c.id",
+        [territoireId],
+      );
+      const libre = libres.find((c) => distance(c, foyer) < ECART_ENTRE_FOYERS)!;
+      expect(await vue(pool, territoireId, libre)).toMatchObject({ proprietaire: null });
+      const compte = await nouveauCompte();
+      const nom = nomUnique();
+      const { rows: chefs } = await pool.query<{ id: number }>(
+        "insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select monde_id from case_du_monde where id = $2), $3, $4) returning id",
+        [compte.id, libre.id, nom, cleDuNom(nom)],
+      );
+      await pool.query("update case_du_monde set chef_id = $2 where id = $1", [libre.id, chefs[0].id]);
+      expect(await vue(pool, territoireId, libre)).toMatchObject({ q: libre.q, r: libre.r, proprietaire: nom });
+      await pool.query("delete from compte where id = $1", [compte.id]);
+      expect(await vue(pool, territoireId, libre)).toMatchObject({ q: libre.q, r: libre.r, proprietaire: null });
+    });
+
+    it("montre toujours le Biome du moment, lu en direct : rien n'en est gardé à la découverte", async () => {
+      const compte = await nouveauCompte();
+      const client = await pool.connect();
+      try {
+        await client.query("begin");
+        // Un Monde d'essai, ni ouvert ni habité, dont les Cases peuvent encore changer (US-0416), et un Territoire qui y a son Foyer.
+        const { rows: mondes } = await client.query<{ id: number }>("insert into monde (nom) values ($1) returning id", [`Essai du brouillard ${lancement}`]);
+        const places = [
+          { q: 10, r: -5 },
+          { q: 11, r: -5 },
+          { q: 10, r: -4 },
+        ];
+        const { rows: cases } = await client.query<{ id: number }>(
+          `insert into case_du_monde (monde_id, q, r, anneau, couronne, eloignement, biome_id)
+           select $1, p.q, p.r, greatest(abs(p.q), abs(p.r), abs(p.q + p.r)), false, 1, 'prairie' from unnest($2::int[], $3::int[]) as p(q, r) returning id`,
+          [mondes[0].id, places.map((p) => p.q), places.map((p) => p.r)],
+        );
+        const nom = nomUnique();
+        const { rows: territoires } = await client.query<{ id: number }>(
+          `with nouveau as (insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), $2, $3) returning id)
+           insert into territoire (chef_id, foyer_case_id) select id, $4 from nouveau returning id`,
+          [compte.id, nom, cleDuNom(nom), cases[0].id],
+        );
+        const territoireId = territoires[0].id;
+        expect(await decouvrir(client, territoireId, abordsDuFoyer(places[0]))).toBe(3);
+        expect((await casesDecouvertes(client, territoireId)).map((c) => c.biome)).toEqual(["prairie", "prairie", "prairie"]);
+        await client.query("update case_du_monde set biome_id = 'foret' where id = $1", [cases[1].id]);
+        expect(await vue(client, territoireId, places[1])).toEqual({ ...places[1], biome: "foret", proprietaire: null });
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
+    });
+
+    it("ne remet aucune Case sous le brouillard, quoi que fasse le jeu : le temps, la Famine, un renvoi, un accueil, un refus, ni découvrir de nouveau", async () => {
+      const territoireId = await naitre();
+      const { foyer, loin } = await foyerEtLoin(territoireId);
+      await decouvrir(pool, territoireId, [loin]);
+      const decouvertes = await placesDecouvertes(pool, territoireId);
+      // La Famine : vingt Habitants, plus de Nourriture ; le temps passe, des Habitants s'en vont, puis elle finit.
+      await pool.query("update stock set quantite = 0, reste = 0, plein_depuis = null where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')", [territoireId]);
+      await pool.query("insert into habitant (territoire_id, prenom) select $1, 'Essai' from generate_series(1, 17)", [territoireId]);
+      /** Si le Territoire est en Famine, et combien d'Habitants il lui reste. */
+      const etat = async () =>
+        (
+          await pool.query<{ famine: boolean; habitants: number }>(
+            "select famine_depuis is not null as famine, (select count(*)::int from habitant where territoire_id = $1) as habitants from territoire where id = $1",
+            [territoireId],
+          )
+        ).rows[0];
+      await rattraper("territoire", territoireId, { pool, jusqua: new Date(Date.now() + 5 * HEURE) });
+      const enFamine = await etat();
+      expect(enFamine.famine).toBe(true);
+      expect(enFamine.habitants).toBeLessThan(20);
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(decouvertes);
+      await rattraper("territoire", territoireId, { pool, jusqua: new Date(Date.now() + 30 * HEURE) });
+      expect(await etat()).toMatchObject({ famine: false });
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(decouvertes);
+      // Un renvoi, un accueil, un refus.
+      const instant = new Date(Date.now() + 30 * HEURE);
+      const [habitant] = await habitantsDuTerritoire(pool, territoireId);
+      expect(await renvoyerLHabitant(pool, territoireId, habitant.id, instant)).toBe(true);
+      const { rows: venus } = await pool.query<{ id: number }>(
+        "insert into voyageur (territoire_id, prenom, arrive_le) values ($1, 'Ines', $2), ($1, 'Joran', $2) returning id",
+        [territoireId, instant],
+      );
+      await accueillirLeVoyageur(pool, territoireId, venus[0].id, instant, "chasseur");
+      await refuserLeVoyageur(pool, territoireId, venus[1].id, instant);
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(decouvertes);
+      // Découvrir de nouveau ne change rien, même depuis deux appareils à la fois.
+      const autre = poolDeTest();
+      try {
+        expect(await Promise.all([decouvrir(pool, territoireId, abordsDuFoyer(foyer)), decouvrir(autre, territoireId, [...abordsDuFoyer(foyer), loin])])).toEqual([0, 0]);
+      } finally {
+        await autre.end();
+      }
+      expect(await placesDecouvertes(pool, territoireId)).toEqual(decouvertes);
+    });
+
+    it("ne découvre qu'une fois une Case découverte depuis deux appareils à la fois", async () => {
+      const territoireId = await naitre();
+      const { loin } = await foyerEtLoin(territoireId);
+      const autre = poolDeTest();
+      try {
+        const decouvertes = await Promise.all([decouvrir(pool, territoireId, [loin]), decouvrir(autre, territoireId, [loin])]);
+        expect([...decouvertes].sort()).toEqual([0, 1]);
+      } finally {
+        await autre.end();
+      }
+      const { rows } = await pool.query<{ n: number }>(
+        "select count(*)::int as n from case_decouverte d join case_du_monde c on c.id = d.case_id where d.territoire_id = $1 and c.q = $2 and c.r = $3",
+        [territoireId, loin.q, loin.r],
+      );
+      expect(rows[0].n).toBe(1);
     });
   });
 });

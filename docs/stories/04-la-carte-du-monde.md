@@ -413,6 +413,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0441 · Garder visibles les Cases déjà vues
 **En tant que** joueur, **je veux** que les Cases que j'ai découvertes le restent pour toujours, **afin de** ne jamais perdre ce que j'ai exploré.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une Case découverte reste découverte d'une visite et d'un appareil à l'autre. Seul le fait d'être découverte est enregistré : son Biome et son propriétaire se lisent toujours en direct. Une seule façon de découvrir, sans effet sur une Case déjà découverte. Rien dans le jeu ne retire une Case découverte (rattrapage, Famine, renvoi, accueil) ; un test le vérifie dans tout le code. Vérifié sur base.
 - **Débloquée par** : US-0440
 - **Critères d'acceptation** :
   - Une Case découverte reste découverte d'une visite à l'autre et sur tous les appareils.

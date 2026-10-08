@@ -40,9 +40,10 @@ const DECOUVRIR = `
 /**
  * US-0436 : le Territoire découvre les Cases `cases` de son Monde. C'est la seule façon de découvrir des Cases : sa
  * naissance (src/chefs/chef.ts) et la bascule d'un Monde s'en servent pour les abords de son Foyer, les Expéditions
- * et les Avant-postes s'en serviront (US-0442). Une Case déjà découverte le reste, sans que rien ne change : découvrir
- * deux fois, même en même temps, ne fait rien de plus. Rend le nombre de Cases tout juste découvertes. Appelée avec le
- * client d'une transaction, elle tient dedans.
+ * et les Avant-postes s'en serviront (US-0442). US-0441 : une Case déjà découverte le reste, sans que rien ne change :
+ * découvrir deux fois, même en même temps, ne fait rien de plus ; et rien dans le jeu n'efface une ligne du brouillard,
+ * qui ne part qu'avec son Territoire. Rend le nombre de Cases tout juste découvertes. Appelée avec le client d'une
+ * transaction, elle tient dedans.
  */
 export async function decouvrir(base: Pool | PoolClient, territoireId: number, cases: Coordonnees[]): Promise<number> {
   const { rowCount } = await base.query(DECOUVRIR, [territoireId, cases.map((c) => c.q), cases.map((c) => c.r)]);
@@ -50,15 +51,23 @@ export async function decouvrir(base: Pool | PoolClient, territoireId: number, c
 }
 
 /**
- * US-0436 : les Cases que le Territoire a découvertes dans son Monde, celui de son Foyer, rangées par q puis r comme
- * sur la carte ; toutes les autres sont pour lui sous le brouillard. [] pour un Territoire inconnu.
+ * US-0441 : une Case découverte telle que le joueur la voit : sa place, son Biome et le nom du chef qui la possède
+ * (null : libre), lus au moment même dans le Monde ; le brouillard n'en garde rien.
  */
-export async function casesDecouvertes(base: Pool | PoolClient, territoireId: number): Promise<Coordonnees[]> {
-  const { rows } = await base.query<Coordonnees>(
-    `select c.q, c.r from territoire t
+export type CaseDecouverte = Coordonnees & { biome: string; proprietaire: string | null };
+
+/**
+ * US-0436 : les Cases que le Territoire a découvertes dans son Monde, celui de son Foyer, rangées par q puis r comme
+ * sur la carte ; toutes les autres sont pour lui sous le brouillard. [] pour un Territoire inconnu. US-0441 : chacune
+ * avec son Biome et son propriétaire du moment, à jour même si le joueur n'y est jamais retourné.
+ */
+export async function casesDecouvertes(base: Pool | PoolClient, territoireId: number): Promise<CaseDecouverte[]> {
+  const { rows } = await base.query<CaseDecouverte>(
+    `select c.q, c.r, c.biome_id as biome, p.nom as proprietaire from territoire t
      join case_du_monde f on f.id = t.foyer_case_id
      join case_decouverte d on d.territoire_id = t.id
      join case_du_monde c on c.id = d.case_id and c.monde_id = f.monde_id
+     left join chef p on p.id = c.chef_id
      where t.id = $1
      order by c.q, c.r`,
     [territoireId],
