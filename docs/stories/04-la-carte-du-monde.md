@@ -403,6 +403,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0440 · Avoir son propre brouillard
 **En tant que** joueur, **je veux** un brouillard qui n'appartient qu'à moi, **afin de** découvrir le Monde à mon rythme.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Chaque Territoire a ses Cases découvertes, enregistrées à part, une ligne par Case, effacées avec lui. Deux Territoires aux Foyers éloignés n'ont aucune Case en commun, et ce qu'un joueur découvre reste caché pour les autres, voisin compris. Vérifié sur base.
 - **Débloquée par** : US-0436
 - **Critères d'acceptation** :
   - Chaque joueur a son propre brouillard, enregistré à part.
