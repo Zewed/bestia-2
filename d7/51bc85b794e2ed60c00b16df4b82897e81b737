@@ -4,14 +4,30 @@ docs/stories/README.md
   s_97a431cfa65ca7::t_492b301004c5d4 7
 src/components/ActionsDuJeu.test.tsx
   s_97a431cfa65ca7::t_d3eb4a454b476a 378-393
+  s_97a431cfa65ca7::t_841a01f84c3850 378-393
 src/monde/famine.db.test.ts
   s_97a431cfa65ca7::t_6343dee1369371 114-122,313-314,336,443-509
+  s_97a431cfa65ca7::t_3b2e0544c32bce 114-122
+  s_97a431cfa65ca7::t_0564f13b64c891 443-508
+  s_97a431cfa65ca7::t_1ed10834f736a4 313-314
+  s_97a431cfa65ca7::t_6874da2b7d6dea 336
+  s_97a431cfa65ca7::t_5b38c232b870cf 509
 src/monde/famine.test.ts
   s_97a431cfa65ca7::t_46fbd8f8db2b85 2,44-68
+  s_97a431cfa65ca7::t_9877d693ada84c 44-66
+  s_97a431cfa65ca7::t_1a87501e02f373 2,67-68
 src/monde/famine.ts
   s_97a431cfa65ca7::t_76a559fa8a9a6f 3,139-191
+  s_97a431cfa65ca7::t_e0dd260e981442 139-190
+  s_97a431cfa65ca7::t_0621e24db6b4cf 191
+  s_06a3fa3b9c2b4c::t_0c6abe7cd0dc05 3
 src/monde/production.ts
   s_97a431cfa65ca7::t_72f96e71b4c721 7,120-123,243-247,259,265-266,268-269
+  s_97a431cfa65ca7::t_dcacfc38d00fb1 120-123
+  s_97a431cfa65ca7::t_e214b774d2ee2a 265-266,268-269
+  s_97a431cfa65ca7::t_f72b5b54eb2307 7
+  s_97a431cfa65ca7::t_beae2d98c0dedc 259
+  s_97a431cfa65ca7::t_cdce13872f68af 243-247
 ---
 {
   "schema_version": "authorship/3.0.0",
@@ -19,6 +35,14 @@ src/monde/production.ts
   "base_commit_sha": "d751bc85b794e2ed60c00b16df4b82897e81b737",
   "prompts": {},
   "sessions": {
+    "s_06a3fa3b9c2b4c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a2ca7bd933b12f112",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
     "s_97a431cfa65ca7": {
       "agent_id": {
         "tool": "claude",
