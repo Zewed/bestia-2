@@ -243,12 +243,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0925 · Des Bêtes sauvages apparaissent de temps en temps
 **En tant que** joueur, **je veux** que le Monde fasse apparaître des Bêtes sauvages sur ses Cases, **afin de** toujours avoir quelque chose à aller chercher.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Les apparitions sont une fonction pure de la graine du Monde, de la Case et du temps du jeu : un tirage par heure, en loi de Poisson. Rien n'est écrit en base pour une Bête qu'aucune Expédition ne rencontre. En moyenne, une Bête par Case et par jour de jeu ; jamais sur une Case de Territoire. Chaque apparition amène une seule Bête, avec un numéro unique, et rien ne se voit sur la carte. Prouvé par les tests (`src/monde/betes-sauvages.ts`).
 - **Débloquée par** : US-0923, US-0924, Étape 3
 - **Critères d'acceptation** :
-  - Chaque Case hors des Territoires voit apparaître des Bêtes sauvages de temps en temps, selon une fréquence moyenne (chiffre à régler) ; les Cases des Territoires (à décider).
+  - Chaque Case hors des Territoires voit apparaître des Bêtes sauvages de temps en temps, selon une fréquence moyenne d'une Bête par Case et par jour de jeu (provisoire, `APPARITIONS_PAR_CASE_PAR_JOUR`) ; les Cases des Territoires n'en voient aucune (décidé le 2026-10-08).
   - Chaque apparition amène une seule Bête, jamais un groupe.
   - Les apparitions ont lieu que les joueurs soient connectés ou non.
-  - Plusieurs Bêtes présentes en même temps sur une même Case (à décider).
+  - Plusieurs Bêtes peuvent être présentes en même temps sur une même Case : les apparitions sont indépendantes (décidé le 2026-10-08).
   - Aucune Bête sauvage ne se voit sur la carte : seules les Expéditions présentes sur la Case la voient.
 
 ### US-0926 · Une présence limitée dans le temps

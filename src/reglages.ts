@@ -257,3 +257,10 @@ export const CARTE_DECOUVERTES_SECONDES = 60;
  * Rien n'en est gardé en base : la changer change les Anneaux de tous les Mondes, déjà nés compris.
  */
 export const ANNEAUX_DU_MONDE = 6;
+
+/**
+ * US-0925 : chaque Case hors des Territoires voit apparaître en moyenne 1 Bête sauvage par jour du jeu (valeur provisoire,
+ * à régler en jouant), à des moments au hasard et indépendants : plusieurs peuvent s'y trouver en même temps. La changer
+ * change toutes les apparitions qu'aucune Expédition n'a encore vues, passées comme à venir.
+ */
+export const APPARITIONS_PAR_CASE_PAR_JOUR = 1;
