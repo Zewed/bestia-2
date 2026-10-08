@@ -1,0 +1,38 @@
+drizzle/0043_monde_ouvert.sql
+  s_97a431cfa65ca7::t_608959ab04882b 5-6,10-35
+src/monde/generer.ts
+  s_97a431cfa65ca7::t_f991123b5f31e2 116-117
+  s_97a431cfa65ca7::t_b703bc5199f94d 134-141
+src/monde/preparer-couronne.ts
+  s_97a431cfa65ca7::t_b83a70bdde0ffd 13-15,21-24,28
+src/monde/generer.db.test.ts
+  s_97a431cfa65ca7::t_591dfcd1224b2e 98-108
+  s_97a431cfa65ca7::t_3108998c654d5e 71-79,81-85,89-97,109-192
+  s_97a431cfa65ca7::t_07ed9c27a096c6 4,7
+drizzle/meta/_journal.json
+  s_be36052cf38938::t_bf959bde1a6222 309
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aa7e92bef7ae9fd0a6eaacfcb16f9606bb017184",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_be36052cf38938": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a2bb46cf3f85240ab",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
