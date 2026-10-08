@@ -1,12 +1,19 @@
 src/app/jeu/carte/styles.test.ts
   s_97a431cfa65ca7::t_483ff9c6d6f08f 53,80-84
+  s_97a431cfa65ca7::t_5d875772a085b6 79
 src/app/jeu/carte/FicheDeLaCase.tsx
   s_97a431cfa65ca7::t_30a88d3349d74e 115-121,123-126,133-148,151-156,158-166
   s_97a431cfa65ca7::t_c360b8a38ecbea 3,7
   s_97a431cfa65ca7::t_79af4563ea11ad 56-60
+  s_97a431cfa65ca7::t_d73bb686ec46f2 75-78
+  s_97a431cfa65ca7::t_5300768c5d9ebb 102-109
+  s_97a431cfa65ca7::t_fa898aece0084c 11
+  s_97a431cfa65ca7::t_a7227eb9d91f4b 157
 src/app/jeu/carte/FicheDeLaCase.test.tsx
   s_97a431cfa65ca7::t_5d6460d2c4a69f 268-320,333-349
   s_97a431cfa65ca7::t_13ca6125e26dee 8
+  s_97a431cfa65ca7::t_f19a6ed67bb9e6 321-332
+  s_97a431cfa65ca7::t_34a8a5efecab09 10
 src/app/jeu/carte/page.module.css
   s_97a431cfa65ca7::t_99c3cdff948fc9 37-46
 src/app/jeu/carte/FicheDeLaCase.css.test.ts
@@ -17,6 +24,13 @@ src/app/jeu/carte/vue.test.ts
   s_97a431cfa65ca7::t_2d6e3329794a39 363-375
 src/reglages.ts
   s_97a431cfa65ca7::t_9524a00452d97b 242-246
+src/app/jeu/carte/Legende.test.tsx
+  s_97a431cfa65ca7::t_659a2b97efaf68 8
+  s_97a431cfa65ca7::t_ab88b90c655323 249-278
+src/app/jeu/carte/Legende.tsx
+  s_97a431cfa65ca7::t_afa77bd594f82e 38-42
+  s_97a431cfa65ca7::t_a388192b879456 160-161,163-165
+  s_97a431cfa65ca7::t_8ea520fd797e75 132-133
 ---
 {
   "schema_version": "authorship/3.0.0",
