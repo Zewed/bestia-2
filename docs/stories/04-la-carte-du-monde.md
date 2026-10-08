@@ -176,6 +176,7 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0417 · Ouvrir la carte sur son Foyer
 **En tant que** joueur, **je veux** ouvrir la carte du Monde depuis la navigation, **afin de** voir où se trouve mon Foyer.
 
+- **Statut** : Livrée le 2026-10-08 (autopilot, par un agent en parallèle). Une entrée « Carte » en deuxième place de la navigation (Foyer, Carte, Habitants, Récits ; quatre onglets égaux sur mobile) ouvre la page /jeu/carte : la carte du Monde du joueur, en hexagones de 28 px dessinés dans un canvas net sur les écrans haute densité, occupe toute la place sous la barre, sans défilement, le Foyer au milieu de l'écran. Toutes les Cases sont visibles (le brouillard viendra à l'étape 20) ; seules celles à l'écran sont dessinées. Sur le Monde actuel de la production, Aube, on ne voit que sa Couronne. Vérifié en vrai sur Terra en dev.
 - **Débloquée par** : US-0414
 - **Critères d'acceptation** :
   - Une entrée « Carte » figure dans la navigation, sur ordinateur comme sur mobile.

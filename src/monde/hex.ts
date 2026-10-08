@@ -94,3 +94,16 @@ export function tourDeLAnneau(k: number): Coordonnees[] {
 export function centre({ q, r }: Coordonnees): { x: number; y: number } {
   return { x: Math.sqrt(3) * (q + r / 2), y: 1.5 * r };
 }
+
+/**
+ * US-0417 : les six sommets d'une Case de rayon 1 autour de son centre, dans le plan de `centre` : la pointe du
+ * haut, puis dans le sens des aiguilles d'une montre. Deux Cases voisines y partagent un côté entier.
+ */
+export const SOMMETS_DE_CASE: readonly { x: number; y: number }[] = [
+  { x: 0, y: -1 },
+  { x: Math.sqrt(3) / 2, y: -0.5 },
+  { x: Math.sqrt(3) / 2, y: 0.5 },
+  { x: 0, y: 1 },
+  { x: -Math.sqrt(3) / 2, y: 0.5 },
+  { x: -Math.sqrt(3) / 2, y: -0.5 },
+];

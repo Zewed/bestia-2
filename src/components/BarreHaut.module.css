@@ -614,8 +614,8 @@
   }
 
   /*
-   * La navigation en onglets fixés en bas de l'écran, au pouce : trois onglets égaux (US-0324), sur
-   * l'Encre de la barre, au-dessus de l'encoche du bas. La page s'arrête au-dessus (--hauteur-onglets,
+   * La navigation en onglets fixés en bas de l'écran, au pouce : quatre onglets égaux (US-0324, US-0417),
+   * sur l'Encre de la barre, au-dessus de l'encoche du bas. La page s'arrête au-dessus (--hauteur-onglets,
    * formes.css).
    */
   .navigation {
@@ -629,20 +629,29 @@
 
   .entrees {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 0;
     height: var(--hauteur-onglets);
   }
 
-  /* Un onglet de 106 px sur 320 px : le nom et la pastille des Récits y tiennent, même à « 99+ ». */
+  /*
+   * Un onglet de 80 px sur 320 px (US-0417) : en 13 px, « Habitants » et son point, « Récits » et sa pastille,
+   * même à « 99+ », y tiennent.
+   */
   .entree {
     height: 100%;
-    padding: 0 4px;
+    padding: 0 2px;
     border-radius: 0;
+    font-size: 13px;
   }
 
   .entree:focus-visible {
     outline-offset: -4px;
+  }
+
+  .pastille {
+    margin-left: 3px;
+    padding: 0 5px;
   }
 
   /*

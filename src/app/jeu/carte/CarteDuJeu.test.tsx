@@ -1,0 +1,99 @@
+// @vitest-environment jsdom
+import { act, cleanup, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { casesDesAnneaux } from "@/monde/hex";
+import type { CarteDuJoueur } from "@/monde/carte";
+import { CarteDuJeu } from "./CarteDuJeu";
+import { LARGEUR_DE_CASE } from "./dessin";
+
+/** Ce que le <canvas> a reçu : ses gestes de dessin et ses changements d'échelle. */
+const toile = vi.hoisted(() => ({ gestes: [] as string[], departs: [] as [number, number][] }));
+/** La place que la page donne à la carte, en pixels. */
+const ecran = { largeur: 800, hauteur: 600 };
+/** Le suivi de taille du <canvas> : le dernier posé, pour annoncer un changement de taille comme le navigateur. */
+let suivi: { annoncer: () => void; suivis: Element[]; arrete: boolean } | null = null;
+
+beforeEach(() => {
+  toile.gestes = [];
+  toile.departs = [];
+  const pinceau = new Proxy(
+    {},
+    {
+      get: (_, nom: string) => (...valeurs: number[]) => {
+        if (nom === "moveTo") toile.departs.push([valeurs[0], valeurs[1]]);
+        if (["setTransform", "clearRect", "fill", "stroke"].includes(nom)) toile.gestes.push(`${nom} ${valeurs.join(" ")}`.trim());
+      },
+      set: () => true,
+    },
+  );
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(pinceau as unknown as CanvasRenderingContext2D);
+  vi.spyOn(HTMLCanvasElement.prototype, "getBoundingClientRect").mockImplementation(() => ({ width: ecran.largeur, height: ecran.hauteur }) as DOMRect);
+  // Un écran haute densité : deux pixels de l'écran par pixel de la page.
+  vi.stubGlobal("devicePixelRatio", 2);
+  vi.stubGlobal(
+    "ResizeObserver",
+    class {
+      constructor(rappel: () => void) {
+        suivi = { annoncer: rappel, suivis: [], arrete: false };
+      }
+      observe(element: Element) {
+        suivi!.suivis.push(element);
+        suivi!.annoncer();
+      }
+      disconnect() {
+        suivi!.arrete = true;
+      }
+    },
+  );
+});
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+  vi.unstubAllGlobals();
+  Object.assign(ecran, { largeur: 800, hauteur: 600 });
+  suivi = null;
+});
+
+const FOYER = { q: 31, r: -57 };
+const CARTE: CarteDuJoueur = {
+  monde: "Aube",
+  foyer: FOYER,
+  cases: { q: casesDesAnneaux(0, 1).map((c) => c.q + FOYER.q), r: casesDesAnneaux(0, 1).map((c) => c.r + FOYER.r) },
+};
+/** Le rayon d'une Case à l'écran : la pointe du haut d'une Case est à ce rayon au-dessus de son centre. */
+const RAYON = LARGEUR_DE_CASE / Math.sqrt(3);
+const auMilieuDeLEcran = () => toile.departs.filter(([x, y]) => Math.abs(x - ecran.largeur / 2) < 1e-9 && Math.abs(y - (ecran.hauteur / 2 - RAYON)) < 1e-9);
+
+describe("la carte du Monde (US-0417)", () => {
+  it("est une image du Monde du joueur pour les lecteurs d'écran", () => {
+    render(<CarteDuJeu carte={CARTE} />);
+    expect(screen.getByRole("img", { name: "Carte du Monde Aube, votre Foyer au milieu" }).tagName).toBe("CANVAS");
+  });
+
+  it("dessine les Cases dès l'ouverture, le Foyer au milieu, nette sur un écran haute densité", () => {
+    const { container } = render(<CarteDuJeu carte={CARTE} />);
+    const canvas = container.querySelector("canvas")!;
+    // Deux pixels de l'écran par pixel de la page : la toile est deux fois plus grande, et le dessin mis à l'échelle.
+    expect([canvas.width, canvas.height]).toEqual([1600, 1200]);
+    expect(toile.gestes[0]).toBe("setTransform 2 0 0 2 0 0");
+    expect(toile.departs).toHaveLength(7);
+    expect(auMilieuDeLEcran()).toHaveLength(1);
+  });
+
+  it("se redessine quand l'écran change de taille, le Foyer toujours au milieu", () => {
+    const { container } = render(<CarteDuJeu carte={CARTE} />);
+    Object.assign(ecran, { largeur: 375, hauteur: 559 });
+    vi.stubGlobal("devicePixelRatio", 3);
+    toile.departs = [];
+    act(() => suivi!.annoncer());
+    expect([container.querySelector("canvas")!.width, container.querySelector("canvas")!.height]).toEqual([1125, 1677]);
+    expect(auMilieuDeLEcran()).toHaveLength(1);
+  });
+
+  it("cesse de suivre la taille de l'écran une fois la page quittée", () => {
+    const { unmount, container } = render(<CarteDuJeu carte={CARTE} />);
+    expect(suivi!.suivis).toEqual([container.querySelector("canvas")]);
+    unmount();
+    expect(suivi!.arrete).toBe(true);
+  });
+});

@@ -37,10 +37,12 @@ describe("barre du haut", () => {
     expect(petit).not.toMatch(/\.navigation/);
   });
 
-  it("sur mobile, pose trois onglets égaux en bas de l'écran : Foyer, Habitants, Récits (US-0324)", () => {
+  it("sur mobile, pose quatre onglets égaux en bas de l'écran : Foyer, Carte, Habitants, Récits (US-0324, US-0417)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
     const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
-    expect(mobile).toMatch(/\.entrees \{[^}]*grid-template-columns: repeat\(3, minmax\(0, 1fr\)\);/);
+    expect(mobile).toMatch(/\.entrees \{[^}]*grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
+    // Quatre onglets de 80 px sur 320 px : le nom en 13 px, pour que « Habitants » et son point, « Récits » et « 99+ » y tiennent.
+    expect(mobile).toMatch(/\.entree \{[^}]*font-size: 13px;/);
     // Le trait de l'entrée affichée souligne son nom, pas la pastille des Récits non lus.
     expect(css).toMatch(/\.entree\[aria-current="page"\] \.libelle \{[^}]*text-decoration: underline/);
   });

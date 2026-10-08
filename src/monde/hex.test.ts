@@ -2,7 +2,21 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { COEUR_SAUVAGE_RAYON, MONDE_RAYON } from "@/reglages";
-import { anneau, casesDesAnneaux, CENTRE, dansLeCoeur, dansLeMonde, distance, eloignementDuCoeur, tourDeLAnneau, voisines, voisinesDansLeMonde, type Coordonnees } from "./hex";
+import {
+  anneau,
+  casesDesAnneaux,
+  centre,
+  CENTRE,
+  dansLeCoeur,
+  dansLeMonde,
+  distance,
+  eloignementDuCoeur,
+  SOMMETS_DE_CASE,
+  tourDeLAnneau,
+  voisines,
+  voisinesDansLeMonde,
+  type Coordonnees,
+} from "./hex";
 
 describe("géométrie des Cases", () => {
   it("mesure l'anneau d'une Case : sa distance au Cœur sauvage", () => {
@@ -135,5 +149,25 @@ describe("tour d'un anneau (US-0413)", () => {
 
   it("réduit l'anneau 0 au centre du Monde", () => {
     expect(tourDeLAnneau(0)).toEqual([CENTRE]);
+  });
+});
+
+describe("dessin d'une Case (US-0417)", () => {
+  it("pose les six sommets d'une Case de rayon 1 à un pas de son centre, pointe en haut, dans le sens des aiguilles d'une montre", () => {
+    expect(SOMMETS_DE_CASE).toHaveLength(6);
+    for (const s of SOMMETS_DE_CASE) expect(Math.hypot(s.x, s.y)).toBeCloseTo(1, 12);
+    expect(SOMMETS_DE_CASE[0]).toEqual({ x: 0, y: -1 });
+    expect(SOMMETS_DE_CASE[1].x).toBeGreaterThan(0);
+    expect(SOMMETS_DE_CASE[3]).toEqual({ x: 0, y: 1 });
+    // Sa largeur, d'un côté plat à l'autre : √3, l'écart entre les centres de deux voisines d'une même ligne.
+    const xs = SOMMETS_DE_CASE.map((s) => s.x);
+    expect(Math.max(...xs) - Math.min(...xs)).toBeCloseTo(centre({ q: 1, r: 0 }).x, 12);
+  });
+
+  it("fait se toucher deux Cases voisines par un côté entier : deux sommets en commun, et rien ne se chevauche", () => {
+    const sommetsDe = (c: Coordonnees) => SOMMETS_DE_CASE.map((s) => `${(centre(c).x + s.x).toFixed(9)},${(centre(c).y + s.y).toFixed(9)}`);
+    const ici = new Set(sommetsDe({ q: 2, r: -1 }));
+    for (const v of voisines({ q: 2, r: -1 })) expect(sommetsDe(v).filter((s) => ici.has(s))).toHaveLength(2);
+    expect(sommetsDe({ q: 4, r: -1 }).filter((s) => ici.has(s))).toHaveLength(0);
   });
 });

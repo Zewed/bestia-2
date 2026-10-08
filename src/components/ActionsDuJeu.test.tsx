@@ -116,6 +116,7 @@ describe("actions du joueur dans la barre, sur les pages du jeu", () => {
     const liens = [...nav.matchAll(/<a ([^>]*)>(.*?)<\/a>/g)].map((m) => [m[2].replace(/<[^>]+>/g, ""), m[1].match(/href="([^"]+)"/)?.[1], /aria-current="page"/.test(m[1])]);
     expect(liens).toEqual([
       ["Foyer", "/jeu", false],
+      ["Carte", "/jeu/carte", false],
       ["Habitants", "/jeu/habitants", true],
       ["Récits", "/jeu/recits", false],
     ]);

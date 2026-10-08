@@ -16,10 +16,11 @@ describe("navigation du jeu (US-0302)", () => {
   const entrees = () => within(screen.getByRole("navigation")).getAllByRole("link");
   const marquees = () => entrees().filter((lien) => lien.getAttribute("aria-current") === "page").map((lien) => lien.textContent);
 
-  it("mène au Foyer, aux Habitants puis aux Récits (US-0324)", () => {
+  it("mène au Foyer, à la Carte (US-0417), aux Habitants puis aux Récits (US-0324)", () => {
     render(<Navigation />);
     expect(entrees().map((lien) => [lien.textContent, lien.getAttribute("href")])).toEqual([
       ["Foyer", "/jeu"],
+      ["Carte", "/jeu/carte"],
       ["Habitants", "/jeu/habitants"],
       ["Récits", "/jeu/recits"],
     ]);
@@ -32,7 +33,7 @@ describe("navigation du jeu (US-0302)", () => {
     expect(recits.textContent).toBe("Récits2");
     // La pastille ne double pas le nom pour un lecteur d'écran, et aucune autre entrée n'en porte.
     expect(within(recits).getByText("2").getAttribute("aria-hidden")).toBe("true");
-    expect(entrees().map((lien) => lien.textContent)).toEqual(["Foyer", "Habitants", "Récits2"]);
+    expect(entrees().map((lien) => lien.textContent)).toEqual(["Foyer", "Carte", "Habitants", "Récits2"]);
   });
 
   it("accorde le nom au nombre : « Récits, 1 non lu »", () => {
@@ -78,7 +79,7 @@ describe("navigation du jeu (US-0302)", () => {
 
   it("porte à la fois le repère des Voyageurs et la pastille des Récits non lus (US-0332)", () => {
     render(<Navigation voyageurs={3} recitsNonLus={2} />);
-    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, "Habitants, 3 Voyageurs attendent", "Récits, 2 non lus"]);
+    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, null, "Habitants, 3 Voyageurs attendent", "Récits, 2 non lus"]);
   });
 
   it("signale du même repère sur l'entrée « Habitants » des Habitants sans Métier, et le dit dans son nom : « Habitants, 2 sans Métier » (US-0313)", () => {
@@ -98,7 +99,7 @@ describe("navigation du jeu (US-0302)", () => {
     expect(habitants.querySelectorAll("[aria-hidden='true']")).toHaveLength(1);
     cleanup();
     render(<Navigation sansMetier={3} voyageurs={2} recitsNonLus={4} />);
-    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, "Habitants, 3 sans Métier, 2 Voyageurs attendent", "Récits, 4 non lus"]);
+    expect(entrees().map((lien) => lien.getAttribute("aria-label"))).toEqual([null, null, "Habitants, 3 sans Métier, 2 Voyageurs attendent", "Récits, 4 non lus"]);
   });
 
   it("retire le repère dès que tous les Habitants ont un Métier et que personne n'attend aux portes (US-0313)", () => {
@@ -119,6 +120,10 @@ describe("navigation du jeu (US-0302)", () => {
     adresse.page = "/jeu/recits";
     render(<Navigation recitsNonLus={3} />);
     expect(marquees()).toEqual(["Récits3"]);
+    cleanup();
+    adresse.page = "/jeu/carte";
+    render(<Navigation />);
+    expect(marquees()).toEqual(["Carte"]);
   });
 
   it("ne marque pas le Foyer sur une autre page du jeu", () => {
