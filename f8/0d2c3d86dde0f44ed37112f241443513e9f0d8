@@ -1,0 +1,57 @@
+src/app/jeu/expeditions/page.test.tsx
+  s_97a431cfa65ca7::t_efddc498ebb172 26-33,35-54,57,70,72-79,87,91-95,98-100,103,108
+src/components/DetailDeLExpedition.module.css
+  s_97a431cfa65ca7::t_f90c2a0edd5135 1-170
+src/components/DetailDeLExpedition.test.tsx
+  s_97a431cfa65ca7::t_9f482b585bb2ac 1-103
+src/components/DetailDeLExpedition.tsx
+  s_97a431cfa65ca7::t_fff65af5dedc0c 1-103
+src/expeditions/depart.db.test.ts
+  s_97a431cfa65ca7::t_99633f1ed3cf4b 95-96
+src/expeditions/en-cours.ts
+  s_97a431cfa65ca7::t_665453fa2262d9 1,7-21,26-28,31-38,45,47
+src/expeditions/phase.test.ts
+  s_97a431cfa65ca7::t_91f88c35077d60 2,32-52
+src/expeditions/phase.ts
+  s_31e5e9732cc519::t_dd5d96429f347b 27-49
+src/app/jeu/expeditions/ListeDesExpeditions.test.tsx
+  s_97a431cfa65ca7::t_56a2307afe6f9e 1-75
+src/app/jeu/expeditions/ListeDesExpeditions.tsx
+  s_97a431cfa65ca7::t_ac5ac7bb7ab2b0 1-24
+src/app/jeu/expeditions/page.css.test.ts
+  s_97a431cfa65ca7::t_9ef74e7092a3dc 11,14,17-23
+src/app/jeu/expeditions/page.module.css
+  s_97a431cfa65ca7::t_a3a1d52fe1dab1 19-21,23,25-33,36-39,42-44,47-52,64-68
+src/app/jeu/expeditions/page.tsx
+  s_97a431cfa65ca7::t_c0a47d4951d019 2,10-11,19-24,30-31,37-42,44
+src/components/DetailDeLExpedition.css.test.ts
+  s_97a431cfa65ca7::t_e129c29ac520f7 1-41
+src/expeditions/en-cours.db.test.ts
+  s_97a431cfa65ca7::t_d3102011123802 1-130
+src/temps/heure-du-jeu.ts
+  s_97a431cfa65ca7::t_fc58a9207fdcc1 1-20
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f80d2c3d86dde0f44ed37112f241443513e9f0d8",
+  "prompts": {},
+  "sessions": {
+    "s_31e5e9732cc519": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a69b4a9ece589a534",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
