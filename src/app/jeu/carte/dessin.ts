@@ -1,6 +1,6 @@
 // Le dessin de la carte du Monde sur un <canvas> (US-0417), sans rien demander au navigateur : il se vérifie à part.
 import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
-import { centre, DIRECTIONS, SOMMETS_DE_CASE, type Coordonnees } from "@/monde/hex";
+import { centre, DIRECTIONS, distance, SOMMETS_DE_CASE, tourDeLAnneau, type Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 
 /** US-0417 : la largeur d'une Case à l'écran, d'un côté plat à l'autre, en pixels : un hexagone confortable. */
@@ -21,6 +21,7 @@ export type Pinceau = Pick<
   | "lineCap"
   | "lineJoin"
   | "globalAlpha"
+  | "globalCompositeOperation"
   | "setLineDash"
   | "lineDashOffset"
   | "clearRect"
@@ -58,6 +59,12 @@ export type CarteADessiner = {
 
 /** US-0419 : l'illustration de la hutte du chef, telle que le navigateur l'a chargée, et sa taille en pixels. */
 export type Hutte = { image: CanvasImageSource; largeur: number; hauteur: number };
+
+/**
+ * US-0908 : la portée d'exploration, pendant le choix de la destination d'une Expédition : jusqu'où elle va, en Cases
+ * depuis le Foyer, et la couleur qui grise les Cases au-delà.
+ */
+export type Portee = { cases: number; voile: string };
 
 /**
  * US-0419 : la part de l'illustration du Foyer (foyer/prairie.webp, 3 × 2) où se tient la hutte, en fractions de sa
@@ -425,6 +432,48 @@ function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, r
 }
 
 /**
+ * US-0908 : ajoute au tracé en cours le contour des Cases à `portee` Cases du Foyer ou moins, en en faisant le tour :
+ * chaque Case du dernier anneau autour du Foyer, dans l'ordre de tourDeLAnneau (le sens inverse des aiguilles d'une
+ * montre), y met ses côtés tournés vers l'anneau d'après, dans le même sens : le côté vers la voisine de la direction d
+ * va du sommet (8 − d) au sommet (7 − d) de la Case, et le premier sommet de chaque Case est le dernier de la précédente.
+ */
+function tracerLaPortee(pinceau: Pinceau, foyer: Coordonnees, portee: number, vue: Vue) {
+  let premier = true;
+  for (const pas of tourDeLAnneau(portee)) {
+    const ici = { q: foyer.q + pas.q, r: foyer.r + pas.r };
+    const dehors = DIRECTIONS.map((d) => distance({ q: ici.q + d.q, r: ici.r + d.r }, foyer) > portee);
+    // Ses côtés tournés vers l'anneau d'après se suivent : le premier suit un côté qui ne l'est pas (à portée 0, tous le sont).
+    const debut = Math.max(0, dehors.findIndex((oui, d) => oui && !dehors[(d + 5) % 6]));
+    const { x, y } = aLEcran(ici, vue);
+    for (let d = debut; d < debut + dehors.filter(Boolean).length; d++) {
+      const s = SOMMETS_DE_CASE[(((7 - d) % 6) + 6) % 6];
+      if (premier) pinceau.moveTo(x + s.x * vue.rayon, y + s.y * vue.rayon);
+      else pinceau.lineTo(x + s.x * vue.rayon, y + s.y * vue.rayon);
+      premier = false;
+    }
+  }
+}
+
+/**
+ * US-0908 : grise ce qui est au-delà de la portée d'exploration, d'un seul remplissage, quel que soit le zoom : tout
+ * l'écran, moins la portée (règle pair-impair), et seulement par-dessus ce qui est déjà peint (source-atop) : rien
+ * au-delà du bord du Monde, où il n'y a pas de Case.
+ */
+function griserAuDelaDeLaPortee(pinceau: Pinceau, foyer: Coordonnees, vue: Vue, { cases, voile }: Portee) {
+  pinceau.save();
+  pinceau.globalCompositeOperation = "source-atop";
+  pinceau.beginPath();
+  pinceau.moveTo(0, 0);
+  pinceau.lineTo(vue.largeur, 0);
+  pinceau.lineTo(vue.largeur, vue.hauteur);
+  pinceau.lineTo(0, vue.hauteur);
+  tracerLaPortee(pinceau, foyer, cases, vue);
+  pinceau.fillStyle = voile;
+  pinceau.fill("evenodd");
+  pinceau.restore();
+}
+
+/**
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
@@ -433,9 +482,18 @@ function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, r
  * (`hutte`, une fois chargée), cernée d'Encre, et porte par-dessus tout son repère citron. US-0428 : la Case
  * `choisie` surlignée, sous ce seul repère. US-0437 : les Cases sous le brouillard (de la teinte BROUILLARD), d'une
  * brume unie, d'un seul geste : sans motif, ni bord entre elles, ni liseré, ni Foyer d'un autre chef. Le Foyer du
- * joueur, lui, est toujours découvert.
+ * joueur, lui, est toujours découvert. US-0908 : pendant le choix de la destination d'une Expédition (`portee`), tout
+ * cela grisé au-delà de la portée d'exploration ; ni le Foyer du joueur, ni la Case choisie, ni son repère.
  */
-export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, peinture: Peinture, hutte: Hutte | null = null, choisie: Coordonnees | null = null) {
+export function dessinerLaCarte(
+  pinceau: Pinceau,
+  carte: CarteADessiner,
+  vue: Vue,
+  peinture: Peinture,
+  hutte: Hutte | null = null,
+  choisie: Coordonnees | null = null,
+  portee: Portee | null = null,
+) {
   pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
   // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
   const parTeinte = carte.teintes.map((): { x: number; y: number }[] => []);
@@ -494,6 +552,7 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
     pinceau.fillStyle = peinture.encre;
     pinceau.fill();
   }
+  if (portee) griserAuDelaDeLaPortee(pinceau, carte.foyer, vue, portee);
 
   const foyer = aLEcran(carte.foyer, vue);
   const foyerEnVue = aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon));
@@ -579,6 +638,7 @@ export function enSvg(dessiner: (pinceau: Pinceau) => void): { traits: TraitSvg[
     lineCap: "butt",
     lineJoin: "miter",
     globalAlpha: 1,
+    globalCompositeOperation: "source-over",
     lineDashOffset: 0,
     setLineDash: (valeurs) => void (tirets = [...valeurs]),
     clearRect: () => {},

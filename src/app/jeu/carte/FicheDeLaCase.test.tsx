@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Coordonnees } from "@/monde/hex";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
-import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
+import { CARTE_FICHE_FERMETURE_PIXELS, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { type Choix, FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { LEGENDE_MONTREE } from "./Legende";
 
@@ -251,7 +251,7 @@ describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
   it("le propose aussi pour une Case sous le brouillard", async () => {
     render(<Carte />);
     toucher(ICI);
-    await repondre({ ...ICI, inconnue: true, distance: 12 });
+    await repondre({ ...ICI, inconnue: true, distance: 6 });
     expect(envoyer()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
   });
 
@@ -295,9 +295,9 @@ describe("choisir la destination sur la carte (US-0907)", () => {
   it("le propose pour une Case sous le brouillard, inconnue", async () => {
     render(<Carte destination="choix=destination" />);
     toucher(ICI);
-    await repondre({ ...ICI, inconnue: true, distance: 12 });
+    await repondre({ ...ICI, inconnue: true, distance: 6 });
     expect(screen.getByRole("heading", { name: "Case inconnue" })).toBeTruthy();
-    expect(fiche()!.textContent).toContain("À 12 Cases de votre Foyer");
+    expect(fiche()!.textContent).toContain("À 6 Cases de votre Foyer");
     expect(choisir()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
   });
 
@@ -320,6 +320,43 @@ describe("choisir la destination sur la carte (US-0907)", () => {
     expect(fiche()!.textContent).not.toContain(REFUS);
     await act(async () => demandes[0].echouer());
     expect(choisir()).toBeNull();
+    expect(fiche()!.textContent).not.toContain(REFUS);
+  });
+});
+
+describe("la portée d'exploration sur la fiche d'une Case (US-0908)", () => {
+  const choisir = () => screen.queryByRole("link", { name: "Choisir cette destination" });
+  const REFUS = "Cette Case est hors de portée.";
+  /** Les textes de la fiche, sous son titre. */
+  const lignes = () => [...fiche()!.querySelectorAll("p")].map((p) => p.textContent);
+
+  it("en choisissant la destination, refuse une Case au-delà de la portée, découverte ou sous le brouillard, avec le message à la place", async () => {
+    const brume = { q: 4, r: -5 };
+    render(<Carte destination="choix=destination" cases={[ICI, brume]} />);
+    toucher(ICI);
+    await repondre({ ...FORET, distance: PORTEE_D_EXPLORATION_CASES + 1 });
+    expect(choisir()).toBeNull();
+    expect(lignes()).toEqual([`À ${PORTEE_D_EXPLORATION_CASES + 1} Cases de votre Foyer`, REFUS]);
+    toucher(brume);
+    await repondre({ ...brume, inconnue: true, distance: PORTEE_D_EXPLORATION_CASES + 1 });
+    expect(choisir()).toBeNull();
+    expect(lignes()).toEqual([`À ${PORTEE_D_EXPLORATION_CASES + 1} Cases de votre Foyer`, "Une Expédition pourra la découvrir.", REFUS]);
+  });
+
+  it("propose encore une Case au bout de la portée, à 8 Cases du Foyer", async () => {
+    render(<Carte destination="choix=destination" />);
+    toucher(ICI);
+    await repondre({ ...ICI, inconnue: true, distance: PORTEE_D_EXPLORATION_CASES });
+    expect(PORTEE_D_EXPLORATION_CASES).toBe(8);
+    expect(choisir()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
+    expect(fiche()!.textContent).not.toContain(REFUS);
+  });
+
+  it("depuis la navigation, ne propose pas « Envoyer une Expédition » vers une Case au-delà de la portée, sans rien dire de plus", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre({ ...FORET, distance: PORTEE_D_EXPLORATION_CASES + 1 });
+    expect(screen.queryByRole("link", { name: "Envoyer une Expédition" })).toBeNull();
     expect(fiche()!.textContent).not.toContain(REFUS);
   });
 });

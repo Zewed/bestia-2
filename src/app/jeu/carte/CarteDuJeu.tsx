@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { couleur } from "@/monde/couleurs-de-la-carte";
 import type { Coordonnees } from "@/monde/hex";
+import { PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
 import { CasesDecouvertes } from "./CasesDecouvertes";
 import { nombreDeDecouvertes, useDecouvertes } from "./decouvertes";
@@ -52,6 +53,7 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * surlignage s'en va avec elle. US-0442 : une Case découverte pendant qu'elle est ouverte y apparaît sans recharger
  * la page (useDecouvertes). US-0443 : en bas à gauche, combien le joueur en a découvert, et quelle part du Monde.
  * US-0907 : ouverte pour choisir la destination d'une Expédition (`destination`, son adresse), elle le dit à la fiche.
+ * US-0908 : elle grise alors ce qui est au-delà de la portée d'exploration (PORTEE_D_EXPLORATION_CASES).
  */
 export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteDuJoueur; fonds: string[]; destination?: string | null }) {
   const toile = useRef<HTMLCanvasElement>(null);
@@ -65,6 +67,8 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
   // glisser pour que la fiche (`cache`, en pixels de la carte) ne la cache pas.
   const { choix, choisir, fermer } = useFicheDeLaCase();
   const choisie = useRef<Coordonnees | null>(null);
+  // US-0908 : si la carte est ouverte pour choisir la destination d'une Expédition, où elle grise ce qui est hors de portée.
+  const enChoix = useRef(destination !== null);
   const pourLaFiche = useRef<{ redessiner: () => void; montrer: (c: Coordonnees, cache: Cadre) => void }>({ redessiner: () => {}, montrer: () => {} });
   // US-0442 : la carte à jour des Cases découvertes depuis sa lecture, redessinée dès qu'il y en a ; avant le dessin
   // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle.
@@ -87,6 +91,8 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
       encre: couleurCalculee(canvas, "var(--encre)"),
       repere: couleurCalculee(canvas, "var(--citron)"),
     };
+    // US-0908 : le voile qui grise ce qui est au-delà de la portée d'exploration.
+    const voile = couleurCalculee(canvas, "color-mix(in oklch, var(--galet) 70%, transparent)");
     let hutte: Hutte | null = null;
     // Ce que montre la carte, d'un geste à l'autre, une fois connue la place qu'elle a ; la limite de son milieu.
     let vue: Vue | null = null;
@@ -97,7 +103,7 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
       // US-0442 : une teinte découverte depuis la lecture de la page, de la couleur que la page lui aurait donnée.
       const { teintes } = aDessiner.current;
       for (let t = peinture.fonds.length; t < teintes.length; t++) peinture.fonds.push(couleurCalculee(canvas, couleur(teintes[t])));
-      dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current);
+      dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current, enChoix.current ? { cases: PORTEE_D_EXPLORATION_CASES, voile } : null);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
       retenirLaVue(carte, vue);
     };
@@ -198,6 +204,12 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
     choisie.current = laCase;
     pourLaFiche.current.redessiner();
   }, [laCase]);
+  // US-0908 : ce qui est au-delà de la portée, grisé aussitôt que commence le choix de la destination, et plus du tout
+  // une fois qu'il s'arrête.
+  useEffect(() => {
+    enChoix.current = destination !== null;
+    pourLaFiche.current.redessiner();
+  }, [destination]);
   const montrer = useCallback((c: Coordonnees, cache: Cadre) => pourLaFiche.current.montrer(c, cache), []);
   return (
     <div className={styles.cadre}>

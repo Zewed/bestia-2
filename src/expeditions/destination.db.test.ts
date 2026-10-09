@@ -5,16 +5,17 @@ import { creerCompte } from "@/comptes/compte";
 import { decouvrir } from "@/monde/brouillard";
 import { ficheDUneCase } from "@/monde/fiche";
 import { creerUnMonde } from "@/monde/generer";
-import { distance } from "@/monde/hex";
+import { type Coordonnees, distance } from "@/monde/hex";
+import { PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { CASE_D_UN_TERRITOIRE } from "./choix-de-destination";
+import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE } from "./choix-de-destination";
 import { destinationDUneCase } from "./destination";
 
 /** Le Monde généré des essais de la carte (src/monde/carte.db.test.ts), créé une fois pour toutes dans la base de test : un Monde ne s'efface pas. */
 const MONDE_GENERE = "Essai de la carte (US-0417)";
 const GRAINE = 417;
 
-describe.skipIf(!URL_TEST)("la destination d'une Expédition (US-0907, sur base)", () => {
+describe.skipIf(!URL_TEST)("la destination d'une Expédition (US-0907, US-0908, sur base)", () => {
   let pool: Pool;
   let genereId: number;
   const lancement = `destination-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -31,10 +32,19 @@ describe.skipIf(!URL_TEST)("la destination d'une Expédition (US-0907, sur base)
     );
     return { territoireId: rows[0].territoire, foyer: { q: rows[0].q, r: rows[0].r } };
   };
-  /** La première Case du Monde généré, par q puis r, qui répond à `condition` (sur la Case c). */
-  const uneCase = async (condition: string) => {
-    const { rows } = await pool.query<{ q: number; r: number }>(`select q, r from case_du_monde c where monde_id = $1 and ${condition} order by q, r limit 1`, [genereId]);
-    return rows[0];
+  /**
+   * US-0908 : la première Case libre du Monde généré, par q puis r, hors de l'eau, à `ecart` Cases du Foyer `foyer`
+   * (comptées par `distance`), et le nom de son Biome.
+   */
+  const aLEcart = async (foyer: Coordonnees, ecart: number) => {
+    const { rows } = await pool.query<Coordonnees & { biome: string }>(
+      `select c.q, c.r, b.nom as biome from case_du_monde c join biome b on b.id = c.biome_id
+       where c.monde_id = $1 and c.chef_id is null and c.biome_id <> 'eau' and c.q between $2 and $3 and c.r between $4 and $5
+       order by c.q, c.r`,
+      [genereId, foyer.q - ecart, foyer.q + ecart, foyer.r - ecart, foyer.r + ecart],
+    );
+    const { q, r, biome } = rows.find((c) => distance(c, foyer) === ecart)!;
+    return { laCase: { q, r }, biome };
   };
 
   beforeAll(async () => {
@@ -61,17 +71,36 @@ describe.skipIf(!URL_TEST)("la destination d'une Expédition (US-0907, sur base)
 
   it("choisit une Case libre que le joueur a découverte : son Biome et sa distance au Foyer, en Cases", async () => {
     const moi = await naitre();
-    const foret = await uneCase("biome_id = 'foret' and chef_id is null");
-    await decouvrir(pool, moi.territoireId, [foret]);
-    expect(await destinationDUneCase(pool, moi.territoireId, foret)).toEqual({
-      fiche: expect.objectContaining({ ...foret, biome: "Forêt", chef: null, distance: distance(foret, moi.foyer) }),
+    const { laCase, biome } = await aLEcart(moi.foyer, PORTEE_D_EXPLORATION_CASES - 1);
+    await decouvrir(pool, moi.territoireId, [laCase]);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({
+      fiche: expect.objectContaining({ ...laCase, biome, chef: null, distance: PORTEE_D_EXPLORATION_CASES - 1 }),
     });
   });
 
   it("choisit une Case encore sous le brouillard, sans rien dire d'elle que sa place et sa distance", async () => {
     const moi = await naitre();
-    const loin = { q: 0, r: 0 };
-    expect(await destinationDUneCase(pool, moi.territoireId, loin)).toEqual({ fiche: { ...loin, inconnue: true, distance: distance(loin, moi.foyer) } });
+    // Au-delà des abords du Foyer, découverts à sa naissance.
+    const { laCase } = await aLEcart(moi.foyer, PORTEE_D_EXPLORATION_CASES - 1);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({ fiche: { ...laCase, inconnue: true, distance: PORTEE_D_EXPLORATION_CASES - 1 } });
+  });
+
+  it("choisit encore une Case au bout de la portée d'exploration, à 8 Cases du Foyer, sous le brouillard comme découverte (US-0908)", async () => {
+    const moi = await naitre();
+    const { laCase, biome } = await aLEcart(moi.foyer, PORTEE_D_EXPLORATION_CASES);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({ fiche: { ...laCase, inconnue: true, distance: PORTEE_D_EXPLORATION_CASES } });
+    await decouvrir(pool, moi.territoireId, [laCase]);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({ fiche: expect.objectContaining({ ...laCase, biome, distance: PORTEE_D_EXPLORATION_CASES }) });
+  });
+
+  it("refuse une Case au-delà de la portée, avec le message, sous le brouillard comme découverte, quel que soit le chemin qui la demande (US-0908)", async () => {
+    const moi = await naitre();
+    const { laCase } = await aLEcart(moi.foyer, PORTEE_D_EXPLORATION_CASES + 1);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({ refus: CASE_HORS_DE_PORTEE });
+    await decouvrir(pool, moi.territoireId, [laCase]);
+    expect(await destinationDUneCase(pool, moi.territoireId, laCase)).toEqual({ refus: CASE_HORS_DE_PORTEE });
+    // Le Cœur sauvage, au milieu du Monde : bien plus loin qu'un Foyer né sur la Couronne.
+    expect(await destinationDUneCase(pool, moi.territoireId, { q: 0, r: 0 })).toEqual({ refus: CASE_HORS_DE_PORTEE });
   });
 
   it("refuse le Foyer du joueur, qui appartient à son Territoire", async () => {

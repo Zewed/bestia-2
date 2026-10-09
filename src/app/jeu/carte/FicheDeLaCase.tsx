@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { type PointerEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
-import { CASE_D_UN_TERRITOIRE, versLEcran } from "@/expeditions/choix-de-destination";
+import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE, versLEcran } from "@/expeditions/choix-de-destination";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
-import { CARTE_FICHE_FERMETURE_PIXELS } from "@/reglages";
+import { CARTE_FICHE_FERMETURE_PIXELS, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { ficheDeLaCase } from "./actions";
 import type { Cadre } from "./dessin";
 import styles from "./FicheDeLaCase.module.css";
@@ -89,7 +89,8 @@ function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElemen
  * d'Expédition avec la Case pour destination, sauf sur une Case d'un Territoire, Foyer du joueur compris, qui ne peut
  * pas en être une (US-0907) ; le doigt qui le touche ne fait pas glisser le panneau. US-0907 : sur la carte ouverte
  * pour choisir la destination (`destination`), « Choisir cette destination » à sa place, ou le refus d'une Case d'un
- * Territoire.
+ * Territoire. US-0908 : de même d'une Case au-delà de la portée d'exploration, découverte ou non : aucun des deux
+ * liens, et son refus sur la carte ouverte pour choisir la destination.
  */
 export function FicheDeLaCase({
   choix,
@@ -190,7 +191,7 @@ export function FicheDeLaCase({
           <h2 className={styles.biome}>Case inconnue</h2>
           <p className={styles.distance}>{aDistance(fiche.distance)}</p>
           <p className={styles.expedition}>Une Expédition pourra la découvrir.</p>
-          <VersLExpedition vers={laCase} destination={destination} />
+          <VersLExpedition vers={laCase} destination={destination} refus={horsDePortee(fiche)} />
         </>
       ) : fiche ? (
         <>
@@ -207,7 +208,7 @@ export function FicheDeLaCase({
           </dl>
           {fiche.distance > 0 ? <p className={styles.distance}>{aDistance(fiche.distance)}</p> : null}
           {fiche.zone === ZONE_COEUR ? <p className={styles.rares}>Les Espèces les plus rares vivent ici.</p> : null}
-          <VersLExpedition vers={laCase} destination={destination} territoire={fiche.chef !== null || fiche.distance === 0} />
+          <VersLExpedition vers={laCase} destination={destination} refus={fiche.chef !== null || fiche.distance === 0 ? CASE_D_UN_TERRITOIRE : horsDePortee(fiche)} />
         </>
       ) : echec ? (
         <p className={styles.echec}>La fiche n&apos;a pas pu s&apos;ouvrir.</p>
@@ -221,14 +222,18 @@ export function FicheDeLaCase({
   );
 }
 
+/** US-0908 : le refus d'une Case au-delà de la portée d'exploration, d'après sa distance au Foyer ; null à portée. */
+const horsDePortee = ({ distance }: { distance: number }) => (distance > PORTEE_D_EXPLORATION_CASES ? CASE_HORS_DE_PORTEE : null);
+
 /**
  * US-0901 : « Envoyer une Expédition », au pied de la fiche, vers l'écran d'Expédition avec la Case `vers` pour
- * destination ; rien sur une Case d'un Territoire (`territoire`), qui ne peut pas en être une. US-0907 : sur la carte
- * ouverte pour choisir la destination (`destination`, son adresse), « Choisir cette destination », qui revient à
- * l'écran avec la Case et les autres choix qu'il avait ; sur une Case d'un Territoire, le refus à sa place.
+ * destination ; rien sur une Case qui ne peut pas en être une (`refus`) : une Case d'un Territoire (US-0907), ou
+ * au-delà de la portée d'exploration (US-0908). US-0907 : sur la carte ouverte pour choisir la destination
+ * (`destination`, son adresse), « Choisir cette destination », qui revient à l'écran avec la Case et les autres choix
+ * qu'il avait ; sur une Case qui ne peut pas en être une, le refus à sa place.
  */
-function VersLExpedition({ vers, territoire = false, destination }: { vers: Coordonnees; territoire?: boolean; destination: string | null }) {
-  if (territoire) return destination === null ? null : <p className={styles.refus}>{CASE_D_UN_TERRITOIRE}</p>;
+function VersLExpedition({ vers, refus, destination }: { vers: Coordonnees; refus: string | null; destination: string | null }) {
+  if (refus) return destination === null ? null : <p className={styles.refus}>{refus}</p>;
   return (
     <Link href={versLEcran(vers, destination ?? "")} className={styles.envoyer}>
       {destination === null ? "Envoyer une Expédition" : "Choisir cette destination"}
