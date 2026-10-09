@@ -91,11 +91,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0909 · Partir sans escorte
 **En tant que** joueur, **je veux** envoyer des explorateurs seuls, **afin de** lever le brouillard et ramener mes premières Bêtes sans en risquer aucune.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1367, Zewed/bestia-2#11). Une Expédition avec au moins un explorateur peut partir sans aucune Bête. Sans Bête disponible, le bloc « Escorte » de l'écran d'Expédition dit seulement « Sans escorte, l'Expédition ne ramènera que des Bêtes communes. ». Sans escorte, elle avance au pas des explorateurs, 20 minutes de jeu par Case (provisoire, `PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE`), que la durée du trajet (US-0912) utilisera. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0902, US-0906, US-0907
 - **Critères d'acceptation** :
   - Une Expédition avec au moins un explorateur et aucune Bête peut partir.
   - Sans escorte, elle ne peut ramener que des Bêtes communes (règle à l'étape 40) ; le récapitulatif l'indique en quelques mots, à la place de la force.
-  - Sans escorte, l'Expédition avance au pas des explorateurs (chiffre à régler).
+  - Sans escorte, l'Expédition avance au pas des explorateurs : 20 minutes de jeu par Case (provisoire, `PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE`).
 
 ### US-0910 · Le récapitulatif avant le départ
 **En tant que** joueur, **je veux** relire tout ce que j'ai choisi avant de confirmer, **afin de** ne pas partir avec une erreur.
