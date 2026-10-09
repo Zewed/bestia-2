@@ -49,10 +49,11 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0905 · La force de l'escorte
 **En tant que** joueur, **je veux** voir la force de mon escorte pendant que je la compose, **afin de** juger ce qu'elle pourra apprivoiser.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1363, Zewed/bestia-2#12). Sous les Espèces du bloc « Escorte », une ligne « Force » donne la force de l'escorte, qui se met à jour à chaque Bête ajoutée ou retirée. Elle vaut 0 sans escorte. La force d'une Bête est l'arrondi de la racine carrée de son attaque multipliée par sa vie (une souris vaut 473, une poule 9 457), la même pour toutes les Bêtes d'une Espèce chez tous les joueurs ; l'escorte en fait la simple somme (`src/expeditions/force.ts`). Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0904
 - **Critères d'acceptation** :
   - La force de l'escorte est la simple somme des forces de ses Bêtes, sans bonus de groupe ni règle de taille.
-  - La force d'une Bête vient des caractéristiques de son Espèce, la même pour toutes les Bêtes de l'Espèce et chez tous les joueurs ; la formule à partir de l'attaque et de la vie (à décider).
+  - La force d'une Bête vient des caractéristiques de son Espèce, la même pour toutes les Bêtes de l'Espèce et chez tous les joueurs ; la force d'une Bête vaut la racine carrée de l'attaque multipliée par la vie, arrondie (décidé le 2026-10-08).
   - Aucune Recherche ne change cette force.
   - Le total se met à jour à chaque Bête ajoutée ou retirée ; sans escorte, il vaut zéro.
 

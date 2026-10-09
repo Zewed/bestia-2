@@ -25,10 +25,10 @@ vi.mock("next/navigation", async () => {
 
 import { Escorte } from "./Escorte";
 
-/** Deux Espèces de l'effectif, rangées comme la base les rend, et une Espèce sans illustration. */
-const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1 };
-const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 };
-const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2 };
+/** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes, et une Espèce sans illustration. */
+const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 };
+const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 };
+const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2, force: 1 };
 
 /** L'adresse de l'écran d'Expédition, avec `recherche` (« ?q=3&r=-5 ») : un rechargement, ou un lien. */
 const ouvrir = (recherche = "") => window.history.replaceState(null, "", `/jeu/expeditions/nouvelle${recherche}`);
@@ -51,6 +51,8 @@ const bouton = (nom: string, bouton: string) => within(choix(nom)).getByRole("bu
 const choisies = (nom: string) => within(choix(nom)).getByRole("status").textContent;
 /** Ce qui est grisé parmi « − », « + », « Toutes » et « Aucune ». */
 const grises = (nom: string) => ["Une Bête de moins", "Une Bête de plus", "Toutes", "Aucune"].filter((b) => bouton(nom, b).disabled);
+/** US-0905 : la force de l'escorte choisie, telle que le bloc l'affiche. */
+const force = () => within(bloc()).getByRole("status", { name: "Force" }).textContent;
 
 describe("choisir l'escorte (US-0904)", () => {
   it("propose chaque Espèce de l'effectif avec le nombre de Bêtes disponibles, puis combien partent", () => {
@@ -71,6 +73,8 @@ describe("choisir l'escorte (US-0904)", () => {
       "+",
       "Toutes",
       "Aucune",
+      "Force",
+      "0",
     ]);
   });
 
@@ -169,5 +173,42 @@ describe("choisir l'escorte (US-0904)", () => {
     ecran();
     await joueur.click(bouton("Souris grise", "Une Bête de moins"));
     expect(window.location.search).toBe("?escorte=souris.2");
+  });
+});
+
+describe("la force de l'escorte (US-0905)", () => {
+  it("vaut zéro sans escorte : aucune Bête choisie", () => {
+    ecran();
+    expect(force()).toBe("0");
+  });
+
+  it("se met à jour à chaque Bête ajoutée ou retirée : la simple somme des forces de ses Bêtes", async () => {
+    const joueur = userEvent.setup();
+    ecran();
+    await joueur.click(bouton("Souris grise", "Une Bête de plus"));
+    expect(force()).toBe("473");
+    await joueur.click(bouton("Souris grise", "Une Bête de plus"));
+    expect(force()).toBe("946");
+    await joueur.click(bouton("Poule", "Toutes"));
+    expect(force()).toBe("10 403");
+    await joueur.click(bouton("Souris grise", "Une Bête de moins"));
+    expect(force()).toBe("9 930");
+    await joueur.click(bouton("Souris grise", "Toutes"));
+    expect(force()).toBe("10 876");
+    await joueur.click(bouton("Poule", "Aucune"));
+    await joueur.click(bouton("Souris grise", "Aucune"));
+    expect(force()).toBe("0");
+  });
+
+  it("compte l'escorte gardée dans l'adresse, au rechargement, sans rien de ce que l'adresse dit de trop", () => {
+    ouvrir("?escorte=souris.2&escorte=poule.5&escorte=pigeon.4");
+    ecran();
+    expect(force()).toBe("10 403");
+  });
+
+  it("écrit un grand total d'un tenant, ses milliers séparés d'une espace insécable", () => {
+    ouvrir("?escorte=elephant.1000");
+    ecran([{ id: "elephant", nom: "Éléphant de savane", illustration: null, disponibles: 1000, force: 5_286_856 }]);
+    expect(force()).toBe("5 286 856 000");
   });
 });
