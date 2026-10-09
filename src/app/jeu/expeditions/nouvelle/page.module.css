@@ -38,6 +38,12 @@
   color: var(--texte-discret);
 }
 
+/* US-0907 : le refus d'une Case d'un Territoire, à la place de la destination, dans la couleur d'alerte. */
+.refus {
+  color: var(--mauvais);
+  font-weight: var(--graisse-titre);
+}
+
 /* Au pouce : un lien de 44 px de haut, sur l'Encre ; toute la largeur sur mobile. */
 .choisir {
   display: inline-flex;
@@ -64,6 +70,19 @@
 .choisir:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
+}
+
+/* US-0907 : une destination déjà choisie se change d'un lien secondaire, de la même taille, cerné d'un trait. */
+.changer {
+  background: var(--bloc);
+  color: var(--encre);
+  box-shadow: inset 0 0 0 1px var(--trait);
+}
+
+@media (hover: hover) {
+  .changer:hover {
+    background: var(--bloc-3);
+  }
 }
 
 /* Sur mobile, une seule colonne, sans rien qui dépasse sur le côté. */

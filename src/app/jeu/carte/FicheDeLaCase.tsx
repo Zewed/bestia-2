@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { type PointerEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { CASE_D_UN_TERRITOIRE, versLEcran } from "@/expeditions/choix-de-destination";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
@@ -16,9 +17,6 @@ const ZONES: Record<number, string> = { [ZONE_COURONNE]: "Couronne · ", [ZONE_C
 
 /** US-0429 : « À 7 Cases de votre Foyer ». */
 const aDistance = (n: number) => `À ${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
-
-/** US-0901 : l'écran d'Expédition, avec la Case `c` pour destination. */
-const versLExpedition = (c: Coordonnees) => `/jeu/expeditions/nouvelle?q=${c.q}&r=${c.r}`;
 
 /**
  * La Case choisie sur la carte, et sa fiche : null tant que le serveur ne l'a pas donnée ; `echec` s'il n'a pas pu.
@@ -88,19 +86,23 @@ function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElemen
  * boutons de la carte et la flèche du Foyer. Un seul panneau en bas à la fois : la légende qui s'y montre la ferme.
  * US-0438 : d'une Case sous le brouillard, seulement « Case inconnue », sa distance au Foyer, et qu'une Expédition
  * pourra la découvrir, comme le serveur la donne. US-0901 : une fois remplie, « Envoyer une Expédition » ouvre l'écran
- * d'Expédition avec la Case pour destination, sauf sur le Foyer du joueur, qui ne peut pas en être une (US-0907) ; le
- * doigt qui le touche ne fait pas glisser le panneau.
+ * d'Expédition avec la Case pour destination, sauf sur une Case d'un Territoire, Foyer du joueur compris, qui ne peut
+ * pas en être une (US-0907) ; le doigt qui le touche ne fait pas glisser le panneau. US-0907 : sur la carte ouverte
+ * pour choisir la destination (`destination`), « Choisir cette destination » à sa place, ou le refus d'une Case d'un
+ * Territoire.
  */
 export function FicheDeLaCase({
   choix,
   carte,
   montrer,
   fermer,
+  destination = null,
 }: {
   choix: Choix;
   carte: RefObject<HTMLCanvasElement | null>;
   montrer: (c: Coordonnees, cache: Cadre) => void;
   fermer: () => void;
+  destination?: string | null;
 }) {
   const panneau = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -188,7 +190,7 @@ export function FicheDeLaCase({
           <h2 className={styles.biome}>Case inconnue</h2>
           <p className={styles.distance}>{aDistance(fiche.distance)}</p>
           <p className={styles.expedition}>Une Expédition pourra la découvrir.</p>
-          <EnvoyerUneExpedition vers={laCase} />
+          <VersLExpedition vers={laCase} destination={destination} />
         </>
       ) : fiche ? (
         <>
@@ -205,7 +207,7 @@ export function FicheDeLaCase({
           </dl>
           {fiche.distance > 0 ? <p className={styles.distance}>{aDistance(fiche.distance)}</p> : null}
           {fiche.zone === ZONE_COEUR ? <p className={styles.rares}>Les Espèces les plus rares vivent ici.</p> : null}
-          {fiche.distance > 0 ? <EnvoyerUneExpedition vers={laCase} /> : null}
+          <VersLExpedition vers={laCase} destination={destination} territoire={fiche.chef !== null || fiche.distance === 0} />
         </>
       ) : echec ? (
         <p className={styles.echec}>La fiche n&apos;a pas pu s&apos;ouvrir.</p>
@@ -219,11 +221,17 @@ export function FicheDeLaCase({
   );
 }
 
-/** US-0901 : « Envoyer une Expédition », au pied de la fiche, vers l'écran d'Expédition avec la Case `vers` pour destination. */
-function EnvoyerUneExpedition({ vers }: { vers: Coordonnees }) {
+/**
+ * US-0901 : « Envoyer une Expédition », au pied de la fiche, vers l'écran d'Expédition avec la Case `vers` pour
+ * destination ; rien sur une Case d'un Territoire (`territoire`), qui ne peut pas en être une. US-0907 : sur la carte
+ * ouverte pour choisir la destination (`destination`, son adresse), « Choisir cette destination », qui revient à
+ * l'écran avec la Case et les autres choix qu'il avait ; sur une Case d'un Territoire, le refus à sa place.
+ */
+function VersLExpedition({ vers, territoire = false, destination }: { vers: Coordonnees; territoire?: boolean; destination: string | null }) {
+  if (territoire) return destination === null ? null : <p className={styles.refus}>{CASE_D_UN_TERRITOIRE}</p>;
   return (
-    <Link href={versLExpedition(vers)} className={styles.envoyer}>
-      Envoyer une Expédition
+    <Link href={versLEcran(vers, destination ?? "")} className={styles.envoyer}>
+      {destination === null ? "Envoyer une Expédition" : "Choisir cette destination"}
     </Link>
   );
 }
