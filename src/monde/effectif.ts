@@ -1,9 +1,13 @@
 // Les Bêtes d'un Territoire telles que l'écran d'Expédition les propose pour l'escorte. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
+import { forceDUneBete } from "@/expeditions/force";
 
-/** US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte. */
-export type EspeceDisponible = { id: string; nom: string; illustration: string | null; disponibles: number };
+/**
+ * US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte.
+ * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes.
+ */
+export type EspeceDisponible = { id: string; nom: string; illustration: string | null; disponibles: number; force: number };
 
 /**
  * US-0904 : les Bêtes d'un Couple en Réserve, qui ne sortent jamais : combien l'Espèce en a (expression sur `e`, les
@@ -23,10 +27,11 @@ const BETES_SORTIES = "0";
  * d'Expédition : l'effectif du Territoire, mâles et femelles ensemble (l'escorte ne choisit pas le sexe), moins les Bêtes
  * d'un Couple en Réserve et les Bêtes déjà sorties. Seules les Espèces qui en ont au moins une, de la plus commune à la
  * plus rare, puis par nom ; aucune pour un Territoire sans Bête. Lire ne retient rien : rien ne change avant le départ.
+ * US-0905 : la force d'une Bête vient de l'attaque et de la vie de son Espèce, rien du Territoire : aucune Recherche.
  */
 export async function betesDisponibles(base: Pool | PoolClient, territoireId: number): Promise<EspeceDisponible[]> {
-  const { rows } = await base.query<EspeceDisponible>(
-    `select es.id, es.nom, es.illustration, x.disponibles
+  const { rows } = await base.query<Omit<EspeceDisponible, "force"> & { attaque: number; vie: number }>(
+    `select es.id, es.nom, es.illustration, x.disponibles, es.attaque, es.vie
      from (
        select e.espece_id, sum(e.nombre)::int - (${BETES_EN_RESERVE}) - (${BETES_SORTIES}) as disponibles
        from effectif e
@@ -39,5 +44,5 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
      order by r.rang, es.nom`,
     [territoireId],
   );
-  return rows;
+  return rows.map(({ attaque, vie, ...espece }) => ({ ...espece, force: forceDUneBete({ attaque, vie }) }));
 }

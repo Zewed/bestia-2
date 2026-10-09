@@ -30,3 +30,12 @@ describe("choisir l'escorte sur un téléphone (US-0904)", () => {
     expect(regle(".bloc", ESCORTE)).toContain("margin-top: var(--ecart);");
   });
 });
+
+describe("la force de l'escorte (US-0905)", () => {
+  it("se lit sous les Espèces, d'un trait, comme les lignes des autres blocs : l'étiquette, puis le total, dans la largeur qui reste", () => {
+    expect(regle(".force", ESCORTE)).toContain("grid-template-columns: 96px minmax(0, 1fr);");
+    expect(regle(".force", ESCORTE)).toContain("border-top: 1px solid var(--trait);");
+    expect(regle(".force dt", ESCORTE)).toContain("color: var(--texte-discret);");
+    expect(regle(".total", ESCORTE)).toMatch(/font-weight: var\(--graisse-titre\);[^}]*font-variant-numeric: tabular-nums;/);
+  });
+});

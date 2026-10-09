@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useId } from "react";
 import { Bloc } from "@/components/Bloc";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
+import { forceDeLEscorte } from "@/expeditions/force";
 import type { EspeceDisponible } from "@/monde/effectif";
 import styles from "./Escorte.module.css";
 
@@ -30,6 +31,9 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
 
+/** « 10 403 » : les milliers séparés d'une espace insécable, que le total ne se coupe jamais. */
+const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/ /g, " ");
+
 /**
  * US-0904 : le bloc Escorte de l'écran d'Expédition, après les Explorateurs. Chaque Espèce de l'effectif qui a des Bêtes
  * disponibles y a sa ligne : son illustration, son nom et ce nombre, puis combien de ses Bêtes partent, au pouce, entre
@@ -37,12 +41,15 @@ const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
  * zéro. Comme les explorateurs, l'escorte vit dans l'adresse (replaceState) : elle survit à un rechargement, et le départ
  * la relira (US-0911). Choisir ne retient aucune Bête : les disponibles ne bougent pas avant le départ. Sans aucune Bête
  * disponible, pas d'escorte : le bloc n'apparaît pas, et l'Expédition part sans (US-0909).
+ * US-0905 : sous les Espèces, la force de l'escorte choisie, la simple somme des forces de ses Bêtes, recomptée à chaque
+ * Bête ajoutée ou retirée, comme au rechargement ; zéro tant qu'aucune Bête n'est choisie.
  */
 export function Escorte({ especes }: { especes: EspeceDisponible[] }) {
   const recherche = useSearchParams();
   const id = useId();
   if (especes.length === 0) return null;
   const choix = escorteChoisie(recherche, especes);
+  const force = forceDeLEscorte(especes.map((e) => ({ force: e.force, nombre: choix.get(e.id)! })));
 
   /** Garde `n` Bêtes de l'Espèce `especeId` dans l'adresse, avec le reste de l'escorte et les autres choix ; zéro n'y est pas écrit. */
   function choisir(especeId: string, n: number) {
@@ -92,6 +99,14 @@ export function Escorte({ especes }: { especes: EspeceDisponible[] }) {
           );
         })}
       </ul>
+      <dl className={styles.force}>
+        <dt id={`${id}-force`}>Force</dt>
+        <dd>
+          <output aria-labelledby={`${id}-force`} className={styles.total}>
+            {entier(force)}
+          </output>
+        </dd>
+      </dl>
     </Bloc>
   );
 }
