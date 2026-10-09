@@ -272,6 +272,14 @@ export const APPARITIONS_PAR_CASE_PAR_JOUR = 1;
 export const PRESENCE_D_UNE_BETE_HEURES = 6;
 
 /**
+ * US-0906 : le séjour d'une Expédition sur sa Case se choisit de 30 minutes à 24 heures de jeu, par pas de 30 minutes
+ * (valeurs provisoires, à régler en jouant). Il ne commence qu'à l'arrivée : le trajet ne le raccourcit pas.
+ */
+export const SEJOUR_MINUTES = { min: 30, max: 24 * 60, pas: 30 };
+/** US-0906 : les durées de séjour toutes prêtes, qui se choisissent d'un doigt sur mobile : 1 h, 4 h, 8 h et 12 h (décidées le 2026-10-08). */
+export const SEJOURS_TOUT_PRETS_MINUTES = [60, 4 * 60, 8 * 60, 12 * 60];
+
+/**
  * US-0908 : la portée d'exploration de départ : la destination d'une Expédition est à 8 Cases du Foyer au plus (valeur
  * provisoire, à régler en jouant), comptées par `distance` (src/monde/hex.ts) ; au-delà des abords découverts à la
  * naissance (ABORDS_DU_FOYER_CASES). Des Recherches de la branche Explorer l'agrandiront (US-0731, jalon 7).
