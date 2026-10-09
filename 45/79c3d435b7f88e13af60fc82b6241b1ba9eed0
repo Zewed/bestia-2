@@ -1,0 +1,25 @@
+drizzle/0056_apprivoisement.sql
+  s_97a431cfa65ca7::t_c12f7461ea634e 3-4,6
+drizzle/meta/0056_snapshot.json
+  s_97a431cfa65ca7::t_d09c433aec0eac 2,1179-1193
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_f6651600044559 379
+src/db/schema.ts
+  s_97a431cfa65ca7::t_8a6ab5bb933e50 709-710
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "4579c3d435b7f88e13af60fc82b6241b1ba9eed0",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
