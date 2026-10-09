@@ -684,8 +684,9 @@ export const beteDeNaissance = pgTable(
  * Une Expédition en cours (US-0911) : des explorateurs du Territoire, et peut-être une escorte de Bêtes
  * (expedition_escorte), partis à `part_le`, un instant du jeu, vers la Case `case_id`. Son aller dure `trajet_minutes`
  * minutes de jeu, et son retour autant (US-0912) ; le séjour, `sejour_minutes`, ne commence qu'à l'arrivée (US-0906).
- * Le trajet d'une escorte n'est pas encore chiffré : null, tant qu'US-0912 ne règle pas son allure. Ses explorateurs
- * la portent sur leur ligne (habitant.expedition_id). Elle part avec le Territoire.
+ * Le trajet est chiffré au départ, escorte comprise (US-0912) ; il ne restait null que pour une escorte partie avant,
+ * que la migration 0050 a rattrapée. Ses explorateurs la portent sur leur ligne (habitant.expedition_id). Elle part
+ * avec le Territoire.
  */
 export const expedition = pgTable(
   "expedition",

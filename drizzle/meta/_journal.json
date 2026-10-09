@@ -351,6 +351,13 @@
       "when": 1791533359681,
       "tag": "0049_expedition",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1791537781885,
+      "tag": "0050_trajet_des_escortes",
+      "breakpoints": true
     }
   ]
 }

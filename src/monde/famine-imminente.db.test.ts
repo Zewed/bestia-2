@@ -1,13 +1,13 @@
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { definirAncre } from "@/temps/horloge";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { entretienDesHabitants } from "./habitants";
 import { nourriturePourEncoreDesStocks } from "./nourriture";
 import { famineImminenteDepuis } from "./production";
@@ -16,8 +16,12 @@ import { fixerStock, stocksDuTerritoire } from "./stocks";
 const HEURE = 3_600_000;
 const MINUTE = 60_000;
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de la famine imminente (US-0322)";
+
 describe.skipIf(!URL_TEST)("l'avertissement « famine imminente », tenu par le mécanisme du temps (US-0322, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `famine-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
 
@@ -30,8 +34,8 @@ describe.skipIf(!URL_TEST)("l'avertissement « famine imminente », tenu par le 
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Fami${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query(
       `update stock set quantite = case ressource_id when 'viande' then $2::numeric else $3::numeric end, reste = 0, plein_depuis = null,
          limite = case ressource_id when 'vegetaux' then coalesce($4::numeric, limite) else limite end
@@ -65,6 +69,7 @@ describe.skipIf(!URL_TEST)("l'avertissement « famine imminente », tenu par le 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterEach(() => {
     vi.useRealTimers();

@@ -1,23 +1,28 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, chefParNom, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
+import { chefParNom, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { fixerStock, stocksDuTerritoire } from "./stocks";
+
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des Stocks (US-0201)";
 
 describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `stocks-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
   /** Un nom de chef propre à ce lancement, pour ne pas croiser les autres essais. */
   const nomUnique = () => `Stock${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
 
-  const naitre = async () => {
+  /** Un chef qui naît dans le Monde d'essai, ou dans le Monde du jeu avec `null`. */
+  const naitre = async (monde: number | null = mondeId) => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    return { compte, territoireId: (await chefDuCompte(pool, compte.id))!.territoireId! };
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, monde)).toMatchObject({ statut: "enregistre" });
+    return { compte, territoireId: (await territoireDuCompte(pool, compte.id))! };
   };
   const stocks = async (territoireId: number) =>
     (
@@ -36,6 +41,7 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -156,7 +162,8 @@ describe.skipIf(!URL_TEST)("Stocks du Territoire (US-0201, US-0202, sur base)", 
   });
 
   it("retrouvent leur chef par son nom, majuscules, accents et signes mis à part (US-0208)", async () => {
-    const { territoireId } = await naitre();
+    // chefParNom ne cherche que dans le Monde du jeu.
+    const { territoireId } = await naitre(null);
     const nom: string = (await pool.query("select ch.nom from chef ch join territoire t on t.chef_id = ch.id where t.id = $1", [territoireId])).rows[0].nom;
     expect(await chefParNom(pool, `  ${nom.toUpperCase()} `)).toEqual({ nom, territoireId });
     expect(await chefParNom(pool, "Personne Ici Zz")).toBeNull();

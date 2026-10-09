@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { stocksDuTerritoire } from "@/monde/stocks";
 import { ecartAvantVoyageur } from "@/monde/voyageurs";
 import { ENTRETIEN_HABITANT_PAR_HEURE, VOYAGEUR_ATTEND_HEURES, VOYAGEURS_EN_ATTENTE_MAX } from "@/reglages";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { definirAncre, maintenant } from "./horloge";
 import { lireMarquePage } from "./marque-page";
@@ -17,11 +17,17 @@ import { synchroniserHorloge } from "./synchroniser-horloge";
 const R0 = new Date("2026-03-01T12:00:00Z").getTime();
 const MINUTE = 60_000;
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du temps accéléré (US-0038)";
+
 describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
 
-  beforeAll(() => {
+  beforeAll(async () => {
     pool = poolDeTest();
+    await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   beforeEach(async () => {
     // L'horloge de la base de test repart de zéro à chaque test.
@@ -88,8 +94,8 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
     /** Un Foyer né à l'heure du jeu, ses Stocks remis à zéro et sans Habitants : la production seule, sans Entretien (US-0316). */
     const naitre = async () => {
       const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-      expect(await enregistrerNomDeChef(pool, compte.id, `Vite${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
-      const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      expect(await enregistrerNomDeChef(pool, compte.id, `Vite${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const territoireId = (await territoireDuCompte(pool, compte.id))!;
       await pool.query("update stock set quantite = 0 where territoire_id = $1", [territoireId]);
       await pool.query("delete from habitant where territoire_id = $1", [territoireId]);
       return territoireId;
@@ -258,8 +264,8 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
      */
     const naitre = async () => {
       const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-      expect(await enregistrerNomDeChef(pool, compte.id, `Faim${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
-      const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      expect(await enregistrerNomDeChef(pool, compte.id, `Faim${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const territoireId = (await territoireDuCompte(pool, compte.id))!;
       const p = await prairie();
       await pool.query(
         `update stock set produit_depuis_visite = 0, plein_depuis = null,
@@ -346,8 +352,8 @@ describe.skipIf(!URL_TEST)("temps accéléré (sur base)", () => {
     /** Un Foyer né à l'heure du jeu. */
     const naitre = async () => {
       const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-      expect(await enregistrerNomDeChef(pool, compte.id, `Voya${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`)).toMatchObject({ statut: "enregistre" });
-      return (await chefDuCompte(pool, compte.id))!.territoireId!;
+      expect(await enregistrerNomDeChef(pool, compte.id, `Voya${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      return (await territoireDuCompte(pool, compte.id))!;
     };
     /** Les arrivées prévues sans base, de la naissance `ne` jusqu'à `jusqua` compris : numéro et instant de jeu. */
     const prevues = (territoireId: number, ne: number, jusqua: number) => {

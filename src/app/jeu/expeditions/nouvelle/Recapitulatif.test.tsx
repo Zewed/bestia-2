@@ -31,9 +31,11 @@ vi.mock("./actions", () => actions);
 import { type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
 import { Sejour } from "./Sejour";
 
-/** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes. */
-const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 };
-const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 };
+/** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes et leur vitesse en km/h. */
+const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 };
+const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 };
+/** Une Espèce plus lente que la marche des explorateurs, pour l'essai. */
+const TORTUE: EspeceDisponible = { id: "tortue", nom: "Tortue", illustration: null, disponibles: 2, force: 120, vitesse: 3 };
 /** Une forêt à 7 Cases du Foyer, et une Case encore sous le brouillard, à 12. */
 const FORET = { q: 3, r: -5, biome: "Forêt", distance: 7 };
 const BROUILLARD = { q: -9, r: 2, biome: null, distance: 12 };
@@ -99,9 +101,18 @@ describe("le récapitulatif avant le départ (US-0910)", () => {
     expect(ligne("Force")).toBe("946");
   });
 
-  it("ne chiffre pas encore le trajet d'une escorte, dont l'allure arrive avec US-0912 : ni l'aller, ni le retour, ni l'heure prévue", () => {
-    ouvrir("?explorateurs=1&escorte=souris.1&sejour=60");
-    expect([ligne("Aller"), ligne("Séjour"), ligne("Retour"), ligne("Retour prévu")]).toEqual(["—", "1 h", "—", "—"]);
+  it("chiffre aussi le trajet d'une escorte : au pas des explorateurs quand ses Bêtes vont plus vite qu'eux (US-0912)", () => {
+    ouvrir("?explorateurs=1&escorte=souris.3&escorte=poule.1&sejour=240");
+    expect([ligne("Aller"), ligne("Séjour"), ligne("Retour"), ligne("Retour prévu")]).toEqual([ALLER_EN_FORET, "4 h", ALLER_EN_FORET, "9 octobre à 18:22"]);
+  });
+
+  it("allonge l'aller et le retour au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce (US-0912)", () => {
+    ouvrir("?explorateurs=1&escorte=souris.1&escorte=tortue.1&sejour=240", { especes: [SOURIS, TORTUE] });
+    // À 3 km/h, 34 minutes par Case au lieu de 20 : 3 h 58 pour 7 Cases, à l'aller comme au retour, autour de 4 h de séjour.
+    expect([ligne("Aller"), ligne("Retour"), ligne("Retour prévu")]).toEqual(["3 h 58", "3 h 58", "9 octobre à 21:38"]);
+    // Laissée au Foyer, l'Expédition reprend le pas des explorateurs.
+    choisir("?explorateurs=1&escorte=souris.1&escorte=tortue.0&sejour=240");
+    expect([ligne("Aller"), ligne("Retour prévu")]).toEqual([ALLER_EN_FORET, "9 octobre à 18:22"]);
   });
 
   it("dit le Biome « inconnu » d'une destination encore sous le brouillard", () => {
@@ -149,7 +160,7 @@ describe("le récapitulatif avant le départ (US-0910)", () => {
     choisir("?explorateurs=2&sejour=720");
     expect([ligne("Explorateurs"), ligne("Séjour"), ligne("Retour prévu")]).toEqual(["2", "12 h", "10 octobre à 02:22"]);
     choisir("?explorateurs=2&sejour=720&escorte=poule.1");
-    expect([ligne("Force"), ligne("Retour prévu")]).toEqual(["9 457", "—"]);
+    expect([ligne("Force"), ligne("Retour prévu")]).toEqual(["9 457", "10 octobre à 02:22"]);
   });
 
   it("avance l'heure de retour prévue avec l'heure du jeu, sans recharger la page", async () => {

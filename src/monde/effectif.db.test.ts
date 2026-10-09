@@ -1,13 +1,17 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { forceDUneBete } from "@/expeditions/force";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { betesDisponibles } from "./effectif";
+
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de l'escorte (US-0904)";
 
 describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `effectif-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
 
@@ -15,8 +19,8 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
   const nouveauTerritoire = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Eff${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[numero % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    return { compteId: compte.id, territoireId: (await chefDuCompte(pool, compte.id))!.territoireId! };
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return { compteId: compte.id, territoireId: (await territoireDuCompte(pool, compte.id))! };
   };
   /** Des Bêtes dans l'effectif du Territoire : une ligne par Espèce et par sexe, avec leur nombre. */
   const ajouter = (territoireId: number, lignes: [string, "male" | "femelle", number][]) =>
@@ -32,6 +36,7 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -58,16 +63,16 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     ]);
     // Ni le pigeon ni les souris d'un autre Territoire ; de la plus commune à la plus rare, puis par nom.
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 },
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 },
+      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 },
     ]);
   });
 
   it("range une Espèce plus rare après les communes, même sans illustration", async () => {
     const t = (await nouveauTerritoire()).territoireId;
     // La plus rare des Espèces chargées, sans illustration : l'une des Espèces d'essai (US-0924), jamais nommée ici.
-    const { rows } = await pool.query<{ id: string; nom: string; attaque: number; vie: number }>(
-      `select e.id, e.nom, e.attaque, e.vie from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
+    const { rows } = await pool.query<{ id: string; nom: string; attaque: number; vie: number; vitesse: number }>(
+      `select e.id, e.nom, e.attaque, e.vie, e.vitesse from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
     );
     const [rare] = rows;
     await ajouter(t, [
@@ -75,8 +80,8 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
       ["souris", "male", 4],
     ]);
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473 },
-      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare) },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473, vitesse: 13 },
+      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare), vitesse: rare.vitesse },
     ]);
   });
 

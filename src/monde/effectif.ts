@@ -5,9 +5,10 @@ import { forceDUneBete } from "@/expeditions/force";
 
 /**
  * US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte.
- * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes.
+ * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes. US-0912 : et leur vitesse réelle, en km/h, qui règle
+ * l'allure d'une escorte.
  */
-export type EspeceDisponible = { id: string; nom: string; illustration: string | null; disponibles: number; force: number };
+export type EspeceDisponible = { id: string; nom: string; illustration: string | null; disponibles: number; force: number; vitesse: number };
 
 /**
  * US-0904 : les Bêtes d'un Couple en Réserve, qui ne sortent jamais : combien l'Espèce en a (expression sur `e`, les
@@ -32,7 +33,7 @@ const BETES_SORTIES = `select coalesce(sum(s.nombre), 0)::int from expedition_es
  */
 export async function betesDisponibles(base: Pool | PoolClient, territoireId: number): Promise<EspeceDisponible[]> {
   const { rows } = await base.query<Omit<EspeceDisponible, "force"> & { attaque: number; vie: number }>(
-    `select es.id, es.nom, es.illustration, x.disponibles, es.attaque, es.vie
+    `select es.id, es.nom, es.illustration, x.disponibles, es.attaque, es.vie, es.vitesse
      from (
        select e.espece_id, sum(e.nombre)::int - (${BETES_EN_RESERVE}) - (${BETES_SORTIES}) as disponibles
        from effectif e

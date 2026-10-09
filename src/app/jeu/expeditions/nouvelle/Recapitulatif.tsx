@@ -21,7 +21,7 @@ const FUSEAU = "Europe/Paris";
 
 const MINUTE_MS = 60_000;
 
-/** Ce que le récapitulatif dit d'une durée ou d'une heure qu'il ne peut pas encore chiffrer. */
+/** Ce que le récapitulatif dit d'une durée ou d'une heure qu'il ne peut pas chiffrer sans destination. */
 const AUCUNE = "—";
 
 /** « Souris grise × 3 » : une Espèce de l'escorte et ses Bêtes qui partent, que le nombre ne quitte jamais (espaces insécables). */
@@ -39,11 +39,11 @@ export type DestinationChoisie = Coordonnees & { biome: string | null; distance:
  * l'escorte Espèce par Espèce et sa force, ou « Sans escorte » à la place (US-0909) ; la destination et son Biome, ou
  * « inconnu » ; les durées de l'aller, du séjour et du retour ; l'heure de retour prévue d'un départ à l'heure du jeu :
  * celle de l'ouverture de l'écran (`maintenant`), qui avance en direct au rythme du jeu (`vitesse`, donnée par le
- * serveur) sur l'horloge du navigateur, comme le compte à rebours des Voyageurs (US-0333). Le trajet d'une escorte, à
- * l'allure de sa Bête la plus lente, arrive avec US-0912 : d'ici là, ni son aller, ni son retour, ni son heure ne sont
- * chiffrés. Il rappelle que ceux qui partent mangent toujours (US-0921), et finit sur « Partir ». Sur un téléphone, il
- * reste en bas de l'écran pendant qu'on compose, replié sur l'heure de retour prévue (data-essentiel) et le départ ; un
- * bouton le déplie. US-0911 : « Partir » envoie ce qu'il montre : la destination, les explorateurs et l'escorte.
+ * serveur) sur l'horloge du navigateur, comme le compte à rebours des Voyageurs (US-0333). Il rappelle que ceux qui
+ * partent mangent toujours (US-0921), et finit sur « Partir ». Sur un téléphone, il reste en bas de l'écran pendant qu'on
+ * compose, replié sur l'heure de retour prévue (data-essentiel) et le départ ; un bouton le déplie. US-0911 : « Partir »
+ * envoie ce qu'il montre : la destination, les explorateurs et l'escorte. US-0912 : l'aller et le retour d'une escorte
+ * vont au pas de sa Bête la plus lente, d'après la vitesse de son Espèce, ou des explorateurs s'ils sont plus lents.
  */
 export function Recapitulatif({
   libres,
@@ -74,7 +74,7 @@ export function Recapitulatif({
   const explorateurs = explorateursChoisis(recherche, libres);
   const choix = escorteChoisie(recherche, especes);
   const escorte = especes.filter((e) => choix.get(e.id)! > 0);
-  const aller = destination ? dureeDuTrajetMinutes(destination.distance, choix) : null;
+  const aller = destination ? dureeDuTrajetMinutes(destination.distance, escorte.map((e) => ({ vitesse: e.vitesse, nombre: choix.get(e.id)! }))) : null;
   // Un départ à l'heure du jeu, qui avance au rythme du jeu ; le retour dure autant que l'aller (US-0912), après le
   // séjour, qui ne commence qu'à l'arrivée (US-0906).
   const depart = new Date(base + (ecoule?.base === base ? vitesse * ecoule.ms : 0));

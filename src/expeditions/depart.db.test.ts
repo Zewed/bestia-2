@@ -1,21 +1,27 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { enregistrerLeMetier, habitantsDuTerritoire, renvoyerLHabitant, retirerUnHabitantDuMetier } from "@/monde/habitants";
 import type { Coordonnees } from "@/monde/hex";
 import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE } from "./choix-de-destination";
 import { BETE_PLUS_DISPONIBLE, type ChoixDuDepart, EXPLORATEUR_PLUS_LIBRE, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
 
 const MINUTE_MS = 60_000;
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du départ (US-0911)";
+
 describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `depart-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   /** L'heure du jeu du départ. */
@@ -25,8 +31,8 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   const nouveauTerritoire = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Dep${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
   };
   /** `n` explorateurs de plus au Territoire ; rend leurs identifiants. */
   const explorateurs = async (territoireId: number, n: number) =>
@@ -78,6 +84,7 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -92,7 +99,8 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
     expect(depart).toEqual({ expeditionId: expect.any(Number) });
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 1, total: 3 });
     expect(await expeditionsEnCours(pool, t, INSTANT)).toEqual([
-      { id: (depart as { expeditionId: number }).expeditionId, destination: expect.objectContaining({ ...destination, distance: 3 }), phase: "aller" },
+      // US-0918 : avec son détail (src/expeditions/en-cours.db.test.ts).
+      expect.objectContaining({ id: (depart as { expeditionId: number }).expeditionId, destination: expect.objectContaining({ ...destination, distance: 3 }), phase: "aller" }),
     ]);
     expect(await retenu(t)).toEqual({ expeditions: 1, escortes: 0, partis: 2 });
   });
@@ -122,13 +130,53 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
     expect((await pool.query("select sum(nombre)::int as n from effectif where territoire_id = $1", [t])).rows[0].n).toBe(4);
   });
 
-  it("ne chiffre pas le trajet d'une escorte tant qu'US-0912 n'a pas réglé son allure : elle reste « aller », sans heure de retour", async () => {
+  it("chiffre le trajet d'une escorte (US-0912) : au pas des explorateurs, plus lents que ses Bêtes ; elle arrive, séjourne, puis rentre", async () => {
     const t = await nouveauTerritoire();
     await explorateurs(t, 1);
     await betes(t, [["souris", "male", 1]]);
     await lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, [["souris", 1]]), INSTANT);
-    expect(await expeditionsEnCours(pool, t, new Date(INSTANT.getTime() + 30 * 24 * 60 * MINUTE_MS))).toEqual([expect.objectContaining({ phase: "aller" })]);
-    expect(await prochainRetourDUnExplorateur(pool, t)).toBeNull();
+    // La souris court à 13 km/h, les explorateurs marchent à 5 : 2 Cases à leur pas, puis 4 h de séjour.
+    const aller = 2 * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE;
+    const apres = (minutes: number) => new Date(INSTANT.getTime() + minutes * MINUTE_MS);
+    expect((await expeditionsEnCours(pool, t, apres(aller - 1))).map((x) => x.phase)).toEqual(["aller"]);
+    expect((await expeditionsEnCours(pool, t, apres(aller))).map((x) => x.phase)).toEqual(["sejour"]);
+    expect((await expeditionsEnCours(pool, t, apres(aller + 240))).map((x) => x.phase)).toEqual(["retour"]);
+    // Le retour dure autant que l'aller.
+    expect(await prochainRetourDUnExplorateur(pool, t)).toEqual(apres(aller + 240 + aller));
+  });
+
+  it("rattrape le trajet des Expéditions parties avant qu'il soit chiffré (migration 0050), au pas de leur Bête la plus lente, sans toucher aux autres", async () => {
+    const t = await nouveauTerritoire();
+    await explorateurs(t, 3);
+    await betes(t, [
+      ["souris", "male", 1],
+      ["pigeon", "femelle", 1],
+    ]);
+    const parties = [
+      await lancerLExpedition(pool, t, choix(await aLEcart(t, 3), 1, [["souris", 1], ["pigeon", 1]]), INSTANT),
+      await lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1), INSTANT),
+      await lancerLExpedition(pool, t, choix(await aLEcart(t, 4), 1), INSTANT),
+    ].map((depart) => (depart as { expeditionId: number }).expeditionId);
+    const migration = readFileSync(join(process.cwd(), "drizzle/0050_trajet_des_escortes.sql"), "utf8");
+    const client = await pool.connect();
+    let trajets: number[];
+    try {
+      // Le temps de l'essai, rien n'en reste : aucune Espèce du jeu ne va encore moins vite que les explorateurs.
+      await client.query("begin");
+      await client.query("set local lock_timeout = '10s'");
+      await client.query("update espece set vitesse = 2.5 where id = 'souris'");
+      await client.query("update expedition set trajet_minutes = null where id = any($1)", [parties.slice(0, 2)]);
+      await client.query(migration);
+      // Rejouée, elle ne change rien.
+      await client.query(migration);
+      const { rows } = await client.query<{ trajet: number }>(`select trajet_minutes as trajet from expedition where id = any($1) order by array_position($1, id)`, [parties]);
+      trajets = rows.map((x) => x.trajet);
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
+    // À 2,5 km/h, deux fois moins vite que les explorateurs : 40 minutes par Case. Sans escorte, leur pas ; la dernière, déjà chiffrée, ne change pas.
+    expect(trajets).toEqual([3 * 40, 2 * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, 4 * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE]);
   });
 
   it("verrouille le Métier d'un explorateur parti jusqu'à son retour : ni changé, ni retiré, ni renvoyé, et il est « en Expédition »", async () => {

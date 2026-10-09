@@ -24,3 +24,26 @@ export function phaseDUneExpedition({ partLe, trajetMinutes, sejourMinutes }: Ho
   if (instant < sejour.debut) return "aller";
   return instant < sejour.fin ? "sejour" : "retour";
 }
+
+/**
+ * US-0918 : l'instant du jeu où rentre au Foyer une Expédition : après l'aller, le séjour, qui ne commence qu'à l'arrivée
+ * (US-0906), puis le retour, qui dure autant que l'aller (US-0912). Aucun tant que son trajet n'est pas chiffré.
+ */
+export function retourDUneExpedition({ partLe, trajetMinutes, sejourMinutes }: HorairesDUneExpedition): Date | null {
+  if (trajetMinutes === null) return null;
+  return new Date(horaireDuSejour(partLe, trajetMinutes * MINUTE_MS, sejourMinutes).fin.getTime() + trajetMinutes * MINUTE_MS);
+}
+
+/**
+ * US-0918 : l'instant du jeu où finit la phase d'une Expédition à l'instant `instant` : son arrivée sur la Case à l'aller,
+ * la fin de la durée choisie en séjour (le compte à rebours d'US-0915), son retour au Foyer au retour. Aucun tant que son
+ * trajet n'est pas chiffré.
+ */
+export function finDeLaPhase(horaires: HorairesDUneExpedition, instant: Date): Date | null {
+  const { partLe, trajetMinutes, sejourMinutes } = horaires;
+  if (trajetMinutes === null) return null;
+  const sejour = horaireDuSejour(partLe, trajetMinutes * MINUTE_MS, sejourMinutes);
+  const phase = phaseDUneExpedition(horaires, instant);
+  if (phase === "aller") return sejour.debut;
+  return phase === "sejour" ? sejour.fin : retourDUneExpedition(horaires);
+}
