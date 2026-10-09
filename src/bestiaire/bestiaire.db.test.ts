@@ -236,6 +236,21 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
     }));
     expect(parEspece(bestiaires[0])).toEqual(parEspece(premieres.map((p) => ({ ...p, etat: "croisee" }))));
     expect(parEspece(toutes.filter((r) => r.nouvelleEspece).map(({ especeId, vueLe }) => ({ especeId, croiseeLe: vueLe })))).toEqual(parEspece(premieres));
+    // Près de 200 rattrapages à la suite : sous la charge de la suite complète, plus que les 20 s par défaut.
+  }, 60_000);
+
+  it("une Rencontre retenue sans inscription, pendant une mise en ligne, inscrit son Espèce à la Rencontre suivante, à sa vraie date", async () => {
+    const { territoireId, ne } = await naitre();
+    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
+    const premiere = await poser(territoireId, caseId, apres(bete.arrivee, 30), 30, HEURE);
+    const seconde = await poser(territoireId, caseId, apres(bete.arrivee, 90), 30, HEURE);
+    await rattraperA(territoireId, apres(bete.arrivee, HEURE + 1));
+    // La version d'avant, encore en ligne après la migration, a retenu la première Rencontre sans rien inscrire.
+    await pool.query("delete from bestiaire where territoire_id = $1", [territoireId]);
+
+    await rattraperA(territoireId, apres(bete.depart, JOUR));
+    expect(await bestiaire(territoireId)).toEqual([{ especeId: bete.especeId, etat: "croisee", croiseeLe: apres(bete.arrivee, HEURE) }]);
+    expect([...(await vues(premiere)), ...(await vues(seconde))].map((r) => r.nouvelleEspece)).toEqual([true, false]);
   });
 
   it("inscrit les Espèces des Rencontres retenues avant lui (migration 0055), à leur première Rencontre, une seule fois", async () => {

@@ -9,7 +9,7 @@
 // dans la même transaction (src/bestiaire/bestiaire.ts). Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import { inscrireLesEspecesCroisees, type RencontreRetenue } from "@/bestiaire/bestiaire";
+import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
 import { betesDeNaissanceDesCases } from "@/monde/betes-de-naissance";
 import { betesSauvagesDesCases } from "@/monde/betes-sauvages";
 import { expeditionsPresentesDuTerritoire } from "./presence";
@@ -65,11 +65,10 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   }
   if (aVoir.length === 0) return;
   // « on conflict do nothing » : une Expédition ne rencontre qu'une fois chaque Bête.
-  const { rows: retenues } = await base.query<RencontreRetenue>(
+  const { rowCount } = await base.query(
     `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le)
      select * from unnest($1::int[], $2::bigint[], $3::int[], $4::text[], $5::timestamptz[], $6::timestamptz[])
-     on conflict do nothing
-     returning id, espece_id as "especeId", vue_le as "vueLe", apparue_le as "apparueLe"`,
+     on conflict do nothing`,
     [
       aVoir.map((r) => r.expeditionId),
       aVoir.map((r) => r.numero),
@@ -80,7 +79,7 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
     ],
   );
   // US-0933 : l'Espèce de chaque Bête vue entre au Bestiaire, qu'elle suive l'Expédition ou non.
-  await inscrireLesEspecesCroisees(base, territoireId, retenues);
+  if (rowCount) await inscrireLesEspecesCroisees(base, territoireId);
 }
 
 /**
