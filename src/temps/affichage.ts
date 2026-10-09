@@ -20,6 +20,28 @@ export function formaterJourEtHeure(instant: Date, fuseau: string): string {
   return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: fuseau }).format(instant);
 }
 
+const HEURE_MS = 3_600_000;
+
+/**
+ * US-0948 : jusqu'à quand une Bête repérée devrait rester (`fin`), à l'heure près (décidé le 2026-10-09), dans le fuseau
+ * d'un joueur, à l'heure du jeu `maintenant` : l'heure la plus proche, la demie passant à la suivante. Le jour même,
+ * « jusqu'à 16 h environ » ; la nuit qui vient, « jusqu'à minuit environ » ; un autre jour, « jusqu'au 10 octobre à 2 h
+ * environ ».
+ */
+export function jusquAEnviron(fin: Date, maintenant: Date, fuseau: string): string {
+  const heure = new Intl.DateTimeFormat("fr-FR", { hour: "numeric", minute: "numeric", second: "numeric", hourCycle: "h23", timeZone: fuseau });
+  const parties = (instant: Date) => Object.fromEntries(heure.formatToParts(instant).map((p) => [p.type, Number(p.value)]));
+  const { minute, second } = parties(fin);
+  const pile = fin.getTime() - (minute * 60 + second) * 1000 - fin.getUTCMilliseconds();
+  const arrondie = new Date(minute >= 30 ? pile + HEURE_MS : pile);
+  const h = parties(arrondie).hour;
+  const jour = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: fuseau });
+  const [ce, aujourdhui, demain] = [arrondie, maintenant, new Date(maintenant.getTime() + 24 * HEURE_MS)].map((instant) => jour.format(instant));
+  if (ce === aujourdhui) return `jusqu'à ${h} h environ`;
+  if (h === 0 && ce === demain) return "jusqu'à minuit environ";
+  return `jusqu'au ${ce} à ${h} h environ`;
+}
+
 /**
  * US-0226 : une durée à venir, arrondie à la minute supérieure : « 45 min », « 3 h 05 », puis au-delà
  * de 24 heures, en jours et en heures : « 2 j 5 h ».

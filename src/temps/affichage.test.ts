@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formaterDuree, formaterJourEtHeure, formaterMinutes } from "./affichage";
+import { formaterDuree, formaterJourEtHeure, formaterMinutes, jusquAEnviron } from "./affichage";
 
 describe("durée avant qu'un stock soit plein (US-0226)", () => {
   it.each([
@@ -26,5 +26,24 @@ describe("le jour et l'heure d'un retour (US-0903, US-0910)", () => {
 describe("une durée en minutes entières (US-0906)", () => {
   it("s'affiche comme les autres durées, sans repasser par les heures : 500 min font « 8 h 20 », pas « 8 h 21 »", () => {
     expect([30, 60, 125, 250, 500, 510, 1440].map(formaterMinutes)).toEqual(["30 min", "1 h", "2 h 05", "4 h 10", "8 h 20", "8 h 30", "1 j"]);
+  });
+});
+
+describe("jusqu'à quand une Bête repérée devrait rester, à l'heure près (US-0948)", () => {
+  /** Midi à Paris, le 9 octobre : l'heure du jeu sur la carte. */
+  const MIDI = new Date("2026-10-09T10:00:00Z");
+  const jusqua = (fin: string) => jusquAEnviron(new Date(fin), MIDI, "Europe/Paris");
+
+  it("dit l'heure la plus proche dans le fuseau du joueur : « jusqu'à 16 h environ » pour 15:42, « 15 h » pour 15:20", () => {
+    expect(jusqua("2026-10-09T13:42:00Z")).toBe("jusqu'à 16 h environ");
+    expect(jusqua("2026-10-09T13:20:59Z")).toBe("jusqu'à 15 h environ");
+    // La demie passe à l'heure suivante.
+    expect(jusqua("2026-10-09T13:30:00Z")).toBe("jusqu'à 16 h environ");
+  });
+
+  it("dit « minuit » pour la nuit qui vient, et le jour pour un autre jour", () => {
+    expect(jusqua("2026-10-09T21:50:00Z")).toBe("jusqu'à minuit environ");
+    expect(jusqua("2026-10-10T00:10:00Z")).toBe("jusqu'au 10 octobre à 2 h environ");
+    expect(jusqua("2026-10-11T08:05:00Z")).toBe("jusqu'au 11 octobre à 10 h environ");
   });
 });
