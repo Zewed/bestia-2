@@ -1,0 +1,33 @@
+src/expeditions/rappel.db.test.ts
+  s_97a431cfa65ca7::t_4680ae698cb513 15,271-294,299,301-303,306-324,326-331,333-334,337-338,342-345
+src/expeditions/rappel.ts
+  s_97a431cfa65ca7::t_aaca4618dd3730 31-33,67-68
+src/expeditions/recit-de-retour.ts
+  s_97a431cfa65ca7::t_caad8014b64b93 46,55,62,64,67-68,129,141,146
+src/expeditions/recit-de-retour.test.ts
+  s_a3e95ec8e513ae::t_0d2fcc97a6bca9 2,108-121
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c05d47ff6488b381c4979717bdc6435bc75b5e78",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_a3e95ec8e513ae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a9983fc42ac129e3f",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
