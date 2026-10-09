@@ -1,0 +1,21 @@
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_510508ffb97716::t_fa5d783902d858 280-281
+src/expeditions/plusieurs.db.test.ts
+  s_510508ffb97716::t_21a99683863fa3 8,10,12,16-18,27-28,66,71,74,97-99,101-115,117-121,132-136,139,141,143-145,149-151,157-166,168
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d27464ec6f23b387038e3125f1dd779ccd456a83",
+  "prompts": {},
+  "sessions": {
+    "s_510508ffb97716": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-abb6c9b249eee08d5",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
