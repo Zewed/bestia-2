@@ -102,6 +102,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0910 · Le récapitulatif avant le départ
 **En tant que** joueur, **je veux** relire tout ce que j'ai choisi avant de confirmer, **afin de** ne pas partir avec une erreur.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1368, Zewed/bestia-2#14). Au pied de l'écran d'Expédition, un bloc « Récapitulatif » suit chaque choix sans recharger la page, le curseur du séjour compris : explorateurs, escorte par Espèce et sa force (ou « Sans escorte : Bêtes communes seulement »), destination et Biome (ou « inconnu »), aller, séjour, retour et heure de retour prévue, qui avance au rythme du jeu. « Partir » reste grisé et nomme ce qui manque : une destination, au moins un explorateur, ou les deux. Sur un téléphone, il reste collé en bas, replié sur l'heure de retour prévue et « Partir », et un chevron le déplie. Le trajet d'une escorte n'est pas encore chiffré (« — ») : il arrive avec US-0912.
 - **Débloquée par** : US-0905, US-0906, US-0908
 - **Critères d'acceptation** :
   - Le récapitulatif montre les explorateurs, l'escorte par Espèce, sa force, la destination et son Biome (ou « inconnu »), les durées de l'aller, du séjour et du retour, et l'heure de retour prévue.
