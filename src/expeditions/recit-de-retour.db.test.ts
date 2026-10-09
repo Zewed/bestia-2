@@ -2,7 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { betesSauvagesDUneCase } from "@/monde/betes-sauvages";
+import { type BeteSauvage, betesSauvagesDesCases, betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { ficheDUneCase } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
 import { nombreDeRecitsNonLus, recitsDuTerritoire } from "@/monde/recits";
@@ -74,6 +74,23 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
       if ((await betesSauvagesDUneCase(pool, c.id, arrivee, apres(arrivee, sejour * MINUTE))).length === betes) return { q: c.q, r: c.r };
     }
     throw new Error(`Aucune Case à ${ECART} Cases où se montrent ${betes} Bêtes.`);
+  };
+  /**
+   * Une Case à ECART Cases du Foyer et une heure de départ, dans les neuf jours après `apresLe`, où ne se montre qu'une
+   * Bête sauvage pendant un séjour de quatre heures, telle que `voulue` la veut : commune ou plus rare (US-0935).
+   */
+  const unSejourOu = async (territoireId: number, apresLe: Date, voulue: (b: BeteSauvage) => boolean) => {
+    const [heure, jour] = [60 * MINUTE, 24 * 60 * MINUTE];
+    const cases = await casesAPortee(territoireId);
+    const betes = await betesSauvagesDesCases(pool, cases.map((c) => c.id), apresLe, apres(apresLe, 10 * jour));
+    for (const c of cases) {
+      for (let depart = apresLe; depart < apres(apresLe, 9 * jour); depart = apres(depart, heure)) {
+        const arrivee = apres(depart, ALLER * MINUTE);
+        const montrees = betes.get(c.id)!.filter((b) => b.arrivee < apres(arrivee, 4 * heure) && b.depart > arrivee);
+        if (montrees.length === 1 && voulue(montrees[0])) return { destination: { q: c.q, r: c.r }, depart };
+      }
+    }
+    throw new Error(`Aucun séjour à ${ECART} Cases où ne se montre qu'une Bête qui convienne.`);
   };
   /** Un explorateur, sans escorte, part à `depart` vers `destination` pour `sejour` minutes : l'Expédition et l'instant de son retour. */
   const partir = async (territoireId: number, destination: Coordonnees, depart: Date, sejour = 60) => {
@@ -160,14 +177,27 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
 
   it("quand une Bête s'est montrée sur la Case, le récit ne dit plus qu'aucune ne l'a fait", async () => {
     const { territoireId, ne } = await naitre();
-    const depart = apres(ne, MINUTE);
-    const { expeditionId, retour } = await partir(territoireId, await uneCaseOu(territoireId, depart, 240, 1), depart, 240);
+    // Une Bête commune, qui suit l'Expédition sans escorte (US-0935).
+    const { destination, depart } = await unSejourOu(territoireId, apres(ne, MINUTE), (b) => b.rareteId === "commune");
+    const { expeditionId, retour } = await partir(territoireId, destination, depart, 240);
 
     await aLHeure(territoireId, retour);
-    expect(await rencontresDUneExpedition(pool, expeditionId)).toHaveLength(1);
+    expect((await rencontresDUneExpedition(pool, expeditionId)).map((r) => r.apprivoisee)).toEqual([true]);
     const texte = (await recitsDeRetour(territoireId))[0].texte;
     expect(texte.split("\n").at(-1)).toBe("Une Bête s'est montrée.");
     expect(texte).not.toContain("Aucune Bête");
+  });
+
+  it("quand seule une Bête plus rare s'est montrée, sans escorte, le récit nomme son Espèce et dit qu'aucune Bête n'a suivi (US-0935)", async () => {
+    const { territoireId, ne } = await naitre();
+    const { destination, depart } = await unSejourOu(territoireId, apres(ne, MINUTE), (b) => b.rareteId !== "commune");
+    const { expeditionId, retour } = await partir(territoireId, destination, depart, 240);
+
+    await aLHeure(territoireId, retour);
+    const [vue] = await rencontresDUneExpedition(pool, expeditionId);
+    expect(vue.apprivoisee).toBe(false);
+    const { rows } = await pool.query<{ nom: string }>("select nom from espece where id = $1", [vue.especeId]);
+    expect((await recitsDeRetour(territoireId))[0].texte.split("\n").at(-1)).toBe(`Vos explorateurs ont vu ${rows[0].nom}, mais aucune Bête ne les a suivis.`);
   });
 
   it("le même récit, page ouverte du départ au retour, qu'à la page fermée ou au passage de la tâche planifiée", async () => {
