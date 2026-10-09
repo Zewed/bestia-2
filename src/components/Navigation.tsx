@@ -11,15 +11,16 @@ const PAGE_RECITS = "/jeu/recits";
 
 /**
  * Les pages du jeu qu'on ouvre depuis la navigation, dans leur ordre ; la carte du Monde juste après le Foyer (US-0417).
- * US-0901 : puis l'écran d'Expédition, le même que depuis la fiche d'une Case, sans destination choisie.
+ * US-0901 : puis l'écran d'Expédition, le même que depuis la fiche d'une Case, sans destination choisie. US-0911 : son
+ * entrée vaut pour toutes les pages des Expéditions (`section`), la liste des Expéditions en cours comprise.
  */
-const ENTREES_DU_JEU = [
+const ENTREES_DU_JEU: readonly { chemin: string; section?: string; libelle: string }[] = [
   { chemin: "/jeu", libelle: "Foyer" },
   { chemin: "/jeu/carte", libelle: "Carte" },
-  { chemin: "/jeu/expeditions/nouvelle", libelle: "Expéditions" },
+  { chemin: "/jeu/expeditions/nouvelle", section: "/jeu/expeditions", libelle: "Expéditions" },
   { chemin: PAGE_HABITANTS, libelle: "Habitants" },
   { chemin: PAGE_RECITS, libelle: "Récits" },
-] as const;
+];
 
 /** L'entrée de la page affichée : « /jeu » pour le Foyer seul, une autre entrée pour ses pages filles aussi. */
 function estOuverte(chemin: string, page: string): boolean {
@@ -63,7 +64,7 @@ export function Navigation({ recitsNonLus = 0, voyageurs = 0, sansMetier = 0 }: 
               <Link
                 href={entree.chemin}
                 className={styles.entree}
-                aria-current={estOuverte(entree.chemin, page) ? "page" : undefined}
+                aria-current={estOuverte(entree.section ?? entree.chemin, page) ? "page" : undefined}
                 aria-label={precision ? `${entree.libelle}, ${precision}` : undefined}
               >
                 <span className={styles.libelle}>{entree.libelle}</span>

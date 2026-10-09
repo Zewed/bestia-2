@@ -8,6 +8,7 @@ import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { forceDeLEscorte } from "@/expeditions/force";
 import { horaireDuSejour } from "@/expeditions/sejour";
 import type { EspeceDisponible } from "@/monde/effectif";
+import type { Coordonnees } from "@/monde/hex";
 import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
 import { entier, escorteChoisie } from "./Escorte";
 import { explorateursChoisis } from "./Explorateurs";
@@ -26,8 +27,11 @@ const AUCUNE = "—";
 /** « Souris grise × 3 » : une Espèce de l'escorte et ses Bêtes qui partent, que le nombre ne quitte jamais (espaces insécables). */
 const uneEspece = (nom: string, nombre: number) => `${nom} × ${nombre}`;
 
-/** US-0910 : la destination choisie, telle que le récapitulatif la montre : son Biome (null sous le brouillard) et sa distance au Foyer. */
-export type DestinationChoisie = { biome: string | null; distance: number };
+/**
+ * US-0910 : la destination choisie, telle que le récapitulatif la montre : son Biome (null sous le brouillard) et sa
+ * distance au Foyer. US-0911 : et sa Case, que « Partir » envoie.
+ */
+export type DestinationChoisie = Coordonnees & { biome: string | null; distance: number };
 
 /**
  * US-0910 : le récapitulatif de l'écran d'Expédition, à son pied, à relire avant de partir. Il relit l'adresse, comme
@@ -39,7 +43,7 @@ export type DestinationChoisie = { biome: string | null; distance: number };
  * l'allure de sa Bête la plus lente, arrive avec US-0912 : d'ici là, ni son aller, ni son retour, ni son heure ne sont
  * chiffrés. Il rappelle que ceux qui partent mangent toujours (US-0921), et finit sur « Partir ». Sur un téléphone, il
  * reste en bas de l'écran pendant qu'on compose, replié sur l'heure de retour prévue (data-essentiel) et le départ ; un
- * bouton le déplie.
+ * bouton le déplie. US-0911 : « Partir » envoie ce qu'il montre : la destination, les explorateurs et l'escorte.
  */
 export function Recapitulatif({
   libres,
@@ -136,7 +140,8 @@ export function Recapitulatif({
         </dl>
         <p className={styles.manger}>Ceux qui partent continuent de manger pendant toute l&apos;absence.</p>
       </div>
-      <Partir libres={libres} destination={destination !== null} />
+      {/* US-0911 : un départ refusé se dit jusqu'au prochain choix du joueur, que l'adresse garde ; l'écran relu ne l'efface pas. */}
+      <Partir key={recherche.toString()} destination={destination && { q: destination.q, r: destination.r }} explorateurs={explorateurs} escorte={choix} />
     </Bloc>
   );
 }

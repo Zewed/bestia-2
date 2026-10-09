@@ -706,3 +706,43 @@ describe("renvoyer un Habitant depuis sa ligne (US-0330)", () => {
     expect(container.textContent).toBe("Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes.");
   });
 });
+
+describe("un explorateur parti en Expédition (US-0911)", () => {
+  /** Arno, sans Métier, et Dara, partie en Expédition. */
+  const AVEC_UNE_PARTIE: HabitantAffiche[] = [HABITANTS[0], { id: 43, prenom: "Dara", metier: "Explorateur", etat: "en Expédition" }];
+
+  it("est « en Expédition » sur sa ligne, son Métier écrit sans bouton : ni changé, ni retiré, ni renvoyé avant son retour", () => {
+    render(<ListeDesHabitants habitants={AVEC_UNE_PARTIE} metiers={METIERS} />);
+    expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Dara · Explorateur · en Expédition"]);
+    expect(within(ligne("Dara")).queryAllByRole("button")).toEqual([]);
+    // Son état se distingue de « libre » par sa teinte, celle de la phase de son Expédition.
+    expect(ligne("Dara").querySelector("[data-absent]")?.textContent).toBe("en Expédition");
+    expect(ligne("Arno").querySelector("[data-absent]")).toBeNull();
+  });
+
+  it("ne prend pas la main après un renvoi : elle passe à la ligne suivante qui a son bouton (US-0330)", async () => {
+    const utilisateur = userEvent.setup();
+    render(<ListeDesHabitants habitants={[HABITANTS[0], AVEC_UNE_PARTIE[1], HABITANTS[1]]} metiers={METIERS} />);
+    await utilisateur.click(choisir("Arno"));
+    await utilisateur.click(within(ligne("Arno")).getByRole("button", { name: "Renvoyer Arno" }));
+    await utilisateur.click(within(ligne("Arno")).getByRole("button", { name: "Confirmer le renvoi d'Arno" }));
+    expect(actions.renvoyerUnHabitant).toHaveBeenCalledExactlyOnceWith(40);
+    expect(document.activeElement).toBe(choisir("Brune"));
+  });
+
+  it("referme les Métiers dépliés sur la ligne d'un explorateur parti entre-temps, sans rien laisser à toucher", async () => {
+    const libre: HabitantAffiche = { ...AVEC_UNE_PARTIE[1], etat: "libre" };
+    const { rerender } = render(<ListeDesHabitants habitants={[libre]} metiers={METIERS} />);
+    await userEvent.setup().click(deplier("Dara"));
+    expect(auChoix("Dara")).not.toEqual([]);
+    rerender(<ListeDesHabitants habitants={[AVEC_UNE_PARTIE[1]]} metiers={METIERS} />);
+    expect(within(ligne("Dara")).queryAllByRole("button")).toEqual([]);
+  });
+
+  it("compte toujours parmi les explorateurs, et se filtre avec eux (US-0309, US-0314)", async () => {
+    render(<ListeDesHabitants habitants={AVEC_UNE_PARTIE} metiers={METIERS} />);
+    expect(effectifs()).toContain("Explorateur 1");
+    await userEvent.setup().click(compteur("Explorateur"));
+    expect(lignes()).toEqual(["Dara · Explorateur · en Expédition"]);
+  });
+});

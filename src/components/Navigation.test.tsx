@@ -132,6 +132,12 @@ describe("navigation du jeu (US-0302)", () => {
     expect(marquees()).toEqual(["Expéditions"]);
   });
 
+  it("marque l'entrée « Expéditions » sur la liste des Expéditions en cours aussi, où mène un départ (US-0911)", () => {
+    adresse.page = "/jeu/expeditions";
+    render(<Navigation />);
+    expect(marquees()).toEqual(["Expéditions"]);
+  });
+
   it("ne marque pas le Foyer sur une autre page du jeu", () => {
     adresse.page = "/jeu/arrivee";
     render(<Navigation />);

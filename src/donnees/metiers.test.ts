@@ -23,9 +23,9 @@ describe("Métiers des Habitants (US-0307)", () => {
     }
   });
 
-  it("disent tous quand ils serviront, puisqu'aucun ne sert encore : l'éleveur avec l'Élevage", () => {
-    expect(Object.fromEntries(metiers.map((m) => [m.id, m.servira]))).toEqual({
-      explorateur: "quand les Expéditions partiront",
+  it("disent quand ils serviront, sauf l'explorateur, qui part en Expédition (US-0911) : l'éleveur avec l'Élevage", () => {
+    expect(Object.fromEntries(metiers.map((m) => [m.id, m.servira ?? null]))).toEqual({
+      explorateur: null,
       chasseur: "avec les Récoltes",
       cueilleur: "avec les Récoltes",
       bucheron: "avec les Récoltes",

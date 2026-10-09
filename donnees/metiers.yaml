@@ -7,7 +7,6 @@
 - id: explorateur
   nom: Explorateur
   phrase: "part en Expédition chercher des Bêtes sauvages"
-  servira: "quand les Expéditions partiront"
 - id: chasseur
   nom: Chasseur
   phrase: "rapporte de la Viande"

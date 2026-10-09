@@ -6,6 +6,7 @@ import { Bloc } from "@/components/Bloc";
 import { SEJOUR_PAR_DEFAUT_MINUTES, sejourChoisi } from "@/expeditions/sejour";
 import { SEJOUR_MINUTES, SEJOURS_TOUT_PRETS_MINUTES } from "@/reglages";
 import { formaterMinutes } from "@/temps/affichage";
+import { FORMULAIRE_DE_DEPART } from "./formulaire";
 import styles from "./Sejour.module.css";
 
 /** US-0906 : le paramètre de l'adresse qui garde la durée choisie, en minutes (« ?sejour=240 »). */
@@ -60,7 +61,7 @@ function garderDansLAdresse(minutes: number) {
  * l'adresse, sinon la première toute prête, et l'adresse la garde, pour un rechargement ou un retour arrière : aussitôt
  * pour une durée toute prête ; au curseur, une fois le geste fini (l'évènement natif « change », au lâcher ou à chaque
  * flèche du clavier, ou la perte de la main), jamais plus tard, où l'écriture annulerait un lien touché entre-temps. Le
- * curseur porte la durée au formulaire de départ (US-0911), où le séjour ne commencera qu'à l'arrivée.
+ * curseur porte la durée au formulaire de départ (US-0911, attribut form), où le séjour ne commencera qu'à l'arrivée.
  */
 export function Sejour() {
   const dansLAdresse = useSearchParams()?.get(PARAMETRE_DU_SEJOUR) ?? null;
@@ -103,6 +104,7 @@ export function Sejour() {
           className={styles.curseur}
           type="range"
           name={PARAMETRE_DU_SEJOUR}
+          form={FORMULAIRE_DE_DEPART}
           min={SEJOUR_MINUTES.min}
           max={SEJOUR_MINUTES.max}
           step={SEJOUR_MINUTES.pas}

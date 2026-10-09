@@ -19,17 +19,23 @@ vi.mock("next/navigation", async () => {
   return { useSearchParams: () => new URLSearchParams(useSyncExternalStore(suivre, () => window.location.search)) };
 });
 
+// US-0911 : le départ, côté serveur, n'a rien à faire ici.
+vi.mock("./actions", () => ({ partir: vi.fn() }));
+
 import { Explorateurs } from "./Explorateurs";
-import { Partir } from "./Partir";
+import { Recapitulatif } from "./Recapitulatif";
 import { SansEscorte } from "./SansEscorte";
 
-/** L'écran d'une Expédition sans escorte, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte, le départ, la destination déjà choisie (US-0910). */
+/**
+ * L'écran d'une Expédition sans escorte, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte,
+ * le récapitulatif et son départ, la destination déjà choisie (US-0910).
+ */
 const ecran = () =>
   render(
     <>
       <Explorateurs libres={2} total={2} />
       <SansEscorte />
-      <Partir libres={2} destination />
+      <Recapitulatif libres={2} especes={[]} destination={{ q: 3, r: -5, biome: "Forêt", distance: 7 }} maintenant={new Date()} />
     </>,
   );
 

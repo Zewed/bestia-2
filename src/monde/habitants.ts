@@ -3,14 +3,11 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
+import { EN_EXPEDITION, type EtatHabitant, LIBRE } from "./etat-habitant";
 import { ENTRETIEN_DU_TERRITOIRE } from "./production";
 import { ecrireUnRecit, type NouveauRecit } from "./recits";
 
-/**
- * Ce que fait un Habitant (US-0303). À ce stade, il est toujours libre : au Foyer et disponible.
- * Les Expéditions, les Élevages, les Récoltes et les chantiers en ajouteront d'autres.
- */
-export type EtatHabitant = "libre";
+export type { EtatHabitant };
 
 /**
  * Un Habitant (US-0301) : son prénom (US-0303), le nom de son Métier (« Bûcheron », US-0308), null tant
@@ -20,28 +17,31 @@ export type Habitant = { id: number; prenom: string; metier: string | null; arri
 
 /**
  * Les Habitants d'un Territoire, rangés par Métier, ceux sans Métier en premier, puis par prénom (US-0303).
- * US-0308 : les Métiers dans leur ordre de donnees/metiers.yaml, chacun sous son nom.
+ * US-0308 : les Métiers dans leur ordre de donnees/metiers.yaml, chacun sous son nom. US-0911 : chacun libre, ou en
+ * Expédition jusqu'à son retour.
  */
 export async function habitantsDuTerritoire(pool: Pool, territoireId: number): Promise<Habitant[]> {
-  const { rows } = await pool.query<Omit<Habitant, "etat">>(
-    `select h.id, h.prenom, m.nom as metier, h.arrive_le as "arriveLe"
+  const { rows } = await pool.query<Omit<Habitant, "etat"> & { parti: boolean }>(
+    `select h.id, h.prenom, m.nom as metier, h.arrive_le as "arriveLe", h.expedition_id is not null as parti
      from habitant h left join metier m on m.id = h.metier
      where h.territoire_id = $1
      order by m.ordre nulls first, h.prenom, h.id`,
     [territoireId],
   );
-  return rows.map((h) => ({ ...h, etat: "libre" }));
+  return rows.map(({ parti, ...h }) => ({ ...h, etat: parti ? EN_EXPEDITION : LIBRE }));
 }
 
 /**
  * US-0308 : donne le Métier `metierId` à l'Habitant `habitantId` du Territoire ; US-0310 : ou le change, s'il
  * en a déjà un, enregistré de la même façon ; US-0311 : ou le lui retire (null), sur la même règle. Gratuit et
  * immédiat, sans temps d'apprentissage : aucune Ressource n'est touchée. Rend false sans rien changer pour un
- * Habitant d'un autre Territoire, ou un Métier inconnu, que la clé étrangère vers `metier` refuse.
+ * Habitant d'un autre Territoire, ou un Métier inconnu, que la clé étrangère vers `metier` refuse. US-0911 : de même
+ * pour un explorateur parti en Expédition, jusqu'à son retour, même quand le départ et le changement arrivent au même
+ * instant : l'un attend l'autre sur la ligne de l'Habitant, puis la relit.
  */
 export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId: number, habitantId: number, metierId: string | null): Promise<boolean> {
   try {
-    const { rowCount } = await base.query("update habitant set metier = $3 where id = $2 and territoire_id = $1", [
+    const { rowCount } = await base.query("update habitant set metier = $3 where id = $2 and territoire_id = $1 and expedition_id is null", [
       territoireId,
       habitantId,
       metierId,
@@ -85,12 +85,13 @@ export async function ajouterUnHabitantAuMetier(base: Pool | PoolClient, territo
  *
  * US-0315 : comme pour « + », des « − » simultanés verrouillent chacun le sien et passent ceux déjà pris : jamais
  * plus d'Habitants remis sans Métier qu'il n'en exerçait le Métier, et aucun « − » perdu tant qu'il en reste.
+ * US-0911 : un explorateur parti en Expédition n'est jamais choisi : son Métier ne change pas avant son retour.
  */
 export async function retirerUnHabitantDuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
   const { rows } = await base.query<{ id: number }>(
     `update habitant set metier = null
-     where id = (select id from habitant where territoire_id = $1 and metier = $2 order by id desc limit 1 for update skip locked)
-       and metier = $2
+     where id = (select id from habitant where territoire_id = $1 and metier = $2 and expedition_id is null order by id desc limit 1 for update skip locked)
+       and metier = $2 and expedition_id is null
      returning id`,
     [territoireId, metierId],
   );
@@ -119,9 +120,12 @@ export async function ajouterUnHabitant(
   return rows[0].id;
 }
 
-/** US-0330 : efface l'Habitant $2 du Territoire $1, et rend son prénom et le nom de son Métier (null sans Métier). */
+/**
+ * US-0330 : efface l'Habitant $2 du Territoire $1, et rend son prénom et le nom de son Métier (null sans Métier).
+ * US-0911 : un explorateur parti en Expédition ne se renvoie pas avant son retour.
+ */
 const RENVOYER = `
-  with parti as (delete from habitant where id = $2 and territoire_id = $1 returning prenom, metier)
+  with parti as (delete from habitant where id = $2 and territoire_id = $1 and expedition_id is null returning prenom, metier)
   select parti.prenom, m.nom as metier from parti left join metier m on m.id = parti.metier`;
 
 /**
@@ -143,7 +147,8 @@ export function recitDeRenvoi(prenom: string, metier: string | null, instant: Da
  * pour de bon, et un Récit le dit ; le tout en une transaction. Le nombre d'Habitants, les effectifs par Métier et
  * l'Entretien baissent aussitôt ; le dernier Habitant peut partir aussi, et le Territoire reste alors sans Habitant
  * (US-0329). Rend false sans rien changer pour un Habitant d'un autre Territoire, ou déjà parti : renvoyé plusieurs
- * fois en même temps, il ne part qu'une fois, d'un seul Récit.
+ * fois en même temps, il ne part qu'une fois, d'un seul Récit. US-0911 : de même pour un explorateur en Expédition,
+ * jusqu'à son retour : le départ et le renvoi tiennent tous deux le Territoire, et se suivent.
  *
  * Comme pour l'accueil (US-0338), le Territoire est tenu d'abord, comme le temps qui avance le tient : un renvoi et le
  * calcul du temps (un départ de Famine) se suivent, et le calcul compte les Habitants d'avant ou d'après le renvoi,

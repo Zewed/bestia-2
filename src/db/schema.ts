@@ -2,7 +2,7 @@
 // tout changement passe par une migration :
 //   npm run db:generate   écrit la migration à partir de ce fichier
 //   npm run db:migrate    l'applique
-import { bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, bigint, boolean, check, doublePrecision, index, integer, jsonb, numeric, pgEnum, pgTable, primaryKey, text, timestamp, unique, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 /** Un Monde : il naît une fois et ne se réinitialise jamais (la base refuse de l'effacer). */
@@ -505,8 +505,13 @@ export const habitant = pgTable(
     arriveLe: timestamp("arrive_le", { withTimezone: true }).notNull().defaultNow(),
     /** US-0303 : tiré au hasard dans la table prenom à son arrivée, puis le sien pour toujours. */
     prenom: text("prenom").notNull(),
+    /**
+     * US-0911 : l'Expédition où l'explorateur est parti ; null tant qu'il est au Foyer. Posée sur sa ligne même, pour
+     * qu'un changement de Métier ou un renvoi envoyé au même instant que le départ la voie.
+     */
+    expeditionId: integer("expedition_id").references((): AnyPgColumn => expedition.id, { onDelete: "set null" }),
   },
-  (t) => [index("habitant_par_territoire").on(t.territoireId)],
+  (t) => [index("habitant_par_territoire").on(t.territoireId), index("habitant_par_expedition").on(t.expeditionId)],
 );
 
 /** US-0303 : les prénoms que peuvent recevoir les Habitants, réglés dans donnees/prenoms.yaml. */
@@ -673,4 +678,51 @@ export const beteDeNaissance = pgTable(
     unique("bete_de_naissance_une_par_case").on(t.territoireId, t.caseId),
     check("bete_de_naissance_depart_apres_arrivee", sql`${t.depart} > ${t.arrivee}`),
   ],
+);
+
+/**
+ * Une Expédition en cours (US-0911) : des explorateurs du Territoire, et peut-être une escorte de Bêtes
+ * (expedition_escorte), partis à `part_le`, un instant du jeu, vers la Case `case_id`. Son aller dure `trajet_minutes`
+ * minutes de jeu, et son retour autant (US-0912) ; le séjour, `sejour_minutes`, ne commence qu'à l'arrivée (US-0906).
+ * Le trajet d'une escorte n'est pas encore chiffré : null, tant qu'US-0912 ne règle pas son allure. Ses explorateurs
+ * la portent sur leur ligne (habitant.expedition_id). Elle part avec le Territoire.
+ */
+export const expedition = pgTable(
+  "expedition",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    caseId: integer("case_id")
+      .notNull()
+      .references(() => caseDuMonde.id),
+    partLe: timestamp("part_le", { withTimezone: true }).notNull(),
+    trajetMinutes: integer("trajet_minutes"),
+    sejourMinutes: integer("sejour_minutes").notNull(),
+  },
+  (t) => [
+    index("expedition_par_territoire").on(t.territoireId),
+    check("expedition_trajet_positif", sql`${t.trajetMinutes} > 0`),
+    check("expedition_sejour_positif", sql`${t.sejourMinutes} > 0`),
+  ],
+);
+
+/**
+ * L'escorte d'une Expédition (US-0911) : Espèce par Espèce, combien de ses Bêtes l'accompagnent. Elles restent dans
+ * l'effectif du Territoire, qui les compte par sexe (ADR 0002) : l'escorte ne choisit pas le sexe, et les Bêtes sorties
+ * se retranchent des disponibles (src/monde/effectif.ts). Elle part avec l'Expédition.
+ */
+export const expeditionEscorte = pgTable(
+  "expedition_escorte",
+  {
+    expeditionId: integer("expedition_id")
+      .notNull()
+      .references(() => expedition.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    nombre: integer("nombre").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.expeditionId, t.especeId] }), check("expedition_escorte_au_moins_une", sql`${t.nombre} > 0`)],
 );

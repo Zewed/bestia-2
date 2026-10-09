@@ -51,7 +51,7 @@ describe.skipIf(!URL_TEST)("les explorateurs de l'écran d'Expédition (US-0902,
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 2, total: 2 });
   });
 
-  it("n'a aucun retour à attendre tant qu'aucune Expédition ne part (US-0903 ; les départs viennent avec US-0911)", async () => {
+  it("n'a aucun retour à attendre tant qu'aucun explorateur n'est parti (US-0903 ; les départs, US-0911 : src/expeditions/depart.db.test.ts)", async () => {
     const t = await nouveauTerritoire();
     await ajouter(t, ["explorateur", "explorateur"]);
     expect(await prochainRetourDUnExplorateur(pool, t)).toBeNull();
