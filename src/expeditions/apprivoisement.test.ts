@@ -32,9 +32,28 @@ describe("la Bête à portée (US-0934)", () => {
     expect(aPortee(0, rare({ force: 0 }))).toBe(true);
     expect(aPortee(0, rare({ force: 1 }))).toBe(false);
   });
+});
 
-  it("une Expédition sans escorte n'en a encore aucune à portée : le cas revient à US-0935", () => {
-    expect(aPortee(null, rare({ rareteId: "commune", force: 0 }))).toBe(false);
+describe("sans escorte, une Bête commune (US-0935)", () => {
+  it("une Bête commune est à portée de toute Expédition, même sans escorte", () => {
+    expect(aPortee(null, rare({ rareteId: "commune", force: 0 }))).toBe(true);
+    expect(aPortee(null, rare({ rareteId: "commune", force: 23_029 }))).toBe(true);
+  });
+
+  it("une Bête plus rare n'est jamais à portée d'une Expédition sans escorte, même de force nulle", () => {
+    expect(aPortee(null, rare())).toBe(false);
+    expect(aPortee(null, rare({ rareteId: "peu_commune", force: 37_340 }))).toBe(false);
+    expect(aPortee(null, rare({ force: 0 }))).toBe(false);
+  });
+
+  it("une Bête commune suit l'Expédition sans escorte qui la voit ; une plus rare la voit sans la suivre", () => {
+    expect(lExpeditionSuivie(rare({ rareteId: "commune", force: 473 }), [expedition(4, 8, 14, null)])).toEqual({ expeditionId: 4, le: h(10) });
+    expect(lExpeditionSuivie(rare(), [expedition(4, 8, 14, null)])).toBeNull();
+  });
+
+  it("vue d'abord par une Expédition sans escorte, la Bête commune la suit plutôt qu'une escorte arrivée après", () => {
+    const commune = rare({ rareteId: "commune", force: 473 });
+    expect(lExpeditionSuivie(commune, [expedition(1, 12, 14, 5_000), expedition(2, 11, 14, null)])).toEqual({ expeditionId: 2, le: h(11) });
   });
 });
 

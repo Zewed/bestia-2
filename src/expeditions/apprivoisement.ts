@@ -7,7 +7,7 @@
 // Rencontres (src/expeditions/rencontres.ts) l'appliquent. Côté serveur comme dans le navigateur.
 
 /** US-0934 : la Rareté des Bêtes toujours à portée. */
-const COMMUNE = "commune";
+export const COMMUNE = "commune";
 
 /** US-0934 : une Bête sur sa Case, de son arrivée à son départ (exclu), avec la force de son Espèce (US-0905) et sa Rareté. */
 export type BeteSurLaCase = { arrivee: Date; depart: Date; force: number; rareteId: string };
@@ -20,12 +20,12 @@ export type ExpeditionSurLaCase = { id: number; arrivee: Date; depart: Date; esc
 
 /**
  * US-0934 : une Bête est à portée d'une Expédition quand la force de son escorte, `escorte`, est au moins égale à la
- * sienne, celle de son Espèce ; une Bête commune l'est toujours. Une Expédition sans escorte (null) n'en a encore aucune à
- * portée : US-0935 en décidera.
+ * sienne, celle de son Espèce ; une Bête commune l'est toujours. US-0935 : même d'une Expédition sans escorte (null),
+ * dont la force est nulle ; une Bête plus rare n'est jamais à portée de celle-ci, même de force nulle, et reste sur sa Case.
  */
 export function aPortee(escorte: number | null, bete: Pick<BeteSurLaCase, "force" | "rareteId">): boolean {
-  if (escorte === null) return false;
-  return bete.rareteId === COMMUNE || escorte >= bete.force;
+  if (bete.rareteId === COMMUNE) return true;
+  return escorte !== null && escorte >= bete.force;
 }
 
 /**
