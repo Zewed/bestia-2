@@ -136,6 +136,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0913 · Suivre l'Expédition sur la carte
 **En tant que** joueur, **je veux** voir où en est mon Expédition sur la carte, **afin de** suivre sa progression d'un coup d'œil.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1371, Zewed/bestia-2#23). Sur la carte, chaque Expédition en cours du joueur a un repère posé sur son chemin, qui avance chaque seconde au rythme du jeu ; son chemin est tracé en pointillés du Foyer à la destination, marquée d'un fanion. Seul le joueur qui l'a envoyée les voit. Toucher le repère ouvre la fiche de l'Expédition, avec le même détail que la liste : phase, temps restant, explorateurs, escorte, retour prévu. Toucher encore passe au repère suivant posé au même point, puis à la Case dessous. La position sur le chemin se calcule en un seul endroit (src/expeditions/position.ts).
 - **Débloquée par** : US-0911, Étape 19
 - **Critères d'acceptation** :
   - Un repère montre l'endroit du chemin où se trouve l'Expédition, et la destination est marquée.
