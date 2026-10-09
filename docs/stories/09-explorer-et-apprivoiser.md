@@ -209,13 +209,14 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0920 · Rappeler une Expédition à l'aller
 **En tant que** joueur, **je veux** rappeler une Expédition pendant son trajet aller, **afin de** récupérer mes Bêtes si j'en ai besoin ailleurs.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1378, Zewed/bestia-2#33). Un bouton « Rappeler », dans la liste comme sur la fiche de la carte, fait faire demi-tour à l'Expédition à l'aller ou en séjour ; il disparaît au retour. Rappelée à l'aller, elle rentre après le temps déjà parcouru, ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent. Rappelée en séjour, elle y met fin et rentre après le temps de l'aller. Son retour programmé est déplacé, et le récit de retour dit qu'elle a été rappelée, et quand. Deux rappels au même instant n'en font qu'un. Migration 0059.
 - **Débloquée par** : US-0912
 - **Critères d'acceptation** :
   - Pendant l'aller, un bouton « Rappeler » fait faire demi-tour ; le retour dure le temps déjà parcouru.
   - Une Expédition rappelée ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent.
   - Pendant le retour, le bouton disparaît.
   - Le récit indique que l'Expédition a été rappelée, et à quel moment.
-  - Rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt (à décider).
+  - Pendant le séjour aussi, « Rappeler » met fin au séjour et lance le retour aussitôt (décidé le 2026-10-08).
 
 ### US-0921 · Ceux qui sont partis mangent toujours
 **En tant que** joueur, **je veux** que mes explorateurs continuent de manger pendant l'Expédition, **afin de** prévoir mes stocks de Nourriture avant un long départ.
