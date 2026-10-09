@@ -1,10 +1,10 @@
 // La présence des Expéditions sur une Case (US-0915) : de son arrivée à la fin de la durée choisie, une Expédition est
-// sur sa Case, et sur aucune pendant son aller ni son retour ; c'est là, et pendant ce temps seulement, qu'auront lieu
-// ses Rencontres (étape 40). Le seul endroit qui dit quelles Expéditions sont présentes sur une Case, à un instant ou
-// pendant une période. Comme les apparitions des Bêtes sauvages (src/monde/betes-sauvages.ts, US-0930), elle ne dépend
-// que des horaires fixés au départ et du temps du jeu, jamais de l'heure qu'il est : les mêmes Expéditions, lues en
-// direct, au rattrapage ou par la tâche planifiée, d'un bloc ou par morceaux, pour une Case seule ou avec d'autres. Rien
-// ne s'écrit : à la fin du séjour, l'Expédition repart seule vers le Foyer. Côté serveur et scripts uniquement.
+// sur sa Case ; pendant son aller et son retour, elle n'y est pas. C'est là qu'auront lieu ses Rencontres (étape 40). Le
+// seul endroit qui dit quelles Expéditions sont présentes sur une Case, à un instant ou pendant une période. Comme les
+// apparitions des Bêtes sauvages (src/monde/betes-sauvages.ts, US-0930), elle ne dépend que des horaires fixés au départ
+// et du temps du jeu, jamais de l'heure qu'il est : les mêmes Expéditions, lues en direct, au rattrapage ou par la tâche
+// planifiée, d'un bloc ou par morceaux, pour une Case seule ou avec d'autres, tant que la ligne de chacune reste en base.
+// Rien ne s'écrit : à la fin du séjour, l'Expédition repart seule vers le Foyer. Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
 
