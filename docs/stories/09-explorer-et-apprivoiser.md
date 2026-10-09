@@ -7,6 +7,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0901 · Ouvrir l'écran d'Expédition
 **En tant que** joueur, **je veux** préparer une Expédition depuis la carte ou depuis le menu, **afin de** partir chercher des Bêtes sauvages là où je le décide.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1359, Zewed/bestia-2#3). La fiche d'une Case se termine par « Envoyer une Expédition », sauf sur le Foyer du joueur ; le lien ouvre l'écran d'Expédition (`/jeu/expeditions/nouvelle`) avec la Case pour destination : son Biome, « inconnu » sous le brouillard, et sa distance au Foyer. Une entrée « Expéditions » de la navigation ouvre le même écran sans destination, avec « Choisir sur la carte ». L'écran tient de 320 à 1 440 px sans défilement de côté. Vérifié en vrai.
 - **Débloquée par** : Étape 14, Étape 19
 - **Critères d'acceptation** :
   - Toucher une Case de la carte propose « Envoyer une Expédition », qui ouvre l'écran d'Expédition avec cette Case déjà choisie comme destination.

@@ -20,5 +20,5 @@ Lis d'abord `AGENTS.md` (ce Next.js 16 a des changements cassants ; les guides s
 - Un critère visible se vérifie en vrai, dans un navigateur, de 320 à 1 440 px, sans défilement de côté ; joins une capture avec `armada attach`.
 
 ## La pull request
-- Titre : exactement celui du ticket (`US-0901 · Ouvrir l'écran d'Expédition`), un commit par story ; corps : ce que le joueur vit désormais, comment chaque critère a été vérifié, ce qui reste hors du ticket.
+- Titre au format Commitizen qu'exige Armada, suivi du titre du ticket : `feat(expeditions): US-0901 · Ouvrir l'écran d'Expédition` (la fusion en squash en fait le commit de la story) ; corps : ce que le joueur vit désormais, comment chaque critère a été vérifié, ce qui reste hors du ticket.
 - Fin de chaque message de commit : `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
