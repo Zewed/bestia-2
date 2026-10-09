@@ -212,12 +212,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0921 · Ceux qui sont partis mangent toujours
 **En tant que** joueur, **je veux** que mes explorateurs continuent de manger pendant l'Expédition, **afin de** prévoir mes stocks de Nourriture avant un long départ.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1379, Zewed/bestia-2#17). Les explorateurs partis restent comptés dans l'Entretien : la Nourriture baisse comme s'ils étaient là, et l'avertissement « famine imminente » le prend en compte. En Famine, seuls les Habitants restés au Foyer s'en vont ; sans plus personne au Foyer, la Famine dure sans départ jusqu'au retour des explorateurs. La règle « jamais le dernier Habitant » compte aussi les absents : le dernier resté au Foyer peut donc partir pendant une Expédition. En direct et au rattrapage, les mêmes départs.
 - **Débloquée par** : US-0911, Étape 15
 - **Critères d'acceptation** :
   - La Nourriture des explorateurs continue d'être prise sur les stocks pendant toute l'Expédition.
   - L'avertissement « famine imminente » tient compte des Expéditions en cours.
   - L'Entretien des Bêtes de l'escorte s'y ajoutera quand les Bêtes mangeront (étape 35, US-0826).
-  - En cas de Famine pendant une Expédition, si un explorateur absent peut s'en aller, et, une fois que les Bêtes mangeront, si des Bêtes de l'escorte peuvent retourner au sauvage sur place (à décider).
+  - En cas de Famine pendant une Expédition, seuls les Habitants restés au Foyer peuvent s'en aller : un explorateur absent ne part pas, et les Bêtes de l'escorte ne retournent pas au sauvage (décidé le 2026-10-08).
 
 ### US-0922 · Une Expédition vécue en mon absence
 **En tant que** joueur, **je veux** retrouver le résultat exact d'une Expédition qui s'est entièrement déroulée pendant que je n'étais pas là, **afin de** jouer par courtes sessions sans rien perdre.
