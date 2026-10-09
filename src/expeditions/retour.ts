@@ -6,6 +6,7 @@ import "server-only";
 import type { PoolClient } from "pg";
 import { type Evenement, programmerEvenement } from "@/temps/avancer";
 import { type HorairesDUneExpedition, retourDUneExpedition } from "./phase";
+import { raconterLeRetour } from "./recit-de-retour";
 
 /** US-0916 : l'événement du retour d'une Expédition au Foyer ; ses données portent son identifiant. */
 export const RETOUR_EXPEDITION = "retour_expedition";
@@ -26,7 +27,8 @@ export async function programmerLeRetour(client: PoolClient, territoireId: numbe
  * sont plus sorties (src/monde/effectif.ts). Le temps qui avance a mis le Territoire à l'heure du retour avant de
  * l'appliquer : la production et la Famine (US-0921) sont calculées jusque-là sans les explorateurs au Foyer, et avec eux
  * ensuite. Elle n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) relit toujours son séjour. Une
- * Expédition déjà rentrée, ou d'un autre Territoire, n'est jamais touchée.
+ * Expédition déjà rentrée, ou d'un autre Territoire, n'est jamais touchée. US-0917 : un Récit raconte son retour, daté de
+ * cet instant (src/expeditions/recit-de-retour.ts) ; une seule fois, comme le retour.
  */
 export async function rentrerAuFoyer(client: PoolClient, territoireId: number, evenement: Evenement): Promise<void> {
   const expeditionId = evenement.donnees.expedition;
@@ -40,4 +42,5 @@ export async function rentrerAuFoyer(client: PoolClient, territoireId: number, e
   ]);
   if (rowCount === 0) return;
   await client.query("update habitant set expedition_id = null where territoire_id = $1 and expedition_id = $2", [territoireId, expeditionId]);
+  await raconterLeRetour(client, territoireId, expeditionId, evenement.survientLe);
 }
