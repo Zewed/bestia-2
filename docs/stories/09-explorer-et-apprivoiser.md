@@ -374,6 +374,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0934 · La Bête à portée suit l'Expédition
 **En tant que** joueur, **je veux** qu'une Bête sauvage suive mon Expédition quand mon escorte est assez forte, **afin de** l'apprivoiser.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1394, Zewed/bestia-2#27). Une Bête vue lors d'une Rencontre suit l'Expédition, sans combat, quand la force de l'escorte vaut au moins celle de son Espèce, ou quand elle est commune ; dès cet instant elle a quitté sa Case et personne ne la voit plus. Vue par plusieurs Expéditions, elle suit la première qui la voit et l'a à portée (à égalité, la plus petite), tous Territoires confondus (décidé le 2026-10-09), d'où le même résultat quel que soit l'ordre des rattrapages. Sans escorte, aucune Bête ne suit encore : US-0935 en décidera. La Bête suivie est la Rencontre marquée apprivoisée (migration 0056).
 - **Débloquée par** : US-0932, US-0905
 - **Critères d'acceptation** :
   - Une Bête est à portée quand la force de l'escorte est au moins égale à la sienne, qui est celle de son Espèce ; une Bête commune l'est toujours, même sans escorte (US-0935).
