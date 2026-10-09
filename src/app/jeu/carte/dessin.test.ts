@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { BROUILLARD, COULEURS } from "@/monde/couleurs-de-la-carte";
-import { anneau, casesDesAnneaux, voisines, type Coordonnees } from "@/monde/hex";
+import { anneau, casesDesAnneaux, distance, SOMMETS_DE_CASE, voisines, type Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
 import { aLEcran, type CarteADessiner, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau, type Vue } from "./dessin";
 import { bornesDuZoom, deplacer, limiteDeLaCarte, zoomer } from "./vue";
@@ -11,14 +11,27 @@ type Point = { x: number; y: number };
 /**
  * Ce qu'un remplissage ou un trait a peint : sa couleur, son épaisseur, et ses tracés, chacun la liste de ses points.
  * US-0433 : pour un trait, ses tirets (vide s'il est plein), leur décalage, ses bouts, et l'opacité du pinceau.
+ * US-0908 : pour un remplissage, sa règle (« nonzero » ou « evenodd ») ; et la façon dont il se pose sur ce qui est déjà
+ * peint (« source-over » : par-dessus).
  */
-type Peint = { geste: "remplir" | "border"; couleur: string; epaisseur: number; traces: Point[][]; tirets: number[]; decalage: number; bouts: string; opacite: number };
+type Peint = {
+  geste: "remplir" | "border";
+  couleur: string;
+  epaisseur: number;
+  traces: Point[][];
+  tirets: number[];
+  decalage: number;
+  bouts: string;
+  opacite: number;
+  regle: string;
+  composition: string;
+};
 
 /**
  * Un pinceau qui retient ce qu'on lui fait dessiner : chaque effacement, chaque remplissage ou trait avec ses
  * tracés, et chaque image posée avec la découpe (les tracés) qui la borne. Comme un <canvas>, restore() rend
  * l'opacité et les tirets d'avant save(), et ôte la découpe. US-0435 : il compte aussi les closePath, et ce que save()
- * a mis de côté sans que restore() l'ait rendu.
+ * a mis de côté sans que restore() l'ait rendu. US-0908 : restore() rend aussi la façon de poser.
  */
 function pinceauDEssai() {
   const effacements: number[][] = [];
@@ -27,16 +40,27 @@ function pinceauDEssai() {
   let traces: Point[][] = [];
   let decoupe: Point[][] | null = null;
   let tirets: number[] = [];
-  const mis: { opacite: number; tirets: number[]; decalage: number }[] = [];
+  const mis: { opacite: number; tirets: number[]; decalage: number; composition: GlobalCompositeOperation }[] = [];
   let fermetures = 0;
-  const peint = (geste: Peint["geste"], couleur: unknown) =>
-    void peints.push({ geste, couleur: String(couleur), epaisseur: pinceau.lineWidth, traces, tirets, decalage: pinceau.lineDashOffset, bouts: pinceau.lineCap, opacite: pinceau.globalAlpha });
+  const peint = (geste: Peint["geste"], couleur: unknown, regle = "nonzero") =>
+    void peints.push({
+      geste,
+      couleur: String(couleur),
+      epaisseur: pinceau.lineWidth,
+      traces,
+      tirets,
+      decalage: pinceau.lineDashOffset,
+      bouts: pinceau.lineCap,
+      opacite: pinceau.globalAlpha,
+      regle,
+      composition: pinceau.globalCompositeOperation,
+    });
   const pinceau: Pinceau = {
-    save: () => void mis.push({ opacite: pinceau.globalAlpha, tirets, decalage: pinceau.lineDashOffset }),
+    save: () => void mis.push({ opacite: pinceau.globalAlpha, tirets, decalage: pinceau.lineDashOffset, composition: pinceau.globalCompositeOperation }),
     restore: () => {
       decoupe = null;
       const avant = mis.pop();
-      if (avant) [pinceau.globalAlpha, tirets, pinceau.lineDashOffset] = [avant.opacite, avant.tirets, avant.decalage];
+      if (avant) [pinceau.globalAlpha, tirets, pinceau.lineDashOffset, pinceau.globalCompositeOperation] = [avant.opacite, avant.tirets, avant.decalage, avant.composition];
     },
     clip: () => void (decoupe = traces),
     drawImage: (image: unknown, ...valeurs: number[]) => void images.push({ image, valeurs, decoupe }),
@@ -46,6 +70,7 @@ function pinceauDEssai() {
     lineCap: "butt",
     lineJoin: "miter",
     globalAlpha: 1,
+    globalCompositeOperation: "source-over",
     lineDashOffset: 0,
     setLineDash: (valeurs) => void (tirets = [...valeurs]),
     clearRect: (...valeurs) => void effacements.push(valeurs),
@@ -56,7 +81,7 @@ function pinceauDEssai() {
     // Un rond : son centre, et le point de son bord où il commence.
     arc: (x, y, rayon) => void traces.at(-1)!.push({ x, y }, { x: x + rayon, y }),
     closePath: () => void fermetures++,
-    fill: () => peint("remplir", pinceau.fillStyle),
+    fill: (regle?: CanvasFillRule | Path2D) => peint("remplir", pinceau.fillStyle, typeof regle === "string" ? regle : undefined),
     stroke: () => peint("border", pinceau.strokeStyle),
   } as Pinceau;
   return { pinceau, effacements, peints, images, fermetures: () => fermetures, misDeCote: () => mis.length };
@@ -675,5 +700,104 @@ describe("une carte fluide sur mobile (US-0435)", () => {
     expect(peints.map(vu)).toEqual(premiere.map(vu));
     // Rien de mis de côté par save() qui n'ait été rendu par restore() : le pinceau ne s'alourdit pas.
     expect(misDeCote()).toBe(0);
+  });
+});
+
+describe("la portée d'exploration, en choisissant la destination (US-0908)", () => {
+  // Un Foyer près du bord d'un Monde de 60 Cases de rayon : sa portée en déborde.
+  const FOYER = { q: -20, r: 57 };
+  const PORTEE = { cases: 8, voile: "grisé" };
+  const vue = vueSurLeFoyer(FOYER, 800, 600);
+  /** Les Cases du Monde à 12 Cases du Foyer ou moins. */
+  const autour = casesDesAnneaux(0, 12)
+    .map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r }))
+    .filter((c) => anneau(c) <= 60);
+  /** Ses abords découverts, en prairie et en forêt, la Couronne sur le bord du Monde ; le brouillard au-delà. */
+  const carte: CarteADessiner = {
+    teintes: ["prairie", "foret", BROUILLARD],
+    cases: enColonnes(
+      autour,
+      (c) => (distance(c, FOYER) > 4 ? 2 : c.q % 2 === 0 ? 0 : 1),
+      (c) => (anneau(c) >= 58 ? ZONE_COURONNE : 0),
+    ),
+    foyer: FOYER,
+    // Un autre Foyer dans les abords, à portée ; un autre au-delà.
+    foyers: [
+      { q: FOYER.q + 3, r: FOYER.r - 1 },
+      { q: FOYER.q + 10, r: FOYER.r - 10 },
+    ],
+  };
+  const HUTTE = { image: "hutte" as unknown as CanvasImageSource, largeur: 384, hauteur: 256 };
+  /** Si un remplissage pair-impair couvre le point : il est à l'intérieur d'un nombre impair de ses tracés, chacun refermé. */
+  const couvre = (traces: Point[][], { x, y }: Point) => {
+    const traversees = traces.flatMap((trace) =>
+      trace.filter((a, i) => {
+        const b = trace[(i + 1) % trace.length];
+        return a.y > y !== b.y > y && x < a.x + ((y - a.y) * (b.x - a.x)) / (b.y - a.y);
+      }),
+    );
+    return traversees.length % 2 === 1;
+  };
+  /** Le centre d'une Case, et ses sommets un peu ramenés vers lui : toute la Case, sans son bord, là où elle est à l'écran. */
+  const pointsDe = (c: Coordonnees, ici: Vue) => {
+    const { x, y } = aLEcran(c, ici);
+    const points = [{ x, y }, ...SOMMETS_DE_CASE.map((s) => ({ x: x + 0.8 * s.x * ici.rayon, y: y + 0.8 * s.y * ici.rayon }))];
+    return points.filter((p) => p.x > 0 && p.x < ici.largeur && p.y > 0 && p.y < ici.hauteur);
+  };
+  /** La carte dessinée sur la vue `ici`, une Case hors de portée choisie, avec la portée ou sans (null). */
+  const dessiner = (ici: Vue, portee: typeof PORTEE | null, monde = carte) => {
+    const essai = pinceauDEssai();
+    dessinerLaCarte(essai.pinceau, monde, ici, peinture(["vert", "sapin", "brume"]), HUTTE, { q: FOYER.q + 9, r: FOYER.r - 2 }, portee);
+    return essai;
+  };
+
+  it("grise d'un seul remplissage chaque Case à plus de 8 Cases du Foyer, en entier, et elles seules", () => {
+    const dezoomee = { ...vue, rayon: bornesDuZoom(800, 600).min };
+    for (const ici of [vue, dezoomee]) {
+      const voiles = dessiner(ici, PORTEE).peints.filter((p) => p.couleur === "grisé");
+      expect(voiles).toHaveLength(1);
+      const [voile] = voiles;
+      expect([voile.geste, voile.regle]).toEqual(["remplir", "evenodd"]);
+      for (const c of autour) for (const point of pointsDe(c, ici)) expect(couvre(voile.traces, point), `${c.q},${c.r}`).toBe(distance(c, FOYER) > PORTEE.cases);
+      // Jusqu'aux coins de l'écran, loin du Foyer.
+      expect(couvre(voile.traces, { x: 1, y: 1 })).toBe(true);
+    }
+  });
+
+  it("ne grise que là où des Cases sont déjà peintes, rien au-delà du bord du Monde ; puis pose le reste par-dessus, comme avant", () => {
+    const { peints, misDeCote } = dessiner(vue, PORTEE);
+    const voile = peints.find((p) => p.couleur === "grisé")!;
+    expect(voile.composition).toBe("source-atop");
+    expect(new Set(peints.filter((p) => p !== voile).map((p) => p.composition))).toEqual(new Set(["source-over"]));
+    expect(misDeCote()).toBe(0);
+  });
+
+  it("grise les Cases, leurs motifs, leurs bords, les liserés et les autres Foyers ; ni le Foyer du joueur, ni la Case choisie, ni le repère", () => {
+    const sans = dessiner(vue, null).peints;
+    const avec = dessiner(vue, PORTEE).peints;
+    expect(sans.some((p) => p.couleur === "grisé")).toBe(false);
+    const voile = avec.find((p) => p.couleur === "grisé")!;
+    expect(avec.filter((p) => p !== voile)).toEqual(sans);
+    // Juste après les autres Foyers, de petits hexagones d'Encre ; juste avant le contour d'Encre du Foyer du joueur.
+    const ici = avec.indexOf(voile);
+    expect(avec[ici - 1]).toMatchObject({ geste: "remplir", couleur: "Encre" });
+    expect(avec[ici + 1]).toMatchObject({ geste: "border", couleur: "Encre", epaisseur: 2 });
+  });
+
+  it("coûte autant à tout zoom : l'écran et le contour de la portée, sans un tracé par Case ni closePath de plus", () => {
+    const monde = { ...carte, teintes: ["prairie"], cases: enColonnes(casesDesAnneaux(0, 60)) };
+    const dezoomee = { ...vueSurLeFoyer(FOYER, 390, 688), rayon: bornesDuZoom(390, 688).min };
+    const avec = dessiner(dezoomee, PORTEE, monde);
+    const { traces } = avec.peints.find((p) => p.couleur === "grisé")!;
+    expect(traces).toHaveLength(2);
+    expect(traces[0]).toEqual([
+      { x: 0, y: 0 },
+      { x: 390, y: 0 },
+      { x: 390, y: 688 },
+      { x: 0, y: 688 },
+    ]);
+    // Le tour de la portée : 17 côtés de Case par côté de son grand hexagone.
+    expect(traces[1]).toHaveLength(6 * (2 * PORTEE.cases + 1));
+    expect(avec.fermetures()).toBe(dessiner(dezoomee, null, monde).fermetures());
   });
 });

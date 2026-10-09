@@ -270,3 +270,10 @@ export const APPARITIONS_PAR_CASE_PAR_JOUR = 1;
  * sa Rareté, puis disparaît pour toujours ; plus tôt si elle suit une Expédition.
  */
 export const PRESENCE_D_UNE_BETE_HEURES = 6;
+
+/**
+ * US-0908 : la portée d'exploration de départ : la destination d'une Expédition est à 8 Cases du Foyer au plus (valeur
+ * provisoire, à régler en jouant), comptées par `distance` (src/monde/hex.ts) ; au-delà des abords découverts à la
+ * naissance (ABORDS_DU_FOYER_CASES). Des Recherches de la branche Explorer l'agrandiront (US-0731, jalon 7).
+ */
+export const PORTEE_D_EXPLORATION_CASES = 8;

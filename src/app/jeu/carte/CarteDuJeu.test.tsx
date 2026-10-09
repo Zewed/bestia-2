@@ -813,6 +813,41 @@ describe("choisir la destination d'une Expédition sur la carte (US-0907)", () =
   });
 });
 
+describe("griser ce qui est hors de portée en choisissant la destination (US-0908)", () => {
+  /** Le voile qui grise les Cases au-delà de la portée d'exploration (dessin.test.ts : où, et comment). */
+  const VOILE = "remplir color-mix(in oklch, var(--galet) 70%, transparent)";
+  /** Les gestes d'un nouveau dessin de la carte, comme quand l'écran change de taille. */
+  const redessinee = () => {
+    toile.gestes = [];
+    act(() => suivi!.annoncer());
+    return toile.gestes;
+  };
+
+  it("ouverte pour choisir la destination, grise d'un voile ce qui est au-delà de la portée, par-dessus les Cases, sous le repère du Foyer", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} destination="choix=destination" />);
+    const gestes = redessinee();
+    expect(gestes.filter((g) => g === VOILE)).toHaveLength(1);
+    expect(gestes.indexOf(VOILE)).toBeGreaterThan(gestes.indexOf("remplir var(--galet)"));
+    expect(gestes.slice(-3)).toEqual(["remplir var(--citron)", "border var(--encre)", "remplir var(--encre)"]);
+  });
+
+  it("ouverte depuis la navigation, ne grise rien", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(redessinee()).not.toContain(VOILE);
+  });
+
+  it("grise ou ne grise plus dès que le choix de la destination commence ou s'arrête, sans attendre que la carte bouge", () => {
+    const { rerender } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    toile.gestes = [];
+    rerender(<CarteDuJeu carte={CARTE} fonds={FONDS} destination="choix=destination" />);
+    expect(toile.gestes).toContain(VOILE);
+    toile.gestes = [];
+    rerender(<CarteDuJeu carte={CARTE} fonds={FONDS} destination={null} />);
+    expect(toile.gestes).toContain("remplir var(--galet)");
+    expect(toile.gestes).not.toContain(VOILE);
+  });
+});
+
 describe("fermer la fiche d'une Case (US-0430)", () => {
   it("la ferme en touchant la carte hors de ses Cases, et retire le surlignage", () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
