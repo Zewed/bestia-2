@@ -1,0 +1,41 @@
+drizzle/0055_bestiaire.sql
+  s_97a431cfa65ca7::t_c6e543d2ac799b 1-26
+drizzle/meta/0055_snapshot.json
+  s_97a431cfa65ca7::t_35600fb829c191 1,4-319,344-345,346-371,385-3190
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_91faaeb457b9f0 375,383-385,387-388
+src/bestiaire/bestiaire.ts
+  s_97a431cfa65ca7::t_2ce028942517da 1-61
+src/db/schema.ts
+  s_97a431cfa65ca7::t_27bad833996dd0 772-801
+src/expeditions/rencontres.db.test.ts
+  s_97a431cfa65ca7::t_342b6c86bf940d 87-92
+src/expeditions/rencontres.ts
+  s_97a431cfa65ca7::t_576d62fdd55b70 8-9,12,20-22,33,68,71-72,82-83,93-94
+src/bestiaire/bestiaire.db.test.ts
+  s_14731d25b634da::t_e0badfa6710c65 1-274
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f15b8e834a4d98a998f1c8ef9e314b18af1e466b",
+  "prompts": {},
+  "sessions": {
+    "s_14731d25b634da": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a8cebfd198ef4f96b",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
