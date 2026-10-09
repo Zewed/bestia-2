@@ -274,7 +274,7 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
     const { nom, force } = await uneEspece(montrees.find((b) => b.rareteId !== "commune")!.especeId);
     const lignes = (await recitsDeRetour(territoireId))[0].texte.split("\n");
     expect(lignes).toContain(`${montrees.length} Bêtes se sont montrées.`);
-    expect(lignes).toContain(`${nom} n'a pas suivi vos explorateurs : trop forte pour votre escorte, il lui manquait ${entier(force)} de force.`);
+    expect(lignes).toContain(`${nom} n'a pas suivi vos explorateurs : Bête trop forte pour votre escorte, il lui manquait ${entier(force)} de force.`);
     expect(lignes.join("\n")).not.toContain("aucune Bête ne les a suivis");
   }, 60_000);
 

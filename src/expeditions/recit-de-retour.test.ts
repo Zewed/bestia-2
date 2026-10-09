@@ -171,10 +171,10 @@ describe("la Bête trop forte pour l'escorte, restée sur sa Case (US-0942)", ()
   it("quand d'autres Bêtes ont suivi, une ligne après celle des Bêtes montrées dit celles qui n'ont pas suivi, trop fortes, et de combien", () => {
     expect(lignes({ rencontres: 3, tropFortes: [renard] }).slice(-2)).toEqual([
       "3 Bêtes se sont montrées.",
-      "Renard roux n'a pas suivi vos explorateurs : trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
+      "Renard roux n'a pas suivi vos explorateurs : Bête trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
     ]);
     expect(lignes({ rencontres: 4, tropFortes: [renard, loup] }).at(-1)).toBe(
-      "Renard roux et Loup gris n'ont pas suivi vos explorateurs : trop fortes pour votre escorte, il lui manquait 37\u00a0340 de force pour Renard roux et 150\u00a0000 pour Loup gris.",
+      "Renard roux et Loup gris n'ont pas suivi vos explorateurs : Bêtes trop fortes pour votre escorte, il lui manquait 37\u00a0340 de force pour Renard roux et 150\u00a0000 pour Loup gris.",
     );
   });
 
@@ -193,7 +193,7 @@ describe("la Bête trop forte pour l'escorte, restée sur sa Case (US-0942)", ()
   it("une Bête trop forte et une Bête ramenée au Foyer : la ligne de la Bête restée vient avant celle de l'arrivée au Foyer (US-0938)", () => {
     expect(lignes({ rencontres: 2, tropFortes: [renard], ramenees: [{ nom: "Souris grise", sexe: "male" }] }).slice(-3)).toEqual([
       "2 Bêtes se sont montrées.",
-      "Renard roux n'a pas suivi vos explorateurs : trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
+      "Renard roux n'a pas suivi vos explorateurs : Bête trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
       "Bête ramenée au Foyer : Souris grise (mâle).",
     ]);
   });

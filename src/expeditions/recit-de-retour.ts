@@ -179,11 +179,12 @@ function vuesSansQueRienNeSuive(especes: string[], tropFortes?: TropForte[]): st
 
 /**
  * US-0942 : quand d'autres Bêtes ont suivi l'Expédition, celles restées sur leur Case : « Renard roux n'a pas suivi vos
- * explorateurs : trop forte pour votre escorte, il lui manquait 37 340 de force. ».
+ * explorateurs : Bête trop forte pour votre escorte, il lui manquait 37 340 de force. ». « Bête » porte l'accord de
+ * « trop forte », quel que soit le genre du nom de l'Espèce.
  */
 function resteesSurLeurCase(tropFortes: TropForte[]): string {
-  const noms = enumeres(tropFortes.map((e) => e.nom));
-  return `${noms} ${tropFortes.length > 1 ? "n'ont" : "n'a"} pas suivi vos explorateurs : ${tropFortesPourLEscorte(tropFortes)}.`;
+  const [noms, plusieurs] = [enumeres(tropFortes.map((e) => e.nom)), tropFortes.length > 1];
+  return `${noms} ${plusieurs ? "n'ont" : "n'a"} pas suivi vos explorateurs : ${plusieurs ? "Bêtes" : "Bête"} ${tropFortesPourLEscorte(tropFortes)}.`;
 }
 
 /**
@@ -285,7 +286,8 @@ async function betesRameneesAuFoyer(client: PoolClient, expeditionId: number): P
 /**
  * US-0942 : les Espèces trop fortes pour l'escorte de l'Expédition `expeditionId` parmi ses Rencontres `vues`
  * (especesTropFortes), dans le même ordre : leur nom, et la force qui manquait à l'escorte (forceQuiManque), nulle sans
- * escorte (US-0935).
+ * escorte (US-0935). Une force qui ne manque plus au retour (les caractéristiques des Espèces rechargées entre-temps, ou
+ * une Espèce sans arme face à une Expédition sans escorte) ne se dit pas : « il lui manquait 0 de force » n'a pas de sens.
  */
 async function especesRestees(client: PoolClient, expeditionId: number, vues: Rencontre[]): Promise<TropForte[]> {
   const ids = especesTropFortes(vues);
@@ -294,8 +296,10 @@ async function especesRestees(client: PoolClient, expeditionId: number, vues: Re
   const escorte = (await forcesDesEscortes(client, [expeditionId])).get(expeditionId) ?? null;
   const forces = await forcesDesEspeces(client, ids);
   const noms = await nomsDesEspeces(client, ids);
-  return ids.map((id, i) => ({
-    nom: noms[i],
-    manque: forceQuiManque(escorte, { force: forces.get(id)!, rareteId: vues.find((r) => r.especeId === id)!.rareteId }),
-  }));
+  return ids
+    .map((id, i) => ({
+      nom: noms[i],
+      manque: forceQuiManque(escorte, { force: forces.get(id)!, rareteId: vues.find((r) => r.especeId === id)!.rareteId }),
+    }))
+    .filter((e) => e.manque > 0);
 }
