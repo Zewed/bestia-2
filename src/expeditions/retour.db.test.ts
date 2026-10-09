@@ -64,23 +64,26 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
     ]);
     return t;
   };
-  /** La `rang`-ième Case libre du Monde du Territoire, à deux Cases de son Foyer. */
-  const destination = async (territoireId: number, rang = 0): Promise<Coordonnees> => {
+  /** La `rang`-ième Case libre du Monde du Territoire, à `ecart` Cases de son Foyer. */
+  const destination = async (territoireId: number, ecart: number, rang: number): Promise<Coordonnees> => {
     const { rows } = await pool.query<Coordonnees>(
       `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
          join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
-       where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = 2
-       order by c.q, c.r limit 1 offset $2`,
-      [territoireId, rang],
+       where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
+       order by c.q, c.r limit 1 offset $3`,
+      [territoireId, ecart, rang],
     );
     return rows[0];
   };
-  /** Une Expédition de `explorateurs` explorateurs, escortée de `souris` souris, qui part à `instant` pour un séjour de `sejour` minutes. */
-  const partir = async (territoireId: number, instant: Date, { explorateurs = 2, souris = 2, sejour = 60, rang = 0 } = {}) => {
+  /**
+   * Une Expédition de `explorateurs` explorateurs, escortée de `souris` souris, qui part à `instant` vers une Case à `ecart`
+   * Cases du Foyer (deux par défaut) pour un séjour de `sejour` minutes.
+   */
+  const partir = async (territoireId: number, instant: Date, { explorateurs = 2, souris = 2, sejour = 60, ecart = 2, rang = 0 } = {}) => {
     const depart = await lancerLExpedition(
       pool,
       territoireId,
-      { destination: await destination(territoireId, rang), explorateurs, escorte: new Map(souris > 0 ? [["souris", souris]] : []), sejourMinutes: sejour },
+      { destination: await destination(territoireId, ecart, rang), explorateurs, escorte: new Map(souris > 0 ? [["souris", souris]] : []), sejourMinutes: sejour },
       instant,
     );
     expect(depart).toEqual({ expeditionId: expect.any(Number) });
@@ -209,13 +212,17 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
       expect(await expeditionsEnCours(pool, t.territoireId, apres(retour, 3 * HEURE + 17 * MINUTE))).toEqual([]);
     });
 
-    describe("en Famine, sans plus personne au Foyer : les départs reprennent à l'heure pleine qui suit le retour, quel que soit le découpage", () => {
-      /**
-       * Un chasseur et deux explorateurs, sans Nourriture ni Case pour en produire : la Famine dès la naissance. Les deux
-       * explorateurs partent aussitôt, 3 h de séjour : ils rentrent à 4 h 20 (40 min d'aller, autant de retour). Reste,
-       * seul au Foyer, s'en va à 1 h ; la Famine dure sans départ jusqu'au retour, puis le dernier arrivé des deux
-       * explorateurs rentrés s'en va à 5 h, l'heure pleine suivante ; jamais le dernier Habitant.
-       */
+    /**
+     * Un chasseur et deux explorateurs, sans Nourriture ni Case pour en produire : la Famine dès la naissance. Les deux
+     * explorateurs partent aussitôt, 3 h de séjour, à 2 Cases (40 min d'aller, autant de retour : ils rentrent à 4 h 20)
+     * ou à 3 Cases (1 h d'aller : ils rentrent à 5 h pile, une heure pleine de la Famine). Reste, seul au Foyer, s'en va à
+     * 1 h ; la Famine dure sans départ jusqu'au retour, puis le dernier arrivé des deux explorateurs rentrés s'en va à
+     * l'heure pleine qui suit ; jamais le dernier Habitant.
+     */
+    describe.each([
+      { ecart: 2, retour: 4 * 60 + 20, depart: 5, quand: "à 4 h 20, entre deux heures pleines" },
+      { ecart: 3, retour: 5 * 60, depart: 6, quand: "à 5 h pile, une heure pleine de la Famine" },
+    ])("en Famine, sans plus personne au Foyer, rentrés $quand : les départs reprennent à l'heure pleine qui suit, quel que soit le découpage", ({ ecart, retour, depart }) => {
       const preparer = async () => {
         const t = await naitre([
           { prenom: "Reste", metier: "chasseur" },
@@ -225,7 +232,7 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
         await pool.query("update stock set quantite = 0, reste = 0, plein_depuis = null where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')", [
           t.territoireId,
         ]);
-        const expedition = await partir(t.territoireId, t.ne, { explorateurs: 2, souris: 0, sejour: 180 });
+        const expedition = await partir(t.territoireId, t.ne, { explorateurs: 2, souris: 0, sejour: 180, ecart });
         // Sans aucune Case, le Territoire ne produit rien : son Foyer passe à un voisin.
         const voisin = await naitre([{ prenom: "Voisin", metier: null }]);
         await pool.query(
@@ -259,8 +266,7 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
           )
         ).rows,
       });
-      /** Le retour des deux explorateurs : 40 min d'aller, 3 h de séjour et 40 min de retour. */
-      const RETOUR = (4 * 60 + 20) * MINUTE;
+      const RETOUR = retour * MINUTE;
       const FIN = 8 * HEURE;
       let fermee: Awaited<ReturnType<typeof etat>>;
 
@@ -273,7 +279,7 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
           restants: [{ prenom: "Loin", parti: false }],
           departs: [
             { prenom: "Reste", instant: us(1) },
-            { prenom: "Ailleurs", instant: us(5) },
+            { prenom: "Ailleurs", instant: us(depart) },
           ],
         });
       });
@@ -290,7 +296,7 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
 
       it("tâche planifiée passée au milieu, dont une à l'instant même du retour : même fin qu'à la page fermée", async () => {
         const t = await preparer();
-        for (const minutes of [50, 4 * 60 + 20, 4 * 60 + 59, 6 * 60 + 30]) {
+        for (const minutes of [50, retour, retour + 39, retour + 130]) {
           const passage = await rattraperLesAbsents({ pool, maintenant: apres(t.ne, minutes * MINUTE), parmi: { territoire: [t.territoireId] } });
           expect(passage, `passage à ${minutes} min`).toMatchObject({ rattrapes: 1, echecs: 0 });
         }
@@ -304,14 +310,19 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
     const t = await naitreAvecTroisExplorateurs();
     const avant = await partir(t.territoireId, t.ne, { explorateurs: 1, souris: 1 });
     const programmee = await partir(t.territoireId, t.ne, { explorateurs: 1, souris: 1, rang: 1 });
-    const migration = readFileSync(join(process.cwd(), "drizzle/0052_retour_au_foyer.sql"), "utf8");
+    // Ses retours programmés seulement : sa colonne est déjà là (src/test/preparer-base.ts), et l'ajouter de nouveau tiendrait
+    // la table de toutes les Expéditions de la base de test, que d'autres fichiers lisent en même temps.
+    const migration = readFileSync(join(process.cwd(), "drizzle/0052_retour_au_foyer.sql"), "utf8")
+      .split("--> statement-breakpoint")
+      .filter((instruction) => !instruction.includes("ALTER TABLE"))
+      .join("\n");
+    expect(migration).toContain("INSERT INTO");
     const retours = `select (donnees->>'expedition')::int as expedition, survient_le as "survientLe" from evenement
       where element = 'territoire' and element_id = $1 and type = $2 order by (donnees->>'expedition')::int`;
     const client = await pool.connect();
     let programmes: { expedition: number; survientLe: Date }[];
     try {
       await client.query("begin");
-      await client.query("set local lock_timeout = '10s'");
       // Partie avant le retour au Foyer : rien ne programmait son retour.
       await client.query(`delete from evenement where element = 'territoire' and element_id = $1 and type = $2 and (donnees->>'expedition')::int = $3`, [
         t.territoireId,

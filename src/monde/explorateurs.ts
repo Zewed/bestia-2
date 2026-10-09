@@ -36,7 +36,7 @@ export async function prochainRetourDUnExplorateur(base: Pool | PoolClient, terr
   const { rows } = await base.query<HorairesDUneExpedition>(
     `select x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes"
      from expedition x
-     where x.territoire_id = $1 and exists (select 1 from habitant h where h.expedition_id = x.id and h.metier = 'explorateur')`,
+     where x.territoire_id = $1 and x.rentree_le is null and exists (select 1 from habitant h where h.expedition_id = x.id and h.metier = 'explorateur')`,
     [territoireId],
   );
   const retours = rows.flatMap((horaires) => retourDUneExpedition(horaires) ?? []);

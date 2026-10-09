@@ -135,9 +135,10 @@ describe("le retour au Foyer, en direct (US-0916)", () => {
     const { rerender } = render(<ListeDesExpeditions expeditions={[vers(5, avant(6 * 60 - 30)), vers(6, avant(2 * 60))]} maintenant={MAINTENANT} vitesse={60} />);
     await act(async () => vi.advanceTimersByTime(31_000));
     expect(routeur.refresh).toHaveBeenCalledTimes(1);
-    // La page relue, 31 minutes du jeu plus tard, n'a plus que la seconde : elle rentre dans 3 h 29 du jeu, 3 min 29 s réelles.
-    rerender(<ListeDesExpeditions expeditions={[vers(6, avant(2 * 60))]} maintenant={new Date(MAINTENANT.getTime() + 31 * MINUTE_MS)} vitesse={60} />);
-    await act(async () => vi.advanceTimersByTime(209_000));
+    // La page relue n'a plus que la seconde, lue 35 minutes du jeu après l'affichage, plus tard que l'horloge du
+    // navigateur : elle rentre dans 3 h 25 du jeu, 3 min 25 s réelles, et non plus dans les 3 min 29 de la première lecture.
+    rerender(<ListeDesExpeditions expeditions={[vers(6, avant(2 * 60))]} maintenant={new Date(MAINTENANT.getTime() + 35 * MINUTE_MS)} vitesse={60} />);
+    await act(async () => vi.advanceTimersByTime(205_000));
     expect(routeur.refresh).toHaveBeenCalledTimes(1);
     await act(async () => vi.advanceTimersByTime(1_000));
     expect(routeur.refresh).toHaveBeenCalledTimes(2);
