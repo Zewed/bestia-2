@@ -92,3 +92,19 @@ describe("la liste des Expéditions en cours, en direct (US-0918)", () => {
     expect(etats()).toEqual(["true", "false"]);
   });
 });
+
+describe("le séjour sur la Case, en direct (US-0915)", () => {
+  it("passe en séjour à l'arrivée avec le compte à rebours de la durée choisie, puis repart seule vers le Foyer à sa fin", async () => {
+    vi.useFakeTimers();
+    // Partie il y a 59 min 30 s, au rythme du jeu × 60 : elle arrive dans 30 s du jeu ; son séjour dure 4 h.
+    render(<ListeDesExpeditions expeditions={[vers(5, new Date(avant(59).getTime() - 30_000))]} maintenant={MAINTENANT} vitesse={60} />);
+    expect(comptes()).toEqual([["Aller", "arrive dans 1 min"]]);
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(comptes()).toEqual([["Séjour", "repart dans 4 h"]]);
+    // 3 h 59 du jeu plus tard, sans rien toucher ni recharger : la dernière minute du séjour.
+    await act(async () => vi.advanceTimersByTime(239_000));
+    expect(comptes()).toEqual([["Séjour", "repart dans 1 min"]]);
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(comptes()).toEqual([["Retour", "rentre dans 1 h"]]);
+  });
+});
