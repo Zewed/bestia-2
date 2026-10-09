@@ -1,9 +1,9 @@
 // US-0922 : une Expédition partie, arrivée et rentrée pendant l'absence du joueur laisse exactement ce qu'elle aurait laissé
 // page ouverte. Le mécanisme du temps (src/temps/avancer.ts) applique chacun de ses événements à son instant exact, page
 // ouverte, au retour du joueur ou par la tâche planifiée : le brouillard levé (US-0914), les Rencontres (US-0932), les
-// Bêtes qui la suivent (US-0934), le Bestiaire (US-0933), le retour (US-0916) et son récit (US-0917). Les mêmes Expéditions
-// du même Territoire sont vécues ici des trois manières, et tout ce qu'elles laissent se compare. Les combats (étape 41)
-// n'existent pas encore.
+// Bêtes qui la suivent (US-0934), le Bestiaire (US-0933), le retour (US-0916), son récit (US-0917), et le rappel
+// (US-0920), à l'aller ou en séjour. Les mêmes Expéditions du même Territoire sont vécues ici des trois manières, et tout ce
+// qu'elles laissent se compare. Les combats (étape 41) n'existent pas encore.
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { bestiaireDuTerritoire, type EspeceAuBestiaire } from "@/bestiaire/bestiaire";
@@ -28,6 +28,7 @@ import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
 import { type HorairesDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
 import { passagesDUneExpedition } from "./position";
+import { rappelerLExpedition } from "./rappel";
 import { type Rencontre, rencontresDUneExpedition } from "./rencontres";
 
 const MINUTE_MS = 60_000;
@@ -39,23 +40,27 @@ const MONDE_D_ESSAI = "Essai d'une Expédition vécue en mon absence (US-0922)";
 const RETOUR = "Retour d'Expédition";
 
 /**
- * Les manières de vivre les mêmes Expéditions : page ouverte du premier départ au dernier retour ; page fermée après le
- * dernier départ, puis rattrapée d'un bloc au retour du joueur ; ou page fermée, sans retour du joueur, le temps avancé
- * par la seule tâche planifiée, qui passe toutes les heures (vercel.json).
+ * Les manières de vivre les mêmes Expéditions : page ouverte du premier départ au dernier retour ; page fermée entre les
+ * départs et les rappels, puis après le dernier, et rattrapée d'un bloc au retour du joueur ; ou page fermée, sans retour
+ * du joueur, le temps avancé par la seule tâche planifiée, qui passe toutes les heures (vercel.json).
  */
 const MANIERES = ["page ouverte", "d'un bloc", "par la tâche planifiée"] as const;
 type Maniere = (typeof MANIERES)[number];
 
-/** Les trois Expéditions de l'essai, nommées dans l'ordre de leur départ. */
-type Lettre = "A" | "B" | "C";
+/** Les cinq Expéditions de l'essai, nommées dans l'ordre de leur départ. */
+type Lettre = "A" | "B" | "C" | "D" | "E";
 
-/** Une Expédition de l'essai telle que le joueur la lance, avec les horaires que son départ lui fixera et l'heure de son retour. */
+/**
+ * Une Expédition de l'essai telle que le joueur la lance, puis la rappelle (`rappel`, US-0920), s'il le fait, avec les
+ * horaires que son départ et son rappel lui fixeront, et l'heure de son retour.
+ */
 type Plan = {
   lettre: Lettre;
   destination: Coordonnees;
   caseId: number;
   escorte: Map<string, number>;
   horaires: HorairesDUneExpedition;
+  rappel?: Date;
   retour: Date;
 };
 
@@ -89,6 +94,13 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
   const bilans = {} as Record<Maniere, Bilan>;
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
   const plan = (lettre: Lettre) => plans.find((p) => p.lettre === lettre)!;
+  /** Les instants où le joueur vient lancer ou rappeler une Expédition, dans l'ordre. */
+  const instantsDuJoueur = () =>
+    [...new Set(plans.flatMap((p) => [p.horaires.partLe, p.rappel ?? p.horaires.partLe]).map((d) => d.getTime()))]
+      .sort((x, y) => x - y)
+      .map((t) => new Date(t));
+  /** Les Expéditions dans l'ordre de leurs retours. */
+  const parRetour = () => [...plans].sort((x, y) => x.retour.getTime() - y.retour.getTime());
 
   /** Le bilan de ce qu'ont laissé au Territoire les Expéditions `ids`, lu avec `jeu` à l'instant `fin`. */
   const bilan = async (jeu: Pool, ids: Map<Lettre, number>): Promise<Bilan> => {
@@ -146,7 +158,10 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       await client.query("begin");
       const jeu = poolDansLaTransaction(client);
       const ids = new Map<Lettre, number>();
-      /** Le joueur ouvre une page à l'instant `instant` : son Territoire est mis à l'heure, puis il lance les Expéditions prévues à cet instant. */
+      /**
+       * Le joueur ouvre une page à l'instant `instant` : son Territoire est mis à l'heure, puis il lance les Expéditions
+       * prévues à cet instant, et rappelle celles qu'il rappelle alors.
+       */
       const ouvrir = async (instant: Date) => {
         await rattraper("territoire", territoireId, { pool: jeu, jusqua: instant });
         for (const p of plans.filter((x) => x.horaires.partLe.getTime() === instant.getTime())) {
@@ -155,12 +170,15 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
           if (!("expeditionId" in depart)) throw new Error(depart.refus);
           ids.set(p.lettre, depart.expeditionId);
         }
+        for (const p of plans.filter((x) => x.rappel?.getTime() === instant.getTime())) {
+          expect(await rappelerLExpedition(jeu, territoireId, ids.get(p.lettre)!, instant)).toEqual({ rappeleeLe: instant });
+        }
       };
       if (maniere === "page ouverte") {
         for (const instant of instantsDeLaPage) await ouvrir(instant);
       } else {
-        // Le joueur lance ses Expéditions, puis s'en va.
-        for (const p of plans) await ouvrir(p.horaires.partLe);
+        // Le joueur ne vient que lancer et rappeler ses Expéditions, puis s'en va.
+        for (const instant of instantsDuJoueur()) await ouvrir(instant);
         if (maniere === "d'un bloc") await ouvrir(fin);
         for (const instant of maniere === "par la tâche planifiée" ? passagesDeLaTache : []) {
           const passage = await rattraperLesAbsents({ pool: jeu, maintenant: instant, parmi: { territoire: [territoireId] } });
@@ -187,7 +205,7 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
 
     /**
-     * Le `n`-ième chef qui naît dans le Monde d'essai, avec ses trois Bêtes de naissance (US-0975), trois explorateurs et
+     * Le `n`-ième chef qui naît dans le Monde d'essai, avec ses trois Bêtes de naissance (US-0975), cinq explorateurs et
      * deux Bêtes de l'Espèce la plus forte du jeu, qui escortent A et B : toute Bête sauvage est à leur portée (US-0934).
      * Son Territoire, l'instant de sa naissance, la place de son Foyer et les Cases de ses Bêtes de naissance.
      */
@@ -197,8 +215,8 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
       const id = (await territoireDuCompte(pool, compte.id))!;
       await pool.query(
-        "insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur'), ($1, 'Mael', 'explorateur')",
-        [id],
+        "insert into habitant (territoire_id, prenom, metier) select $1, unnest($2::text[]), 'explorateur'",
+        [id, ["Joran", "Ilda", "Mael", "Nora", "Tibo"]],
       );
       await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2)", [id, forte.id]);
       const { rows } = await pool.query<{ foyer: Coordonnees; naissance: (Coordonnees & { id: number })[] }>(
@@ -272,29 +290,51 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const versC = (await aLEcart(chef, 3)).map((x) => prevoir(chef, "C", x, apres(premierDepart, 40), 30));
     const c = versC.reduce((x, y) => (neuves(y) > neuves(x) ? y : x));
     expect(neuves(c)).toBeGreaterThan(0);
-    plans = [a, b, c];
-    // Elles rentrent dans l'ordre inverse de leurs départs.
-    expect(c.retour.getTime()).toBeLessThan(b.retour.getTime());
-    expect(b.retour.getTime()).toBeLessThan(a.retour.getTime());
+    /** L'Expédition `p`, rappelée par le joueur à l'instant `le` (US-0920) : ses horaires, et son retour, en découlent. */
+    const rappelee = (p: Plan, le: Date): Plan => {
+      const horaires = { ...p.horaires, rappeleeLe: le };
+      return { ...p, horaires, rappel: le, retour: retourDUneExpedition(horaires)! };
+    };
+    // D, sans escorte, part cinquante minutes après A, à 6 Cases, et le joueur la rappelle à l'aller, 1 h 47 après son
+    // départ, entre deux Cases de son chemin : elle ne séjourne pas.
+    const versD = (await aLEcart(chef, 6)).find((x) => x.id !== a.caseId)!;
+    const d = rappelee(prevoir(chef, "D", versD, apres(premierDepart, 50), HEURE), apres(premierDepart, 50 + 107));
+    expect(sejourDUneExpedition(d.horaires)).toBeNull();
+    // E, sans escorte, part une heure après A, à 2 à 4 Cases, pour quatre heures là où se montrent le plus de Bêtes, et le
+    // joueur la rappelle pendant son séjour, 2 h 03 après son arrivée : celles d'après ne la trouvent plus.
+    const versE = [...(await aLEcart(chef, 2)), ...(await aLEcart(chef, 3)), ...(await aLEcart(chef, 4))]
+      .filter((x) => ![a.caseId, c.caseId].includes(x.id))
+      .map((x) => prevoir(chef, "E", x, apres(premierDepart, 60), 4 * HEURE));
+    const animation = new Map<Plan, number>();
+    for (const p of versE) {
+      const { debut, fin: repart } = sejourDUneExpedition(p.horaires)!;
+      animation.set(p, (await betesSauvagesDUneCase(pool, p.caseId, debut, repart)).length);
+    }
+    const e0 = versE.reduce((x, y) => (animation.get(y)! > animation.get(x)! ? y : x));
+    const e = rappelee(e0, apres(sejourDUneExpedition(e0.horaires)!.debut, 2 * HEURE + 3));
+    plans = [a, b, c, d, e];
+    // Elles ne rentrent pas dans l'ordre de leurs départs : C, partie après A et B, rentre la première ; A, la dernière.
+    expect(parRetour()[0].lettre).toBe("C");
+    expect(parRetour().at(-1)!.lettre).toBe("A");
 
-    // La tâche planifiée passe toutes les heures, à partir de 13 minutes après le dernier départ, jusqu'à son premier passage
-    // qui rattrape le dernier retour : c'est la fin de l'essai, pour toutes les manières.
-    const passagesDeLaTache = [apres(c.horaires.partLe, 13)];
+    // La tâche planifiée passe toutes les heures, à partir de 13 minutes après la dernière venue du joueur, jusqu'à son
+    // premier passage qui rattrape le dernier retour : c'est la fin de l'essai, pour toutes les manières.
+    const passagesDeLaTache = [apres(instantsDuJoueur().at(-1)!, 13)];
     while (passagesDeLaTache.at(-1)! <= apres(a.retour, RATTRAPER_APRES_MINUTES)) {
       passagesDeLaTache.push(apres(passagesDeLaTache.at(-1)!, HEURE));
     }
     fin = passagesDeLaTache.at(-1)!;
 
     // Page ouverte : relue toutes les 5 minutes du jeu, et à chaque instant qui compte, une milliseconde avant, pile et une
-    // après : chaque passage sur une Case du chemin, chaque arrivée, fin de séjour et retour, chaque Bête sauvage qui
-    // arrive sur une destination ou qui en part.
+    // après : chaque passage sur une Case du chemin, chaque arrivée, rappel, fin de séjour et retour, chaque Bête sauvage
+    // qui arrive sur une destination ou qui en part.
     const instants = new Set([fin.getTime()]);
     for (let t = premierDepart.getTime(); t <= fin.getTime(); t += 5 * MINUTE_MS) instants.add(t);
     const autour = (instant: Date) => [-1, 0, 1].forEach((ms) => instants.add(instant.getTime() + ms));
     for (const p of plans) {
       passagesDUneExpedition(foyer, p.destination, p.horaires).forEach(({ le }) => autour(le));
-      const sejour = sejourDUneExpedition(p.horaires)!;
-      [sejour.debut, sejour.fin, p.retour].forEach(autour);
+      const sejour = sejourDUneExpedition(p.horaires);
+      [sejour?.debut, sejour?.fin, p.rappel, p.retour].forEach((instant) => instant && autour(instant));
       for (const bete of await betesSauvagesDUneCase(pool, p.caseId, premierDepart, fin)) [bete.arrivee, bete.depart].forEach(autour);
     }
     const instantsDeLaPage = [...instants]
@@ -303,7 +343,7 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       .map((t) => new Date(t));
 
     for (const maniere of MANIERES) bilans[maniere] = await vivre(maniere, instantsDeLaPage, passagesDeLaTache);
-    // Environ 400 rattrapages à la suite, page ouverte : sous la charge de la suite complète, bien plus que les 30 s par défaut.
+    // Environ 450 rattrapages à la suite, page ouverte : sous la charge de la suite complète, bien plus que les 30 s par défaut.
   }, 240_000);
 
   afterAll(async () => {
@@ -318,7 +358,7 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       const { expeditions, enCours, explorateursAuFoyer, disponibles } = bilans[maniere];
       for (const { lettre, retour } of plans) expect(expeditions[lettre]?.rentreeLe, `${lettre}, ${maniere}`).toEqual(retour);
       const auFoyer = { enCours, explorateursAuFoyer, disponibles: disponibles.map((e) => e.disponibles) };
-      expect(auFoyer, maniere).toEqual({ enCours: 0, explorateursAuFoyer: 3, disponibles: [2] });
+      expect(auFoyer, maniere).toEqual({ enCours: 0, explorateursAuFoyer: 5, disponibles: [2] });
     }
   });
 
@@ -336,6 +376,9 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const arriveeDeB = sejourDUneExpedition(plan("B").horaires)!.debut;
     const deNaissance = expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arriveeDeB, apprivoisee: true });
     expect(expeditions.B!.rencontres).toContainEqual(deNaissance);
+    // Rappelée à l'aller, D ne voit aucune Bête ; rappelée en séjour, E n'en voit plus après son rappel.
+    expect(expeditions.D!.rencontres).toEqual([]);
+    for (const r of expeditions.E!.rencontres) expect(r.vueLe.getTime()).toBeLessThan(plan("E").rappel!.getTime());
     expect(parties.length).toBeGreaterThan(0);
     for (const maniere of fermees) {
       expect(bilans[maniere].expeditions, maniere).toEqual(expeditions);
@@ -353,13 +396,18 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
 
   it("le même récit de retour pour chaque Expédition, daté de son retour", () => {
     const { recits } = bilans[ouverte];
-    expect(recits.map((r) => r.survenuLe)).toEqual([plan("A").retour, plan("B").retour, plan("C").retour]);
+    expect(recits.map((r) => r.survenuLe)).toEqual(parRetour().reverse().map((p) => p.retour));
     expect(recits[0].texte).toMatch(/\d+ Bêtes se sont montrées\./);
+    const recitDe = (lettre: Lettre) => recits.find((r) => r.survenuLe.getTime() === plan(lettre).retour.getTime())!.texte;
+    expect(recitDe("D")).toMatch(/^Rappelée à l'aller le .*\nAller 1 h 47, sans séjour, retour 1 h 47\.$/m);
+    expect(recitDe("E")).toMatch(/^Rappelée pendant le séjour le .*\nAller .*, séjour 2 h 03, retour .*\.$/m);
     for (const maniere of fermees) expect(bilans[maniere].recits, maniere).toEqual(recits);
   });
 
   it("les récits arrivent dans l'ordre des retours, pas dans celui des départs", () => {
-    for (const maniere of MANIERES) expect(bilans[maniere].ecrits, maniere).toEqual(["C", "B", "A"]);
+    const retours = parRetour().map((p) => p.lettre);
+    expect(retours).not.toEqual(plans.map((p) => p.lettre));
+    for (const maniere of MANIERES) expect(bilans[maniere].ecrits, maniere).toEqual(retours);
   });
 
   it("en vitesse accélérée, une Expédition complète se vit en quelques minutes réelles, page fermée, et rentre à son heure", async () => {
