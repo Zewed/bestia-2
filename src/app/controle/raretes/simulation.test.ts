@@ -60,7 +60,7 @@ describe("la simulation des Raretés par Anneau (US-0931)", () => {
     });
   });
 
-  it(`tient chaque Rareté de chaque Anneau à ${SIMULATION_DES_RARETES_TOLERANCE_POINTS} point de sa part attendue, et les communes majoritaires`, () => {
+  it(`marque chaque Rareté qui s'écarte de plus de ${SIMULATION_DES_RARETES_TOLERANCE_POINTS} point de sa part attendue, et vérifie que les communes restent majoritaires`, () => {
     expect(simulation.tolerance).toBe(SIMULATION_DES_RARETES_TOLERANCE_POINTS);
     for (const { raretes, communesMajoritaires } of simulation.anneaux) {
       // Les communes : la première Rareté de la table, plus de la moitié dans chaque Anneau.
