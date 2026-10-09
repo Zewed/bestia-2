@@ -66,12 +66,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0907 · Choisir la destination
 **En tant que** joueur, **je veux** choisir la Case où se rend l'Expédition, même si elle est encore dans le brouillard, **afin de** partir à la découverte du Monde.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1365, Zewed/bestia-2#7). Depuis l'écran d'Expédition, « Choisir sur la carte » ouvre la carte en mode choix : toucher une Case ouvre sa fiche, avec sa distance et « Choisir cette destination », qui revient à l'écran. Une Case sous le brouillard peut être choisie ; son Biome s'affiche « inconnu ». Le Foyer et toute Case d'un Territoire sont refusés par le serveur, même sous le brouillard, avec « Cette Case appartient à un Territoire. ». Le détour par la carte garde les autres choix de l'écran. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0901, Étape 20
 - **Critères d'acceptation** :
   - Toucher une Case depuis l'écran d'Expédition la choisit ; sa distance en Cases depuis le Foyer s'affiche.
   - Une Case dans le brouillard peut être choisie ; son Biome s'affiche « inconnu ».
   - Le Foyer lui-même ne peut pas être choisi.
-  - Une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec un message (à décider).
+  - Une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec le message « Cette Case appartient à un Territoire. » (décidé le 2026-10-08).
 
 ### US-0908 · La portée d'exploration
 **En tant que** joueur, **je veux** voir jusqu'où mes Expéditions peuvent aller, **afin de** choisir une destination qu'elles peuvent atteindre.

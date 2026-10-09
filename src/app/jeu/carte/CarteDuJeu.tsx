@@ -51,8 +51,9 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * cache pas, et la flèche du Foyer la contourne. US-0430 : toucher la carte hors de ses Cases la ferme, et le
  * surlignage s'en va avec elle. US-0442 : une Case découverte pendant qu'elle est ouverte y apparaît sans recharger
  * la page (useDecouvertes). US-0443 : en bas à gauche, combien le joueur en a découvert, et quelle part du Monde.
+ * US-0907 : ouverte pour choisir la destination d'une Expédition (`destination`, son adresse), elle le dit à la fiche.
  */
-export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: string[] }) {
+export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteDuJoueur; fonds: string[]; destination?: string | null }) {
   const toile = useRef<HTMLCanvasElement>(null);
   // US-0425 : si l'on peut encore rapprocher ou éloigner la carte, et le zoom d'un cran autour du milieu de l'écran.
   const [zoom, setZoom] = useState({ rapprocher: true, eloigner: true });
@@ -205,7 +206,7 @@ export function CarteDuJeu({ carte, fonds }: { carte: CarteDuJoueur; fonds: stri
       <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
       <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
       <CasesDecouvertes nombre={decouvertes} total={decouverte.cases.q.length} />
-      {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} fermer={fermer} /> : null}
+      {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} fermer={fermer} destination={destination} /> : null}
     </div>
   );
 }
