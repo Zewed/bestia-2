@@ -1,0 +1,21 @@
+src/expeditions/recit-de-retour.test.ts
+  s_14731d25b634da::t_01dce360f4738e 32,46
+src/expeditions/recit-de-retour.ts
+  s_14731d25b634da::t_939cc82ef25f0d 45,48,92-93,95
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b10ab405942ea2e395773c918f43a185b166f5df",
+  "prompts": {},
+  "sessions": {
+    "s_14731d25b634da": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a8cebfd198ef4f96b",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
