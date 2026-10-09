@@ -4,6 +4,7 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { MONDE_DU_JEU, VERROU_DES_NAISSANCES } from "@/monde/bascule";
+import { poserLesBetesDeNaissance } from "@/monde/betes-de-naissance";
 import { abordsDuFoyer, decouvrir } from "@/monde/brouillard";
 import { alerteDePlaces, choisirCaseDeNaissance, emplacementsDeFoyers } from "@/monde/foyers";
 import type { Coordonnees } from "@/monde/hex";
@@ -11,15 +12,17 @@ import { maintenant } from "@/temps/horloge";
 import { nomInterditPar, type MotInterdit } from "./interdits";
 import { cleDuNom, NOM_NON_AUTORISE, nettoyerNom, verifierNomDeChef } from "./nom";
 
-export type ChefDuCompte = { nom: string; territoireId: number | null; recitLu: boolean };
+export type ChefDuCompte = { nom: string; territoireId: number | null; recitLu: boolean; betesAttendues: boolean };
 
 /**
  * Le Chef du compte dans le Monde du jeu, avec son Territoire (null pour un chef né avant les
  * Territoires) et si son récit d'arrivée a été montré, ou null tant qu'il n'a pas choisi son nom.
+ * US-0975 : et si son Territoire attend encore ses Bêtes de naissance (né avant elles, ou après une bascule).
  */
 export async function chefDuCompte(pool: Pool, compteId: number): Promise<ChefDuCompte | null> {
   const { rows } = await pool.query<ChefDuCompte>(
-    `select ch.nom, t.id as "territoireId", coalesce(t.recit_lu_le is not null, false) as "recitLu"
+    `select ch.nom, t.id as "territoireId", coalesce(t.recit_lu_le is not null, false) as "recitLu",
+       t.id is not null and t.betes_de_naissance_le is null as "betesAttendues"
      from chef ch left join territoire t on t.chef_id = ch.id
      where ch.compte_id = $1 and ch.monde_id = ${MONDE_DU_JEU}`,
     [compteId],
@@ -75,6 +78,7 @@ export type Enregistrement =
  * un conflit : il retrouve le chef créé par le premier. US-0414 : le chef naît dans le Monde du
  * jeu, le Monde ouvert, ou dans le Monde `mondeId` pour les essais. US-0436 : son Territoire naît
  * en ne découvrant que les abords de son Foyer ; tout le reste du Monde est sous le brouillard.
+ * US-0975 : et ses Bêtes de naissance se posent autour de son Foyer, dans la même transaction.
  */
 export async function enregistrerNomDeChef(
   pool: Pool,
@@ -91,8 +95,8 @@ export async function enregistrerNomDeChef(
   try {
     await client.query("begin");
     // US-0414 : le Monde n'est lu qu'une fois le verrou des naissances obtenu, avec ce qu'il sait déjà de ce compte et
-    // de ce nom (sept allers-retours en tout, abords du Foyer compris) : une naissance qui attendait la fin d'une
-    // bascule vise le nouveau Monde.
+    // de ce nom (neuf allers-retours en tout, abords du Foyer et Bêtes de naissance compris) : une naissance qui
+    // attendait la fin d'une bascule vise le nouveau Monde.
     await client.query("select pg_advisory_xact_lock($1)", [VERROU_DES_NAISSANCES]);
     const { rows: mondes } = await client.query<{ id: number; nom: string; existant: string | null; doublon: boolean }>(
       `select m.id, m.nom, (select nom from chef where compte_id = $1 and monde_id = m.id) as existant,
@@ -119,6 +123,7 @@ export async function enregistrerNomDeChef(
     }
     // Le chef, sa Case devenue Foyer imprenable et son Territoire, en une seule requête. Le marque-page
     // du temps du Territoire part de sa naissance, à l'heure du jeu (US-0156).
+    const instant = maintenant();
     const { rows } = await client.query<{ id: number }>(
       `with nouveau as (
          insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $2, $3, $4) returning id
@@ -128,11 +133,13 @@ export async function enregistrerNomDeChef(
        )
        insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select nouveau.id, prise.id, $6, $6 from nouveau, prise
        returning id`,
-      [compteId, monde.id, nom, cleDuNom(nom), naissance.id, maintenant()],
+      [compteId, monde.id, nom, cleDuNom(nom), naissance.id, instant],
     );
     if (!rows[0]) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
     // US-0436 : le Territoire naît en ne découvrant que les abords de son Foyer, dans la même transaction.
     await decouvrir(client, rows[0].id, abordsDuFoyer(naissance));
+    // US-0975 : ses Bêtes de naissance arrivent avec lui.
+    await poserLesBetesDeNaissance(client, rows[0].id, instant, hasard);
     await client.query("commit");
     return { statut: "enregistre", nom };
   } catch (refus) {
@@ -178,16 +185,19 @@ export async function naitreSurLaCouronne(pool: Pool, compteId: number, hasard: 
       await client.query("rollback");
       return null;
     }
+    const instant = maintenant();
     const { rows } = await client.query<{ id: number }>(
       `with prise as (
          update case_du_monde set chef_id = $1, imprenable = true where id = $2 and chef_id is null returning id
        )
        insert into territoire (chef_id, foyer_case_id, ne_le, calcule_jusqu_a) select $1, prise.id, $3, $3 from prise returning id`,
-      [chef.id, naissance.id, maintenant()],
+      [chef.id, naissance.id, instant],
     );
     if (!rows[0]) throw new Error(`La Case ${naissance.id} n'est plus libre.`);
     // US-0436 : comme à une naissance ordinaire, il ne découvre que les abords de son Foyer.
     await decouvrir(client, rows[0].id, abordsDuFoyer(naissance));
+    // US-0975 : et ses Bêtes de naissance arrivent avec lui.
+    await poserLesBetesDeNaissance(client, rows[0].id, instant, hasard);
     await client.query("commit");
     return rows[0].id;
   } catch (erreur) {

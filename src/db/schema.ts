@@ -452,6 +452,11 @@ export const territoire = pgTable("territoire", {
    * null hors Famine. Le mécanisme du temps le tient à jour, comme famineImminenteDepuis.
    */
   famineDepuis: timestamp("famine_depuis", { withTimezone: true }),
+  /**
+   * US-0975 : l'instant du jeu où ses Bêtes de naissance se sont posées autour de son Foyer (table bete_de_naissance) ;
+   * null tant qu'il ne les a pas reçues : un chef né avant cette story les reçoit à son retour, une seule fois.
+   */
+  betesDeNaissanceLe: timestamp("betes_de_naissance_le", { withTimezone: true }),
 });
 
 /**
@@ -638,4 +643,34 @@ export const effectif = pgTable(
     nombre: integer("nombre").notNull(),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.especeId, t.sexe] }), check("effectif_jamais_negatif", sql`${t.nombre} >= 0`)],
+);
+
+/**
+ * Une Bête de naissance (US-0975) : une Bête sauvage commune posée à la naissance d'un Foyer sur une Case libre à portée
+ * d'exploration de départ, une par Case, réservée à son Territoire : les Expéditions des autres ne la rencontrent pas.
+ * Contrairement aux apparitions ordinaires, qui se recalculent à la demande (src/monde/betes-sauvages.ts), elle est
+ * écrite, avec son Espèce et sa présence, de son arrivée à son départ (exclu), pour que l'étape 40 la fasse rencontrer.
+ * Elle part avec le Territoire.
+ */
+export const beteDeNaissance = pgTable(
+  "bete_de_naissance",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    caseId: integer("case_id")
+      .notNull()
+      .references(() => caseDuMonde.id),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    /** Les instants du jeu de son arrivée et de son départ. */
+    arrivee: timestamp("arrivee", { withTimezone: true }).notNull(),
+    depart: timestamp("depart", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    unique("bete_de_naissance_une_par_case").on(t.territoireId, t.caseId),
+    check("bete_de_naissance_depart_apres_arrivee", sql`${t.depart} > ${t.arrivee}`),
+  ],
 );

@@ -5,6 +5,8 @@ const garde = vi.hoisted(() => ({ exigerCompte: vi.fn(), PAGE_ARRIVEE: "/jeu/arr
 vi.mock("@/comptes/garde", () => garde);
 const territoire = vi.hoisted(() => ({ foyerDuTerritoire: vi.fn(), marquerRecitLu: vi.fn() }));
 vi.mock("@/monde/territoire", () => territoire);
+const betes = vi.hoisted(() => ({ betesDeNaissancePresentes: vi.fn(async () => 0) }));
+vi.mock("@/monde/betes-de-naissance", () => betes);
 vi.mock("./actions", () => ({ entrerDansLeFoyer: vi.fn() }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -32,6 +34,19 @@ describe("page du récit d'arrivée (US-0158)", () => {
     // Le seul paragraphe hors de l'illustration est le récit.
     const contenu = html.slice(html.indexOf("<h1"));
     expect(contenu.match(/<p[ >]/g)).toHaveLength(1);
+  });
+
+  it("dit que quelques Bêtes rôdent dans les abords, sans dire où, tant que ses Bêtes de naissance sont là (US-0975)", async () => {
+    chef(12, false);
+    territoire.foyerDuTerritoire.mockResolvedValue({ biome: { id: "prairie", nom: "Prairie" }, monde: "Aube" });
+    betes.betesDeNaissancePresentes.mockResolvedValue(3);
+    const html = renderToStaticMarkup(await Arrivee());
+    expect(html).toContain("C&#x27;est ici que naît votre Foyer. Quelques Bêtes rôdent dans les abords.</p>");
+    expect(betes.betesDeNaissancePresentes).toHaveBeenCalledWith(expect.anything(), 12, expect.any(Date));
+    // Toujours un seul paragraphe : le récit.
+    expect(html.slice(html.indexOf("<h1")).match(/<p[ >]/g)).toHaveLength(1);
+    betes.betesDeNaissancePresentes.mockResolvedValue(0);
+    expect(renderToStaticMarkup(await Arrivee())).not.toContain("Bêtes");
   });
 
   it("ne note pas le récit comme lu en s'affichant : seul le bouton le fait (US-0160)", async () => {

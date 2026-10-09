@@ -291,3 +291,14 @@ export const PORTEE_D_EXPLORATION_CASES = 8;
  * à régler en jouant). La durée du trajet (US-0912) en tirera l'aller et le retour (src/expeditions/allure.ts).
  */
 export const PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE = 20;
+
+/**
+ * US-0975 : à la naissance d'un Foyer, 3 Bêtes sauvages communes (valeur provisoire, à régler en jouant) se posent sur des
+ * Cases libres à portée d'exploration de départ (PORTEE_D_EXPLORATION_CASES), une par Case, réservées au nouveau chef…
+ */
+export const BETES_DE_NAISSANCE = 3;
+/**
+ * … et y restent 48 heures de jeu (valeur provisoire, à régler en jouant), bien plus qu'une apparition ordinaire
+ * (PRESENCE_D_UNE_BETE_HEURES) : assez pour qu'une première Expédition sans escorte les trouve.
+ */
+export const PRESENCE_D_UNE_BETE_DE_NAISSANCE_HEURES = 48;

@@ -34,8 +34,9 @@ export type Bascule = {
  * près du dernier arrivé. Son Territoire est rattaché à cette Case, rien d'autre ne change : Stocks, Habitants,
  * Voyageurs, Récits et marque-page restent les siens, et sa production continue aussi, une prairie pour une
  * prairie. US-0436 : sur le nouveau Monde, chaque Territoire ne découvre que les abords de son nouveau Foyer ; ce
- * qu'il avait découvert de l'ancien reste à lui, sans plus se montrer. Un chef encore sans Foyer (US-0160) recevra
- * le sien à son retour, comme une naissance. Refuse, avant
+ * qu'il avait découvert de l'ancien reste à lui, sans plus se montrer. US-0975 : ses Bêtes de naissance se poseront
+ * autour du nouveau Foyer au retour de son chef. Un chef encore sans Foyer (US-0160) recevra le sien à son retour,
+ * comme une naissance. Refuse, avant
  * d'écrire quoi que ce soit, un Monde qui a déjà été ouvert, qui compte déjà des chefs, qui n'est pas généré en
  * entier, ou qui n'a pas la place de tous les chefs.
  */
@@ -91,8 +92,11 @@ export async function basculerLeMonde(client: PoolClient, vers: string, hasard: 
     paires,
   );
   if (rowCount !== avecFoyer.length) throw new Error(`Des Cases d'« ${cible.nom} » n'étaient plus libres.`);
+  // US-0975 : les Bêtes de naissance de l'ancien Monde y restent, hors de portée ; d'autres se poseront autour du nouveau
+  // Foyer au retour de chaque chef (recevoirLesBetesDeNaissance), à l'heure du jeu, que ce script ne connaît pas.
   const { rows: rattaches } = await client.query<{ id: number; chef: number }>(
-    "update territoire t set foyer_case_id = p.case_id from unnest($1::int[], $2::int[]) as p(chef, case_id) where t.chef_id = p.chef returning t.id, p.chef",
+    `update territoire t set foyer_case_id = p.case_id, betes_de_naissance_le = null from unnest($1::int[], $2::int[]) as p(chef, case_id)
+     where t.chef_id = p.chef returning t.id, p.chef`,
     paires,
   );
   // US-0436 : sur le nouveau Monde, chaque Territoire ne découvre que les abords de son nouveau Foyer, comme à une naissance.

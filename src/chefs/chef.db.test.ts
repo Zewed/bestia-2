@@ -2,9 +2,11 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { creerCompte } from "@/comptes/compte";
 import { calculerEmpreinte } from "@/comptes/empreinte";
+import { recevoirLesBetesDeNaissance } from "@/monde/betes-de-naissance";
 import { choisirCaseDeNaissance } from "@/monde/foyers";
 import { distance } from "@/monde/hex";
 import { foyerDuTerritoire, marquerRecitLu } from "@/monde/territoire";
+import { BETES_DE_NAISSANCE } from "@/reglages";
 import { maintenant } from "@/temps/horloge";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne, nomDejaPris, nomInterdit } from "./chef";
@@ -33,7 +35,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   it("porte le nom choisi dans le Monde du jeu", async () => {
     const compte = await nouveauCompte();
     await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), 'Ourse', $2)", [compte.id, `ourse${numero}${lancement.replace(/[^a-z0-9]/g, "")}`]);
-    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse", territoireId: null, recitLu: false });
+    expect(await chefDuCompte(pool, compte.id)).toEqual({ nom: "Ourse", territoireId: null, recitLu: false, betesAttendues: false });
   });
 
   it("n'est pas celui d'un autre Monde", async () => {
@@ -312,7 +314,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       ]);
       const territoireId = await naitreSurLaCouronne(pool, compte.id);
       expect(territoireId).toEqual(expect.any(Number));
-      expect(await chefDuCompte(pool, compte.id)).toEqual({ nom, territoireId, recitLu: false });
+      expect(await chefDuCompte(pool, compte.id)).toEqual({ nom, territoireId, recitLu: false, betesAttendues: false });
       expect(await caseDu(compte.id)).toHaveLength(1);
       expect(await naitreSurLaCouronne(pool, compte.id)).toBe(territoireId);
       expect(await caseDu(compte.id)).toHaveLength(1);
@@ -328,6 +330,49 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
         [c.q, c.r],
       );
       expect(rows[0]).toEqual({ chef_id: null, imprenable: false });
+    });
+  });
+
+  describe("les Bêtes de naissance (US-0975)", () => {
+    /** Les Bêtes de naissance du Territoire du chef d'un compte : leur arrivée, et la naissance de son Territoire. */
+    const betesDu = async (compteId: number) =>
+      (
+        await pool.query<{ arrivee: Date; neLe: Date }>(
+          `select b.arrivee, t.ne_le as "neLe" from chef ch join territoire t on t.chef_id = ch.id join bete_de_naissance b on b.territoire_id = t.id
+           where ch.compte_id = $1`,
+          [compteId],
+        )
+      ).rows;
+
+    it("arrivent avec le Foyer, par l'un et l'autre chemin de la naissance", async () => {
+      const nouveau = await nouveauCompte();
+      await enregistrerNomDeChef(pool, nouveau.id, nomUnique("Pisteur"));
+      const ancien = await nouveauCompte();
+      const nom = nomUnique("Traqueur");
+      // Un chef d'avant les Foyers (US-0160), qui reçoit le sien à son retour.
+      await pool.query("insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, (select id from monde order by id limit 1), $2, $3)", [
+        ancien.id,
+        nom,
+        cleDuNom(nom),
+      ]);
+      await naitreSurLaCouronne(pool, ancien.id);
+      for (const compte of [nouveau, ancien]) {
+        const betes = await betesDu(compte.id);
+        expect(betes).toHaveLength(BETES_DE_NAISSANCE);
+        for (const b of betes) expect(b.arrivee).toEqual(b.neLe);
+        expect(await chefDuCompte(pool, compte.id)).toMatchObject({ betesAttendues: false });
+      }
+    });
+
+    it("dit qu'un Territoire né avant elles les attend encore, jusqu'à ce qu'il les reçoive", async () => {
+      const compte = await nouveauCompte();
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Revenant"));
+      const { territoireId } = (await chefDuCompte(pool, compte.id))!;
+      await pool.query("delete from bete_de_naissance where territoire_id = $1", [territoireId]);
+      await pool.query("update territoire set betes_de_naissance_le = null where id = $1", [territoireId]);
+      expect(await chefDuCompte(pool, compte.id)).toMatchObject({ betesAttendues: true });
+      expect(await recevoirLesBetesDeNaissance(pool, territoireId!, maintenant())).toBe(BETES_DE_NAISSANCE);
+      expect(await chefDuCompte(pool, compte.id)).toMatchObject({ betesAttendues: false });
     });
   });
 });
