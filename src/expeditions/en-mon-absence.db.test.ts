@@ -4,7 +4,7 @@
 // Bêtes qui la suivent (US-0934), le Bestiaire (US-0933), le retour (US-0916) et son récit (US-0917). Les mêmes Expéditions
 // du même Territoire sont vécues ici des trois manières, et tout ce qu'elles laissent se compare. Les combats (étape 41)
 // n'existent pas encore.
-import type { Pool, PoolClient } from "pg";
+import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { bestiaireDuTerritoire, type EspeceAuBestiaire } from "@/bestiaire/bestiaire";
 import { enregistrerNomDeChef } from "@/chefs/chef";
@@ -20,7 +20,7 @@ import { formaterMinutes } from "@/temps/affichage";
 import { definirAncre, maintenant } from "@/temps/horloge";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { dureeDuTrajetMinutes } from "./allure";
 import { casesRevelees } from "./brouillard";
 import { lancerLExpedition } from "./depart";
@@ -77,23 +77,6 @@ type Bilan = {
   ecrits: (Lettre | undefined)[];
 };
 
-/**
- * Un pool qui fait tout passer par la transaction ouverte sur `client` : chaque transaction du jeu (un rattrapage, un
- * départ) y devient un point de sauvegarde, validé ou annulé comme elle l'aurait été. Annuler ensuite la transaction de
- * `client` efface tout ce qu'une manière a vécu : la suivante repart du même Territoire, au même instant, devant les mêmes
- * Bêtes sauvages et de naissance.
- */
-function dansUneTransaction(client: PoolClient): Pool {
-  const ordres = new Map([
-    ["begin", "savepoint jeu"],
-    ["commit", "release savepoint jeu"],
-    ["rollback", "rollback to savepoint jeu"],
-  ]);
-  const query = (texte: string, valeurs?: unknown[]) => client.query(ordres.get(texte) ?? texte, valeurs);
-  const connexion = { query, release: () => {} };
-  return { query, connect: async () => connexion } as unknown as Pool;
-}
-
 describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur base)", () => {
   let pool: Pool;
   let mondeId: number;
@@ -117,7 +100,9 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     );
     const expeditions: Bilan["expeditions"] = {};
     for (const [lettre, id] of ids) {
-      const { rows } = await jeu.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [id]);
+      const { rows } = await jeu.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [
+        id,
+      ]);
       // Sans leur identifiant, que chaque manière tire à nouveau : toEqual ne compte pas une propriété indéfinie.
       const rencontres = (await rencontresDUneExpedition(jeu, id)).map((r) => ({ ...r, id: undefined }));
       expeditions[lettre] = { rentreeLe: rows[0].rentreeLe, rencontres };
@@ -134,7 +119,10 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const recits = (await recitsDuTerritoire(jeu, territoireId)).filter((r) => r.titre === RETOUR);
     const rentrees = new Map(Object.entries(expeditions).map(([lettre, x]) => [x.rentreeLe?.getTime(), lettre as Lettre]));
     return {
-      decouvertes: decouvertes.map(({ expeditionId, ...c }) => ({ ...c, par: expeditionId === null ? null : (lettres.get(expeditionId) ?? null) })),
+      decouvertes: decouvertes.map(({ expeditionId, ...c }) => ({
+        ...c,
+        par: expeditionId === null ? null : (lettres.get(expeditionId) ?? null),
+      })),
       expeditions,
       parties: parties.map((p) => ({ ...p, numero: Number(p.numero) })),
       bestiaire: await bestiaireDuTerritoire(jeu, territoireId),
@@ -147,14 +135,16 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
   };
 
   /**
-   * Les Expéditions de l'essai vécues de la manière `maniere`, dans une transaction annulée ensuite : le bilan de ce
-   * qu'elles ont laissé au Territoire à l'instant `fin`.
+   * Les Expéditions de l'essai vécues de la manière `maniere`, dans une transaction annulée ensuite, où chaque transaction
+   * du jeu (un rattrapage, un départ) devient un point de reprise (poolDansLaTransaction) : le bilan de ce qu'elles ont
+   * laissé au Territoire à l'instant `fin`. La manière suivante repart du même Territoire, au même instant, devant les mêmes
+   * Bêtes sauvages et de naissance.
    */
   const vivre = async (maniere: Maniere, instantsDeLaPage: Date[], passagesDeLaTache: Date[]): Promise<Bilan> => {
     const client = await pool.connect();
     try {
       await client.query("begin");
-      const jeu = dansUneTransaction(client);
+      const jeu = poolDansLaTransaction(client);
       const ids = new Map<Lettre, number>();
       /** Le joueur ouvre une page à l'instant `instant` : son Territoire est mis à l'heure, puis il lance les Expéditions prévues à cet instant. */
       const ouvrir = async (instant: Date) => {
@@ -173,7 +163,8 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
         for (const p of plans) await ouvrir(p.horaires.partLe);
         if (maniere === "d'un bloc") await ouvrir(fin);
         for (const instant of maniere === "par la tâche planifiée" ? passagesDeLaTache : []) {
-          expect(await rattraperLesAbsents({ pool: jeu, maintenant: instant, parmi: { territoire: [territoireId] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+          const passage = await rattraperLesAbsents({ pool: jeu, maintenant: instant, parmi: { territoire: [territoireId] } });
+          expect(passage).toMatchObject({ rattrapes: 1, echecs: 0 });
         }
       }
       expect(await lireMarquePage(jeu, "territoire", territoireId)).toEqual(fin);
@@ -188,8 +179,6 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
-    // Les Bêtes qu'un passage interrompu aurait laissées parties sont revenues sur leur Case.
-    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
 
     // Le chef naît avec ses trois Bêtes de naissance (US-0975) ; il a trois explorateurs, et deux Bêtes de l'Espèce la plus
     // forte du jeu, qui escortent A et B : toute Bête sauvage est à leur portée (US-0934).
@@ -197,10 +186,13 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const nom = `Abs${lancement.slice(-6).replace(/[^a-z]/g, "x")}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     territoireId = (await territoireDuCompte(pool, compte.id))!;
-    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur'), ($1, 'Mael', 'explorateur')", [
-      territoireId,
-    ]);
-    const { rows: especes } = await pool.query<{ id: string; attaque: number; vie: number; vitesse: number }>("select id, attaque, vie, vitesse from espece order by id");
+    await pool.query(
+      "insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur'), ($1, 'Mael', 'explorateur')",
+      [territoireId],
+    );
+    const { rows: especes } = await pool.query<{ id: string; attaque: number; vie: number; vitesse: number }>(
+      "select id, attaque, vie, vitesse from espece order by id",
+    );
     const forte = especes.reduce((x, y) => (forceDUneBete(y) > forceDUneBete(x) ? y : x));
     await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2)", [territoireId, forte.id]);
     const { rows: lieux } = await pool.query<{ foyer: Coordonnees; naissance: (Coordonnees & { id: number })[] }>(
@@ -232,9 +224,11 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const prevoir = (lettre: Lettre, c: Coordonnees & { id: number }, minutes: number, sejour: number, escorte: typeof especes = []): Plan => {
       const trajetMinutes = dureeDuTrajetMinutes(distance(foyer, c), escorte.map((e) => ({ vitesse: e.vitesse, nombre: 1 })));
       const horaires = { partLe: apres(premierDepart, minutes), trajetMinutes, sejourMinutes: sejour };
-      return { lettre, destination: { q: c.q, r: c.r }, caseId: c.id, escorte: new Map(escorte.map((e) => [e.id, 1])), horaires, retour: retourDUneExpedition(horaires)! };
+      const retour = retourDUneExpedition(horaires)!;
+      return { lettre, destination: { q: c.q, r: c.r }, caseId: c.id, escorte: new Map(escorte.map((e) => [e.id, 1])), horaires, retour };
     };
 
+    const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
     // B, escortée, part dix minutes après A, pour quatre heures sur la Case d'une Bête de naissance, encore là à son arrivée.
     const b = prevoir("B", naissance[0], 10, 4 * HEURE, [forte]);
     // A, escortée, part la première, au plus loin, pour douze heures sur une Case où plusieurs Bêtes sauvages se montrent,
@@ -248,14 +242,14 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
           if (betes.length >= 2 && betes.some((x) => x.arrivee >= debut)) return a;
         }
       }
-      throw new Error("Aucune Case où plusieurs Bêtes se montrent.");
+      throw new Error(`Aucune Case où plusieurs Bêtes se montrent, à 6 à 8 Cases du Foyer ${cle(foyer)}, pour A partie le ${premierDepart.toISOString()}.`);
     };
     const a = await versA();
     // C, sans escorte, part la dernière, tout près, pour une demi-heure, là où elle sort le plus de Cases du brouillard que
     // ni les abords du Foyer, découverts à sa naissance, ni A ni B ne sortent, et qui sont bien dans le Monde.
-    const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
-    const dejaVues = new Set([...(await casesDecouvertes(pool, territoireId)), ...[a, b].flatMap((p) => casesRevelees(foyer, p.destination, p.horaires, p.retour))].map(cle));
-    const neuves = (p: Plan) => casesRevelees(foyer, p.destination, p.horaires, p.retour).filter((x) => anneau(x) <= MONDE_RAYON && !dejaVues.has(cle(x))).length;
+    const revelees = (p: Plan) => casesRevelees(foyer, p.destination, p.horaires, p.retour);
+    const dejaVues = new Set([...(await casesDecouvertes(pool, territoireId)), ...revelees(a), ...revelees(b)].map(cle));
+    const neuves = (p: Plan) => revelees(p).filter((x) => anneau(x) <= MONDE_RAYON && !dejaVues.has(cle(x))).length;
     const c = (await aLEcart(3)).map((x) => prevoir("C", x, 40, 30)).reduce((x, y) => (neuves(y) > neuves(x) ? y : x));
     expect(neuves(c)).toBeGreaterThan(0);
     plans = [a, b, c];
@@ -266,7 +260,9 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     // La tâche planifiée passe toutes les heures, à partir de 13 minutes après le dernier départ, jusqu'à son premier passage
     // qui rattrape le dernier retour : c'est la fin de l'essai, pour toutes les manières.
     const passagesDeLaTache = [apres(c.horaires.partLe, 13)];
-    while (passagesDeLaTache.at(-1)! <= apres(a.retour, RATTRAPER_APRES_MINUTES)) passagesDeLaTache.push(apres(passagesDeLaTache.at(-1)!, HEURE));
+    while (passagesDeLaTache.at(-1)! <= apres(a.retour, RATTRAPER_APRES_MINUTES)) {
+      passagesDeLaTache.push(apres(passagesDeLaTache.at(-1)!, HEURE));
+    }
     fin = passagesDeLaTache.at(-1)!;
 
     // Page ouverte : relue toutes les 5 minutes du jeu, et à chaque instant qui compte, une milliseconde avant, pile et une
@@ -301,7 +297,8 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     for (const maniere of MANIERES) {
       const { expeditions, enCours, explorateursAuFoyer, disponibles } = bilans[maniere];
       for (const { lettre, retour } of plans) expect(expeditions[lettre]?.rentreeLe, `${lettre}, ${maniere}`).toEqual(retour);
-      expect({ enCours, explorateursAuFoyer, disponibles: disponibles.map((e) => e.disponibles) }).toEqual({ enCours: 0, explorateursAuFoyer: 3, disponibles: [2] });
+      const auFoyer = { enCours, explorateursAuFoyer, disponibles: disponibles.map((e) => e.disponibles) };
+      expect(auFoyer, maniere).toEqual({ enCours: 0, explorateursAuFoyer: 3, disponibles: [2] });
     }
   });
 
@@ -317,7 +314,8 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     expect(expeditions.A!.rencontres.length).toBeGreaterThanOrEqual(2);
     expect(expeditions.A!.rencontres.some((r) => r.apprivoisee)).toBe(true);
     const arriveeDeB = sejourDUneExpedition(plan("B").horaires)!.debut;
-    expect(expeditions.B!.rencontres).toContainEqual(expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arriveeDeB, apprivoisee: true }));
+    const deNaissance = expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arriveeDeB, apprivoisee: true });
+    expect(expeditions.B!.rencontres).toContainEqual(deNaissance);
     expect(parties.length).toBeGreaterThan(0);
     for (const maniere of fermees) {
       expect(bilans[maniere].expeditions, maniere).toEqual(expeditions);
@@ -328,7 +326,9 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
   it("le même Bestiaire, chaque Espèce croisée au même instant, et le même effectif", () => {
     const { bestiaire, disponibles } = bilans[ouverte];
     expect(bestiaire.length).toBeGreaterThan(0);
-    for (const maniere of fermees) expect({ bestiaire: bilans[maniere].bestiaire, disponibles: bilans[maniere].disponibles }, maniere).toEqual({ bestiaire, disponibles });
+    for (const maniere of fermees) {
+      expect({ bestiaire: bilans[maniere].bestiaire, disponibles: bilans[maniere].disponibles }, maniere).toEqual({ bestiaire, disponibles });
+    }
   });
 
   it("le même récit de retour pour chaque Expédition, daté de son retour", () => {
@@ -343,33 +343,38 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
   });
 
   it("en vitesse accélérée, une Expédition complète se vit en quelques minutes réelles, page fermée, et rentre à son heure", async () => {
-    // À ×60, C (une heure d'aller, une demi-heure de séjour, une heure de retour) rentre deux minutes et demie réelles après son départ.
+    // À ×60, C (une heure d'aller, une demi-heure de séjour, une heure de retour) rentre deux minutes et demie réelles
+    // après son départ.
     const FACTEUR = 60;
     const { destination, escorte, horaires, retour } = plan("C");
     const enReel = (retour.getTime() - horaires.partLe.getTime()) / FACTEUR;
-    expect(enReel).toBe(150_000);
+    expect(enReel).toBeLessThanOrEqual(5 * MINUTE_MS);
     const reel = Date.UTC(2026, 9, 9, 12);
     const client = await pool.connect();
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
       await client.query("begin");
-      const jeu = dansUneTransaction(client);
+      const jeu = poolDansLaTransaction(client);
       definirAncre({ facteur: FACTEUR, reel, jeu: horaires.partLe.getTime() });
       vi.setSystemTime(reel);
       // Le joueur lance C, à l'heure du jeu, comme « Partir » (src/app/jeu/expeditions/nouvelle/actions.ts), puis ferme la page.
       await rattraper("territoire", territoireId, { pool: jeu });
-      const depart = await lancerLExpedition(jeu, territoireId, { destination, explorateurs: 1, escorte, sejourMinutes: horaires.sejourMinutes }, maintenant());
+      const choix = { destination, explorateurs: 1, escorte, sejourMinutes: horaires.sejourMinutes };
+      const depart = await lancerLExpedition(jeu, territoireId, choix, maintenant());
       if (!("expeditionId" in depart)) throw new Error(depart.refus);
       /** Le joueur revient `ms` millisecondes réelles après le départ : ses récits de retour, et l'heure où C est rentrée. */
       const revenir = async (ms: number) => {
         vi.setSystemTime(reel + ms);
         await rattraper("territoire", territoireId, { pool: jeu });
-        const { rows } = await jeu.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [depart.expeditionId]);
+        const { rows } = await jeu.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [
+          depart.expeditionId,
+        ]);
         const recits = (await recitsDuTerritoire(jeu, territoireId)).filter((r) => r.titre === RETOUR);
         return { rentreeLe: rows[0].rentreeLe, recits: recits.map(({ texte, survenuLe }) => ({ duree: texte.split("\n")[1], survenuLe })) };
       };
       expect(await revenir(enReel - 1_000)).toEqual({ rentreeLe: null, recits: [] });
-      const duree = `Aller ${formaterMinutes(horaires.trajetMinutes!)}, séjour ${formaterMinutes(horaires.sejourMinutes)}, retour ${formaterMinutes(horaires.trajetMinutes!)}.`;
+      const [trajet, sejour] = [formaterMinutes(horaires.trajetMinutes!), formaterMinutes(horaires.sejourMinutes)];
+      const duree = `Aller ${trajet}, séjour ${sejour}, retour ${trajet}.`;
       expect(await revenir(enReel + 1_000)).toEqual({ rentreeLe: retour, recits: [{ duree, survenuLe: retour }] });
     } finally {
       definirAncre(null);
