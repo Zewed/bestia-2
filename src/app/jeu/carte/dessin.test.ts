@@ -876,8 +876,10 @@ describe("les Expéditions en cours sur la carte (US-0913)", () => {
     expect(avec[debut - 1].couleur).toBe("grisé");
   });
 
-  it("ne dessine rien de plus sans Expédition en cours", () => {
+  it("ne dessine rien de plus sans Expédition en cours, ni d'un chemin vide", () => {
     expect(dessiner({ chemins: [], fanion: "ciel" }).peints).toEqual(dessiner(null).peints);
+    expect(dessiner({ chemins: [[]], fanion: "ciel" }).peints).toEqual(dessiner(null).peints);
+    expect(dessiner({ chemins: [CHEMINS[0], []], fanion: "ciel" }).peints).toEqual(dessiner({ chemins: [CHEMINS[0]], fanion: "ciel" }).peints);
   });
 
   it("ne garde rien d'un dessin à l'autre : tout ce que save() met de côté, restore() le rend", () => {

@@ -1,8 +1,10 @@
 "use client";
 
-import { type RefObject, useEffect, useRef } from "react";
+import { type RefObject, useEffect, useRef, useState } from "react";
 import { DetailDeLExpedition } from "@/components/DetailDeLExpedition";
+import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
+import { retourDUneExpedition } from "@/expeditions/phase";
 import { positionDUneExpedition } from "@/expeditions/position";
 import type { Coordonnees } from "@/monde/hex";
 import { useHeureDuJeu } from "@/temps/heure-du-jeu";
@@ -51,27 +53,47 @@ export function placerLesReperes(reperes: readonly Repere[], foyer: Coordonnees,
   }
 }
 
-/** US-0913 : l'Expédition dont le repère est sous le point (x, y) de la carte, à moins de DEMI_PLACE pixels : la plus proche ; null sinon. */
-export function repereSous(reperes: readonly Repere[], x: number, y: number): number | null {
-  let plusProche: { id: number; ecart: number } | null = null;
-  for (const { id, ici } of reperes) {
-    const ecart = ici ? Math.hypot(ici.x - x, ici.y - y) : Infinity;
-    if (ecart <= DEMI_PLACE && (!plusProche || ecart < plusProche.ecart)) plusProche = { id, ecart };
+/**
+ * US-0913 : les repères sous le point (x, y) de la carte : le plus proche, à moins de DEMI_PLACE pixels, et ceux posés au
+ * même point que lui (deux Expéditions sur la même Case, ou parties ensemble), dans leur ordre ; aucun sinon.
+ */
+export function reperesSous(reperes: readonly Repere[], x: number, y: number): number[] {
+  let plusProche: Repere | null = null;
+  let ecartMin = DEMI_PLACE;
+  for (const repere of reperes) {
+    const ecart = repere.ici ? Math.hypot(repere.ici.x - x, repere.ici.y - y) : Infinity;
+    if (ecart <= ecartMin && (!plusProche || ecart < ecartMin)) [plusProche, ecartMin] = [repere, ecart];
   }
-  return plusProche?.id ?? null;
+  const la = plusProche?.ici;
+  return la ? reperes.filter(({ ici }) => ici && Math.hypot(ici.x - la.x, ici.y - la.y) < 1).map(({ id }) => id) : [];
 }
 
-/** US-0913 : ce que le repère d'une Expédition dit aux lecteurs d'écran : vers quoi elle va. */
-const versOu = ({ destination }: ExpeditionEnCours) => `Expédition vers ${"inconnue" in destination ? "une Case inconnue" : destination.biome}`;
+/**
+ * US-0913 : ce que touche un toucher en (x, y), l'Expédition `suivie` ayant sa fiche ouverte : le premier des repères
+ * sous le doigt (reperesSous) ; s'il est déjà suivi, le suivant, puis la Case dessous (null), puis de nouveau le premier :
+ * toucher encore au même endroit passe d'une Expédition à l'autre, puis à la Case qu'elles cachent, comme le Foyer d'où
+ * elles viennent de partir. Sans repère sous le doigt, la Case (null).
+ */
+export function repereTouche(reperes: readonly Repere[], x: number, y: number, suivie: number | null): number | null {
+  const sous = reperesSous(reperes, x, y);
+  const rang = suivie === null ? -1 : sous.indexOf(suivie);
+  return rang < 0 ? (sous[0] ?? null) : (sous[rang + 1] ?? null);
+}
+
+/** US-0913 : ce que le repère d'une Expédition dit aux lecteurs d'écran : vers quoi elle va, et à quelle distance. */
+const versOu = ({ destination }: ExpeditionEnCours) =>
+  `Expédition vers ${"inconnue" in destination ? "une Case inconnue" : destination.biome}, à ${casesDuFoyer(destination.distance)}`;
 
 /**
  * US-0913 : les Expéditions en cours du joueur sur la carte, seulement les siennes (la page ne lui donne qu'elles) :
  * l'heure du jeu, partie de `maintenant` à l'affichage de la page, qui avance au rythme du jeu (`vitesse`,
- * useHeureDuJeu) ; le repère de chacune, un bouton par-dessus la carte, que la carte pose sur son chemin, à chaque
- * seconde (`poser`) comme à chaque dessin ; et la fiche de l'Expédition suivie (`suivie`) : son détail, celui de la liste des Expéditions, avec sa
- * phase, son temps restant, ses explorateurs et son escorte. Toucher un repère, ou l'appuyer au clavier, la suit
- * (`suivre`). Sa fiche se ferme (`fermer`) comme celle d'une Case ; la carte glisse pour qu'elle ne cache pas la Case la
- * plus proche de son repère (`montrer`).
+ * useHeureDuJeu) ; le repère de chacune encore dehors, un bouton par-dessus la carte, que la carte pose sur son chemin
+ * (`poser`), à chaque seconde comme à chaque dessin ; et la fiche de l'Expédition suivie (`suivie`) : son détail, celui
+ * de la liste des Expéditions, avec sa phase, son temps restant, ses explorateurs et son escorte. Toucher un repère, ou
+ * l'appuyer au clavier, la suit (`suivre`). Sa fiche se ferme (`fermer`) comme celle d'une Case ; à son ouverture, la
+ * carte glisse pour qu'elle ne cache pas la Case la plus proche du repère (`montrer`), puis ne bouge plus d'elle-même
+ * quand l'Expédition avance. Une Expédition rentrée au Foyer n'a plus ni repère ni chemin : elle n'est plus dehors,
+ * même tant qu'elle reste parmi les Expéditions en cours (jusqu'à US-0916).
  */
 export function ExpeditionsSurLaCarte({
   expeditions,
@@ -98,21 +120,39 @@ export function ExpeditionsSurLaCarte({
 }) {
   const instant = useHeureDuJeu(maintenant, vitesse);
   const positions = expeditions.map(({ expedition, chemin }) => positionDUneExpedition(foyer, expedition.destination, expedition, instant, chemin));
-  const boutons = useRef<(HTMLButtonElement | null)[]>([]);
-  // À chaque seconde du jeu : où en est chaque Expédition, pour la carte, qui pose aussitôt leurs repères.
-  useEffect(() => poser(expeditions.map(({ expedition, chemin }, i) => ({ id: expedition.id, bouton: boutons.current[i], chemin, avancee: positions[i].avancee, ici: null }))));
+  // Celles encore dehors : pas encore rentrées au Foyer, ou sans retour chiffré.
+  const dehors = expeditions.flatMap((e, i) => {
+    const retour = retourDUneExpedition(e.expedition);
+    return retour === null || retour > instant ? [{ ...e, avancee: positions[i].avancee }] : [];
+  });
+  // Les boutons des repères, par Expédition.
+  const boutons = useRef(new Map<number, HTMLButtonElement>());
+  // À chaque seconde du jeu : où en est chaque Expédition dehors, pour la carte, qui pose aussitôt leurs repères.
+  useEffect(() => {
+    poser(dehors.map(({ expedition, chemin, avancee }) => ({ id: expedition.id, bouton: boutons.current.get(expedition.id) ?? null, chemin, avancee, ici: null })));
+  });
   // Plus aucun repère sur la carte une fois les Expéditions parties de la page.
-  useEffect(() => () => poser([]), [poser]);
+  useEffect(
+    () => () => {
+      poser([]);
+    },
+    [poser],
+  );
   const rang = expeditions.findIndex(({ expedition }) => expedition.id === suivie);
-  // La Case la plus proche du repère de l'Expédition suivie : celle que sa fiche ne doit pas cacher.
-  const proche = rang < 0 ? 0 : Math.round(positions[rang].avancee);
+  // La Case la plus proche du repère de l'Expédition suivie, à l'ouverture de sa fiche : celle que la fiche ne doit pas
+  // cacher. Elle ne change plus tant que la fiche reste ouverte : la carte ne glisse pas sous les doigts du joueur.
+  const proche = rang < 0 ? null : Math.round(positions[rang].avancee);
+  const caseProche = !proche ? foyer : expeditions[rang].chemin[proche - 1];
+  const [montree, setMontree] = useState<{ id: number; c: Coordonnees } | null>(null);
+  if (suivie !== null && rang >= 0 && montree?.id !== suivie) setMontree({ id: suivie, c: caseProche });
   return (
     <>
-      {expeditions.map(({ expedition }, i) => (
+      {dehors.map(({ expedition }) => (
         <button
           key={expedition.id}
           ref={(bouton) => {
-            boutons.current[i] = bouton;
+            if (bouton) boutons.current.set(expedition.id, bouton);
+            else boutons.current.delete(expedition.id);
           }}
           type="button"
           className={styles.repere}
@@ -131,7 +171,7 @@ export function ExpeditionsSurLaCarte({
       {rang < 0 ? null : (
         <PanneauSurLaCarte
           nom="Fiche de l'Expédition"
-          laCase={proche === 0 ? foyer : expeditions[rang].chemin[proche - 1]}
+          laCase={montree?.id === suivie ? montree.c : caseProche}
           carte={carte}
           montrer={montrer}
           fermer={fermer}

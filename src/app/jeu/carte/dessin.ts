@@ -620,7 +620,8 @@ export function dessinerLaCarte(
     pinceau.fill();
   }
   if (portee) griserAuDelaDeLaPortee(pinceau, carte.foyer, vue, portee);
-  if (expeditions && expeditions.chemins.length > 0) tracerLesExpeditions(pinceau, carte.foyer, vue, peinture, expeditions);
+  const chemins = expeditions?.chemins.filter((chemin) => chemin.length > 0) ?? [];
+  if (expeditions && chemins.length > 0) tracerLesExpeditions(pinceau, carte.foyer, vue, peinture, { ...expeditions, chemins });
 
   const foyer = aLEcran(carte.foyer, vue);
   const foyerEnVue = aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon));

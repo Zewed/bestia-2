@@ -33,9 +33,11 @@ export type PositionDUneExpedition = { avancee: number; rang: number; case: Coor
  * - Tant que son trajet n'est pas chiffré (une escorte partie avant US-0912), elle reste au Foyer.
  *
  * Une Case du chemin est donc atteinte, à l'aller, à `partLe + rang × allure` : c'est là que le brouillard se lèvera
- * (US-0914), en direct comme au rattrapage d'une absence, et les Cases déjà traversées sont les `rang` premières du
- * chemin. Le rappel (US-0920) fera demi-tour depuis `avancee`. `chemin` : celui de l'Expédition, s'il est déjà connu,
- * pour ne pas le recalculer à chaque instant.
+ * (US-0914), en direct comme au rattrapage d'une absence. À l'aller, les Cases déjà traversées sont les `rang` premières
+ * du chemin ; dès l'arrivée, toutes, et elles le restent : au retour, `rang` redescend avec l'Expédition, il ne compte
+ * plus les Cases traversées. Le rappel (US-0920) fera demi-tour depuis `avancee`. `chemin` : celui de l'Expédition
+ * (cheminDUneExpedition, autant de Cases que la distance), s'il est déjà connu, pour ne pas le recalculer à chaque
+ * instant.
  */
 export function positionDUneExpedition(
   foyer: Coordonnees,
@@ -46,7 +48,8 @@ export function positionDUneExpedition(
 ): PositionDUneExpedition {
   const surLeChemin = (avancee: number, rang: number): PositionDUneExpedition => ({ avancee, rang, case: rang === 0 ? foyer : chemin[rang - 1] });
   const cases = chemin.length;
-  if (trajetMinutes === null || cases === 0) return surLeChemin(0, 0);
+  // Un trajet est toujours positif (la base le vérifie) ; un trajet nul ou négatif ne se suit pas, comme un trajet non chiffré.
+  if (trajetMinutes === null || trajetMinutes <= 0 || cases === 0) return surLeChemin(0, 0);
   const trajetMs = trajetMinutes * MINUTE_MS;
   const sejour = horaireDuSejour(partLe, trajetMs, sejourMinutes);
   const ici = instant.getTime();

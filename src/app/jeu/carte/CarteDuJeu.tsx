@@ -12,7 +12,7 @@ import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
 import { CasesDecouvertes } from "./CasesDecouvertes";
 import { nombreDeDecouvertes, useDecouvertes } from "./decouvertes";
 import { type Cadre, dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
-import { ExpeditionsSurLaCarte, placerLesReperes, type Repere, repereSous } from "./ExpeditionsSurLaCarte";
+import { ExpeditionsSurLaCarte, placerLesReperes, type Repere, reperesSous, repereTouche } from "./ExpeditionsSurLaCarte";
 import { FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
 import { suivreLesGestes } from "./gestes";
@@ -63,7 +63,9 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * US-0913 : les Expéditions en cours du joueur (`expeditions`, lues par la page à l'heure du jeu `maintenant`, qui avance
  * au rythme `vitesse`) : le chemin de chacune et le fanion de sa destination dessinés sur la carte ; son repère, posé à
  * chaque dessin là où elle en est sur son chemin (ExpeditionsSurLaCarte). Le toucher d'un repère, à moins de 22 px de son
- * centre, ouvre la fiche de son Expédition à la place de celle d'une Case : une seule fiche à la fois.
+ * centre, ouvre la fiche de son Expédition à la place de celle d'une Case : une seule fiche à la fois ; touché encore, il
+ * passe à l'Expédition posée au même point, puis à la Case dessous. Pendant le choix d'une destination, le toucher choisit
+ * toujours la Case.
  */
 export function CarteDuJeu({
   carte,
@@ -111,17 +113,28 @@ export function CarteDuJeu({
     [fermer],
   );
   const nePlusSuivre = useCallback(() => setSuivie(null), []);
-  // US-0913 : les Expéditions en cours et leur chemin, dessinés avec la carte ; leurs repères, posés à chaque dessin.
+  // L'Expédition suivie, pour le toucher de la carte, qui passe d'un repère à l'autre.
+  const suivieActuelle = useRef(suivie);
+  useEffect(() => {
+    suivieActuelle.current = suivie;
+  }, [suivie]);
+  // US-0913 : les Expéditions en cours et leur chemin. Les repères de celles encore dehors, posés à chaque dessin ; leurs
+  // chemins, dessinés avec la carte, qui ne se redessine que quand l'une rentre ou qu'une autre apparaît.
   const suivies = useMemo(() => expeditions.map((expedition) => ({ expedition, chemin: cheminDUneExpedition(carte.foyer, expedition.destination) })), [expeditions, carte.foyer]);
-  const cheminsADessiner = useRef(suivies);
   const reperes = useRef<Repere[]>([]);
+  const cheminsADessiner = useRef<{ ids: string; chemins: Repere["chemin"][] }>({ ids: "", chemins: [] });
   const pourLesReperes = useRef(() => {});
   const poser = useCallback((liste: Repere[]) => {
     reperes.current = liste;
-    pourLesReperes.current();
+    const ids = liste.map((r) => r.id).join(",");
+    if (ids === cheminsADessiner.current.ids) pourLesReperes.current();
+    else {
+      cheminsADessiner.current = { ids, chemins: liste.map((r) => r.chemin) };
+      pourLaFiche.current.redessiner();
+    }
   }, []);
   // US-0442 : la carte à jour des Cases découvertes depuis sa lecture, redessinée dès qu'il y en a ; avant le dessin
-  // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle. US-0913 : de même des Expéditions en cours.
+  // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle.
   const decouverte = useDecouvertes(carte);
   const decouvertes = useMemo(() => nombreDeDecouvertes(decouverte), [decouverte]);
   const aDessiner = useRef(decouverte);
@@ -129,10 +142,6 @@ export function CarteDuJeu({
     aDessiner.current = decouverte;
     pourLaFiche.current.redessiner();
   }, [decouverte]);
-  useEffect(() => {
-    cheminsADessiner.current = suivies;
-    pourLaFiche.current.redessiner();
-  }, [suivies]);
   useEffect(() => {
     const canvas = toile.current;
     const pinceau = canvas?.getContext("2d");
@@ -160,7 +169,7 @@ export function CarteDuJeu({
       // US-0442 : une teinte découverte depuis la lecture de la page, de la couleur que la page lui aurait donnée.
       const { teintes } = aDessiner.current;
       for (let t = peinture.fonds.length; t < teintes.length; t++) peinture.fonds.push(couleurCalculee(canvas, couleur(teintes[t])));
-      const chemins = cheminsADessiner.current.map((e) => e.chemin);
+      const { chemins } = cheminsADessiner.current;
       const portee = enChoix.current ? { cases: PORTEE_D_EXPLORATION_CASES, voile } : null;
       dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current, portee, chemins.length > 0 ? { chemins, fanion } : null);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
@@ -212,19 +221,24 @@ export function CarteDuJeu({
       deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
       avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
       zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
-      // US-0913 : le repère d'une Expédition sous le doigt ouvre sa fiche ; sinon, la Case dessous.
+      // US-0913 : le repère d'une Expédition sous le doigt ouvre sa fiche ; touché encore, l'Expédition posée au même
+      // point, puis la Case dessous (repereTouche) ; sinon, la Case dessous. Pendant le choix d'une destination, toujours
+      // la Case : une Expédition qui y séjourne ne l'empêche pas d'être choisie.
       toucher: (x, y) => {
         if (!vue) return;
-        const touchee = repereSous(reperes.current, x, y);
+        const touchee = enChoix.current ? null : repereTouche(reperes.current, x, y, suivieActuelle.current);
         if (touchee === null) choisirUneCase(caseSous(carte, vue, x, y));
         else suivre(touchee);
       },
     });
     // US-0913 : la main au survol d'un repère, à la souris : un clic l'ouvre.
     const survoler = (evenement: PointerEvent) => {
-      if (evenement.pointerType !== "mouse") return;
+      if (evenement.pointerType !== "mouse" || evenement.buttons !== 0) {
+        canvas.style.cursor = "";
+        return;
+      }
       const { left, top } = canvas.getBoundingClientRect();
-      const dessus = evenement.buttons === 0 && repereSous(reperes.current, evenement.clientX - left, evenement.clientY - top) !== null;
+      const dessus = !enChoix.current && reperesSous(reperes.current, evenement.clientX - left, evenement.clientY - top).length > 0;
       canvas.style.cursor = dessus ? "pointer" : "";
     };
     canvas.addEventListener("pointermove", survoler);

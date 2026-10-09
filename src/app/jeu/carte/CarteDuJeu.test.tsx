@@ -1027,7 +1027,7 @@ describe("suivre une Expédition sur la carte (US-0913)", () => {
     <CarteDuJeu carte={GRANDE} fonds={FONDS} expeditions={expeditions} maintenant={MAINTENANT} vitesse={vitesse} />
   );
   /** Le repère d'une Expédition, posé ou caché (un élément caché n'a pas de nom pour les lecteurs d'écran). */
-  const repere = (nom = "Expédition vers Prairie") => document.querySelector<HTMLButtonElement>(`button[aria-label="${nom}"]`)!;
+  const repere = (nom = "Expédition vers Prairie, à 3 Cases de votre Foyer") => document.querySelector<HTMLButtonElement>(`button[aria-label="${nom}"]`)!;
   /** Le point à la part t du chemin de la Case a à la Case b, à l'écran tel que la vue `vue` le montre. */
   const entre = (a: { q: number; r: number }, b: { q: number; r: number }, t: number, vue = ouverte()) => {
     const [p, q] = [aLEcran(a, vue), aLEcran(b, vue)];
@@ -1050,7 +1050,7 @@ describe("suivre une Expédition sur la carte (US-0913)", () => {
     render(carte([vers(7, avant(30)), versLInconnue(8, MAINTENANT)]));
     expect(repere().hidden).toBe(false);
     expect(repere().style.transform).toBe(place(entre(EST[0], EST[1], 0.5)));
-    expect(repere("Expédition vers une Case inconnue").style.transform).toBe(place(aLEcran(FOYER, ouverte())));
+    expect(repere("Expédition vers une Case inconnue, à 2 Cases de votre Foyer").style.transform).toBe(place(aLEcran(FOYER, ouverte())));
     // Les fanions des destinations, sur la carte.
     expect(toile.gestes).toContain("remplir var(--ciel)");
   });
@@ -1164,5 +1164,56 @@ describe("suivre une Expédition sur la carte (US-0913)", () => {
     render(carte([]));
     expect(screen.queryAllByRole("button", { name: /^Expédition/ })).toEqual([]);
     expect(toile.gestes).not.toContain("remplir var(--ciel)");
+  });
+
+  it("touché encore, passe à l'Expédition posée au même point, puis à la Case qu'elles cachent, puis revient à la première", () => {
+    // Deux Expéditions qui viennent de partir, toutes deux encore sur le Foyer.
+    render(carte([vers(7, MAINTENANT), versLInconnue(8, MAINTENANT)]));
+    const titre = () => ficheDeLExpedition()?.querySelector("[data-ligne] strong")?.textContent;
+    const foyer = aLEcran(FOYER, ouverte());
+    toucher(foyer);
+    expect(titre()).toBe("Prairie");
+    toucher(foyer);
+    expect(titre()).toBe("Case inconnue");
+    toucher(foyer);
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([FOYER]);
+    toucher(foyer);
+    expect(titre()).toBe("Prairie");
+  });
+
+  it("choisit toujours la Case sous le doigt pendant le choix d'une destination, même sous un repère", () => {
+    render(<CarteDuJeu carte={GRANDE} fonds={FONDS} destination="choix=destination" expeditions={[vers(7, avant(60 + 30))]} maintenant={MAINTENANT} />);
+    // En séjour sur sa destination.
+    toucher(aLEcran(EST[2], ouverte()));
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([EST[2]]);
+  });
+
+  it("ne montre plus ni repère ni chemin d'une Expédition rentrée au Foyer, et efface le sien à son retour", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "performance"] });
+    // L'une rentrée depuis une minute ; l'autre rentre dans 30 secondes (1 h d'aller, 4 h de séjour, 1 h de retour).
+    render(carte([vers(7, avant(60 + 240 + 60 + 1)), versLInconnue(8, new Date(avant(40 + 240 + 40).getTime() + 30_000))]));
+    expect(document.querySelector('button[aria-label^="Expédition vers Prairie"]')).toBeNull();
+    expect(repere("Expédition vers une Case inconnue, à 2 Cases de votre Foyer")).not.toBeNull();
+    // Seule la hampe du fanion de la seconde part du centre de sa destination.
+    const centre = (c: { q: number; r: number }) => `${aLEcran(c, ouverte()).x.toFixed(6)},${aLEcran(c, ouverte()).y.toFixed(6)}`;
+    expect(departs().has(centre(NORD_OUEST[1]))).toBe(true);
+    expect(departs().has(centre(EST[2]))).toBe(false);
+    toile.gestes = [];
+    await attendre(30_000);
+    expect(screen.queryAllByRole("button", { name: /^Expédition/ })).toEqual([]);
+    // Redessinée aussitôt, sans chemin ni fanion.
+    expect(toile.gestes).toContain("remplir var(--galet)");
+    expect(toile.gestes).not.toContain("remplir var(--ciel)");
+  });
+
+  it("ne garde aucun repère à toucher une fois les Expéditions parties de la page", () => {
+    const { rerender } = render(carte([vers(7, avant(30))]));
+    const ici = entre(EST[0], EST[1], 0.5);
+    rerender(carte([]));
+    toucher(ici);
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches).toHaveLength(1);
   });
 });

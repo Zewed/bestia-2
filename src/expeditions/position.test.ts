@@ -62,8 +62,9 @@ describe("la position d'une Expédition sur son chemin (US-0913)", () => {
     expect(a(150, lente)).toMatchObject({ rang: 3, case: DESTINATION });
   });
 
-  it("reste au Foyer tant que le trajet d'une escorte n'est pas chiffré (US-0912)", () => {
+  it("reste au Foyer tant que le trajet d'une escorte n'est pas chiffré (US-0912), comme d'un trajet nul, que la base refuse", () => {
     expect(a(30 * 24 * 60, { ...EXPEDITION, trajetMinutes: null })).toEqual({ avancee: 0, rang: 0, case: FOYER });
+    for (const minutes of [0, 240, 241]) expect(a(minutes, { ...EXPEDITION, trajetMinutes: 0 })).toEqual({ avancee: 0, rang: 0, case: FOYER });
   });
 
   it("donne la même Case que celle de la carte, jamais une copie : la carte reconnaît ainsi qu'elle n'a pas bougé", () => {
