@@ -13,6 +13,7 @@ import { dureeDuTrajetMinutes } from "./allure";
 import { lancerLExpedition } from "./depart";
 import { forceDUneBete } from "./force";
 import { rencontresDUneExpedition } from "./rencontres";
+import { betesQuiSuivent } from "./sexe";
 
 const MINUTE_MS = 60_000;
 const HEURE = 60;
@@ -157,7 +158,8 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
   it("à portée, la Bête suit l'Expédition dès qu'elle la voit, sans combat : aucune Bête de l'escorte n'est blessée ni tuée", async () => {
     const { territoireId, ne, foyer } = await naitre();
     await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2), ($1, $2, 'femelle', 1)", [territoireId, forte.id]);
-    const { place, caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), rare);
+    // Une Bête d'une autre Espèce que l'escorte, pour la distinguer d'elle dans l'effectif à son arrivée au Foyer (US-0938).
+    const { place, caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), (b) => rare(b) && b.especeId !== forte.id);
     expect(forte.force).toBeGreaterThanOrEqual(especes.get(bete.especeId)!.force);
     // L'escorte, au complet, arrive une heure avant la Bête et reste quatre heures.
     const aller = dureeDuTrajetMinutes(distance(foyer, place), [{ vitesse: forte.vitesse, nombre: 3 }]);
@@ -178,7 +180,12 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
     await rattraperA(territoireId, apres(depart, 2 * aller + 4 * HEURE + HEURE));
     const { rows } = await pool.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [id]);
     expect(rows[0].rentreeLe).toEqual(apres(depart, 2 * aller + 4 * HEURE));
-    expect(await lire()).toEqual(avant);
+    // US-0938 : la Bête qui la suit arrive au Foyer avec elle et entre dans l'effectif, à côté de toutes celles de l'escorte.
+    const [{ sexe }] = await betesQuiSuivent(pool, id);
+    const rentree = await lire();
+    expect(rentree.escorte).toEqual(avant.escorte);
+    expect(rentree.effectif).toEqual(expect.arrayContaining([...avant.effectif, { espece_id: bete.especeId, sexe, nombre: 1 }]));
+    expect(rentree.effectif).toHaveLength(avant.effectif.length + 1);
     expect(await rencontres(id)).toEqual([vue(bete, caseId, bete.arrivee, true)]);
     expect(await partieLe(caseId, bete.numero)).toEqual(bete.arrivee);
   });

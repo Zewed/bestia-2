@@ -79,3 +79,30 @@ describe("les durées réelles d'une Expédition rentrée (US-0917)", () => {
     expect(dureesReelles({ partLe, trajetMinutes: null, sejourMinutes: 60 }, aParis(9, 18))).toBeNull();
   });
 });
+
+describe("les Bêtes qui ont suivi l'Expédition jusqu'au Foyer (US-0938)", () => {
+  /** La dernière ligne du récit d'une Expédition suivie des Bêtes `ramenees`, et qui en a vu deux de plus. */
+  const fin = (...ramenees: [string, "male" | "femelle"][]) =>
+    recitDeRetour(retour({ rencontres: ramenees.length + 2, ramenees: ramenees.map(([nom, sexe]) => ({ nom, sexe })) })).texte.split("\n").at(-1);
+
+  it("une ligne de plus, après les Bêtes qui se sont montrées, dit chacune ramenée au Foyer avec son sexe", () => {
+    expect(recitDeRetour(retour({ rencontres: 3, ramenees: [{ nom: "Renard roux", sexe: "male" }] })).texte.split("\n").slice(-2)).toEqual([
+      "3 Bêtes se sont montrées.",
+      "Bête ramenée au Foyer : Renard roux (mâle).",
+    ]);
+    expect(fin(["Poule", "femelle"])).toBe("Bête ramenée au Foyer : Poule (femelle).");
+  });
+
+  it("plusieurs : chaque Espèce une fois, dans l'ordre de leur Apprivoisement, avec ses mâles et ses femelles", () => {
+    expect(fin(["Renard roux", "male"], ["Poule", "femelle"])).toBe("Bêtes ramenées au Foyer : Renard roux (mâle) et Poule (femelle).");
+    expect(fin(["Souris grise", "male"], ["Poule", "femelle"], ["Souris grise", "femelle"], ["Souris grise", "male"], ["Loup gris", "male"])).toBe(
+      "Bêtes ramenées au Foyer : Souris grise (2 mâles, 1 femelle), Poule (femelle) et Loup gris (mâle).",
+    );
+    expect(fin(["Poule", "femelle"], ["Poule", "femelle"])).toBe("Bêtes ramenées au Foyer : Poule (2 femelles).");
+  });
+
+  it("aucune ligne quand aucune Bête n'a suivi", () => {
+    expect(recitDeRetour(retour({ rencontres: 2, ramenees: [] })).texte.split("\n")).toHaveLength(4);
+    expect(recitDeRetour(retour({ rencontres: 2 })).texte.split("\n").at(-1)).toBe("2 Bêtes se sont montrées.");
+  });
+});
