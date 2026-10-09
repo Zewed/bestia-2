@@ -9,6 +9,8 @@ import { ficheDUneCase } from "@/monde/fiche";
 import { casesDansLeRayon, type Coordonnees, distance } from "@/monde/hex";
 import { ABORDS_DU_FOYER_CASES, BROUILLARD_LEVE_AUTOUR_DE_LA_DESTINATION_CASES, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
+import { DEPART_VOYAGEUR } from "@/monde/voyageurs";
+import { programmerEvenement } from "@/temps/avancer";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { casesRevelees } from "./brouillard";
@@ -33,7 +35,7 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
   let numero = 0;
 
   /**
-   * Un chef qui vient de naître dans le Monde d'essai, avec un explorateur : son Territoire, la Case de son Foyer, l'instant
+   * Un chef qui vient de naître dans le Monde d'essai, avec deux explorateurs : son Territoire, la Case de son Foyer, l'instant
    * de sa naissance et les Cases qu'il a découvertes en naissant, les abords de son Foyer (US-0436).
    */
   const naitre = async () => {
@@ -42,7 +44,7 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
     const nom = `Chem${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
-    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Essai', 'explorateur')", [territoireId]);
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Essai', 'explorateur'), ($1, 'Autre', 'explorateur')", [territoireId]);
     const { rows } = await pool.query<Coordonnees>("select f.q, f.r from territoire t join case_du_monde f on f.id = t.foyer_case_id where t.id = $1", [
       territoireId,
     ]);
@@ -51,16 +53,16 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
   /** Les Cases que le Territoire a découvertes, sous forme de clés. */
   const decouvertes = async (territoireId: number) => new Set((await casesDecouvertes(pool, territoireId)).map(cle));
   /**
-   * Une Case libre du Monde du Territoire au bout de sa portée d'exploration (PORTEE_D_EXPLORATION_CASES), la plus proche du
-   * milieu du Monde : son chemin part de la Couronne vers l'intérieur, loin au-delà des abords du Foyer.
+   * Une Case libre du Monde du Territoire au bout de sa portée d'exploration (PORTEE_D_EXPLORATION_CASES), la `rang`-ième
+   * plus proche du milieu du Monde : son chemin part de la Couronne vers l'intérieur, loin au-delà des abords du Foyer.
    */
-  const auBoutDeLaPortee = async (territoireId: number) => {
+  const auBoutDeLaPortee = async (territoireId: number, rang = 0) => {
     const { rows } = await pool.query<Coordonnees>(
       `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
          join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
        where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
-       order by greatest(abs(c.q), abs(c.r), abs(c.q + c.r)), c.q, c.r limit 1`,
-      [territoireId, PORTEE_D_EXPLORATION_CASES],
+       order by greatest(abs(c.q), abs(c.r), abs(c.q + c.r)), c.q, c.r limit 1 offset $3`,
+      [territoireId, PORTEE_D_EXPLORATION_CASES, rang],
     );
     return rows[0];
   };
@@ -84,8 +86,17 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
    * Ce que le Territoire doit avoir découvert à l'instant `instant` : les abords de son Foyer, et les Cases que son
    * Expédition a révélées (casesRevelees), celles que son Monde a.
    */
-  const attendues = async (territoireId: number, abords: Set<string>, foyer: Coordonnees, destination: Coordonnees, horaires: HorairesDUneExpedition, instant: Date) => {
-    const revelees = casesRevelees(foyer, destination, horaires, instant);
+  const attendues = (territoireId: number, abords: Set<string>, foyer: Coordonnees, destination: Coordonnees, horaires: HorairesDUneExpedition, instant: Date) =>
+    attenduesDe(territoireId, abords, foyer, [{ destination, horaires }], instant);
+  /** Ce que le Territoire doit avoir découvert à l'instant `instant`, avec plusieurs Expéditions dehors. */
+  const attenduesDe = async (
+    territoireId: number,
+    abords: Set<string>,
+    foyer: Coordonnees,
+    expeditions: { destination: Coordonnees; horaires: HorairesDUneExpedition }[],
+    instant: Date,
+  ) => {
+    const revelees = expeditions.flatMap(({ destination, horaires }) => casesRevelees(foyer, destination, horaires, instant));
     const { rows } = await pool.query<Coordonnees>(
       `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
          join unnest($2::int[], $3::int[]) as v(q, r) on true join case_du_monde c on c.monde_id = f.monde_id and c.q = v.q and c.r = v.r
@@ -219,22 +230,61 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
     expect(await decouvertes(b.territoireId)).toEqual(await attenduesA(b, b.arrivee));
   });
 
-  it("lève au premier rattrapage le chemin d'une Expédition déjà partie avant que le brouillard s'y lève", async () => {
+  it("lève, au passage suivant, tout le chemin d'une Expédition déjà en route avant que le brouillard se lève sur les chemins", async () => {
     const { territoireId, foyer, ne, abords } = await naitre();
     const destination = await auBoutDeLaPortee(territoireId);
-    // Le Territoire est déjà à l'heure de la fin de son séjour quand le brouillard commence à se lever sur les chemins.
+    // Le Territoire est déjà à l'heure entre le 5e et le 6e passage de son Expédition, partie quand rien ne se levait encore.
     const horaires: HorairesDUneExpedition = { partLe: decale(ne, MINUTE_MS), trajetMinutes: PORTEE_D_EXPLORATION_CASES * 20, sejourMinutes: 60 };
-    const finDuSejour = sejourDUneExpedition(horaires)!.fin;
-    await pool.query("update territoire set calcule_jusqu_a = $2 where id = $1", [territoireId, finDuSejour]);
+    const passages = passagesDUneExpedition(foyer, destination, horaires);
+    await pool.query("update territoire set calcule_jusqu_a = $2 where id = $1", [territoireId, decale(passages[4].le, MINUTE_MS)]);
     await pool.query(
       `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
        select $1, c.id, $4, $5, $6 from case_du_monde c where c.monde_id = $7 and c.q = $2 and c.r = $3`,
       [territoireId, destination.q, destination.r, horaires.partLe, horaires.trajetMinutes, horaires.sejourMinutes, mondeId],
     );
-    expect(await decouvertes(territoireId)).toEqual(abords);
 
-    await aLHeure(territoireId, decale(finDuSejour, MINUTE_MS));
-    expect(await decouvertes(territoireId)).toEqual(await attendues(territoireId, abords, foyer, destination, horaires, finDuSejour));
+    await aLHeure(territoireId, decale(passages[5].le, -1));
+    expect(await decouvertes(territoireId)).toEqual(abords);
+    await aLHeure(territoireId, passages[5].le);
+    expect(await decouvertes(territoireId)).toEqual(await attendues(territoireId, abords, foyer, destination, horaires, passages[5].le));
+    await aLHeure(territoireId, sejourDUneExpedition(horaires)!.fin);
     expect((await decouvertes(territoireId)).has(cle(destination))).toBe(true);
+  });
+
+  it("lève le brouillard de plusieurs Expéditions dehors en même temps, même quand un événement coupe le rattrapage", async () => {
+    const { territoireId, foyer, ne, abords } = await naitre();
+    const [versLUne, versLAutre] = [await auBoutDeLaPortee(territoireId, 0), await auBoutDeLaPortee(territoireId, 9)];
+    const lUne = { destination: versLUne, horaires: await partir(territoireId, versLUne, decale(ne, MINUTE_MS)) };
+    const lAutre = { destination: versLAutre, horaires: await partir(territoireId, versLAutre, decale(ne, 31 * MINUTE_MS)) };
+    // Un événement daté au milieu des deux allers (le départ d'un Voyageur qui n'existe pas : il ne fait rien d'autre).
+    await programmerEvenement(pool, "territoire", territoireId, decale(ne, 95 * MINUTE_MS), DEPART_VOYAGEUR, { voyageur: 2_000_000_000 });
+
+    for (const minutes of [130, 24 * 60]) {
+      const instant = decale(ne, minutes * MINUTE_MS);
+      await aLHeure(territoireId, instant);
+      expect(await decouvertes(territoireId)).toEqual(await attenduesDe(territoireId, abords, foyer, [lUne, lAutre], instant));
+    }
+    expect(await decouvertes(territoireId)).not.toEqual(await attenduesDe(territoireId, abords, foyer, [lUne], decale(ne, 24 * 60 * MINUTE_MS)));
+    // L'événement a bien coupé le rattrapage, à son instant.
+    const { rows } = await pool.query<{ traiteLe: Date }>(
+      `select traite_le as "traiteLe" from evenement where element = 'territoire' and element_id = $1 and type = $2 and donnees->>'voyageur' = '2000000000'`,
+      [territoireId, DEPART_VOYAGEUR],
+    );
+    expect(rows).toEqual([{ traiteLe: decale(ne, 95 * MINUTE_MS) }]);
+  });
+
+  it("ne lève rien pour une Expédition dont la destination n'est pas dans le Monde de son Foyer (après la bascule d'un Monde)", async () => {
+    const { territoireId, ne, abords } = await naitre();
+    // Une Case d'un autre Monde, celui du jeu : la bascule déplace le Foyer, pas la destination des Expéditions déjà parties.
+    const { rows } = await pool.query<{ id: number }>("select c.id from case_du_monde c join monde m on m.id = c.monde_id where m.id <> $1 order by c.id limit 1", [
+      mondeId,
+    ]);
+    await pool.query("insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) values ($1, $2, $3, 160, 60)", [
+      territoireId,
+      rows[0].id,
+      decale(ne, MINUTE_MS),
+    ]);
+    await aLHeure(territoireId, decale(ne, 24 * 60 * MINUTE_MS));
+    expect(await decouvertes(territoireId)).toEqual(abords);
   });
 });

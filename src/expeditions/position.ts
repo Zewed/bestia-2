@@ -35,9 +35,9 @@ export type PositionDUneExpedition = { avancee: number; rang: number; case: Coor
  * Une Case du chemin est donc atteinte, à l'aller, à `partLe + rang × allure` (passagesDUneExpedition, la même heure) :
  * c'est là que le brouillard se lève (US-0914), en direct comme au rattrapage d'une absence. À l'aller, les Cases déjà
  * traversées sont les `rang` premières du chemin ; dès l'arrivée, toutes, et elles le restent : au retour, `rang`
- * redescend avec l'Expédition, il ne compte plus les Cases traversées. Le rappel (US-0920) fera demi-tour depuis `avancee`. `chemin` : celui de l'Expédition
- * (cheminDUneExpedition, autant de Cases que la distance), s'il est déjà connu, pour ne pas le recalculer à chaque
- * instant.
+ * redescend avec l'Expédition, il ne compte plus les Cases traversées. Le rappel (US-0920) fera demi-tour depuis
+ * `avancee`. `chemin` : celui de l'Expédition (cheminDUneExpedition, autant de Cases que la distance), s'il est déjà
+ * connu, pour ne pas le recalculer à chaque instant.
  */
 export function positionDUneExpedition(
   foyer: Coordonnees,
@@ -68,7 +68,7 @@ export function positionDUneExpedition(
  * (k pour la k-ième, la distance pour la destination, comme dans PositionDUneExpedition) et l'instant du jeu où elle
  * l'atteint.
  */
-export type Passage = { case: Coordonnees; rang: number; le: Date };
+export type PassageSurUneCase = { case: Coordonnees; rang: number; le: Date };
 
 /**
  * US-0914 : les passages d'une Expédition partie du `foyer` vers la `destination` sur les Cases de son chemin, à l'aller,
@@ -83,7 +83,7 @@ export function passagesDUneExpedition(
   destination: Coordonnees,
   { partLe, trajetMinutes }: HorairesDUneExpedition,
   chemin: readonly Coordonnees[] = cheminDUneExpedition(foyer, destination),
-): Passage[] {
+): PassageSurUneCase[] {
   const cases = chemin.length;
   if (trajetMinutes === null || trajetMinutes <= 0) return [];
   const trajetMs = trajetMinutes * MINUTE_MS;
