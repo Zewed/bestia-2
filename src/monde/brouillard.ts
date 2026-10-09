@@ -3,7 +3,7 @@
 // uniquement (la bascule d'un Monde s'en sert).
 import type { Pool, PoolClient } from "pg";
 import { ABORDS_DU_FOYER_CASES } from "@/reglages";
-import { type Coordonnees, distance } from "./hex";
+import { casesDansLeRayon, type Coordonnees } from "./hex";
 
 /**
  * US-0436 : les abords d'un Foyer, ce qu'un Territoire découvre en naissant : les Cases à `rayon` Cases de lui ou
@@ -12,13 +12,7 @@ import { type Coordonnees, distance } from "./hex";
  * sur Aube, qui n'a en base que sa Couronne : decouvrir les passe.
  */
 export function abordsDuFoyer(foyer: Coordonnees, rayon: number = ABORDS_DU_FOYER_CASES): Coordonnees[] {
-  const abords: Coordonnees[] = [];
-  for (let q = foyer.q - rayon; q <= foyer.q + rayon; q++) {
-    for (let r = foyer.r - rayon; r <= foyer.r + rayon; r++) {
-      if (distance({ q, r }, foyer) <= rayon) abords.push({ q: q + 0, r: r + 0 }); // + 0 : jamais de « -0 »
-    }
-  }
-  return abords;
+  return casesDansLeRayon(foyer, rayon);
 }
 
 /**

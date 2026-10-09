@@ -87,6 +87,20 @@ export function casesDesAnneaux(de: number, a: number): Coordonnees[] {
 }
 
 /**
+ * US-0914 : les Cases à `rayon` Cases de `c` ou moins, elle comprise, comptées par `distance` et rangées par q puis r :
+ * les abords d'un Foyer (US-0436), ce que l'Expédition voit autour d'elle à son passage. Certaines peuvent manquer au Monde.
+ */
+export function casesDansLeRayon(c: Coordonnees, rayon: number): Coordonnees[] {
+  const cases: Coordonnees[] = [];
+  for (let q = c.q - rayon; q <= c.q + rayon; q++) {
+    for (let r = c.r - rayon; r <= c.r + rayon; r++) {
+      if (distance({ q, r }, c) <= rayon) cases.push({ q: q + 0, r: r + 0 }); // + 0 : jamais de « -0 »
+    }
+  }
+  return cases;
+}
+
+/**
  * US-0413 : les Cases de l'anneau `k`, dans l'ordre où on en fait le tour : de proche en proche, chacune
  * voisine de la suivante, la dernière de la première.
  */

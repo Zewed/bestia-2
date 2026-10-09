@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { COEUR_SAUVAGE_RAYON, MONDE_RAYON } from "@/reglages";
 import {
   anneau,
+  casesDansLeRayon,
   casesDesAnneaux,
   centre,
   CENTRE,
@@ -36,6 +37,15 @@ describe("géométrie des Cases", () => {
     const autour = voisines({ q: 2, r: -1 });
     expect(autour).toHaveLength(6);
     for (const v of autour) expect(anneau({ q: v.q - 2, r: v.r + 1 })).toBe(1);
+  });
+
+  it("donne les Cases à un rayon d'une Case ou moins, elle comprise, rangées par q puis r, sans jamais de « -0 » (US-0914)", () => {
+    expect(casesDansLeRayon({ q: 5, r: -2 }, 0)).toEqual([{ q: 5, r: -2 }]);
+    const autour = casesDansLeRayon({ q: 5, r: -2 }, 1);
+    expect(autour).toEqual([...[{ q: 5, r: -2 }, ...voisines({ q: 5, r: -2 })]].sort((a, b) => a.q - b.q || a.r - b.r));
+    const loin = casesDansLeRayon({ q: -1, r: 1 }, 3);
+    expect(loin).toEqual(casesDesAnneaux(0, 3).map((c) => ({ q: c.q - 1, r: c.r + 1 })));
+    for (const c of loin) expect(Object.is(c.q, -0) || Object.is(c.r, -0)).toBe(false);
   });
 
   it("n'accepte de coordonnée de Case qu'entière et que la base peut tenir (US-0428, US-0901)", () => {
