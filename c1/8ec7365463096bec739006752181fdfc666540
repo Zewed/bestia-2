@@ -1,0 +1,33 @@
+src/comptes/garde.test.ts
+  s_00c131376e16bb::t_c1963ce44257b7 31,226-235
+src/monde/betes-de-naissance.db.test.ts
+  s_97a431cfa65ca7::t_674712a2024e35 13-17,75,123-127,142-160
+src/monde/betes-de-naissance.test.ts
+  s_97a431cfa65ca7::t_81a2e1ea447256 34,62
+src/monde/betes-de-naissance.ts
+  s_00c131376e16bb::t_de38c4de7b9a84 6-8,124,135-136,145-148,154
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c18ec7365463096bec739006752181fdfc666540",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
