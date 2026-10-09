@@ -23,7 +23,7 @@ import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import { SansEscorte } from "./SansEscorte";
 
-/** L'écran d'un joueur sans aucune Bête, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte, le départ. */
+/** L'écran d'une Expédition sans escorte, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte, le départ. */
 const ecran = () =>
   render(
     <>

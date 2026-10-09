@@ -99,7 +99,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
-      {/* US-0909 : sans Bête, l'Expédition part sans escorte, et l'écran le dit là où se choisira l'escorte (US-0904). */}
+      {/* US-0909 : tant que l'escorte ne se choisit pas (US-0904), toute Expédition part sans, et l'écran le dit là où elle se choisira. */}
       <SansEscorte />
       <Sejour />
       <Partir libres={explorateurs.libres} />
