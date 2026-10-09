@@ -400,6 +400,13 @@
       "when": 1791566163094,
       "tag": "0058_sexe_des_betes_apprivoisees",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1791569202809,
+      "tag": "0059_rappel_des_expeditions",
+      "breakpoints": true
     }
   ]
 }

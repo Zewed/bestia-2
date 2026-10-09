@@ -26,11 +26,13 @@ export type ExpeditionEnCours = HorairesDUneExpedition & {
  * Expédition qui vient de partir est à l'aller. US-0918 : avec son détail, la même lecture pour la liste et pour la
  * carte (US-0913) : ses horaires, ses explorateurs, dans l'ordre de leur arrivée au Foyer, et son escorte, Espèce par
  * Espèce, de la plus commune à la plus rare puis par nom, comme l'écran d'Expédition les propose (US-0904). US-0916 : une
- * Expédition rentrée au Foyer n'est plus en cours ; d'ici là, son heure passée, elle est « de retour ».
+ * Expédition rentrée au Foyer n'est plus en cours ; d'ici là, son heure passée, elle est « de retour ». US-0920 : ses
+ * horaires disent aussi son rappel, d'où se lisent son demi-tour et son retour avancé.
  */
 export async function expeditionsEnCours(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<ExpeditionEnCours[]> {
   const { rows } = await base.query<HorairesDUneExpedition & { id: number; q: number; r: number; explorateurs: string[]; escorte: EspeceDeLEscorte[] }>(
     `select x.id, c.q, c.r, x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes",
+       x.rappelee_le as "rappeleeLe",
        array(select h.prenom from habitant h where h.expedition_id = x.id order by h.id) as explorateurs,
        coalesce((
          select json_agg(json_build_object('id', es.id, 'nom', es.nom, 'nombre', s.nombre) order by r.rang, es.nom)

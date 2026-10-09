@@ -4,7 +4,8 @@
 // apparitions des Bêtes sauvages (src/monde/betes-sauvages.ts, US-0930), elle ne dépend que des horaires fixés au départ
 // et du temps du jeu, jamais de l'heure qu'il est : les mêmes Expéditions, lues en direct, au rattrapage ou par la tâche
 // planifiée, d'un bloc ou par morceaux, pour une Case seule ou avec d'autres, tant que la ligne de chacune reste en base.
-// Rien ne s'écrit : à la fin du séjour, l'Expédition repart seule vers le Foyer. Côté serveur et scripts uniquement.
+// Rien ne s'écrit : à la fin du séjour, l'Expédition repart seule vers le Foyer. US-0920 : rappelée, elle quitte sa Case
+// au rappel, ou n'y vient pas si elle était encore à l'aller (sejourDUneExpedition). Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
 
@@ -48,7 +49,7 @@ export async function expeditionsPresentesDuTerritoire(
 async function enSejour(base: Pool | PoolClient, filtre: string, valeur: unknown, de: Date, a: Date): Promise<(ExpeditionPresente & { caseId: number })[]> {
   const { rows } = await base.query<HorairesDUneExpedition & { id: number; territoireId: number; caseId: number }>(
     `select x.id, x.territoire_id as "territoireId", x.case_id as "caseId",
-       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes"
+       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes", x.rappelee_le as "rappeleeLe"
      from expedition x
      where ${filtre} and x.part_le < $3 and x.part_le + make_interval(mins => x.trajet_minutes + x.sejour_minutes) > $2`,
     [valeur, de, a],
