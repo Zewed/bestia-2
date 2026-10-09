@@ -2,6 +2,9 @@
 
 Lis d'abord `AGENTS.md` (ce Next.js 16 a des changements cassants ; les guides sont dans `node_modules/next/dist/docs/`) et `CONTEXT.md` (les mots du jeu, avec leur majuscule : Territoire, Foyer, Case, Habitant, Bête, Expédition…).
 
+## Armada
+- La CLI `armada` est déjà installée sur ce poste : ne la réinstalle pas (`npm install -g` lancé par plusieurs agents à la fois l'a déjà cassée pour toute la flotte). Si `armada` manque, utilise `npx -y @the-vibe-company/armada@0.2.61` et dis-le au coordinateur.
+
 ## Le ticket
 - La story de `docs/stories` citée dans le ticket fait foi ; les décisions du ticket (« décidé le … ») et ses valeurs provisoires sont tranchées : ne les rediscute pas, ne tranche aucune autre question de jeu (demande avec `armada ask`).
 - **Ne touche pas à `docs/`** : le coordinateur y écrit le statut de la story et les décisions à la fusion.

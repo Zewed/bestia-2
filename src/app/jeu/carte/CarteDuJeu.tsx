@@ -2,6 +2,8 @@
 
 import { getImageProps } from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { cheminDUneExpedition } from "@/expeditions/chemin";
+import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { couleur } from "@/monde/couleurs-de-la-carte";
 import type { Coordonnees } from "@/monde/hex";
@@ -10,6 +12,7 @@ import { BoutonsDeLaCarte } from "./BoutonsDeLaCarte";
 import { CasesDecouvertes } from "./CasesDecouvertes";
 import { nombreDeDecouvertes, useDecouvertes } from "./decouvertes";
 import { type Cadre, dessinerLaCarte, vueSurLeFoyer, type Hutte, type Vue } from "./dessin";
+import { ExpeditionsSurLaCarte, placerLesReperes, type Repere, reperesSous, repereTouche } from "./ExpeditionsSurLaCarte";
 import { FicheDeLaCase, useFicheDeLaCase } from "./FicheDeLaCase";
 import { FlecheDuFoyer, placerLaFleche } from "./FlecheDuFoyer";
 import { suivreLesGestes } from "./gestes";
@@ -24,6 +27,9 @@ import { retenirLaVue, vueRetenue } from "./vue-retenue";
  * servie par Next en petit : assez pour une Case nette sur un écran haute densité.
  */
 const HUTTE = getImageProps({ src: "/illustrations/foyer/prairie.webp", alt: "", width: 192, height: 128 }).props.src;
+
+/** US-0913 : une carte sans Expédition en cours. */
+const AUCUNE_EXPEDITION: ExpeditionEnCours[] = [];
 
 /** La couleur que donne une expression CSS sur la page (« var(--trait) »), telle que le <canvas> la comprend. */
 function couleurCalculee(element: HTMLElement, expression: string): string {
@@ -54,8 +60,28 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * la page (useDecouvertes). US-0443 : en bas à gauche, combien le joueur en a découvert, et quelle part du Monde.
  * US-0907 : ouverte pour choisir la destination d'une Expédition (`destination`, son adresse), elle le dit à la fiche.
  * US-0908 : elle grise alors ce qui est au-delà de la portée d'exploration (PORTEE_D_EXPLORATION_CASES).
+ * US-0913 : les Expéditions en cours du joueur (`expeditions`, lues par la page à l'heure du jeu `maintenant`, qui avance
+ * au rythme `vitesse`) : le chemin de chacune et le fanion de sa destination dessinés sur la carte ; son repère, posé à
+ * chaque dessin là où elle en est sur son chemin (ExpeditionsSurLaCarte). Le toucher d'un repère, à moins de 22 px de son
+ * centre, ouvre la fiche de son Expédition à la place de celle d'une Case : une seule fiche à la fois ; touché encore, il
+ * passe à l'Expédition posée au même point, puis à la Case dessous. Pendant le choix d'une destination, le toucher choisit
+ * toujours la Case.
  */
-export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteDuJoueur; fonds: string[]; destination?: string | null }) {
+export function CarteDuJeu({
+  carte,
+  fonds,
+  destination = null,
+  expeditions = AUCUNE_EXPEDITION,
+  maintenant = null,
+  vitesse = 1,
+}: {
+  carte: CarteDuJoueur;
+  fonds: string[];
+  destination?: string | null;
+  expeditions?: ExpeditionEnCours[];
+  maintenant?: Date | null;
+  vitesse?: number;
+}) {
   const toile = useRef<HTMLCanvasElement>(null);
   // US-0425 : si l'on peut encore rapprocher ou éloigner la carte, et le zoom d'un cran autour du milieu de l'écran.
   const [zoom, setZoom] = useState({ rapprocher: true, eloigner: true });
@@ -70,6 +96,43 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
   // US-0908 : si la carte est ouverte pour choisir la destination d'une Expédition, où elle grise ce qui est hors de portée.
   const enChoix = useRef(destination !== null);
   const pourLaFiche = useRef<{ redessiner: () => void; montrer: (c: Coordonnees, cache: Cadre) => void }>({ redessiner: () => {}, montrer: () => {} });
+  // US-0913 : l'Expédition dont la fiche est ouverte : une seule fiche à la fois, d'une Case ou d'une Expédition.
+  const [suivie, setSuivie] = useState<number | null>(null);
+  const choisirUneCase = useCallback(
+    (c: Coordonnees | null) => {
+      setSuivie(null);
+      choisir(c);
+    },
+    [choisir],
+  );
+  const suivre = useCallback(
+    (id: number) => {
+      fermer();
+      setSuivie(id);
+    },
+    [fermer],
+  );
+  const nePlusSuivre = useCallback(() => setSuivie(null), []);
+  // L'Expédition suivie, pour le toucher de la carte, qui passe d'un repère à l'autre.
+  const suivieActuelle = useRef(suivie);
+  useEffect(() => {
+    suivieActuelle.current = suivie;
+  }, [suivie]);
+  // US-0913 : les Expéditions en cours et leur chemin. Les repères de celles encore dehors, posés à chaque dessin ; leurs
+  // chemins, dessinés avec la carte, qui ne se redessine que quand l'une rentre ou qu'une autre apparaît.
+  const suivies = useMemo(() => expeditions.map((expedition) => ({ expedition, chemin: cheminDUneExpedition(carte.foyer, expedition.destination) })), [expeditions, carte.foyer]);
+  const reperes = useRef<Repere[]>([]);
+  const cheminsADessiner = useRef<{ ids: string; chemins: Repere["chemin"][] }>({ ids: "", chemins: [] });
+  const pourLesReperes = useRef(() => {});
+  const poser = useCallback((liste: Repere[]) => {
+    reperes.current = liste;
+    const ids = liste.map((r) => r.id).join(",");
+    if (ids === cheminsADessiner.current.ids) pourLesReperes.current();
+    else {
+      cheminsADessiner.current = { ids, chemins: liste.map((r) => r.chemin) };
+      pourLaFiche.current.redessiner();
+    }
+  }, []);
   // US-0442 : la carte à jour des Cases découvertes depuis sa lecture, redessinée dès qu'il y en a ; avant le dessin
   // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle.
   const decouverte = useDecouvertes(carte);
@@ -93,20 +156,28 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
     };
     // US-0908 : le voile qui grise ce qui est au-delà de la portée d'exploration.
     const voile = couleurCalculee(canvas, "color-mix(in oklch, var(--galet) 70%, transparent)");
+    // US-0913 : le fanion des destinations, du ton de l'état « en Expédition ».
+    const fanion = couleurCalculee(canvas, "var(--ciel)");
     let hutte: Hutte | null = null;
     // Ce que montre la carte, d'un geste à l'autre, une fois connue la place qu'elle a ; la limite de son milieu.
     let vue: Vue | null = null;
     const limite = limiteDeLaCarte(carte);
     // US-0426 : la flèche du Foyer suit chaque dessin. US-0427 : la vue retenue à chaque dessin, au plus un par image.
+    // US-0913 : les repères des Expéditions aussi.
     const dessiner = () => {
       if (!vue) return;
       // US-0442 : une teinte découverte depuis la lecture de la page, de la couleur que la page lui aurait donnée.
       const { teintes } = aDessiner.current;
       for (let t = peinture.fonds.length; t < teintes.length; t++) peinture.fonds.push(couleurCalculee(canvas, couleur(teintes[t])));
-      dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current, enChoix.current ? { cases: PORTEE_D_EXPLORATION_CASES, voile } : null);
+      const { chemins } = cheminsADessiner.current;
+      const portee = enChoix.current ? { cases: PORTEE_D_EXPLORATION_CASES, voile } : null;
+      dessinerLaCarte(pinceau, aDessiner.current, vue, peinture, hutte, choisie.current, portee, chemins.length > 0 ? { chemins, fanion } : null);
       placerLaFleche(fleche.current, canvas, vue, carte.foyer);
+      placerLesReperes(reperes.current, carte.foyer, vue);
       retenirLaVue(carte, vue);
     };
+    // US-0913 : les repères reposés quand leurs Expéditions avancent, sans redessiner la carte.
+    pourLesReperes.current = () => vue && placerLesReperes(reperes.current, carte.foyer, vue);
     // US-0425 : les boutons de zoom grisés ou non selon la vue, sans rien redessiner s'ils ne changent pas.
     const griser = () => {
       if (!vue) return;
@@ -150,8 +221,27 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
       deplacer: (dx, dy) => vue && changer(deplacer(vue, dx, dy, limite)),
       avancer: (colonnes, rangees) => vue && changer(avancer(vue, colonnes, rangees, limite)),
       zoomer: (facteur, x, y) => vue && changer(zoomer(vue, facteur, x, y, limite)),
-      toucher: (x, y) => vue && choisir(caseSous(carte, vue, x, y)),
+      // US-0913 : le repère d'une Expédition sous le doigt ouvre sa fiche ; touché encore, l'Expédition posée au même
+      // point, puis la Case dessous (repereTouche) ; sinon, la Case dessous. Pendant le choix d'une destination, toujours
+      // la Case : une Expédition qui y séjourne ne l'empêche pas d'être choisie.
+      toucher: (x, y) => {
+        if (!vue) return;
+        const touchee = enChoix.current ? null : repereTouche(reperes.current, x, y, suivieActuelle.current);
+        if (touchee === null) choisirUneCase(caseSous(carte, vue, x, y));
+        else suivre(touchee);
+      },
     });
+    // US-0913 : la main au survol d'un repère, à la souris : un clic l'ouvre.
+    const survoler = (evenement: PointerEvent) => {
+      if (evenement.pointerType !== "mouse" || evenement.buttons !== 0) {
+        canvas.style.cursor = "";
+        return;
+      }
+      const { left, top } = canvas.getBoundingClientRect();
+      const dessus = !enChoix.current && reperesSous(reperes.current, evenement.clientX - left, evenement.clientY - top).length > 0;
+      canvas.style.cursor = dessus ? "pointer" : "";
+    };
+    canvas.addEventListener("pointermove", survoler);
     zoomerAuMilieu.current = (facteur) => vue && changer(zoomer(vue, facteur, vue.largeur / 2, vue.hauteur / 2, limite));
     // US-0426 : le retour au Foyer, chaque vue dessinée aussitôt, à l'image de l'écran du mouvement, à la taille de la carte.
     revenirAuFoyer.current = () => {
@@ -188,6 +278,8 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
       suivi.disconnect();
       illustration.onload = null;
       arreter();
+      canvas.removeEventListener("pointermove", survoler);
+      pourLesReperes.current = () => {};
       cancelAnimationFrame(image);
       cancelAnimationFrame(pose);
       panneaux.disconnect();
@@ -197,7 +289,7 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
       revenirAuFoyer.current = () => {};
       pourLaFiche.current = { redessiner: () => {}, montrer: () => {} };
     };
-  }, [carte, fonds, choisir]);
+  }, [carte, fonds, choisirUneCase, suivre]);
   // US-0428 : la Case choisie surlignée aussitôt, et plus du tout une fois la fiche fermée.
   const laCase = choix?.case ?? null;
   useEffect(() => {
@@ -215,6 +307,20 @@ export function CarteDuJeu({ carte, fonds, destination = null }: { carte: CarteD
     <div className={styles.cadre}>
       {/* US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent. */}
       <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
+      {suivies.length > 0 && maintenant ? (
+        <ExpeditionsSurLaCarte
+          expeditions={suivies}
+          foyer={carte.foyer}
+          maintenant={maintenant}
+          vitesse={vitesse}
+          poser={poser}
+          suivie={suivie}
+          suivre={suivre}
+          fermer={nePlusSuivre}
+          carte={toile}
+          montrer={montrer}
+        />
+      ) : null}
       <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
       <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
       <CasesDecouvertes nombre={decouvertes} total={decouverte.cases.q.length} />

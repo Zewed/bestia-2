@@ -67,6 +67,12 @@ export type Hutte = { image: CanvasImageSource; largeur: number; hauteur: number
 export type Portee = { cases: number; voile: string };
 
 /**
+ * US-0913 : les Expéditions en cours du joueur : le chemin de chacune (cheminDUneExpedition, src/expeditions/chemin.ts),
+ * du Foyer exclu à sa destination comprise, et la couleur de leur fanion.
+ */
+export type ExpeditionsADessiner = { chemins: readonly (readonly Coordonnees[])[]; fanion: string };
+
+/**
  * US-0419 : la part de l'illustration du Foyer (foyer/prairie.webp, 3 × 2) où se tient la hutte, en fractions de sa
  * largeur : d'un peu avant le bord gauche du toit à un peu après le bord droit, depuis le haut. La hauteur suit, aux
  * proportions d'une Case (√3 × 2) : la hutte n'est jamais étirée.
@@ -474,6 +480,64 @@ function griserAuDelaDeLaPortee(pinceau: Pinceau, foyer: Coordonnees, vue: Vue, 
 }
 
 /**
+ * US-0913 : le chemin d'une Expédition, en points ronds d'Encre à demi transparente : leur épaisseur et le vide entre
+ * eux, en pixels, les mêmes à tout zoom.
+ */
+const POINTS_DU_CHEMIN = { epaisseur: 3, vide: 7, opacite: 0.55 };
+
+/**
+ * US-0913 : les Expéditions en cours sur la carte : le chemin de chacune, en points de centre en centre, du Foyer à sa
+ * destination, d'un seul trait pour toutes ; puis sa destination, marquée d'un fanion planté sur la Case : une hampe
+ * d'Encre qui part de son centre, et un fanion de la couleur des Expéditions, cerné d'Encre, à la taille du repère du
+ * Foyer (tailleDuRepere) : il se voit à tout zoom. Trois gestes de plus, quel que soit leur nombre.
+ */
+function tracerLesExpeditions(pinceau: Pinceau, foyer: Coordonnees, vue: Vue, peinture: Peinture, { chemins, fanion }: ExpeditionsADessiner) {
+  const depart = aLEcran(foyer, vue);
+  pinceau.save();
+  pinceau.beginPath();
+  for (const chemin of chemins) {
+    pinceau.moveTo(depart.x, depart.y);
+    for (const c of chemin) {
+      const { x, y } = aLEcran(c, vue);
+      pinceau.lineTo(x, y);
+    }
+  }
+  pinceau.setLineDash([0.01, POINTS_DU_CHEMIN.vide]);
+  pinceau.lineDashOffset = 0;
+  pinceau.globalAlpha = POINTS_DU_CHEMIN.opacite;
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.lineWidth = POINTS_DU_CHEMIN.epaisseur;
+  pinceau.lineCap = "round";
+  pinceau.lineJoin = "round";
+  pinceau.stroke();
+  pinceau.restore();
+  // Les fanions, chacun au-dessus de sa destination, tournés vers la droite ; leur côté ouvert, le long de la hampe,
+  // que la hampe tracée par-dessus referme.
+  const taille = tailleDuRepere(vue.rayon);
+  const destinations = chemins.map((chemin) => aLEcran(chemin[chemin.length - 1], vue));
+  pinceau.beginPath();
+  for (const { x, y } of destinations) {
+    pinceau.moveTo(x, y - 2 * taille);
+    pinceau.lineTo(x + 1.3 * taille, y - 1.6 * taille);
+    pinceau.lineTo(x, y - 1.2 * taille);
+  }
+  pinceau.fillStyle = fanion;
+  pinceau.fill();
+  pinceau.strokeStyle = peinture.encre;
+  pinceau.lineWidth = 1.5;
+  pinceau.lineJoin = "round";
+  pinceau.stroke();
+  pinceau.beginPath();
+  for (const { x, y } of destinations) {
+    pinceau.moveTo(x, y);
+    pinceau.lineTo(x, y - 2 * taille);
+  }
+  pinceau.lineWidth = 2;
+  pinceau.lineCap = "round";
+  pinceau.stroke();
+}
+
+/**
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
@@ -483,7 +547,9 @@ function griserAuDelaDeLaPortee(pinceau: Pinceau, foyer: Coordonnees, vue: Vue, 
  * `choisie` surlignée, sous ce seul repère. US-0437 : les Cases sous le brouillard (de la teinte BROUILLARD), d'une
  * brume unie, d'un seul geste : sans motif, ni bord entre elles, ni liseré, ni Foyer d'un autre chef. Le Foyer du
  * joueur, lui, est toujours découvert. US-0908 : pendant le choix de la destination d'une Expédition (`portee`), tout
- * cela grisé au-delà de la portée d'exploration ; ni le Foyer du joueur, ni la Case choisie, ni son repère.
+ * cela grisé au-delà de la portée d'exploration ; ni le Foyer du joueur, ni la Case choisie, ni son repère. US-0913 :
+ * par-dessus, les Expéditions en cours du joueur (`expeditions`) : leurs chemins et le fanion de leurs destinations,
+ * sous le Foyer, la Case choisie et le repère du Foyer.
  */
 export function dessinerLaCarte(
   pinceau: Pinceau,
@@ -493,6 +559,7 @@ export function dessinerLaCarte(
   hutte: Hutte | null = null,
   choisie: Coordonnees | null = null,
   portee: Portee | null = null,
+  expeditions: ExpeditionsADessiner | null = null,
 ) {
   pinceau.clearRect(0, 0, vue.largeur, vue.hauteur);
   // Les Cases à l'écran, rangées par teinte : le centre de chacune, en pixels.
@@ -553,6 +620,8 @@ export function dessinerLaCarte(
     pinceau.fill();
   }
   if (portee) griserAuDelaDeLaPortee(pinceau, carte.foyer, vue, portee);
+  const chemins = expeditions?.chemins.filter((chemin) => chemin.length > 0) ?? [];
+  if (expeditions && chemins.length > 0) tracerLesExpeditions(pinceau, carte.foyer, vue, peinture, { ...expeditions, chemins });
 
   const foyer = aLEcran(carte.foyer, vue);
   const foyerEnVue = aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon));

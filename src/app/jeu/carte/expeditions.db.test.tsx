@@ -1,0 +1,80 @@
+import type { Pool } from "pg";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { enregistrerNomDeChef } from "@/chefs/chef";
+import { creerCompte } from "@/comptes/compte";
+import { lancerLExpedition } from "@/expeditions/depart";
+import type { ExpeditionEnCours } from "@/expeditions/en-cours";
+import type { Coordonnees } from "@/monde/hex";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+
+// La garde dit qui est connecté ; la page lit pour de bon la base de test.
+const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
+vi.mock("@/comptes/garde", () => garde);
+const base = vi.hoisted(() => ({ pool: null as Pool | null }));
+vi.mock("@/db", async (original) => ({ ...(await original<object>()), getPool: () => base.pool }));
+vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
+// Ce que la page envoie au navigateur pour la carte : les propriétés de CarteDuJeu, telles quelles.
+vi.mock("./CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
+vi.mock("./Legende", () => ({ Legende: () => <aside /> }));
+vi.mock("./Attente", () => ({ Attente: () => <div /> }));
+
+import Carte from "./page";
+
+describe.skipIf(!URL_TEST)("les Expéditions que la carte reçoit, sur base (US-0913)", () => {
+  let pool: Pool;
+  let mondeId: number;
+  const lancement = `carte-expeditions-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  let numero = 0;
+
+  /** Un chef qui naît dans le Monde d'essai de ce fichier, et son Territoire. */
+  const naitre = async () => {
+    const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+    const nom = `Exp${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
+  };
+  /** Une Case libre du Monde du Territoire, à `ecart` Cases de son Foyer. */
+  const aLEcart = async (territoireId: number, ecart: number): Promise<Coordonnees> => {
+    const { rows } = await pool.query<Coordonnees>(
+      `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
+         join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
+       where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
+       order by c.q, c.r limit 1`,
+      [territoireId, ecart],
+    );
+    return rows[0];
+  };
+  /** Les Expéditions que la page de la carte donne au navigateur du joueur de ce Territoire. */
+  const envoyees = async (territoireId: number) => {
+    garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId, recitLu: true });
+    const html = renderToStaticMarkup(await Carte({ params: Promise.resolve({}), searchParams: Promise.resolve({}) } as PageProps<"/jeu/carte">));
+    const brut = html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+    return (JSON.parse(brut) as { expeditions: ExpeditionEnCours[] }).expeditions;
+  };
+
+  beforeAll(async () => {
+    pool = poolDeTest();
+    base.pool = pool;
+    await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, "Essai du suivi des Expéditions sur la carte (US-0913)");
+  }, 60_000);
+  afterAll(async () => {
+    await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    await pool.end();
+  });
+
+  it("donne au joueur qui l'a envoyée son Expédition en cours, et à nul autre, même voisin", async () => {
+    const moi = await naitre();
+    const voisin = await naitre();
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur')", [moi]);
+    const destination = await aLEcart(moi, 3);
+    const depart = await lancerLExpedition(pool, moi, { destination, explorateurs: 1, escorte: new Map(), sejourMinutes: 60 }, new Date());
+    expect(depart).toHaveProperty("expeditionId");
+    const id = (depart as { expeditionId: number }).expeditionId;
+    expect((await envoyees(moi)).map((e) => ({ id: e.id, q: e.destination.q, r: e.destination.r, explorateurs: e.explorateurs }))).toEqual([
+      { id, ...destination, explorateurs: ["Joran"] },
+    ]);
+    expect(await envoyees(voisin)).toEqual([]);
+  });
+});

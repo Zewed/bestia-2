@@ -3,11 +3,17 @@ import { act, cleanup, render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
+
+// US-0916 : le routeur, observé pour voir la page se relire au retour d'une Expédition.
+const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
+vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
+
 import { ListeDesExpeditions } from "./ListeDesExpeditions";
 
 afterEach(() => {
   cleanup();
   vi.useRealTimers();
+  routeur.refresh.mockClear();
 });
 
 const MINUTE_MS = 60_000;
@@ -106,5 +112,46 @@ describe("le séjour sur la Case, en direct (US-0915)", () => {
     expect(comptes()).toEqual([["Séjour", "repart dans 1 min"]]);
     await act(async () => vi.advanceTimersByTime(1_000));
     expect(comptes()).toEqual([["Retour", "rentre dans 1 h"]]);
+  });
+});
+
+describe("le retour au Foyer, en direct (US-0916)", () => {
+  it("relit la page juste après le retour de la première Expédition qui rentre, pour qu'elle quitte la liste", async () => {
+    vi.useFakeTimers();
+    // Parties il y a 5 h 59 min 30 s et 2 h : la première rentre dans 30 s, la seconde dans 4 h.
+    render(<ListeDesExpeditions expeditions={[vers(5, avant(6 * 60 - 0.5)), vers(6, avant(2 * 60))]} maintenant={MAINTENANT} />);
+    expect(comptes()[0]).toEqual(["Retour", "rentre dans 1 min"]);
+    await act(async () => vi.advanceTimersByTime(30_000));
+    expect(comptes()[0]).toEqual(["Retour", "de retour"]);
+    expect(routeur.refresh).not.toHaveBeenCalled();
+    // Une seconde réelle plus tard, le temps que le serveur l'ait fait rentrer.
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("suit le rythme du jeu, et repart de la page relue pour l'Expédition suivante", async () => {
+    vi.useFakeTimers();
+    // Au rythme du jeu × 60, la première rentre dans 30 s réelles, la seconde dans 4 min réelles.
+    const { rerender } = render(<ListeDesExpeditions expeditions={[vers(5, avant(6 * 60 - 30)), vers(6, avant(2 * 60))]} maintenant={MAINTENANT} vitesse={60} />);
+    await act(async () => vi.advanceTimersByTime(31_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(1);
+    // La page relue n'a plus que la seconde, lue 35 minutes du jeu après l'affichage, plus tard que l'horloge du
+    // navigateur : elle rentre dans 3 h 25 du jeu, 3 min 25 s réelles, et non plus dans les 3 min 29 de la première lecture.
+    rerender(<ListeDesExpeditions expeditions={[vers(6, avant(2 * 60))]} maintenant={new Date(MAINTENANT.getTime() + 35 * MINUTE_MS)} vitesse={60} />);
+    await act(async () => vi.advanceTimersByTime(205_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(1);
+    await act(async () => vi.advanceTimersByTime(1_000));
+    expect(routeur.refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it("ne relit pas la page pour une Expédition déjà de retour à l'affichage, ni pour une dont le retour n'est pas chiffré", async () => {
+    vi.useFakeTimers();
+    render(<ListeDesExpeditions expeditions={[vers(5, avant(7 * 60)), vers(6, avant(10), { trajetMinutes: null })]} maintenant={MAINTENANT} />);
+    expect(comptes()).toEqual([
+      ["Retour", "de retour"],
+      ["Aller", "—"],
+    ]);
+    await act(async () => vi.advanceTimersByTime(24 * 60 * MINUTE_MS));
+    expect(routeur.refresh).not.toHaveBeenCalled();
   });
 });

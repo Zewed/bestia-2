@@ -143,8 +143,10 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     expect(await rencontres(id)).toEqual([]);
     await rattraperA(territoireId, decale(bete.arrivee, 1));
     expect(await rencontres(id)).toEqual([vue(bete, caseId, bete.arrivee)]);
-    // Jusqu'à son retour, et bien après : une seule Rencontre, toujours à l'heure de l'apparition.
+    // Rentrée au Foyer (US-0916), et bien après : une seule Rencontre, toujours à l'heure de l'apparition.
     await rattraperA(territoireId, apres(depart, 2 * ALLER + 4 * HEURE + JOUR));
+    const { rows } = await pool.query<{ rentreeLe: Date | null }>('select rentree_le as "rentreeLe" from expedition where id = $1', [id]);
+    expect(rows[0].rentreeLe).toEqual(apres(depart, 2 * ALLER + 4 * HEURE));
     expect(await rencontres(id)).toEqual([vue(bete, caseId, bete.arrivee)]);
   });
 

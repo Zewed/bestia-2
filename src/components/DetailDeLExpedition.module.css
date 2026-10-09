@@ -191,3 +191,54 @@
     transition: none;
   }
 }
+
+/*
+ * US-0913 : dans une place étroite qui se déclare conteneur, comme la fiche d'une Expédition sur la carte, même sur
+ * ordinateur : la destination et sa phase au premier rang, la distance dessous, puis le temps restant, plutôt que de
+ * couper la destination lettre à lettre ; le détail, une étiquette par ligne, comme sur un téléphone. À plat, sans le
+ * fond d'une ligne de liste : la fiche est déjà un bloc, et le panneau plafonné d'un téléphone garde sa place. Sans
+ * conteneur, comme dans la liste des Expéditions, rien ne change.
+ */
+@container (max-width: 480px) {
+  .expedition {
+    padding: 0;
+    background: none;
+  }
+
+  .ligne {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .phase {
+    grid-row: 1;
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .distance {
+    grid-row: 2;
+    grid-column: 1 / -1;
+  }
+
+  .reste {
+    grid-row: 3;
+    grid-column: 1 / -1;
+    margin-top: 4px;
+  }
+
+  .detail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .detail > div {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+  }
+
+  .detail dt {
+    font-size: inherit;
+  }
+}

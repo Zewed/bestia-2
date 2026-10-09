@@ -20,6 +20,8 @@ vi.mock("@/temps/horloge", () => ({ maintenant: () => INSTANT, vitesse: () => 1 
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
+// US-0916 : la liste se relit au prochain retour (src/app/jeu/expeditions/ListeDesExpeditions.test.tsx) ; ici, rien ne se relit.
+vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useRouter: () => ({ refresh: vi.fn() }) }));
 
 import ExpeditionsEnCours, { metadata } from "./page";
 
