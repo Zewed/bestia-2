@@ -4,12 +4,13 @@ import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Coordonnees } from "@/monde/hex";
+import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { type ChoixDuDepart, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
 
 // Aucune Espèce du jeu ne va encore moins vite que la marche des explorateurs, 5 km/h : ici, ils marchent à 26 km/h, deux
-// fois plus vite que la souris (13 km/h) et presque autant que la poule (14 km/h) ; le pigeon (80 km/h) les dépasse
+// fois plus vite que la souris (13 km/h), plus vite aussi que la poule (14 km/h) ; le pigeon (80 km/h) les dépasse
 // toujours. Leur pas reste de 20 minutes de jeu par Case.
 vi.mock("@/reglages", async (original) => ({ ...(await original<typeof import("@/reglages")>()), MARCHE_DES_EXPLORATEURS_KMH: 26 }));
 
@@ -52,6 +53,7 @@ describe.skipIf(!URL_TEST)("la durée du trajet d'une escorte (US-0912, sur base
   const partir = async (territoireId: number, escorte: [string, number][]) => {
     const choix: ChoixDuDepart = { destination: await aLEcart(territoireId, 3), explorateurs: 1, escorte: new Map(escorte), sejourMinutes: 240 };
     const depart = await lancerLExpedition(pool, territoireId, choix, INSTANT);
+    expect(depart).toEqual({ expeditionId: expect.any(Number) });
     const { rows } = await pool.query<{ trajet: number }>("select trajet_minutes as trajet from expedition where id = $1", [(depart as { expeditionId: number }).expeditionId]);
     return rows[0].trajet;
   };
@@ -80,7 +82,7 @@ describe.skipIf(!URL_TEST)("la durée du trajet d'une escorte (US-0912, sur base
 
   it("garde le pas des explorateurs quand toutes les Bêtes de l'escorte vont plus vite qu'eux", async () => {
     const t = await nouveauTerritoire([["pigeon", 1]]);
-    expect(await partir(t, [["pigeon", 1]])).toBe(3 * 20);
+    expect(await partir(t, [["pigeon", 1]])).toBe(3 * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE);
   });
 
   it("arrondit l'allure à la minute supérieure : 20 × 26 / 14 minutes par Case pour la poule, soit 38", async () => {

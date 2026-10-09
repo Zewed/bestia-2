@@ -157,6 +157,7 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
     try {
       // Le temps de l'essai, rien n'en reste : aucune Espèce du jeu ne va encore moins vite que les explorateurs.
       await client.query("begin");
+      await client.query("set local lock_timeout = '10s'");
       await client.query("update espece set vitesse = 2.5 where id = 'souris'");
       await client.query("update expedition set trajet_minutes = null where id = any($1)", [parties.slice(0, 2)]);
       await client.query(migration);
