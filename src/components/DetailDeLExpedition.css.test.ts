@@ -75,3 +75,22 @@ describe("le détail d'une Expédition dans une place étroite, la fiche de la c
     expect(fiche).toMatch(/\.detail \{[^}]*container-type: inline-size;/);
   });
 });
+
+describe("« Rappeler » (US-0920)", () => {
+  const mobile = CSS.match(/@media \(max-width: 820px\), \(max-height: 500px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+  const etroit = CSS.match(/@container \(max-width: 480px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+
+  it("se touche au pouce, discret à côté des boutons sur l'Encre, et se grise le temps que le serveur réponde", () => {
+    expect(regle(".rappeler")).toContain("min-height: 44px;");
+    expect(regle(".rappeler")).toContain("box-shadow: inset 0 0 0 1px var(--trait);");
+    expect(regle(".rappeler")).toContain("cursor: pointer;");
+    expect(regle(".rappeler:disabled")).toMatch(/color: var\(--texte-pale\);[^}]*cursor: not-allowed;/);
+    expect(regle(".rappeler:focus-visible")).toContain("outline: 2px solid var(--encre);");
+  });
+
+  it("prend toute la largeur sur un téléphone et dans la fiche de la carte, et attend avec le détail qu'on déplie la ligne", () => {
+    expect(regle(".rappeler", mobile)).toContain("width: 100%;");
+    expect(regle(".rappeler", etroit)).toContain("width: 100%;");
+    expect(regle(".repliable:not(.deplie) .rappeler", mobile)).toContain("display: none;");
+  });
+});

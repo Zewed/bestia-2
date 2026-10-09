@@ -693,7 +693,8 @@ export const beteDeNaissance = pgTable(
  * Le trajet est chiffré au départ, escorte comprise (US-0912) ; il ne restait null que pour une escorte partie avant,
  * que la migration 0050 a rattrapée. Ses explorateurs la portent sur leur ligne (habitant.expedition_id). Elle part
  * avec le Territoire. US-0916 : rentrée au Foyer à `rentree_le`, un instant du jeu (null tant qu'elle est en cours), elle
- * n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) la relit.
+ * n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) la relit. US-0920 : rappelée par le joueur à
+ * `rappelee_le`, un instant du jeu (null sans rappel), elle fait demi-tour aussitôt (src/expeditions/phase.ts).
  */
 export const expedition = pgTable(
   "expedition",
@@ -709,6 +710,7 @@ export const expedition = pgTable(
     trajetMinutes: integer("trajet_minutes"),
     sejourMinutes: integer("sejour_minutes").notNull(),
     rentreeLe: timestamp("rentree_le", { withTimezone: true }),
+    rappeleeLe: timestamp("rappelee_le", { withTimezone: true }),
   },
   (t) => [
     index("expedition_par_territoire").on(t.territoireId),
@@ -716,6 +718,8 @@ export const expedition = pgTable(
     index("expedition_par_case").on(t.caseId),
     check("expedition_trajet_positif", sql`${t.trajetMinutes} > 0`),
     check("expedition_sejour_positif", sql`${t.sejourMinutes} > 0`),
+    // US-0920 : une Expédition ne se rappelle qu'une fois partie.
+    check("expedition_rappelee_apres_son_depart", sql`${t.rappeleeLe} >= ${t.partLe}`),
   ],
 );
 
@@ -747,7 +751,9 @@ export const expeditionEscorte = pgTable(
  * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition, ou avec sa Bête de naissance, qui ne s'efface
  * qu'avec son Territoire et ses Expéditions. US-0934 : `apprivoisee`, la Bête, à portée, suit l'Expédition depuis
  * `vue_le` : c'est l'Apprivoisement, et elle a quitté sa Case (src/expeditions/apprivoisement.ts). Une seule Expédition
- * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici.
+ * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici. US-0937 : `sexe`,
+ * celui de la Bête apprivoisée, tiré à chances égales à l'Apprivoisement (src/expeditions/sexe.ts), qui ne change plus ;
+ * null pour une Bête restée sur sa Case.
  */
 export const rencontre = pgTable(
   "rencontre",
@@ -765,6 +771,7 @@ export const rencontre = pgTable(
     apparueLe: timestamp("apparue_le", { withTimezone: true }).notNull(),
     vueLe: timestamp("vue_le", { withTimezone: true }).notNull(),
     apprivoisee: boolean("apprivoisee").notNull().default(false),
+    sexe: sexe("sexe"),
   },
   (t) => [
     unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
@@ -773,6 +780,7 @@ export const rencontre = pgTable(
     uniqueIndex("rencontre_une_expedition_par_bete_de_naissance").on(t.beteDeNaissanceId).where(sql`${t.apprivoisee}`),
     check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
+    check("rencontre_sexe_de_l_apprivoisee", sql`(${t.sexe} is not null) = ${t.apprivoisee}`),
   ],
 );
 

@@ -7,7 +7,8 @@
 // se tire selon l'Anneau de sa Case ; US-0928 : son Espèce, parmi celles de cette Rareté qui vivent dans le Biome de sa
 // Case. US-0930 : tout se compte en temps du jeu, par tranches fixes : pour une Case et une période, les mêmes Bêtes,
 // qu'on les calcule en direct ou au rattrapage, d'un bloc ou par morceaux, seule ou avec tout le Monde ; la vitesse
-// accélérée du temps accélère d'autant leurs apparitions et leurs durées. Côté serveur et scripts uniquement.
+// accélérée du temps accélère d'autant leurs apparitions et leurs durées. US-0937 : apprivoisée, une Bête est mâle ou
+// femelle, tiré de même. Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type ChancesDeRarete, lireRaretesParAnneau } from "@/donnees/jeux";
 import { APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
@@ -21,7 +22,7 @@ const JOUR_MS = 86_400_000;
 /** Au plus 100 apparitions par Case et par tranche (en moyenne, bien moins d'une), pour que leurs numéros ne se mêlent jamais. */
 const PAR_TRANCHE = 100;
 /** Ce que chaque tranche, puis chaque apparition, tire de son côté. */
-const TIRAGE = { nombre: 1, moment: 2, rarete: 3, espece: 4 } as const;
+const TIRAGE = { nombre: 1, moment: 2, rarete: 3, espece: 4, sexe: 5 } as const;
 /** US-0926 : combien de temps une Bête reste sur sa Case, en temps du jeu. */
 const PRESENCE_MS = PRESENCE_D_UNE_BETE_HEURES * TRANCHE_MS;
 
@@ -104,6 +105,23 @@ export function tirerUneEspece(
     if (candidates?.length) return { especeId: candidates[Math.floor(hasard * candidates.length)], rareteId: chances[rang].rareteId };
   }
   return null;
+}
+
+/** US-0937 : le sexe d'une Bête apprivoisée, comme l'effectif le compte (src/monde/effectif.ts, enum sexe). */
+export type Sexe = "male" | "femelle";
+
+/** US-0937 : le sexe que le hasard `hasard`, de 0 à 1, tire à chances égales : mâle sous la moitié, femelle au-dessus. */
+export function tirerUnSexe(hasard: number): Sexe {
+  return hasard < 0.5 ? "male" : "femelle";
+}
+
+/**
+ * US-0937 : le sexe de l'apparition `numero` de la Case `laCase`, tiré à son Apprivoisement (src/expeditions/sexe.ts) à
+ * chances égales : comme sa Rareté et son Espèce, une fonction de la graine de son Monde, de sa Case et de son numéro,
+ * par un tirage qui lui est propre, jamais de l'heure qu'il est. Le même en direct, au rattrapage ou par la tâche planifiée.
+ */
+export function sexeTire({ graine, q, r }: Pick<CaseSauvage, "graine" | "q" | "r">, numero: number): Sexe {
+  return tirerUnSexe(hacher(graine, q, r, numero, TIRAGE.sexe));
 }
 
 /** Le nombre d'apparitions d'une tranche, de moyenne `moyenne` : une loi de Poisson, celle d'apparitions indépendantes. */

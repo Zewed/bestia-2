@@ -329,3 +329,11 @@ export const MARCHE_DES_EXPLORATEURS_KMH = 5;
  */
 export const BROUILLARD_LEVE_SUR_LE_CHEMIN_CASES = 1;
 export const BROUILLARD_LEVE_AUTOUR_DE_LA_DESTINATION_CASES = 2;
+
+/**
+ * US-0937 : sur une longue simulation de 10 000 Apprivoisements (valeur provisoire, à régler en jouant), mâles et femelles
+ * sont à parts égales : la part des mâles s'écarte au plus de 2 points de pourcentage de la moitié (valeur provisoire, à
+ * régler en jouant).
+ */
+export const SIMULATION_DES_SEXES_APPRIVOISEMENTS = 10_000;
+export const SIMULATION_DES_SEXES_TOLERANCE_POINTS = 2;

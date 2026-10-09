@@ -121,3 +121,44 @@ describe("l'heure de passage sur chaque Case du chemin (US-0914)", () => {
     );
   });
 });
+
+describe("le demi-tour d'une Expédition rappelée (US-0920)", () => {
+  /** Rappelée à mi-chemin entre la deuxième Case et la destination, 50 minutes après son départ. */
+  const RAPPELEE = { ...EXPEDITION, rappeleeLe: apres(50) };
+
+  it("fait demi-tour là où elle en est, et revient au Foyer au même pas, le retour durant le temps déjà parcouru", () => {
+    expect(a(50, RAPPELEE).avancee).toBeCloseTo(2.5, 12);
+    expect(a(60, RAPPELEE).avancee).toBeCloseTo(2, 12);
+    expect(a(60, RAPPELEE)).toMatchObject({ rang: 2, case: DEUXIEME });
+    expect(a(70, RAPPELEE)).toMatchObject({ rang: 2, case: DEUXIEME });
+    expect(a(80, RAPPELEE)).toMatchObject({ rang: 1, case: PREMIERE });
+    expect(a(100, RAPPELEE)).toEqual({ avancee: 0, rang: 0, case: FOYER });
+    expect(a(100 + 24 * 60, RAPPELEE)).toEqual({ avancee: 0, rang: 0, case: FOYER });
+  });
+
+  it("n'atteint jamais la Case vers laquelle elle allait : elle est toujours sur la dernière qu'elle a atteinte", () => {
+    for (const minutes of [50, 51, 55, 59]) expect(a(minutes, RAPPELEE)).toMatchObject({ rang: 2, case: DEUXIEME });
+    expect(a(60, RAPPELEE).avancee).toBeLessThan(3);
+  });
+
+  it("rappelée en séjour, repart de la destination au rappel, pour un retour aussi long que l'aller", () => {
+    const enSejour = { ...EXPEDITION, rappeleeLe: apres(60 + 30) };
+    expect(a(60 + 29, enSejour)).toEqual({ avancee: 3, rang: 3, case: DESTINATION });
+    expect(a(60 + 30 + 10, enSejour).avancee).toBeCloseTo(2.5, 12);
+    expect(a(60 + 30 + 20, enSejour)).toEqual({ avancee: 2, rang: 2, case: DEUXIEME });
+    expect(a(60 + 30 + 60, enSejour)).toEqual({ avancee: 0, rang: 0, case: FOYER });
+  });
+
+  it("ne passe plus sur aucune Case après son rappel : ses passages s'arrêtent au demi-tour", () => {
+    expect(passagesDUneExpedition(FOYER, DESTINATION, RAPPELEE)).toEqual([
+      { case: PREMIERE, rang: 1, le: apres(20) },
+      { case: DEUXIEME, rang: 2, le: apres(40) },
+    ]);
+    // Rappelée à l'instant même où elle atteint une Case, elle l'a atteinte.
+    expect(passagesDUneExpedition(FOYER, DESTINATION, { ...EXPEDITION, rappeleeLe: apres(40) }).map((p) => p.rang)).toEqual([1, 2]);
+    expect(passagesDUneExpedition(FOYER, DESTINATION, { ...EXPEDITION, rappeleeLe: apres(40 - 1 / 60_000) }).map((p) => p.rang)).toEqual([1]);
+    expect(passagesDUneExpedition(FOYER, DESTINATION, { ...EXPEDITION, rappeleeLe: DEPART })).toEqual([]);
+    // Rappelée en séjour, elle était arrivée : tous ses passages.
+    expect(passagesDUneExpedition(FOYER, DESTINATION, { ...EXPEDITION, rappeleeLe: apres(61) })).toHaveLength(3);
+  });
+});

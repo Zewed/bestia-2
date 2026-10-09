@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { finDeLaPhase, phaseDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
+import { demiTourDUneExpedition, finDeLaPhase, phaseDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
 
 const MINUTE_MS = 60_000;
 const DEPART = new Date("2026-10-09T07:42:00.000Z");
@@ -68,5 +68,64 @@ describe("le séjour d'une Expédition sur sa Case (US-0915)", () => {
 
   it("n'a pas lieu tant que le trajet d'une escorte n'est pas chiffré (US-0912)", () => {
     expect(sejourDUneExpedition({ ...EXPEDITION, trajetMinutes: null })).toBeNull();
+  });
+});
+
+describe("une Expédition rappelée (US-0920)", () => {
+  /** 140 minutes d'aller, puis 4 h de séjour, puis 140 minutes de retour, sauf rappel. */
+  const EXPEDITION = { partLe: DEPART, trajetMinutes: 140, sejourMinutes: 240 };
+  /** Rappelée 50 minutes après son départ, à l'aller. */
+  const A_L_ALLER = { ...EXPEDITION, rappeleeLe: apres(50) };
+  /** Rappelée 1 h 30 après son arrivée, en séjour. */
+  const EN_SEJOUR = { ...EXPEDITION, rappeleeLe: apres(140 + 90) };
+
+  it("à l'aller, fait demi-tour aussitôt : le retour dure le temps déjà parcouru", () => {
+    expect(phaseDUneExpedition(A_L_ALLER, apres(49))).toBe("aller");
+    expect(phaseDUneExpedition(A_L_ALLER, apres(50))).toBe("retour");
+    expect(retourDUneExpedition(A_L_ALLER)).toEqual(apres(50 + 50));
+    expect(phaseDUneExpedition(A_L_ALLER, apres(140))).toBe("retour");
+    expect(finDeLaPhase(A_L_ALLER, apres(49))).toEqual(apres(50));
+    expect(finDeLaPhase(A_L_ALLER, apres(50))).toEqual(apres(100));
+  });
+
+  it("à l'aller, ne séjourne pas : elle n'est jamais sur sa Case", () => {
+    expect(sejourDUneExpedition(A_L_ALLER)).toBeNull();
+    for (let minutes = 0; minutes <= 140 + 240 + 140; minutes += 7) expect(phaseDUneExpedition(A_L_ALLER, apres(minutes))).not.toBe("sejour");
+  });
+
+  it("rappelée au départ même, est aussitôt de retour", () => {
+    const aussitot = { ...EXPEDITION, rappeleeLe: DEPART };
+    expect(phaseDUneExpedition(aussitot, DEPART)).toBe("retour");
+    expect(retourDUneExpedition(aussitot)).toEqual(DEPART);
+  });
+
+  it("en séjour, y met fin et repart aussitôt, pour un retour aussi long que l'aller (décidé le 2026-10-08)", () => {
+    expect(sejourDUneExpedition(EN_SEJOUR)).toEqual({ debut: apres(140), fin: apres(140 + 90) });
+    expect(phaseDUneExpedition(EN_SEJOUR, apres(140 + 89))).toBe("sejour");
+    expect(phaseDUneExpedition(EN_SEJOUR, apres(140 + 90))).toBe("retour");
+    expect(finDeLaPhase(EN_SEJOUR, apres(140))).toEqual(apres(140 + 90));
+    expect(retourDUneExpedition(EN_SEJOUR)).toEqual(apres(140 + 90 + 140));
+  });
+
+  it("rappelée à l'arrivée pile, ne séjourne pas un instant", () => {
+    const aLArrivee = { ...EXPEDITION, rappeleeLe: apres(140) };
+    expect(sejourDUneExpedition(aLArrivee)).toEqual({ debut: apres(140), fin: apres(140) });
+    expect(phaseDUneExpedition(aLArrivee, apres(140))).toBe("retour");
+    expect(retourDUneExpedition(aLArrivee)).toEqual(apres(280));
+  });
+
+  it("garde ses horaires jusqu'au rappel ; un rappel après la fin du séjour ne change rien", () => {
+    for (let minutes = 0; minutes < 50; minutes += 7) expect(phaseDUneExpedition(A_L_ALLER, apres(minutes))).toBe(phaseDUneExpedition(EXPEDITION, apres(minutes)));
+    for (const rappeleeLe of [null, undefined, apres(140 + 240), apres(140 + 240 + 60)]) {
+      expect(retourDUneExpedition({ ...EXPEDITION, rappeleeLe })).toEqual(retourDUneExpedition(EXPEDITION));
+      expect(sejourDUneExpedition({ ...EXPEDITION, rappeleeLe })).toEqual(sejourDUneExpedition(EXPEDITION));
+    }
+  });
+
+  it("fait demi-tour au rappel, ou à la fin du séjour sans rappel, avec l'aller fait jusque-là", () => {
+    expect(demiTourDUneExpedition(A_L_ALLER)).toEqual({ le: apres(50), allerMs: 50 * MINUTE_MS });
+    expect(demiTourDUneExpedition(EN_SEJOUR)).toEqual({ le: apres(140 + 90), allerMs: 140 * MINUTE_MS });
+    expect(demiTourDUneExpedition(EXPEDITION)).toEqual({ le: apres(140 + 240), allerMs: 140 * MINUTE_MS });
+    expect(demiTourDUneExpedition({ ...A_L_ALLER, trajetMinutes: null })).toBeNull();
   });
 });
