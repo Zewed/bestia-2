@@ -23,13 +23,38 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 
 import ExpeditionsEnCours, { metadata } from "./page";
 
-/** Une Expédition partie vers une forêt à 3 Cases, et une autre vers une Case encore sous le brouillard, à 1 Case. */
+/** Une heure du jeu, `minutes` avant l'affichage de la page. */
+const avant = (minutes: number) => new Date(INSTANT.getTime() - minutes * 60_000);
+
+/**
+ * Une Expédition partie il y a 18 min vers une forêt à 3 Cases (1 h d'aller, 4 h de séjour), avec deux explorateurs et
+ * une escorte ; et une autre, partie il y a 30 min vers une Case encore sous le brouillard, à 1 Case (20 min d'aller,
+ * 1 h de séjour), avec un explorateur, sans escorte.
+ */
 const EXPEDITIONS: ExpeditionEnCours[] = [
-  { id: 5, destination: { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 3, anneau: 3 }, phase: "aller" },
-  { id: 6, destination: { q: 4, r: -5, inconnue: true, distance: 1 }, phase: "sejour" },
+  {
+    id: 5,
+    destination: { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 3, anneau: 3 },
+    phase: "aller",
+    partLe: avant(18),
+    trajetMinutes: 60,
+    sejourMinutes: 240,
+    explorateurs: ["Joran", "Ines"],
+    escorte: [{ id: "souris", nom: "Souris grise", nombre: 2 }],
+  },
+  {
+    id: 6,
+    destination: { q: 4, r: -5, inconnue: true, distance: 1 },
+    phase: "sejour",
+    partLe: avant(30),
+    trajetMinutes: 20,
+    sejourMinutes: 60,
+    explorateurs: ["Mael"],
+    escorte: [],
+  },
 ];
 
-describe("la liste des Expéditions en cours (US-0911)", () => {
+describe("la liste des Expéditions en cours (US-0911, US-0918)", () => {
   afterEach(() => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
@@ -42,9 +67,16 @@ describe("la liste des Expéditions en cours (US-0911)", () => {
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
     enCours.expeditionsEnCours.mockResolvedValue(expeditions);
   };
-  /** Le texte de chaque ligne de la liste, ses morceaux séparés par « · ». */
+  /** Le texte de chaque ligne de la liste, ses morceaux séparés par « · » (« arrive dans » à part, que mobile replie). */
   const lignes = (html: string) =>
-    [...html.matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) => ligne.replace(/<[^>]+>/g, "|").split("|").filter(Boolean).join(" · "));
+    [...html.matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, ligne]) =>
+      ligne
+        .replace(/<[^>]+>/g, "|")
+        .split("|")
+        .map((morceau) => morceau.trim())
+        .filter(Boolean)
+        .join(" · "),
+    );
 
   it("titre la page « Expéditions en cours », dans l'onglet comme sur la page", async () => {
     connecte();
@@ -52,23 +84,28 @@ describe("la liste des Expéditions en cours (US-0911)", () => {
     expect(renderToStaticMarkup(await ExpeditionsEnCours())).toMatch(/<main[^>]*><h1[^>]*>Expéditions en cours<\/h1>/);
   });
 
-  it("montre chaque Expédition en cours du Territoire, à l'heure du jeu : sa destination, sa distance et sa phase", async () => {
+  it("montre chaque Expédition en cours du Territoire, à l'heure du jeu : sa destination, sa phase, son temps restant, ses explorateurs et son escorte", async () => {
     connecte();
     const html = renderToStaticMarkup(await ExpeditionsEnCours());
     expect(enCours.expeditionsEnCours).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, INSTANT);
-    expect(lignes(html)).toEqual(["Forêt · 3 Cases de votre Foyer · Aller", "Case inconnue · 1 Case de votre Foyer · Séjour"]);
+    expect(lignes(html)).toEqual([
+      // 9 h 24 à Paris, plus 1 h d'aller, 4 h de séjour et 1 h de retour.
+      "Forêt · 3 Cases de votre Foyer · Aller · arrive dans · 42 min · Explorateurs · Joran, Ines · Escorte · Souris grise × 2 · Retour prévu · 9 octobre à 15:24",
+      "Case inconnue · 1 Case de votre Foyer · Séjour · repart dans · 50 min · Explorateurs · Mael · Escorte · Sans escorte · Retour prévu · 9 octobre à 10:52",
+    ]);
   });
 
-  it("dit la phase de retour", async () => {
-    connecte([{ ...EXPEDITIONS[0], phase: "retour" }]);
-    expect(lignes(renderToStaticMarkup(await ExpeditionsEnCours()))).toEqual(["Forêt · 3 Cases de votre Foyer · Retour"]);
+  it("dit la phase de retour, et le temps qu'il reste avant la rentrée au Foyer", async () => {
+    connecte([{ ...EXPEDITIONS[0], partLe: avant(60 + 240 + 30) }]);
+    expect(lignes(renderToStaticMarkup(await ExpeditionsEnCours()))[0]).toMatch(/^Forêt · 3 Cases de votre Foyer · Retour · rentre dans · 30 min · /);
   });
 
-  it("sans Expédition en cours, le dit, sans liste", async () => {
+  it("sans Expédition en cours, le dit, sans liste, avec un bouton pour en préparer une sur l'écran d'Expédition", async () => {
     connecte([]);
     const html = renderToStaticMarkup(await ExpeditionsEnCours());
     expect(html).toContain("Aucune Expédition en cours");
     expect(html).not.toContain("<ul");
+    expect(html).toMatch(/<a[^>]*href="\/jeu\/expeditions\/nouvelle"[^>]*>Préparer une Expédition<\/a>/);
   });
 
   it("renvoie vers la connexion sans session, qui ramènera ensuite ici", async () => {

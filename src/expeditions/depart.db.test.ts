@@ -97,7 +97,8 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
     expect(depart).toEqual({ expeditionId: expect.any(Number) });
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 1, total: 3 });
     expect(await expeditionsEnCours(pool, t, INSTANT)).toEqual([
-      { id: (depart as { expeditionId: number }).expeditionId, destination: expect.objectContaining({ ...destination, distance: 3 }), phase: "aller" },
+      // US-0918 : avec son détail (src/expeditions/en-cours.db.test.ts).
+      expect.objectContaining({ id: (depart as { expeditionId: number }).expeditionId, destination: expect.objectContaining({ ...destination, distance: 3 }), phase: "aller" }),
     ]);
     expect(await retenu(t)).toEqual({ expeditions: 1, escortes: 0, partis: 2 });
   });

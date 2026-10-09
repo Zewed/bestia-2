@@ -8,13 +8,18 @@ const CSS = readFileSync(join(process.cwd(), "src/app/jeu/expeditions/page.modul
 /** Les déclarations de la règle `selecteur`, écrite en tête de ligne, dans `texte` (toute la feuille par défaut). */
 const regle = (selecteur: string, texte = CSS) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\:,]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
 
-describe("la liste des Expéditions en cours sur un téléphone (US-0911)", () => {
+describe("la liste des Expéditions en cours sur un téléphone (US-0911, US-0918)", () => {
   const mobile = CSS.match(/@media \(max-width: 820px\), \(max-height: 500px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
 
-  it("tient sans défilement de côté : la destination se plie, la phase garde sa place au bout de la ligne", () => {
+  it("tient sans défilement de côté : rien n'y a de largeur fixe plus grande que l'écran", () => {
     expect(regle(".page", mobile)).toContain("padding: 12px;");
     expect(CSS).not.toMatch(/(?:^|[^-])width: \d{3,}px/);
-    expect(regle(".expedition")).toContain("grid-template-columns: minmax(0, 1fr) auto;");
-    expect(regle(".destination")).toContain("overflow-wrap: anywhere;");
+  });
+
+  it("sans Expédition, met le bouton pour en préparer une au pouce : 44 px de haut, toute la largeur sur mobile", () => {
+    expect(regle(".preparer")).toContain("min-height: 44px;");
+    expect(regle(".preparer")).toContain("cursor: pointer;");
+    expect(regle(".preparer:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    expect(regle(".preparer", mobile)).toMatch(/display: flex;[^}]*width: 100%;/);
   });
 });
