@@ -285,3 +285,9 @@ export const SEJOURS_TOUT_PRETS_MINUTES = [60, 4 * 60, 8 * 60, 12 * 60];
  * naissance (ABORDS_DU_FOYER_CASES). Des Recherches de la branche Explorer l'agrandiront (US-0731, jalon 7).
  */
 export const PORTEE_D_EXPLORATION_CASES = 8;
+
+/**
+ * US-0909 : sans escorte, une Expédition avance au pas des explorateurs : 20 minutes de jeu par Case (valeur provisoire,
+ * à régler en jouant). La durée du trajet (US-0912) en tirera l'aller et le retour (src/expeditions/allure.ts).
+ */
+export const PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE = 20;

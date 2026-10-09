@@ -1,0 +1,4 @@
+/* US-0909 : le bloc sans escorte, sous les Explorateurs, à l'écart des blocs Bento. */
+.bloc {
+  margin-top: var(--ecart);
+}

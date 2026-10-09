@@ -37,6 +37,8 @@ const effectif = vi.hoisted(() => ({
 }));
 vi.mock("@/monde/effectif", () => effectif);
 vi.mock("./Escorte", () => ({ Escorte: (p: object) => <i data-escorte={JSON.stringify(p)} /> }));
+// US-0909 : l'escorte d'une Expédition sans Bête, réduite à sa place (testée à part).
+vi.mock("./SansEscorte", () => ({ SansEscorte: () => <i data-sans-escorte="" /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -342,5 +344,35 @@ describe("l'escorte de l'écran d'Expédition (US-0904)", () => {
   it("garde l'escorte choisie en allant choisir la destination sur la carte (US-0907)", async () => {
     connecte();
     expect(lien(await ouvrir({ escorte: ["poule.1", "souris.2"] }), "Choisir sur la carte")).toBe("/jeu/carte?choix=destination&escorte=poule.1&escorte=souris.2");
+  });
+});
+
+describe("partir sans escorte (US-0909)", () => {
+  afterEach(() => {
+    effectif.betesDisponibles.mockClear();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+
+  it("sans Bête disponible, dit l'Expédition sans escorte à la place du bloc Escorte, entre les explorateurs et le séjour, avec ou sans destination", async () => {
+    connecte();
+    effectif.betesDisponibles.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const aLaPlaceDeLEscorte = /<i data-explorateurs="[^"]*"><\/i><i data-sans-escorte=""><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>/;
+    const sansDestination = await ouvrir();
+    expect(sansDestination).toMatch(aLaPlaceDeLEscorte);
+    expect(sansDestination).not.toContain("data-escorte");
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(aLaPlaceDeLEscorte);
+  });
+
+  it("avec des Bêtes disponibles, propose l'escorte et ne dit rien de plus", async () => {
+    connecte();
+    const html = await ouvrir();
+    expect(html).toContain("data-escorte");
+    expect(html).not.toContain("data-sans-escorte");
   });
 });

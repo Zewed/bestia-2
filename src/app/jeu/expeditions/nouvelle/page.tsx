@@ -15,6 +15,7 @@ import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
+import { SansEscorte } from "./SansEscorte";
 import { Sejour } from "./Sejour";
 import { VersLaCarte } from "./VersLaCarte";
 
@@ -101,7 +102,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
-      <Escorte especes={escorte} />
+      {/* US-0909 : sans Bête disponible, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. */}
+      {escorte.length > 0 ? <Escorte especes={escorte} /> : <SansEscorte />}
       <Sejour />
       <Partir libres={explorateurs.libres} />
     </main>
