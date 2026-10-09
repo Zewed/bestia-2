@@ -638,8 +638,9 @@ export const sexe = pgEnum("sexe", ["male", "femelle"]);
 /**
  * L'effectif d'un Territoire (US-0904) : ses Bêtes apprivoisées, comptées et non désignées, puisque toutes les Bêtes
  * d'une Espèce sont identiques (ADR 0002) : une ligne par Espèce et par sexe, avec leur nombre, jamais négatif. Elle part
- * avec le Territoire. Personne n'a encore de Bête (ADR 0008) : l'Apprivoisement (US-0937, US-0938) et la Réserve des
- * Couples (jalon 8) la rempliront ; l'écran d'Expédition y lit les Bêtes disponibles (src/monde/effectif.ts).
+ * avec le Territoire. Personne n'a de Bête à sa naissance (ADR 0008) : la Bête apprivoisée y entre à son arrivée au Foyer
+ * (US-0938), et la Réserve des Couples (jalon 8) la remplira aussi ; l'écran d'Expédition y lit les Bêtes disponibles
+ * (src/monde/effectif.ts).
  */
 export const effectif = pgTable(
   "effectif",

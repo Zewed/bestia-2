@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-215 points au total.
+214 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -89,7 +89,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
-- [US-0938](09-explorer-et-apprivoiser.md) · La Bête apprivoisée arrive au Foyer : jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat.
 - [US-0939](09-explorer-et-apprivoiser.md) · Une Bête apprivoisée sans Place libre : quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage.
 - [US-0942](09-explorer-et-apprivoiser.md) · La Bête trop forte reste sur sa Case : le récit dit « trop forte pour votre escorte » ; dire aussi de combien.
 - [US-0943](09-explorer-et-apprivoiser.md) · La Bête trop forte peut attaquer : une chance d'attaque qui dépend de la Rareté ou du régime, un carnivore étant plus agressif.

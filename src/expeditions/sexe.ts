@@ -4,7 +4,7 @@
 // de son Monde, de la Bête et d'un tirage qui lui est propre (sexeTire, sexeDUneBeteDeNaissance), jamais de l'heure qu'il
 // est : le même en direct, au rattrapage ou par la tâche planifiée. Seules les Bêtes apprivoisées avant cette story ont
 // reçu le leur d'un hachage de leur Rencontre (migration 0058). Tant que le Couple de son Espèce n'est pas réuni,
-// l'effectif compte ses mâles et ses femelles (src/monde/effectif.ts) ; l'arrivée au Foyer (US-0938) l'y fera entrer.
+// l'effectif compte ses mâles et ses femelles (src/monde/effectif.ts) ; l'arrivée au Foyer (US-0938) l'y fait entrer.
 // Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
@@ -41,7 +41,8 @@ export type BeteQuiSuit = { especeId: string; sexe: Sexe; depuis: Date };
 
 /**
  * US-0937 : les Bêtes apprivoisées qui suivent l'Expédition `expeditionId`, chacune avec son sexe, dans l'ordre de leur
- * Apprivoisement. US-0938 les fera entrer dans l'effectif, chacune avec le sien, au retour de l'Expédition.
+ * Apprivoisement. US-0938 : elles entrent dans l'effectif, chacune avec le sien, au retour de l'Expédition
+ * (src/expeditions/arrivee-au-foyer.ts).
  */
 export async function betesQuiSuivent(base: Pool | PoolClient, expeditionId: number): Promise<BeteQuiSuit[]> {
   const { rows } = await base.query<BeteQuiSuit>(
