@@ -25,10 +25,13 @@ vi.mock("next/navigation", async () => {
 
 import { Escorte } from "./Escorte";
 
-/** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes, et une Espèce sans illustration. */
-const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 };
-const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 };
-const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2, force: 1 };
+/**
+ * Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes et leur vitesse, et une
+ * Espèce sans illustration.
+ */
+const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 };
+const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 };
+const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2, force: 1, vitesse: 10 };
 
 /** L'adresse de l'écran d'Expédition, avec `recherche` (« ?q=3&r=-5 ») : un rechargement, ou un lien. */
 const ouvrir = (recherche = "") => window.history.replaceState(null, "", `/jeu/expeditions/nouvelle${recherche}`);
@@ -208,7 +211,7 @@ describe("la force de l'escorte (US-0905)", () => {
 
   it("écrit un grand total d'un tenant, ses milliers séparés d'une espace insécable", () => {
     ouvrir("?escorte=elephant.1000");
-    ecran([{ id: "elephant", nom: "Éléphant de savane", illustration: null, disponibles: 1000, force: 5_286_856 }]);
+    ecran([{ id: "elephant", nom: "Éléphant de savane", illustration: null, disponibles: 1000, force: 5_286_856, vitesse: 40 }]);
     expect(force()).toBe("5 286 856 000");
   });
 });

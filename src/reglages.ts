@@ -292,7 +292,7 @@ export const PORTEE_D_EXPLORATION_CASES = 8;
 
 /**
  * US-0909 : sans escorte, une Expédition avance au pas des explorateurs : 20 minutes de jeu par Case (valeur provisoire,
- * à régler en jouant). La durée du trajet (US-0912) en tirera l'aller et le retour (src/expeditions/allure.ts).
+ * à régler en jouant). La durée du trajet (US-0912) en tire l'aller et le retour (src/expeditions/allure.ts).
  */
 export const PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE = 20;
 
@@ -314,3 +314,10 @@ export const BETES_DE_NAISSANCE = 3;
  * (PRESENCE_D_UNE_BETE_HEURES) : assez pour qu'une première Expédition sans escorte les trouve.
  */
 export const PRESENCE_D_UNE_BETE_DE_NAISSANCE_HEURES = 48;
+
+/**
+ * US-0912 : le pas des explorateurs (PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE) est celui d'une marche à 5 km/h (valeur
+ * provisoire, à régler en jouant), à laquelle se compare la vitesse réelle de chaque Espèce de l'escorte : une Bête de
+ * v km/h, plus lente, met 20 × 5 / v minutes de jeu à passer une Case (src/expeditions/allure.ts).
+ */
+export const MARCHE_DES_EXPLORATEURS_KMH = 5;

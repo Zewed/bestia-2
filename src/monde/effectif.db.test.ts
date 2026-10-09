@@ -63,16 +63,16 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     ]);
     // Ni le pigeon ni les souris d'un autre Territoire ; de la plus commune à la plus rare, puis par nom.
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 },
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 },
+      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 },
     ]);
   });
 
   it("range une Espèce plus rare après les communes, même sans illustration", async () => {
     const t = (await nouveauTerritoire()).territoireId;
     // La plus rare des Espèces chargées, sans illustration : l'une des Espèces d'essai (US-0924), jamais nommée ici.
-    const { rows } = await pool.query<{ id: string; nom: string; attaque: number; vie: number }>(
-      `select e.id, e.nom, e.attaque, e.vie from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
+    const { rows } = await pool.query<{ id: string; nom: string; attaque: number; vie: number; vitesse: number }>(
+      `select e.id, e.nom, e.attaque, e.vie, e.vitesse from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
     );
     const [rare] = rows;
     await ajouter(t, [
@@ -80,8 +80,8 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
       ["souris", "male", 4],
     ]);
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473 },
-      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare) },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473, vitesse: 13 },
+      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare), vitesse: rare.vitesse },
     ]);
   });
 

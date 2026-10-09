@@ -4,7 +4,7 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { betesDisponibles } from "@/monde/effectif";
 import type { Coordonnees } from "@/monde/hex";
-import { dureeDuTrajetMinutes } from "./allure";
+import { type BetesDeLEscorte, dureeDuTrajetMinutes } from "./allure";
 import { destinationDUneCase } from "./destination";
 
 /**
@@ -35,7 +35,8 @@ class Refus extends Error {}
  * US-0908), les explorateurs libres et les Bêtes disponibles sont relus au moment de confirmer. Les explorateurs partent
  * avec elle : ils ne sont plus libres, et leur Métier ne change plus avant leur retour (habitant.expedition_id) ; les
  * Bêtes de l'escorte ne sont plus disponibles (expedition_escorte). L'aller est fixé au départ, au pas des explorateurs
- * sans escorte (US-0909) ; celui d'une escorte n'est pas encore chiffré (US-0912) : null.
+ * sans escorte (US-0909), et avec une escorte au pas de sa Bête la plus lente, d'après la vitesse de son Espèce, s'il est
+ * plus lent encore (US-0912) ; le retour dure autant.
  *
  * Tout tient dans une transaction : un départ refusé ne retient rien. Le Territoire y est tenu d'abord : deux départs
  * du même Territoire envoyés au même instant passent l'un après l'autre, et le second relit ce que le premier a pris ;
@@ -59,19 +60,32 @@ export async function lancerLExpedition(pool: Pool, territoireId: number, choix:
   }
 }
 
+/**
+ * US-0912 : les Bêtes de l'escorte, Espèce par Espèce, avec la vitesse de leur Espèce, lue en base. Une Espèce que le jeu
+ * n'a pas n'en a aucune : le départ la refuse plus loin, faute de Bête disponible.
+ */
+async function betesDeLEscorte(client: PoolClient, betes: [string, number][]): Promise<BetesDeLEscorte[]> {
+  if (betes.length === 0) return [];
+  const { rows } = await client.query<{ id: string; vitesse: number }>("select id, vitesse from espece where id = any($1)", [betes.map(([especeId]) => especeId)]);
+  const vitesses = new Map(rows.map((e) => [e.id, e.vitesse]));
+  return betes.flatMap(([especeId, nombre]) => (vitesses.has(especeId) ? [{ vitesse: vitesses.get(especeId)!, nombre }] : []));
+}
+
 /** US-0911 : le départ, dans la transaction de lancerLExpedition ; un Refus l'annule. */
 async function partir(client: PoolClient, territoireId: number, { destination, explorateurs, escorte, sejourMinutes }: ChoixDuDepart, instant: Date): Promise<number> {
   if (explorateurs < 1) throw new Refus(SANS_EXPLORATEUR);
   const laCase = await destinationDUneCase(client, territoireId, destination);
   if (!laCase) throw new Refus(SANS_DESTINATION);
   if ("refus" in laCase) throw new Refus(laCase.refus);
+  const betes = [...escorte].filter(([, nombre]) => nombre > 0);
+  const trajetMinutes = dureeDuTrajetMinutes(laCase.fiche.distance, await betesDeLEscorte(client, betes));
   const { rows } = await client.query<{ id: number }>(
     `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
      select t.id, c.id, $4, $5, $6
      from territoire t join case_du_monde f on f.id = t.foyer_case_id join case_du_monde c on c.monde_id = f.monde_id and c.q = $2 and c.r = $3
      where t.id = $1
      returning id`,
-    [territoireId, destination.q, destination.r, instant, dureeDuTrajetMinutes(laCase.fiche.distance, escorte), sejourMinutes],
+    [territoireId, destination.q, destination.r, instant, trajetMinutes, sejourMinutes],
   );
   const expeditionId = rows[0].id;
 
@@ -86,7 +100,6 @@ async function partir(client: PoolClient, territoireId: number, { destination, e
   );
   if (partis.rowCount !== explorateurs) throw new Refus(EXPLORATEUR_PLUS_LIBRE);
 
-  const betes = [...escorte].filter(([, nombre]) => nombre > 0);
   if (betes.length === 0) return expeditionId;
   await client.query("select 1 from effectif where territoire_id = $1 and espece_id = any($2) order by espece_id, sexe for update", [
     territoireId,
