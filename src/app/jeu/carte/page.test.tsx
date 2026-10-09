@@ -153,7 +153,7 @@ describe("page Carte (US-0417)", () => {
     const bete: BeteReperee = {
       id: 41,
       laCase: { q: 34, r: -57 },
-      especeId: "renard",
+      especeId: "renard_roux",
       espece: "Renard roux",
       force: 37_340,
       jusquA: new Date("2026-10-09T11:42:13.250Z"),

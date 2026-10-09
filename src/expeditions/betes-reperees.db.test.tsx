@@ -3,10 +3,6 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { dureeDuTrajetMinutes } from "@/expeditions/allure";
-import type { BeteReperee } from "@/expeditions/betes-reperees";
-import { lancerLExpedition } from "@/expeditions/depart";
-import { forceDUneBete } from "@/expeditions/force";
 import { betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { type Coordonnees, distance } from "@/monde/hex";
 import { recitsDuTerritoire } from "@/monde/recits";
@@ -14,6 +10,10 @@ import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { dureeDuTrajetMinutes } from "./allure";
+import type { BeteReperee } from "./betes-reperees";
+import { lancerLExpedition } from "./depart";
+import { forceDUneBete } from "./force";
 
 // La garde dit qui est connecté ; la page lit pour de bon la base de test, à l'heure du jeu que l'essai choisit.
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
@@ -27,11 +27,11 @@ vi.mock("@/temps/horloge", async (original) => {
   return { ...vraie, maintenant: () => horloge.instant ?? vraie.maintenant() };
 });
 // Ce que la page envoie au navigateur pour la carte : les propriétés de CarteDuJeu, telles quelles.
-vi.mock("./CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
-vi.mock("./Legende", () => ({ Legende: () => <aside /> }));
-vi.mock("./Attente", () => ({ Attente: () => <div /> }));
+vi.mock("@/app/jeu/carte/CarteDuJeu", () => ({ CarteDuJeu: (proprietes: object) => <canvas data-proprietes={JSON.stringify(proprietes)} /> }));
+vi.mock("@/app/jeu/carte/Legende", () => ({ Legende: () => <aside /> }));
+vi.mock("@/app/jeu/carte/Attente", () => ({ Attente: () => <div /> }));
 
-import Carte from "./page";
+import Carte from "@/app/jeu/carte/page";
 
 const MINUTE_MS = 60_000;
 const HEURE = 60;

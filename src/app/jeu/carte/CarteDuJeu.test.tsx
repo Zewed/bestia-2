@@ -1231,8 +1231,8 @@ describe("repérer la Bête restée sur la carte (US-0948)", () => {
   const GRANDE: CarteDuJoueur = { ...CARTE, cases: { q: autour.map((c) => c.q), r: autour.map((c) => c.r), teinte: autour.map(() => 0), zone: autour.map(() => 0) } };
   /** La prairie à 3 Cases à l'est du Foyer, où un Renard roux est resté jusqu'à 13 h 42, et une Loutre à 2 Cases au nord-ouest. */
   const PRAIRIE = { q: FOYER.q + 3, r: FOYER.r };
-  const RENARD: BeteReperee = { id: 41, laCase: PRAIRIE, especeId: "renard", espece: "Renard roux", force: 37_340, jusquA: apres(4 * 60) };
-  const LOUTRE: BeteReperee = { id: 42, laCase: { q: FOYER.q, r: FOYER.r - 2 }, especeId: "loutre", espece: "Loutre d'Europe", force: 42_295, jusquA: apres(30) };
+  const RENARD: BeteReperee = { id: 41, laCase: PRAIRIE, especeId: "renard_roux", espece: "Renard roux", force: 37_340, jusquA: apres(4 * 60) };
+  const LOUTRE: BeteReperee = { id: 42, laCase: { q: FOYER.q, r: FOYER.r - 2 }, especeId: "loutre_d_europe", espece: "Loutre d'Europe", force: 42_295, jusquA: apres(30) };
   /** Une Expédition en séjour sur la prairie depuis une demi-heure. */
   const ENSEJOUR: ExpeditionEnCours = {
     id: 7,
