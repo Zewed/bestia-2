@@ -318,11 +318,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0931 · La simulation des Raretés par Anneau
 **En tant que** développeur, **je veux** simuler les apparitions sur une longue période, **afin de** vérifier que les Raretés suivent les pourcentages de chaque Anneau.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1389, Zewed/bestia-2#13). La page /controle/raretes, reliée depuis le contrôle, prend une graine et simule toutes les Cases d'un Monde généré pendant 30 jours de jeu, sans rien lire ni écrire en base. Le résultat du contrôle vient en tête, puis un tableau par Anneau : Cases, apparitions, moyenne par Case et par jour, part obtenue de chaque Rareté à côté de la part attendue. On compte la Rareté tirée avant le choix de l'Espèce, par la même fonction que le jeu. Avec 30 jours et 1 point, le Cœur sauvage échoue par pur hasard pour environ une graine sur quatre ; 120 jours ramèneraient ce taux sous 1 %.
 - **Débloquée par** : US-0927, US-0928
 - **Critères d'acceptation** :
-  - Un outil de la page de contrôle interne simule les apparitions sur une longue période (chiffre à régler), Anneau par Anneau.
+  - Un outil de la page de contrôle interne simule les apparitions sur une longue période, 30 jours de jeu (décidé le 2026-10-09), Anneau par Anneau.
   - Il affiche, pour chaque Anneau, la part obtenue de chaque Rareté à côté de la part attendue.
-  - Le contrôle échoue si un écart dépasse la tolérance (chiffre à régler), ou si les communes ne sont pas majoritaires dans un Anneau.
+  - Le contrôle échoue si un écart dépasse la tolérance, 1 point de pourcentage (décidé le 2026-10-09), ou si les communes ne sont pas majoritaires dans un Anneau.
   - Il donne le nombre moyen d'apparitions par Case et par jour, pour régler le rythme (première peu commune en 3 à 4 jours, rare en un mois).
 
 ### US-0975 · Des Bêtes communes à portée de chaque nouveau Foyer
