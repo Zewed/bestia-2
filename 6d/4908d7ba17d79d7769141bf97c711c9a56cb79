@@ -1,0 +1,19 @@
+src/expeditions/en-mon-absence.db.test.ts
+  s_343d46d123da0b::t_16ad71eb76a5f1 4-6,31,43-45,50-51,53-56,63,97-103,161-164,173-175,180-181,208,218-219,293-318,320-322,329-330,336-337,346,361,379-381,399,401-403,408-410
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6d4908d7ba17d79d7769141bf97c711c9a56cb79",
+  "prompts": {},
+  "sessions": {
+    "s_343d46d123da0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a08174ab15f7d5dc6",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
