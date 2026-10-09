@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-218 points au total.
+217 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -90,7 +90,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0920](09-explorer-et-apprivoiser.md) · Rappeler une Expédition à l'aller : rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
-- [US-0932](09-explorer-et-apprivoiser.md) · La Rencontre : une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes.
 - [US-0936](09-explorer-et-apprivoiser.md) · Une Bête à la fois : après un Apprivoisement, l'Expédition poursuit son séjour et peut en apprivoiser d'autres, ou rentre aussitôt avec sa Bête.
 - [US-0938](09-explorer-et-apprivoiser.md) · La Bête apprivoisée arrive au Foyer : jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat.
 - [US-0939](09-explorer-et-apprivoiser.md) · Une Bête apprivoisée sans Place libre : quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage.
