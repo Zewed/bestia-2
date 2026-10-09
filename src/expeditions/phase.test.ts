@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { finDeLaPhase, phaseDUneExpedition, retourDUneExpedition } from "./phase";
+import { finDeLaPhase, phaseDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
 
 const MINUTE_MS = 60_000;
 const DEPART = new Date("2026-10-09T07:42:00.000Z");
@@ -48,5 +48,25 @@ describe("la fin de la phase et le retour d'une Expédition (US-0918)", () => {
   it("ne chiffre ni la fin de l'aller ni le retour tant que le trajet d'une escorte ne l'est pas (US-0912)", () => {
     expect(finDeLaPhase({ ...EXPEDITION, trajetMinutes: null }, DEPART)).toBeNull();
     expect(retourDUneExpedition({ ...EXPEDITION, trajetMinutes: null })).toBeNull();
+  });
+});
+
+describe("le séjour d'une Expédition sur sa Case (US-0915)", () => {
+  /** 140 minutes d'aller, puis 4 h de séjour, puis 140 minutes de retour. */
+  const EXPEDITION = { partLe: DEPART, trajetMinutes: 140, sejourMinutes: 240 };
+
+  it("commence à l'arrivée et dure toute la durée choisie ; sa fin en est exclue", () => {
+    expect(sejourDUneExpedition(EXPEDITION)).toEqual({ debut: apres(140), fin: apres(140 + 240) });
+  });
+
+  it("est exactement le temps de la phase « séjour », à la milliseconde près, du départ au retour", () => {
+    const { debut, fin } = sejourDUneExpedition(EXPEDITION)!;
+    const instants = [debut, fin].flatMap((t) => [-1, 0, 1].map((ms) => new Date(t.getTime() + ms)));
+    for (let minutes = 0; minutes <= 140 + 240 + 140; minutes += 7) instants.push(apres(minutes));
+    for (const instant of instants) expect(phaseDUneExpedition(EXPEDITION, instant) === "sejour").toBe(instant >= debut && instant < fin);
+  });
+
+  it("n'a pas lieu tant que le trajet d'une escorte n'est pas chiffré (US-0912)", () => {
+    expect(sejourDUneExpedition({ ...EXPEDITION, trajetMinutes: null })).toBeNull();
   });
 });
