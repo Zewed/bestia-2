@@ -727,3 +727,35 @@ export const expeditionEscorte = pgTable(
   },
   (t) => [primaryKey({ columns: [t.expeditionId, t.especeId] }), check("expedition_escorte_au_moins_une", sql`${t.nombre} > 0`)],
 );
+
+/**
+ * Une Rencontre (US-0932) : une Bête sauvage qu'une Expédition a vue sur sa Case pendant son séjour, à `vue_le`, un
+ * instant du jeu : celui de l'apparition de la Bête, ou celui de l'arrivée de l'Expédition si la Bête était déjà là. Une
+ * Bête sauvage ordinaire s'y désigne par son numéro sur la Case de l'Expédition (src/monde/betes-sauvages.ts), une Bête
+ * de naissance par sa ligne (bete_de_naissance) : l'une ou l'autre, jamais les deux. Son Espèce et l'instant de son
+ * apparition sont retenus avec elle : ce que l'Expédition a vu ne change plus. Une Expédition ne rencontre qu'une fois
+ * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition.
+ */
+export const rencontre = pgTable(
+  "rencontre",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    expeditionId: integer("expedition_id")
+      .notNull()
+      .references(() => expedition.id, { onDelete: "cascade" }),
+    numero: bigint("numero", { mode: "number" }),
+    beteDeNaissanceId: integer("bete_de_naissance_id").references(() => beteDeNaissance.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    /** Les instants du jeu de l'apparition de la Bête, et de la Rencontre. */
+    apparueLe: timestamp("apparue_le", { withTimezone: true }).notNull(),
+    vueLe: timestamp("vue_le", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
+    unique("rencontre_une_par_bete_de_naissance").on(t.expeditionId, t.beteDeNaissanceId),
+    check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
+    check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
+  ],
+);
