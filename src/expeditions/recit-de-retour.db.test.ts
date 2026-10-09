@@ -137,15 +137,15 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   /** Les Cases que le Territoire a découvertes : celles sorties du brouillard se comptent par différence. */
   const decouvertes = async (territoireId: number) =>
     (await pool.query<{ nombre: number }>("select count(*)::int as nombre from case_decouverte where territoire_id = $1", [territoireId])).rows[0].nombre;
-  /** US-0942 : les Espèces du jeu : leur nom, leur Rareté, leur vitesse et la force d'une de leurs Bêtes (US-0905). */
-  const especesDuJeu = async () =>
-    (
-      await pool.query<{ id: string; nom: string; rareteId: string; vitesse: number; attaque: number; vie: number }>(
-        `select id, nom, rarete_id as "rareteId", vitesse, attaque, vie from espece order by id`,
-      )
-    ).rows.map(({ attaque, vie, ...e }) => ({ ...e, force: forceDUneBete({ attaque, vie }) }));
-  /** US-0942 : l'Espèce `id` du jeu. */
-  const uneEspece = async (id: string) => (await especesDuJeu()).find((e) => e.id === id)!;
+  /** US-0942 : l'Espèce `id` du jeu : son nom, sa vitesse et la force d'une de ses Bêtes (US-0905). */
+  const uneEspece = async (id: string) => {
+    const { rows } = await pool.query<{ id: string; nom: string; vitesse: number; attaque: number; vie: number }>(
+      "select id, nom, vitesse, attaque, vie from espece where id = $1",
+      [id],
+    );
+    const { attaque, vie, ...espece } = rows[0];
+    return { ...espece, force: forceDUneBete({ attaque, vie }) };
+  };
 
   beforeAll(async () => {
     pool = poolDeTest();
@@ -243,8 +243,8 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   });
 
   it("quand seule une Bête plus forte que l'escorte s'est montrée, le récit dit « trop forte pour votre escorte » et la force qui lui manquait, en chiffres (US-0942)", async () => {
-    // Deux Bêtes de la commune la plus faible du jeu font l'escorte.
-    const faible = (await especesDuJeu()).filter((e) => e.rareteId === "commune").sort((x, y) => x.force - y.force)[0];
+    // Deux Souris grises, communes de force 473 (US-0905), font l'escorte.
+    const faible = await uneEspece("souris");
     const escorte = { especeId: faible.id, nombre: 2, aller: dureeDuTrajetMinutes(ECART, [{ vitesse: faible.vitesse, nombre: 2 }]) };
     const { territoireId, destination, depart, montrees } = await naitreEtUnSejourOu((m) => m.length === 1 && m[0].rareteId !== "commune", { aller: escorte.aller });
     await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2)", [territoireId, faible.id]);

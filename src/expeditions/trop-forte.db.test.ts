@@ -31,7 +31,7 @@ type Espece = { id: string; rareteId: string; vitesse: number; force: number };
 describe.skipIf(!URL_TEST)("la Bête trop forte reste sur sa Case (US-0942, sur base)", () => {
   let pool: Pool;
   let mondeId: number;
-  /** Les Espèces du jeu, par identifiant ; la commune la plus faible, dont deux Bêtes font l'escorte des essais. */
+  /** Les Espèces du jeu, par identifiant ; la Souris grise, commune de force 473 (US-0905), dont deux Bêtes font l'escorte des essais. */
   let especes: Map<string, Espece>;
   let faible: Espece;
   const lancement = `trop-forte-${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -42,7 +42,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte reste sur sa Case (US-0942, sur 
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
 
   /**
-   * Un chef qui vient de naître dans le Monde d'essai, avec un explorateur et deux Bêtes de la commune la plus faible :
+   * Un chef qui vient de naître dans le Monde d'essai, avec un explorateur et deux Souris grises :
    * son Territoire, l'instant de sa naissance et la place de son Foyer.
    */
   const naitre = async () => {
@@ -150,7 +150,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte reste sur sa Case (US-0942, sur 
       `select id, rarete_id as "rareteId", vitesse, attaque, vie from espece order by id`,
     );
     especes = new Map(rows.map(({ attaque, vie, ...e }) => [e.id, { ...e, force: forceDUneBete({ attaque, vie }) }]));
-    faible = [...especes.values()].filter((e) => e.rareteId === "commune").sort((x, y) => x.force - y.force)[0];
+    faible = especes.get("souris")!;
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -161,7 +161,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte reste sur sa Case (US-0942, sur 
   it("plus forte que l'escorte, la Bête ne suit pas : l'Expédition la voit dès son arrivée et pendant tout son séjour, et son Espèce s'inscrit « croisée »", async () => {
     const { territoireId, foyer, place, caseId, bete } = await naitrePresDUneBeteRare();
     expect(2 * faible.force).toBeLessThan(especes.get(bete.especeId)!.force);
-    // Deux Bêtes de la commune la plus faible, lancées depuis le Foyer, arrivent une heure après la Bête et repartent une heure avant elle.
+    // Deux Souris grises, lancées depuis le Foyer, arrivent une heure après la Bête et repartent une heure avant elle.
     const aller = dureeDuTrajetMinutes(distance(foyer, place), [{ vitesse: faible.vitesse, nombre: 2 }]);
     const arrivee = apres(bete.arrivee, HEURE);
     const lancee = await lancerLExpedition(
