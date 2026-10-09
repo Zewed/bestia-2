@@ -67,6 +67,22 @@ export async function territoireDuCompte(base: Pick<Pool, "query">, compteId: nu
   return rows[0]?.id ?? null;
 }
 
+/**
+ * Un pool dont chaque connexion est `client` lui-même, et chaque transaction un point de reprise de la sienne, validé ou
+ * annulé comme elle : ce que le jeu y fait l'est pour de bon, tel que cette transaction le voit, puis s'efface avec elle.
+ * Une seule connexion : ni verrou ni isolation entre deux transactions ne s'y éprouvent, et deux connexions ouvertes à la
+ * fois mêleraient leurs points de reprise.
+ */
+export function poolDansLaTransaction(client: PoolClient): Pool {
+  const ordres = new Map([
+    ["begin", "savepoint jeu"],
+    ["commit", "release savepoint jeu"],
+    ["rollback", "rollback to savepoint jeu"],
+  ]);
+  const connexion = { query: (texte: string, valeurs?: unknown[]) => client.query(ordres.get(texte) ?? texte, valeurs), release: () => {} };
+  return { connect: async () => connexion, query: (texte: string, valeurs?: unknown[]) => client.query(texte, valeurs) } as unknown as Pool;
+}
+
 /** Une transaction à la fois pour tous les fichiers de test qui préparent la base. */
 async function enTransaction<T>(pool: Pool, travail: (client: PoolClient) => Promise<T>): Promise<T> {
   const client = await pool.connect();

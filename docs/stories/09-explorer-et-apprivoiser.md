@@ -232,6 +232,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0922 · Une Expédition vécue en mon absence
 **En tant que** joueur, **je veux** retrouver le résultat exact d'une Expédition qui s'est entièrement déroulée pendant que je n'étais pas là, **afin de** jouer par courtes sessions sans rien perdre.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1380, Zewed/bestia-2#32). Prouvée de bout en bout : cinq Expéditions (escortées, sans escorte, rappelées à l'aller et en séjour) vécues page ouverte, rattrapées d'un bloc au retour du joueur, ou par la seule tâche planifiée, donnent exactement les mêmes Cases révélées, Rencontres, Apprivoisements, Bestiaire, effectif et récits, dans l'ordre des retours. À ×60, une Expédition complète se vérifie en quelques minutes. Les combats viendront avec l'étape 41.
 - **Débloquée par** : US-0917, Étape 3
 - **Critères d'acceptation** :
   - Une Expédition partie, arrivée et rentrée pendant une absence donne les mêmes Cases révélées, les mêmes Rencontres, les mêmes combats et le même récit que si la page était restée ouverte.

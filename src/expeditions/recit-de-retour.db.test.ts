@@ -118,8 +118,26 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
       const chef = await naitre();
       const sejour = await unSejourOuSeMontrent(chef.territoireId, apres(chef.ne, MINUTE), conviennent, options);
       if (sejour) return { ...chef, ...sejour };
+      // Comme naitreAvecUnSejourOu (US-0922) : son Foyer revient à la Couronne du Monde d'essai.
+      await pool.query("delete from compte where email = $1", [nes.pop()]);
     }
     throw new Error("Aucun séjour qui convienne autour de trois Foyers.");
+  };
+  /**
+   * Un chef qui vient de naître, et un séjour de quatre heures où ne se montre qu'une Bête telle que `voulue` la veut
+   * (unSejourOu). Le hasard des naissances peut le poser où il n'en trouve aucun, près de la banquise ou de la jungle, où
+   * aucune Bête ne vit : il renaît alors ailleurs, jusqu'à trois fois (US-0922).
+   */
+  const naitreAvecUnSejourOu = async (voulue: (b: BeteSauvage) => boolean) => {
+    for (let essai = 1; ; essai++) {
+      const { territoireId, ne } = await naitre();
+      try {
+        return { territoireId, ...(await unSejourOu(territoireId, apres(ne, MINUTE), voulue)) };
+      } catch (erreur) {
+        if (essai === 3) throw erreur;
+        await pool.query("delete from compte where email = $1", [nes.pop()]);
+      }
+    }
   };
   /** Un explorateur, sans escorte, part à `depart` vers `destination` pour `sejour` minutes : l'Expédition et l'instant de son retour. */
   const partir = async (territoireId: number, destination: Coordonnees, depart: Date, sejour = 60, escorte: EscorteDEssai | null = null) => {
@@ -216,9 +234,8 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   });
 
   it("quand une Bête s'est montrée sur la Case, le récit ne dit plus qu'aucune ne l'a fait", async () => {
-    const { territoireId, ne } = await naitre();
     // Une Bête commune, qui suit l'Expédition sans escorte (US-0935).
-    const { destination, depart } = await unSejourOu(territoireId, apres(ne, MINUTE), (b) => b.rareteId === "commune");
+    const { territoireId, destination, depart } = await naitreAvecUnSejourOu((b) => b.rareteId === "commune");
     const { expeditionId, retour } = await partir(territoireId, destination, depart, 240);
 
     await aLHeure(territoireId, retour);
@@ -230,8 +247,7 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   });
 
   it("quand seule une Bête plus rare s'est montrée, sans escorte, le récit nomme son Espèce, dit qu'aucune Bête n'a suivi, trop forte, et qu'il manquait toute sa force (US-0935, US-0942)", async () => {
-    const { territoireId, ne } = await naitre();
-    const { destination, depart } = await unSejourOu(territoireId, apres(ne, MINUTE), (b) => b.rareteId !== "commune");
+    const { territoireId, destination, depart } = await naitreAvecUnSejourOu((b) => b.rareteId !== "commune");
     const { expeditionId, retour } = await partir(territoireId, destination, depart, 240);
 
     await aLHeure(territoireId, retour);

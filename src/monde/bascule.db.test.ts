@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { calculerEmpreinte } from "@/comptes/empreinte";
 import { ABORDS_DU_FOYER_CASES, BETES_DE_NAISSANCE, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { poolDansLaTransaction, poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { basculerLeMonde, MONDE_DU_JEU } from "./bascule";
 import { recevoirLesBetesDeNaissance } from "./betes-de-naissance";
 import { casesDecouvertes } from "./brouillard";
@@ -19,25 +19,6 @@ const MONDE_GENERE = "Essai des naissances (US-0414)";
 /** Deux Foyers ne sont jamais à moins de 4 Cases l'un de l'autre (ECART_ENTRE_FOYERS). */
 function bienEspaces(cases: Coordonnees[]) {
   for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
-}
-
-/**
- * Un pool dont chaque connexion est `client` lui-même, et chaque transaction un point de reprise de la sienne : les
- * naissances s'y font pour de bon, sur le Monde du jeu tel que cette transaction le voit, puis s'effacent avec elle.
- */
-function poolDansLaTransaction(client: PoolClient): Pool {
-  const connexion = {
-    query: (texte: string, valeurs?: unknown[]) =>
-      texte === "begin"
-        ? client.query("savepoint naissance")
-        : texte === "commit"
-          ? client.query("release savepoint naissance")
-          : texte === "rollback"
-            ? client.query("rollback to savepoint naissance")
-            : client.query(texte, valeurs),
-    release: () => {},
-  };
-  return { connect: async () => connexion, query: (texte: string, valeurs?: unknown[]) => client.query(texte, valeurs) } as unknown as Pool;
 }
 
 describe.skipIf(!URL_TEST)("le Monde du jeu (US-0414)", () => {
