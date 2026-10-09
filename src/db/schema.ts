@@ -712,6 +712,8 @@ export const expedition = pgTable(
   },
   (t) => [
     index("expedition_par_territoire").on(t.territoireId),
+    // US-0934 : les Expéditions de tous les Territoires présentes sur une Case, lues à chaque rattrapage d'une Rencontre.
+    index("expedition_par_case").on(t.caseId),
     check("expedition_trajet_positif", sql`${t.trajetMinutes} > 0`),
     check("expedition_sejour_positif", sql`${t.sejourMinutes} > 0`),
   ],
@@ -743,7 +745,9 @@ export const expeditionEscorte = pgTable(
  * de naissance par sa ligne (bete_de_naissance) : l'une ou l'autre, jamais les deux. Son Espèce et l'instant de son
  * apparition sont retenus avec elle : ce que l'Expédition a vu ne change plus. Une Expédition ne rencontre qu'une fois
  * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition, ou avec sa Bête de naissance, qui ne s'efface
- * qu'avec son Territoire et ses Expéditions.
+ * qu'avec son Territoire et ses Expéditions. US-0934 : `apprivoisee`, la Bête, à portée, suit l'Expédition depuis
+ * `vue_le` : c'est l'Apprivoisement, et elle a quitté sa Case (src/expeditions/apprivoisement.ts). Une seule Expédition
+ * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici.
  */
 export const rencontre = pgTable(
   "rencontre",
@@ -760,11 +764,13 @@ export const rencontre = pgTable(
     /** Les instants du jeu de l'apparition de la Bête, et de la Rencontre. */
     apparueLe: timestamp("apparue_le", { withTimezone: true }).notNull(),
     vueLe: timestamp("vue_le", { withTimezone: true }).notNull(),
+    apprivoisee: boolean("apprivoisee").notNull().default(false),
   },
   (t) => [
     unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
     unique("rencontre_une_par_bete_de_naissance").on(t.expeditionId, t.beteDeNaissanceId),
     index("rencontre_par_bete_de_naissance").on(t.beteDeNaissanceId),
+    uniqueIndex("rencontre_une_expedition_par_bete_de_naissance").on(t.beteDeNaissanceId).where(sql`${t.apprivoisee}`),
     check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
   ],
