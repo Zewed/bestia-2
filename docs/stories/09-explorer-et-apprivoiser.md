@@ -57,10 +57,11 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0906 · Choisir la durée du séjour
 **En tant que** joueur, **je veux** choisir combien de temps l'Expédition reste sur la Case, **afin de** l'accorder au moment où je reviendrai jouer.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1364, Zewed/bestia-2#4). Le bloc « Séjour » de l'écran d'Expédition montre la durée choisie en grand, avec un curseur de 30 min à 1 j par pas de 30 min et, d'un doigt, les durées toutes prêtes 1 h, 4 h, 8 h et 12 h (1 h par défaut). La durée est gardée dans l'adresse, au rechargement comme au détour par la carte. Le séjour ne commencera qu'à l'arrivée (`horaireDuSejour`, que le départ, US-0911, utilisera). Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0901
 - **Critères d'acceptation** :
-  - La durée se choisit entre un minimum et un maximum (chiffre à régler), par pas réguliers (chiffre à régler).
-  - Quelques durées toutes prêtes se choisissent d'un doigt sur mobile ; lesquelles (à décider).
+  - La durée se choisit entre 30 minutes et 24 heures, par pas de 30 minutes (provisoire, `SEJOUR_MINUTES`).
+  - Quelques durées toutes prêtes se choisissent d'un doigt sur mobile ; 1 h, 4 h, 8 h et 12 h (décidé le 2026-10-08).
   - Le séjour ne commence qu'à l'arrivée : le temps du trajet ne le raccourcit pas.
 
 ### US-0907 · Choisir la destination
