@@ -1,0 +1,23 @@
+src/app/jeu/expeditions/nouvelle/SansEscorte.test.tsx
+  s_34d8b4ba4609cf::t_4e3a69de0cf823 26
+src/app/jeu/expeditions/nouvelle/SansEscorte.tsx
+  s_34d8b4ba4609cf::t_6bec8d0d8403dc 6
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_34d8b4ba4609cf::t_7cd988d6b028c5 102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "b2c77aa565a99b83608c2d428daeb1ad3e53cc26",
+  "prompts": {},
+  "sessions": {
+    "s_34d8b4ba4609cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aa2c6fe1ded99d57d",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
