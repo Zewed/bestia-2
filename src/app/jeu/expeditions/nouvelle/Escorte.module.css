@@ -120,8 +120,9 @@
   text-align: center;
 }
 
-/* Sur mobile, les choix passent sous le nom, sur toute la largeur. */
-@media (max-width: 820px), (max-height: 500px) {
+/* Sur un téléphone en portrait, quand la ligne n'a plus la place, les choix passent sous le nom, sur toute la largeur ;
+   en paysage, ils restent sur la ligne : l'écran y manque de hauteur, pas de largeur. */
+@media (max-width: 560px) {
   .espece {
     grid-template-columns: 48px minmax(0, 1fr);
   }
