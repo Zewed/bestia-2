@@ -1,0 +1,133 @@
+/* US-0904 : le bloc Escorte, sous les Explorateurs, à l'écart des blocs Bento. */
+.bloc {
+  margin-top: var(--ecart);
+}
+
+/* Une ligne par Espèce, séparées d'un trait. */
+.especes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Sur ordinateur : la vignette, le nom et les disponibles, puis les choix à droite. */
+.espece {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.espece:first-child {
+  padding-top: 0;
+}
+
+.espece:last-child {
+  padding-bottom: 0;
+}
+
+.espece + .espece {
+  border-top: 1px solid var(--trait-doux);
+}
+
+.vignette {
+  width: 48px;
+  border-radius: var(--arrondi-petit);
+}
+
+.nom {
+  display: grid;
+  min-width: 0;
+  font-weight: var(--graisse-titre);
+}
+
+.disponibles {
+  color: var(--texte-discret);
+  font-size: 13px;
+  font-weight: var(--graisse-texte);
+  font-variant-numeric: tabular-nums;
+}
+
+/* « − », le nombre choisi, « + », puis « Toutes » et « Aucune » : deux paires qui passent l'une sous l'autre si la place manque. */
+.choix {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 16px;
+}
+
+.paire {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Au pouce, comme les explorateurs : chaque bouton a sa surface de 44 px. */
+.bouton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 20px;
+  font-weight: var(--graisse-titre);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* « Toutes » et « Aucune » : la largeur de leur mot, jamais moins de 44 px. */
+.mot {
+  width: auto;
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Grisés, ils restent à leur place sans réagir. */
+.bouton:disabled {
+  border-color: var(--trait-doux);
+  background: var(--bloc-2);
+  color: var(--galet);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .bouton:enabled:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.bouton:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.nombre {
+  min-width: 2ch;
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* Sur mobile, les choix passent sous le nom, sur toute la largeur. */
+@media (max-width: 820px), (max-height: 500px) {
+  .espece {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .choix {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+  }
+}

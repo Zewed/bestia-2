@@ -19,6 +19,12 @@ const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async (
 vi.mock("@/monde/explorateurs", () => explorateurs);
 vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
 vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
+// US-0904 : les Bêtes disponibles du Territoire, et le bloc Escorte réduit à ce que la page lui donne (testé à part).
+const effectif = vi.hoisted(() => ({
+  betesDisponibles: vi.fn(async () => [{ id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 }]),
+}));
+vi.mock("@/monde/effectif", () => effectif);
+vi.mock("./Escorte", () => ({ Escorte: (p: object) => <i data-escorte={JSON.stringify(p)} /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -164,5 +170,36 @@ describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
     expect(explorateurs.explorateursDuTerritoire).not.toHaveBeenCalled();
     expect(html).toContain(donne("explorateurs", { libres: 0, total: 0 }));
     expect(html).toContain(donne("partir", { libres: 0 }));
+  });
+});
+
+describe("l'escorte de l'écran d'Expédition (US-0904)", () => {
+  afterEach(() => {
+    effectif.betesDisponibles.mockClear();
+    fiches.ficheDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  /** Ce que la page donne à un bloc, tel qu'elle le rend. */
+  const donne = (nom: string, valeur: object) => `<i data-${nom}="${JSON.stringify(valeur).replaceAll('"', "&quot;")}"></i>`;
+  const SOURIS = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 };
+
+  it("propose les Bêtes disponibles du Territoire de la garde, entre les explorateurs et le départ", async () => {
+    connecte();
+    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(effectif.betesDisponibles).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
+    expect(html).toContain(`${donne("explorateurs", { libres: 2, total: 3 })}${donne("escorte", { especes: [SOURIS] })}${donne("partir", { libres: 2 })}`);
+  });
+
+  it("ne propose aucune Bête à un chef sans Territoire, sans rien demander à la base", async () => {
+    connecte();
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
+    const html = await ouvrir();
+    expect(effectif.betesDisponibles).not.toHaveBeenCalled();
+    expect(html).toContain(donne("escorte", { especes: [] }));
   });
 });

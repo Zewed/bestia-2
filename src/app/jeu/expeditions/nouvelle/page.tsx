@@ -6,9 +6,11 @@ import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
+import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire } from "@/monde/explorateurs";
 import { type Fiche, type FicheInconnue, ficheDUneCase } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
+import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
@@ -67,6 +69,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   const destination = fiche && fiche.distance > 0 ? fiche : null;
   // US-0902 : les explorateurs libres sur total, lus à chaque affichage ; aucun pour un chef sans Territoire.
   const explorateurs = territoireId !== null ? await explorateursDuTerritoire(getPool(), territoireId) : { libres: 0, total: 0 };
+  // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage ; aucune sans Territoire.
+  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
@@ -83,6 +87,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
+      <Escorte especes={escorte} />
       <Partir libres={explorateurs.libres} />
     </main>
   );
