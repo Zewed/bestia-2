@@ -1,0 +1,65 @@
+docs/stories/04-la-carte-du-monde.md
+  s_97a431cfa65ca7::t_37dd23dd715591 361,364,367
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_da73395ee691ef 69,75
+docs/stories/README.md
+  s_97a431cfa65ca7::t_d81bd27afdafec 7,17,22,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_14222257bb7f1b 5
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_053fc70ccc2977 794-815
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_b9040be4ee34aa 54,56,209
+src/app/jeu/carte/FicheDeLaCase.css.test.ts
+  s_97a431cfa65ca7::t_fe0c5f6969124e 70-85
+src/app/jeu/carte/FicheDeLaCase.module.css
+  s_97a431cfa65ca7::t_d65ca87e446de5 146-159
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_97a431cfa65ca7::t_5d4c53f296c142 59-60,62-70,84,268-324
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_7fb922f72ead22 5,89-92,99,105,193,210,224-231,233-234
+src/app/jeu/carte/dessin.test.ts
+  s_97a431cfa65ca7::t_75abe047a33dcc 7-8,20-21,31,58,62,75-79,200-204,409-410,412,416-417,608-679
+src/app/jeu/carte/dessin.ts
+  s_97a431cfa65ca7::t_ab04d117413a3a 96-101,105-119,128,164,417,474,502
+src/app/jeu/carte/page.db.test.tsx
+  s_97a431cfa65ca7::t_76b61a7fcccef1 50
+src/app/jeu/carte/page.test.tsx
+  s_97a431cfa65ca7::t_eaa05ba3fa8cda 56-58,77,84-85,91,107,114,119,131,136,142,146-178
+src/app/jeu/carte/page.tsx
+  s_97a431cfa65ca7::t_36f6cdebceec4e 8,23-25,27,30-31,36
+src/app/jeu/expeditions/nouvelle/VersLaCarte.tsx
+  s_97a431cfa65ca7::t_de3056ad408e3a 1-20
+src/app/jeu/expeditions/nouvelle/page.css.test.ts
+  s_97a431cfa65ca7::t_58a639aad04330 21-34
+src/app/jeu/expeditions/nouvelle/page.module.css
+  s_97a431cfa65ca7::t_a985e57d6dec17 41-46,75-87
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_bf8be77555be9b 3-4,18-23,36-38,41,44-45,58-59,75,78-79,84,90-100,106,108,117,120,122,125,127-128,138-139,141-142,157,170,182,185-186,192,205-240
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_d6e058c364b1f9 8,10,16,59-63,70,77-81,84-85
+src/expeditions/choix-de-destination.test.ts
+  s_97a431cfa65ca7::t_707c3fa616cd15 1-37
+src/expeditions/choix-de-destination.ts
+  s_97a431cfa65ca7::t_d3689d05a27683 1-47
+src/expeditions/destination.db.test.ts
+  s_97a431cfa65ca7::t_0478c3e3133919 1-105
+src/expeditions/destination.ts
+  s_97a431cfa65ca7::t_fce70550a07d09 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a81a92703c6e53c9cdd5d1c9370ed9dab07c7c6a",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
