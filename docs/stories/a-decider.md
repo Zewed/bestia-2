@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-224 points au total.
+222 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -94,8 +94,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0921](09-explorer-et-apprivoiser.md) · Ceux qui sont partis mangent toujours : en cas de Famine pendant une Expédition, si un explorateur absent peut s'en aller, et, une fois que les Bêtes mangeront, si des Bêtes de l'escorte peuvent retourner au sauvage sur place.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
-- [US-0975](09-explorer-et-apprivoiser.md) · Des Bêtes communes à portée de chaque nouveau Foyer : elles sont réservées au nouveau chef, ou les Expéditions des autres peuvent aussi les rencontrer.
-- [US-0975](09-explorer-et-apprivoiser.md) · Des Bêtes communes à portée de chaque nouveau Foyer : comme toute Bête sauvage, elles ne se voient pas sur la carte ; qu'un indice aide le nouveau chef à les trouver.
 - [US-0932](09-explorer-et-apprivoiser.md) · La Rencontre : une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes.
 - [US-0936](09-explorer-et-apprivoiser.md) · Une Bête à la fois : après un Apprivoisement, l'Expédition poursuit son séjour et peut en apprivoiser d'autres, ou rentre aussitôt avec sa Bête.
 - [US-0938](09-explorer-et-apprivoiser.md) · La Bête apprivoisée arrive au Foyer : jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat.

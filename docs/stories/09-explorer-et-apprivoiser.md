@@ -330,13 +330,14 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0975 · Des Bêtes communes à portée de chaque nouveau Foyer
 **En tant que** nouveau joueur, **je veux** que quelques Bêtes communes se trouvent à portée de mon Foyer quand je nais, **afin de** pouvoir ramener mes premières Bêtes dès mes premières Expéditions.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1390, Zewed/bestia-2#15). À la naissance d'un Foyer, 3 Bêtes communes se posent sur des Cases libres à 1 à 8 Cases de lui, une par Case, chacune d'une Espèce commune du Biome de sa Case, pour 48 heures de jeu. Elles sont écrites en base (table bete_de_naissance) et réservées à son Territoire. Un chef né avant les reçoit à son retour, une seule fois ; après une bascule de Monde, il en reçoit d'autres autour de son nouveau Foyer. Tant qu'elles sont là, le récit d'arrivée ajoute « Quelques Bêtes rôdent dans les abords. » Un Foyer né plus tard sur leur Case les fait disparaître.
 - **Débloquée par** : US-0908, US-0926, US-0928
 - **Critères d'acceptation** :
-  - À la naissance d'un Foyer, (chiffre à régler) Bêtes sauvages communes apparaissent sur des Cases libres à portée d'exploration de départ (US-0908), une par Case ; un chef né avant cette story les reçoit aussi, une seule fois.
+  - À la naissance d'un Foyer, 3 Bêtes sauvages communes (décidé le 2026-10-09) apparaissent sur des Cases libres à portée d'exploration de départ (US-0908), une par Case ; un chef né avant cette story les reçoit aussi, une seule fois.
   - L'Espèce de chacune est tirée au hasard parmi les communes qui vivent dans le Biome de sa Case (US-0928) ; une Case dont le Biome n'en compte aucune n'est pas choisie.
-  - Elles restent sur leur Case plus longtemps qu'une apparition ordinaire, assez pour qu'une première Expédition sans escorte les trouve (chiffre à régler).
-  - Elles sont réservées au nouveau chef, ou les Expéditions des autres peuvent aussi les rencontrer (à décider).
-  - Comme toute Bête sauvage, elles ne se voient pas sur la carte ; qu'un indice aide le nouveau chef à les trouver (à décider).
+  - Elles restent sur leur Case plus longtemps qu'une apparition ordinaire, 48 heures de jeu, assez pour qu'une première Expédition sans escorte les trouve (décidé le 2026-10-09).
+  - Elles sont réservées au nouveau chef : les Expéditions des autres ne les rencontrent pas (décidé le 2026-10-09).
+  - Comme toute Bête sauvage, elles ne se voient pas sur la carte ; tant qu'elles sont là, le récit d'arrivée dit que quelques Bêtes rôdent dans les abords, sans dire où (décidé le 2026-10-09).
 
 ## Étape 40 · La Rencontre
 
