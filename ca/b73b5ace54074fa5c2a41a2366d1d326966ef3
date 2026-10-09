@@ -1,0 +1,67 @@
+src/app/jeu/expeditions/nouvelle/Escorte.tsx
+  s_97a431cfa65ca7::t_dae578e6e8c6ba 34-35
+src/app/jeu/expeditions/nouvelle/Explorateurs.test.tsx
+  s_97a431cfa65ca7::t_85838e09182f84 30,35
+src/app/jeu/expeditions/nouvelle/Partir.tsx
+  s_4ce34ec42d9105::t_a24b723c4c5859 8-16,20-21,23,26
+src/app/jeu/expeditions/nouvelle/Recapitulatif.css.test.ts
+  s_97a431cfa65ca7::t_337e0569ac9220 1-37
+src/app/jeu/expeditions/nouvelle/Recapitulatif.module.css
+  s_00c131376e16bb::t_4ca817fef295d9 1-106
+src/app/jeu/expeditions/nouvelle/Recapitulatif.test.tsx
+  s_bf676359eed9d5::t_e3dc58786f8a88 1-213
+src/app/jeu/expeditions/nouvelle/Recapitulatif.tsx
+  s_97a431cfa65ca7::t_19cc7344f5f179 1-144
+src/app/jeu/expeditions/nouvelle/SansEscorte.test.tsx
+  s_97a431cfa65ca7::t_0ed902e3148619 26,32
+src/app/jeu/expeditions/nouvelle/Sejour.tsx
+  s_97a431cfa65ca7::t_b17df5413f4892 17-19
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_cee1bcfb42ccf4 24,32-35,62-64,153,208,210,212,258,268,385-428
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_00c131376e16bb::t_a6cc5427fd7f10 13,18,60-62,71,92-93,113-120
+src/expeditions/allure.test.ts
+  s_97a431cfa65ca7::t_b053613cd401eb 3,24-34
+src/expeditions/allure.ts
+  s_97a431cfa65ca7::t_158ce9cd4dda83 20-28
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cab73b5ace54074fa5c2a41a2366d1d326966ef3",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_4ce34ec42d9105": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "986afa6c-8f0b-494f-9694-d93f52c5ef9e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_bf676359eed9d5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c6dee16a-3fdb-4c67-8ab1-9d65fce22c6d",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
