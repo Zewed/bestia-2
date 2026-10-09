@@ -352,11 +352,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0932 · La Rencontre
 **En tant que** joueur, **je veux** que mon Expédition voie les Bêtes qui se montrent sur sa Case, **afin de** tenter de les apprivoiser.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1392, Zewed/bestia-2#25). Une Expédition en séjour voit chaque Bête qui se montre sur sa Case, à l'instant de son apparition, ou à son arrivée si la Bête est déjà là, tant que ni l'une ni l'autre n'est partie : c'est une Rencontre, retenue en base (table rencontre, migration 0053) par le mécanisme du temps, la même en direct, au rattrapage et par la tâche planifiée. Elle voit les Bêtes sauvages ordinaires comme les Bêtes de naissance de son seul Territoire. Les Cases traversées ne montrent rien, et un joueur sans Expédition sur la Case n'apprend rien.
 - **Débloquée par** : US-0915, US-0925
 - **Critères d'acceptation** :
   - Quand une Bête apparaît sur une Case où une Expédition séjourne, c'est une Rencontre pour cette Expédition.
   - Une Expédition qui arrive sur une Case où une Bête est encore présente la rencontre dès son arrivée.
-  - Une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes (à décider).
+  - Une Expédition qui ne fait que traverser une Case pendant son trajet ne voit pas ses Bêtes : seule la Case du séjour compte (décidé le 2026-10-09).
   - Un joueur sans Expédition sur la Case n'apprend rien de la Bête.
 
 ### US-0933 · L'Espèce croisée entre au Bestiaire
