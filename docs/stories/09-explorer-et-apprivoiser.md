@@ -113,6 +113,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0911 · Lancer l'Expédition
 **En tant que** joueur, **je veux** confirmer le départ, **afin de** mettre en route mes explorateurs et mon escorte.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1369, Zewed/bestia-2#16). « Partir » lance l'Expédition, à l'heure du jeu, dans une transaction qui relit tout au moment de confirmer, et mène à la liste des Expéditions en cours, où elle apparaît à l'aller. Les explorateurs partis sont « en Expédition » sur la page Habitants : leur Métier ne se change pas et ils ne se renvoient pas avant leur retour. Les Bêtes de l'escorte sortent des disponibles. Deux départs au même instant ne prennent jamais deux fois le même explorateur ni la même Bête ; un départ refusé ne retient rien et dit pourquoi. Tables expedition et expedition_escorte (migration 0049). Rien ne fait encore rentrer une Expédition (US-0916).
 - **Débloquée par** : US-0910
 - **Critères d'acceptation** :
   - « Partir » fait passer les explorateurs et les Bêtes à l'état « en Expédition » : ils ne sont plus proposés ailleurs, et le Métier d'un explorateur parti ne peut pas être changé avant son retour.
