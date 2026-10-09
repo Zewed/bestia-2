@@ -734,7 +734,8 @@ export const expeditionEscorte = pgTable(
  * Bête sauvage ordinaire s'y désigne par son numéro sur la Case de l'Expédition (src/monde/betes-sauvages.ts), une Bête
  * de naissance par sa ligne (bete_de_naissance) : l'une ou l'autre, jamais les deux. Son Espèce et l'instant de son
  * apparition sont retenus avec elle : ce que l'Expédition a vu ne change plus. Une Expédition ne rencontre qu'une fois
- * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition.
+ * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition, ou avec sa Bête de naissance, qui ne s'efface
+ * qu'avec son Territoire et ses Expéditions.
  */
 export const rencontre = pgTable(
   "rencontre",
@@ -755,6 +756,7 @@ export const rencontre = pgTable(
   (t) => [
     unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
     unique("rencontre_une_par_bete_de_naissance").on(t.expeditionId, t.beteDeNaissanceId),
+    index("rencontre_par_bete_de_naissance").on(t.beteDeNaissanceId),
     check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
   ],

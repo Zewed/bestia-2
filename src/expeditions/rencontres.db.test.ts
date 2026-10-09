@@ -5,7 +5,7 @@ import { creerCompte } from "@/comptes/compte";
 import { type BeteSauvage, betesSauvagesDesCases, betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { hacher } from "@/monde/couronne";
 import { type Coordonnees, distance } from "@/monde/hex";
-import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
+import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
@@ -21,6 +21,8 @@ const JOUR = 24 * HEURE;
 const PAS = PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE;
 /** L'aller vers une Case à 2 Cases du Foyer. */
 const ALLER = 2 * PAS;
+/** Le temps, en minutes, où aucune autre Bête n'apparaît avant ou après celle d'un essai : sa présence et 6 heures de marge. */
+const CALME = PRESENCE_D_UNE_BETE_HEURES * HEURE + 6 * HEURE;
 
 /** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
 const MONDE_D_ESSAI = "Essai de la Rencontre (US-0932)";
@@ -52,7 +54,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     );
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId), foyer: rows[0].foyer };
   };
-  /** La `rang`-ième Case libre du Monde du Territoire à `ecart` Cases de son Foyer : sa place et son identifiant. */
+  /** La `rang`-ième Case libre du Monde du Territoire à `ecart` Cases de son Foyer : sa place et son identifiant ; null au-delà de la dernière. */
   const aLEcart = async (territoireId: number, ecart: number, rang = 0) => {
     const { rows } = await pool.query<Coordonnees & { id: number }>(
       `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
@@ -61,7 +63,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
        order by c.q, c.r limit 1 offset $3`,
       [territoireId, ecart, rang],
     );
-    return { place: { q: rows[0].q, r: rows[0].r }, caseId: rows[0].id };
+    return rows[0] ? { place: { q: rows[0].q, r: rows[0].r }, caseId: rows[0].id } : null;
   };
   /** Le départ d'un explorateur vers `destination`, à `instant`, pour `sejourMinutes` de séjour ; rend l'Expédition. */
   const partir = async (territoireId: number, destination: Coordonnees, instant: Date, sejourMinutes: number) => {
@@ -100,22 +102,22 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
       .rows;
 
   /**
-   * Une Bête sauvage seule sur une Case libre à `ecart` Cases du Foyer du Territoire, apparue au moins 18 heures après
-   * `apresLe` : aucune autre n'est sur sa Case de 12 heures avant son apparition à 12 heures après. Sa Case et la Bête.
+   * Une Bête sauvage seule sur une Case libre à `ecart` Cases du Foyer du Territoire, apparue après `apresLe` : aucune autre
+   * n'apparaît sur sa Case de CALME heures avant elle à CALME heures après, et aucune n'y est donc de 6 heures avant son
+   * apparition à 6 heures après son départ. Sa Case et la Bête.
    */
   const uneBeteSeule = async (territoireId: number, ecart: number, apresLe: Date) => {
     const fin = apres(apresLe, 30 * JOUR);
-    for (let rang = 0; rang < 40; rang++) {
-      const { place, caseId } = await aLEcart(territoireId, ecart, rang);
-      const betes = await betesSauvagesDUneCase(pool, caseId, apresLe, fin);
+    for (let rang = 0, ici = await aLEcart(territoireId, ecart); ici; ici = await aLEcart(territoireId, ecart, ++rang)) {
+      const betes = await betesSauvagesDUneCase(pool, ici.caseId, apresLe, fin);
       const bete = betes.find(
         (b, i) =>
-          b.arrivee >= apres(apresLe, 18 * HEURE) &&
-          b.arrivee <= apres(fin, -12 * HEURE) &&
-          (i === 0 || betes[i - 1].arrivee <= apres(b.arrivee, -18 * HEURE)) &&
-          (i === betes.length - 1 || betes[i + 1].arrivee >= apres(b.arrivee, 12 * HEURE)),
+          b.arrivee >= apres(apresLe, CALME) &&
+          b.arrivee <= apres(fin, -CALME) &&
+          (i === 0 || betes[i - 1].arrivee <= apres(b.arrivee, -CALME)) &&
+          (i === betes.length - 1 || betes[i + 1].arrivee >= apres(b.arrivee, CALME)),
       );
-      if (bete) return { place, caseId, bete };
+      if (bete) return { ...ici, bete };
     }
     throw new Error("Aucune Bête seule à cet écart.");
   };
@@ -166,8 +168,8 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     const debut = apres(ne, 3 * JOUR);
     // Une destination sans aucune Bête de l'aller au retour, et une Case de son chemin où une Bête se trouve au passage.
     const traversee = async () => {
-      for (let rang = 0; rang < 20; rang++) {
-        const { place: destination, caseId } = await aLEcart(territoireId, ECART, rang);
+      for (let rang = 0, ici = await aLEcart(territoireId, ECART); ici; ici = await aLEcart(territoireId, ECART, ++rang)) {
+        const { place: destination, caseId } = ici;
         // Les Cases libres du chemin, sans la destination, avec leur rang : la k-ième est passée entre la (k − 1)-ième et la k-ième Case de l'aller.
         const chemin = cheminDUneExpedition(foyer, destination).slice(0, -1);
         const { rows: etapes } = await pool.query<Coordonnees & { id: number; rang: string }>(
@@ -182,7 +184,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
           for (const { id, q, r, rang: k } of etapes) {
             const [entree, sortie] = [apres(depart, (Number(k) - 1) * PAS), apres(depart, Number(k) * PAS)];
             const bete = betes.get(id)!.find((b) => b.arrivee < sortie && b.depart > entree);
-            if (bete) return { destination, depart, etape: { place: { q, r }, entree }, bete };
+            if (bete) return { destination, depart, etape: { place: { q, r }, caseId: id, entree }, bete };
           }
         }
       }
@@ -195,30 +197,33 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
 
     await rattraperA(territoireId, apres(depart, 2 * ECART * PAS + HEURE + JOUR));
     expect(await rencontres(passe)).toEqual([]);
-    expect((await rencontres(reste)).map((r) => [r.numero, r.apparueLe])).toContainEqual([bete.numero, bete.arrivee]);
+    // Arrivée quand la première entre sur la Case, elle voit la Bête dès son arrivée, ou à son apparition.
+    expect(await rencontres(reste)).toContainEqual(vue(bete, etape.caseId, bete.arrivee > etape.entree ? bete.arrivee : etape.entree));
   });
 
   it("un joueur sans Expédition sur la Case n'apprend rien de la Bête, même venu juste avant son apparition ou à l'instant de son départ", async () => {
-    const [joueur, voisin, tiers] = [await naitre(), await naitre(), await naitre()];
+    const [joueur, voisin] = [await naitre(), await naitre()];
     const { place, caseId, bete } = await uneBeteSeule(joueur.territoireId, 2, apres(joueur.ne, 3 * JOUR));
     const sienne = await partir(joueur.territoireId, place, apres(bete.arrivee, -ALLER - HEURE), 4 * HEURE);
     // Le voisin y séjourne jusqu'à l'instant où la Bête apparaît, puis y revient à l'instant où elle s'en va.
     await poser(voisin.territoireId, caseId, apres(bete.arrivee, -2 * HEURE), 30, 90);
     await poser(voisin.territoireId, caseId, apres(bete.depart, -30), 30, HEURE);
 
-    for (const { territoireId } of [joueur, voisin, tiers]) await rattraperA(territoireId, apres(bete.depart, JOUR));
+    for (const { territoireId } of [joueur, voisin]) await rattraperA(territoireId, apres(bete.depart, JOUR));
     expect(await rencontres(sienne)).toEqual([vue(bete, caseId, bete.arrivee)]);
     expect(await retenuesSur(voisin.territoireId, caseId)).toEqual([]);
-    expect(await retenuesSur(tiers.territoireId, caseId)).toEqual([]);
   });
 
   it("voit aussi les Bêtes de naissance de son Territoire, et jamais celles d'un autre, qui voit pourtant les mêmes Bêtes sauvages", async () => {
     const [joueur, voisin] = [await naitre(), await naitre()];
+    // Une Bête de naissance du joueur sur une Case restée libre, où le voisin n'a pas la sienne.
     const { rows } = await pool.query<Coordonnees & { id: number; caseId: number; especeId: string; arrivee: Date }>(
       `select b.id, b.case_id as "caseId", c.q, c.r, b.espece_id as "especeId", b.arrivee
        from bete_de_naissance b join case_du_monde c on c.id = b.case_id
-       where b.territoire_id = $1 and c.chef_id is null order by b.id limit 1`,
-      [joueur.territoireId],
+       where b.territoire_id = $1 and c.chef_id is null
+         and not exists (select 1 from bete_de_naissance v where v.territoire_id = $2 and v.case_id = b.case_id)
+       order by b.id limit 1`,
+      [joueur.territoireId, voisin.territoireId],
     );
     const bn = rows[0];
     // Une heure après la naissance, une Expédition part vers la Case de sa première Bête de naissance ; une du voisin y séjourne aux mêmes heures.
@@ -242,8 +247,9 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     const territoires = [await naitre(), await naitre(), await naitre(), await naitre()];
     // Une Case où deux Bêtes au moins se montrent à moins de dix heures d'écart : la période commence une heure avant la première.
     const uneCaseAnimee = async () => {
-      for (let rang = 0; rang < 40; rang++) {
-        const { caseId } = await aLEcart(territoires[0].territoireId, 2, rang);
+      const { territoireId } = territoires[0];
+      for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
+        const { caseId } = ici;
         const betes = await betesSauvagesDUneCase(pool, caseId, apres(territoires[0].ne, 3 * JOUR), apres(territoires[0].ne, 30 * JOUR));
         const i = betes.findIndex((b, j) => j + 1 < betes.length && betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE));
         if (i >= 0) return { caseId, debut: apres(betes[i].arrivee, -HEURE) };

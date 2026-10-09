@@ -1,5 +1,5 @@
 {
-  "id": "b915eda6-f628-4e5e-ac91-dc499b81e8d1",
+  "id": "7a24f074-28d5-4460-bf9d-ed1774a64c21",
   "prevId": "c418980a-826e-4850-bafb-cf02b84ab1f7",
   "version": "7",
   "dialect": "postgresql",
@@ -2325,7 +2325,23 @@
           "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "rencontre_par_bete_de_naissance": {
+          "name": "rencontre_par_bete_de_naissance",
+          "columns": [
+            {
+              "expression": "bete_de_naissance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
       "foreignKeys": {
         "rencontre_expedition_id_expedition_id_fk": {
           "name": "rencontre_expedition_id_expedition_id_fk",

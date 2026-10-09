@@ -18,4 +18,5 @@ CREATE TABLE "rencontre" (
 --> statement-breakpoint
 ALTER TABLE "rencontre" ADD CONSTRAINT "rencontre_expedition_id_expedition_id_fk" FOREIGN KEY ("expedition_id") REFERENCES "public"."expedition"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "rencontre" ADD CONSTRAINT "rencontre_bete_de_naissance_id_bete_de_naissance_id_fk" FOREIGN KEY ("bete_de_naissance_id") REFERENCES "public"."bete_de_naissance"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "rencontre" ADD CONSTRAINT "rencontre_espece_id_espece_id_fk" FOREIGN KEY ("espece_id") REFERENCES "public"."espece"("id") ON DELETE no action ON UPDATE no action;
+ALTER TABLE "rencontre" ADD CONSTRAINT "rencontre_espece_id_espece_id_fk" FOREIGN KEY ("espece_id") REFERENCES "public"."espece"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+CREATE INDEX "rencontre_par_bete_de_naissance" ON "rencontre" USING btree ("bete_de_naissance_id");
