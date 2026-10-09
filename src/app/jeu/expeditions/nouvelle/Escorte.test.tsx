@@ -227,7 +227,7 @@ describe("les mâles et les femelles de l'effectif (US-0937)", () => {
     expect([sexes("Poule"), sexes("Souris grise"), sexes("Bête d'essai")]).toEqual(["0 mâle · 1 femelle", "2 mâles · 1 femelle", "1 mâle · 1 femelle"]);
   });
 
-  it("compte aussi les Bêtes parties en escorte : le joueur les possède toujours", () => {
+  it("montre les mâles et les femelles possédés même au-delà des disponibles : les Bêtes parties en escorte en sont", () => {
     ecran([{ ...SOURIS, disponibles: 1, males: 3, femelles: 2 }]);
     expect(within(ligne("Souris grise")).getByText("1 disponible")).toBeTruthy();
     expect(sexes("Souris grise")).toBe("3 mâles · 2 femelles");

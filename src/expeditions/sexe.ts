@@ -2,7 +2,8 @@
 // l'Expédition est mâle ou femelle au hasard, à chances égales, et ne change plus : il est retenu avec sa Rencontre (table
 // rencontre), écrite une seule fois (src/expeditions/rencontres.ts). Comme ses apparitions, il ne dépend que de la graine
 // de son Monde, de la Bête et d'un tirage qui lui est propre (sexeTire, sexeDUneBeteDeNaissance), jamais de l'heure qu'il
-// est : le même en direct, au rattrapage ou par la tâche planifiée. Tant que le Couple de son Espèce n'est pas réuni,
+// est : le même en direct, au rattrapage ou par la tâche planifiée. Seules les Bêtes apprivoisées avant cette story ont
+// reçu le leur d'un hachage de leur Rencontre (migration 0058). Tant que le Couple de son Espèce n'est pas réuni,
 // l'effectif compte ses mâles et ses femelles (src/monde/effectif.ts) ; l'arrivée au Foyer (US-0938) l'y fera entrer.
 // Côté serveur uniquement.
 import "server-only";
@@ -29,7 +30,8 @@ export async function sexesALApprivoisement(base: Pool | PoolClient, betes: read
   );
   const cases = new Map(rows.map((c) => [c.id, { q: c.q, r: c.r, graine: Number(c.graine) }]));
   return betes.map((b) => {
-    const laCase = cases.get(b.caseId)!;
+    const laCase = cases.get(b.caseId);
+    if (!laCase) throw new Error(`US-0937 : la Case ${b.caseId} de la Bête apprivoisée est introuvable.`);
     return b.numero !== null ? sexeTire(laCase, b.numero) : sexeDUneBeteDeNaissance(laCase.graine, b.beteDeNaissanceId!);
   });
 }

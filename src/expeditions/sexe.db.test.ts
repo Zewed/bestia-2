@@ -145,19 +145,26 @@ describe.skipIf(!URL_TEST)("le sexe tiré au hasard (US-0937, sur base)", () => 
     expect(await betesQuiSuivent(pool, id)).toEqual([]);
   });
 
-  it("le même sexe, que le Territoire soit rattrapé d'un bloc ou par tranches, à toute heure", async () => {
+  it("par tranches comme d'un bloc, à toute heure, chaque Bête a le sexe de son tirage", async () => {
     const [a, b] = [await naitre(), await naitre()];
-    // Deux Bêtes d'un même sexe, l'une rattrapée d'un bloc, l'autre par tranches de 25 minutes : chacune a celui que son tirage donne.
-    const dUnBloc = await uneBeteSeule(a.territoireId, apres(a.ne, 3 * JOUR), rareDuSexe("femelle"));
-    const parTranches = await uneBeteSeule(b.territoireId, apres(b.ne, 3 * JOUR), rareDuSexe("femelle"));
-    const x = await poser(a.territoireId, dUnBloc.caseId, apres(dUnBloc.bete.arrivee, -HEURE), 4 * HEURE, forte);
-    const y = await poser(b.territoireId, parTranches.caseId, apres(parTranches.bete.arrivee, -HEURE), 4 * HEURE, forte);
+    /** Un mâle et une femelle sur des Cases du Territoire, chacun suivi par une escorte arrivée une heure avant lui. */
+    const unMaleEtUneFemelle = async (t: { territoireId: number; ne: Date }) => {
+      const betes = [await uneBeteSeule(t.territoireId, apres(t.ne, 3 * JOUR), rareDuSexe("male")), await uneBeteSeule(t.territoireId, apres(t.ne, 3 * JOUR), rareDuSexe("femelle"))];
+      const ids = [];
+      for (const { caseId, bete } of betes) ids.push(await poser(t.territoireId, caseId, apres(bete.arrivee, -HEURE), 4 * HEURE, forte));
+      return { ids, fin: apres(new Date(Math.max(...betes.map(({ bete }) => bete.arrivee.getTime()))), JOUR), arrivees: betes.map(({ bete }) => bete.arrivee) };
+    };
+    const [dUnBloc, parTranches] = [await unMaleEtUneFemelle(a), await unMaleEtUneFemelle(b)];
+    const sexes = async (ids: number[]) => Promise.all(ids.map(async (id) => (await betesQuiSuivent(pool, id)).map((bete) => bete.sexe)));
 
-    await rattraperA(a.territoireId, apres(dUnBloc.bete.arrivee, JOUR));
-    for (let k = -6; k <= 12; k++) await rattraperA(b.territoireId, apres(parTranches.bete.arrivee, 25 * k + 7));
-    await rattraperA(b.territoireId, apres(parTranches.bete.arrivee, JOUR));
-    expect((await betesQuiSuivent(pool, x)).map((bete) => bete.sexe)).toEqual(["femelle"]);
-    expect((await betesQuiSuivent(pool, y)).map((bete) => bete.sexe)).toEqual(["femelle"]);
+    await rattraperA(a.territoireId, dUnBloc.fin);
+    // Des tranches de 25 minutes autour de chaque Apprivoisement : il tombe au milieu de l'une d'elles.
+    for (const arrivee of [...parTranches.arrivees].sort((x, y) => x.getTime() - y.getTime())) {
+      for (let k = -6; k <= 12; k++) await rattraperA(b.territoireId, apres(arrivee, 25 * k + 7));
+    }
+    await rattraperA(b.territoireId, parTranches.fin);
+    expect(await sexes(dUnBloc.ids)).toEqual([["male"], ["femelle"]]);
+    expect(await sexes(parTranches.ids)).toEqual([["male"], ["femelle"]]);
   });
 
   it("une Bête de naissance apprivoisée a son sexe, tiré de même", async () => {

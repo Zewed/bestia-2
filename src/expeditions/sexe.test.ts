@@ -34,13 +34,20 @@ describe("le sexe tiré au hasard (US-0937)", () => {
     expect([0.5, 0.75, 0.9999].map(tirerUnSexe)).toEqual(["femelle", "femelle", "femelle"]);
   });
 
-  it("ne dépend que du Monde et de la Bête : la même Bête a toujours le même sexe, quand qu'on le tire", () => {
+  it("ne dépend que du Monde et de la Bête : la même Bête a le même sexe quel que soit le moment où on le tire", () => {
     const graine = graineDuMonde("Essai du sexe (US-0937)");
-    const sur = apparitions(graine, { q: 7, r: -3 }, new Date(0), new Date(20 * JOUR_MS));
-    const premiers = sur.map((b) => sexeTire({ graine, q: 7, r: -3 }, b.numero));
-    expect(sur.map((b) => sexeTire({ graine, q: 7, r: -3 }, b.numero))).toEqual(premiers);
-    // Sur une même Case, les deux sexes viennent ; ailleurs ou dans un autre Monde, la même Bête n'a pas forcément le même.
-    expect(new Set(premiers)).toEqual(new Set(["male", "femelle"]));
+    const ici = { graine, q: 7, r: -3 };
+    /** Le sexe de chaque Bête de la Case apparue dans [de, a), par son numéro. */
+    const sexesDe = (de: number, a: number, laCase = ici) =>
+      apparitions(laCase.graine, laCase, new Date(de * JOUR_MS), new Date(a * JOUR_MS)).map((b) => [b.numero, sexeTire(laCase, b.numero)] as const);
+    // Vingt jours d'un bloc, puis jour après jour : les mêmes Bêtes, chacune avec le même sexe.
+    const dUnBloc = sexesDe(0, 20);
+    expect(Array.from({ length: 20 }, (_, jour) => sexesDe(jour, jour + 1)).flat()).toEqual(dUnBloc);
+    // Sur une même Case, les deux sexes viennent.
+    expect(new Set(dUnBloc.map(([, sexe]) => sexe))).toEqual(new Set(["male", "femelle"]));
+    // Dans un autre Monde, les mêmes numéros n'ont pas les mêmes sexes : le tirage tient à la graine.
+    const ailleurs = { ...ici, graine: graineDuMonde("Un autre Monde (US-0937)") };
+    expect(dUnBloc.map(([numero]) => sexeTire(ailleurs, numero))).not.toEqual(dUnBloc.map(([, sexe]) => sexe));
     expect(sexeDUneBeteDeNaissance(graine, 42)).toBe(sexeDUneBeteDeNaissance(graine, 42));
   });
 
