@@ -1,0 +1,61 @@
+drizzle/meta/0052_snapshot.json
+  s_97a431cfa65ca7::t_8c17e576e3f4bc 1-2897
+src/app/jeu/expeditions/ListeDesExpeditions.test.tsx
+  s_97a431cfa65ca7::t_127208b6d7ca31 6-10,16,117-156
+src/app/jeu/expeditions/ListeDesExpeditions.tsx
+  s_00c131376e16bb::t_314a41519cd7b3 3-4,7,11-15,20-23,27-39
+src/app/jeu/expeditions/page.test.tsx
+  s_97a431cfa65ca7::t_4bd742af38042d 23-24
+src/temps/regles.ts
+  s_97a431cfa65ca7::t_5897e9d203e353 4-5,7,15-18
+drizzle/0052_retour_au_foyer.sql
+  s_9f5c258c8ce904::t_3f8f71e867d269 1-16
+drizzle/meta/_journal.json
+  s_9f5c258c8ce904::t_352d4065cd0a20 361-367
+src/db/schema.ts
+  s_9f5c258c8ce904::t_d34d6bf175590e 689-690,705
+src/expeditions/depart.ts
+  s_9f5c258c8ce904::t_828c76e299e86b 9,40,92-93
+src/expeditions/en-cours.ts
+  s_9f5c258c8ce904::t_67261598c275ee 28-29,41
+src/expeditions/retour.db.test.ts
+  s_9f5c258c8ce904::t_66ace593a95c6b 1-334
+src/expeditions/retour.ts
+  s_9f5c258c8ce904::t_779d0a9c9c607c 1-43
+src/monde/effectif.ts
+  s_9f5c258c8ce904::t_a53a03666c907b 22-23,26
+src/monde/explorateurs.ts
+  s_9f5c258c8ce904::t_5ca77b5e60940a 4,31-33,36-39,42-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3fdf72b82a9d660a5d40c8733fdbc31437b2d624",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_9f5c258c8ce904": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a9dba3f8c50e9bcf2",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
