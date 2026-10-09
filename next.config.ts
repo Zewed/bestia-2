@@ -8,7 +8,11 @@ const nextConfig: NextConfig = {
     localPatterns: [{ pathname: "/illustrations/**", search: "" }],
   },
   // US-0412 : le contrôle du Monde lit à la demande les voisinages interdits des Biomes, dans les données du jeu.
-  outputFileTracingIncludes: { "/controle/monde": ["./donnees/biomes.yaml"] },
+  // US-0931 : la simulation des Raretés lit de même les Raretés et leurs chances par Anneau.
+  outputFileTracingIncludes: {
+    "/controle/monde": ["./donnees/biomes.yaml"],
+    "/controle/raretes": ["./donnees/raretes.yaml", "./donnees/raretes-par-anneau.yaml"],
+  },
 };
 
 export default nextConfig;
