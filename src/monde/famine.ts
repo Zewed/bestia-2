@@ -17,14 +17,21 @@ export const DEPART_DE_FAMINE = "depart_de_famine";
 const FUSEAU = "Europe/Paris";
 
 /**
+ * US-0921 : un Habitant resté au Foyer, qui peut s'en aller en Famine (condition sur la table habitant) : un explorateur
+ * absent ne part pas. Le départ (FAIRE_PARTIR) et le calcul qui le programme (PRODUIRE) le lisent tous deux ici.
+ */
+export const AU_FOYER = "expedition_id is null";
+
+/**
  * US-0326 : l'Habitant du Territoire $1 qui s'en va à l'instant $2 : un sans Métier d'abord, puis le dernier arrivé
  * (le plus grand identifiant : les Habitants sont numérotés à leur arrivée) ; jamais le dernier Habitant. Il est
- * effacé, et son départ noté ($3, le type de l'événement).
+ * effacé, et son départ noté ($3, le type de l'événement). US-0921 : il est choisi parmi ceux restés au Foyer ; les
+ * explorateurs absents restent des Habitants du Territoire, et comptent pour qu'il en garde toujours un.
  */
 const FAIRE_PARTIR = `
   with parti as (
     delete from habitant
-    where id = (select id from habitant where territoire_id = $1 order by metier is not null, id desc limit 1)
+    where id = (select id from habitant where territoire_id = $1 and ${AU_FOYER} order by metier is not null, id desc limit 1)
       and (select count(*) from habitant where territoire_id = $1) > 1
     returning prenom, metier
   )

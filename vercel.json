@@ -8,7 +8,7 @@
   "crons": [
     {
       "path": "/taches/temps",
-      "schedule": "*/5 * * * *"
+      "schedule": "0 * * * *"
     }
   ],
   "git": {
