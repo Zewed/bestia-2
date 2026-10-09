@@ -358,6 +358,13 @@
       "when": 1791537781885,
       "tag": "0050_trajet_des_escortes",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1791549088618,
+      "tag": "0052_retour_au_foyer",
+      "breakpoints": true
     }
   ]
 }

@@ -25,7 +25,8 @@ export type ExpeditionEnCours = HorairesDUneExpedition & {
  * chacune avec sa destination, son Biome « inconnu » tant que la Case est sous le brouillard, et sa phase. Une
  * Expédition qui vient de partir est à l'aller. US-0918 : avec son détail, la même lecture pour la liste et pour la
  * carte (US-0913) : ses horaires, ses explorateurs, dans l'ordre de leur arrivée au Foyer, et son escorte, Espèce par
- * Espèce, de la plus commune à la plus rare puis par nom, comme l'écran d'Expédition les propose (US-0904).
+ * Espèce, de la plus commune à la plus rare puis par nom, comme l'écran d'Expédition les propose (US-0904). US-0916 : une
+ * Expédition rentrée au Foyer n'est plus en cours ; d'ici là, son heure passée, elle est « de retour ».
  */
 export async function expeditionsEnCours(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<ExpeditionEnCours[]> {
   const { rows } = await base.query<HorairesDUneExpedition & { id: number; q: number; r: number; explorateurs: string[]; escorte: EspeceDeLEscorte[] }>(
@@ -37,7 +38,7 @@ export async function expeditionsEnCours(base: Pool | PoolClient, territoireId: 
          where s.expedition_id = x.id
        ), '[]') as escorte
      from expedition x join case_du_monde c on c.id = x.case_id
-     where x.territoire_id = $1
+     where x.territoire_id = $1 and x.rentree_le is null
      order by x.part_le, x.id`,
     [territoireId],
   );
