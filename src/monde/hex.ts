@@ -5,6 +5,17 @@
 
 export type Coordonnees = { q: number; r: number };
 
+/** Le plus grand entier qu'une colonne integer de Postgres puisse tenir, d'un côté comme de l'autre de zéro. */
+const COORDONNEE_MAX = 2_147_483_647;
+
+/**
+ * US-0428 : vrai pour une coordonnée de Case que la base peut tenir. US-0901 : la même borne pour la fiche d'une Case
+ * et pour la destination d'une Expédition, que le navigateur donne l'une comme l'autre.
+ */
+export function coordonneeValable(n: number): boolean {
+  return Number.isInteger(n) && Math.abs(n) <= COORDONNEE_MAX;
+}
+
 /** Le centre du Monde, au cœur du Cœur sauvage. */
 export const CENTRE: Coordonnees = { q: 0, r: 0 };
 

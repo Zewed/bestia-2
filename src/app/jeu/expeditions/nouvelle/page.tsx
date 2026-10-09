@@ -7,7 +7,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
 import { type Fiche, type FicheInconnue, ficheDUneCase } from "@/monde/fiche";
-import type { Coordonnees } from "@/monde/hex";
+import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Nouvelle Expédition" };
@@ -15,14 +15,11 @@ export const metadata: Metadata = { title: "Nouvelle Expédition" };
 /** L'écran d'Expédition, où mènent la fiche d'une Case et la navigation. */
 const ECRAN = "/jeu/expeditions/nouvelle";
 
-/** Le plus grand entier qu'une colonne integer de Postgres puisse tenir, d'un côté comme de l'autre de zéro. */
-const COORDONNEE_MAX = 2_147_483_647;
-
 /** Une coordonnée de l'adresse (« -5 »), si c'est un entier que la base peut tenir ; null sinon. */
 function coordonnee(texte: string | string[] | undefined): number | null {
   if (typeof texte !== "string" || !/^-?\d{1,10}$/.test(texte)) return null;
   const n = Number(texte);
-  return Math.abs(n) <= COORDONNEE_MAX ? n : null;
+  return coordonneeValable(n) ? n : null;
 }
 
 /** US-0901 : la Case en paramètre de l'adresse (« ?q=3&r=-5 »), ou null si l'une de ses coordonnées manque ou est fausse. */

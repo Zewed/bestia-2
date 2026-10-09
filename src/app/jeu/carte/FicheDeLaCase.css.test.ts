@@ -58,4 +58,12 @@ describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
     expect(envoyer).toContain("cursor: pointer;");
     expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
+
+  it("reste à portée au pied de la fiche, même quand le panneau du mobile, plafonné, coupe ce qui le précède", () => {
+    const envoyer = regle(".envoyer");
+    expect(envoyer).toMatch(/position: sticky;[^}]*bottom: 0;/);
+    // Le fond de la fiche autour de lui : le texte coupé ne le touche pas, mais la croix reste au-dessus.
+    expect(envoyer).toContain("box-shadow: 0 0 0 16px var(--bloc);");
+    expect(regle(".fermer")).toContain("z-index: 1;");
+  });
 });
