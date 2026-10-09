@@ -14,7 +14,7 @@ import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { sexeDUneBeteDeNaissance } from "./betes-de-naissance";
 import { betesSauvagesDUneCase, type Sexe } from "./betes-sauvages";
-import { type CoupleReuni, couplesDuTerritoire } from "./couple";
+import { type CoupleReuni, couplesDuTerritoire, reunirLesCouples } from "./couple";
 import { betesDisponibles } from "./effectif";
 import { type Coordonnees, distance } from "./hex";
 
@@ -214,6 +214,47 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
       expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE);
     });
 
+    it("avec des Bêtes sorties, seulement si un mâle et une femelle sont sûrement au Foyer ; plusieurs Espèces à la fois", async () => {
+      const t = await naitre();
+      await pool.query(
+        `insert into effectif (territoire_id, espece_id, sexe, nombre)
+         values ($1, 'souris', 'male', 2), ($1, 'souris', 'femelle', 1), ($1, 'poule', 'male', 2), ($1, 'poule', 'femelle', 2),
+           ($1, 'pigeon', 'male', 1), ($1, 'pigeon', 'femelle', 1)`,
+        [t.territoireId],
+      );
+      // Une souris et une poule sorties en escorte d'une Expédition encore en cours, au sexe que l'escorte ne dit pas.
+      const { rows } = await pool.query<{ id: number }>(
+        `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+         select $1, c.id, $2, 30, 60 from case_du_monde c where c.monde_id = $3 and c.chef_id is null order by c.id limit 1 returning id`,
+        [t.territoireId, t.ne, mondeId],
+      );
+      await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, 'souris', 1), ($1, 'poule', 1)", [rows[0].id]);
+      const le = apres(t.ne, HEURE);
+
+      const client = await pool.connect();
+      try {
+        // La souris sortie peut être la seule femelle ; les poules gardent au Foyer au moins un mâle et une femelle.
+        expect(await reunirLesCouples(client, t.territoireId, le)).toEqual(["pigeon", "poule"]);
+        // Rien de plus la fois suivante.
+        expect(await reunirLesCouples(client, t.territoireId, apres(le, HEURE))).toEqual([]);
+      } finally {
+        client.release();
+      }
+      expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([
+        { especeId: "pigeon", reuniLe: le },
+        { especeId: "poule", reuniLe: le },
+      ]);
+      expect(await effectifDe(t.territoireId, "poule")).toEqual(VIDE.map((l) => ({ ...l, nombre: 1 })));
+      expect(await effectifDe(t.territoireId, "souris")).toEqual([
+        { sexe: "male", nombre: 2 },
+        { sexe: "femelle", nombre: 1 },
+      ]);
+      expect((await betesDisponibles(pool, t.territoireId)).map((e) => [e.id, e.disponibles, e.coupleReuni])).toEqual([
+        ["poule", 1, true],
+        ["souris", 2, false],
+      ]);
+    });
+
     it("une Espèce dont le Couple est déjà réuni n'en réunit pas d'autre : sa nouvelle Bête reste dans l'effectif", async () => {
       const { t, especeId, retour } = await unRetourAvecLaBete((sexe) => [[AUTRE[sexe], 1]]);
       await pool.query("insert into couple (territoire_id, espece_id, reuni_le) values ($1, $2, $3)", [t.territoireId, especeId, t.ne]);
@@ -329,6 +370,8 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
 
     const client = await pool.connect();
     let apresLaMigration: { couples: CoupleReuni[]; effectif: { sexe: Sexe; nombre: number }[]; escorte: { sexe: Sexe; nombre: number }[]; bestiaire: EtatAuBestiaire | null };
+    let marquePage: Date;
+    let sansArrivee: string;
     try {
       await client.query("begin");
       // Arrivés avant cette story : le mâle et la femelle sont au Foyer, sans Couple.
@@ -342,6 +385,13 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
         [t.territoireId, bete.caseId, apres(retour, HEURE)],
       );
       await client.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, 1)", [rows[0].id, escorte]);
+      // Et un mâle et une femelle d'une troisième Espèce, sans arrivée connue : réunis au marque-page du Territoire.
+      sansArrivee = [escorte, especeId].includes("pigeon") ? "marmotte" : "pigeon";
+      await client.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 1), ($1, $2, 'femelle', 1)", [
+        t.territoireId,
+        sansArrivee,
+      ]);
+      marquePage = (await client.query<{ le: Date }>("select calcule_jusqu_a as le from territoire where id = $1", [t.territoireId])).rows[0].le;
 
       await client.query(migration);
       // Rejouée, elle ne change rien.
@@ -356,9 +406,13 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
       await client.query("rollback");
       client.release();
     }
-    // Réuni à l'arrivée de la Bête de naissance, la seule connue des deux.
+    // Réuni à l'arrivée de la Bête de naissance, la seule connue des deux ; l'autre Espèce, au marque-page.
+    expect(marquePage!).toEqual(apres(retour, HEURE));
     expect(apresLaMigration).toEqual({
-      couples: [{ especeId, reuniLe: retour }],
+      couples: [
+        { especeId, reuniLe: retour },
+        { especeId: sansArrivee!, reuniLe: marquePage! },
+      ],
       effectif: VIDE,
       escorte: [
         { sexe: "male", nombre: 1 },

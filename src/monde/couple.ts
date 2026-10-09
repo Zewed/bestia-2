@@ -23,7 +23,9 @@ export type CoupleReuni = { especeId: string; reuniLe: Date };
  *
  * Les Bêtes d'une escorte en cours ne sont pas au Foyer (BETES_SORTIES). L'escorte ne choisit pas le sexe : le Couple ne
  * se forme que si un mâle et une femelle y sont sûrement, quelles que soient les Bêtes sorties, soit plus de mâles que de
- * Bêtes sorties de l'Espèce, et plus de femelles ; sinon au retour de l'escorte, qui repasse par ici.
+ * Bêtes sorties de l'Espèce, et plus de femelles ; sinon au retour de l'escorte, qui repasse par ici. Jamais une Bête
+ * sortie n'entre en Réserve ; mais faute de connaître leur sexe, le Couple peut attendre ce retour alors que son mâle et
+ * sa femelle sont déjà au Foyer (deux mâles, dont un sorti, puis une femelle) : US-0960 dira mieux les absents.
  */
 export async function reunirLesCouples(client: PoolClient, territoireId: number, le: Date): Promise<string[]> {
   const { rows } = await client.query<{ especeId: string }>(

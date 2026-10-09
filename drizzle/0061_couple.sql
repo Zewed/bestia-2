@@ -1,10 +1,12 @@
 -- US-0956 : le Couple réuni de chaque Espèce, un seul par Territoire : son mâle et sa femelle ont quitté l'effectif pour
 -- la Réserve, à `reuni_le`, l'instant du jeu où l'effectif les a comptés tous deux au Foyer (src/monde/couple.ts). Le
 -- retour d'une Expédition les réunit désormais. Les effectifs qui comptent déjà un mâle et une femelle au Foyer, arrivés
--- avant cette story, réunissent ici le leur : à l'arrivée du premier mâle ou de la première femelle, la plus tardive des
--- deux (le marque-page du Territoire sans arrivée connue), sous la même règle que le retour (plus de mâles, et plus de
--- femelles, que de Bêtes de l'Espèce sorties en escorte). Purement additive, et rejouable sans rien changer : seules les
--- Espèces sans Couple en reçoivent un.
+-- avant cette story, réunissent ici le leur, sous la même règle que le retour (plus de mâles, et plus de femelles, que de
+-- Bêtes de l'Espèce sorties en escorte) : le mâle et la femelle passent de l'effectif à la Réserve, et l'Espèce au
+-- « Couple réuni » du Bestiaire. Il est daté de l'arrivée au Foyer, avec une Expédition, du premier mâle ou de la
+-- première femelle, la plus tardive des deux ; un sexe dont aucune arrivée n'est connue ne compte pas (greatest ignore
+-- null), et sans aucune arrivée connue, du marque-page du Territoire. En production, toute Bête de l'effectif est arrivée
+-- ainsi (US-0938). Rien ne s'efface, et rejouée, elle ne change rien : seules les Espèces sans Couple en reçoivent un.
 CREATE TABLE "couple" (
 	"territoire_id" integer NOT NULL,
 	"espece_id" text NOT NULL,
