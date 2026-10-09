@@ -1,0 +1,21 @@
+src/expeditions/depart.db.test.ts
+  s_76c5dcedbbca72::t_f6c7f650236a7f 160
+src/expeditions/trajet.db.test.ts
+  s_76c5dcedbbca72::t_a28ea0d95cf743 7,13,56,85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0afd62df39f1a36b2d494db75f34b16f56cdaa8a",
+  "prompts": {},
+  "sessions": {
+    "s_76c5dcedbbca72": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a433a7f1724d36da0",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
