@@ -117,6 +117,18 @@ describe("le séjour sur l'écran d'Expédition (US-0906)", () => {
     expect([window.location.search, ecritures.mock.calls.length]).toEqual([`?q=3&r=-5&sejour=${ENTRE_DEUX}`, 1]);
   });
 
+  it("garde la durée choisie quand le navigateur refuse une réécriture de l'adresse (trop rapprochées), et la réécrit au choix suivant", async () => {
+    ouvrir("?q=3&r=-5");
+    vi.spyOn(window.history, "replaceState").mockImplementationOnce(() => {
+      throw new DOMException("Trop de réécritures", "SecurityError");
+    });
+    await userEvent.click(screen.getByRole("button", { name: "8 h" }));
+    expect([affichee(), presses(), window.location.search]).toEqual(["8 h", ["8 h"], "?q=3&r=-5"]);
+    glisser(ENTRE_DEUX);
+    lacher();
+    expect(window.location.search).toBe(`?q=3&r=-5&sejour=${ENTRE_DEUX}`);
+  });
+
   it("annonce la durée par le curseur seulement, pas une seconde fois par son affichage", () => {
     ouvrir();
     expect(screen.getByRole("status").getAttribute("aria-live")).toBe("off");

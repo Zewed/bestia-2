@@ -23,7 +23,11 @@ function garderDansLAdresse(minutes: number) {
   const parametres = new URLSearchParams(window.location.search);
   if (parametres.get(PARAMETRE_DU_SEJOUR) === String(minutes)) return;
   parametres.set(PARAMETRE_DU_SEJOUR, String(minutes));
-  window.history.replaceState(null, "", `?${parametres}`);
+  try {
+    window.history.replaceState(null, "", `?${parametres}`);
+  } catch {
+    // Une flèche du clavier tenue enfonce la limite de Safari : l'adresse garde l'ancienne durée, réécrite au choix suivant.
+  }
 }
 
 /**
