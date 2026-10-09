@@ -64,6 +64,11 @@ describe("le récit de Rencontre (US-0940)", () => {
     ]);
   });
 
+  it("dit d'une Bête trop forte et restée la force qui manquait à l'escorte, en chiffres insécables (US-0942)", () => {
+    render(<RencontresDuRecit rencontres={[{ ...RENCONTRES[1], manque: 37_340 }]} />);
+    expect(screen.getByRole("list").querySelector("[data-issue]")?.textContent).toBe("Trop forte, restée sur sa Case : il manquait 37 340 de force");
+  });
+
   it("dit le sexe d'un mâle apprivoisé", () => {
     render(<RencontresDuRecit rencontres={[{ ...RENCONTRES[0], sexe: "male", nouvelleEspece: false }]} />);
     expect(screen.getByText("Apprivoisée, mâle")).toBeTruthy();

@@ -19,9 +19,9 @@ export type IssueDUneRencontre = "apprivoisee" | "restee" | "repartie";
 /**
  * US-0940 : une Rencontre telle que le Récit d'un retour d'Expédition la retient : l'Espèce de la Bête, l'instant du jeu
  * où l'Expédition l'a vue, ce qu'il en advint, son sexe si elle l'a suivie (null sinon, US-0937), et si elle a fait
- * entrer son Espèce au Bestiaire (US-0933).
+ * entrer son Espèce au Bestiaire (US-0933). Restée sur sa Case, la force qui manquait à l'escorte (US-0942).
  */
-export type RencontreRacontee = { especeId: string; vueLe: Date; issue: IssueDUneRencontre; sexe: Sexe | null; nouvelleEspece: boolean };
+export type RencontreRacontee = { especeId: string; vueLe: Date; issue: IssueDUneRencontre; sexe: Sexe | null; nouvelleEspece: boolean; manque?: number };
 
 /** US-0940 : une Rencontre racontée telle que la page Récits la montre : avec le nom, l'illustration et la Rareté de son Espèce. */
 export type RencontreDuRecit = RencontreRacontee & { nom: string; illustration: string | null; rarete: { id: string; nom: string } };

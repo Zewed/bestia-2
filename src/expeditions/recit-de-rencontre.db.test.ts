@@ -10,6 +10,7 @@ import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lancerLExpedition } from "./depart";
+import { forceDUneBete } from "./force";
 import { retourDUneExpedition, sejourDUneExpedition } from "./phase";
 
 const MINUTE = 60_000;
@@ -79,7 +80,7 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
           const montrees = betes.get(c.id)!.filter((b) => b.arrivee < fin && b.depart > arrivee);
           if (accepte(montrees, arrivee, fin)) {
             prises.add(c.id);
-            return { territoireId, destination: { q: c.q, r: c.r }, depart, arrivee, fin, montrees };
+            return { territoireId, caseId: c.id, destination: { q: c.q, r: c.r }, depart, arrivee, fin, montrees };
           }
         }
       }
@@ -111,6 +112,9 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
         [id],
       )
     ).rows[0];
+  /** La force d'une Bête de l'Espèce `id` (US-0905) : sans escorte, toute celle qui manquait (US-0942). */
+  const force = async (id: string) =>
+    forceDUneBete((await pool.query<{ attaque: number; vie: number }>("select attaque, vie from espece where id = $1", [id])).rows[0]);
   /** Les sexes que le jeu a tirés aux Apprivoisements de l'Expédition (US-0937), Bête par Bête. */
   const sexes = async (expeditionId: number) =>
     (await pool.query<{ especeId: string; sexe: string }>('select espece_id as "especeId", sexe from rencontre where expedition_id = $1 and apprivoisee order by apparue_le, id', [expeditionId]))
@@ -157,8 +161,46 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
     await aLHeure(territoireId, retour);
     const [bete] = montrees;
     expect((await leRecit(territoireId)).rencontres).toEqual([
-      { especeId: bete.especeId, vueLe: bete.arrivee > arrivee ? bete.arrivee : arrivee, issue: "restee", sexe: null, nouvelleEspece: true, ...(await espece(bete.especeId)) },
+      {
+        especeId: bete.especeId,
+        vueLe: bete.arrivee > arrivee ? bete.arrivee : arrivee,
+        issue: "restee",
+        sexe: null,
+        nouvelleEspece: true,
+        // Sans escorte, il manquait toute sa force (US-0942).
+        manque: await force(bete.especeId),
+        ...(await espece(bete.especeId)),
+      },
     ]);
+  });
+
+  it("une Bête plus rare emmenée pendant le séjour par l'Expédition plus forte d'un voisin : repartie, même avant que le voisin ne soit rattrapé", async () => {
+    // Une Bête plus rare qui serait encore là à la fin du séjour, vue au moins deux heures avant.
+    const { territoireId, caseId, destination, depart, arrivee, montrees } = await unSejourOu(
+      (m, arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart >= fin && Math.max(m[0].arrivee.getTime(), arrivee.getTime()) < fin.getTime() - 2 * HEURE,
+    );
+    const { retour } = await partir(territoireId, destination, depart);
+    const [bete] = montrees;
+    // Une heure après que l'Expédition l'a vue, celle d'un voisin arrive sur la Case, avec une escorte assez forte pour elle.
+    const emmenee = apres(bete.arrivee > arrivee ? bete.arrivee : arrivee, HEURE);
+    const voisin = await naitre();
+    const { rows: especes } = await pool.query<{ id: string; attaque: number; vie: number }>("select id, attaque, vie from espece");
+    const forte = especes.map((e) => ({ id: e.id, force: forceDUneBete(e) })).sort((x, y) => y.force - x.force)[0];
+    const { rows } = await pool.query<{ id: number }>(
+      "insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) values ($1, $2, $3, 30, 60) returning id",
+      [voisin.territoireId, caseId, apres(emmenee, -30 * MINUTE)],
+    );
+    await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, $3)", [
+      rows[0].id,
+      forte.id,
+      Math.ceil((await force(bete.especeId)) / forte.force),
+    ]);
+
+    // Seul le Territoire du joueur avance : celui du voisin n'a pas encore retenu le départ de la Bête.
+    await aLHeure(territoireId, retour);
+    expect((await pool.query("select 1 from bete_partie where case_id = $1 and numero = $2", [caseId, bete.numero])).rowCount).toBe(0);
+    expect((await leRecit(territoireId)).rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, issue: "repartie", sexe: null })]);
+    expect((await leRecit(territoireId)).rencontres![0]).not.toHaveProperty("manque");
   });
 
   it("une Bête plus rare partie de sa Case avant la fin du séjour : repartie à la fin de sa durée", async () => {
@@ -191,6 +233,7 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
         sexe: issue === "apprivoisee" ? tirages.shift()!.sexe : null,
         // Une Espèce n'est nouvelle au Bestiaire qu'à sa première Rencontre.
         nouvelleEspece: !especesVues.has(b.especeId),
+        ...(issue === "restee" ? { manque: await force(b.especeId) } : {}),
         ...(await espece(b.especeId)),
       });
       especesVues.add(b.especeId);

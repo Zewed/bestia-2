@@ -130,11 +130,12 @@ describe("page Récits (US-0324)", () => {
 
   it("dit aussi le jour d'une Rencontre quand il n'est plus celui de la précédente, ou du retour pour la première (US-0940)", async () => {
     const rencontre = (vueLe: string) => ({
-      especeId: "renard",
+      especeId: "goupil",
       vueLe: new Date(vueLe),
       issue: "restee" as const,
       sexe: null,
       nouvelleEspece: false,
+      manque: 37_340,
       nom: "Renard roux",
       illustration: null,
       rarete: { id: "peu_commune", nom: "Peu commune" },
@@ -156,6 +157,8 @@ describe("page Récits (US-0324)", () => {
       "12 octobre à 14:04",
       "20:46",
     ]);
+    // Restée sur sa Case, la force qui manquait à l'escorte (US-0942).
+    expect(html).toContain("Trop forte, restée sur sa Case : il manquait 37 340 de force");
   });
 
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {

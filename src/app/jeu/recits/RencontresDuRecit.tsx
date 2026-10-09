@@ -6,7 +6,8 @@ import styles from "./RencontresDuRecit.module.css";
 
 /**
  * US-0940 : une Rencontre telle que le Récit d'un retour la montre : son heure, déjà écrite par le serveur dans le fuseau du
- * joueur, l'Espèce de la Bête avec son illustration et sa Rareté, et ce qu'il en advint.
+ * joueur, l'Espèce de la Bête avec son illustration et sa Rareté, et ce qu'il en advint ; restée sur sa Case, la force
+ * qui manquait à l'escorte (US-0942).
  */
 export type RencontreAffichee = {
   instant: string;
@@ -17,14 +18,22 @@ export type RencontreAffichee = {
   issue: IssueDUneRencontre;
   sexe: Sexe | null;
   nouvelleEspece: boolean;
+  manque?: number;
 };
 
 const SEXES: Record<Sexe, string> = { male: "mâle", femelle: "femelle" };
 
-/** US-0940 : « Apprivoisée, femelle », « Trop forte, restée sur sa Case », « Repartie à la fin de sa durée ». */
-function ceQuIlAdvint({ issue, sexe }: Pick<RencontreAffichee, "issue" | "sexe">): string {
+/** US-0942 : une force en chiffres, comme la Force de l'écran d'Expédition : « 37 340 », à espace insécable. */
+const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/\s/g, " ");
+
+/**
+ * US-0940 : « Apprivoisée, femelle », « Trop forte, restée sur sa Case : il manquait 37 340 de force », « Repartie à la
+ * fin de sa durée ».
+ */
+function ceQuIlAdvint({ issue, sexe, manque }: Pick<RencontreAffichee, "issue" | "sexe" | "manque">): string {
   if (issue === "apprivoisee") return sexe ? `Apprivoisée, ${SEXES[sexe]}` : "Apprivoisée";
-  return issue === "restee" ? "Trop forte, restée sur sa Case" : "Repartie à la fin de sa durée";
+  if (issue === "repartie") return "Repartie à la fin de sa durée";
+  return manque ? `Trop forte, restée sur sa Case : il manquait ${entier(manque)} de force` : "Trop forte, restée sur sa Case";
 }
 
 /**

@@ -53,7 +53,7 @@ export default async function Recits() {
               lu: r.luLe !== null,
               // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
               ...(r.rencontres && {
-                rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece }, i, toutes) => ({
+                rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque }, i, toutes) => ({
                   instant: vueLe.toISOString(),
                   heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
                   nom,
@@ -62,6 +62,7 @@ export default async function Recits() {
                   issue,
                   sexe,
                   nouvelleEspece,
+                  ...(manque && { manque }),
                 })),
               }),
             }))}
