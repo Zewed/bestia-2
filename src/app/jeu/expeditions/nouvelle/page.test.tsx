@@ -28,6 +28,9 @@ const ouvrir = async (recherche: Record<string, string | string[]> = {}) =>
 /** Les textes de la page, dans l'ordre de la lecture. */
 const textes = (html: string) => html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean);
 
+/** US-0906 : les textes du bloc Séjour, après la destination : la durée choisie, les bornes du curseur, les durées toutes prêtes. */
+const SEJOUR = ["Séjour", "1 h", "30 min", "1 j", "1 h", "4 h", "8 h", "12 h"];
+
 /** Une forêt libre, à 7 Cases du Foyer. */
 const FORET: Fiche = { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7, anneau: 3 };
 
@@ -57,7 +60,7 @@ describe("l'écran d'Expédition (US-0901)", () => {
     const html = await ouvrir({ q: "3", r: "-5" });
     // Le Monde vient du Territoire de la garde, jamais de l'adresse, qui ne dit que la Case.
     expect(fiches.ficheDUneCase).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, { q: 3, r: -5 });
-    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Biome", "Forêt", "Distance", "7 Cases de votre Foyer"]);
+    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Biome", "Forêt", "Distance", "7 Cases de votre Foyer", ...SEJOUR]);
   });
 
   it("accorde la distance : « 1 Case de votre Foyer »", async () => {
@@ -69,14 +72,14 @@ describe("l'écran d'Expédition (US-0901)", () => {
   it("dit le Biome « inconnu » d'une Case encore sous le brouillard", async () => {
     connecte();
     fiches.ficheDUneCase.mockResolvedValue({ q: 3, r: -5, inconnue: true, distance: 12 });
-    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toEqual(["Nouvelle Expédition", "Destination", "Biome", "inconnu", "Distance", "12 Cases de votre Foyer"]);
+    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toEqual(["Nouvelle Expédition", "Destination", "Biome", "inconnu", "Distance", "12 Cases de votre Foyer", ...SEJOUR]);
   });
 
   it("ouverte depuis le menu, sans Case, n'a pas de destination, et mène à la carte pour en choisir une", async () => {
     connecte();
     const html = await ouvrir();
     expect(fiches.ficheDUneCase).not.toHaveBeenCalled();
-    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte"]);
+    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte", ...SEJOUR]);
     expect(html).toMatch(/<a [^>]*href="\/jeu\/carte"[^>]*>Choisir sur la carte<\/a>/);
   });
 
@@ -96,10 +99,17 @@ describe("l'écran d'Expédition (US-0901)", () => {
     expect(textes(await ouvrir({ q: "0", r: "0" }))).toContain("Aucune destination");
   });
 
-  it("n'ajoute aucune phrase d'explication : le titre, puis la destination", async () => {
+  it("n'ajoute aucune phrase d'explication : le titre, la destination, puis le séjour", async () => {
     connecte();
     fiches.ficheDUneCase.mockResolvedValue(FORET);
-    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(6);
+    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(6 + SEJOUR.length);
+  });
+
+  it("propose la durée du séjour, avec ou sans destination (US-0906)", async () => {
+    connecte();
+    expect(await ouvrir()).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
+    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    expect(textes(await ouvrir({ q: "3", r: "-5" })).slice(-SEJOUR.length)).toEqual(SEJOUR);
   });
 
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {

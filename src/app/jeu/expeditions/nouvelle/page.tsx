@@ -9,6 +9,7 @@ import { getPool } from "@/db";
 import { type Fiche, type FicheInconnue, ficheDUneCase } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import styles from "./page.module.css";
+import { Sejour } from "./Sejour";
 
 export const metadata: Metadata = { title: "Nouvelle Expédition" };
 
@@ -77,6 +78,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
           </>
         )}
       </Bloc>
+      <Sejour />
     </main>
   );
 }
