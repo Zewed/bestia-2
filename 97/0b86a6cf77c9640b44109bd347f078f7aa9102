@@ -1,0 +1,33 @@
+src/app/jeu/carte/ExpeditionsSurLaCarte.module.css
+  s_4ce34ec42d9105::t_45fb85debdbc77 67-71
+src/app/jeu/carte/ExpeditionsSurLaCarte.tsx
+  s_4ce34ec42d9105::t_1e29057e72ca83 140-142
+src/components/DetailDeLExpedition.css.test.ts
+  s_4ce34ec42d9105::t_349d4802b3517a 56-77
+src/components/DetailDeLExpedition.module.css
+  s_00c131376e16bb::t_d538e83b6a8330 194-244
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "970b86a6cf77c9640b44109bd347f078f7aa9102",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_4ce34ec42d9105": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "986afa6c-8f0b-494f-9694-d93f52c5ef9e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
