@@ -64,3 +64,8 @@
   font-size: 18px;
   font-weight: var(--graisse-titre);
 }
+
+/* Son détail, celui de la liste des Expéditions, dans la place étroite de la fiche : il s'y range (DetailDeLExpedition.module.css). */
+.detail {
+  container-type: inline-size;
+}

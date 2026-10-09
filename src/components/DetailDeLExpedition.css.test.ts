@@ -53,3 +53,25 @@ describe("le détail d'une Expédition sur un téléphone (US-0918)", () => {
     expect(regle(".detail > div", mobile)).toContain("grid-template-columns: 96px minmax(0, 1fr);");
   });
 });
+
+describe("le détail d'une Expédition dans une place étroite, la fiche de la carte (US-0913)", () => {
+  const etroit = CSS.match(/@container \(max-width: 480px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+
+  it("ne coupe pas la destination : la phase à côté d'elle, la distance puis le temps restant dessous, sur toute la largeur", () => {
+    expect(regle(".ligne", etroit)).toContain("grid-template-columns: minmax(0, 1fr) auto;");
+    expect(regle(".phase", etroit)).toMatch(/grid-row: 1;[^}]*grid-column: 2;/);
+    expect(regle(".distance", etroit)).toMatch(/grid-row: 2;[^}]*grid-column: 1 \/ -1;/);
+    expect(regle(".reste", etroit)).toMatch(/grid-row: 3;[^}]*grid-column: 1 \/ -1;/);
+  });
+
+  it("range le détail une étiquette par ligne, comme sur un téléphone", () => {
+    expect(regle(".detail", etroit)).toContain("grid-template-columns: minmax(0, 1fr);");
+    expect(regle(".detail > div", etroit)).toContain("grid-template-columns: 96px minmax(0, 1fr);");
+  });
+
+  it("ne change rien hors d'un conteneur, comme dans la liste des Expéditions : seule la fiche de la carte s'en déclare un", () => {
+    expect(CSS).not.toContain("container-type");
+    const fiche = readFileSync(join(process.cwd(), "src/app/jeu/carte/ExpeditionsSurLaCarte.module.css"), "utf8");
+    expect(fiche).toMatch(/\.detail \{[^}]*container-type: inline-size;/);
+  });
+});

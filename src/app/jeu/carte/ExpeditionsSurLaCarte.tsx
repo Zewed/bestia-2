@@ -137,7 +137,9 @@ export function ExpeditionsSurLaCarte({
           fermer={fermer}
         >
           <h2 className={styles.titre}>Expédition</h2>
-          <DetailDeLExpedition expedition={expeditions[rang].expedition} instant={instant} />
+          <div className={styles.detail}>
+            <DetailDeLExpedition expedition={expeditions[rang].expedition} instant={instant} />
+          </div>
         </PanneauSurLaCarte>
       )}
     </>
