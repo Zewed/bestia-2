@@ -14,7 +14,12 @@ describe.skipIf(!URL_TEST)("fiche d'Espèce en base", () => {
     await pool.end();
   });
 
-  const inserer = (champs: Record<string, unknown>) => {
+  /**
+   * US-0922 : chaque fiche s'essaie dans une transaction annulée ensuite. Une Espèce d'essai écrite pour de bon se mêlerait,
+   * au milieu de leurs essais, aux tirages des Bêtes sauvages (US-0928) des fichiers qui tournent en même temps, et
+   * changerait l'Espèce de leurs Bêtes d'un rattrapage au suivant.
+   */
+  const inserer = async (champs: Record<string, unknown>) => {
     const ligne = {
       id: `essai_${Math.random().toString(36).slice(2)}`,
       nom: "Essai",
@@ -32,7 +37,14 @@ describe.skipIf(!URL_TEST)("fiche d'Espèce en base", () => {
       ...champs,
     };
     const noms = Object.keys(ligne);
-    return pool.query(`insert into espece (${noms.join(", ")}) values (${noms.map((_, i) => `$${i + 1}`).join(", ")})`, Object.values(ligne));
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      return await client.query(`insert into espece (${noms.join(", ")}) values (${noms.map((_, i) => `$${i + 1}`).join(", ")})`, Object.values(ligne));
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
   };
 
   it("accepte une fiche complète", async () => {
