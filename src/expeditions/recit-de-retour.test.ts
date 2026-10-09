@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dureesReelles, especesVuesSansSuite, type RetourARaconter, rappelDUneExpedition, recitDeRetour } from "./recit-de-retour";
+import { dureesReelles, especesTropFortes, especesVuesSansSuite, type RetourARaconter, rappelDUneExpedition, recitDeRetour } from "./recit-de-retour";
 
 const MINUTE = 60_000;
 /** Une heure de Paris en octobre (UTC+2), comme le jeu l'enregistre, en temps universel. */
@@ -143,5 +143,50 @@ describe("quand seules des Bêtes plus rares se sont montrées (US-0935)", () =>
     expect(especesVuesSansSuite([vue("isard", "rare", true)])).toBeNull();
     expect(especesVuesSansSuite([])).toBeNull();
     expect(recitDeRetour(retour({ rencontres: 2 })).texte.split("\n").at(-1)).toBe("2 Bêtes se sont montrées.");
+  });
+});
+
+describe("la Bête trop forte pour l'escorte, restée sur sa Case (US-0942)", () => {
+  /** Les lignes du récit du retour `autre`. */
+  const lignes = (autre: Partial<RetourARaconter>) => recitDeRetour(retour(autre)).texte.split("\n");
+  /** Le Renard roux, peu commun, auquel il manquait 37 340 de force ; le Loup gris, rare, 150 000. */
+  const renard = { nom: "Renard roux", manque: 37_340 };
+  const loup = { nom: "Loup gris", manque: 150_000 };
+
+  it("quand seules des Bêtes trop fortes se sont montrées, la ligne qui les nomme dit « trop forte pour votre escorte » et la force qui lui manquait, en chiffres", () => {
+    expect(lignes({ rencontres: 1, vuesSansSuite: ["Renard roux"], tropFortes: [renard] }).at(-1)).toBe(
+      "Vos explorateurs ont vu Renard roux, mais aucune Bête ne les a suivis : trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
+    );
+  });
+
+  it("plusieurs Espèces trop fortes : la force qui manquait pour chacune, dans l'ordre où elles se sont montrées", () => {
+    expect(lignes({ rencontres: 3, vuesSansSuite: ["Renard roux", "Loup gris"], tropFortes: [renard, loup] }).at(-1)).toBe(
+      "Vos explorateurs ont vu Renard roux et Loup gris, mais aucune Bête ne les a suivis : trop fortes pour votre escorte, il lui manquait 37\u00a0340 de force pour Renard roux et 150\u00a0000 pour Loup gris.",
+    );
+    expect(lignes({ rencontres: 3, vuesSansSuite: ["Renard roux", "Loup gris", "Lion"], tropFortes: [renard, loup, { nom: "Lion", manque: 640_000 }] }).at(-1)).toBe(
+      "Vos explorateurs ont vu Renard roux, Loup gris et Lion, mais aucune Bête ne les a suivis : trop fortes pour votre escorte, il lui manquait 37\u00a0340 de force pour Renard roux, 150\u00a0000 pour Loup gris et 640\u00a0000 pour Lion.",
+    );
+  });
+
+  it("quand d'autres Bêtes ont suivi, une ligne après celle des Bêtes montrées dit celles qui n'ont pas suivi, trop fortes, et de combien", () => {
+    expect(lignes({ rencontres: 3, tropFortes: [renard] }).slice(-2)).toEqual([
+      "3 Bêtes se sont montrées.",
+      "Renard roux n'a pas suivi vos explorateurs : trop forte pour votre escorte, il lui manquait 37\u00a0340 de force.",
+    ]);
+    expect(lignes({ rencontres: 4, tropFortes: [renard, loup] }).at(-1)).toBe(
+      "Renard roux et Loup gris n'ont pas suivi vos explorateurs : trop fortes pour votre escorte, il lui manquait 37\u00a0340 de force pour Renard roux et 150\u00a0000 pour Loup gris.",
+    );
+  });
+
+  it("rien de plus quand aucune Bête n'a été trop forte", () => {
+    expect(lignes({ rencontres: 2, tropFortes: [] })).toEqual(lignes({ rencontres: 2 }));
+    expect(lignes({ rencontres: 2 }).at(-1)).toBe("2 Bêtes se sont montrées.");
+  });
+
+  it("les Espèces trop fortes sont celles des Bêtes vues qui n'ont pas suivi l'Expédition, chacune une fois, dans l'ordre des apparitions", () => {
+    const vue = (especeId: string, apprivoisee: boolean) => ({ especeId, apprivoisee });
+    expect(especesTropFortes([vue("isard", false), vue("mulot", true), vue("goupil", false), vue("isard", false)])).toEqual(["isard", "goupil"]);
+    expect(especesTropFortes([vue("mulot", true)])).toEqual([]);
+    expect(especesTropFortes([])).toEqual([]);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aPortee, type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
+import { aPortee, type ExpeditionSurLaCase, forceQuiManque, lExpeditionSuivie, vueLe } from "./apprivoisement";
 
 const HEURE_MS = 3_600_000;
 /** L'instant du jeu `heures` heures après une origine quelconque. */
@@ -87,5 +87,23 @@ describe("l'Expédition que la Bête suit (US-0934)", () => {
 
   it("une Expédition partie avant l'apparition, ou arrivée après le départ de la Bête, ne l'emmène pas", () => {
     expect(lExpeditionSuivie(rare(), [expedition(1, 6, 10, 5_000), expedition(2, 16, 18, 5_000)])).toBeNull();
+  });
+});
+
+describe("la force qui manque à l'escorte face à une Bête trop forte (US-0942)", () => {
+  it("l'écart entre la force de la Bête et celle de l'escorte, quand elle est plus forte qu'elle", () => {
+    expect(forceQuiManque(999, rare())).toBe(1);
+    expect(forceQuiManque(473, rare({ rareteId: "peu_commune", force: 37_340 }))).toBe(36_867);
+  });
+
+  it("sans escorte, de force nulle, toute la force de la Bête", () => {
+    expect(forceQuiManque(null, rare({ rareteId: "peu_commune", force: 37_340 }))).toBe(37_340);
+  });
+
+  it("aucune quand la Bête est à portée : escorte assez forte, ou Bête commune", () => {
+    expect(forceQuiManque(1_000, rare())).toBe(0);
+    expect(forceQuiManque(5_000, rare())).toBe(0);
+    expect(forceQuiManque(null, rare({ rareteId: "commune", force: 23_029 }))).toBe(0);
+    expect(forceQuiManque(1, rare({ rareteId: "commune", force: 23_029 }))).toBe(0);
   });
 });

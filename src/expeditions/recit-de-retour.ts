@@ -1,19 +1,23 @@
 // Le récit de retour d'une Expédition (US-0917) : à son retour au Foyer (src/expeditions/retour.ts), un Récit du
 // Territoire dit où elle est allée, combien de temps ont duré son aller, son séjour et son retour, combien de Cases elle
 // a sorties du brouillard et si des Bêtes se sont montrées. Le détail des Rencontres, Bête par Bête, viendra avec US-0940.
-// US-0920 : rappelée, il le dit, et quand. Côté serveur uniquement.
+// US-0920 : rappelée, il le dit, et quand. US-0942 : les Bêtes trop fortes pour son escorte, restées sur leur Case, et la
+// force qui lui manquait. Côté serveur uniquement.
 import "server-only";
 import type { PoolClient } from "pg";
 import { type Coordonnees, distance } from "@/monde/hex";
 import { ecrireUnRecit, type NouveauRecit } from "@/monde/recits";
 import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
-import { COMMUNE } from "./apprivoisement";
+import { COMMUNE, forceQuiManque } from "./apprivoisement";
 import { casesLeveesParLExpedition } from "./brouillard";
 import { casesDuFoyer } from "./choix-de-destination";
 import { demiTourDUneExpedition, type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
-import { type Rencontre, rencontresDUneExpedition } from "./rencontres";
+import { forcesDesEscortes, forcesDesEspeces, type Rencontre, rencontresDUneExpedition } from "./rencontres";
 
 const MINUTE_MS = 60_000;
+
+/** US-0942 : une force dite en chiffres comme la Force de l'écran d'Expédition : « 37 340 », à espace insécable. */
+const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/ /g, " ");
 
 /** US-0920 : le fuseau des heures dites dans les Récits, comme sur la page Récits, en attendant celui de chaque joueur. */
 const FUSEAU = "Europe/Paris";
@@ -41,9 +45,17 @@ export type RetourARaconter = {
    * de leurs Espèces, chacune une fois, dans l'ordre des apparitions (especesVuesSansSuite) ; absent sinon.
    */
   vuesSansSuite?: string[];
+  /**
+   * US-0942 : les Espèces des Bêtes vues restées sur leur Case, trop fortes pour l'escorte, chacune une fois, dans l'ordre
+   * des apparitions (especesTropFortes) ; absentes ou vides : aucune.
+   */
+  tropFortes?: TropForte[];
   rentreeLe: Date;
   rappel?: RappelARaconter | null;
 };
+
+/** US-0942 : une Espèce trop forte pour l'escorte : son nom et la force qui manquait à l'escorte (forceQuiManque). */
+export type TropForte = { nom: string; manque: number };
 
 /**
  * US-0917 : les durées réelles d'une Expédition rentrée à l'instant du jeu `rentreeLe` : l'aller jusqu'à son arrivée sur la
@@ -101,10 +113,47 @@ export function especesVuesSansSuite(rencontres: Pick<Rencontre, "especeId" | "r
   return [...new Set(rencontres.map((r) => r.especeId))];
 }
 
-/** US-0935 : « Vos explorateurs ont vu Renard roux et Loup gris, mais aucune Bête ne les a suivis. ». */
-function vuesSansQueRienNeSuive(especes: string[]): string {
-  const vues = especes.length > 1 ? `${especes.slice(0, -1).join(", ")} et ${especes.at(-1)}` : especes[0];
-  return `Vos explorateurs ont vu ${vues}, mais aucune Bête ne les a suivis.`;
+/**
+ * US-0942 : les Espèces des Bêtes que l'Expédition a vues sans qu'elles la suivent, chacune une fois, dans l'ordre de ses
+ * Rencontres : toutes trop fortes pour son escorte, car une Bête à portée suit la première Expédition qui la voit, et les
+ * suivantes ne la voient plus (lExpeditionSuivie, src/expeditions/apprivoisement.ts).
+ */
+export function especesTropFortes(rencontres: Pick<Rencontre, "especeId" | "apprivoisee">[]): string[] {
+  return [...new Set(rencontres.filter((r) => !r.apprivoisee).map((r) => r.especeId))];
+}
+
+/** « Renard roux », « Renard roux et Loup gris », « Renard roux, Loup gris et Lion ». */
+function enumeres(mots: string[]): string {
+  return mots.length > 1 ? `${mots.slice(0, -1).join(", ")} et ${mots.at(-1)}` : mots[0];
+}
+
+/**
+ * US-0942 : « trop forte pour votre escorte, il lui manquait 37 340 de force » ; plusieurs Espèces, la force qui manquait
+ * pour chacune : « trop fortes pour votre escorte, il lui manquait 37 340 de force pour Renard roux et 150 000 pour Loup gris ».
+ */
+function tropFortesPourLEscorte(tropFortes: TropForte[]): string {
+  if (tropFortes.length === 1) return `trop forte pour votre escorte, il lui manquait ${entier(tropFortes[0].manque)} de force`;
+  const manques = tropFortes.map(({ nom, manque }, i) => `${entier(manque)}${i === 0 ? " de force" : ""} pour ${nom}`);
+  return `trop fortes pour votre escorte, il lui manquait ${enumeres(manques)}`;
+}
+
+/**
+ * US-0935 : « Vos explorateurs ont vu Renard roux et Loup gris, mais aucune Bête ne les a suivis. ». US-0942 : suivi de
+ * la raison, trop fortes pour l'escorte, et de combien : « … ne les a suivis : trop forte pour votre escorte, il lui
+ * manquait 37 340 de force. ».
+ */
+function vuesSansQueRienNeSuive(especes: string[], tropFortes?: TropForte[]): string {
+  const raison = tropFortes?.length ? ` : ${tropFortesPourLEscorte(tropFortes)}` : "";
+  return `Vos explorateurs ont vu ${enumeres(especes)}, mais aucune Bête ne les a suivis${raison}.`;
+}
+
+/**
+ * US-0942 : quand d'autres Bêtes ont suivi l'Expédition, celles restées sur leur Case : « Renard roux n'a pas suivi vos
+ * explorateurs : trop forte pour votre escorte, il lui manquait 37 340 de force. ».
+ */
+function resteesSurLeurCase(tropFortes: TropForte[]): string {
+  const noms = enumeres(tropFortes.map((e) => e.nom));
+  return `${noms} ${tropFortes.length > 1 ? "n'ont" : "n'a"} pas suivi vos explorateurs : ${tropFortesPourLEscorte(tropFortes)}.`;
 }
 
 /**
@@ -112,9 +161,11 @@ function vuesSansQueRienNeSuive(especes: string[]): string {
  * ligne par fait : sa destination et son Biome, ses durées, les Cases sorties du brouillard, et les Bêtes qui se sont
  * montrées, ou la phrase qui dit qu'aucune ne l'a fait : il n'est jamais vide. US-0920 : rappelée, une ligne le dit, et
  * quand, avant ses durées ; sans séjour, « sans séjour ». US-0935 : quand seules des Bêtes plus rares se sont montrées et
- * qu'aucune n'a suivi, la ligne des Bêtes nomme les Espèces vues et le dit.
+ * qu'aucune n'a suivi, la ligne des Bêtes nomme les Espèces vues et le dit. US-0942 : elle dit aussi qu'elles étaient
+ * trop fortes pour l'escorte, et la force qui lui manquait ; quand d'autres ont suivi, une ligne après elle le dit des
+ * Bêtes restées sur leur Case.
  */
-export function recitDeRetour({ destination, durees, casesLevees, rencontres, vuesSansSuite, rentreeLe, rappel }: RetourARaconter): NouveauRecit {
+export function recitDeRetour({ destination, durees, casesLevees, rencontres, vuesSansSuite, tropFortes, rentreeLe, rappel }: RetourARaconter): NouveauRecit {
   const sejour = durees.sejour === 0 ? "sans séjour" : `séjour ${formaterMinutes(durees.sejour)}`;
   return {
     titre: "Retour d'Expédition",
@@ -124,7 +175,9 @@ export function recitDeRetour({ destination, durees, casesLevees, rencontres, vu
       `Aller ${formaterMinutes(durees.aller)}, ${sejour}, retour ${formaterMinutes(durees.retour)}.`,
       casesSorties(casesLevees),
       // US-0940 : le détail de chaque Rencontre, Bête par Bête.
-      vuesSansSuite?.length ? vuesSansQueRienNeSuive(vuesSansSuite) : betesMontrees(rencontres),
+      ...(vuesSansSuite?.length
+        ? [vuesSansQueRienNeSuive(vuesSansSuite, tropFortes)]
+        : [betesMontrees(rencontres), ...(tropFortes?.length ? [resteesSurLeurCase(tropFortes)] : [])]),
     ].join("\n"),
     survenuLe: rentreeLe,
   };
@@ -160,6 +213,8 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   // US-0935 : seules des Bêtes plus rares se sont montrées et aucune n'a suivi : le récit nomme leurs Espèces.
   const sansSuite = especesVuesSansSuite(vues);
   const vuesSansSuite = sansSuite ? await nomsDesEspeces(client, sansSuite) : undefined;
+  // US-0942 : les Bêtes vues restées sur leur Case, trop fortes pour l'escorte : la force qui lui manquait.
+  const tropFortes = await especesRestees(client, expeditionId, vues);
   await ecrireUnRecit(
     client,
     territoireId,
@@ -170,6 +225,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
       casesLevees,
       rencontres,
       vuesSansSuite,
+      tropFortes,
       rentreeLe,
       rappel,
     }),
@@ -183,4 +239,22 @@ async function nomsDesEspeces(client: PoolClient, ids: string[]): Promise<string
     [ids],
   );
   return rows.map((r) => r.nom);
+}
+
+/**
+ * US-0942 : les Espèces trop fortes pour l'escorte de l'Expédition `expeditionId` parmi ses Rencontres `vues`
+ * (especesTropFortes), dans le même ordre : leur nom, et la force qui manquait à l'escorte (forceQuiManque), nulle sans
+ * escorte (US-0935).
+ */
+async function especesRestees(client: PoolClient, expeditionId: number, vues: Rencontre[]): Promise<TropForte[]> {
+  const ids = especesTropFortes(vues);
+  if (ids.length === 0) return [];
+  // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
+  const escorte = (await forcesDesEscortes(client, [expeditionId])).get(expeditionId) ?? null;
+  const forces = await forcesDesEspeces(client, ids);
+  const noms = await nomsDesEspeces(client, ids);
+  return ids.map((id, i) => ({
+    nom: noms[i],
+    manque: forceQuiManque(escorte, { force: forces.get(id)!, rareteId: vues.find((r) => r.especeId === id)!.rareteId }),
+  }));
 }
