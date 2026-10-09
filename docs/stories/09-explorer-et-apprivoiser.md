@@ -397,11 +397,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0936 · Une Bête à la fois
 **En tant que** joueur, **je veux** que les Bêtes me rejoignent une par une, **afin de** faire de chaque Apprivoisement un événement.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1396, Zewed/bestia-2#30). Les règles de la Rencontre et de l'Apprivoisement la tenaient déjà : la story est prouvée par des tests. Une Rencontre ne porte qu'une Bête, chacune est jugée à part dans l'ordre des apparitions, et après un Apprivoisement l'Expédition poursuit son séjour jusqu'à son terme : elle peut en apprivoiser d'autres, une par Rencontre, et rentre à l'heure fixée au départ.
 - **Débloquée par** : US-0934
 - **Critères d'acceptation** :
   - Un Apprivoisement n'amène jamais qu'une seule Bête.
   - Quand plusieurs Bêtes se montrent pendant un même séjour, chaque Rencontre est jugée à part, dans l'ordre des apparitions.
-  - Après un Apprivoisement, l'Expédition poursuit son séjour et peut en apprivoiser d'autres, ou rentre aussitôt avec sa Bête (à décider).
+  - Après un Apprivoisement, l'Expédition poursuit son séjour jusqu'à son terme et peut en apprivoiser d'autres, une par Rencontre (décidé le 2026-10-09).
 
 ### US-0937 · Le sexe tiré au hasard
 **En tant que** joueur, **je veux** connaître le sexe de chaque Bête apprivoisée, **afin de** savoir s'il me manque un mâle ou une femelle pour réunir le Couple.
