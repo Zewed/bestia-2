@@ -1,0 +1,49 @@
+drizzle/0047_effectif.sql
+  s_97a431cfa65ca7::t_80a419660e3928 1-14
+drizzle/meta/0047_snapshot.json
+  s_97a431cfa65ca7::t_4c0f94c39525ff 1-2554
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_fff882f60c71a1 333-339
+src/app/jeu/expeditions/nouvelle/Escorte.css.test.ts
+  s_00c131376e16bb::t_3d765773a60482 1-32
+src/app/jeu/expeditions/nouvelle/Escorte.module.css
+  s_97a431cfa65ca7::t_fdabf18fc869cc 1-133
+src/app/jeu/expeditions/nouvelle/Escorte.test.tsx
+  s_00c131376e16bb::t_cc14b0f8496957 1-173
+src/app/jeu/expeditions/nouvelle/Escorte.tsx
+  s_00c131376e16bb::t_3aee7593fe0849 1-97
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_a9dc26968d3354 22-27,175-205
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_a9e39330bab8f6 9,13,72-73,90
+src/db/schema.ts
+  s_97a431cfa65ca7::t_134616edb4a260 618-641
+src/monde/effectif.db.test.ts
+  s_97a431cfa65ca7::t_e76e09ebef8f64 1-119
+src/monde/effectif.ts
+  s_97a431cfa65ca7::t_23d1024d4ace70 1-43
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "96141e98de99626adb64f14aa4651110e5927527",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
