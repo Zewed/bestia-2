@@ -194,11 +194,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0919 · Plusieurs Expéditions à la fois
 **En tant que** joueur, **je veux** lancer une nouvelle Expédition pendant qu'une autre est en route, **afin de** fouiller plusieurs directions en même temps.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1377, Zewed/bestia-2#18). Le départ respectait déjà la règle : la story est prouvée par des tests. Plusieurs Expéditions partent tant qu'il reste un explorateur libre, chacune avec sa destination, son escorte et ses horaires, sans effet sur les autres ; le prochain retour affiché est celui de la plus proche. Aucun plafond hors des explorateurs libres. Deux Expéditions peuvent viser la même Case.
 - **Débloquée par** : US-0911
 - **Critères d'acceptation** :
   - On peut lancer une nouvelle Expédition tant qu'il reste au moins un explorateur libre.
   - Chaque Expédition a sa destination, son escorte et ses horaires, sans effet sur les autres.
-  - Un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs (à décider).
+  - Aucun plafond d'Expéditions simultanées autre que le nombre d'explorateurs libres (décidé le 2026-10-08).
 
 ### US-0920 · Rappeler une Expédition à l'aller
 **En tant que** joueur, **je veux** rappeler une Expédition pendant son trajet aller, **afin de** récupérer mes Bêtes si j'en ai besoin ailleurs.
