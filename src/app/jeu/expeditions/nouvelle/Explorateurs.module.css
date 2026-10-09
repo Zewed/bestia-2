@@ -1,0 +1,84 @@
+/* US-0902 : le bloc Explorateurs, sous la destination, à l'écart des blocs Bento. */
+.bloc {
+  margin-top: var(--ecart);
+}
+
+/* Comme la destination : chaque ligne, sa petite étiquette, puis ce qu'elle dit. */
+.lignes {
+  display: grid;
+  gap: 6px;
+}
+
+.lignes > div {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.lignes dt {
+  color: var(--texte-discret);
+}
+
+.lignes dd {
+  margin: 0;
+}
+
+.libres {
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
+/* « − », le nombre choisi, puis « + », au pouce : chaque bouton a sa surface de 44 px, à 8 px du nombre. */
+.choix {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plusMoins {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 20px;
+  font-weight: var(--graisse-titre);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* Grisés, ils restent à leur place sans réagir. */
+.plusMoins:disabled {
+  border-color: var(--trait-doux);
+  background: var(--bloc-2);
+  color: var(--galet);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .plusMoins:enabled:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.plusMoins:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.nombre {
+  min-width: 2ch;
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}

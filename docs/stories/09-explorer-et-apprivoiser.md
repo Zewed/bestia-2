@@ -17,12 +17,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0902 · Choisir les explorateurs
 **En tant que** joueur, **je veux** choisir combien de mes explorateurs partent, **afin de** garder les autres pour d'autres Expéditions.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1360, Zewed/bestia-2#5). Sous la destination, le bloc « Explorateurs » montre les explorateurs libres sur le total (« Libres 2 / 3 ») et le nombre qui partent, choisi au pouce entre « − » et « + ». Le choix part de zéro et ne dépasse jamais les libres ; il est gardé dans l'adresse. « Partir » reste grisé à zéro, avec « Il faut au moins un explorateur. » ; le départ lui-même arrive avec US-0911. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0901
 - **Critères d'acceptation** :
   - Seuls les Habitants au Métier d'explorateur qui ne sont pas déjà partis sont proposés, avec un compteur « libres / total ».
   - Il faut au moins un explorateur : à zéro, le bouton de départ reste grisé et dit pourquoi.
   - On ne peut pas choisir plus d'explorateurs qu'il n'y en a de libres.
-  - Ce qu'apporte un explorateur de plus dans une même Expédition (à décider).
+  - Un explorateur de plus augmente les chances de Rencontre sur la Case (la règle chiffrée arrive avec l'étape 40) ; d'ici là, il ne change que ce que l'Expédition mange (décidé le 2026-10-08).
 
 ### US-0903 · Aucun explorateur libre
 **En tant que** nouveau joueur, **je veux** comprendre pourquoi je ne peux pas encore partir, **afin de** trouver comment lancer ma première Expédition.
