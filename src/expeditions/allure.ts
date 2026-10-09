@@ -17,3 +17,12 @@ export function allureMinutesParCase(escorte: ReadonlyMap<string, number>): numb
   if (!sansEscorte(escorte)) throw new Error("L'allure d'une escorte arrive avec la durée du trajet (US-0912).");
   return PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE;
 }
+
+/**
+ * US-0910 : la durée de l'aller d'une Expédition, en minutes de jeu, jusqu'à une Case à `distance` Cases du Foyer : une
+ * Case après l'autre, à son allure ; le retour dure autant (US-0912). Avec une escorte, aucune tant que son allure n'est
+ * pas réglée (US-0912) : null, que le récapitulatif ne chiffre pas.
+ */
+export function dureeDuTrajetMinutes(distance: number, escorte: ReadonlyMap<string, number>): number | null {
+  return sansEscorte(escorte) ? distance * allureMinutesParCase(escorte) : null;
+}

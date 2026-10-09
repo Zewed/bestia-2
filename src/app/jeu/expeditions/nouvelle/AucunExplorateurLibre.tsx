@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { Bloc } from "@/components/Bloc";
+import { formaterJourEtHeure } from "@/temps/affichage";
 import styles from "./AucunExplorateurLibre.module.css";
 
 /** Le fuseau des joueurs, pour l'heure du prochain retour. */
 const FUSEAU = "Europe/Paris";
 
 /** US-0903 : l'heure du prochain retour, dans le fuseau du joueur : « 9 octobre à 14:05 ». */
-const quand = (instant: Date) =>
-  new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: FUSEAU }).format(instant);
+const quand = (instant: Date) => formaterJourEtHeure(instant, FUSEAU);
 
 /**
  * US-0903 : à la place du formulaire de l'écran d'Expédition, quand aucun explorateur n'est libre : sans aucun

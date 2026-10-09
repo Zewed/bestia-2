@@ -1,6 +1,9 @@
 // Le choix de la destination d'une Expédition sur la carte (US-0907), tel que l'écran d'Expédition, la carte et sa
-// fiche le partagent : les adresses de l'aller et du retour, et les refus que lit le joueur.
+// fiche le partagent : les adresses de l'aller et du retour, les refus que lit le joueur, et la distance qu'il lit.
 import type { Coordonnees } from "@/monde/hex";
+
+/** US-0901 : la distance d'une destination au Foyer : « 7 Cases de votre Foyer », « 1 Case de votre Foyer » ; US-0910 : de même au récapitulatif. */
+export const casesDuFoyer = (n: number) => `${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
 
 /** US-0907 : le refus d'une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur (décidé le 2026-10-08). */
 export const CASE_D_UN_TERRITOIRE = "Cette Case appartient à un Territoire.";

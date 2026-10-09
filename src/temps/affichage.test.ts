@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formaterDuree, formaterMinutes } from "./affichage";
+import { formaterDuree, formaterJourEtHeure, formaterMinutes } from "./affichage";
 
 describe("durée avant qu'un stock soit plein (US-0226)", () => {
   it.each([
@@ -13,6 +13,13 @@ describe("durée avant qu'un stock soit plein (US-0226)", () => {
     [2 * 24 + 5 + 0.2, "2 j 5 h"],
   ])("%f heures s'affichent « %s »", (heures, affichee) => {
     expect(formaterDuree(heures)).toBe(affichee);
+  });
+});
+
+describe("le jour et l'heure d'un retour (US-0903, US-0910)", () => {
+  it("s'affichent dans le fuseau du joueur, sans l'année : « 9 octobre à 14:05 », la minute à deux chiffres", () => {
+    expect(formaterJourEtHeure(new Date("2026-10-09T12:05:59Z"), "Europe/Paris")).toBe("9 octobre à 14:05");
+    expect(formaterJourEtHeure(new Date("2026-10-09T23:30:00Z"), "Europe/Paris")).toBe("10 octobre à 01:30");
   });
 });
 

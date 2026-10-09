@@ -13,6 +13,14 @@ export function formaterInstant(instant: Date, fuseau: string): string {
 }
 
 /**
+ * US-0903 : le jour et l'heure d'un retour, dans le fuseau d'un joueur, sans l'année : « 9 octobre à 14:05 ». US-0910 :
+ * de même pour l'heure de retour prévue du récapitulatif.
+ */
+export function formaterJourEtHeure(instant: Date, fuseau: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: fuseau }).format(instant);
+}
+
+/**
  * US-0226 : une durée à venir, arrondie à la minute supérieure : « 45 min », « 3 h 05 », puis au-delà
  * de 24 heures, en jours et en heures : « 2 j 5 h ».
  */

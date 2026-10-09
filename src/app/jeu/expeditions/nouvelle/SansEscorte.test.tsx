@@ -23,13 +23,13 @@ import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import { SansEscorte } from "./SansEscorte";
 
-/** L'écran d'une Expédition sans escorte, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte, le départ. */
+/** L'écran d'une Expédition sans escorte, réduit à ce qui compte ici, comme la page le range : les explorateurs, l'escorte, le départ, la destination déjà choisie (US-0910). */
 const ecran = () =>
   render(
     <>
       <Explorateurs libres={2} total={2} />
       <SansEscorte />
-      <Partir libres={2} />
+      <Partir libres={2} destination />
     </>,
   );
 

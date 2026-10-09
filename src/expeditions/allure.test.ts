@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
-import { allureMinutesParCase, sansEscorte } from "./allure";
+import { allureMinutesParCase, dureeDuTrajetMinutes, sansEscorte } from "./allure";
 
 describe("l'allure d'une Expédition sans escorte (US-0909)", () => {
   it("part sans escorte quand aucune Bête ne l'accompagne, quelle que soit l'Espèce", () => {
@@ -19,5 +19,16 @@ describe("l'allure d'une Expédition sans escorte (US-0909)", () => {
 
   it("ne donne aucune allure à une escorte : celle de sa Bête la plus lente arrive avec la durée du trajet (US-0912)", () => {
     expect(() => allureMinutesParCase(new Map([["souris", 1]]))).toThrow(/US-0912/);
+  });
+});
+
+describe("la durée du trajet dans le récapitulatif (US-0910)", () => {
+  it("sans escorte, compte chaque Case de la distance au pas des explorateurs : le retour dure autant", () => {
+    expect(dureeDuTrajetMinutes(7, new Map())).toBe(7 * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE);
+    expect(dureeDuTrajetMinutes(1, new Map([["souris", 0]]))).toBe(PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE);
+  });
+
+  it("n'en donne aucune avec une escorte, tant que son allure n'est pas réglée (US-0912)", () => {
+    expect(dureeDuTrajetMinutes(7, new Map([["souris", 1]]))).toBeNull();
   });
 });
