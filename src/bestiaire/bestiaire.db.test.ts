@@ -32,6 +32,11 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
   let mondeId: number;
   const lancement = `bestiaire-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
+  /**
+   * Les Cases déjà prises par un essai de ce fichier : chacun a la sienne. Sans escorte, une Bête commune suit l'Expédition
+   * qui la voit (US-0935) : deux chefs nés côte à côte choisiraient sinon la même Bête, et le premier l'emmènerait.
+   */
+  const prises = new Set<number>();
   /** Une heure du jeu, `minutes` après `instant`. */
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
 
@@ -82,6 +87,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
   const uneBeteSeule = async (territoireId: number, apresLe: Date, voulue: (b: BeteSauvage) => boolean = () => true) => {
     const fin = apres(apresLe, 30 * JOUR);
     for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
+      if (prises.has(ici.caseId)) continue;
       const betes = await betesSauvagesDUneCase(pool, ici.caseId, apresLe, fin);
       const bete = betes.find(
         (b, i) =>
@@ -91,18 +97,27 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
           (i === 0 || betes[i - 1].arrivee <= apres(b.arrivee, -CALME)) &&
           (i === betes.length - 1 || betes[i + 1].arrivee >= apres(b.arrivee, CALME)),
       );
-      if (bete) return { ...ici, bete };
+      if (bete) {
+        prises.add(ici.caseId);
+        return { ...ici, bete };
+      }
     }
     throw new Error("Aucune Bête seule qui convienne.");
   };
+
+  /** Une Bête plus rare que commune : sans escorte, elle ne suit aucune Expédition et reste sur sa Case, où d'autres la revoient (US-0935). */
+  const plusRare = (b: BeteSauvage) => b.rareteId !== "commune";
 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    // Les Bêtes communes emmenées lors d'un lancement précédent de ce fichier sont revenues sur leur Case (US-0935).
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
     await pool.end();
   });
 
@@ -140,7 +155,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
 
   it("l'inscription se fait une seule fois par Espèce : la revoir, par une autre Expédition ou au rattrapage rejoué, ne change rien", async () => {
     const { territoireId, ne } = await naitre();
-    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
+    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), plusRare);
     // Une Expédition arrive une heure après la Bête, une autre deux heures après : toutes deux la voient.
     const premiere = await poser(territoireId, caseId, apres(bete.arrivee, 30), 30, HEURE);
     const seconde = await poser(territoireId, caseId, apres(bete.arrivee, 90), 30, HEURE);
@@ -160,7 +175,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
 
   it("l'état d'une Espèce au Bestiaire ne recule jamais, même quand toutes ses Bêtes meurent", async () => {
     const { territoireId, ne } = await naitre();
-    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
+    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), plusRare);
     const especeId = bete.especeId;
     // Vue à son apparition, puis revue deux heures et demie après par une autre Expédition.
     await poser(territoireId, caseId, apres(bete.arrivee, -90), 30, 2 * HEURE);
@@ -188,43 +203,61 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
 
   it("inscrit les mêmes Espèces, signalées nouvelles aux mêmes Rencontres, en direct, par morceaux, d'un bloc ou par la tâche planifiée", async () => {
     const territoires = [await naitre(), await naitre(), await naitre(), await naitre()];
-    // Une Case où deux Bêtes au moins se montrent à moins de dix heures d'écart : la période commence une heure avant la première.
+    // Une Case où deux Bêtes au moins se montrent à moins de dix heures d'écart, la première plus rare que commune, que
+    // plusieurs Expéditions voient donc (US-0935) : la période commence une heure avant elle.
     const uneCaseAnimee = async () => {
       const { territoireId, ne } = territoires[0];
       for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
+        if (prises.has(ici.caseId)) continue;
         const betes = await betesSauvagesDUneCase(pool, ici.caseId, apres(ne, 3 * JOUR), apres(ne, 30 * JOUR));
-        const i = betes.findIndex((b, j) => j + 1 < betes.length && betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE));
-        if (i >= 0) return { caseId: ici.caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        const i = betes.findIndex((b, j) => plusRare(b) && j + 1 < betes.length && betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE));
+        if (i >= 0) {
+          prises.add(ici.caseId);
+          return { caseId: ici.caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        }
       }
       throw new Error("Aucune Case animée.");
     };
     const { caseId, debut } = await uneCaseAnimee();
-    // Pour chaque Territoire, les mêmes Expéditions sur la Case, qui se suivent et se chevauchent : chaque Bête y est vue
-    // plusieurs fois.
+    // Pour chaque Territoire, les mêmes Expéditions sur la Case, qui se suivent et se chevauchent : chaque Bête plus rare y
+    // est vue plusieurs fois ; une commune, une fois, par celle qu'elle suit (US-0935).
     const HORAIRES: [number, number, number][] = [
       [0, 40, 12 * HEURE],
       [100, 13, 30],
       [300, 25, 4 * HEURE],
       [500, 60, 90],
     ];
-    const expeditions: number[][] = [];
-    for (const { territoireId } of territoires) {
+    const fin = apres(debut, 16 * HEURE);
+    const coupures = Array.from({ length: 30 }, (_, i) => debut.getTime() + Math.floor(hacher(i, 933) * (fin.getTime() - debut.getTime()))).sort((x, y) => x - y);
+    const facons = [
+      async (territoireId: number) => {
+        for (let instant = debut; instant < fin; instant = apres(instant, 5)) await rattraperA(territoireId, instant);
+        await rattraperA(territoireId, fin);
+      },
+      async (territoireId: number) => {
+        for (const t of [...coupures, fin.getTime()]) await rattraperA(territoireId, new Date(t));
+      },
+      async (territoireId: number) => {
+        await rattraperA(territoireId, fin);
+      },
+      async (territoireId: number) => {
+        await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [territoireId] } });
+      },
+    ];
+    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit et quitte la Case (US-0935) : chaque
+    // façon de compter le temps y passe seule, puis la Case redevient ce qu'elle était, sans ses Expéditions ni la trace
+    // des Bêtes parties avec elles.
+    const bestiaires = [];
+    const rencontres = [];
+    for (const [k, { territoireId }] of territoires.entries()) {
       const ids: number[] = [];
       for (const [partie, trajet, sejour] of HORAIRES) ids.push(await poser(territoireId, caseId, apres(debut, partie), trajet, sejour));
-      expeditions.push(ids);
+      await facons[k](territoireId);
+      bestiaires.push(await bestiaire(territoireId));
+      rencontres.push(await Promise.all(ids.map(vues)));
+      await pool.query("delete from expedition where id = any($1::int[])", [ids]);
+      await pool.query("delete from bete_partie where case_id = $1", [caseId]);
     }
-    const fin = apres(debut, 16 * HEURE);
-    const [enDirect, parMorceaux, dUnBloc, planifiee] = territoires.map((t) => t.territoireId);
-
-    for (let instant = debut; instant < fin; instant = apres(instant, 5)) await rattraperA(enDirect, instant);
-    await rattraperA(enDirect, fin);
-    const coupures = Array.from({ length: 30 }, (_, i) => debut.getTime() + Math.floor(hacher(i, 933) * (fin.getTime() - debut.getTime()))).sort((x, y) => x - y);
-    for (const t of [...coupures, fin.getTime()]) await rattraperA(parMorceaux, new Date(t));
-    await rattraperA(dUnBloc, fin);
-    await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [planifiee] } });
-
-    const bestiaires = await Promise.all(territoires.map((t) => bestiaire(t.territoireId)));
-    const rencontres = await Promise.all(expeditions.map((ids) => Promise.all(ids.map(vues))));
     for (const autre of bestiaires.slice(1)) expect(autre).toEqual(bestiaires[0]);
     for (const autres of rencontres.slice(1)) expect(autres).toEqual(rencontres[0]);
     // Chaque Espèce vue est inscrite une fois, croisée à sa première Rencontre, la seule qui la signale nouvelle.
@@ -242,7 +275,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
 
   it("une Rencontre retenue sans inscription, pendant une mise en ligne, inscrit son Espèce à la Rencontre suivante, à sa vraie date", async () => {
     const { territoireId, ne } = await naitre();
-    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
+    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), plusRare);
     const premiere = await poser(territoireId, caseId, apres(bete.arrivee, 30), 30, HEURE);
     const seconde = await poser(territoireId, caseId, apres(bete.arrivee, 90), 30, HEURE);
     await rattraperA(territoireId, apres(bete.arrivee, HEURE + 1));
@@ -256,7 +289,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
 
   it("inscrit les Espèces des Rencontres retenues avant lui (migration 0057), à leur première Rencontre, une seule fois", async () => {
     const { territoireId, ne } = await naitre();
-    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
+    const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), plusRare);
     const premiere = await poser(territoireId, caseId, apres(bete.arrivee, 30), 30, HEURE);
     const seconde = await poser(territoireId, caseId, apres(bete.arrivee, 90), 30, HEURE);
     await rattraperA(territoireId, apres(bete.depart, JOUR));

@@ -1,5 +1,6 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { bestiaireDuTerritoire } from "@/bestiaire/bestiaire";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { betesDeNaissancePresentes } from "@/monde/betes-de-naissance";
@@ -303,5 +304,78 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
     expect((await rencontres(ensuite)).filter((r) => r.beteDeNaissanceId !== null)).toEqual([]);
     expect(await betesDeNaissancePresentes(pool, territoireId, apres(ne, 2 * HEURE))).toBe(rodent - 1);
     expect(await betesDeNaissancePresentes(pool, territoireId, apres(ne, 30))).toBe(rodent);
+  });
+
+  /** Une Bête commune, toujours à portée, même d'une Expédition sans escorte (US-0935). */
+  const commune = (b: BeteSauvage) => b.rareteId === "commune";
+  /**
+   * US-0935 : un explorateur part seul, sans escorte, comme depuis l'écran d'Expédition, vers la Case `place`, pour y
+   * arriver une heure avant `avant` et y rester `sejourMinutes` : l'Expédition.
+   */
+  const partirSansEscorte = async (territoireId: number, foyer: Coordonnees, place: Coordonnees, avant: Date, sejourMinutes: number) => {
+    const depart = apres(avant, -dureeDuTrajetMinutes(distance(foyer, place), []) - HEURE);
+    const lancee = await lancerLExpedition(pool, territoireId, { destination: place, explorateurs: 1, escorte: new Map(), sejourMinutes }, depart);
+    if (!("expeditionId" in lancee)) throw new Error(lancee.refus);
+    return lancee.expeditionId;
+  };
+
+  it("sans escorte, une Bête commune suit l'Expédition dès qu'elle la voit, sans combat, et son Espèce entre au Bestiaire (US-0935)", async () => {
+    const { territoireId, ne, foyer } = await naitre();
+    const { place, caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), commune);
+    const id = await partirSansEscorte(territoireId, foyer, place, bete.arrivee, 4 * HEURE);
+
+    await rattraperA(territoireId, apres(bete.depart, JOUR));
+    expect(await rencontres(id)).toEqual([vue(bete, caseId, bete.arrivee, true)]);
+    expect(await partieLe(caseId, bete.numero)).toEqual(bete.arrivee);
+    expect(await bestiaireDuTerritoire(pool, territoireId)).toEqual([{ especeId: bete.especeId, etat: "croisee", croiseeLe: bete.arrivee }]);
+  });
+
+  it("sans escorte, une Bête plus rare n'est jamais à portée : l'Expédition la voit, elle reste sur sa Case, et son Espèce entre au Bestiaire (US-0935)", async () => {
+    const { territoireId, ne, foyer } = await naitre();
+    const { place, caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), rare);
+    const id = await partirSansEscorte(territoireId, foyer, place, bete.arrivee, 4 * HEURE);
+
+    await rattraperA(territoireId, apres(bete.depart, JOUR));
+    expect(await rencontres(id)).toEqual([vue(bete, caseId, bete.arrivee, false)]);
+    expect(await partieLe(caseId, bete.numero)).toBeNull();
+    expect((await betesSauvagesDUneCase(pool, caseId, bete.arrivee, apres(bete.arrivee, 1))).find((b) => b.numero === bete.numero)?.depart).toEqual(bete.depart);
+    expect(await bestiaireDuTerritoire(pool, territoireId)).toEqual([{ especeId: bete.especeId, etat: "croisee", croiseeLe: bete.arrivee }]);
+  });
+
+  it("sans escorte, deux Bêtes communes du même séjour la suivent chacune à sa Rencontre : une Bête par Rencontre (US-0935, US-0936)", async () => {
+    const { territoireId, ne, foyer } = await naitre();
+    // Deux Bêtes communes à moins de dix heures d'écart sur une Case libre, sans autre Bête de CALME avant la première à
+    // CALME après la seconde.
+    const deuxCommunes = async () => {
+      const [debut, fin] = [apres(ne, 3 * JOUR), apres(ne, 30 * JOUR)];
+      for (let ecart = 2; ecart <= 6; ecart++) {
+        for (let rang = 0, ici = await aLEcart(territoireId, ecart); ici; ici = await aLEcart(territoireId, ecart, ++rang)) {
+          if (prises.has(ici.caseId)) continue;
+          const betes = await betesSauvagesDUneCase(pool, ici.caseId, debut, fin);
+          const i = betes.findIndex(
+            (b, j) =>
+              j + 1 < betes.length &&
+              commune(b) &&
+              commune(betes[j + 1]) &&
+              b.arrivee >= apres(debut, CALME) &&
+              betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE) &&
+              (j === 0 || betes[j - 1].arrivee <= apres(b.arrivee, -CALME)) &&
+              (j + 2 === betes.length || betes[j + 2].arrivee >= apres(betes[j + 1].arrivee, CALME)),
+          );
+          if (i >= 0) {
+            prises.add(ici.caseId);
+            return { ...ici, betes: [betes[i], betes[i + 1]] };
+          }
+        }
+      }
+      throw new Error("Aucune Case où se montrent deux Bêtes communes.");
+    };
+    const { place, caseId, betes } = await deuxCommunes();
+    // Arrivée une heure avant la première, elle reste douze heures : la seconde se montre pendant son séjour.
+    const id = await partirSansEscorte(territoireId, foyer, place, betes[0].arrivee, 12 * HEURE);
+
+    await rattraperA(territoireId, apres(betes[1].depart, JOUR));
+    expect(await rencontres(id)).toEqual(betes.map((b) => vue(b, caseId, b.arrivee, true)));
+    for (const b of betes) expect(await partieLe(caseId, b.numero)).toEqual(b.arrivee);
   });
 });

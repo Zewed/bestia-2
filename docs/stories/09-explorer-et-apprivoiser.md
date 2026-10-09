@@ -388,6 +388,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0935 · Sans escorte, ramener une Bête commune
 **En tant que** joueur, **je veux** que mes explorateurs partis seuls puissent ramener une Bête commune, **afin de** trouver mes premières Bêtes avant d'avoir de quoi les escorter.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1395, Zewed/bestia-2#34). Une Bête commune est à portée de toute Expédition, avec ou sans escorte : elle la suit sans combat. Une Bête plus rare n'est jamais à portée d'une Expédition sans escorte, et reste sur sa Case. Les Espèces vues s'inscrivent au Bestiaire et une seule Bête suit par Rencontre. Quand seules des Bêtes plus rares se sont montrées, le récit de retour le dit en nommant leurs Espèces : « Vos explorateurs ont vu Renard roux, mais aucune Bête ne les a suivis. »
 - **Débloquée par** : US-0934, US-0909
 - **Critères d'acceptation** :
   - Une Bête commune est à portée de toute Expédition, avec ou sans escorte : elle la suit sans combat, c'est un Apprivoisement.
