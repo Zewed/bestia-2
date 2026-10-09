@@ -26,7 +26,7 @@ describe("la durée du séjour (US-0906)", () => {
 
   it("se lit dans l'adresse en minutes, seulement si on aurait pu la choisir", () => {
     const { min, max, pas } = SEJOUR_MINUTES;
-    const bonnes = [min, min + pas, 60, max];
+    const bonnes = [min, min + pas, min + 3 * pas, max];
     expect(bonnes.map((m) => sejourChoisi(String(m)))).toEqual(bonnes);
     const horsDesPas = [0, -60, max + pas, min + pas / 2].map(String);
     const fausses = [undefined, null, "", ...horsDesPas, "60.5", "6e1", " 60", "0x3c", "une heure", "060"];

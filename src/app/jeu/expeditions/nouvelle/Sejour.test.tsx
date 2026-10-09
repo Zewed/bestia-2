@@ -2,7 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { SEJOUR_MINUTES } from "@/reglages";
+import { SEJOUR_MINUTES, SEJOURS_TOUT_PRETS_MINUTES } from "@/reglages";
 import { formaterMinutes } from "@/temps/affichage";
 
 /**
@@ -35,8 +35,12 @@ const ouvrir = (recherche = "") => {
   return render(<Sejour />);
 };
 const curseur = () => screen.getByRole<HTMLInputElement>("slider", { name: "Durée du séjour" });
-/** Bouge le curseur jusqu'à `minutes`, comme le doigt, la souris ou les flèches du clavier. */
-const glisser = (minutes: number) => fireEvent.change(curseur(), { target: { value: String(minutes) } });
+/** Bouge le curseur jusqu'à `minutes`, le doigt encore posé (l'évènement « input », à chaque pas). */
+const glisser = (minutes: number) => fireEvent.input(curseur(), { target: { value: String(minutes) } });
+/** Lâche le curseur là où il est : le geste est fini (l'évènement « change », au lâcher ou à chaque flèche du clavier). */
+const lacher = () => fireEvent.change(curseur());
+/** Une durée sur un pas du curseur, qui n'est pas toute prête. */
+const ENTRE_DEUX = Array.from({ length: 10 }, (_, k) => min + (k + 1) * pas).find((m) => !SEJOURS_TOUT_PRETS_MINUTES.includes(m)) ?? max;
 const prets = () => within(screen.getByRole("group", { name: "Durées toutes prêtes" })).getAllByRole("button");
 /** Les durées toutes prêtes pressées, à leur texte. */
 const presses = () => prets().filter((b) => b.getAttribute("aria-pressed") === "true").map((b) => b.textContent);
@@ -46,7 +50,7 @@ const affichee = () => screen.getByRole("status").textContent;
 describe("le séjour sur l'écran d'Expédition (US-0906)", () => {
   afterEach(() => {
     cleanup();
-    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it("est un bloc « Séjour » : la durée choisie, un curseur entre ses deux bornes, et les durées toutes prêtes", () => {
@@ -83,8 +87,8 @@ describe("le séjour sur l'écran d'Expédition (US-0906)", () => {
 
   it("au curseur, chaque pas entre les bornes, sans aller au-delà ; hors des durées prêtes, aucune n'est pressée", () => {
     ouvrir();
-    glisser(60 + 3 * pas);
-    const entreDeux = formaterMinutes(60 + 3 * pas);
+    glisser(ENTRE_DEUX);
+    const entreDeux = formaterMinutes(ENTRE_DEUX);
     expect([affichee(), curseur().getAttribute("aria-valuetext"), presses()]).toEqual([entreDeux, entreDeux, []]);
     glisser(max + 10 * pas);
     expect([curseur().value, affichee()]).toEqual([String(max), formaterMinutes(max)]);
@@ -94,26 +98,23 @@ describe("le séjour sur l'écran d'Expédition (US-0906)", () => {
     expect(presses()).toEqual(["4 h"]);
   });
 
-  it("au curseur, l'adresse ne garde la durée qu'une fois le geste fini, pas à chaque pas (Safari en limite les réécritures)", () => {
-    vi.useFakeTimers();
+  it("au curseur, l'adresse ne garde la durée qu'au geste fini, pas à chaque pas (Safari en limite les réécritures)", () => {
     ouvrir("?q=3&r=-5");
     const ecritures = vi.spyOn(window.history, "replaceState");
-    for (const minutes of [90, 120, 150, 180, 210]) {
-      glisser(minutes);
-      act(() => vi.advanceTimersByTime(100));
-    }
-    expect([affichee(), window.location.search, ecritures.mock.calls.length]).toEqual([formaterMinutes(210), "?q=3&r=-5", 0]);
-    act(() => vi.advanceTimersByTime(250));
-    expect([window.location.search, ecritures.mock.calls.length]).toEqual(["?q=3&r=-5&sejour=210", 1]);
+    for (const k of [1, 2, 3, 4, 5]) glisser(min + k * pas);
+    expect([affichee(), window.location.search, ecritures.mock.calls.length]).toEqual([formaterMinutes(min + 5 * pas), "?q=3&r=-5", 0]);
+    lacher();
+    expect([window.location.search, ecritures.mock.calls.length]).toEqual([`?q=3&r=-5&sejour=${min + 5 * pas}`, 1]);
   });
 
-  it("n'écrit pas une durée glissée dans une adresse qu'un lien vient de remplacer", () => {
-    vi.useFakeTimers();
+  it("garde aussi la durée glissée quand le curseur perd la main sans avoir été lâché, et seulement si elle a changé", () => {
     ouvrir("?q=3&r=-5&sejour=240");
-    glisser(210);
-    aller("");
-    act(() => vi.advanceTimersByTime(1000));
-    expect([window.location.search, affichee()]).toEqual(["", "1 h"]);
+    const ecritures = vi.spyOn(window.history, "replaceState");
+    fireEvent.blur(curseur());
+    expect(ecritures).not.toHaveBeenCalled();
+    glisser(ENTRE_DEUX);
+    fireEvent.blur(curseur());
+    expect([window.location.search, ecritures.mock.calls.length]).toEqual([`?q=3&r=-5&sejour=${ENTRE_DEUX}`, 1]);
   });
 
   it("annonce la durée par le curseur seulement, pas une seconde fois par son affichage", () => {
