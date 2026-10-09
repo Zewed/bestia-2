@@ -1,9 +1,9 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { ecrireUnRecit, recitsDuTerritoire } from "@/monde/recits";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; l'action écrit pour de bon dans la base de test.
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
@@ -14,15 +14,19 @@ vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 import { lireUnRecit } from "./actions";
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des actions des Récits (US-0324)";
+
 describe.skipIf(!URL_TEST)("ouvrir un Récit, sur base (US-0324)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `lire-recit-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nomUnique = () => `Lect${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
   };
   const lus = async (territoireId: number) => (await recitsDuTerritoire(pool, territoireId)).map((r) => [r.titre, r.luLe !== null]);
 
@@ -30,6 +34,7 @@ describe.skipIf(!URL_TEST)("ouvrir un Récit, sur base (US-0324)", () => {
     pool = poolDeTest();
     base.pool = pool;
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

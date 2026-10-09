@@ -1,19 +1,24 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { lireJeu } from "@/donnees/charger";
 import { METIERS } from "@/donnees/jeux";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lesMetiers } from "./metiers";
+
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des Métiers (US-0307)";
 
 describe.skipIf(!URL_TEST)("les Métiers (US-0307, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `metiers-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -41,8 +46,8 @@ describe.skipIf(!URL_TEST)("les Métiers (US-0307, sur base)", () => {
   it("n'accepte comme Métier d'un Habitant que l'un des Métiers, ou aucun", async () => {
     const compte = (await creerCompte(pool, `${lancement}-1@essai.test`, "une phrase de passe"))!;
     const nom = `Met${lancement.slice(-6).replace(/[^a-z]/g, "x")}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     const donner = (metier: string | null) =>
       pool.query("update habitant set metier = $2 where id = (select min(id) from habitant where territoire_id = $1)", [territoireId, metier]);
     await expect(donner("poste")).rejects.toMatchObject({ code: "23503" });

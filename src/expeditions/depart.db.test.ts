@@ -1,21 +1,25 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { enregistrerLeMetier, habitantsDuTerritoire, renvoyerLHabitant, retirerUnHabitantDuMetier } from "@/monde/habitants";
 import type { Coordonnees } from "@/monde/hex";
 import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE } from "./choix-de-destination";
 import { BETE_PLUS_DISPONIBLE, type ChoixDuDepart, EXPLORATEUR_PLUS_LIBRE, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
 
 const MINUTE_MS = 60_000;
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du départ (US-0911)";
+
 describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `depart-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   /** L'heure du jeu du départ. */
@@ -25,8 +29,8 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   const nouveauTerritoire = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Dep${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
   };
   /** `n` explorateurs de plus au Territoire ; rend leurs identifiants. */
   const explorateurs = async (territoireId: number, n: number) =>
@@ -78,6 +82,7 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
