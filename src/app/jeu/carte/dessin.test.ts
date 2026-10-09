@@ -4,7 +4,8 @@ import { describe, expect, it } from "vitest";
 import { BROUILLARD, COULEURS } from "@/monde/couleurs-de-la-carte";
 import { anneau, casesDesAnneaux, voisines, type Coordonnees } from "@/monde/hex";
 import { ZONE_COEUR, ZONE_COURONNE } from "@/monde/zones";
-import { aLEcran, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau } from "./dessin";
+import { aLEcran, type CarteADessiner, dessinerLaCarte, enSvg, LARGEUR_DE_CASE, MOTIFS, tailleDuRepere, vueSurLeFoyer, type Peinture, type Pinceau, type Vue } from "./dessin";
+import { bornesDuZoom, deplacer, limiteDeLaCarte, zoomer } from "./vue";
 
 type Point = { x: number; y: number };
 /**
@@ -16,7 +17,8 @@ type Peint = { geste: "remplir" | "border"; couleur: string; epaisseur: number; 
 /**
  * Un pinceau qui retient ce qu'on lui fait dessiner : chaque effacement, chaque remplissage ou trait avec ses
  * tracés, et chaque image posée avec la découpe (les tracés) qui la borne. Comme un <canvas>, restore() rend
- * l'opacité et les tirets d'avant save(), et ôte la découpe.
+ * l'opacité et les tirets d'avant save(), et ôte la découpe. US-0435 : il compte aussi les closePath, et ce que save()
+ * a mis de côté sans que restore() l'ait rendu.
  */
 function pinceauDEssai() {
   const effacements: number[][] = [];
@@ -26,6 +28,7 @@ function pinceauDEssai() {
   let decoupe: Point[][] | null = null;
   let tirets: number[] = [];
   const mis: { opacite: number; tirets: number[]; decalage: number }[] = [];
+  let fermetures = 0;
   const peint = (geste: Peint["geste"], couleur: unknown) =>
     void peints.push({ geste, couleur: String(couleur), epaisseur: pinceau.lineWidth, traces, tirets, decalage: pinceau.lineDashOffset, bouts: pinceau.lineCap, opacite: pinceau.globalAlpha });
   const pinceau: Pinceau = {
@@ -52,11 +55,11 @@ function pinceauDEssai() {
     quadraticCurveTo: (_, __, x, y) => void traces.at(-1)!.push({ x, y }),
     // Un rond : son centre, et le point de son bord où il commence.
     arc: (x, y, rayon) => void traces.at(-1)!.push({ x, y }, { x: x + rayon, y }),
-    closePath: () => {},
+    closePath: () => void fermetures++,
     fill: () => peint("remplir", pinceau.fillStyle),
     stroke: () => peint("border", pinceau.strokeStyle),
   } as Pinceau;
-  return { pinceau, effacements, peints, images };
+  return { pinceau, effacements, peints, images, fermetures: () => fermetures, misDeCote: () => mis.length };
 }
 
 /**
@@ -69,11 +72,11 @@ const enColonnes = (cases: Coordonnees[], teinte: (c: Coordonnees) => number = (
   teinte: cases.map(teinte),
   zone: cases.map(zone),
 });
-/** Le milieu d'un tracé : la moyenne de ses sommets. */
-const milieu = (points: Point[]) => ({
-  x: points.reduce((s, p) => s + p.x, 0) / points.length,
-  y: points.reduce((s, p) => s + p.y, 0) / points.length,
-});
+/** Le milieu d'un tracé : la moyenne de ses sommets, chacun compté une fois (US-0435 : un bord repasse sur son premier côté). */
+const milieu = (tous: Point[]) => {
+  const points = [...new Map(tous.map((p) => [`${p.x},${p.y}`, p])).values()];
+  return { x: points.reduce((s, p) => s + p.x, 0) / points.length, y: points.reduce((s, p) => s + p.y, 0) / points.length };
+};
 const cle = (p: Point) => `${Math.round(p.x)},${Math.round(p.y)}`;
 /** Des couleurs d'essai, nommées pour se reconnaître. */
 const peinture = (fonds: string[]): Peinture => ({ fonds, bord: "bord", motifSombre: "encre", motifClair: "ivoire", encre: "Encre", repere: "citron" });
@@ -194,6 +197,11 @@ describe("chaque Case selon son Biome (US-0418)", () => {
     const bord = peints.at(-1)!;
     expect(bord).toMatchObject({ geste: "border", couleur: "bord", epaisseur: 1 });
     expect(bord.traces.map((t) => cle(milieu(t))).sort()).toEqual(cases.map((c) => cle(aLEcran(c, vue))).sort());
+    // US-0435 : chacune tout autour, ses six sommets, puis à nouveau son premier côté : son bord est refermé.
+    for (const t of bord.traces) {
+      expect(new Set(t.map(cle)).size).toBe(6);
+      expect(t.slice(6)).toEqual(t.slice(0, 2));
+    }
   });
 });
 
@@ -398,13 +406,15 @@ describe("la carte écrite en SVG, pour sa légende (US-0432)", () => {
   it("écrit chaque remplissage et chaque trait de la carte en chemin SVG, de sa couleur, dans l'ordre où la carte les peint", () => {
     const { traits } = enSvg((p) => dessinerLaCarte(p, { ...FOYER_LOIN, teintes: ["foret"], cases: enColonnes([{ q: 0, r: 0 }]) }, vue, peinture(["vert"])));
     expect(traits.map((t) => `${t.geste} ${t.couleur}`)).toEqual(["remplir vert", "remplir encre", "tracer bord"]);
-    // L'hexagone de la Case : six sommets autour de son centre, la pointe en haut ; son bord suit le même chemin.
+    // L'hexagone de la Case : six sommets autour de son centre, la pointe en haut ; son bord suit le même chemin, et
+    // US-0435 : repasse sur son premier côté pour se refermer, quand le remplissage se referme de lui-même.
     const [fond, , bord] = traits;
-    expect(fond.d).toMatch(/^M[^A-Z]+(L[^A-Z]+){5}Z$/);
+    expect(fond.d).toMatch(/^M[^A-Z]+(L[^A-Z]+){5}$/);
     const sommets = nombres(fond.d);
     for (let i = 0; i < 12; i += 2) expect(Math.hypot(sommets[i], sommets[i + 1])).toBeCloseTo(vue.rayon, 2);
     expect(sommets.slice(0, 2).map((n) => Math.round(n))).toEqual([0, -Math.round(vue.rayon)]);
-    expect(bord).toMatchObject({ d: fond.d, epaisseur: 1 });
+    const [premier, second] = fond.d.slice(1).split("L");
+    expect(bord).toMatchObject({ d: `${fond.d}L${premier}L${second}`, epaisseur: 1 });
   });
 
   it("écrit les ronds en arcs, et garde les bouts et les jointures arrondis des motifs", () => {
@@ -593,5 +603,74 @@ describe("la Case choisie, surlignée (US-0428)", () => {
     dessinerLaCarte(loin.pinceau, carte, vue, peinture(["vert"]), HUTTE, { q: 0, r: 0 });
     expect(loin.peints).toEqual(sans.peints);
     expect(sans.peints.filter((p) => p.geste === "border" && p.couleur === "citron")).toEqual([]);
+  });
+});
+
+describe("une carte fluide sur mobile (US-0435)", () => {
+  // Le téléphone de référence : 390 × 844 pixels, la carte sous la barre du haut, sur 688 pixels de haut.
+  const [LARGEUR, HAUTEUR] = [390, 688];
+  const MONDE = casesDesAnneaux(0, 60);
+  const TEINTES = [...Object.keys(MOTIFS), BROUILLARD];
+  /** Un Monde de toutes les teintes, la Couronne sur ses anneaux 50 à 52, le brouillard au-delà du 55e ; deux Foyers au milieu. */
+  const carte = (cases: Coordonnees[]): CarteADessiner => ({
+    teintes: TEINTES,
+    cases: enColonnes(
+      cases,
+      (c) => (anneau(c) > 55 ? TEINTES.length - 1 : Math.abs(7 * c.q + c.r) % (TEINTES.length - 1)),
+      (c) => (anneau(c) >= 50 && anneau(c) <= 52 ? ZONE_COURONNE : 0),
+    ),
+    foyer: { q: 0, r: 0 },
+    foyers: [{ q: 2, r: -1 }],
+  });
+  const HUTTE = { image: "hutte" as unknown as CanvasImageSource, largeur: 384, hauteur: 256 };
+  /** La vue dézoomée au maximum sur ce téléphone, sur la Case `milieu`. */
+  const dezoomee = (milieu: Coordonnees): Vue => ({ ...vueSurLeFoyer(milieu, LARGEUR, HAUTEUR), rayon: bornesDuZoom(LARGEUR, HAUTEUR).min });
+
+  it("ne referme aucune Case par closePath, qui coûte dans Chrome d'autant plus que le tracé en cours est long : pas un de plus pour tout le Monde que pour une seule Case", () => {
+    const fermetures = (cases: Coordonnees[]) => {
+      const essai = pinceauDEssai();
+      dessinerLaCarte(essai.pinceau, carte(cases), dezoomee({ q: 0, r: 0 }), peinture(TEINTES), HUTTE, { q: 1, r: 0 });
+      return essai.fermetures();
+    };
+    expect(fermetures(MONDE)).toBe(fermetures([{ q: 0, r: 0 }]));
+  });
+
+  it("dézoomée au maximum, ne dessine encore que les Cases à l'écran, et un peu autour : à moins d'une Case de son bord", () => {
+    const vue = dezoomee({ q: 0, r: 0 });
+    const { pinceau, peints } = pinceauDEssai();
+    dessinerLaCarte(pinceau, { ...FOYER_LOIN, teintes: SANS_MOTIF, cases: enColonnes(MONDE) }, vue, peinture(["blanc"]));
+    const dessinees = new Set(peints[0].traces.map((t) => cle(milieu(t))));
+    const centres = MONDE.map((c) => aLEcran(c, vue));
+    // Toutes celles dont un bout touche l'écran…
+    const demiLargeur = (Math.sqrt(3) / 2) * vue.rayon;
+    const touchent = centres.filter(({ x, y }) => x > -demiLargeur && x < LARGEUR + demiLargeur && y > -vue.rayon && y < HAUTEUR + vue.rayon);
+    expect(touchent.map(cle).filter((ici) => !dessinees.has(ici))).toEqual([]);
+    // … et aucune plus loin qu'une Case : le Monde, plus large que ce téléphone, n'est pas dessiné en entier.
+    const autour = new Set(centres.filter(({ x, y }) => x > -2 * vue.rayon && x < LARGEUR + 2 * vue.rayon && y > -2 * vue.rayon && y < HAUTEUR + 2 * vue.rayon).map(cle));
+    expect([...dessinees].filter((ici) => !autour.has(ici))).toEqual([]);
+    expect(dessinees.size).toBeLessThan(MONDE.length);
+  });
+
+  it("ne garde rien d'une image à l'autre : après des milliers d'images, glissée et zoomée, la même vue se redessine des mêmes gestes", () => {
+    const monde = carte(casesDesAnneaux(0, 30));
+    const limite = limiteDeLaCarte(monde);
+    const depart = vueSurLeFoyer({ q: 0, r: 0 }, LARGEUR, HAUTEUR);
+    const { pinceau, peints, images, misDeCote } = pinceauDEssai();
+    const dessiner = (vue: Vue) => dessinerLaCarte(pinceau, monde, vue, peinture(TEINTES), HUTTE, { q: 1, r: 0 });
+    dessiner(depart);
+    const premiere = peints.splice(0);
+    let vue = depart;
+    for (let i = 0; i < 2000; i++) {
+      vue = i % 4 === 0 ? zoomer(vue, i % 8 ? 1.2 : 1 / 1.2, 100, 300, limite) : deplacer(vue, 9 * Math.cos(i / 40), 9 * Math.sin(i / 40), limite);
+      dessiner(vue);
+      peints.length = 0;
+      images.length = 0;
+    }
+    dessiner(depart);
+    // Ce qui se voit : d'un remplissage, sa couleur, son opacité et ses tracés (l'épaisseur et les bouts du trait n'y font rien).
+    const vu = ({ geste, couleur, opacite, traces, ...trait }: Peint) => ({ geste, couleur, opacite, traces, ...(geste === "border" ? trait : {}) });
+    expect(peints.map(vu)).toEqual(premiere.map(vu));
+    // Rien de mis de côté par save() qui n'ait été rendu par restore() : le pinceau ne s'alourdit pas.
+    expect(misDeCote()).toBe(0);
   });
 });

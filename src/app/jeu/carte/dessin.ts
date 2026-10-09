@@ -93,10 +93,30 @@ function aLaVue(x: number, y: number, vue: Vue, marge = vue.rayon): boolean {
   return x > -marge && x < vue.largeur + marge && y > -marge && y < vue.hauteur + marge;
 }
 
-/** Ajoute au tracé en cours l'hexagone d'une Case, centré en (x, y), de rayon `rayon` en pixels. */
+/**
+ * Ajoute au tracé en cours l'hexagone d'une Case, centré en (x, y), de rayon `rayon` en pixels, de son premier sommet
+ * au dernier : à remplir, ce qui le referme de soi-même. US-0435 : sans closePath : dans Chrome, il coûte d'autant
+ * plus que le tracé en cours est long, et la carte trace des milliers de Cases d'un seul geste (dézoomée au maximum,
+ * une image prenait ainsi près d'une seconde sur le téléphone de référence).
+ */
 function tracerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
   pinceau.moveTo(x + SOMMETS_DE_CASE[0].x * rayon, y + SOMMETS_DE_CASE[0].y * rayon);
   for (const s of SOMMETS_DE_CASE.slice(1)) pinceau.lineTo(x + s.x * rayon, y + s.y * rayon);
+}
+
+/**
+ * US-0435 : ajoute au tracé en cours l'hexagone d'une Case, à border : refermé à la main, en repassant sur son premier
+ * côté, ce qui lui donne à son premier sommet le même angle qu'aux autres, sans closePath (voir tracerLaCase).
+ */
+function cernerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
+  tracerLaCase(pinceau, x, y, rayon);
+  for (const s of SOMMETS_DE_CASE.slice(0, 2)) pinceau.lineTo(x + s.x * rayon, y + s.y * rayon);
+}
+
+/** L'hexagone d'une Case seule, refermé : un tracé à lui seul, où closePath ne coûte rien. */
+function fermerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
+  pinceau.beginPath();
+  tracerLaCase(pinceau, x, y, rayon);
   pinceau.closePath();
 }
 
@@ -105,8 +125,7 @@ function poserLaHutte(pinceau: Pinceau, hutte: Hutte, x: number, y: number, rayo
   const largeur = hutte.largeur * HUTTE_RECADREE.largeur;
   const hauteur = (largeur * 2) / Math.sqrt(3);
   pinceau.save();
-  pinceau.beginPath();
-  tracerLaCase(pinceau, x, y, rayon);
+  fermerLaCase(pinceau, x, y, rayon);
   pinceau.clip();
   pinceau.drawImage(hutte.image, hutte.largeur * HUTTE_RECADREE.gauche, 0, largeur, hauteur, x - (Math.sqrt(3) / 2) * rayon, y - rayon, Math.sqrt(3) * rayon, 2 * rayon);
   pinceau.restore();
@@ -142,6 +161,7 @@ function poserLeRepere(pinceau: Pinceau, peinture: Peinture, x: number, y: numbe
  * US-0418 : le motif d'une teinte, posé au milieu de chaque Case de cette teinte : un petit dessin plat, dans le
  * ton sombre sur les teintes claires et le ton clair sur les sombres, rempli ou tracé d'un trait rond. `dessiner`
  * l'ajoute au tracé en cours, la Case centrée en (x, y) et de rayon s ; il reste à moins de 0,6 s du centre.
+ * US-0435 : sans closePath (voir tracerLaCase) : remplir referme de lui-même chaque forme.
  */
 type Motif = { ton: "sombre" | "clair"; geste: "remplir" | "tracer"; dessiner: (p: Pinceau, x: number, y: number, s: number) => void };
 
@@ -162,7 +182,6 @@ function sapin(p: Pinceau, x: number, y: number, s: number) {
   p.moveTo(x, y - 0.3 * s);
   p.lineTo(x + 0.16 * s, y + 0.16 * s);
   p.lineTo(x - 0.16 * s, y + 0.16 * s);
-  p.closePath();
 }
 
 /** Un rond plein de rayon r (en rayons de Case), centré en (x, y). */
@@ -215,12 +234,10 @@ export const MOTIFS: Record<string, Motif> = {
     dessiner: (p, x, y, s) => {
       p.moveTo(x - 0.34 * s, y - 0.06 * s);
       p.quadraticCurveTo(x, y - 0.36 * s, x + 0.34 * s, y - 0.06 * s);
-      p.closePath();
       p.moveTo(x - 0.035 * s, y - 0.06 * s);
       p.lineTo(x + 0.035 * s, y - 0.06 * s);
       p.lineTo(x + 0.035 * s, y + 0.3 * s);
       p.lineTo(x - 0.035 * s, y + 0.3 * s);
-      p.closePath();
     },
   },
   // Deux dunes.
@@ -244,7 +261,6 @@ export const MOTIFS: Record<string, Motif> = {
       p.lineTo(x + 0.1 * s, y - 0.02 * s);
       p.lineTo(x + 0.2 * s, y - 0.16 * s);
       p.lineTo(x + 0.42 * s, y + 0.24 * s);
-      p.closePath();
     },
   },
   // Des lichens, en points épars.
@@ -398,8 +414,7 @@ function tracerLesLimites(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, pei
  * épais que tout autre trait de la carte, comme le repère du Foyer : il se voit sur les teintes claires et sombres.
  */
 function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, rayon: number) {
-  pinceau.beginPath();
-  tracerLaCase(pinceau, x, y, rayon);
+  fermerLaCase(pinceau, x, y, rayon);
   pinceau.lineJoin = "round";
   pinceau.strokeStyle = peinture.encre;
   pinceau.lineWidth = 6;
@@ -456,7 +471,7 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   const bordees = parTeinte.filter((centres, t) => t !== brume && centres.length > 0);
   if (bordees.length > 0) {
     pinceau.beginPath();
-    for (const centres of bordees) for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
+    for (const centres of bordees) for (const { x, y } of centres) cernerLaCase(pinceau, x, y, vue.rayon);
     pinceau.strokeStyle = peinture.bord;
     pinceau.lineWidth = 1;
     pinceau.stroke();
@@ -484,8 +499,7 @@ export function dessinerLaCarte(pinceau: Pinceau, carte: CarteADessiner, vue: Vu
   const foyerEnVue = aLaVue(foyer.x, foyer.y, vue, vue.rayon + 3 * tailleDuRepere(vue.rayon));
   if (foyerEnVue) {
     if (hutte) poserLaHutte(pinceau, hutte, foyer.x, foyer.y, vue.rayon);
-    pinceau.beginPath();
-    tracerLaCase(pinceau, foyer.x, foyer.y, vue.rayon);
+    fermerLaCase(pinceau, foyer.x, foyer.y, vue.rayon);
     pinceau.strokeStyle = peinture.encre;
     pinceau.lineWidth = 2;
     pinceau.lineJoin = "round";
