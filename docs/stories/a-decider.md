@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-229 points au total.
+228 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -88,7 +88,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md)
 
-- [US-0902](09-explorer-et-apprivoiser.md) · Choisir les explorateurs : ce qu'apporte un explorateur de plus dans une même Expédition.
 - [US-0905](09-explorer-et-apprivoiser.md) · La force de l'escorte : la force d'une Bête vient des caractéristiques de son Espèce, la même pour toutes les Bêtes de l'Espèce et chez tous les joueurs ; la formule à partir de l'attaque et de la vie.
 - [US-0906](09-explorer-et-apprivoiser.md) · Choisir la durée du séjour : quelques durées toutes prêtes se choisissent d'un doigt sur mobile ; lesquelles.
 - [US-0907](09-explorer-et-apprivoiser.md) · Choisir la destination : une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec un message.
