@@ -140,9 +140,11 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     if (evenement.detail > 1) return;
     setARenvoyer(null);
     setOuvert(null);
-    // La ligne s'en va avec le bouton : la main passe à celle qui prend sa place, ou à celle d'avant.
-    const rang = montres.indexOf(habitant);
-    const voisin = montres[rang + 1] ?? montres[rang - 1];
+    // La ligne s'en va avec le bouton : la main passe à celle qui prend sa place, ou à celle d'avant ; US-0911 : à la
+    // plus proche qui a son bouton, celle d'un explorateur parti n'en ayant pas.
+    const aBouton = montres.filter((h) => h === habitant || h.etat !== EN_EXPEDITION);
+    const rang = aBouton.indexOf(habitant);
+    const voisin = aBouton[rang + 1] ?? aBouton[rang - 1];
     if (voisin) document.getElementById(idBouton(voisin.id))?.focus();
     demarrer(async () => {
       montrerDAvance({ id: habitant.id, renvoye: true });
@@ -196,7 +198,8 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
       ) : (
         <ul className={styles.habitants}>
           {montres.map((h) => {
-            const deplie = ouvert === h.id;
+            // US-0911 : rien ne reste déplié sur la ligne d'un explorateur parti entre-temps.
+            const deplie = ouvert === h.id && h.etat !== EN_EXPEDITION;
             const confirmer = deplie && aRenvoyer === h.id;
             return (
               <li key={h.id} className={styles.habitant}>

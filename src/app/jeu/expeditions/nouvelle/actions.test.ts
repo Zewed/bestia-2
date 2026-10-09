@@ -12,8 +12,9 @@ vi.mock("@/temps/horloge", () => ({ maintenant: () => INSTANT }));
 const cache = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/cache", () => cache);
 const navigation = vi.hoisted(() => ({
-  redirect: vi.fn((chemin: string) => {
-    throw Object.assign(new Error("NEXT_REDIRECT"), { digest: `NEXT_REDIRECT;push;${chemin};303;` });
+  RedirectType: { push: "push", replace: "replace" },
+  redirect: vi.fn((chemin: string, type = "push") => {
+    throw Object.assign(new Error("NEXT_REDIRECT"), { digest: `NEXT_REDIRECT;${type};${chemin};303;` });
   }),
 }));
 vi.mock("next/navigation", () => navigation);
@@ -63,7 +64,8 @@ describe("lancer l'Expédition depuis l'écran (US-0911)", () => {
     await expect(partir({ refus: null }, formulaire(COMPLET))).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/expeditions;") });
     expect(garde.exigerCompte).toHaveBeenCalledWith("/jeu/expeditions/nouvelle");
     expect(depart.lancerLExpedition).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, CHOIX, INSTANT);
-    expect(navigation.redirect).toHaveBeenCalledExactlyOnceWith("/jeu/expeditions");
+    // À la place de l'écran dans l'historique : un retour arrière ne ramène pas au formulaire, prêt à repartir.
+    expect(navigation.redirect).toHaveBeenCalledExactlyOnceWith("/jeu/expeditions", "replace");
   });
 
   it("part sans escorte quand le formulaire n'en dit rien (US-0909)", async () => {

@@ -1,7 +1,7 @@
 "use server";
 
 import { refresh } from "next/cache";
-import { redirect } from "next/navigation";
+import { RedirectType, redirect } from "next/navigation";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
@@ -69,5 +69,6 @@ export async function partir(_avant: EtatDuDepart, formulaire: FormData): Promis
     refresh();
     return { refus: depart.refus };
   }
-  redirect(EN_COURS);
+  // À la place de l'écran composé, dans l'historique : un retour arrière n'y ramène pas, prêt à repartir une seconde fois.
+  redirect(EN_COURS, RedirectType.replace);
 }

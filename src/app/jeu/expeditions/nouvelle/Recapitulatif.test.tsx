@@ -259,6 +259,19 @@ describe("confirmer le départ (US-0911)", () => {
     expect(partir().disabled).toBe(false);
   });
 
+  it("ne dit plus ce refus dès que le joueur change un choix, même s'il y revient", async () => {
+    const joueur = userEvent.setup();
+    actions.partir.mockResolvedValue({ refus: "Départ refusé : un explorateur n'est plus libre." });
+    ouvrir("?explorateurs=2");
+    await joueur.click(partir());
+    expect(within(bloc()).getByRole("alert")).toBeTruthy();
+    choisir("?explorateurs=1");
+    expect(within(bloc()).queryByRole("alert")).toBeNull();
+    choisir("?explorateurs=2");
+    expect(within(bloc()).queryByRole("alert")).toBeNull();
+    expect(raison()).toBeNull();
+  });
+
   it("ne part pas tant qu'un choix manque", async () => {
     const joueur = userEvent.setup();
     ouvrir("", { destination: null });

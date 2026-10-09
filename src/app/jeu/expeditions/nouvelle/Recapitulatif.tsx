@@ -140,7 +140,8 @@ export function Recapitulatif({
         </dl>
         <p className={styles.manger}>Ceux qui partent continuent de manger pendant toute l&apos;absence.</p>
       </div>
-      <Partir destination={destination && { q: destination.q, r: destination.r }} explorateurs={explorateurs} escorte={choix} />
+      {/* US-0911 : un départ refusé se dit jusqu'au prochain choix du joueur, que l'adresse garde ; l'écran relu ne l'efface pas. */}
+      <Partir key={recherche.toString()} destination={destination && { q: destination.q, r: destination.r }} explorateurs={explorateurs} escorte={choix} />
     </Bloc>
   );
 }
