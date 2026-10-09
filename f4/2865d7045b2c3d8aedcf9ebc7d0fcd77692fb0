@@ -1,0 +1,41 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_f20a5743e042fe 31,82,85
+docs/stories/README.md
+  s_97a431cfa65ca7::t_4c7bed01fd6522 7,33
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_ac904e17c371ba 9,817-863
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_a60c91299b1557 8,56,70-71,94-95,106,207-212
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_97a431cfa65ca7::t_387ddeb3443364 8,254,298,300,327-363
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_c1a2062a66507d 5,9,92-93,194,211,225-227,230-233,235-236
+src/app/jeu/carte/dessin.test.ts
+  s_97a431cfa65ca7::t_1a2305f44e16ad 5,14-15,17-28,34,43,45-57,59,63,73,84,705-803
+src/app/jeu/carte/dessin.ts
+  s_97a431cfa65ca7::t_3df5beb117b3cb 3,24,63-68,434-475,485-486,488-496,555,641
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_037eec410fe70d 294-301
+src/expeditions/choix-de-destination.ts
+  s_97a431cfa65ca7::t_67f08799b86d1f 2,8-10
+src/expeditions/destination.db.test.ts
+  s_97a431cfa65ca7::t_5b4ebfdc2f2245 8-9,11,18,35-47,74-77,83-103
+src/expeditions/destination.ts
+  s_97a431cfa65ca7::t_ebb209bf052c8e 6-7,20-22,35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f42865d7045b2c3d8aedcf9ebc7d0fcd77692fb0",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
