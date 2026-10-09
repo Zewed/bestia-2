@@ -1,11 +1,23 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
+
+// US-0920 : le rappel, une action du serveur (src/app/jeu/expeditions/actions.ts) : ici, ce que le bouton lui confie.
+const actions = vi.hoisted(() => {
+  const enCours: Array<() => void> = [];
+  return { enCours, rappeler: vi.fn(() => new Promise<void>((finir) => enCours.push(finir))) };
+});
+vi.mock("@/app/jeu/expeditions/actions", () => actions);
+
 import { DetailDeLExpedition } from "./DetailDeLExpedition";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  actions.rappeler.mockClear();
+  actions.enCours.splice(0);
+});
 
 const MINUTE_MS = 60_000;
 /** Le départ : 9 h 42 à Paris. */
@@ -114,6 +126,50 @@ describe("le détail d'une Expédition en cours (US-0918)", () => {
 
   it("sans être repliable, montre tout, sans rien à déplier", () => {
     render(<DetailDeLExpedition expedition={FORET} instant={DEPART} />);
-    expect(screen.queryByRole("button")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Détail" })).toBeNull();
+  });
+});
+
+describe("rappeler une Expédition (US-0920)", () => {
+  const rappeler = () => screen.queryByRole("button", { name: "Rappeler" });
+
+  it("à l'aller, un bouton « Rappeler » la rappelle, une seule fois : il attend la réponse du serveur", async () => {
+    render(<DetailDeLExpedition expedition={FORET} instant={apres(18)} />);
+    await userEvent.click(rappeler()!);
+    expect(actions.rappeler).toHaveBeenCalledExactlyOnceWith(5);
+    expect(rappeler()).toHaveProperty("disabled", true);
+    await userEvent.click(rappeler()!);
+    expect(actions.rappeler).toHaveBeenCalledTimes(1);
+    await act(async () => actions.enCours.splice(0).forEach((finir) => finir()));
+    expect(rappeler()).toHaveProperty("disabled", false);
+  });
+
+  it("dit de quelle Expédition il s'agit à un lecteur d'écran", () => {
+    render(<DetailDeLExpedition expedition={FORET} instant={apres(18)} />);
+    expect(document.getElementById(rappeler()!.getAttribute("aria-describedby")!)?.textContent).toBe("Forêt");
+  });
+
+  it("en séjour aussi, pour la faire rentrer plus tôt (décidé le 2026-10-08)", () => {
+    render(<DetailDeLExpedition expedition={FORET} instant={apres(60 + 30)} />);
+    expect(rappeler()).not.toBeNull();
+  });
+
+  it("disparaît au retour, qu'elle soit rappelée ou au bout de son séjour", () => {
+    const { rerender } = render(<DetailDeLExpedition expedition={FORET} instant={apres(60 + 240)} />);
+    expect(rappeler()).toBeNull();
+    rerender(<DetailDeLExpedition expedition={{ ...FORET, rappeleeLe: apres(18) }} instant={apres(18)} />);
+    expect(rappeler()).toBeNull();
+  });
+
+  it("rappelée à l'aller, est au retour, qui dure le temps déjà parcouru, et son retour prévu avance d'autant", () => {
+    render(<DetailDeLExpedition expedition={{ ...FORET, rappeleeLe: apres(18) }} instant={apres(25)} />);
+    expect(ligne().slice(2)).toEqual(["Retour", "rentre dans 11 min"]);
+    // 9 h 42 à Paris, plus 18 min d'aller et 18 min de retour.
+    expect(detail()["Retour prévu"]).toBe("9 octobre à 10:18");
+  });
+
+  it("n'a rien à rappeler tant que son trajet n'est pas chiffré (US-0912) : il n'y aurait pas de retour", () => {
+    render(<DetailDeLExpedition expedition={{ ...FORET, trajetMinutes: null }} instant={apres(18)} />);
+    expect(rappeler()).toBeNull();
   });
 });

@@ -693,7 +693,8 @@ export const beteDeNaissance = pgTable(
  * Le trajet est chiffré au départ, escorte comprise (US-0912) ; il ne restait null que pour une escorte partie avant,
  * que la migration 0050 a rattrapée. Ses explorateurs la portent sur leur ligne (habitant.expedition_id). Elle part
  * avec le Territoire. US-0916 : rentrée au Foyer à `rentree_le`, un instant du jeu (null tant qu'elle est en cours), elle
- * n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) la relit.
+ * n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) la relit. US-0920 : rappelée par le joueur à
+ * `rappelee_le`, un instant du jeu (null sans rappel), elle fait demi-tour aussitôt (src/expeditions/phase.ts).
  */
 export const expedition = pgTable(
   "expedition",
@@ -709,6 +710,7 @@ export const expedition = pgTable(
     trajetMinutes: integer("trajet_minutes"),
     sejourMinutes: integer("sejour_minutes").notNull(),
     rentreeLe: timestamp("rentree_le", { withTimezone: true }),
+    rappeleeLe: timestamp("rappelee_le", { withTimezone: true }),
   },
   (t) => [
     index("expedition_par_territoire").on(t.territoireId),
@@ -716,6 +718,8 @@ export const expedition = pgTable(
     index("expedition_par_case").on(t.caseId),
     check("expedition_trajet_positif", sql`${t.trajetMinutes} > 0`),
     check("expedition_sejour_positif", sql`${t.sejourMinutes} > 0`),
+    // US-0920 : une Expédition ne se rappelle qu'une fois partie.
+    check("expedition_rappelee_apres_son_depart", sql`${t.rappeleeLe} >= ${t.partLe}`),
   ],
 );
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useId, useState, useTransition } from "react";
+import { rappeler } from "@/app/jeu/expeditions/actions";
 import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import { finDeLaPhase, type Phase, phaseDUneExpedition, retourDUneExpedition } from "@/expeditions/phase";
@@ -41,9 +42,14 @@ const uneEspece = (nom: string, nombre: number) => `${nom} × ${nombre}`;
  * restant, sans son annonce, qui n'y tiendrait pas à 320 px. Un toucher n'importe où sur cette ligne la déplie pour
  * montrer sa distance et son détail, et la replie de même (DetailDeLExpedition.module.css) ; un lecteur d'écran entend
  * avec le bouton de quelle Expédition il s'agit. Sur ordinateur, tout se lit.
+ *
+ * US-0920 : sous son détail, « Rappeler », à l'aller comme en séjour (décidé le 2026-10-08) : elle fait demi-tour, et la
+ * page relue la montre au retour, d'où le bouton disparaît. Il attend la réponse du serveur, grisé : un double clic ne la
+ * rappelle qu'une fois. Sans trajet chiffré (US-0912), aucun retour, donc rien à rappeler.
  */
 export function DetailDeLExpedition({ expedition, instant, repliable = false }: { expedition: ExpeditionEnCours; instant: Date; repliable?: boolean }) {
   const [deplie, setDeplie] = useState(false);
+  const [rappelEnCours, demarrer] = useTransition();
   const prefixe = useId();
   const id = (morceau: string) => `${prefixe}-${morceau}`;
   const { destination, explorateurs, escorte } = expedition;
@@ -106,6 +112,17 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
           <dd>{retour ? <time dateTime={retour.toISOString()}>{formaterJourEtHeure(retour, FUSEAU)}</time> : AUCUNE}</dd>
         </div>
       </dl>
+      {phase !== "retour" && retour ? (
+        <button
+          type="button"
+          className={styles.rappeler}
+          disabled={rappelEnCours}
+          aria-describedby={id("destination")}
+          onClick={() => demarrer(() => rappeler(expedition.id))}
+        >
+          Rappeler
+        </button>
+      ) : null}
     </div>
   );
 }

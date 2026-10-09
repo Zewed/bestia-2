@@ -81,3 +81,18 @@ describe("le brouillard se lève sur le chemin (US-0914)", () => {
     expect(revelees).toHaveLength(new Set(revelees).size);
   });
 });
+
+describe("le brouillard d'une Expédition rappelée (US-0920)", () => {
+  /** Rappelée 50 minutes après son départ, entre la deuxième et la troisième Case de son chemin. */
+  const RAPPELEE = { ...EXPEDITION, rappeleeLe: apres(50) };
+
+  it("garde levées les Cases déjà révélées, et n'en lève plus aucune après son rappel, ni la destination", () => {
+    expect(a(50, RAPPELEE)).toEqual(a(40));
+    for (const minutes of [60, 100, 120, 120 + 240, 30 * 24 * 60]) expect(a(minutes, RAPPELEE)).toEqual(a(40));
+    expect(a(30 * 24 * 60, RAPPELEE).has(cle(DESTINATION))).toBe(false);
+  });
+
+  it("rappelée en séjour, garde tout ce que son aller a levé, destination comprise", () => {
+    expect(a(30 * 24 * 60, { ...EXPEDITION, rappeleeLe: apres(121) })).toEqual(a(120));
+  });
+});

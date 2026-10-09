@@ -79,3 +79,31 @@ describe("les durées réelles d'une Expédition rentrée (US-0917)", () => {
     expect(dureesReelles({ partLe, trajetMinutes: null, sejourMinutes: 60 }, aParis(9, 18))).toBeNull();
   });
 });
+
+describe("le récit de retour d'une Expédition rappelée (US-0920)", () => {
+  it("dit qu'elle a été rappelée, à l'aller, et quand, et qu'elle n'a pas séjourné", () => {
+    const texte = recitDeRetour(retour({ durees: { aller: 50, sejour: 0, retour: 50 }, rappel: { le: aParis(9, 14, 50), pendant: "aller" } })).texte;
+    expect(texte.split("\n").slice(0, 3)).toEqual([
+      "Destination : Forêt, à 3 Cases de votre Foyer.",
+      "Rappelée à l'aller le 9 octobre à 14:50.",
+      "Aller 50 min, sans séjour, retour 50 min.",
+    ]);
+  });
+
+  it("dit qu'elle a été rappelée pendant son séjour, et quand", () => {
+    const texte = recitDeRetour(retour({ durees: { aller: 60, sejour: 30, retour: 60 }, rappel: { le: aParis(9, 15, 30), pendant: "sejour" } })).texte;
+    expect(texte.split("\n").slice(1, 3)).toEqual(["Rappelée pendant le séjour le 9 octobre à 15:30.", "Aller 1 h, séjour 30 min, retour 1 h."]);
+  });
+
+  it("ne dit rien d'un rappel quand il n'y en a pas eu", () => {
+    expect(recitDeRetour(retour({ rappel: null })).texte).not.toContain("Rappelée");
+  });
+
+  it("compte ses durées réelles : l'aller jusqu'au rappel, aucun séjour, et le retour", () => {
+    const partLe = aParis(9, 14);
+    const horaires = { partLe, trajetMinutes: 40, sejourMinutes: 60, rappeleeLe: new Date(partLe.getTime() + 25 * MINUTE) };
+    expect(dureesReelles(horaires, new Date(partLe.getTime() + 50 * MINUTE))).toEqual({ aller: 25, sejour: 0, retour: 25 });
+    const enSejour = { ...horaires, rappeleeLe: new Date(partLe.getTime() + 55 * MINUTE) };
+    expect(dureesReelles(enSejour, new Date(partLe.getTime() + 95 * MINUTE))).toEqual({ aller: 40, sejour: 15, retour: 40 });
+  });
+});
