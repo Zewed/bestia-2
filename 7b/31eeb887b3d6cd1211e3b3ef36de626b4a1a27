@@ -1,0 +1,23 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_4ce34ec42d9105::t_d50d9c0b7dd700 465,470
+docs/stories/README.md
+  s_4ce34ec42d9105::t_c274d27e1306a4 7,22,31
+docs/stories/a-decider.md
+  s_4ce34ec42d9105::t_25e6096420e72c 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7b31eeb887b3d6cd1211e3b3ef36de626b4a1a27",
+  "prompts": {},
+  "sessions": {
+    "s_4ce34ec42d9105": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "986afa6c-8f0b-494f-9694-d93f52c5ef9e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
