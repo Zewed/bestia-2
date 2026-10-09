@@ -80,8 +80,9 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
       [territoireId, ecart],
     );
     const sauvages = await betesSauvagesDesCases(pool, rows.map((c) => c.id), de, a);
-    const { q, r } = rows.filter((c) => sauvages.get(c.id)!.length === 0)[rang];
-    return { q, r };
+    const calme = rows.filter((c) => sauvages.get(c.id)!.length === 0)[rang];
+    if (!calme) throw new Error(`Aucune Case à ${ecart} Cases où rien ne se montre pendant le séjour (rang ${rang}).`);
+    return { q: calme.q, r: calme.r };
   };
   /**
    * Une Expédition de `explorateurs` explorateurs, escortée de `souris` souris, qui part à `instant` vers une Case à `ecart`

@@ -10,6 +10,7 @@ import { type Coordonnees, distance } from "@/monde/hex";
 import { recitsDuTerritoire } from "@/monde/recits";
 import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
+import type { Evenement } from "@/temps/avancer";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
@@ -20,6 +21,7 @@ import { forceDUneBete } from "./force";
 import { type HorairesDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
 import { rappelerLExpedition } from "./rappel";
 import { rencontresDUneExpedition } from "./rencontres";
+import { RETOUR_EXPEDITION, rentrerAuFoyer } from "./retour";
 import { betesQuiSuivent } from "./sexe";
 
 const MINUTE = 60_000;
@@ -174,10 +176,21 @@ describe.skipIf(!URL_TEST)("la Bête apprivoisée arrive au Foyer (US-0938, sur 
       );
       expect(await disponibles(t.territoireId)).toHaveLength(2);
 
-      // Rentrée une fois, elle n'arrive qu'une fois.
+      // Rentrée une fois, elle n'arrive qu'une fois : même quand son retour s'appliquerait de nouveau.
       await aLHeure(t.territoireId, apres(retour, JOUR));
+      const { rows } = await pool.query<Evenement>(
+        `select id, type, survient_le as "survientLe", donnees from evenement where element = 'territoire' and element_id = $1 and type = $2`,
+        [t.territoireId, RETOUR_EXPEDITION],
+      );
+      const client = await pool.connect();
+      try {
+        await rentrerAuFoyer(client, t.territoireId, rows[0]);
+      } finally {
+        client.release();
+      }
       expect(await effectifDe(t.territoireId, bete.especeId)).toEqual([{ sexe, nombre: 1 }]);
       expect(await effectifDe(t.territoireId, escorte)).toEqual([{ sexe: "male", nombre: 1 }]);
+      expect((await recitsDuTerritoire(pool, t.territoireId)).filter((r) => r.titre === "Retour d'Expédition")).toHaveLength(1);
     });
 
     it("le récit de retour la dit ramenée au Foyer, avec son sexe", async () => {

@@ -69,7 +69,7 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
 /**
  * US-0938 : fait entrer les Bêtes `betes` dans l'effectif du Territoire, chacune à la ligne de son Espèce et de son sexe,
  * créée au besoin : elles s'ajoutent à celles qui y sont déjà, et sont disponibles pour l'escorte dès lors. Aucune limite
- * de Places : elles arrivent au jalon 8, avec la Bête apprivoisée sans Place libre (US-0939). Rien sans Bête.
+ * de Places : les Places arrivent au jalon 8, avec la Bête apprivoisée sans Place libre (US-0939). Rien sans Bête.
  */
 export async function faireEntrerDansLEffectif(base: Pool | PoolClient, territoireId: number, betes: readonly { especeId: string; sexe: Sexe }[]): Promise<void> {
   if (betes.length === 0) return;
