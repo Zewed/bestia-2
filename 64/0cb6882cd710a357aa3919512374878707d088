@@ -1,0 +1,19 @@
+src/monde/betes-de-naissance.db.test.ts
+  s_343d46d123da0b::t_df29aebcce65f6 176-178
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "640cb6882cd710a357aa3919512374878707d088",
+  "prompts": {},
+  "sessions": {
+    "s_343d46d123da0b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a08174ab15f7d5dc6",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
