@@ -4,7 +4,7 @@ import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { forceDUneBete } from "@/expeditions/force";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
-import { betesDisponibles } from "./effectif";
+import { betesDisponibles, faireEntrerDansLEffectif } from "./effectif";
 
 /** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
 const MONDE_D_ESSAI = "Essai de l'escorte (US-0904)";
@@ -165,5 +165,21 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     expect(await lignesDeLEffectif(territoireId)).toBe(2);
     await pool.query("delete from compte where id = $1", [compteId]);
     expect(await lignesDeLEffectif(territoireId)).toBe(0);
+  });
+
+  it("fait entrer des Bêtes apprivoisées dans l'effectif, chacune à la ligne de son Espèce et de son sexe, créée au besoin (US-0938)", async () => {
+    const t = (await nouveauTerritoire()).territoireId;
+    await ajouter(t, [["souris", "male", 2]]);
+    await faireEntrerDansLEffectif(pool, t, [
+      { especeId: "souris", sexe: "male" },
+      { especeId: "poule", sexe: "femelle" },
+      { especeId: "souris", sexe: "male" },
+    ]);
+    await faireEntrerDansLEffectif(pool, t, []);
+    const { rows } = await pool.query("select espece_id, sexe, nombre from effectif where territoire_id = $1 order by espece_id, sexe", [t]);
+    expect(rows).toEqual([
+      { espece_id: "poule", sexe: "femelle", nombre: 1 },
+      { espece_id: "souris", sexe: "male", nombre: 4 },
+    ]);
   });
 });

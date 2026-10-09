@@ -8,8 +8,8 @@
 // l'Apprivoisement (src/expeditions/apprivoisement.ts), retenu avec sa Rencontre ; elle a alors quitté sa Case, et personne
 // ne la rencontre plus. US-0937 : elle est alors mâle ou femelle, tiré au hasard (src/expeditions/sexe.ts), retenu avec sa
 // Rencontre. US-0933 : chaque Rencontre retenue inscrit son Espèce au Bestiaire du Territoire, dans la même transaction
-// (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938) et le récit (US-0940) les liront ici. Côté serveur
-// uniquement.
+// (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938, src/expeditions/arrivee-au-foyer.ts) les lit ici, comme le
+// fera le récit (US-0940). Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";

@@ -1,10 +1,11 @@
 // Le récit de retour d'une Expédition (US-0917) : à son retour au Foyer (src/expeditions/retour.ts), un Récit du
 // Territoire dit où elle est allée, combien de temps ont duré son aller, son séjour et son retour, combien de Cases elle
 // a sorties du brouillard et si des Bêtes se sont montrées. Le détail des Rencontres, Bête par Bête, viendra avec US-0940.
-// US-0920 : rappelée, il le dit, et quand. US-0942 : les Bêtes trop fortes pour son escorte, restées sur leur Case, et la
-// force qui lui manquait. Côté serveur uniquement.
+// US-0920 : rappelée, il le dit, et quand. US-0938 : et les Bêtes qui l'ont suivie jusqu'au Foyer. US-0942 : les Bêtes
+// trop fortes pour son escorte, restées sur leur Case, et la force qui lui manquait. Côté serveur uniquement.
 import "server-only";
 import type { PoolClient } from "pg";
+import type { Sexe } from "@/monde/betes-sauvages";
 import { type Coordonnees, distance } from "@/monde/hex";
 import { ecrireUnRecit, type NouveauRecit } from "@/monde/recits";
 import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
@@ -13,6 +14,7 @@ import { casesLeveesParLExpedition } from "./brouillard";
 import { casesDuFoyer } from "./choix-de-destination";
 import { demiTourDUneExpedition, type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
 import { forcesDesEscortes, forcesDesEspeces, type Rencontre, rencontresDUneExpedition } from "./rencontres";
+import { betesQuiSuivent } from "./sexe";
 
 const MINUTE_MS = 60_000;
 
@@ -52,10 +54,15 @@ export type RetourARaconter = {
   tropFortes?: TropForte[];
   rentreeLe: Date;
   rappel?: RappelARaconter | null;
+  /** US-0938 : les Bêtes qui l'ont suivie jusqu'au Foyer, dans l'ordre de leur Apprivoisement ; absentes : aucune. */
+  ramenees?: BeteRamenee[];
 };
 
 /** US-0942 : une Espèce trop forte pour l'escorte : son nom et la force qui manquait à l'escorte (forceQuiManque). */
 export type TropForte = { nom: string; manque: number };
+
+/** US-0938 : une Bête qui a suivi l'Expédition jusqu'au Foyer : le nom de son Espèce et son sexe. */
+export type BeteRamenee = { nom: string; sexe: Sexe };
 
 /**
  * US-0917 : les durées réelles d'une Expédition rentrée à l'instant du jeu `rentreeLe` : l'aller jusqu'à son arrivée sur la
@@ -101,6 +108,29 @@ function casesSorties(nombre: number): string {
 function betesMontrees(nombre: number): string {
   if (nombre === 0) return "Aucune Bête ne s'est montrée.";
   return nombre === 1 ? "Une Bête s'est montrée." : `${nombre} Bêtes se sont montrées.`;
+}
+
+/** US-0938 : « 2 mâles », « 1 femelle » ; une Bête seule, son sexe : « mâle ». */
+function sexes({ male, femelle }: Record<Sexe, number>): string {
+  if (male + femelle === 1) return male ? "mâle" : "femelle";
+  const dits = [male > 0 && `${male} ${male > 1 ? "mâles" : "mâle"}`, femelle > 0 && `${femelle} ${femelle > 1 ? "femelles" : "femelle"}`];
+  return dits.filter(Boolean).join(", ");
+}
+
+/**
+ * US-0938 : « Bête ramenée au Foyer : Renard roux (mâle). », « Bêtes ramenées au Foyer : Souris grise (2 mâles, 1 femelle)
+ * et Poule (femelle). » : chaque Espèce une fois, dans l'ordre de son premier Apprivoisement, avec ses mâles et ses femelles.
+ */
+function betesRamenees(betes: readonly BeteRamenee[]): string {
+  const parEspece = new Map<string, Record<Sexe, number>>();
+  for (const { nom, sexe } of betes) {
+    const compte = parEspece.get(nom) ?? { male: 0, femelle: 0 };
+    compte[sexe]++;
+    parEspece.set(nom, compte);
+  }
+  const especes = [...parEspece].map(([nom, compte]) => `${nom} (${sexes(compte)})`);
+  const liste = especes.length > 1 ? `${especes.slice(0, -1).join(", ")} et ${especes.at(-1)}` : especes[0];
+  return `${betes.length > 1 ? "Bêtes ramenées" : "Bête ramenée"} au Foyer : ${liste}.`;
 }
 
 /**
@@ -163,9 +193,9 @@ function resteesSurLeurCase(tropFortes: TropForte[]): string {
  * quand, avant ses durées ; sans séjour, « sans séjour ». US-0935 : quand seules des Bêtes plus rares se sont montrées et
  * qu'aucune n'a suivi, la ligne des Bêtes nomme les Espèces vues et le dit. US-0942 : elle dit aussi qu'elles étaient
  * trop fortes pour l'escorte, et la force qui lui manquait ; quand d'autres ont suivi, une ligne après elle le dit des
- * Bêtes restées sur leur Case.
+ * Bêtes restées sur leur Case. US-0938 : puis, si des Bêtes ont suivi l'Expédition, une ligne les dit arrivées au Foyer.
  */
-export function recitDeRetour({ destination, durees, casesLevees, rencontres, vuesSansSuite, tropFortes, rentreeLe, rappel }: RetourARaconter): NouveauRecit {
+export function recitDeRetour({ destination, durees, casesLevees, rencontres, vuesSansSuite, tropFortes, rentreeLe, rappel, ramenees }: RetourARaconter): NouveauRecit {
   const sejour = durees.sejour === 0 ? "sans séjour" : `séjour ${formaterMinutes(durees.sejour)}`;
   return {
     titre: "Retour d'Expédition",
@@ -178,6 +208,7 @@ export function recitDeRetour({ destination, durees, casesLevees, rencontres, vu
       ...(vuesSansSuite?.length
         ? [vuesSansQueRienNeSuive(vuesSansSuite, tropFortes)]
         : [betesMontrees(rencontres), ...(tropFortes?.length ? [resteesSurLeurCase(tropFortes)] : [])]),
+      ...(ramenees?.length ? [betesRamenees(ramenees)] : []),
     ].join("\n"),
     survenuLe: rentreeLe,
   };
@@ -215,6 +246,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   const vuesSansSuite = sansSuite ? await nomsDesEspeces(client, sansSuite) : undefined;
   // US-0942 : les Bêtes vues restées sur leur Case, trop fortes pour l'escorte : la force qui lui manquait.
   const tropFortes = await especesRestees(client, expeditionId, vues);
+  const ramenees = await betesRameneesAuFoyer(client, expeditionId);
   await ecrireUnRecit(
     client,
     territoireId,
@@ -228,6 +260,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
       tropFortes,
       rentreeLe,
       rappel,
+      ramenees,
     }),
   );
 }
@@ -239,6 +272,14 @@ async function nomsDesEspeces(client: PoolClient, ids: string[]): Promise<string
     [ids],
   );
   return rows.map((r) => r.nom);
+}
+
+/** US-0938 : les Bêtes qui ont suivi l'Expédition jusqu'au Foyer (betesQuiSuivent), avec le nom de leur Espèce. */
+async function betesRameneesAuFoyer(client: PoolClient, expeditionId: number): Promise<BeteRamenee[]> {
+  const betes = await betesQuiSuivent(client, expeditionId);
+  if (betes.length === 0) return [];
+  const noms = await nomsDesEspeces(client, betes.map((b) => b.especeId));
+  return betes.map((b, i) => ({ nom: noms[i], sexe: b.sexe }));
 }
 
 /**

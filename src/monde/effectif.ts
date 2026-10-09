@@ -1,7 +1,9 @@
-// Les Bêtes d'un Territoire telles que l'écran d'Expédition les propose pour l'escorte. Côté serveur uniquement.
+// Les Bêtes d'un Territoire telles que l'écran d'Expédition les propose pour l'escorte. US-0938 : et l'entrée d'une Bête
+// apprivoisée dans l'effectif, à son arrivée au Foyer. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { forceDUneBete } from "@/expeditions/force";
+import type { Sexe } from "./betes-sauvages";
 
 /**
  * US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte.
@@ -62,4 +64,19 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
     [territoireId],
   );
   return rows.map(({ attaque, vie, ...espece }) => ({ ...espece, force: forceDUneBete({ attaque, vie }) }));
+}
+
+/**
+ * US-0938 : fait entrer les Bêtes `betes` dans l'effectif du Territoire, chacune à la ligne de son Espèce et de son sexe,
+ * créée au besoin : elles s'ajoutent à celles qui y sont déjà, et sont disponibles pour l'escorte dès lors. Aucune limite
+ * de Places : les Places arrivent au jalon 8, avec la Bête apprivoisée sans Place libre (US-0939). Rien sans Bête.
+ */
+export async function faireEntrerDansLEffectif(base: Pool | PoolClient, territoireId: number, betes: readonly { especeId: string; sexe: Sexe }[]): Promise<void> {
+  if (betes.length === 0) return;
+  await base.query(
+    `insert into effectif (territoire_id, espece_id, sexe, nombre)
+     select $1, b.espece_id, b.sexe, count(*)::int from unnest($2::text[], $3::sexe[]) as b(espece_id, sexe) group by b.espece_id, b.sexe
+     on conflict (territoire_id, espece_id, sexe) do update set nombre = effectif.nombre + excluded.nombre`,
+    [territoireId, betes.map((b) => b.especeId), betes.map((b) => b.sexe)],
+  );
 }

@@ -221,6 +221,8 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
       `Aller ${formaterMinutes(ALLER)}, séjour 30 min, retour ${formaterMinutes(ALLER)}.`,
       expect.stringMatching(/sorties? du brouillard\.$/),
       expect.stringMatching(/^(Une Bête s'est montrée|\d+ Bêtes se sont montrées)\.$/),
+      // US-0938 : la souris qui la suit arrive au Foyer avec elle, et peut-être d'autres Bêtes de la Case.
+      expect.stringMatching(/^Bêtes? ramenées? au Foyer : .*Souris grise \(/),
     ]);
   });
 

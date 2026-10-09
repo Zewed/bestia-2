@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { betesSauvagesDesCases } from "@/monde/betes-sauvages";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { DEPART_DE_FAMINE } from "@/monde/famine";
@@ -64,26 +65,37 @@ describe.skipIf(!URL_TEST)("le retour au Foyer (US-0916, sur base)", () => {
     ]);
     return t;
   };
-  /** La `rang`-ième Case libre du Monde du Territoire, à `ecart` Cases de son Foyer. */
-  const destination = async (territoireId: number, ecart: number, rang: number): Promise<Coordonnees> => {
-    const { rows } = await pool.query<Coordonnees>(
-      `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
+  /**
+   * La `rang`-ième Case libre du Monde du Territoire, à `ecart` Cases de son Foyer, où aucune Bête ne se montre de `de` à
+   * `a`, ni Bête sauvage ni Bête de naissance : US-0938, une Bête qui suivrait l'Expédition entrerait dans l'effectif à
+   * son retour, et ces essais ne comptent que les Bêtes de l'escorte.
+   */
+  const destination = async (territoireId: number, ecart: number, rang: number, de: Date, a: Date): Promise<Coordonnees> => {
+    const { rows } = await pool.query<Coordonnees & { id: number }>(
+      `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
          join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
        where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
-       order by c.q, c.r limit 1 offset $3`,
-      [territoireId, ecart, rang],
+         and not exists (select 1 from bete_de_naissance n where n.territoire_id = t.id and n.case_id = c.id)
+       order by c.q, c.r`,
+      [territoireId, ecart],
     );
-    return rows[0];
+    const sauvages = await betesSauvagesDesCases(pool, rows.map((c) => c.id), de, a);
+    const calme = rows.filter((c) => sauvages.get(c.id)!.length === 0)[rang];
+    if (!calme) throw new Error(`Aucune Case à ${ecart} Cases où rien ne se montre pendant le séjour (rang ${rang}).`);
+    return { q: calme.q, r: calme.r };
   };
   /**
    * Une Expédition de `explorateurs` explorateurs, escortée de `souris` souris, qui part à `instant` vers une Case à `ecart`
    * Cases du Foyer (deux par défaut) pour un séjour de `sejour` minutes.
    */
   const partir = async (territoireId: number, instant: Date, { explorateurs = 2, souris = 2, sejour = 60, ecart = 2, rang = 0 } = {}) => {
+    // Son séjour : après un aller au pas des explorateurs, plus lent que les souris (US-0912).
+    const arrivee = apres(instant, ecart * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE * MINUTE);
+    const laCase = await destination(territoireId, ecart, rang, arrivee, apres(arrivee, sejour * MINUTE));
     const depart = await lancerLExpedition(
       pool,
       territoireId,
-      { destination: await destination(territoireId, ecart, rang), explorateurs, escorte: new Map(souris > 0 ? [["souris", souris]] : []), sejourMinutes: sejour },
+      { destination: laCase, explorateurs, escorte: new Map(souris > 0 ? [["souris", souris]] : []), sejourMinutes: sejour },
       instant,
     );
     expect(depart).toEqual({ expeditionId: expect.any(Number) });

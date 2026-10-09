@@ -224,7 +224,8 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
     await aLHeure(territoireId, retour);
     expect((await rencontresDUneExpedition(pool, expeditionId)).map((r) => r.apprivoisee)).toEqual([true]);
     const texte = (await recitsDeRetour(territoireId))[0].texte;
-    expect(texte.split("\n").at(-1)).toBe("Une Bête s'est montrée.");
+    // US-0938 : la Bête qui l'a suivie est dite ramenée au Foyer, à la ligne suivante.
+    expect(texte.split("\n").slice(-2)).toEqual(["Une Bête s'est montrée.", expect.stringMatching(/^Bête ramenée au Foyer : /)]);
     expect(texte).not.toContain("Aucune Bête");
   });
 
