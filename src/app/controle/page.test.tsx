@@ -184,6 +184,11 @@ describe("page de contrôle", () => {
     expect(html).toContain("Voit loin.");
   });
 
+  it("mène à la simulation des Raretés par Anneau (US-0931)", async () => {
+    entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
+    expect(renderToStaticMarkup(await ouvrir())).toContain('<a href="/controle/raretes">Simulation par Anneau</a>');
+  });
+
   it("montre la Couronne vue d'en haut, une forme par Biome, et la part de chacun (US-0151)", async () => {
     entetes.authorization = `Basic ${Buffer.from(`controle:${MOT_DE_PASSE}`).toString("base64")}`;
     monde.couronneEnBase.mockResolvedValue(COURONNE);

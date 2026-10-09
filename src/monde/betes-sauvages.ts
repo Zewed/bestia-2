@@ -79,6 +79,14 @@ export function tirerUneRarete(chances: ChancesDeRarete, hasard: number): string
 }
 
 /**
+ * US-0927 : la Rareté tirée pour l'apparition `numero` de la Case `laCase`, aux chances de son Anneau, avant le choix de
+ * l'Espèce, qui peut la faire retomber (US-0928). US-0931 : la simulation des Raretés tire par elle, comme le jeu.
+ */
+export function rareteTiree({ graine, q, r, anneau }: Omit<CaseSauvage, "biome">, numero: number, chances = raretesParAnneau()): string {
+  return tirerUneRarete(chances[anneau - 1], hacher(graine, q, r, numero, TIRAGE.rarete));
+}
+
+/**
  * US-0928 : l'Espèce que le hasard `hasard`, de 0 à 1, tire parmi celles de la Rareté `rareteId` qui vivent dans le Biome
  * `biome`, chacune avec la même chance ; s'il n'y en a aucune, parmi celles de la Rareté inférieure (dans l'ordre de
  * `chances`), et ainsi de suite jusqu'aux communes. null quand même les communes manquent : la Bête n'apparaît pas.
@@ -150,7 +158,7 @@ export function betesSauvages(
     const partie = parties.get(x.numero);
     const depart = Math.min(x.arrivee.getTime() + PRESENCE_MS, partie?.getTime() ?? Infinity);
     if (depart <= de.getTime()) return [];
-    const tiree = tirerUneRarete(chances[anneau - 1], hacher(graine, q, r, x.numero, TIRAGE.rarete));
+    const tiree = rareteTiree(laCase, x.numero, chances);
     const espece = tirerUneEspece(especes, chances[anneau - 1], biome, tiree, hacher(graine, q, r, x.numero, TIRAGE.espece));
     return espece ? [{ ...x, depart: new Date(depart), ...espece }] : [];
   });
