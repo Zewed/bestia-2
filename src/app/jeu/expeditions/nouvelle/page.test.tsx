@@ -267,6 +267,19 @@ describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
     expect(html).toContain(donne({ libres: 2, total: 3 }).replace("data-aucun", "data-explorateurs"));
     expect(html).toMatch(/<i data-recapitulatif="[^"]*"><\/i><\/main>$/);
   });
+
+  it("garde tout le formulaire pour le dernier explorateur libre, les autres déjà en Expédition (US-0919)", async () => {
+    connecte();
+    explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 1, total: 3 });
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(explorateurs.prochainRetourDUnExplorateur).not.toHaveBeenCalled();
+    expect(html).not.toContain("data-aucun");
+    expect(html).toContain(donne({ libres: 1, total: 3 }).replace("data-aucun", "data-explorateurs"));
+    expect(html).toContain("data-escorte");
+    // Aucun plafond d'Expéditions (décidé le 2026-10-08) : le départ ne compte que l'explorateur libre.
+    expect(confie(html, "recapitulatif")).toMatchObject({ libres: 1, destination: { q: 3, r: -5, biome: "Forêt", distance: 7 } });
+  });
 });
 
 describe("choisir la destination depuis l'écran d'Expédition (US-0907)", () => {
