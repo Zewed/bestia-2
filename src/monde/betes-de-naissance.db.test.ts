@@ -173,7 +173,9 @@ describe.skipIf(!URL_TEST)("les Bêtes de naissance d'un Foyer (US-0975, sur bas
       const [prairie, sansCommune] = [aPortee.find((c) => c.biome === "prairie")!, aPortee.find((c) => c.biome !== "prairie")!];
       await client.query("update espece set rarete_id = 'rare' where biome_id = $1 and rarete_id = 'commune'", [sansCommune.biome]);
       const prises = aPortee.filter((c) => c !== prairie && c !== sansCommune).map((c) => c.id);
-      expect(prises.length).toBeGreaterThan(100);
+      // Une portée de 8 Cases en compte plus de 200, mais 80 seulement autour d'un Foyer né au coin du Monde, environ une
+      // naissance sur soixante.
+      expect(prises.length).toBeGreaterThan(50);
       await client.query("update case_du_monde set chef_id = (select chef_id from territoire where id = $1) where id = any($2::int[])", [territoire.id, prises]);
       await client.query("delete from bete_de_naissance where territoire_id = $1", [territoire.id]);
       for (const hasard of [0, 0.5, 0.999]) {

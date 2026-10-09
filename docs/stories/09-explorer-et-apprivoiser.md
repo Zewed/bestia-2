@@ -232,6 +232,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0922 · Une Expédition vécue en mon absence
 **En tant que** joueur, **je veux** retrouver le résultat exact d'une Expédition qui s'est entièrement déroulée pendant que je n'étais pas là, **afin de** jouer par courtes sessions sans rien perdre.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1380, Zewed/bestia-2#32). Prouvée de bout en bout : cinq Expéditions (escortées, sans escorte, rappelées à l'aller et en séjour) vécues page ouverte, rattrapées d'un bloc au retour du joueur, ou par la seule tâche planifiée, donnent exactement les mêmes Cases révélées, Rencontres, Apprivoisements, Bestiaire, effectif et récits, dans l'ordre des retours. À ×60, une Expédition complète se vérifie en quelques minutes. Les combats viendront avec l'étape 41.
 - **Débloquée par** : US-0917, Étape 3
 - **Critères d'acceptation** :
   - Une Expédition partie, arrivée et rentrée pendant une absence donne les mêmes Cases révélées, les mêmes Rencontres, les mêmes combats et le même récit que si la page était restée ouverte.
@@ -461,11 +462,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0942 · La Bête trop forte reste sur sa Case
 **En tant que** joueur, **je veux** qu'une Bête trop forte pour mon escorte reste où elle est, **afin de** pouvoir revenir la chercher.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1459, Zewed/bestia-2#36). Une Bête plus forte que l'escorte (ou plus rare qu'une commune, sans escorte) ne suit pas : elle reste sur sa Case jusqu'à la fin de sa durée, l'Expédition la voit pendant tout son séjour et son Espèce s'inscrit « croisée ». Le récit de retour le dit, et de combien : « …, mais aucune Bête ne les a suivis : trop forte pour votre escorte, il lui manquait 37 340 de force. », un chiffre par Espèce, ou une ligne à part quand d'autres Bêtes ont suivi.
 - **Débloquée par** : US-0934
 - **Critères d'acceptation** :
   - Quand la force de l'escorte est inférieure à la sienne, la Bête ne suit pas et reste sur sa Case jusqu'à la fin de sa durée ; une Bête commune n'est jamais dans ce cas (US-0935).
   - L'Expédition la voit pendant tout son séjour, et son Espèce s'inscrit « croisée ».
-  - Le récit dit « trop forte pour votre escorte » ; dire aussi de combien (à décider).
+  - Le récit dit « trop forte pour votre escorte » et de combien : la force qui manquait, en chiffres (décidé le 2026-10-09).
 
 ### US-0943 · La Bête trop forte peut attaquer
 **En tant que** joueur, **je veux** qu'une Bête trop forte puisse s'en prendre à mon Expédition, **afin de** sentir le risque d'aller chercher plus fort que soi.
