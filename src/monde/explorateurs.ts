@@ -28,7 +28,7 @@ export async function explorateursDuTerritoire(base: Pool | PoolClient, territoi
 /**
  * US-0903 : l'heure à laquelle rentre un explorateur parti (expression sur `h`, l'Habitant). US-0911 : celle du retour
  * de son Expédition : son départ, l'aller, le séjour, qui ne commence qu'à l'arrivée (US-0906), puis le retour, qui dure
- * autant que l'aller (US-0912) ; aucune tant que le trajet d'une escorte n'est pas chiffré.
+ * autant que l'aller (US-0912), escorte comprise.
  */
 const RETOUR_DE_L_EXPLORATEUR = `(select x.part_le + make_interval(mins => 2 * x.trajet_minutes + x.sejour_minutes) from expedition x where x.id = h.expedition_id)`;
 
