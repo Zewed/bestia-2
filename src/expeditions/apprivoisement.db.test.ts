@@ -113,8 +113,12 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
   };
   /** Le Territoire mis à l'heure du jeu `instant`, comme à l'ouverture d'une page : le mécanisme unique du temps. */
   const rattraperA = (territoireId: number, instant: Date) => rattraper("territoire", territoireId, { pool, jusqua: instant });
-  /** Les Rencontres retenues de l'Expédition, sans leur identifiant (toEqual ne compte pas une propriété indéfinie). */
-  const rencontres = async (expeditionId: number) => (await rencontresDUneExpedition(pool, expeditionId)).map((r) => ({ ...r, id: undefined }));
+  /**
+   * Les Rencontres retenues de l'Expédition, sans leur identifiant ni ce que le Bestiaire en dit (US-0933,
+   * src/bestiaire/bestiaire.db.test.ts) : toEqual ne compte pas une propriété indéfinie.
+   */
+  const rencontres = async (expeditionId: number) =>
+    (await rencontresDUneExpedition(pool, expeditionId)).map((r) => ({ ...r, id: undefined, nouvelleEspece: undefined }));
   /** Ce que retient la Rencontre de la Bête sauvage `b` de la Case `caseId`, vue à `vueLe`, et si elle suit l'Expédition. */
   const vue = (b: BeteSauvage, caseId: number, vueLe: Date, apprivoisee: boolean) => ({
     vueLe,

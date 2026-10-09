@@ -775,3 +775,33 @@ export const rencontre = pgTable(
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
   ],
 );
+
+/**
+ * US-0933 : l'état d'une Espèce au Bestiaire, du premier au plus haut : croisée lors d'une Rencontre, apprivoisée
+ * (US-0938), son Couple réuni (US-0956). La base compare les états dans cet ordre, celui de leurs valeurs.
+ */
+export const etatAuBestiaire = pgEnum("etat_au_bestiaire", ["croisee", "apprivoisee", "couple_reuni"]);
+
+/**
+ * Le Bestiaire d'un Territoire (US-0933) : une ligne par Espèce que le joueur connaît, avec son état, qui ne fait
+ * qu'avancer, jamais reculer, même quand toutes ses Bêtes meurent : il ne se déduit ni de l'effectif ni des Rencontres
+ * (src/bestiaire/bestiaire.ts). `croisee_le` est l'instant du jeu où le joueur a vu l'Espèce pour la première fois, et
+ * `rencontre_id` la Rencontre qui l'a inscrite : celle que les récits signalent « Nouvelle Espèce au Bestiaire » (null
+ * pour une Espèce inscrite autrement, ou si cette Rencontre s'efface). Il part avec le Territoire. La page Bestiaire
+ * arrive au jalon 10.
+ */
+export const bestiaire = pgTable(
+  "bestiaire",
+  {
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    etat: etatAuBestiaire("etat").notNull(),
+    croiseeLe: timestamp("croisee_le", { withTimezone: true }).notNull(),
+    rencontreId: integer("rencontre_id").references(() => rencontre.id, { onDelete: "set null" }),
+  },
+  (t) => [primaryKey({ columns: [t.territoireId, t.especeId] }), unique("bestiaire_une_espece_par_rencontre").on(t.rencontreId)],
+);

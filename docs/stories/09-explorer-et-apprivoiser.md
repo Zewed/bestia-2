@@ -177,6 +177,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0917 · Le récit de retour
 **En tant que** joueur, **je veux** lire un récit à chaque retour d'Expédition, **afin de** savoir ce que mes explorateurs ont vécu.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1375, Zewed/bestia-2#28). À chaque retour, un Récit « Retour d'Expédition », daté de l'heure exacte du retour, s'ajoute à la page Récits : la destination et son Biome désormais connu, sa distance, les durées réelles de l'aller, du séjour et du retour, le nombre de Cases sorties du brouillard, et « Aucune Bête ne s'est montrée » quand rien ne s'est passé, sinon combien de Bêtes se sont montrées. Le compteur de non lus suit : dans la barre du haut sur ordinateur, sur l'onglet Récits de la navigation du bas sur mobile. Le même Récit en direct, au rattrapage ou par la tâche planifiée.
 - **Débloquée par** : US-0916, Étape 16
 - **Critères d'acceptation** :
   - Chaque retour ajoute un récit daté à la page Récits (US-0324).
@@ -364,6 +365,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0933 · L'Espèce croisée entre au Bestiaire
 **En tant que** joueur, **je veux** que chaque Espèce croisée s'inscrive dans mon Bestiaire, **afin de** garder la trace de tout ce que j'ai vu.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1393, Zewed/bestia-2#29). Toute Espèce vue lors d'une Rencontre s'inscrit au Bestiaire du Territoire, « croisée », à l'instant de sa première Rencontre, qu'elle suive l'Expédition ou non, une seule fois ; son état (croisée, apprivoisée, Couple réuni) ne fait qu'avancer, même quand toutes ses Bêtes meurent (table bestiaire, migration 0057). La Rencontre qui l'a inscrite est marquée, pour que les récits disent « Nouvelle Espèce au Bestiaire » (US-0940). La page Bestiaire arrive au jalon 10.
 - **Débloquée par** : US-0932
 - **Critères d'acceptation** :
   - Toute Espèce vue lors d'une Rencontre s'inscrit au Bestiaire du joueur à l'état « croisée », qu'elle suive l'Expédition ou non.
