@@ -1,0 +1,29 @@
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_00c131376e16bb::t_bee97ad20df398 270-282
+src/expeditions/plusieurs.db.test.ts
+  s_4ce34ec42d9105::t_099291dcf77cf7 1-172
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9ba59e5ec384d3971310c9bf122fa430525ecf76",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_4ce34ec42d9105": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "986afa6c-8f0b-494f-9694-d93f52c5ef9e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
