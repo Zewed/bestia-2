@@ -1,6 +1,6 @@
 {
-  "id": "bc800415-6c54-4717-a00c-46ef0f1ed610",
-  "prevId": "296a4d8c-9c54-4b26-8028-9d57266124be",
+  "id": "296a4d8c-9c54-4b26-8028-9d57266124be",
+  "prevId": "2b5c1e8f-6b1b-42eb-aa44-5f2fef73801f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -217,32 +217,9 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
-        },
-        "expedition_id": {
-          "name": "expedition_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
-      "indexes": {
-        "case_decouverte_par_expedition": {
-          "name": "case_decouverte_par_expedition",
-          "columns": [
-            {
-              "expression": "expedition_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"case_decouverte\".\"expedition_id\" is not null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "case_decouverte_territoire_id_territoire_id_fk": {
           "name": "case_decouverte_territoire_id_territoire_id_fk",
@@ -268,19 +245,6 @@
             "id"
           ],
           "onDelete": "no action",
-          "onUpdate": "no action"
-        },
-        "case_decouverte_expedition_id_expedition_id_fk": {
-          "name": "case_decouverte_expedition_id_expedition_id_fk",
-          "tableFrom": "case_decouverte",
-          "tableTo": "expedition",
-          "columnsFrom": [
-            "expedition_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

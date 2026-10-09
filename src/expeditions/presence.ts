@@ -22,23 +22,46 @@ export type ExpeditionPresente = { id: number; territoireId: number; arrivee: Da
  * aucune.
  */
 export async function expeditionsPresentesSurLesCases(base: Pool | PoolClient, caseIds: number[], de: Date, a: Date): Promise<Map<number, ExpeditionPresente[]>> {
+  const presentes = new Map(caseIds.map((id) => [id, [] as ExpeditionPresente[]]));
+  for (const { caseId, ...presente } of await enSejour(base, "x.case_id = any($1::int[])", caseIds, de, a)) presentes.get(caseId)!.push(presente);
+  return presentes;
+}
+
+/**
+ * US-0932 : les Expéditions du Territoire `territoireId` présentes sur leur Case à un moment de [de, a), avec leur Case,
+ * dans l'ordre de leur arrivée : la même présence qu'expeditionsPresentesSurLesCases, lue par Territoire, pour ses
+ * Rencontres (src/expeditions/rencontres.ts).
+ */
+export async function expeditionsPresentesDuTerritoire(
+  base: Pool | PoolClient,
+  territoireId: number,
+  de: Date,
+  a: Date,
+): Promise<(ExpeditionPresente & { caseId: number })[]> {
+  return enSejour(base, "x.territoire_id = $1", territoireId, de, a);
+}
+
+/**
+ * Les Expéditions que désigne `filtre` ($1 : `valeur`) en séjour sur leur Case à un moment de [de, a), dans l'ordre de
+ * leur arrivée : la base n'écarte que celles qui ne peuvent pas y être, la règle est sejourDUneExpedition.
+ */
+async function enSejour(base: Pool | PoolClient, filtre: string, valeur: unknown, de: Date, a: Date): Promise<(ExpeditionPresente & { caseId: number })[]> {
   const { rows } = await base.query<HorairesDUneExpedition & { id: number; territoireId: number; caseId: number }>(
     `select x.id, x.territoire_id as "territoireId", x.case_id as "caseId",
        x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes"
      from expedition x
-     where x.case_id = any($1::int[]) and x.part_le < $3 and x.part_le + make_interval(mins => x.trajet_minutes + x.sejour_minutes) > $2`,
-    [caseIds, de, a],
+     where ${filtre} and x.part_le < $3 and x.part_le + make_interval(mins => x.trajet_minutes + x.sejour_minutes) > $2`,
+    [valeur, de, a],
   );
-  const presentes = new Map(caseIds.map((id) => [id, [] as ExpeditionPresente[]]));
+  const presentes: (ExpeditionPresente & { caseId: number })[] = [];
   for (const { id, territoireId, caseId, ...horaires } of rows) {
     const sejour = sejourDUneExpedition(horaires);
     // Présente à un instant de la période : son séjour et la période se recouvrent.
     if (sejour && Math.max(sejour.debut.getTime(), de.getTime()) < Math.min(sejour.fin.getTime(), a.getTime())) {
-      presentes.get(caseId)!.push({ id, territoireId, arrivee: sejour.debut, depart: sejour.fin });
+      presentes.push({ id, territoireId, arrivee: sejour.debut, depart: sejour.fin, caseId });
     }
   }
-  for (const liste of presentes.values()) liste.sort((x, y) => x.arrivee.getTime() - y.arrivee.getTime() || x.id - y.id);
-  return presentes;
+  return presentes.sort((x, y) => x.arrivee.getTime() - y.arrivee.getTime() || x.id - y.id);
 }
 
 /**

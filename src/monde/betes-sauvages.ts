@@ -181,17 +181,17 @@ type CaseEnBase = Coordonnees & {
  * tire de la forme de son Monde. US-0928 : les Espèces sont celles de la base, lues une fois pour toutes les Cases.
  */
 export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: number[], de: Date, a: Date): Promise<Map<number, BeteSauvage[]>> {
-  const [{ rows }, { rows: especes }] = await Promise.all([
-    base.query<CaseEnBase>(
-      `select c.id, c.q, c.r, c.biome_id as biome, m.graine, c.chef_id is null as libre,
-         json_build_object('rayon', m.rayon, 'anneauxCouronne', m.anneaux_couronne, 'rayonCoeur', m.rayon_coeur) as forme,
-         coalesce((select json_agg(json_build_object('numero', p.numero, 'partie_le', p.partie_le)) from bete_partie p where p.case_id = c.id), '[]') as parties
-       from case_du_monde c join monde m on m.id = c.monde_id
-       where c.id = any($1::int[])`,
-      [caseIds],
-    ),
-    base.query<EspeceSauvage>(`select id, rarete_id as "rareteId", biome_id as "biomeId" from espece`),
-  ]);
+  // US-0932 : l'une après l'autre : le mécanisme du temps l'appelle avec le client de sa transaction, où deux requêtes
+  // ne partent pas à la fois.
+  const { rows } = await base.query<CaseEnBase>(
+    `select c.id, c.q, c.r, c.biome_id as biome, m.graine, c.chef_id is null as libre,
+       json_build_object('rayon', m.rayon, 'anneauxCouronne', m.anneaux_couronne, 'rayonCoeur', m.rayon_coeur) as forme,
+       coalesce((select json_agg(json_build_object('numero', p.numero, 'partie_le', p.partie_le)) from bete_partie p where p.case_id = c.id), '[]') as parties
+     from case_du_monde c join monde m on m.id = c.monde_id
+     where c.id = any($1::int[])`,
+    [caseIds],
+  );
+  const { rows: especes } = await base.query<EspeceSauvage>(`select id, rarete_id as "rareteId", biome_id as "biomeId" from espece`);
   const [parCase, rangees] = [new Map(rows.map((c) => [c.id, c])), rangerLesEspeces(especes)];
   return new Map(
     caseIds.map((id) => {
