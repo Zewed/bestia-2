@@ -13,6 +13,7 @@ import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
+import { Sejour } from "./Sejour";
 import { VersLaCarte } from "./VersLaCarte";
 
 export const metadata: Metadata = { title: "Nouvelle Expédition" };
@@ -97,6 +98,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
+      <Sejour />
       <Partir libres={explorateurs.libres} />
     </main>
   );
