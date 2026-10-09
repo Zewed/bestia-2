@@ -419,11 +419,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0938 · La Bête apprivoisée arrive au Foyer
 **En tant que** joueur, **je veux** voir ma nouvelle Bête rejoindre mon effectif au retour de l'Expédition, **afin de** pouvoir m'en servir.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1398, Zewed/bestia-2#35). La Bête apprivoisée suit l'Expédition et arrive au Foyer avec elle, à son retour : elle entre alors dans l'effectif de son Espèce, avec son sexe, et son Espèce passe « apprivoisée » au Bestiaire si elle n'avait pas mieux. Jusque-là, elle ne fait pas partie de l'escorte et n'en change pas la force. Elle peut partir en escorte dès l'Expédition suivante. Le récit de retour la nomme : « Bête ramenée au Foyer : Marmotte des Alpes (mâle). » Sans limite de Places, qui arrivent au jalon 8 (US-0939).
 - **Débloquée par** : US-0934, US-0916
 - **Critères d'acceptation** :
   - La Bête suit l'Expédition et arrive au Foyer avec elle, à son retour.
   - Elle entre alors dans l'effectif de son Espèce, et l'Espèce passe à l'état « apprivoisée » au Bestiaire si elle n'avait pas mieux.
-  - Jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat (à décider).
+  - Jusqu'au retour, la Bête qui suit ne fait pas partie de l'escorte : elle n'en change pas la force et ne peut pas être perdue dans un combat (décidé le 2026-10-09).
   - Elle peut partir en escorte dès l'Expédition suivante.
 
 ### US-0939 · Une Bête apprivoisée sans Place libre
