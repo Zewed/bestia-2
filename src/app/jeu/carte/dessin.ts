@@ -442,7 +442,7 @@ function tracerLaPortee(pinceau: Pinceau, foyer: Coordonnees, portee: number, vu
   for (const pas of tourDeLAnneau(portee)) {
     const ici = { q: foyer.q + pas.q, r: foyer.r + pas.r };
     const dehors = DIRECTIONS.map((d) => distance({ q: ici.q + d.q, r: ici.r + d.r }, foyer) > portee);
-    // Ses côtés tournés vers l'anneau d'après se suivent : le premier suit un côté tourné vers le Foyer (s'il en a un).
+    // Ses côtés tournés vers l'anneau d'après se suivent : le premier suit un côté qui ne l'est pas (à portée 0, tous le sont).
     const debut = Math.max(0, dehors.findIndex((oui, d) => oui && !dehors[(d + 5) % 6]));
     const { x, y } = aLEcran(ici, vue);
     for (let d = debut; d < debut + dehors.filter(Boolean).length; d++) {

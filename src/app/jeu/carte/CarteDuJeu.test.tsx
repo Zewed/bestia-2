@@ -6,6 +6,7 @@ import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
 import type { Fiche } from "@/monde/fiche";
+import { PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
 import { LEGENDE_MONTREE } from "./Legende";
@@ -819,8 +820,17 @@ describe("griser ce qui est hors de portée en choisissant la destination (US-09
   /** Les gestes d'un nouveau dessin de la carte, comme quand l'écran change de taille. */
   const redessinee = () => {
     toile.gestes = [];
+    toile.departs = [];
     act(() => suivi!.annoncer());
     return toile.gestes;
+  };
+  /**
+   * Le départ du contour de la portée, à `cases` Cases du Foyer : le tour de son dernier anneau commence par la Case au
+   * sud-ouest du Foyer, à son sommet du bas à gauche (dessin.ts, tracerLaPortee).
+   */
+  const departDuContour = (cases: number) => {
+    const { x, y } = aLEcran({ q: FOYER.q - cases, r: FOYER.r + cases }, ouverte());
+    return `${(x - (Math.sqrt(3) / 2) * RAYON).toFixed(6)},${(y + RAYON / 2).toFixed(6)}`;
   };
 
   it("ouverte pour choisir la destination, grise d'un voile ce qui est au-delà de la portée, par-dessus les Cases, sous le repère du Foyer", () => {
@@ -829,6 +839,9 @@ describe("griser ce qui est hors de portée en choisissant la destination (US-09
     expect(gestes.filter((g) => g === VOILE)).toHaveLength(1);
     expect(gestes.indexOf(VOILE)).toBeGreaterThan(gestes.indexOf("remplir var(--galet)"));
     expect(gestes.slice(-3)).toEqual(["remplir var(--citron)", "border var(--encre)", "remplir var(--encre)"]);
+    // Au-delà de la portée d'exploration de départ, et pas d'une autre.
+    expect(departs()).toContain(departDuContour(PORTEE_D_EXPLORATION_CASES));
+    expect(departs()).not.toContain(departDuContour(PORTEE_D_EXPLORATION_CASES - 1));
   });
 
   it("ouverte depuis la navigation, ne grise rien", () => {
