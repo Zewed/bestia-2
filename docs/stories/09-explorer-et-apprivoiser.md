@@ -38,6 +38,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0904 · Choisir l'escorte
 **En tant que** joueur, **je veux** choisir, Espèce par Espèce, combien de Bêtes accompagnent mes explorateurs, **afin de** leur donner assez de force pour qu'une Bête sauvage plus rare les suive.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1362, Zewed/bestia-2#9). L'effectif d'un Territoire se compte par Espèce et par sexe (table `effectif`, migration 0047, ADR 0002), vide pour tous tant que l'apprivoisement (étape 40) n'existe pas. Avec des Bêtes, le bloc « Escorte » de l'écran d'Expédition liste chaque Espèce disponible avec sa vignette et son nombre ; on en choisit au pouce avec « − » et « + », « Toutes » et « Aucune ». Le choix est gardé dans l'adresse et rien n'est retenu avant le départ. Les Bêtes d'un Couple en Réserve et celles déjà sorties seront retirées des disponibles (jalon 8, US-0911). Sans Bête, pas de bloc. Vérifié en vrai, avec des Bêtes ajoutées à un compte d'essai.
 - **Débloquée par** : US-0902
 - **Critères d'acceptation** :
   - Chaque Espèce de l'effectif apparaît avec son illustration et le nombre de Bêtes disponibles ; sans aucune Bête, l'écran ne propose pas d'escorte et l'Expédition part sans (US-0909).
