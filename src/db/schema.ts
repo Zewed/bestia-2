@@ -615,3 +615,27 @@ export const betePartie = pgTable(
   },
   (t) => [primaryKey({ columns: [t.caseId, t.numero] })],
 );
+
+/** US-0904 : le sexe d'une Bête apprivoisée, dû au hasard (Apprivoisement, US-0937). */
+export const sexe = pgEnum("sexe", ["male", "femelle"]);
+
+/**
+ * L'effectif d'un Territoire (US-0904) : ses Bêtes apprivoisées, comptées et non désignées, puisque toutes les Bêtes
+ * d'une Espèce sont identiques (ADR 0002) : une ligne par Espèce et par sexe, avec leur nombre, jamais négatif. Elle part
+ * avec le Territoire. Personne n'a encore de Bête (ADR 0008) : l'Apprivoisement (US-0937, US-0938) et la Réserve des
+ * Couples (jalon 8) la rempliront ; l'écran d'Expédition y lit les Bêtes disponibles (src/monde/effectif.ts).
+ */
+export const effectif = pgTable(
+  "effectif",
+  {
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    sexe: sexe("sexe").notNull(),
+    nombre: integer("nombre").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.territoireId, t.especeId, t.sexe] }), check("effectif_jamais_negatif", sql`${t.nombre} >= 0`)],
+);
