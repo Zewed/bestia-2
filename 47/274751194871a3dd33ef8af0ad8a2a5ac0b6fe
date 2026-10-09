@@ -1,0 +1,47 @@
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_97a431cfa65ca7::t_0a6520b24454f5 1030,1053,1168-1218
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_00c131376e16bb::t_f7b1463919ebcf 15,66-68,116-122,125,129-134,137,172,224-226,229,236-239,241
+src/app/jeu/carte/dessin.test.ts
+  s_00c131376e16bb::t_38e8155be28505 879,881-882
+src/app/jeu/carte/dessin.ts
+  s_00c131376e16bb::t_d8110b51f78438 623-624
+src/expeditions/position.test.ts
+  s_00c131376e16bb::t_2972947ad22cea 65,67
+src/expeditions/position.ts
+  s_00c131376e16bb::t_6872d31312fefa 36-40,51-52
+src/app/jeu/carte/ExpeditionsSurLaCarte.tsx
+  s_9f5c258c8ce904::t_2ce687561d3396 3,5,7,56-65,67-80,83-85,90-96,123-133,135-140,142-147,150,154-155,174
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "47274751194871a3dd33ef8af0ad8a2a5ac0b6fe",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_9f5c258c8ce904": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a9dba3f8c50e9bcf2",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
