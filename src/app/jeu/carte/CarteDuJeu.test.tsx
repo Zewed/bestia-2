@@ -6,6 +6,7 @@ import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
 import type { Fiche } from "@/monde/fiche";
+import { PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { aLEcran, LARGEUR_DE_CASE, vueSurLeFoyer, type Vue } from "./dessin";
 import { LEGENDE_MONTREE } from "./Legende";
@@ -810,6 +811,53 @@ describe("choisir la destination d'une Expédition sur la carte (US-0907)", () =
     await act(async () => fiches[0].repondre(FORET));
     expect(lien("Envoyer une Expédition")!.getAttribute("href")).toBe(`/jeu/expeditions/nouvelle?q=${AUTOUR[1].q}&r=${AUTOUR[1].r}`);
     expect(lien("Choisir cette destination")).toBeNull();
+  });
+});
+
+describe("griser ce qui est hors de portée en choisissant la destination (US-0908)", () => {
+  /** Le voile qui grise les Cases au-delà de la portée d'exploration (dessin.test.ts : où, et comment). */
+  const VOILE = "remplir color-mix(in oklch, var(--galet) 70%, transparent)";
+  /** Les gestes d'un nouveau dessin de la carte, comme quand l'écran change de taille. */
+  const redessinee = () => {
+    toile.gestes = [];
+    toile.departs = [];
+    act(() => suivi!.annoncer());
+    return toile.gestes;
+  };
+  /**
+   * Le départ du contour de la portée, à `cases` Cases du Foyer : le tour de son dernier anneau commence par la Case au
+   * sud-ouest du Foyer, à son sommet du bas à gauche (dessin.ts, tracerLaPortee).
+   */
+  const departDuContour = (cases: number) => {
+    const { x, y } = aLEcran({ q: FOYER.q - cases, r: FOYER.r + cases }, ouverte());
+    return `${(x - (Math.sqrt(3) / 2) * RAYON).toFixed(6)},${(y + RAYON / 2).toFixed(6)}`;
+  };
+
+  it("ouverte pour choisir la destination, grise d'un voile ce qui est au-delà de la portée, par-dessus les Cases, sous le repère du Foyer", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} destination="choix=destination" />);
+    const gestes = redessinee();
+    expect(gestes.filter((g) => g === VOILE)).toHaveLength(1);
+    expect(gestes.indexOf(VOILE)).toBeGreaterThan(gestes.indexOf("remplir var(--galet)"));
+    expect(gestes.slice(-3)).toEqual(["remplir var(--citron)", "border var(--encre)", "remplir var(--encre)"]);
+    // Au-delà de la portée d'exploration de départ, et pas d'une autre.
+    expect(departs()).toContain(departDuContour(PORTEE_D_EXPLORATION_CASES));
+    expect(departs()).not.toContain(departDuContour(PORTEE_D_EXPLORATION_CASES - 1));
+  });
+
+  it("ouverte depuis la navigation, ne grise rien", () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    expect(redessinee()).not.toContain(VOILE);
+  });
+
+  it("grise ou ne grise plus dès que le choix de la destination commence ou s'arrête, sans attendre que la carte bouge", () => {
+    const { rerender } = render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    toile.gestes = [];
+    rerender(<CarteDuJeu carte={CARTE} fonds={FONDS} destination="choix=destination" />);
+    expect(toile.gestes).toContain(VOILE);
+    toile.gestes = [];
+    rerender(<CarteDuJeu carte={CARTE} fonds={FONDS} destination={null} />);
+    expect(toile.gestes).toContain("remplir var(--galet)");
+    expect(toile.gestes).not.toContain(VOILE);
   });
 });
 

@@ -289,4 +289,12 @@ describe("choisir la destination depuis l'écran d'Expédition (US-0907)", () =>
     expect(html).not.toMatch(/Biome|Distance|Aucune destination/);
     expect(lien(html, "Choisir sur la carte")).toBe("/jeu/carte?choix=destination");
   });
+
+  it("refuse de même une Case hors de portée, demandée par son adresse sans passer par la carte (US-0908)", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ refus: "Cette Case est hors de portée." });
+    const html = await ouvrir({ q: "0", r: "0" });
+    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Cette Case est hors de portée.", "Choisir sur la carte", ...SEJOUR]);
+    expect(lien(html, "Choisir sur la carte")).toBe("/jeu/carte?choix=destination");
+  });
 });
