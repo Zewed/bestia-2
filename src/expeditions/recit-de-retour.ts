@@ -1,6 +1,7 @@
 // Le récit de retour d'une Expédition (US-0917) : à son retour au Foyer (src/expeditions/retour.ts), un Récit du
 // Territoire dit où elle est allée, combien de temps ont duré son aller, son séjour et son retour, combien de Cases elle
-// a sorties du brouillard et si des Bêtes se sont montrées. Le détail des Rencontres, Bête par Bête, viendra avec US-0940.
+// a sorties du brouillard et si des Bêtes se sont montrées. US-0940 : le détail de ses Rencontres, Bête par Bête, s'y joint
+// (src/expeditions/recit-de-rencontre.ts).
 // US-0920 : rappelée, il le dit, et quand. US-0938 : et les Bêtes qui l'ont suivie jusqu'au Foyer. Côté serveur
 // uniquement.
 import "server-only";
@@ -13,6 +14,7 @@ import { COMMUNE } from "./apprivoisement";
 import { casesLeveesParLExpedition } from "./brouillard";
 import { casesDuFoyer } from "./choix-de-destination";
 import { demiTourDUneExpedition, type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
+import { rencontresARaconter } from "./recit-de-rencontre";
 import { type Rencontre, rencontresDUneExpedition } from "./rencontres";
 import { betesQuiSuivent } from "./sexe";
 
@@ -190,6 +192,8 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   const casesLevees = await casesLeveesParLExpedition(client, expeditionId);
   const vues = await rencontresDUneExpedition(client, expeditionId);
   const rencontres = vues.length;
+  // US-0940 : et chaque Bête vue, à son heure, avec ce qu'il en advint : le récit de Rencontre, joint au Récit.
+  const detail = await rencontresARaconter(client, territoireId, expeditionId, vues, sejourDUneExpedition(horaires));
   // US-0935 : seules des Bêtes plus rares se sont montrées et aucune n'a suivi : le récit nomme leurs Espèces.
   const sansSuite = especesVuesSansSuite(vues);
   const vuesSansSuite = sansSuite ? await nomsDesEspeces(client, sansSuite) : undefined;
@@ -208,6 +212,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
       rappel,
       ramenees,
     }),
+    detail,
   );
 }
 

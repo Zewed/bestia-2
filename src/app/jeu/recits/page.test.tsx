@@ -95,6 +95,69 @@ describe("page Récits (US-0324)", () => {
     expect(html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual(["Récits", "Retour de Récolte", "7 octobre 2026 à 00:30", "Du Bois."]);
   });
 
+  it("joint au retour d'une Expédition ses Rencontres, chacune à son heure dans le fuseau du joueur, repliées avec son texte (US-0940)", async () => {
+    connecte([
+      {
+        id: 51,
+        titre: "Retour d'Expédition",
+        texte: "Une Bête s'est montrée.",
+        survenuLe: new Date("2026-10-09T16:05:00Z"),
+        luLe: null,
+        rencontres: [
+          {
+            especeId: "souris_grise",
+            vueLe: new Date("2026-10-09T12:05:00Z"),
+            issue: "apprivoisee",
+            sexe: "femelle",
+            nouvelleEspece: true,
+            nom: "Souris grise",
+            illustration: "especes/souris.webp",
+            rarete: { id: "commune", nom: "Commune" },
+          },
+        ],
+      } as Recit,
+      TROIS_RECITS[1],
+    ]);
+    const html = renderToStaticMarkup(await Recits());
+    const liste = html.match(/<ol [^>]*aria-label="Rencontres"[^>]*>.*?<\/ol>/)?.[0] ?? "";
+    expect(liste).toMatch(/^<ol [^>]*hidden=""/);
+    expect(liste).toMatch(/<time[^>]* datetime="2026-10-09T12:05:00.000Z"[^>]*>14:05<\/time>/i);
+    expect(liste.replace(/<[^>]+>/g, "|").split("|").filter(Boolean)).toEqual(["14:05", "Souris grise", "Commune", "Apprivoisée, femelle", "Nouvelle Espèce au Bestiaire"]);
+    expect(liste).toContain('alt="Souris grise"');
+    // Un seul retour a des Rencontres : les autres Récits restent du texte.
+    expect(html.match(/aria-label="Rencontres"/g)).toHaveLength(1);
+  });
+
+  it("dit aussi le jour d'une Rencontre quand il n'est plus celui de la précédente, ou du retour pour la première (US-0940)", async () => {
+    const rencontre = (vueLe: string) => ({
+      especeId: "renard",
+      vueLe: new Date(vueLe),
+      issue: "restee" as const,
+      sexe: null,
+      nouvelleEspece: false,
+      nom: "Renard roux",
+      illustration: null,
+      rarete: { id: "peu_commune", nom: "Peu commune" },
+    });
+    connecte([
+      {
+        id: 52,
+        titre: "Retour d'Expédition",
+        texte: "3 Bêtes se sont montrées.",
+        survenuLe: new Date("2026-10-12T21:00:00Z"),
+        luLe: null,
+        rencontres: [rencontre("2026-10-11T19:00:00Z"), rencontre("2026-10-12T12:04:00Z"), rencontre("2026-10-12T18:46:00Z")],
+      } as Recit,
+    ]);
+    const html = renderToStaticMarkup(await Recits());
+    expect([...html.matchAll(/<time[^>]*>([^<]*)<\/time>/g)].map(([, heure]) => heure)).toEqual([
+      "12 octobre 2026 à 23:00",
+      "11 octobre à 21:00",
+      "12 octobre à 14:04",
+      "20:46",
+    ]);
+  });
+
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {
     connecte();
     chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: 12, recitLu: false });
