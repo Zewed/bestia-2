@@ -155,6 +155,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0915 · Le séjour sur la Case
 **En tant que** joueur, **je veux** que mon Expédition reste sur la Case le temps choisi, **afin de** lui laisser la chance d'y croiser des Bêtes sauvages.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1373, Zewed/bestia-2#22). À l'arrivée, l'Expédition passe en « séjour » avec le compte à rebours de la durée choisie, et repart seule vers le Foyer à sa fin, sans action ni rechargement. Le séjour va de l'arrivée (comprise) à la fin de la durée (exclue) ; un seul endroit dit quelles Expéditions sont présentes sur une Case, à un instant ou pendant une période (src/expeditions/presence.ts), la même réponse en direct et au rattrapage : c'est là que l'étape 40 fera ses Rencontres.
 - **Débloquée par** : US-0912
 - **Critères d'acceptation** :
   - À l'arrivée, l'Expédition passe en phase « séjour », avec le compte à rebours de la durée choisie.
