@@ -40,7 +40,10 @@ export function vueLe(bete: Pick<BeteSurLaCase, "arrivee" | "depart">, x: Pick<E
 /**
  * US-0934 : l'Expédition que la Bête suit, parmi `expeditions`, celles de sa Case, et l'instant où elle la suit : la
  * première qui la voit et l'a à portée, à cet instant ; à égalité, celle de plus petit identifiant. null : aucune, la Bête
- * reste sur sa Case jusqu'à son départ.
+ * reste sur sa Case jusqu'à son départ. US-0936 : une Bête à la fois : chaque Bête est jugée à part, à sa Rencontre, et un
+ * Apprivoisement n'amène qu'elle ; l'Expédition suivie poursuit son séjour jusqu'à son terme, où d'autres Bêtes peuvent
+ * encore la suivre, une par Rencontre (décidé le 2026-10-09). Ses Rencontres se lisent dans l'ordre des apparitions
+ * (rencontresDUneExpedition).
  */
 export function lExpeditionSuivie(bete: BeteSurLaCase, expeditions: readonly ExpeditionSurLaCase[]): { expeditionId: number; le: Date } | null {
   let suivie: { expeditionId: number; le: Date } | null = null;
