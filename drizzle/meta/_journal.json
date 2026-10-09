@@ -407,6 +407,13 @@
       "when": 1791569202809,
       "tag": "0059_rappel_des_expeditions",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1791574110322,
+      "tag": "0061_couple",
+      "breakpoints": true
     }
   ]
 }
