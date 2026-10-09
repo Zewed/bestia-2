@@ -166,6 +166,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0916 · Le retour au Foyer
 **En tant que** joueur, **je veux** retrouver mes explorateurs et mes Bêtes à leur retour, **afin de** les renvoyer aussitôt.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1374, Zewed/bestia-2#24). Le retour est un événement daté du Territoire, programmé au départ, appliqué à son heure exacte par le mécanisme du temps, page ouverte, au rattrapage ou par la tâche planifiée : les explorateurs redeviennent libres et leur Métier se change de nouveau, les Bêtes de l'escorte redeviennent disponibles, et l'Expédition quitte la liste, qui se relit d'elle-même à l'heure du retour. L'Expédition rentrée n'est pas effacée (rentree_le) : sa présence sur la Case se relit toujours. L'heure du retour se calcule en un seul endroit (retourDUneExpedition). Migration 0052.
 - **Débloquée par** : US-0915
 - **Critères d'acceptation** :
   - Au retour, les explorateurs redeviennent libres et les Bêtes de l'escorte rentrent dans l'effectif.
