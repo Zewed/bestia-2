@@ -182,6 +182,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0918 · La liste des Expéditions en cours
 **En tant que** joueur, **je veux** voir toutes mes Expéditions en cours au même endroit, **afin de** savoir quand chacune revient.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1376, Zewed/bestia-2#20). La page /jeu/expeditions montre chaque Expédition en cours : destination, distance, phase et temps restant de la phase (« arrive dans », « repart dans », « rentre dans », puis « de retour »), puis ses explorateurs par prénom, son escorte et son retour prévu. Les comptes à rebours avancent sans recharger, au rythme du jeu. Sans Expédition, « Aucune Expédition en cours » et un bouton « Préparer une Expédition ». Sur mobile (jusqu'à 820 px), chacune tient sur une ligne qu'on déplie. Le détail est un composant réutilisable (DetailDeLExpedition), repris par la carte (US-0913).
 - **Débloquée par** : US-0911
 - **Critères d'acceptation** :
   - Chaque Expédition montre sa destination, sa phase (aller, séjour, retour), son temps restant, ses explorateurs et son escorte.
