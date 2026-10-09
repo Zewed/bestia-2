@@ -143,9 +143,16 @@
   outline-offset: 2px;
 }
 
-/* US-0907 : sur la carte ouverte pour choisir la destination, le refus d'une Case d'un Territoire, à la place du bouton. */
+/*
+ * US-0907 : sur la carte ouverte pour choisir la destination, le refus d'une Case d'un Territoire, à la place du
+ * bouton, et comme lui collé au pied de la fiche quand le panneau plafonné du mobile coupe ce qui le précède.
+ */
 .refus {
+  position: sticky;
+  bottom: 0;
   margin-top: 16px;
+  box-shadow: 0 0 0 16px var(--bloc);
+  background: var(--bloc);
   color: var(--mauvais);
   font-weight: var(--graisse-titre);
 }

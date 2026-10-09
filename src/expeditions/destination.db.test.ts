@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { decouvrir } from "@/monde/brouillard";
+import { ficheDUneCase } from "@/monde/fiche";
 import { creerUnMonde } from "@/monde/generer";
 import { distance } from "@/monde/hex";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
@@ -80,6 +81,12 @@ describe.skipIf(!URL_TEST)("la destination d'une Expédition (US-0907, sur base)
 
   it("refuse une Case du Territoire d'un autre joueur, sous le brouillard comme découverte", async () => {
     const [moi, voisin] = [await naitre(), await naitre()];
+    // Deux Foyers voisins se découvrent souvent à la naissance : celui du voisin remis sous le brouillard du joueur.
+    await pool.query(
+      "delete from case_decouverte d using case_du_monde c where d.territoire_id = $1 and d.case_id = c.id and c.monde_id = $2 and c.q = $3 and c.r = $4",
+      [moi.territoireId, genereId, voisin.foyer.q, voisin.foyer.r],
+    );
+    expect(await ficheDUneCase(pool, moi.territoireId, voisin.foyer)).toMatchObject({ inconnue: true });
     expect(await destinationDUneCase(pool, moi.territoireId, voisin.foyer)).toEqual({ refus: CASE_D_UN_TERRITOIRE });
     await decouvrir(pool, moi.territoireId, [voisin.foyer]);
     expect(await destinationDUneCase(pool, moi.territoireId, voisin.foyer)).toEqual({ refus: CASE_D_UN_TERRITOIRE });
