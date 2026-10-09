@@ -4,7 +4,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, FAMINE_IMMINENTE_HEURES, FAMINE_IMMINENTE_MARGE_HEURES } from "@/reglages";
-import { faireRepartirUnHabitant, finirLaFamine } from "./famine";
+import { AU_FOYER, faireRepartirUnHabitant, finirLaFamine } from "./famine";
 
 /**
  * Ce que le Territoire $1 produit par heure, Ressource par Ressource : la somme de toutes ses Cases,
@@ -19,7 +19,9 @@ export const PRODUCTION_DU_TERRITOIRE = `
 
 /**
  * US-0316 : l'Entretien de tous les Habitants du Territoire $1, en Nourriture par heure, qu'ils aient un
- * Métier ou non. Le calcul et l'affichage le lisent tous deux ici.
+ * Métier ou non. Le calcul et l'affichage le lisent tous deux ici. US-0921 : les explorateurs partis en
+ * Expédition compris : ils mangent toujours, sur les Stocks du Territoire, et l'avertissement « famine
+ * imminente » (US-0322) comme la Famine (US-0325) les comptent donc aussi.
  */
 export const ENTRETIEN_DU_TERRITOIRE = `
   select (${ENTRETIEN_HABITANT_PAR_HEURE} * count(*))::numeric as par_heure from habitant where territoire_id = $1`;
@@ -116,7 +118,8 @@ const FIN_FAMINE_IMMINENTE = `${FAMINE_IMMINENTE_HEURES + FAMINE_IMMINENTE_MARGE
  * d'ici $3 et rend l'instant atteint (atteint, en texte à la microseconde) et s'il y a un départ à y appliquer
  * (depart) ; produire() le fait partir, puis reprend de là. Les départs tombent aux heures pleines depuis le début de
  * la Famine, que le Territoire retient : les mêmes quel que soit le découpage du temps. Un départ à l'instant $3
- * même est appliqué dans ce calcul-ci.
+ * même est appliqué dans ce calcul-ci. US-0921 : seul un Habitant resté au Foyer s'en va ; sans plus personne au
+ * Foyer, les explorateurs étant absents, la Famine dure sans départ.
  *
  * US-0328 : la Famine finit en $2 quand la Nourriture y paie de nouveau l'Entretien (un départ qui l'a ramené sous la
  * production, de la Nourriture ajoutée) : le calcul rend alors son début (famineFinie), pour le Récit de sa fin, et
@@ -162,9 +165,10 @@ export const PRODUIRE = `
   ),
   -- US-0326 : le pas du prochain départ de Famine, compté depuis $2 : une heure pleine après le début de la Famine
   -- (debut, avant $2 quand elle dure déjà, comme le Territoire le retient), toujours après $2 ; null hors Famine, ou
-  -- quand il ne reste qu'un Habitant.
+  -- quand il ne reste qu'un Habitant. US-0921 : ou quand plus personne n'est resté au Foyer pour s'en aller.
   depart as (
     select case when debut is not null and (select count(*) from habitant where territoire_id = $1) > 1
+        and exists (select 1 from habitant where territoire_id = $1 and ${AU_FOYER})
         then debut + 3600000000 * greatest(1, div(-debut, 3600000000) + 1)
       end as pas
     from (
