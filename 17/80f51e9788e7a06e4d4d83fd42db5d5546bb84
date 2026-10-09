@@ -1,0 +1,49 @@
+drizzle/0058_sexe_des_betes_apprivoisees.sql
+  s_97a431cfa65ca7::t_d28232a446df52 1-9
+drizzle/meta/0058_snapshot.json
+  s_97a431cfa65ca7::t_3d191c59a9c68c 1,4-6,107-3193,3203-3239
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_63c61258686198 389,397-399,401-402
+src/app/jeu/expeditions/nouvelle/Escorte.test.tsx
+  s_97a431cfa65ca7::t_f5001d832b4e6e 29-30,32-34,67,75,216,220-242
+src/app/jeu/expeditions/nouvelle/Escorte.tsx
+  s_97a431cfa65ca7::t_e26fdc61ca3e35 34-37,50-51,84
+src/app/jeu/expeditions/nouvelle/Recapitulatif.test.tsx
+  s_97a431cfa65ca7::t_e579b34dc0da2b 35-36,38
+src/db/schema.ts
+  s_97a431cfa65ca7::t_62c1385c4eb2f8 750-752,770,779
+src/expeditions/rencontres.ts
+  s_97a431cfa65ca7::t_1d5fafcb2bfdea 9,12,21,44,47,121,129-132,134-135,145
+src/expeditions/sexe.db.test.ts
+  s_97a431cfa65ca7::t_30d93fd929086b 1-190
+src/expeditions/sexe.test.ts
+  s_97a431cfa65ca7::t_ed0209ec0f860d 1-61
+src/expeditions/sexe.ts
+  s_97a431cfa65ca7::t_86d710c0bf5463 1-50
+src/monde/betes-de-naissance.ts
+  s_97a431cfa65ca7::t_f9153967434d97 7-8,12-13,55-66
+src/monde/betes-sauvages.ts
+  s_97a431cfa65ca7::t_fe13fda2ae9ade 10-11,25,110-126
+src/monde/effectif.db.test.ts
+  s_97a431cfa65ca7::t_7e426e890b9f6f 21,66-67,83-84,130-149
+src/monde/effectif.ts
+  s_97a431cfa65ca7::t_a5ec3652ba15bd 9,11-20,43-45,49,51-53
+src/reglages.ts
+  s_97a431cfa65ca7::t_f3969b3209a3a4 332-339
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1780f51e9788e7a06e4d4d83fd42db5d5546bb84",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
