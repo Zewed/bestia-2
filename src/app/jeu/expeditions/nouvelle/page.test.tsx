@@ -1,6 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
+import { SEJOUR_MINUTES } from "@/reglages";
+import { formaterMinutes } from "@/temps/affichage";
 
 // La vraie garde, branchée sur une session simulée.
 const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
@@ -29,7 +31,7 @@ const ouvrir = async (recherche: Record<string, string | string[]> = {}) =>
 const textes = (html: string) => html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean);
 
 /** US-0906 : les textes du bloc Séjour, après la destination : la durée choisie, les bornes du curseur, les durées toutes prêtes. */
-const SEJOUR = ["Séjour", "1 h", "30 min", "1 j", "1 h", "4 h", "8 h", "12 h"];
+const SEJOUR = ["Séjour", "1 h", formaterMinutes(SEJOUR_MINUTES.min), formaterMinutes(SEJOUR_MINUTES.max), "1 h", "4 h", "8 h", "12 h"];
 
 /** Une forêt libre, à 7 Cases du Foyer. */
 const FORET: Fiche = { q: 3, r: -5, biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 7, anneau: 3 };
