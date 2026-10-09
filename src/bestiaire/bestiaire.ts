@@ -29,7 +29,7 @@ export async function inscrireAuBestiaire(base: Pool | PoolClient, territoireId:
 
 /**
  * US-0933 : inscrit « croisée » au Bestiaire du Territoire chaque Espèce que ses Expéditions ont rencontrée et qui n'y est
- * pas encore, par sa première Rencontre : la plus tôt vue, puis la plus tôt apparue (la règle de la migration 0055).
+ * pas encore, par sa première Rencontre : la plus tôt vue, puis la plus tôt apparue (la règle de la migration 0057).
  * Appelée dès qu'une Rencontre est retenue, dans la transaction du mécanisme du temps, qui les retient dans l'ordre du
  * temps : la même Rencontre inscrit l'Espèce, en direct, au rattrapage ou par la tâche planifiée, et revoir une Espèce
  * inscrite ne change rien. Lue dans les Rencontres en base, pas dans celles qui viennent d'être retenues : une Rencontre

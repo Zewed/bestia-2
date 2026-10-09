@@ -90,7 +90,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
    */
   const rencontres = async (expeditionId: number) =>
     (await rencontresDUneExpedition(pool, expeditionId)).map((r) => ({ ...r, id: undefined, nouvelleEspece: undefined }));
-  /** Ce que retient la Rencontre de la Bête sauvage `b` de la Case `caseId`, vue à `vueLe`. */
+  /** Ce que retient la Rencontre de la Bête sauvage `b` de la Case `caseId`, vue à `vueLe` : sans escorte, elle ne la suit pas (US-0935). */
   const vue = (b: BeteSauvage, caseId: number, vueLe: Date) => ({
     vueLe,
     caseId,
@@ -99,6 +99,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     rareteId: b.rareteId,
     numero: b.numero,
     beteDeNaissanceId: null,
+    apprivoisee: false,
   });
   /** Toutes les Rencontres que le Territoire a retenues sur la Case `caseId`, quelle que soit l'Expédition. */
   const retenuesSur = async (territoireId: number, caseId: number) =>
@@ -244,7 +245,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     for (const { territoireId } of [joueur, voisin]) await rattraperA(territoireId, apres(arrivee, JOUR));
     const siennes = await rencontres(sienne);
     expect(siennes.filter((r) => r.beteDeNaissanceId !== null)).toEqual([
-      { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id },
+      { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id, apprivoisee: false },
     ]);
     expect(await rencontres(chezLeVoisin)).toEqual(siennes.filter((r) => r.beteDeNaissanceId === null));
   });

@@ -6,7 +6,7 @@ import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { lancerLExpedition } from "@/expeditions/depart";
 import { rencontresDUneExpedition, retenirLesRencontres } from "@/expeditions/rencontres";
-import { type BeteSauvage, betesSauvagesDUneCase, emmenerUneBete } from "@/monde/betes-sauvages";
+import { type BeteSauvage, betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { hacher } from "@/monde/couronne";
 import type { Coordonnees } from "@/monde/hex";
 import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
@@ -121,18 +121,19 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
     expect(await vues(depart.expeditionId)).toEqual([{ vueLe: bete.arrivee, especeId: bete.especeId, nouvelleEspece: true }]);
   });
 
-  it("qu'elle suive l'Expédition ou non : une Bête commune qui la suit, une plus rare qui reste sur sa Case", async () => {
+  it("qu'elle suive l'Expédition ou non : une Bête commune qui suit l'Expédition escortée, une plus rare qui reste sur sa Case", async () => {
     const { territoireId, ne } = await naitre();
     const suit = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), (b) => b.rareteId === "commune");
     const reste = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR), (b) => b.rareteId !== "commune");
-    // Chacune vue à son apparition par une Expédition arrivée une heure avant elle.
-    await poser(territoireId, suit.caseId, apres(suit.bete.arrivee, -90), 30, 4 * HEURE);
-    await poser(territoireId, reste.caseId, apres(reste.bete.arrivee, -90), 30, 4 * HEURE);
+    // Chacune vue à son apparition par une Expédition arrivée une heure avant elle : la commune par une Expédition escortée,
+    // qui l'a toujours à portée (US-0934) ; la plus rare par une Expédition sans escorte, qui ne l'a jamais (US-0935).
+    const escortee = await poser(territoireId, suit.caseId, apres(suit.bete.arrivee, -90), 30, 4 * HEURE);
+    await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, 1)", [escortee, suit.bete.especeId]);
+    const seule = await poser(territoireId, reste.caseId, apres(reste.bete.arrivee, -90), 30, 4 * HEURE);
 
-    await rattraperA(territoireId, new Date(suit.bete.arrivee.getTime() + 1));
-    // La commune suit l'Expédition dès la Rencontre (US-0934, US-0935) : elle quitte sa Case.
-    expect(await emmenerUneBete(pool, suit.caseId, suit.bete.numero, suit.bete.arrivee)).toBe(true);
     await rattraperA(territoireId, apres(suit.bete.depart > reste.bete.depart ? suit.bete.depart : reste.bete.depart, JOUR));
+    expect((await rencontresDUneExpedition(pool, escortee)).map((r) => r.apprivoisee)).toEqual([true]);
+    expect((await rencontresDUneExpedition(pool, seule)).map((r) => r.apprivoisee)).toEqual([false]);
     const croisees = [suit.bete, reste.bete].sort((x, y) => x.arrivee.getTime() - y.arrivee.getTime());
     expect(await bestiaire(territoireId)).toEqual(croisees.map((b) => ({ especeId: b.especeId, etat: "croisee", croiseeLe: b.arrivee })));
   });
@@ -253,14 +254,14 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
     expect([...(await vues(premiere)), ...(await vues(seconde))].map((r) => r.nouvelleEspece)).toEqual([true, false]);
   });
 
-  it("inscrit les Espèces des Rencontres retenues avant lui (migration 0055), à leur première Rencontre, une seule fois", async () => {
+  it("inscrit les Espèces des Rencontres retenues avant lui (migration 0057), à leur première Rencontre, une seule fois", async () => {
     const { territoireId, ne } = await naitre();
     const { caseId, bete } = await uneBeteSeule(territoireId, apres(ne, 3 * JOUR));
     const premiere = await poser(territoireId, caseId, apres(bete.arrivee, 30), 30, HEURE);
     const seconde = await poser(territoireId, caseId, apres(bete.arrivee, 90), 30, HEURE);
     await rattraperA(territoireId, apres(bete.depart, JOUR));
     // Son inscription seulement : la table est déjà là (src/test/preparer-base.ts).
-    const migration = readFileSync(join(process.cwd(), "drizzle/0055_bestiaire.sql"), "utf8")
+    const migration = readFileSync(join(process.cwd(), "drizzle/0057_bestiaire.sql"), "utf8")
       .split("--> statement-breakpoint")
       .filter((instruction) => instruction.includes("INSERT INTO"))
       .join("\n");

@@ -1,6 +1,6 @@
 {
-  "id": "b80e8ac6-1397-46fd-a2ae-ffceab047904",
-  "prevId": "bc800415-6c54-4717-a00c-46ef0f1ed610",
+  "id": "5dc46835-d5a8-4b13-b43d-6c237a00b57d",
+  "prevId": "0e70afe1-7f07-4b09-bc94-da19cb5a0a42",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1312,6 +1312,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "expedition_par_case": {
+          "name": "expedition_par_case",
+          "columns": [
+            {
+              "expression": "case_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -2465,6 +2480,13 @@
           "type": "timestamp with time zone",
           "primaryKey": false,
           "notNull": true
+        },
+        "apprivoisee": {
+          "name": "apprivoisee",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {
@@ -2479,6 +2501,22 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "rencontre_une_expedition_par_bete_de_naissance": {
+          "name": "rencontre_une_expedition_par_bete_de_naissance",
+          "columns": [
+            {
+              "expression": "bete_de_naissance_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"rencontre\".\"apprivoisee\"",
           "concurrently": false,
           "method": "btree",
           "with": {}

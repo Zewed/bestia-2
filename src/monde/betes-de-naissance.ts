@@ -118,10 +118,17 @@ export async function recevoirLesBetesDeNaissance(pool: Pool, territoireId: numb
 }
 
 /**
+ * US-0934 : le départ d'une Bête de naissance `b` (expression SQL) : la fin de sa présence, ou l'instant où elle a suivi
+ * une Expédition (sa Rencontre apprivoisée, src/expeditions/apprivoisement.ts), si c'est plus tôt.
+ */
+const DEPART = `least(b.depart, (select r.vue_le from rencontre r where r.bete_de_naissance_id = b.id and r.apprivoisee))`;
+
+/**
  * US-0975 : les Bêtes de naissance réservées au Territoire présentes à un moment de [de, a) sur les Cases `caseIds`, Case
  * par Case, dans l'ordre de leur arrivée, pour que l'étape 40 les fasse rencontrer à ses Expéditions, et à elles seules :
  * celles des autres Territoires n'y sont pas, et les Bêtes sauvages ordinaires (betesSauvagesDesCases) ne les comptent pas.
- * Comme elles (US-0925), aucune sur une Case qui appartient à un Territoire.
+ * Comme elles (US-0925), aucune sur une Case qui appartient à un Territoire. US-0934 : celle qui a suivi une Expédition
+ * n'y est plus dès cet instant.
  */
 export async function betesDeNaissanceDesCases(
   base: Pool | PoolClient,
@@ -131,10 +138,13 @@ export async function betesDeNaissanceDesCases(
   a: Date,
 ): Promise<Map<number, BeteDeNaissance[]>> {
   const { rows } = await base.query<BeteDeNaissance & { caseId: number }>(
-    `select b.id, b.case_id as "caseId", b.arrivee, b.depart, b.espece_id as "especeId", e.rarete_id as "rareteId"
-     from bete_de_naissance b join espece e on e.id = b.espece_id join case_du_monde c on c.id = b.case_id
-     where b.territoire_id = $1 and b.case_id = any($2::int[]) and b.arrivee < $4 and b.depart > $3 and c.chef_id is null
-     order by b.arrivee, b.id`,
+    `select * from (
+       select b.id, b.case_id as "caseId", b.arrivee, ${DEPART} as depart, b.espece_id as "especeId", e.rarete_id as "rareteId"
+       from bete_de_naissance b join espece e on e.id = b.espece_id join case_du_monde c on c.id = b.case_id
+       where b.territoire_id = $1 and b.case_id = any($2::int[]) and b.arrivee < $4 and b.depart > $3 and c.chef_id is null
+     ) presente
+     where presente.depart > $3
+     order by presente.arrivee, presente.id`,
     [territoireId, caseIds, de, a],
   );
   const parCase = new Map<number, BeteDeNaissance[]>(caseIds.map((id) => [id, []]));
@@ -144,14 +154,14 @@ export async function betesDeNaissanceDesCases(
 
 /**
  * US-0975 : le nombre de Bêtes de naissance du Territoire présentes à l'instant du jeu `instant` autour de son Foyer, dans
- * son Monde, sur une Case toujours libre.
+ * son Monde, sur une Case toujours libre. US-0934 : sans celles qui ont suivi une Expédition.
  */
 export async function betesDeNaissancePresentes(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<number> {
   const { rows } = await base.query<{ n: number }>(
     `select count(*)::int as n from bete_de_naissance b
      join territoire t on t.id = b.territoire_id join case_du_monde f on f.id = t.foyer_case_id
      join case_du_monde c on c.id = b.case_id and c.monde_id = f.monde_id
-     where b.territoire_id = $1 and b.arrivee <= $2 and b.depart > $2 and c.chef_id is null`,
+     where b.territoire_id = $1 and b.arrivee <= $2 and ${DEPART} > $2 and c.chef_id is null`,
     [territoireId, instant],
   );
   return rows[0].n;
