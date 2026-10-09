@@ -1,0 +1,29 @@
+src/app/jeu/carte/CarteDuJeu.test.tsx
+  s_cb889869b8db78::t_a7fbdf7acd19b1 9,823,827-834,842-844
+src/app/jeu/carte/dessin.ts
+  s_fc0c1f45235e69::t_aa05233ea4bc9e 445
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f0ad834297c4e9f89444e58041b5e08d95457abe",
+  "prompts": {},
+  "sessions": {
+    "s_cb889869b8db78": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-ae5bc5a183fc51ca2",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_fc0c1f45235e69": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-afc1330cf9279969d",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
