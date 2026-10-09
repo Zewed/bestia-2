@@ -22,10 +22,15 @@ vi.mock("@/expeditions/destination", () => destinations);
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
 // US-0902 : les explorateurs du Territoire, et leur bloc et le départ réduits à ce que la page leur donne (testés à part).
-const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })) }));
+// US-0903 : de même pour l'heure du prochain retour, et le message qui remplace le formulaire sans explorateur libre.
+const explorateurs = vi.hoisted(() => ({
+  explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })),
+  prochainRetourDUnExplorateur: vi.fn(async (): Promise<Date | null> => null),
+}));
 vi.mock("@/monde/explorateurs", () => explorateurs);
 vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
 vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
+vi.mock("./AucunExplorateurLibre", () => ({ AucunExplorateurLibre: (p: object) => <i data-aucun={JSON.stringify(p)} /> }));
 // US-0904 : les Bêtes disponibles du Territoire, et le bloc Escorte réduit à ce que la page lui donne (testé à part).
 const effectif = vi.hoisted(() => ({
   betesDisponibles: vi.fn(async () => [{ id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 }]),
@@ -199,13 +204,60 @@ describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
     expect(await ouvrir({ q: "3", r: "-5" })).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
   });
 
-  it("ne propose aucun explorateur à un chef sans Territoire, sans rien demander à la base", async () => {
+  it("ne propose aucun explorateur à un chef sans Territoire, sans rien demander à la base : le message à la place (US-0903)", async () => {
     connecte();
     chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
     const html = await ouvrir();
     expect(explorateurs.explorateursDuTerritoire).not.toHaveBeenCalled();
-    expect(html).toContain(donne("explorateurs", { libres: 0, total: 0 }));
-    expect(html).toContain(donne("partir", { libres: 0 }));
+    expect(explorateurs.prochainRetourDUnExplorateur).not.toHaveBeenCalled();
+    expect(html).toContain(donne("aucun", { total: 0, prochainRetour: null }));
+    expect(html).not.toContain("data-explorateurs");
+  });
+});
+
+describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
+  afterEach(() => {
+    explorateurs.explorateursDuTerritoire.mockClear();
+    explorateurs.prochainRetourDUnExplorateur.mockClear();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  /** Ce que la page donne au message, tel qu'elle le rend. */
+  const donne = (valeur: object) => `<i data-aucun="${JSON.stringify(valeur).replaceAll('"', "&quot;")}"></i>`;
+
+  it("sans aucun explorateur, met le message à la place du formulaire : ni destination, ni explorateurs, ni départ", async () => {
+    connecte();
+    explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 0, total: 0 });
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(html).toMatch(new RegExp(`<main[^>]*><h1[^>]*>Nouvelle Expédition</h1>${donne({ total: 0, prochainRetour: null })}</main>$`));
+    // Personne n'est parti : aucun retour à attendre, rien à demander à la base.
+    expect(explorateurs.prochainRetourDUnExplorateur).not.toHaveBeenCalled();
+  });
+
+  it("quand tous les explorateurs sont déjà partis, lit l'heure du prochain retour sur le Territoire de la garde, pour le message", async () => {
+    connecte();
+    explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 0, total: 2 });
+    // Une valeur simulée : les départs, et donc les retours, arrivent avec US-0911.
+    explorateurs.prochainRetourDUnExplorateur.mockResolvedValueOnce(new Date("2026-10-09T12:05:00Z"));
+    const html = await ouvrir();
+    expect(explorateurs.prochainRetourDUnExplorateur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
+    expect(html).toMatch(new RegExp(`<h1[^>]*>Nouvelle Expédition</h1>${donne({ total: 2, prochainRetour: "2026-10-09T12:05:00.000Z" })}</main>$`));
+    expect(html).not.toContain("data-partir");
+  });
+
+  it("garde le formulaire dès un explorateur libre, sans chercher de retour", async () => {
+    connecte();
+    const html = await ouvrir();
+    expect(explorateurs.prochainRetourDUnExplorateur).not.toHaveBeenCalled();
+    expect(html).not.toContain("data-aucun");
+    expect(textes(html).slice(0, 4)).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte"]);
+    expect(html).toContain(donne({ libres: 2, total: 3 }).replace("data-aucun", "data-explorateurs"));
+    expect(html).toMatch(/<i data-partir="[^"]*"><\/i><\/main>$/);
   });
 });
 
@@ -269,12 +321,14 @@ describe("l'escorte de l'écran d'Expédition (US-0904)", () => {
     expect(apres).toMatch(/^<section[^>]*><h2[^>]*>Séjour<\/h2>/);
   });
 
-  it("ne propose aucune Bête à un chef sans Territoire, sans rien demander à la base", async () => {
+  it("ne propose pas d'escorte sans explorateur libre, ni à un chef sans Territoire : le message d'US-0903 remplace tout le formulaire", async () => {
     connecte();
+    explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 0, total: 2 });
+    expect(await ouvrir()).not.toContain("data-escorte");
     chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
-    const html = await ouvrir();
+    expect(await ouvrir()).not.toContain("data-escorte");
+    // Rien n'est demandé à la base des Bêtes quand le formulaire n'est pas montré.
     expect(effectif.betesDisponibles).not.toHaveBeenCalled();
-    expect(html).toContain(donne("escorte", { especes: [] }));
   });
 
   it("garde l'escorte choisie en allant choisir la destination sur la carte (US-0907)", async () => {

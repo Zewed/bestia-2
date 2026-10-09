@@ -7,9 +7,10 @@ import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
 import { destinationDUneCase } from "@/expeditions/destination";
 import { betesDisponibles } from "@/monde/effectif";
-import { explorateursDuTerritoire } from "@/monde/explorateurs";
+import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
+import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
 import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
@@ -72,9 +73,18 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   const destination = laCase && territoireId !== null ? await destinationDUneCase(getPool(), territoireId, laCase) : null;
   // US-0902 : les explorateurs libres sur total, lus à chaque affichage ; aucun pour un chef sans Territoire.
   const explorateurs = territoireId !== null ? await explorateursDuTerritoire(getPool(), territoireId) : { libres: 0, total: 0 };
-  // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage ; aucune sans Territoire.
-  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
-  return (
+  // US-0903 : sans explorateur libre, un message à la place du formulaire ; l'heure du prochain retour si tous sont partis.
+  if (explorateurs.libres === 0) {
+    const prochainRetour = explorateurs.total > 0 && territoireId !== null ? await prochainRetourDUnExplorateur(getPool(), territoireId) : null;
+    return (
+      <main className={styles.page}>
+        <h1 className={styles.titre}>Nouvelle Expédition</h1>
+        <AucunExplorateurLibre total={explorateurs.total} prochainRetour={prochainRetour} />
+      </main>
+    );
+  }
+  // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage du formulaire.
+  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];  return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
       <Bloc titre="Destination">

@@ -3,7 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { explorateursDuTerritoire } from "./explorateurs";
+import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "./explorateurs";
 
 describe.skipIf(!URL_TEST)("les explorateurs de l'écran d'Expédition (US-0902, sur base)", () => {
   let pool: Pool;
@@ -49,5 +49,12 @@ describe.skipIf(!URL_TEST)("les explorateurs de l'écran d'Expédition (US-0902,
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 3, total: 3 });
     await pool.query("update habitant set metier = 'cueilleur' where id = (select min(id) from habitant where territoire_id = $1)", [t]);
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 2, total: 2 });
+  });
+
+  it("n'a aucun retour à attendre tant qu'aucune Expédition ne part (US-0903 ; les départs viennent avec US-0911)", async () => {
+    const t = await nouveauTerritoire();
+    await ajouter(t, ["explorateur", "explorateur"]);
+    expect(await prochainRetourDUnExplorateur(pool, t)).toBeNull();
+    expect(await prochainRetourDUnExplorateur(pool, await nouveauTerritoire())).toBeNull();
   });
 });
