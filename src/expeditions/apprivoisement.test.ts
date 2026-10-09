@@ -32,7 +32,6 @@ describe("la Bête à portée (US-0934)", () => {
     expect(aPortee(0, rare({ force: 0 }))).toBe(true);
     expect(aPortee(0, rare({ force: 1 }))).toBe(false);
   });
-
 });
 
 describe("sans escorte, une Bête commune (US-0935)", () => {

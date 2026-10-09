@@ -103,9 +103,12 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    // Les Bêtes communes emmenées lors d'un lancement précédent de ce fichier sont revenues sur leur Case (US-0935).
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
     await pool.end();
   });
 
@@ -203,8 +206,8 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
       throw new Error("Aucune Case animée.");
     };
     const { caseId, debut } = await uneCaseAnimee();
-    // Pour chaque Territoire, les mêmes Expéditions sur la Case, qui se suivent et se chevauchent : chaque Bête y est vue
-    // plusieurs fois.
+    // Pour chaque Territoire, les mêmes Expéditions sur la Case, qui se suivent et se chevauchent : chaque Bête plus rare y
+    // est vue plusieurs fois ; une commune, une fois, par celle qu'elle suit (US-0935).
     const HORAIRES: [number, number, number][] = [
       [0, 40, 12 * HEURE],
       [100, 13, 30],
