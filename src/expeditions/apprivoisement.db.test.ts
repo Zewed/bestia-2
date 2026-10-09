@@ -265,9 +265,15 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
     expect(vues).toEqual(attendues);
   });
 
-  it("la même Bête suit la même Expédition quand les Territoires sont rattrapés par tranches de vingt minutes, chacun à son tour", async () => {
+  it("la même Bête suit la même Expédition quand les Territoires sont rattrapés par tranches, chacun à ses heures", async () => {
     const { vues, attendues } = await troisTerritoires(async (a, b, c, debut, fin) => {
-      for (let instant = debut; instant < fin; instant = apres(instant, 20)) for (const t of [c, b, a]) await rattraperA(t, instant);
+      // Des tranches de 25 minutes, décalées de 0, 7 et 13 minutes : l'Apprivoisement tombe au milieu d'une tranche pour chacun.
+      const heures = [
+        [a, 0],
+        [b, 7],
+        [c, 13],
+      ].flatMap(([t, decalage]) => Array.from({ length: Math.ceil((fin.getTime() - debut.getTime()) / (25 * MINUTE_MS)) }, (_, k) => ({ t, instant: apres(debut, decalage + 25 * k) })));
+      for (const { t, instant } of heures.filter((h) => h.instant < fin).sort((x, y) => x.instant.getTime() - y.instant.getTime())) await rattraperA(t, instant);
       for (const t of [a, b, c]) await rattraperA(t, fin);
     });
     expect(vues).toEqual(attendues);
