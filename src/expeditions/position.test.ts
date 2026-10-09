@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { Coordonnees } from "@/monde/hex";
 import { cheminDUneExpedition } from "./chemin";
-import type { HorairesDUneExpedition } from "./phase";
-import { positionDUneExpedition } from "./position";
+import { type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
+import { passagesDUneExpedition, positionDUneExpedition } from "./position";
 
 const MINUTE_MS = 60_000;
 const DEPART = new Date("2026-10-09T07:42:00.000Z");
@@ -72,5 +72,52 @@ describe("la position d'une Expédition sur son chemin (US-0913)", () => {
     expect(positionDUneExpedition(FOYER, DESTINATION, EXPEDITION, apres(0), chemin).case).toBe(FOYER);
     expect(positionDUneExpedition(FOYER, DESTINATION, EXPEDITION, apres(25), chemin).case).toBe(chemin[0]);
     expect(positionDUneExpedition(FOYER, DESTINATION, EXPEDITION, apres(60), chemin).case).toBe(chemin[2]);
+  });
+});
+
+describe("l'heure de passage sur chaque Case du chemin (US-0914)", () => {
+  /** Les passages de l'Expédition aux horaires `horaires`, vers `destination`. */
+  const passages = (horaires = EXPEDITION, destination = DESTINATION) => passagesDUneExpedition(FOYER, destination, horaires);
+
+  it("dit, à l'aller, quand l'Expédition atteint chaque Case de son chemin, une par pas de son allure, jusqu'à la destination", () => {
+    expect(passages()).toEqual([
+      { case: PREMIERE, rang: 1, le: apres(20) },
+      { case: DEUXIEME, rang: 2, le: apres(40) },
+      { case: DESTINATION, rang: 3, le: apres(60) },
+    ]);
+  });
+
+  it("atteint la destination à l'arrivée pile, quand commence le séjour, quelle que soit l'allure", () => {
+    for (const trajetMinutes of [60, 150, 7, 1]) {
+      const horaires = { ...EXPEDITION, trajetMinutes };
+      expect(passages(horaires).at(-1)).toEqual({ case: DESTINATION, rang: 3, le: sejourDUneExpedition(horaires)!.debut });
+    }
+  });
+
+  it("est l'heure même où la position l'y pose, à la milliseconde près, même quand l'allure ne tombe pas juste", () => {
+    // 7 Cases en 1, 61 ou 1 000 minutes : des allures qui ne font pas un nombre entier de millisecondes.
+    const loin: Coordonnees = { q: 19, r: -7 };
+    for (const trajetMinutes of [1, 61, 1_000, 60]) {
+      const horaires = { ...EXPEDITION, trajetMinutes };
+      const chemin = cheminDUneExpedition(FOYER, loin);
+      const tous = passagesDUneExpedition(FOYER, loin, horaires);
+      expect(tous.map((p) => p.case)).toEqual(chemin);
+      for (const { case: laCase, rang, le } of tous) {
+        expect(positionDUneExpedition(FOYER, loin, horaires, le)).toMatchObject({ rang, case: laCase });
+        expect(positionDUneExpedition(FOYER, loin, horaires, new Date(le.getTime() - 1)).rang).toBe(rang - 1);
+      }
+    }
+  });
+
+  it("n'en dit aucun tant que le trajet d'une escorte n'est pas chiffré (US-0912) : elle reste au Foyer", () => {
+    expect(passages({ ...EXPEDITION, trajetMinutes: null })).toEqual([]);
+    expect(passages({ ...EXPEDITION, trajetMinutes: 0 })).toEqual([]);
+  });
+
+  it("donne les Cases mêmes du chemin qu'on lui passe, jamais des copies", () => {
+    const chemin = cheminDUneExpedition(FOYER, DESTINATION);
+    expect(passagesDUneExpedition(FOYER, DESTINATION, EXPEDITION, chemin).map((p) => p.case)).toSatisfy((cases: Coordonnees[]) =>
+      cases.every((c, i) => c === chemin[i]),
+    );
   });
 });

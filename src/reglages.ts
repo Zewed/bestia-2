@@ -321,3 +321,11 @@ export const PRESENCE_D_UNE_BETE_DE_NAISSANCE_HEURES = 48;
  * v km/h, plus lente, met 20 × 5 / v minutes de jeu à passer une Case (src/expeditions/allure.ts).
  */
 export const MARCHE_DES_EXPLORATEURS_KMH = 5;
+
+/**
+ * US-0914 : là où passe une Expédition, le brouillard se lève à son passage sur 1 Case autour de chaque Case de son chemin,
+ * et à son arrivée sur 2 Cases autour de sa destination (valeurs provisoires, à régler en jouant). Les Éclaireurs les
+ * agrandiront (US-0969).
+ */
+export const BROUILLARD_LEVE_SUR_LE_CHEMIN_CASES = 1;
+export const BROUILLARD_LEVE_AUTOUR_DE_LA_DESTINATION_CASES = 2;

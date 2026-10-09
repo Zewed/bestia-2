@@ -3,9 +3,10 @@
 // Habitants y prennent leur Entretien (US-0316) et des Voyageurs s'y présentent de temps en temps (US-0331),
 // puis repartent au bout de leur attente s'ils n'ont pas été accueillis (US-0337) ; ses Expéditions y retiennent leurs
 // Rencontres, à leur instant exact (US-0932), et y rentrent au Foyer à leur heure (US-0916) : le temps évolue jusqu'au
-// retour avant de l'appliquer, toutes les Rencontres du séjour sont donc retenues quand il s'applique ; les guérisons,
-// les Attaques s'ajouteront ici.
+// retour avant de l'appliquer, toutes les Rencontres du séjour sont donc retenues quand il s'applique ; le brouillard
+// s'y lève sur leur chemin, à leur passage (US-0914) ; les guérisons, les Attaques s'ajouteront ici.
 import "server-only";
+import { leverLeBrouillard } from "@/expeditions/brouillard";
 import { retenirLesRencontres } from "@/expeditions/rencontres";
 import { RETOUR_EXPEDITION, rentrerAuFoyer } from "@/expeditions/retour";
 import { produire } from "@/monde/production";
@@ -19,6 +20,7 @@ export const REGLES: Record<ElementSuivi, Regles> = {
     evoluer: async (client, id, depuis, jusqua) => {
       await produire(client, id, depuis, jusqua);
       await retenirLesRencontres(client, id, depuis, jusqua);
+      await leverLeBrouillard(client, id, depuis, jusqua);
     },
     evenements: { [ARRIVEE_VOYAGEUR]: arriveeDUnVoyageur, [DEPART_VOYAGEUR]: departDUnVoyageur, [RETOUR_EXPEDITION]: rentrerAuFoyer },
   },

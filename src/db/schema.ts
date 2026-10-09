@@ -593,7 +593,9 @@ export const voyageur = pgTable(
  * Le brouillard d'un Territoire (US-0436, US-0440) : une ligne par Case qu'il a découverte, à lui seul ; toute Case
  * sans ligne est pour lui sous le brouillard. Il naît avec les abords de son Foyer (src/monde/brouillard.ts), et
  * ses lignes partent avec lui. US-0441 : seul le fait d'être découverte est gardé, jamais un instantané de la Case :
- * son Biome et son propriétaire se lisent toujours en direct, et une Case découverte le reste pour toujours.
+ * son Biome et son propriétaire se lisent toujours en direct, et une Case découverte le reste pour toujours. US-0914 :
+ * `expedition_id`, l'Expédition qui l'a sortie du brouillard (la première), null pour les abords du Foyer ; le Récit de
+ * son retour (US-0917) en compte les Cases (casesLeveesParLExpedition, src/expeditions/brouillard.ts).
  */
 export const caseDecouverte = pgTable(
   "case_decouverte",
@@ -604,8 +606,12 @@ export const caseDecouverte = pgTable(
     caseId: integer("case_id")
       .notNull()
       .references(() => caseDuMonde.id),
+    expeditionId: integer("expedition_id").references((): AnyPgColumn => expedition.id, { onDelete: "set null" }),
   },
-  (t) => [primaryKey({ columns: [t.territoireId, t.caseId] })],
+  (t) => [
+    primaryKey({ columns: [t.territoireId, t.caseId] }),
+    index("case_decouverte_par_expedition").on(t.expeditionId).where(sql`${t.expeditionId} is not null`),
+  ],
 );
 
 /**
