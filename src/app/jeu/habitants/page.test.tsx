@@ -233,7 +233,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       "0 Nourriture par heure",
       "Nourriture assurée",
       "Métiers",
-      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, `Servira ${m.servira}.`]),
+      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, ...(m.servira ? [`Servira ${m.servira}.`] : [])]),
     ]);
     // Les seuls boutons : « − » et « + » de chaque Métier, tous grisés faute d'Habitant.
     expect(repartitions(html)).toEqual(HUIT_METIERS.map((m) => [m.nom, 0, "grisé", "grisé"]));
@@ -270,7 +270,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
       "Nourriture assurée",
       "Métiers",
       // US-0312 : sur chaque ligne, l'effectif du Métier entre « − » et « + ».
-      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, `Servira ${m.servira}.`]),
+      ...HUIT_METIERS.flatMap((m) => [m.nom, "−", "0", "+", m.phrase, ...(m.servira ? [`Servira ${m.servira}.`] : [])]),
     ]);
     expect(html).not.toMatch(/<(form|input|select)[ >]/);
     // Les seuls liens : le raccourci du bandeau vers les Habitants sans Métier (US-0313), puis l'historique des Voyageurs (US-0342).
@@ -513,7 +513,7 @@ describe("page Habitants (US-0302, US-0303, US-0305, US-0306, US-0307, US-0308, 
     expect(lus.map(([nom]) => nom)).toEqual(["Explorateur", "Chasseur", "Cueilleur", "Bûcheron", "Mineur", "Chercheur", "Bâtisseur", "Éleveur"]);
     expect(lus[3]).toEqual(["Bûcheron", "rapporte du Bois des forêts", "Servira avec les Récoltes."]);
     expect(lus[5]).toEqual(["Chercheur", "fait avancer la Recherche", "Servira quand le cercle des sages sera bâti."]);
-    expect(lus).toEqual(HUIT_METIERS.map((m) => [m.nom, m.phrase, `Servira ${m.servira}.`]));
+    expect(lus).toEqual(HUIT_METIERS.map((m) => [m.nom, m.phrase, ...(m.servira ? [`Servira ${m.servira}.`] : [])]));
   });
 
   it("montre l'icône peinte de chaque Métier, en petit et muette (le nom est à côté), puis le nom en gras, sa phrase dessous (US-0307, US-0312)", async () => {

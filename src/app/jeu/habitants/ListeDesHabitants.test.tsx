@@ -715,6 +715,9 @@ describe("un explorateur parti en Expédition (US-0911)", () => {
     render(<ListeDesHabitants habitants={AVEC_UNE_PARTIE} metiers={METIERS} />);
     expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Dara · Explorateur · en Expédition"]);
     expect(within(ligne("Dara")).queryAllByRole("button")).toEqual([]);
+    // Son état se distingue de « libre » par sa teinte, celle de la phase de son Expédition.
+    expect(ligne("Dara").querySelector("[data-absent]")?.textContent).toBe("en Expédition");
+    expect(ligne("Arno").querySelector("[data-absent]")).toBeNull();
   });
 
   it("compte toujours parmi les explorateurs, et se filtre avec eux (US-0309, US-0314)", async () => {

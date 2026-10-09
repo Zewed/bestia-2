@@ -212,6 +212,12 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0911 : un explorateur parti en Expédition, dans le ton de la phase de son Expédition (liste des Expéditions en cours). */
+.etat[data-absent] {
+  background: var(--ciel);
+  color: var(--ciel-fonce);
+}
+
 /*
  * US-0308 : sur la ligne d'un Habitant sans Métier, à la place de « sans Métier », le bouton qui déplie
  * les Métiers au choix ; sa flèche se retourne tant qu'ils sont dépliés. US-0310 : sur celle d'un Habitant

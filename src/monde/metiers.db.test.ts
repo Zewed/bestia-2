@@ -22,7 +22,7 @@ describe.skipIf(!URL_TEST)("les Métiers (US-0307, sur base)", () => {
 
   it("rend les huit Métiers chargés depuis donnees/metiers.yaml, dans l'ordre du fichier, avec leur phrase et ce qu'ils attendent", async () => {
     const fichier = lireJeu(METIERS);
-    expect(await lesMetiers(pool)).toEqual(fichier.map((m) => ({ id: m.id, nom: m.nom, phrase: m.phrase, servira: m.servira })));
+    expect(await lesMetiers(pool)).toEqual(fichier.map((m) => ({ id: m.id, nom: m.nom, phrase: m.phrase, servira: m.servira ?? null })));
     expect((await lesMetiers(pool)).map((m) => m.id)).toEqual(["explorateur", "chasseur", "cueilleur", "bucheron", "mineur", "chercheur", "batisseur", "eleveur"]);
   });
 

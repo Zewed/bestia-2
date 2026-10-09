@@ -214,7 +214,9 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
                     {h.metier ?? "sans Métier"}
                   </span>
                 )}
-                <span className={styles.etat}>{h.etat}</span>
+                <span className={styles.etat} data-absent={h.etat === EN_EXPEDITION ? "" : undefined}>
+                  {h.etat}
+                </span>
                 {/* US-0310 : le Métier qu'il exerce déjà est marqué, et ne se redonne pas. */}
                 {deplie ? <MetiersAuChoix id={idChoix(h.id)} etiquette={`Métier de ${h.prenom}`} metiers={metiers} actuel={h.metier} choisir={(m) => donner(h, m)} /> : null}
                 {/* US-0330 : à part des Métiers, en dernier ; un lecteur d'écran entend aussi qui il renvoie. */}
