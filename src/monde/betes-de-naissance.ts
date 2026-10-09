@@ -4,10 +4,13 @@
 // apparitions ordinaires, qui se recalculent à la demande (src/monde/betes-sauvages.ts), elles sont écrites en base
 // (table bete_de_naissance), pour que l'étape 40 les fasse rencontrer. Comme toute Bête sauvage, elles ne se voient pas
 // sur la carte. Comme elles, aucune ne se trouve sur une Case qui appartient à un Territoire : une Case prise après leur
-// arrivée (un Foyer né tout près) les perd. Côté serveur uniquement : l'heure du jeu vient de l'appelant.
+// arrivée (un Foyer né tout près) les perd. US-0937 : apprivoisée, chacune est mâle ou femelle, tiré comme les Bêtes
+// sauvages ordinaires. Côté serveur uniquement : l'heure du jeu vient de l'appelant.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { BETES_DE_NAISSANCE, PORTEE_D_EXPLORATION_CASES, PRESENCE_D_UNE_BETE_DE_NAISSANCE_HEURES } from "@/reglages";
+import { type Sexe, tirerUnSexe } from "./betes-sauvages";
+import { hacher } from "./couronne";
 import { casesDesAnneaux } from "./hex";
 
 /** La Rareté des Bêtes de naissance : la plus basse, celle des Espèces que toute Expédition, même sans escorte, peut ramener. */
@@ -47,6 +50,18 @@ export function tirerLesBetesDeNaissance(
     tirees.push({ caseId: possibles[i].id, especeId: especes[Math.floor(hasard() * especes.length)] });
   }
   return tirees;
+}
+
+/** US-0937 : le tirage du sexe d'une Bête de naissance, à part de ceux des apparitions ordinaires (src/monde/betes-sauvages.ts). */
+const TIRAGE_DU_SEXE = 6;
+
+/**
+ * US-0937 : le sexe de la Bête de naissance `id` d'un Monde de graine `graine`, tiré à son Apprivoisement
+ * (src/expeditions/sexe.ts) à chances égales, comme celui d'une Bête sauvage ordinaire (sexeTire) : une fonction de la
+ * graine et de la Bête, jamais de l'heure qu'il est.
+ */
+export function sexeDUneBeteDeNaissance(graine: number, id: number): Sexe {
+  return tirerUnSexe(hacher(graine, id, TIRAGE_DU_SEXE));
 }
 
 /**

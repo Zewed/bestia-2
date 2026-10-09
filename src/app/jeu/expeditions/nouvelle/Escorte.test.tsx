@@ -26,12 +26,12 @@ vi.mock("next/navigation", async () => {
 import { Escorte } from "./Escorte";
 
 /**
- * Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes et leur vitesse, et une
- * Espèce sans illustration.
+ * Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes, leur vitesse, et les
+ * mâles et femelles que le joueur en possède (US-0937), et une Espèce sans illustration.
  */
-const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 };
-const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 };
-const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2, force: 1, vitesse: 10 };
+const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14, males: 0, femelles: 1 };
+const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13, males: 2, femelles: 1 };
+const SANS_ILLUSTRATION: EspeceDisponible = { id: "bete_d_essai", nom: "Bête d'essai", illustration: null, disponibles: 2, force: 1, vitesse: 10, males: 1, femelles: 1 };
 
 /** L'adresse de l'écran d'Expédition, avec `recherche` (« ?q=3&r=-5 ») : un rechargement, ou un lien. */
 const ouvrir = (recherche = "") => window.history.replaceState(null, "", `/jeu/expeditions/nouvelle${recherche}`);
@@ -64,6 +64,7 @@ describe("choisir l'escorte (US-0904)", () => {
       "Escorte",
       "Poule",
       "1 disponible",
+      "0 mâle · 1 femelle",
       "−",
       "0",
       "+",
@@ -71,6 +72,7 @@ describe("choisir l'escorte (US-0904)", () => {
       "Aucune",
       "Souris grise",
       "3 disponibles",
+      "2 mâles · 1 femelle",
       "−",
       "0",
       "+",
@@ -211,7 +213,30 @@ describe("la force de l'escorte (US-0905)", () => {
 
   it("écrit un grand total d'un tenant, ses milliers séparés d'une espace insécable", () => {
     ouvrir("?escorte=elephant.1000");
-    ecran([{ id: "elephant", nom: "Éléphant de savane", illustration: null, disponibles: 1000, force: 5_286_856, vitesse: 40 }]);
+    ecran([{ id: "elephant", nom: "Éléphant de savane", illustration: null, disponibles: 1000, force: 5_286_856, vitesse: 40, males: 600, femelles: 400 }]);
     expect(force()).toBe("5 286 856 000");
+  });
+});
+
+describe("les mâles et les femelles de l'effectif (US-0937)", () => {
+  /** Ce que la ligne d'une Espèce dit de ses mâles et de ses femelles. */
+  const sexes = (nom: string) => within(ligne(nom)).getByText(/mâle/).textContent;
+
+  it("dit, sous les disponibles de chaque Espèce, combien de mâles et de femelles le joueur possède", () => {
+    ecran([POULE, SOURIS, SANS_ILLUSTRATION]);
+    expect([sexes("Poule"), sexes("Souris grise"), sexes("Bête d'essai")]).toEqual(["0 mâle · 1 femelle", "2 mâles · 1 femelle", "1 mâle · 1 femelle"]);
+  });
+
+  it("compte aussi les Bêtes parties en escorte : le joueur les possède toujours", () => {
+    ecran([{ ...SOURIS, disponibles: 1, males: 3, femelles: 2 }]);
+    expect(within(ligne("Souris grise")).getByText("1 disponible")).toBeTruthy();
+    expect(sexes("Souris grise")).toBe("3 mâles · 2 femelles");
+  });
+
+  it("ne bouge pas tant qu'on choisit l'escorte : rien n'est encore parti", async () => {
+    const joueur = userEvent.setup();
+    ecran();
+    await joueur.click(bouton("Souris grise", "Toutes"));
+    expect(sexes("Souris grise")).toBe("2 mâles · 1 femelle");
   });
 });

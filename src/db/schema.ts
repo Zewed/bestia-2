@@ -747,7 +747,9 @@ export const expeditionEscorte = pgTable(
  * chaque Bête (src/expeditions/rencontres.ts). Elle part avec l'Expédition, ou avec sa Bête de naissance, qui ne s'efface
  * qu'avec son Territoire et ses Expéditions. US-0934 : `apprivoisee`, la Bête, à portée, suit l'Expédition depuis
  * `vue_le` : c'est l'Apprivoisement, et elle a quitté sa Case (src/expeditions/apprivoisement.ts). Une seule Expédition
- * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici.
+ * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici. US-0937 : `sexe`,
+ * celui de la Bête apprivoisée, tiré à chances égales à l'Apprivoisement (src/expeditions/sexe.ts), qui ne change plus ;
+ * null pour une Bête restée sur sa Case.
  */
 export const rencontre = pgTable(
   "rencontre",
@@ -765,6 +767,7 @@ export const rencontre = pgTable(
     apparueLe: timestamp("apparue_le", { withTimezone: true }).notNull(),
     vueLe: timestamp("vue_le", { withTimezone: true }).notNull(),
     apprivoisee: boolean("apprivoisee").notNull().default(false),
+    sexe: sexe("sexe"),
   },
   (t) => [
     unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
@@ -773,6 +776,7 @@ export const rencontre = pgTable(
     uniqueIndex("rencontre_une_expedition_par_bete_de_naissance").on(t.beteDeNaissanceId).where(sql`${t.apprivoisee}`),
     check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
+    check("rencontre_sexe_de_l_apprivoisee", sql`(${t.sexe} is not null) = ${t.apprivoisee}`),
   ],
 );
 
