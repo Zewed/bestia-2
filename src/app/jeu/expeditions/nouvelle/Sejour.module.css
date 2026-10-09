@@ -13,7 +13,6 @@
 .duree {
   font-size: 28px;
   font-weight: var(--graisse-titre);
-  font-variant-numeric: tabular-nums;
   letter-spacing: -0.02em;
   line-height: 1.15;
 }
@@ -36,7 +35,7 @@
 .bornes {
   display: flex;
   justify-content: space-between;
-  margin-top: -8px;
+  margin-top: -4px;
   color: var(--texte-discret);
   font-size: 13px;
 }
@@ -58,7 +57,6 @@
   color: var(--texte-2);
   font: inherit;
   font-weight: var(--graisse-titre);
-  font-variant-numeric: tabular-nums;
   cursor: pointer;
 }
 
