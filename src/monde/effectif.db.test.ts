@@ -18,7 +18,7 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
   /** Un joueur qui vient de naître, sans aucune Bête (ADR 0008) : son compte et son Territoire. */
   const nouveauTerritoire = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-    const nom = `Eff${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[numero % 10]}`;
+    const nom = `Eff${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     return { compteId: compte.id, territoireId: (await territoireDuCompte(pool, compte.id))! };
   };
@@ -63,8 +63,8 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     ]);
     // Ni le pigeon ni les souris d'un autre Territoire ; de la plus commune à la plus rare, puis par nom.
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14 },
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13 },
+      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457, vitesse: 14, males: 0, femelles: 1 },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473, vitesse: 13, males: 2, femelles: 1 },
     ]);
   });
 
@@ -80,8 +80,8 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
       ["souris", "male", 4],
     ]);
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473, vitesse: 13 },
-      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare), vitesse: rare.vitesse },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473, vitesse: 13, males: 4, femelles: 0 },
+      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare), vitesse: rare.vitesse, males: 0, femelles: 1 },
     ]);
   });
 
@@ -125,6 +125,26 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     expect((await betesDisponibles(pool, t)).map((e) => e.disponibles)).toEqual([1]);
     await pool.query("update effectif set nombre = nombre + 2 where territoire_id = $1", [t]);
     expect((await betesDisponibles(pool, t)).map((e) => e.disponibles)).toEqual([3]);
+  });
+
+  it("compte, Espèce par Espèce, les mâles et les femelles que le joueur possède, Bêtes sorties en escorte comprises (US-0937)", async () => {
+    const t = (await nouveauTerritoire()).territoireId;
+    await ajouter(t, [
+      ["souris", "male", 2],
+      ["souris", "femelle", 1],
+      ["poule", "femelle", 1],
+    ]);
+    // Deux souris parties en escorte : l'escorte ne choisit pas le sexe, et le joueur les possède toujours.
+    const { rows } = await pool.query<{ id: number }>(
+      `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+       select $1, c.id, now(), 30, 60 from case_du_monde c where c.monde_id = $2 and c.chef_id is null order by c.id limit 1 returning id`,
+      [t, mondeId],
+    );
+    await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, 'souris', 2)", [rows[0].id]);
+    expect((await betesDisponibles(pool, t)).map((e) => [e.id, e.disponibles, e.males, e.femelles])).toEqual([
+      ["poule", 1, 0, 1],
+      ["souris", 1, 2, 1],
+    ]);
   });
 
   it("refuse un nombre de Bêtes négatif, un sexe inconnu, une Espèce inconnue, et deux lignes pour la même Espèce et le même sexe", async () => {

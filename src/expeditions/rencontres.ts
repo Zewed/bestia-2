@@ -6,9 +6,10 @@
 // base (table rencontre), à son instant exact, par le mécanisme du temps (src/temps/regles.ts) : en direct, au rattrapage
 // ou par la tâche planifiée, les mêmes Rencontres, aux mêmes instants. US-0934 : la Bête à portée suit l'Expédition, c'est
 // l'Apprivoisement (src/expeditions/apprivoisement.ts), retenu avec sa Rencontre ; elle a alors quitté sa Case, et personne
-// ne la rencontre plus. US-0933 : chaque Rencontre retenue inscrit son Espèce au Bestiaire du Territoire, dans la même
-// transaction (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938) et le récit (US-0940) les liront ici. Côté
-// serveur uniquement.
+// ne la rencontre plus. US-0937 : elle est alors mâle ou femelle, tiré au hasard (src/expeditions/sexe.ts), retenu avec sa
+// Rencontre. US-0933 : chaque Rencontre retenue inscrit son Espèce au Bestiaire du Territoire, dans la même transaction
+// (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938) et le récit (US-0940) les liront ici. Côté serveur
+// uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
@@ -17,6 +18,7 @@ import { betesSauvagesDesCases, emmenerUneBete } from "@/monde/betes-sauvages";
 import { type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
 import { forceDeLEscorte, forceDUneBete } from "./force";
 import { expeditionsPresentesDuTerritoire, expeditionsPresentesSurLesCases } from "./presence";
+import { sexesALApprivoisement } from "./sexe";
 
 /**
  * US-0932 : une Rencontre : l'instant du jeu où l'Expédition a vu la Bête (vueLe), sur sa Case (caseId), et la Bête :
@@ -39,9 +41,10 @@ export type Rencontre = {
   nouvelleEspece: boolean;
 };
 
-/** Une Rencontre à retenir : l'Expédition, la Bête, l'instant où elle la voit, et si elle la suit. */
+/** Une Rencontre à retenir : l'Expédition, la Bête et sa Case, l'instant où elle la voit, et si elle la suit. */
 type AVoir = {
   expeditionId: number;
+  caseId: number;
   numero: number | null;
   beteDeNaissanceId: number | null;
   especeId: string;
@@ -115,7 +118,7 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
       const apprivoisee = suivie?.expeditionId === x.id;
       // Partie avec une autre Expédition, la Bête n'est plus là pour celles qui la verraient ensuite, ou au même instant.
       if (suivie && !apprivoisee && vue >= suivie.le) continue;
-      aVoir.push({ expeditionId: x.id, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, apparueLe: b.arrivee, vueLe: vue, apprivoisee });
+      aVoir.push({ expeditionId: x.id, caseId: b.caseId, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, apparueLe: b.arrivee, vueLe: vue, apprivoisee });
       if (apprivoisee && b.numero !== null) emmenees.push({ caseId: b.caseId, numero: b.numero, le: vue });
     }
   }
@@ -123,10 +126,13 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   // US-0934 : la Bête sauvage ordinaire qui suit une Expédition quitte sa Case (bete_partie) ; une Bête de naissance, par
   // sa seule Rencontre apprivoisée.
   for (const { caseId, numero, le } of emmenees) await emmenerUneBete(base, caseId, numero, le);
-  // « on conflict do nothing » : une Expédition ne rencontre qu'une fois chaque Bête.
+  // US-0937 : la Bête qui suit l'Expédition est mâle ou femelle, tiré à son Apprivoisement ; celle qui reste n'en a pas.
+  const apprivoisees = aVoir.filter((r) => r.apprivoisee);
+  const sexes = new Map((await sexesALApprivoisement(base, apprivoisees)).map((sexe, i) => [apprivoisees[i], sexe]));
+  // « on conflict do nothing » : une Expédition ne rencontre qu'une fois chaque Bête, et son sexe ne change plus.
   const { rowCount } = await base.query(
-    `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le, apprivoisee)
-     select * from unnest($1::int[], $2::bigint[], $3::int[], $4::text[], $5::timestamptz[], $6::timestamptz[], $7::boolean[])
+    `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le, apprivoisee, sexe)
+     select * from unnest($1::int[], $2::bigint[], $3::int[], $4::text[], $5::timestamptz[], $6::timestamptz[], $7::boolean[], $8::sexe[])
      on conflict do nothing`,
     [
       aVoir.map((r) => r.expeditionId),
@@ -136,6 +142,7 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
       aVoir.map((r) => r.apparueLe),
       aVoir.map((r) => r.vueLe),
       aVoir.map((r) => r.apprivoisee),
+      aVoir.map((r) => sexes.get(r) ?? null),
     ],
   );
   // US-0933 : l'Espèce de chaque Bête vue entre au Bestiaire, qu'elle suive l'Expédition ou non.
