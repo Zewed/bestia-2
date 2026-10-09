@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
+import { enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
@@ -11,7 +11,7 @@ import { PRENOMS } from "@/donnees/jeux";
 import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { famineDepuis } from "./famine";
 import {
   ajouterUnHabitantAuMetier,
@@ -38,8 +38,12 @@ function nommerLesHabitantsDejaLa(): string {
   return instructions.find((i) => /^\s*WITH "rangs"/m.test(i) && i.includes('UPDATE "habitant" SET "prenom"'))!;
 }
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des Habitants (US-0301)";
+
 describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, US-0308, US-0310, US-0311, US-0312, US-0318, US-0329, US-0330, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `habitants-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
@@ -50,6 +54,7 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -58,8 +63,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("donne trois Habitants sans Métier à un joueur qui vient de naître", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     const siens = await habitants(territoireId);
     expect(siens).toHaveLength(3);
     expect(siens.map((h) => h.metier)).toEqual([null, null, null]);
@@ -75,10 +80,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("garde les Habitants de chacun pour lui seul, et les retire avec son Territoire", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     const [ha, hb] = [await habitants(ta), await habitants(tb)];
     expect(ha).toHaveLength(3);
     expect(hb).toHaveLength(3);
@@ -89,10 +94,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("rend à la page Habitants ceux du Territoire, et aucun autre (US-0302)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     const siens = await habitantsDuTerritoire(pool, ta);
     expect(siens.map((h) => h.id).sort()).toEqual((await habitants(ta)).map((h) => h.id).sort());
     expect(siens.map((h) => h.metier)).toEqual([null, null, null]);
@@ -107,8 +112,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     const tirages = new Set<string>();
     for (let i = 0; i < 4; i++) {
       const compte = await nouveauCompte();
-      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-      const prenoms = (await habitantsDuTerritoire(pool, (await chefDuCompte(pool, compte.id))!.territoireId!)).map((h) => h.prenom);
+      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const prenoms = (await habitantsDuTerritoire(pool, (await territoireDuCompte(pool, compte.id))!)).map((h) => h.prenom);
       expect(prenoms).toHaveLength(3);
       expect(new Set(prenoms).size).toBe(3);
       for (const p of prenoms) {
@@ -123,8 +128,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
   it("n'a aucun Habitant sans prénom, et la base refuse d'en créer un", async () => {
     expect((await pool.query("select count(*)::int as n from habitant where prenom is null")).rows[0].n).toBe(0);
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     await expect(pool.query("insert into habitant (territoire_id) values ($1)", [t])).rejects.toMatchObject({ code: "23502" });
   });
 
@@ -154,8 +159,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("range la lecture par Métier dans l'ordre des Métiers, ceux sans Métier en premier, puis par prénom (US-0303, US-0308)", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     const [h1, h2, h3] = (await habitants(t)).map((h) => h.id);
     const nommer = (id: number, prenom: string, metier: string | null) =>
       pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [id, prenom, metier]);
@@ -184,8 +189,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("donne un Métier à un Habitant sans Métier du Territoire, pour de bon, sans rien coûter (US-0308)", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     const [h1, h2] = (await habitants(t)).map((h) => h.id);
     const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
     const avant = await stocks();
@@ -203,8 +208,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("change le Métier d'un Habitant qui en a un, pour de bon, aussitôt et sans rien coûter, comme le premier (US-0310)", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     const [h1, h2] = (await habitants(t)).map((h) => h.id);
     const stocks = async () => (await pool.query("select ressource_id, quantite, reste from stock where territoire_id = $1 order by ressource_id", [t])).rows;
     expect(await enregistrerLeMetier(pool, t, h1, "chasseur")).toBe(true);
@@ -227,10 +232,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("remet sans Métier un Habitant qui en a un, pour de bon, aussitôt et sans rien coûter : il revient en tête de la lecture (US-0311)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     const [h1, h2, h3] = (await habitants(ta)).map((h) => h.id);
     const [voisin] = (await habitants(tb)).map((h) => h.id);
     await pool.query("update habitant set prenom = case id when $1 then 'Arno' when $2 then 'Brune' else 'Cael' end where territoire_id = $3", [h1, h2, ta]);
@@ -258,8 +263,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
   /** Un Territoire neuf, ses trois Habitants renommés Brune, Cael et Arno, du premier arrivé au dernier. */
   const territoireABC = async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     const [brune, cael, arno] = (await habitants(t)).map((h) => h.id);
     await pool.query("update habitant set prenom = case id when $1 then 'Brune' when $2 then 'Cael' else 'Arno' end where territoire_id = $3", [brune, cael, t]);
     return { t, brune, cael, arno };
@@ -310,10 +315,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("ne touche ni un Habitant d'un autre Territoire, ni ne donne un Métier qui n'existe pas (US-0308, US-0310)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     const [h1, h2] = (await habitants(ta)).map((h) => h.id);
     const [voisin] = (await habitants(tb)).map((h) => h.id);
     expect(await enregistrerLeMetier(pool, ta, h1, "chasseur")).toBe(true);
@@ -329,10 +334,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("compte les Habitants du Territoire pour la barre du haut, et suit chaque arrivée et chaque départ (US-0304)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     expect(await nombreDHabitants(pool, ta)).toBe(3);
     await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno'), ($1, 'Dara')", [ta]);
     expect(await nombreDHabitants(pool, ta)).toBe(5);
@@ -344,10 +349,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("compte les Habitants sans Métier du Territoire pour la navigation, et suit chaque Métier donné, chaque arrivée et chaque départ (US-0313)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     expect(await nombreSansMetier(pool, ta)).toBe(3);
     const [h1, h2] = (await habitants(ta)).map((h) => h.id);
     expect(await enregistrerLeMetier(pool, ta, h1, "chasseur")).toBe(true);
@@ -366,10 +371,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
   it("rend la place du Territoire : au départ, les 5 places du Foyer, quel que soit le nombre d'Habitants (US-0305)", async () => {
     expect(PLACES_DU_FOYER).toBe(5);
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     expect(await placesDuTerritoire(pool, ta)).toBe(PLACES_DU_FOYER);
     // Toute la place prise, puis plus d'Habitants que de places : la place ne bouge pas.
     await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno'), ($1, 'Dara')", [ta]);
@@ -384,8 +389,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("dit quand toute la place est prise : autant d'Habitants que de places, ou plus (US-0338)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const ta = (await chefDuCompte(pool, a.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const ta = (await territoireDuCompte(pool, a.id))!;
     expect(await plusDePlace(pool, ta)).toBe(false);
     await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno')", [ta]);
     expect(await plusDePlace(pool, ta)).toBe(false);
@@ -406,10 +411,10 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("rend l'Entretien des Habitants, et le suit à chaque arrivée et à chaque départ, avec ou sans Métier (US-0318)", async () => {
     const a = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, a.id, nomUnique())).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, a.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const b = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, b.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const [ta, tb] = [(await chefDuCompte(pool, a.id))!.territoireId!, (await chefDuCompte(pool, b.id))!.territoireId!];
+    expect(await enregistrerNomDeChef(pool, b.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const [ta, tb] = [(await territoireDuCompte(pool, a.id))!, (await territoireDuCompte(pool, b.id))!];
     const e = ENTRETIEN_HABITANT_PAR_HEURE;
     expect(await entretien(ta)).toEqual({ habitants: 3, parHabitant: e, parHeure: 3 * e });
     await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Arno', null), ($1, 'Dara', 'chasseur')", [ta]);
@@ -422,8 +427,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("rend l'Entretien même que le calcul du jeu prélève chaque heure sur la Nourriture (US-0318)", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("insert into habitant (territoire_id, prenom) values ($1, 'Arno')", [t]);
     const lu = await entretien(t);
     expect(lu).toMatchObject({ habitants: 4, parHeure: 4 * ENTRETIEN_HABITANT_PAR_HEURE });
@@ -441,8 +446,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
 
   it("fait produire le Foyer d'un Territoire sans Habitant, sans Entretien ni Famine, et des Voyageurs s'y présentent toujours (US-0329)", async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("delete from habitant where territoire_id = $1", [t]);
     await pool.query("update stock set quantite = 100, reste = 0, plein_depuis = null where territoire_id = $1", [t]);
     const avant = await stocksDuTerritoire(pool, t);
@@ -461,8 +466,8 @@ describe.skipIf(!URL_TEST)("les premiers Habitants (US-0301, US-0303, US-0305, U
     /** Un Territoire tout neuf, ses trois Habitants nommés Arno, Brune (Chasseur) et Cael, du premier arrivé au dernier. */
     const naitre = async () => {
       const compte = await nouveauCompte();
-      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-      const t = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const t = (await territoireDuCompte(pool, compte.id))!;
       const [arno, brune, cael] = (await habitants(t)).map((h) => h.id);
       await pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [arno, "Arno", null]);
       await pool.query("update habitant set prenom = $2, metier = $3 where id = $1", [brune, "Brune", "chasseur"]);

@@ -2,7 +2,7 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
+import { enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
@@ -13,7 +13,7 @@ import { rattraperLesAbsents } from "@/temps/absents";
 import { programmerEvenement } from "@/temps/avancer";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants } from "./habitants";
 import { marquerUnRecitLu, recitsDuTerritoire } from "./recits";
 import { stocksDuTerritoire } from "./stocks";
@@ -96,8 +96,12 @@ function departDesVoyageursDejaAuxPortes(): string {
   return instructions.find((i) => /^INSERT INTO "evenement"/m.test(i) && i.includes('FROM "voyageur"'))!;
 }
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des Voyageurs (US-0331)";
+
 describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `voyageurs-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
@@ -106,8 +110,8 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
   /** Un Territoire tout neuf, et l'instant de sa naissance. */
   const naitre = async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
   /** Les arrivées du Territoire en base : numéro, instant prévu, instant où elle a été traitée (null si à venir). */
@@ -179,6 +183,7 @@ describe.skipIf(!URL_TEST)("l'arrivée des Voyageurs (US-0331, sur base)", () =>
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

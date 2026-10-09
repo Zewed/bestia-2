@@ -1,11 +1,11 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { ENTRETIEN_HABITANT_PAR_HEURE } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { PRODUIRE } from "./production";
 import { stocksDuTerritoire } from "./stocks";
 
@@ -63,8 +63,12 @@ function deroulerPasAPas(depart: Record<Ressource, { s: bigint; l: bigint; p: bi
   ) as Record<Ressource, Compte>;
 }
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de l'Entretien (US-0316)";
+
 describe.skipIf(!URL_TEST)("l'Entretien des Habitants (US-0316, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `entretien-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const HEURE = 3_600_000;
@@ -74,8 +78,8 @@ describe.skipIf(!URL_TEST)("l'Entretien des Habitants (US-0316, sur base)", () =
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Entr${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
   /** Règle les Stocks (à zéro ceux qu'on ne nomme pas) et le nombre d'Habitants du Territoire. */
@@ -121,6 +125,7 @@ describe.skipIf(!URL_TEST)("l'Entretien des Habitants (US-0316, sur base)", () =
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

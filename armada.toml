@@ -53,16 +53,12 @@ sign = "inherit"        # "off" disables commit signing only in new Herdr worktr
 
 # A root-cause ticket is required for every known flaky failure. Rerun failed jobs once
 # with `armada ci why <pr> --rerun`; unknown failures are refused.
-# Les naissances des tests sur base, qui se gênent sous charge sur la Couronne d'Aube partagée (THE-1386).
-[[ci.known_failure]]
-check = "Lint, types, migrations, tests et secrets"
-pattern = "src/chefs/chef\\.db\\.test\\.ts > chef d'un compte \\(sur base\\) > naître sur la Couronne"
-ticket = "THE-1386"
-
-[[ci.known_failure]]
-check = "Lint, types, migrations, tests et secrets"
-pattern = "src/monde/habitants\\.db\\.test\\.ts > les premiers Habitants"
-ticket = "THE-1386"
+# [ci]
+# failure_patterns = ["FAIL (.+)"]  # optional test-name regex; exactly one capture group
+# [[ci.known_failure]]
+# check = "test"  # exact check run name
+# pattern = "flaky_suite > times out on cold start"  # regex over failing test names or error block
+# ticket = "ABC-123"
 
 [gates]
 # required_checks = ["test"]  # CI checks that must be green before a hand-back (default: every check)

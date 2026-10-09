@@ -1,12 +1,12 @@
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { definirAncre } from "@/temps/horloge";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { DEPART_DE_FAMINE, departsNonLus, famineDepuis, recitDesDeparts } from "./famine";
 import { entretienDesHabitants, habitantsDuTerritoire, nombreDHabitants, renvoyerLHabitant } from "./habitants";
 import { ecrireUnRecit, marquerUnRecitLu } from "./recits";
@@ -17,8 +17,12 @@ const MINUTE = 60_000;
 /** Une heure, en microsecondes : la plus petite durée du jeu est la microseconde. */
 const HEURE_US = 3_600_000_000;
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de la Famine (US-0325)";
+
 describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `famine-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   /** Les comptes des Territoires nés pendant l'essai en cours. */
@@ -33,8 +37,8 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
     nes.push(`${lancement}-${n}@essai.test`);
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Fain${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query(
       `update stock set quantite = case ressource_id when 'viande' then $2::numeric else $3::numeric end, reste = 0, plein_depuis = null
        where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')`,
@@ -129,6 +133,7 @@ describe.skipIf(!URL_TEST)("la Famine, tenue par le mécanisme du temps (US-0325
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterEach(async () => {
     vi.useRealTimers();
