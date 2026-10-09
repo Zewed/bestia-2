@@ -1,0 +1,59 @@
+src/app/jeu/carte/CarteDuJeu.tsx
+  s_97a431cfa65ca7::t_aacc8a2a9c418c 54,56,209
+src/app/jeu/carte/FicheDeLaCase.css.test.ts
+  s_97a431cfa65ca7::t_4c09d756a0c931 70-77
+src/app/jeu/carte/FicheDeLaCase.module.css
+  s_97a431cfa65ca7::t_6417f82e8006bd 146-152
+src/app/jeu/carte/FicheDeLaCase.test.tsx
+  s_00c131376e16bb::t_10db6ccf046fb9 59-60,62-70,84,268-324
+src/app/jeu/carte/FicheDeLaCase.tsx
+  s_97a431cfa65ca7::t_4bebc3296c55b3 5,89-92,99,105,193,210,224-231,233-234
+src/app/jeu/carte/page.db.test.tsx
+  s_97a431cfa65ca7::t_8c9857bea3171b 50
+src/app/jeu/carte/page.test.tsx
+  s_97a431cfa65ca7::t_02d56259fb368c 56-58,77,84-85,91,107,114,119,131,136,142,146-178
+src/app/jeu/carte/page.tsx
+  s_97a431cfa65ca7::t_e7035d879f9960 8,23-25,27,30-31,36
+src/app/jeu/expeditions/nouvelle/VersLaCarte.tsx
+  s_97a431cfa65ca7::t_0f2ada19ebe94d 1-20
+src/app/jeu/expeditions/nouvelle/page.css.test.ts
+  s_00c131376e16bb::t_2fdf7a2441ade9 21-34
+src/app/jeu/expeditions/nouvelle/page.module.css
+  s_00c131376e16bb::t_3af2a3f1874088 41-46,75-87
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_f7e3d2fabe1bc9 3-4,16-21,29-31,34,37-38,48-49,65,68-69,74,80-89,95,97,106,109,111,114,116-117,132,141-176
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_7c692173b10c60 8-9,12,55-59,66,71-75,78-79
+src/expeditions/choix-de-destination.test.ts
+  s_97a431cfa65ca7::t_d3fa8cb897a7bb 1-37
+src/expeditions/choix-de-destination.ts
+  s_97a431cfa65ca7::t_69890b1e5b33c1 1-47
+src/expeditions/destination.db.test.ts
+  s_97a431cfa65ca7::t_33ce6a3498e02e 1-98
+src/expeditions/destination.ts
+  s_97a431cfa65ca7::t_8483fbd8cd04f9 1-33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "00754a6187338fa183ce8e475b5e8754a4206bae",
+  "prompts": {},
+  "sessions": {
+    "s_00c131376e16bb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2a5e8019-4d46-4f58-b7f7-d342945bedfd",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
