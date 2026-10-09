@@ -31,7 +31,7 @@ describe("les Bêtes de naissance tirées autour d'un Foyer (US-0975)", () => {
       expect(new Set(tirees.map((b) => b.caseId)).size).toBe(BETES_DE_NAISSANCE);
     }
     // Même quand le hasard tombe toujours au même endroit.
-    for (const fixe of [0, 0.5, 0.999999]) expect(new Set(tirerLesBetesDeNaissance(desCases(10, "prairie"), COMMUNES, () => fixe).map((b) => b.caseId)).size).toBe(3);
+    for (const fixe of [0, 0.5, 0.999999]) expect(new Set(tirerLesBetesDeNaissance(desCases(10, "prairie"), COMMUNES, () => fixe).map((b) => b.caseId)).size).toBe(BETES_DE_NAISSANCE);
   });
 
   it("tire l'Espèce de chacune parmi les communes du Biome de sa Case, chacune avec sa chance", () => {
@@ -59,7 +59,7 @@ describe("les Bêtes de naissance tirées autour d'un Foyer (US-0975)", () => {
   });
 
   it("en tire moins quand les Cases possibles manquent, aucune sans Case possible", () => {
-    expect(tirerLesBetesDeNaissance([...desCases(2, "eau"), ...desCases(5, "jungle", 10)], COMMUNES, Math.random)).toHaveLength(2);
+    expect(tirerLesBetesDeNaissance([...desCases(2, "eau"), ...desCases(5, "jungle", 10)], COMMUNES, Math.random, 5)).toHaveLength(2);
     expect(tirerLesBetesDeNaissance(desCases(5, "jungle"), COMMUNES, Math.random)).toEqual([]);
     expect(tirerLesBetesDeNaissance([], COMMUNES, Math.random)).toEqual([]);
     expect(tirerLesBetesDeNaissance(desCases(5, "prairie"), new Map(), Math.random)).toEqual([]);

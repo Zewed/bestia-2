@@ -10,8 +10,11 @@ import { type Coordonnees, distance } from "./hex";
 
 const HEURE = 3_600_000;
 
-/** Le Monde généré des essais de la carte (carte.db.test.ts), créé une fois pour toutes dans la base de test : un Monde ne s'efface pas. */
-const MONDE_GENERE = "Essai de la carte (US-0417)";
+/**
+ * Le Monde généré des essais de ce fichier, créé une fois pour toutes dans la base de test (un Monde ne s'efface pas) : à
+ * lui seul, aucun Foyer d'un autre fichier n'y naît sur les Cases de ses Bêtes de naissance pendant un essai.
+ */
+const MONDE_GENERE = "Essai des Bêtes de naissance (US-0975)";
 
 /** Une Bête de naissance telle que la base la garde, avec sa Case et son Espèce. */
 type BeteEnBase = Coordonnees & {
@@ -69,7 +72,7 @@ describe.skipIf(!URL_TEST)("les Bêtes de naissance d'un Foyer (US-0975, sur bas
       await client.query("begin");
       await client.query("select pg_advisory_xact_lock(4153)");
       const { rows } = await client.query<{ id: number }>("select id from monde where nom = $1", [MONDE_GENERE]);
-      genereId = rows[0]?.id ?? (await creerUnMonde(client, { nom: MONDE_GENERE, graine: 417 })).mondeId;
+      genereId = rows[0]?.id ?? (await creerUnMonde(client, { nom: MONDE_GENERE, graine: 975 })).mondeId;
       await client.query("commit");
     } catch (erreur) {
       await client.query("rollback");
@@ -117,7 +120,11 @@ describe.skipIf(!URL_TEST)("les Bêtes de naissance d'un Foyer (US-0975, sur bas
 
   it("les réserve au nouveau chef : les Expéditions d'un autre Territoire n'en rencontrent aucune sur leurs Cases", async () => {
     const [lui, autre] = [await naitre(), await naitre()];
-    const betes = await betesDu(lui.id);
+    // L'autre, né tout près, pourrait avoir posé les siennes sur les mêmes Cases : ici, il n'en a aucune. Son Foyer a pu
+    // naître sur l'une des Cases du premier : seules comptent celles qui sont restées libres.
+    await pool.query("delete from bete_de_naissance where territoire_id = $1", [autre.id]);
+    const betes = (await betesDu(lui.id)).filter((b) => b.libre);
+    expect(betes.length).toBeGreaterThan(0);
     const caseIds = betes.map((b) => b.caseId);
     const [arrivee, depart] = [betes[0].arrivee, betes[0].depart];
     const siennes = await betesDeNaissanceDesCases(pool, lui.id, caseIds, arrivee, depart);
@@ -130,6 +137,25 @@ describe.skipIf(!URL_TEST)("les Bêtes de naissance d'un Foyer (US-0975, sur bas
     // Ni avant leur arrivée, ni dès leur départ.
     expect([...(await betesDeNaissanceDesCases(pool, lui.id, caseIds, new Date(arrivee.getTime() - HEURE), arrivee)).values()].flat()).toEqual([]);
     expect([...(await betesDeNaissanceDesCases(pool, lui.id, caseIds, depart, new Date(depart.getTime() + HEURE))).values()].flat()).toEqual([]);
+  });
+
+  it("les perd sur une Case prise depuis par un Territoire, comme toute Bête sauvage (US-0925)", async () => {
+    const territoire = await naitre();
+    const [prise, ...restees] = await betesDu(territoire.id);
+    const [arrivee, depart] = [prise.arrivee, prise.depart];
+    const client = await pool.connect();
+    try {
+      await client.query("begin");
+      // Un Foyer né juste après, sur l'une de ses Cases : ici, son propre Territoire la prend, le temps de l'essai.
+      await client.query("update case_du_monde set chef_id = (select chef_id from territoire where id = $1) where id = $2", [territoire.id, prise.caseId]);
+      const siennes = await betesDeNaissanceDesCases(client, territoire.id, [prise.caseId, ...restees.map((b) => b.caseId)], arrivee, depart);
+      expect(siennes.get(prise.caseId)).toEqual([]);
+      for (const b of restees) expect(siennes.get(b.caseId)).toHaveLength(1);
+      expect(await betesDeNaissancePresentes(client, territoire.id, arrivee)).toBe(restees.length);
+    } finally {
+      await client.query("rollback");
+      client.release();
+    }
   });
 
   it("ne choisit ni une Case prise, ni une Case dont le Biome n'a aucune commune", async () => {

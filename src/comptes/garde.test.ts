@@ -28,6 +28,7 @@ vi.mock("@/monde/famine", () => famine);
 const betes = vi.hoisted(() => ({ recevoirLesBetesDeNaissance: vi.fn(async () => 3) }));
 vi.mock("@/monde/betes-de-naissance", () => betes);
 
+import { definirAncre } from "@/temps/horloge";
 import {
   entretienALHeure,
   exigerCompte,
@@ -222,9 +223,16 @@ describe("garde du jeu", () => {
   describe("les Bêtes de naissance d'un chef né avant elles (US-0975)", () => {
     it("les lui donne à son retour, à l'heure du jeu, quand son Territoire les attend encore", async () => {
       betes.recevoirLesBetesDeNaissance.mockClear();
-      connecte({ nom: "Ourse", territoireId: 12, recitLu: true, betesAttendues: true });
-      expect(await exigerCompte("/jeu")).toMatchObject({ territoireId: 12 });
-      expect(betes.recevoirLesBetesDeNaissance).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, expect.any(Date));
+      // Un temps du jeu arrêté, très loin de l'heure réelle : celui que reçoit la pose.
+      const jeu = Date.parse("2031-05-04T03:02:01Z");
+      definirAncre({ facteur: 0, reel: Date.now(), jeu });
+      try {
+        connecte({ nom: "Ourse", territoireId: 12, recitLu: true, betesAttendues: true });
+        expect(await exigerCompte("/jeu")).toMatchObject({ territoireId: 12 });
+        expect(betes.recevoirLesBetesDeNaissance).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, new Date(jeu));
+      } finally {
+        definirAncre(null);
+      }
     });
 
     it("ne les redonne pas à qui les a déjà reçues, ni à un chef qui vient de naître avec elles", async () => {
