@@ -1,12 +1,12 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { ENTRETIEN_HABITANT_PAR_HEURE } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 
 const RESSOURCES = ["viande", "vegetaux", "bois", "pierre"] as const;
 type Ressource = (typeof RESSOURCES)[number];
@@ -185,8 +185,12 @@ const SCENARIOS: Scenario[] = [
   },
 ];
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de l'Entretien après une absence (US-0317)";
+
 describe.skipIf(!URL_TEST)("rattraper l'Entretien après une absence (US-0317, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `rattrapage-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   let prairie: ParRessource<number>;
@@ -196,8 +200,8 @@ describe.skipIf(!URL_TEST)("rattraper l'Entretien après une absence (US-0317, s
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Ratt${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
   /** Règle les Stocks (à zéro ceux qu'on ne nomme pas) et le nombre d'Habitants du Territoire. */
@@ -244,6 +248,7 @@ describe.skipIf(!URL_TEST)("rattraper l'Entretien après une absence (US-0317, s
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
     prairie = Object.fromEntries(
       (await pool.query<{ id: string; par_heure: string }>("select ressource_id as id, par_heure from production_biome where biome_id = 'prairie'")).rows.map((p) => [
         p.id,

@@ -1,14 +1,18 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { stocksDuTerritoire } from "./stocks";
+
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du surplus (US-0230)";
 
 describe.skipIf(!URL_TEST)("un Stock au-dessus de sa limite (US-0230, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `surplus-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const HEURE = 3_600_000;
@@ -17,8 +21,8 @@ describe.skipIf(!URL_TEST)("un Stock au-dessus de sa limite (US-0230, sur base)"
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     const nom = `Surp${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("update stock set quantite = 0, reste = 0, produit_depuis_visite = 0 where territoire_id = $1", [territoireId]);
     await pool.query("delete from habitant where territoire_id = $1", [territoireId]);
     return territoireId;
@@ -43,6 +47,7 @@ describe.skipIf(!URL_TEST)("un Stock au-dessus de sa limite (US-0230, sur base)"
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

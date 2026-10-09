@@ -8,19 +8,29 @@ import { distance } from "@/monde/hex";
 import { foyerDuTerritoire, marquerRecitLu } from "@/monde/territoire";
 import { BETES_DE_NAISSANCE } from "@/reglages";
 import { maintenant } from "@/temps/horloge";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne, nomDejaPris, nomInterdit } from "./chef";
 import { caractereRefuse, cleDuNom, NOM_NON_AUTORISE, NOM_TROP_COURT } from "./nom";
 
+/**
+ * Le Monde d'essai de ce fichier : ses naissances y ont lieu, sauf celles qui portent sur le Monde du jeu (chefDuCompte,
+ * naitreSurLaCouronne). La Couronne d'Aube, partagée par toute la suite, n'aurait pas la place de ses rafales.
+ */
+const MONDE_D_ESSAI = "Essai des chefs (US-0153)";
+
 describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `chef-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
+  /** Le nombre de chefs du compte, dans tous les Mondes. */
+  const chefsDu = async (compteId: number) => (await pool.query<{ n: number }>("select count(*)::int as n from chef where compte_id = $1", [compteId])).rows[0].n;
 
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -112,9 +122,9 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const premier = await nouveauCompte();
       const second = await nouveauCompte();
       const nom = nomUnique("Élan");
-      await enregistrerNomDeChef(pool, premier.id, nom.replace("Élan", "Elan"));
-      expect(await enregistrerNomDeChef(pool, second.id, nom.toUpperCase())).toEqual({ statut: "pris" });
-      expect(await chefDuCompte(pool, second.id)).toBeNull();
+      await enregistrerNomDeChef(pool, premier.id, nom.replace("Élan", "Elan"), Math.random, mondeId);
+      expect(await enregistrerNomDeChef(pool, second.id, nom.toUpperCase(), Math.random, mondeId)).toEqual({ statut: "pris" });
+      expect(await chefsDu(second.id)).toBe(0);
     });
 
     /** Des connexions déjà ouvertes : sinon leur ouverture, une à une, étalerait la rafale. */
@@ -124,7 +134,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const comptes = await Promise.all(Array.from({ length: 10 }, () => nouveauCompte()));
       const nom = nomUnique("Rafale");
       await chaufferLePool();
-      const resultats = await Promise.all(comptes.map((compte) => enregistrerNomDeChef(pool, compte.id, nom)));
+      const resultats = await Promise.all(comptes.map((compte) => enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)));
       expect(resultats.filter((r) => r.statut === "enregistre")).toHaveLength(1);
       expect(resultats.filter((r) => r.statut === "pris")).toHaveLength(9);
       const { rows } = await pool.query("select count(*)::int as n from chef where cle_nom = $1", [cleDuNom(nom)]);
@@ -135,7 +145,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const compte = await nouveauCompte();
       const nom = nomUnique("Double");
       await chaufferLePool();
-      const resultats = await Promise.all([enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, compte.id, nom)]);
+      const resultats = await Promise.all([enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId), enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)]);
       expect(resultats).toEqual([
         { statut: "enregistre", nom },
         { statut: "enregistre", nom },
@@ -176,7 +186,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
 
     it("donne au nouveau chef une Case libre de la Couronne, en prairie, à lui seul", async () => {
       const compte = await nouveauCompte();
-      await enregistrerNomDeChef(pool, compte.id, nomUnique("Naissance"));
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Naissance"), Math.random, mondeId);
       const cases = await caseDu(compte.id);
       expect(cases).toHaveLength(1);
       expect(cases[0]).toMatchObject({ couronne: true, biome: "prairie" });
@@ -184,7 +194,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
 
     it("fait de cette Case son Foyer, imprenable, seule Case de son Territoire (US-0155)", async () => {
       const compte = await nouveauCompte();
-      await enregistrerNomDeChef(pool, compte.id, nomUnique("Foyer"));
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Foyer"), Math.random, mondeId);
       const { rows } = await pool.query(
         `select t.foyer_case_id = c.id as foyer, c.imprenable,
            (select count(*)::int from case_du_monde where chef_id = ch.id) as cases
@@ -196,43 +206,35 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
     });
 
     it("fait naître le chef suivant parmi les 5 emplacements libres les plus proches du dernier arrivé", async () => {
-      // Un autre fichier de test peut faire naître un chef entre les deux : l'essai est alors recommencé.
-      for (const essai of "abcde") {
-        const premier = await nouveauCompte();
-        const second = await nouveauCompte();
-        await enregistrerNomDeChef(pool, premier.id, nomUnique(`Aîné${essai}`));
-        // Les 5 emplacements possibles juste avant la naissance du second, selon la règle elle-même.
-        const { rows: libres } = await pool.query(
-          "select q, r, biome_id as biome from case_du_monde where monde_id = (select id from monde order by id limit 1) and couronne and chef_id is null",
-        );
-        const { rows: foyers } = await pool.query(
-          `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
-           where c.monde_id = (select id from monde order by id limit 1) order by ch.cree_le desc, ch.id desc`,
-        );
-        const possibles = new Set([0, 1, 2, 3, 4].map((i) => choisirCaseDeNaissance(libres, foyers, foyers[0], () => i / 5)).map((c) => `${c?.q},${c?.r}`));
-        await enregistrerNomDeChef(pool, second.id, nomUnique(`Cadet${essai}`));
-        const { rows: entreDeux } = await pool.query<{ nombre: number }>(
-          `select count(*)::int as nombre from chef ch, chef a, chef b
-           where a.compte_id = $1 and b.compte_id = $2 and ch.monde_id = a.monde_id
-             and (ch.cree_le, ch.id) > (a.cree_le, a.id) and (ch.cree_le, ch.id) < (b.cree_le, b.id)`,
-          [premier.id, second.id],
-        );
-        const [a] = await caseDu(premier.id);
-        const [b] = await caseDu(second.id);
-        const intercale = entreDeux[0].nombre > 0 || foyers[0].q !== a.q || foyers[0].r !== a.r;
-        if (intercale && essai !== "e") continue;
-        expect(foyers[0]).toEqual({ q: a.q, r: a.r });
-        expect(possibles.has(`${b.q},${b.r}`)).toBe(true);
-        expect(distance(a, b)).toBeGreaterThanOrEqual(4);
-        return;
-      }
+      // Dans le Monde d'essai de ce fichier, aucun autre fichier ne fait naître de chef entre les deux.
+      const premier = await nouveauCompte();
+      const second = await nouveauCompte();
+      await enregistrerNomDeChef(pool, premier.id, nomUnique("Aîné"), Math.random, mondeId);
+      // Les 5 emplacements possibles juste avant la naissance du second, selon la règle elle-même.
+      const { rows: libres } = await pool.query("select q, r, biome_id as biome from case_du_monde where monde_id = $1 and couronne and chef_id is null", [mondeId]);
+      const { rows: foyers } = await pool.query(
+        `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id join chef ch on ch.id = t.chef_id
+         where c.monde_id = $1 order by ch.cree_le desc, ch.id desc`,
+        [mondeId],
+      );
+      const possibles = new Set([0, 1, 2, 3, 4].map((i) => choisirCaseDeNaissance(libres, foyers, foyers[0], () => i / 5)).map((c) => `${c?.q},${c?.r}`));
+      await enregistrerNomDeChef(pool, second.id, nomUnique("Cadet"), Math.random, mondeId);
+      const [a] = await caseDu(premier.id);
+      const [b] = await caseDu(second.id);
+      expect(foyers[0]).toEqual({ q: a.q, r: a.r });
+      expect(possibles.has(`${b.q},${b.r}`)).toBe(true);
+      expect(distance(a, b)).toBeGreaterThanOrEqual(4);
     });
 
     it("ne donne qu'une Case pour un double appui, et aucune à qui n'obtient pas le nom", async () => {
       const compte = await nouveauCompte();
       const autre = await nouveauCompte();
       const nom = nomUnique("Unique");
-      await Promise.all([enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, compte.id, nom), enregistrerNomDeChef(pool, autre.id, nom)]);
+      await Promise.all([
+        enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId),
+        enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId),
+        enregistrerNomDeChef(pool, autre.id, nom, Math.random, mondeId),
+      ]);
       // Le premier arrivé, l'un ou l'autre, obtient le nom et une seule Case ; l'autre aucune.
       const cases = [(await caseDu(compte.id)).length, (await caseDu(autre.id)).length].sort();
       expect(cases).toEqual([0, 1]);
@@ -242,7 +244,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const comptes = await Promise.all(Array.from({ length: 8 }, () => nouveauCompte()));
       await Promise.all(Array.from({ length: 10 }, () => pool.query("select pg_sleep(0.2)")));
       const noms = ["Abeille", "Bison", "Castor", "Daim", "Écureuil", "Faon", "Gerboise", "Hérisson"];
-      await Promise.all(comptes.map((compte, i) => enregistrerNomDeChef(pool, compte.id, nomUnique(noms[i]))));
+      await Promise.all(comptes.map((compte, i) => enregistrerNomDeChef(pool, compte.id, nomUnique(noms[i]), Math.random, mondeId)));
       const cases = (await Promise.all(comptes.map((compte) => caseDu(compte.id)))).map((c) => c[0]);
       expect(cases.every(Boolean)).toBe(true);
       for (const [i, a] of cases.entries()) for (const b of cases.slice(i + 1)) expect(distance(a, b)).toBeGreaterThanOrEqual(4);
@@ -261,7 +263,9 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
       const rafale = poolDeTest({ connectionTimeoutMillis: 60_000 });
       await Promise.all(Array.from({ length: 10 }, () => rafale.query("select pg_sleep(0.2)")));
       const resultats = await Promise.all(
-        comptes.map((compte, i) => enregistrerNomDeChef(rafale, compte.id, nomUnique(`Rafale${String.fromCharCode(97 + (i % 26))}${i >= 26 ? "z" : ""}`))),
+        comptes.map((compte, i) =>
+          enregistrerNomDeChef(rafale, compte.id, nomUnique(`Rafale${String.fromCharCode(97 + (i % 26))}${i >= 26 ? "z" : ""}`), Math.random, mondeId),
+        ),
       );
       await rafale.end();
       expect(resultats.every((r) => r.statut === "enregistre")).toBe(true);
@@ -274,7 +278,7 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
     it("règle le marque-page du temps du Territoire sur sa naissance, à l'heure du jeu (US-0156)", async () => {
       const compte = await nouveauCompte();
       const avant = maintenant();
-      await enregistrerNomDeChef(pool, compte.id, nomUnique("Horloge"));
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Horloge"), Math.random, mondeId);
       const apres = maintenant();
       const { rows } = await pool.query(
         "select t.ne_le, t.calcule_jusqu_a from territoire t join chef ch on ch.id = t.chef_id where ch.compte_id = $1",
@@ -287,9 +291,10 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
 
     it("dit le Biome du Foyer de son Territoire : la prairie (US-0157)", async () => {
       const compte = await nouveauCompte();
-      await enregistrerNomDeChef(pool, compte.id, nomUnique("Prairial"));
-      const chef = await chefDuCompte(pool, compte.id);
-      expect(await foyerDuTerritoire(pool, chef!.territoireId!)).toEqual({ biome: { id: "prairie", nom: "Prairie" }, monde: "Aube" });
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Prairial"), Math.random, mondeId);
+      // Et le nom du Monde de ce Foyer : ici, le Monde d'essai.
+      const territoireId = (await territoireDuCompte(pool, compte.id))!;
+      expect(await foyerDuTerritoire(pool, territoireId)).toEqual({ biome: { id: "prairie", nom: "Prairie" }, monde: MONDE_D_ESSAI });
       expect(await foyerDuTerritoire(pool, -1)).toBeNull();
     });
 
@@ -322,13 +327,10 @@ describe.skipIf(!URL_TEST)("chef d'un compte (sur base)", () => {
 
     it("libère la Case d'un compte supprimé, qui redevient prenable", async () => {
       const compte = await nouveauCompte();
-      await enregistrerNomDeChef(pool, compte.id, nomUnique("Passant"));
+      await enregistrerNomDeChef(pool, compte.id, nomUnique("Passant"), Math.random, mondeId);
       const [c] = await caseDu(compte.id);
       await pool.query("delete from compte where id = $1", [compte.id]);
-      const { rows } = await pool.query(
-        "select chef_id, imprenable from case_du_monde where q = $1 and r = $2 and monde_id = (select id from monde order by id limit 1)",
-        [c.q, c.r],
-      );
+      const { rows } = await pool.query("select chef_id, imprenable from case_du_monde where q = $1 and r = $2 and monde_id = $3", [c.q, c.r, mondeId]);
       expect(rows[0]).toEqual({ chef_id: null, imprenable: false });
     });
   });

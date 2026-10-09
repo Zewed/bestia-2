@@ -2,10 +2,13 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { rattraperLesAbsents } from "./absents";
 import { lireMarquePage } from "./marque-page";
 import { rattraper } from "./rattraper";
+
+/** Le Monde d'essai de ce fichier, où naît son chef : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du temps d'un Territoire (US-0156)";
 
 describe.skipIf(!URL_TEST)("le temps d'un Territoire (US-0156, sur base)", () => {
   let pool: Pool;
@@ -16,9 +19,9 @@ describe.skipIf(!URL_TEST)("le temps d'un Territoire (US-0156, sur base)", () =>
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     const compte = (await creerCompte(pool, `${lancement}@essai.test`, "une phrase de passe"))!;
-    await enregistrerNomDeChef(pool, compte.id, `Temps${lancement.slice(-6).replace(/[^a-z]/g, "x")}`.slice(0, 16));
-    const { rows } = await pool.query("select t.id from territoire t join chef ch on ch.id = t.chef_id where ch.compte_id = $1", [compte.id]);
-    territoireId = rows[0].id;
+    const mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    await enregistrerNomDeChef(pool, compte.id, `Temps${lancement.slice(-6).replace(/[^a-z]/g, "x")}`.slice(0, 16), Math.random, mondeId);
+    territoireId = (await territoireDuCompte(pool, compte.id))!;
   });
   afterAll(async () => {
     await pool.query("delete from compte where email = $1", [`${lancement}@essai.test`]);
