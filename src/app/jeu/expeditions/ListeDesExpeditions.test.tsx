@@ -7,6 +7,8 @@ import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 // US-0916 : le routeur, observé pour voir la page se relire au retour d'une Expédition.
 const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
+// US-0920 : le rappel, une action du serveur (src/app/jeu/expeditions/actions.ts).
+vi.mock("./actions", () => ({ rappeler: vi.fn() }));
 
 import { ListeDesExpeditions } from "./ListeDesExpeditions";
 

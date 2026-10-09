@@ -61,7 +61,7 @@ export function dureesReelles(horaires: HorairesDUneExpedition, rentreeLe: Date)
  * US-0920 : le rappel d'une Expédition, s'il y en a eu un avant son demi-tour prévu : son instant, et la phase où il l'a
  * trouvée ; null sinon.
  */
-export function rappelDUneExpedition(horaires: HorairesDUneExpedition): RappelARaconter | null {
+function rappelDUneExpedition(horaires: HorairesDUneExpedition): RappelARaconter | null {
   const demiTour = demiTourDUneExpedition(horaires);
   if (!demiTour || !horaires.rappeleeLe || demiTour.le.getTime() !== horaires.rappeleeLe.getTime()) return null;
   return { le: horaires.rappeleeLe, pendant: sejourDUneExpedition(horaires) ? "sejour" : "aller" };

@@ -2,7 +2,6 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { ficheDUneCase } from "@/monde/fiche";
@@ -69,18 +68,17 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
   /** La première Case libre à ECART Cases du Foyer. */
   const uneCase = async (territoireId: number) => (await casesAPortee(territoireId))[0];
   /**
-   * Un départ, peu après `ne`, et une Case à ECART Cases du Foyer où se montre au moins une Bête sauvage pendant le séjour
-   * d'une Expédition partie alors : sans rappel, elle l'y verrait. De trois heures en trois heures, jusqu'à en trouver un.
+   * Une souris de naissance du Territoire (US-0975) posée sur la Case `caseId` du départ `depart` jusqu'à la fin du séjour
+   * qu'y ferait une Expédition partie alors : sans rappel, elle l'y verrait, et la suivrait (une commune, toujours à
+   * portée de l'escorte, US-0934). Les Bêtes sauvages d'une Case dépendent de son Biome, que le hasard du Foyer choisit.
    */
-  const unDepartVersUneBete = async (territoireId: number, ne: Date) => {
-    const cases = await casesAPortee(territoireId);
-    for (let essai = 0; essai < 16; essai++) {
-      const depart = apres(ne, MINUTE + essai * 180 * MINUTE);
-      const arrivee = apres(depart, ALLER * MINUTE);
-      for (const c of cases) if ((await betesSauvagesDUneCase(pool, c.id, arrivee, apres(arrivee, SEJOUR * MINUTE))).length > 0) return { depart, destination: c };
-    }
-    throw new Error(`Aucune Case à ${ECART} Cases où se montre une Bête.`);
-  };
+  const uneBeteSurLaCase = (territoireId: number, caseId: number, depart: Date) =>
+    pool.query("insert into bete_de_naissance (territoire_id, case_id, espece_id, arrivee, depart) values ($1, $2, 'souris', $3, $4)", [
+      territoireId,
+      caseId,
+      depart,
+      apres(depart, (ALLER + SEJOUR) * MINUTE),
+    ]);
   /** Deux explorateurs et deux souris partent à `depart` vers `destination` pour SEJOUR minutes : l'Expédition. */
   const partir = async (territoireId: number, destination: Coordonnees, depart: Date) => {
     const resultat = await lancerLExpedition(
@@ -156,7 +154,9 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
 
   it("rappelée à l'aller, ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent, aucune de plus", async () => {
     const { territoireId, ne } = await naitre();
-    const { depart, destination } = await unDepartVersUneBete(territoireId, ne);
+    const depart = apres(ne, MINUTE);
+    const destination = await uneCase(territoireId);
+    await uneBeteSurLaCase(territoireId, destination.id, depart);
     await aLHeure(territoireId, depart);
     const avant = await decouvertes(territoireId);
     const expeditionId = await partir(territoireId, destination, depart);
@@ -183,7 +183,7 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
       `Destination : Case inconnue, à ${ECART} Cases de votre Foyer.`,
       `Rappelée à l'aller le ${formaterJourEtHeure(rappel, "Europe/Paris")}.`,
       "Aller 1 h 30, sans séjour, retour 1 h 30.",
-      `${auRappel - avant} Cases sont sorties du brouillard.`,
+      auRappel - avant === 1 ? "Une Case est sortie du brouillard." : `${auRappel - avant} Cases sont sorties du brouillard.`,
       "Aucune Bête ne s'est montrée.",
     ]);
   });
@@ -192,6 +192,8 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
     const { territoireId, ne } = await naitre();
     const depart = apres(ne, MINUTE);
     const destination = await uneCase(territoireId);
+    // La même souris que l'Expédition rappelée à l'aller ne verra pas : arrivée, celle-ci la voit, et la ramène.
+    await uneBeteSurLaCase(territoireId, destination.id, depart);
     const expeditionId = await partir(territoireId, destination, depart);
     const arrivee = apres(depart, ALLER * MINUTE);
     const rappel = apres(arrivee, 30 * MINUTE);
@@ -206,12 +208,18 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
 
     await aLHeure(territoireId, retour);
     expect((await enBase(expeditionId)).rentreeLe).toEqual(retour);
+    // Les Bêtes sauvages de la Case, au hasard de son Biome, peuvent s'y être montrées aussi.
+    expect(await rencontresDUneExpedition(pool, expeditionId)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arrivee })]),
+    );
     const [recit] = await recitsDeRetour(territoireId);
     const fiche = await ficheDUneCase(pool, territoireId, destination);
-    expect(recit.texte.split("\n").slice(0, 3)).toEqual([
+    expect(recit.texte.split("\n")).toEqual([
       `Destination : ${(fiche as { biome: string }).biome}, à ${ECART} Cases de votre Foyer.`,
       `Rappelée pendant le séjour le ${formaterJourEtHeure(rappel, "Europe/Paris")}.`,
       `Aller ${formaterMinutes(ALLER)}, séjour 30 min, retour ${formaterMinutes(ALLER)}.`,
+      expect.stringMatching(/sorties? du brouillard\.$/),
+      expect.stringMatching(/^(Une Bête s'est montrée|\d+ Bêtes se sont montrées)\.$/),
     ]);
   });
 
