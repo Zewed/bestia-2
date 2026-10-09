@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-228 points au total.
+226 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -16,7 +16,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 4 · La carte du Monde](04-la-carte-du-monde.md)
 
-- [US-0435](04-la-carte-du-monde.md) · Garder la carte fluide sur mobile : déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir.
 
 ## [Jalon 5 · Récolter](05-recolter.md)
 
@@ -90,7 +89,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 - [US-0905](09-explorer-et-apprivoiser.md) · La force de l'escorte : la force d'une Bête vient des caractéristiques de son Espèce, la même pour toutes les Bêtes de l'Espèce et chez tous les joueurs ; la formule à partir de l'attaque et de la vie.
 - [US-0906](09-explorer-et-apprivoiser.md) · Choisir la durée du séjour : quelques durées toutes prêtes se choisissent d'un doigt sur mobile ; lesquelles.
-- [US-0907](09-explorer-et-apprivoiser.md) · Choisir la destination : une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur, est refusée avec un message.
 - [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : l'Expédition avance au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce ; que le pas des explorateurs soit aussi une limite.
 - [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : le chemin passe de Case en Case ; la traversée de la mer, des lacs et des rivières (plus lente, contournée ou interdite).
 - [US-0919](09-explorer-et-apprivoiser.md) · Plusieurs Expéditions à la fois : un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs.
