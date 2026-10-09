@@ -686,7 +686,8 @@ export const beteDeNaissance = pgTable(
  * minutes de jeu, et son retour autant (US-0912) ; le séjour, `sejour_minutes`, ne commence qu'à l'arrivée (US-0906).
  * Le trajet est chiffré au départ, escorte comprise (US-0912) ; il ne restait null que pour une escorte partie avant,
  * que la migration 0050 a rattrapée. Ses explorateurs la portent sur leur ligne (habitant.expedition_id). Elle part
- * avec le Territoire.
+ * avec le Territoire. US-0916 : rentrée au Foyer à `rentree_le`, un instant du jeu (null tant qu'elle est en cours), elle
+ * n'est pas effacée : la présence sur sa Case (src/expeditions/presence.ts) la relit.
  */
 export const expedition = pgTable(
   "expedition",
@@ -701,6 +702,7 @@ export const expedition = pgTable(
     partLe: timestamp("part_le", { withTimezone: true }).notNull(),
     trajetMinutes: integer("trajet_minutes"),
     sejourMinutes: integer("sejour_minutes").notNull(),
+    rentreeLe: timestamp("rentree_le", { withTimezone: true }),
   },
   (t) => [
     index("expedition_par_territoire").on(t.territoireId),

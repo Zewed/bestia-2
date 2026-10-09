@@ -4,7 +4,7 @@ import { sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { migrate } from "drizzle-orm/node-postgres/migrator";
 import { createPool, explainDatabaseError, isConnectionError } from "../src/db";
-import { findDestructiveStatements, MIGRATIONS_FOLDER } from "../src/db/migrations";
+import { entreesDuJournal, findDestructiveStatements, MIGRATIONS_FOLDER, migrationsSautees } from "../src/db/migrations";
 import { assertNotProductionDatabase } from "../src/db/production";
 import { assertEnv } from "../src/env";
 
@@ -36,6 +36,12 @@ async function main() {
     const before = await appliedCount(db);
     await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
     const after = await appliedCount(db);
+    // Une migration dont l'instant précède celui d'une autre déjà appliquée serait sautée sans erreur : on le refuse.
+    const retenues = await db.execute<{ created_at: string }>(sql`select created_at from drizzle.__drizzle_migrations`);
+    const sautees = migrationsSautees(entreesDuJournal(), retenues.rows.map((r) => Number(r.created_at)));
+    if (sautees.length > 0) {
+      throw new Error(`Migrations sautées par Drizzle, leur instant (when) précédant une migration déjà appliquée : ${sautees.join(", ")}. Renumérote-les après la dernière.`);
+    }
     const applied = after - before;
     const name = identity.branch ? `${identity.database} (branche ${identity.branch})` : identity.database;
     console.log(

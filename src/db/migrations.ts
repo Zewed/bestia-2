@@ -50,3 +50,27 @@ export function findDestructiveStatements(folder = MIGRATIONS_FOLDER): string[] 
   }
   return problems;
 }
+
+/** Une migration du journal de Drizzle (drizzle/meta/_journal.json) : son nom et l'instant qui l'ordonne. */
+export type EntreeDuJournal = { tag: string; when: number };
+
+/** Les migrations du journal de Drizzle, dans son ordre. */
+export function entreesDuJournal(folder = MIGRATIONS_FOLDER): EntreeDuJournal[] {
+  const journal = JSON.parse(readFileSync(join(folder, "meta", "_journal.json"), "utf8")) as { entries: EntreeDuJournal[] };
+  return journal.entries.map(({ tag, when }) => ({ tag, when }));
+}
+
+/**
+ * Les migrations du journal qu'une base n'a pas appliquées, d'après les instants qu'elle a retenus
+ * (drizzle.__drizzle_migrations.created_at). Drizzle n'applique une migration que si son instant (`when`) dépasse celui
+ * de la dernière appliquée : une migration fusionnée après une autre plus récente serait sautée sans erreur. Une fois
+ * les migrations passées, il n'en reste aucune ; sinon, leur nom.
+ */
+export function migrationsSautees(journal: EntreeDuJournal[], appliquees: Iterable<number>): string[] {
+  const faites = [...appliquees];
+  // Une base peut avoir retenu, pour une vieille migration, un autre instant que le journal d'aujourd'hui : seul un
+  // compte qui manque dit qu'une migration a été sautée ; l'instant absent la nomme.
+  if (faites.length >= journal.length) return [];
+  const retenus = new Set(faites);
+  return journal.filter((m) => !retenus.has(m.when)).map((m) => m.tag);
+}

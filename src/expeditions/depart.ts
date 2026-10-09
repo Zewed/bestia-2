@@ -6,6 +6,7 @@ import { betesDisponibles } from "@/monde/effectif";
 import type { Coordonnees } from "@/monde/hex";
 import { type BetesDeLEscorte, dureeDuTrajetMinutes } from "./allure";
 import { destinationDUneCase } from "./destination";
+import { programmerLeRetour } from "./retour";
 
 /**
  * US-0911 : ce que le joueur a choisi sur l'écran d'Expédition : la destination, le nombre d'explorateurs qui partent,
@@ -36,7 +37,7 @@ class Refus extends Error {}
  * avec elle : ils ne sont plus libres, et leur Métier ne change plus avant leur retour (habitant.expedition_id) ; les
  * Bêtes de l'escorte ne sont plus disponibles (expedition_escorte). L'aller est fixé au départ, au pas des explorateurs
  * sans escorte (US-0909), et avec une escorte au pas de sa Bête la plus lente, d'après la vitesse de son Espèce, s'il est
- * plus lent encore (US-0912) ; le retour dure autant.
+ * plus lent encore (US-0912) ; le retour dure autant. US-0916 : son retour au Foyer est programmé aussitôt, à son heure.
  *
  * Tout tient dans une transaction : un départ refusé ne retient rien. Le Territoire y est tenu d'abord : deux départs
  * du même Territoire envoyés au même instant passent l'un après l'autre, et le second relit ce que le premier a pris ;
@@ -88,6 +89,8 @@ async function partir(client: PoolClient, territoireId: number, { destination, e
     [territoireId, destination.q, destination.r, instant, trajetMinutes, sejourMinutes],
   );
   const expeditionId = rows[0].id;
+  // US-0916 : son retour au Foyer, à l'heure que donnent ses horaires.
+  await programmerLeRetour(client, territoireId, expeditionId, { partLe: instant, trajetMinutes, sejourMinutes });
 
   // Les explorateurs libres, les premiers arrivés d'abord, choisis une seule fois et tenus jusqu'à la fin du départ.
   const partis = await client.query(

@@ -26,8 +26,10 @@ export const metadata: Metadata = { title: "Expéditions en cours" };
 export default async function ExpeditionsEnCours() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
-  const { territoireId } = await exigerCompte("/jeu/expeditions");
+  // US-0916 : l'heure de la lecture, prise avant la mise à l'heure du Territoire : une Expédition encore listée rentre
+  // toujours après elle, et la liste se relit à son retour.
   const instant = maintenant();
+  const { territoireId } = await exigerCompte("/jeu/expeditions");
   const expeditions = territoireId === null ? [] : await expeditionsEnCours(getPool(), territoireId, instant);
   return (
     <main className={styles.page}>
