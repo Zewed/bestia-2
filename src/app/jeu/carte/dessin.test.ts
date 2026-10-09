@@ -661,7 +661,10 @@ describe("une carte fluide sur mobile (US-0435)", () => {
     const premiere = peints.splice(0);
     let vue = depart;
     for (let i = 0; i < 2000; i++) {
-      vue = i % 4 === 0 ? zoomer(vue, i % 8 ? 1.2 : 1 / 1.2, 100, 300, limite) : deplacer(vue, 9 * Math.cos(i / 40), 9 * Math.sin(i / 40), limite);
+      // Une image sur quatre zoome, tantôt en éloignant, tantôt en rapprochant ; les autres glissent, en tournant.
+      const facteur = i % 8 === 0 ? 1 / 1.2 : 1.2;
+      if (i % 4 === 0) vue = zoomer(vue, facteur, 100, 300, limite);
+      else vue = deplacer(vue, 9 * Math.cos(i / 40), 9 * Math.sin(i / 40), limite);
       dessiner(vue);
       peints.length = 0;
       images.length = 0;

@@ -113,7 +113,7 @@ function cernerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
   for (const s of SOMMETS_DE_CASE.slice(0, 2)) pinceau.lineTo(x + s.x * rayon, y + s.y * rayon);
 }
 
-/** L'hexagone d'une Case seule, refermé : un tracé à lui seul, où closePath ne coûte rien. */
+/** US-0435 : l'hexagone d'une Case seule, refermé : un tracé à lui seul, où closePath ne coûte rien (voir tracerLaCase). */
 function fermerLaCase(pinceau: Pinceau, x: number, y: number, rayon: number) {
   pinceau.beginPath();
   tracerLaCase(pinceau, x, y, rayon);
