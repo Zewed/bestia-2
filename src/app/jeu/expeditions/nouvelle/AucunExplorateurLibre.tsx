@@ -1,0 +1,34 @@
+import Link from "next/link";
+import { Bloc } from "@/components/Bloc";
+import styles from "./AucunExplorateurLibre.module.css";
+
+/** Le fuseau des joueurs, pour l'heure du prochain retour. */
+const FUSEAU = "Europe/Paris";
+
+/** US-0903 : l'heure du prochain retour, dans le fuseau du joueur : « 9 octobre à 14:05 ». */
+const quand = (instant: Date) =>
+  new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: FUSEAU }).format(instant);
+
+/**
+ * US-0903 : à la place du formulaire de l'écran d'Expédition, quand aucun explorateur n'est libre : sans aucun
+ * explorateur, pourquoi l'on ne peut pas partir ; quand tous sont déjà partis, l'heure du prochain retour
+ * (`prochainRetour`, que US-0911 alimentera). Dans les deux cas, un lien mène à la page Habitants pour donner ce
+ * Métier, au pouce sur mobile.
+ */
+export function AucunExplorateurLibre({ total, prochainRetour }: { total: number; prochainRetour: Date | null }) {
+  return (
+    <Bloc titre="Explorateurs">
+      <p className={styles.etat}>{total === 0 ? "Aucun explorateur" : "Tous les explorateurs sont déjà partis"}</p>
+      {total === 0 ? <p>Il faut au moins un explorateur pour partir.</p> : null}
+      {total > 0 && prochainRetour ? (
+        <p>
+          {"Prochain retour le "}
+          <time dateTime={prochainRetour.toISOString()}>{quand(prochainRetour)}</time>
+        </p>
+      ) : null}
+      <Link href="/jeu/habitants" className={styles.habitants}>
+        {"Donner le Métier d'explorateur"}
+      </Link>
+    </Bloc>
+  );
+}

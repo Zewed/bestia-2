@@ -24,3 +24,23 @@ export async function explorateursDuTerritoire(base: Pool | PoolClient, territoi
   );
   return rows[0];
 }
+
+/**
+ * US-0903 : l'heure à laquelle rentre un explorateur parti (expression sur `h`, l'Habitant). Aucune Expédition ne
+ * part encore : aucune. US-0911 écrira ici l'heure du retour de son Expédition, et le prochain retour suivra.
+ */
+const RETOUR_DE_L_EXPLORATEUR = "null::timestamptz";
+
+/**
+ * US-0903 : le prochain retour d'un explorateur parti du Territoire, quand aucun n'est libre ; null si aucun n'est
+ * parti.
+ */
+export async function prochainRetourDUnExplorateur(base: Pool | PoolClient, territoireId: number): Promise<Date | null> {
+  const { rows } = await base.query<{ retour: Date | null }>(
+    `select min(${RETOUR_DE_L_EXPLORATEUR}) as retour
+     from habitant h
+     where h.territoire_id = $1 and h.metier = 'explorateur' and (${EXPLORATEUR_LIBRE}) is not true`,
+    [territoireId],
+  );
+  return rows[0].retour;
+}
