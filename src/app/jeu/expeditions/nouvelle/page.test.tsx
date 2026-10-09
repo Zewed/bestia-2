@@ -31,6 +31,12 @@ vi.mock("@/monde/explorateurs", () => explorateurs);
 vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
 vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
 vi.mock("./AucunExplorateurLibre", () => ({ AucunExplorateurLibre: (p: object) => <i data-aucun={JSON.stringify(p)} /> }));
+// US-0904 : les Bêtes disponibles du Territoire, et le bloc Escorte réduit à ce que la page lui donne (testé à part).
+const effectif = vi.hoisted(() => ({
+  betesDisponibles: vi.fn(async () => [{ id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 }]),
+}));
+vi.mock("@/monde/effectif", () => effectif);
+vi.mock("./Escorte", () => ({ Escorte: (p: object) => <i data-escorte={JSON.stringify(p)} /> }));
 // US-0909 : l'escorte d'une Expédition sans Bête, réduite à sa place (testée à part).
 vi.mock("./SansEscorte", () => ({ SansEscorte: () => <i data-sans-escorte="" /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
@@ -135,16 +141,16 @@ describe("l'écran d'Expédition (US-0901)", () => {
     expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(7 + SEJOUR.length);
   });
 
-  it("propose la durée du séjour, avec ou sans destination, entre l'escorte et le départ (US-0906)", async () => {
+  it("propose la durée du séjour, avec ou sans destination, entre les explorateurs et le départ (US-0906)", async () => {
     connecte();
-    // Le bloc Séjour, seul entre l'escorte (US-0909 : ici sans Bête) et le départ (réduits ici à ce que la page leur donne).
-    const entreEscorteEtDepart = /<i data-sans-escorte=""><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
+    // Le bloc Séjour, seul entre les blocs Explorateurs et Escorte (US-0904) et le départ (réduits ici à ce que la page leur donne).
+    const entreExplorateursEtDepart = /<i data-explorateurs="[^"]*"><\/i><i data-escorte="[^"]*"><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
     const sansDestination = await ouvrir();
     expect(sansDestination).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
-    expect(sansDestination).toMatch(entreEscorteEtDepart);
+    expect(sansDestination).toMatch(entreExplorateursEtDepart);
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     const avecDestination = await ouvrir({ q: "3", r: "-5", sejour: "240" });
-    expect(avecDestination).toMatch(entreEscorteEtDepart);
+    expect(avecDestination).toMatch(entreExplorateursEtDepart);
     // La durée que l'adresse garde, rapportée de la carte avec la Case touchée.
     expect(textes(avecDestination).slice(-SEJOUR.length)).toEqual(["Séjour", "4 h", ...SEJOUR.slice(2)]);
   });
@@ -301,8 +307,49 @@ describe("choisir la destination depuis l'écran d'Expédition (US-0907)", () =>
   });
 });
 
+describe("l'escorte de l'écran d'Expédition (US-0904)", () => {
+  afterEach(() => {
+    effectif.betesDisponibles.mockClear();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  /** Ce que la page donne à un bloc, tel qu'elle le rend. */
+  const donne = (nom: string, valeur: object) => `<i data-${nom}="${JSON.stringify(valeur).replaceAll('"', "&quot;")}"></i>`;
+  const SOURIS = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 };
+
+  it("propose les Bêtes disponibles du Territoire de la garde, juste après les explorateurs, avant le séjour (US-0906)", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(effectif.betesDisponibles).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
+    const [avant, apres] = html.split(donne("escorte", { especes: [SOURIS] }));
+    expect(avant).toMatch(new RegExp(`${donne("explorateurs", { libres: 2, total: 3 })}$`));
+    expect(apres).toMatch(/^<section[^>]*><h2[^>]*>Séjour<\/h2>/);
+  });
+
+  it("ne propose pas d'escorte sans explorateur libre, ni à un chef sans Territoire : le message d'US-0903 remplace tout le formulaire", async () => {
+    connecte();
+    explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 0, total: 2 });
+    expect(await ouvrir()).not.toContain("data-escorte");
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
+    expect(await ouvrir()).not.toContain("data-escorte");
+    // Rien n'est demandé à la base des Bêtes quand le formulaire n'est pas montré.
+    expect(effectif.betesDisponibles).not.toHaveBeenCalled();
+  });
+
+  it("garde l'escorte choisie en allant choisir la destination sur la carte (US-0907)", async () => {
+    connecte();
+    expect(lien(await ouvrir({ escorte: ["poule.1", "souris.2"] }), "Choisir sur la carte")).toBe("/jeu/carte?choix=destination&escorte=poule.1&escorte=souris.2");
+  });
+});
+
 describe("partir sans escorte (US-0909)", () => {
   afterEach(() => {
+    effectif.betesDisponibles.mockClear();
     destinations.destinationDUneCase.mockResolvedValue(null);
   });
 
@@ -311,11 +358,21 @@ describe("partir sans escorte (US-0909)", () => {
     session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
   };
 
-  it("dit l'Expédition sans escorte là où serait l'escorte, juste après les explorateurs, avec ou sans destination", async () => {
+  it("sans Bête disponible, dit l'Expédition sans escorte à la place du bloc Escorte, entre les explorateurs et le séjour, avec ou sans destination", async () => {
     connecte();
-    const apresLesExplorateurs = /<i data-explorateurs="[^"]*"><\/i><i data-sans-escorte=""><\/i><section/;
-    expect(await ouvrir()).toMatch(apresLesExplorateurs);
+    effectif.betesDisponibles.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const aLaPlaceDeLEscorte = /<i data-explorateurs="[^"]*"><\/i><i data-sans-escorte=""><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>/;
+    const sansDestination = await ouvrir();
+    expect(sansDestination).toMatch(aLaPlaceDeLEscorte);
+    expect(sansDestination).not.toContain("data-escorte");
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
-    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(apresLesExplorateurs);
+    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(aLaPlaceDeLEscorte);
+  });
+
+  it("avec des Bêtes disponibles, propose l'escorte et ne dit rien de plus", async () => {
+    connecte();
+    const html = await ouvrir();
+    expect(html).toContain("data-escorte");
+    expect(html).not.toContain("data-sans-escorte");
   });
 });

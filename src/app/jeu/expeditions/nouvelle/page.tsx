@@ -6,10 +6,12 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
 import { destinationDUneCase } from "@/expeditions/destination";
+import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
+import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
@@ -82,7 +84,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
       </main>
     );
   }
-  return (
+  // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage du formulaire.
+  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];  return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
       <Bloc titre="Destination">
@@ -99,8 +102,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
-      {/* US-0909 : tant que l'escorte ne se choisit pas (US-0904), toute Expédition part sans, et l'écran le dit là où elle se choisira. */}
-      <SansEscorte />
+      {/* US-0909 : sans Bête disponible, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. */}
+      {escorte.length > 0 ? <Escorte especes={escorte} /> : <SansEscorte />}
       <Sejour />
       <Partir libres={explorateurs.libres} />
     </main>
