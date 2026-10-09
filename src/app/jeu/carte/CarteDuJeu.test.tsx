@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import { casesDesAnneaux } from "@/monde/hex";
 import type { CarteDuJoueur } from "@/monde/carte";
 import { BROUILLARD } from "@/monde/couleurs-de-la-carte";
@@ -993,5 +994,226 @@ describe("voir une Case découverte sans recharger la page (US-0442)", () => {
     await attendre(120_000);
     onglet(true);
     expect(serveur.decouvertesDepuis).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("suivre une Expédition sur la carte (US-0913)", () => {
+  const MINUTE_MS = 60_000;
+  /** L'heure du jeu à l'affichage de la page : 9 h 42 à Paris, pas à la minute pile. */
+  const MAINTENANT = new Date("2026-10-09T07:42:13.250Z");
+  /** Une heure du jeu, `minutes` avant l'affichage. */
+  const avant = (minutes: number) => new Date(MAINTENANT.getTime() - minutes * MINUTE_MS);
+  /** Une carte de 5 Cases autour du Foyer. */
+  const autour = casesDesAnneaux(0, 5).map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r }));
+  const GRANDE: CarteDuJoueur = { ...CARTE, cases: { q: autour.map((c) => c.q), r: autour.map((c) => c.r), teinte: autour.map(() => 0), zone: autour.map(() => 0) } };
+  /** Le chemin vers la prairie à 3 Cases à l'est du Foyer : une Case par pas, tout droit. */
+  const EST = [1, 2, 3].map((n) => ({ q: FOYER.q + n, r: FOYER.r }));
+  /** Une Expédition vers la prairie à l'est, partie à `partLe` : 1 h d'aller (20 min par Case), 4 h de séjour, 1 h de retour. */
+  const vers = (id: number, partLe: Date, autre: Partial<ExpeditionEnCours> = {}): ExpeditionEnCours => ({
+    id,
+    destination: { ...EST[2], biome: "Prairie", chef: null, aVous: false, zone: 0, distance: 3, anneau: 2 },
+    phase: "aller",
+    partLe,
+    trajetMinutes: 60,
+    sejourMinutes: 240,
+    explorateurs: ["Joran", "Ines"],
+    escorte: [{ id: "souris", nom: "Souris grise", nombre: 2 }],
+    ...autre,
+  });
+  /** Une autre, vers une Case inconnue à 2 Cases au nord-ouest, partie à `partLe`. */
+  const NORD_OUEST = [1, 2].map((n) => ({ q: FOYER.q, r: FOYER.r - n }));
+  const versLInconnue = (id: number, partLe: Date) => vers(id, partLe, { destination: { ...NORD_OUEST[1], inconnue: true, distance: 2 }, trajetMinutes: 40 });
+  const carte = (expeditions: ExpeditionEnCours[], vitesse?: number) => (
+    <CarteDuJeu carte={GRANDE} fonds={FONDS} expeditions={expeditions} maintenant={MAINTENANT} vitesse={vitesse} />
+  );
+  /** Le repère d'une Expédition, posé ou caché (un élément caché n'a pas de nom pour les lecteurs d'écran). */
+  const repere = (nom = "Expédition vers Prairie, à 3 Cases de votre Foyer") => document.querySelector<HTMLButtonElement>(`button[aria-label="${nom}"]`)!;
+  /** Le point à la part t du chemin de la Case a à la Case b, à l'écran tel que la vue `vue` le montre. */
+  const entre = (a: { q: number; r: number }, b: { q: number; r: number }, t: number, vue = ouverte()) => {
+    const [p, q] = [aLEcran(a, vue), aLEcran(b, vue)];
+    return { x: p.x + (q.x - p.x) * t, y: p.y + (q.y - p.y) * t };
+  };
+  const place = ({ x, y }: { x: number; y: number }) => `translate(${x}px, ${y}px)`;
+  const ficheDeLExpedition = () => screen.queryByRole("region", { name: "Fiche de l'Expédition" });
+  /** Un toucher du doigt sur la carte, au point (x, y) de la carte. */
+  const toucher = ({ x, y }: { x: number; y: number }) => {
+    pointeur("pointerdown", x, y + 64, { pointerType: "touch", pointerId: 3 });
+    pointeur("pointerup", x, y + 64, { pointerType: "touch", pointerId: 3 });
+  };
+  /** Le temps du jeu qui passe dans le navigateur, en millisecondes. */
+  const attendre = (ms: number) => act(async () => void vi.advanceTimersByTime(ms));
+
+  afterEach(() => vi.useRealTimers());
+
+  it("pose un repère sur le chemin de chaque Expédition, là où elle en est, et plante un fanion sur sa destination", () => {
+    // La première, partie il y a 30 min : à mi-chemin entre ses deuxième et troisième Cases ; l'autre vient de partir.
+    render(carte([vers(7, avant(30)), versLInconnue(8, MAINTENANT)]));
+    expect(repere().hidden).toBe(false);
+    expect(repere().style.transform).toBe(place(entre(EST[0], EST[1], 0.5)));
+    expect(repere("Expédition vers une Case inconnue, à 2 Cases de votre Foyer").style.transform).toBe(place(aLEcran(FOYER, ouverte())));
+    // Les fanions des destinations, sur la carte.
+    expect(toile.gestes).toContain("remplir var(--ciel)");
+  });
+
+  it("fait avancer le repère au rythme du jeu, sans recharger la page ni redessiner la carte", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "performance"] });
+    render(carte([vers(7, avant(30))], 2));
+    const effacements = toile.effacements;
+    // 5 minutes à × 2 : 10 minutes du jeu ; la deuxième Case atteinte.
+    await attendre(5 * MINUTE_MS);
+    expect(repere().style.transform).toBe(place(aLEcran(EST[1], ouverte())));
+    expect(toile.effacements).toBe(effacements);
+  });
+
+  it("suit la carte quand elle glisse, et se cache quand il sort de l'écran", () => {
+    render(carte([vers(7, avant(30))]));
+    const limite = limiteDeLaCarte(GRANDE);
+    pointeur("pointerdown", 400, 300);
+    pointeur("pointermove", 300, 250);
+    pointeur("pointerup", 300, 250);
+    prochaineImage();
+    const glissee = deplacer(ouverte(), -100, -50, limite);
+    expect(repere().style.transform).toBe(place(entre(EST[0], EST[1], 0.5, glissee)));
+    // Glissée de 600 pixels vers la gauche : le repère passe au-delà du bord gauche.
+    pointeur("pointerdown", 700, 300);
+    pointeur("pointermove", 100, 300);
+    pointeur("pointerup", 100, 300);
+    prochaineImage();
+    expect(entre(EST[0], EST[1], 0.5, deplacer(glissee, -600, 0, limite)).x).toBeLessThan(0);
+    expect(repere().hidden).toBe(true);
+  });
+
+  it("ouvert au toucher du repère, le détail de l'Expédition : sa phase, son temps restant, ses explorateurs et son escorte", () => {
+    render(carte([vers(7, avant(30))]));
+    const ici = entre(EST[0], EST[1], 0.5);
+    toucher({ x: ici.x + 6, y: ici.y - 5 });
+    const fiche = ficheDeLExpedition()!;
+    expect(within(fiche).getByRole("heading", { name: "Expédition" })).toBeTruthy();
+    const ligne = fiche.querySelector("[data-ligne]")!.textContent;
+    for (const morceau of ["Prairie", "Aller", "arrive dans 30 min"]) expect(ligne).toContain(morceau);
+    expect(within(fiche).getByText("Joran, Ines")).toBeTruthy();
+    expect(within(fiche).getByText("Souris grise × 2")).toBeTruthy();
+    expect(repere().getAttribute("aria-expanded")).toBe("true");
+    // Le repère touché, et non la Case dessous : aucune fiche de Case demandée.
+    expect(fiches).toEqual([]);
+    expect(fiche.getAttribute("aria-live")).toBeNull();
+  });
+
+  it("fait avancer le temps restant du détail ouvert, à l'heure du jeu de la page", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "performance"] });
+    render(carte([vers(7, avant(30))]));
+    // Le détail ouvert une minute après l'affichage : il compte depuis l'affichage, pas depuis son ouverture.
+    await attendre(MINUTE_MS);
+    fireEvent.click(repere());
+    expect(ficheDeLExpedition()!.querySelector("[data-ligne]")!.textContent).toContain("arrive dans 29 min");
+    await attendre(MINUTE_MS);
+    expect(ficheDeLExpedition()!.querySelector("[data-ligne]")!.textContent).toContain("arrive dans 28 min");
+  });
+
+  it("se prend aussi au clavier : le repère est un bouton qui ouvre le même détail", async () => {
+    render(carte([vers(7, avant(30))]));
+    const user = userEvent.setup();
+    repere().focus();
+    expect(repere().getAttribute("aria-expanded")).toBe("false");
+    await user.keyboard("{Enter}");
+    expect(ficheDeLExpedition()).not.toBeNull();
+  });
+
+  it("ne garde qu'une fiche à la fois : une Case touchée remplace le détail de l'Expédition, et inversement", async () => {
+    render(carte([vers(7, avant(30))]));
+    const ici = entre(EST[0], EST[1], 0.5);
+    toucher(ici);
+    expect(ficheDeLExpedition()).not.toBeNull();
+    // La Case à l'ouest du Foyer, loin du repère.
+    cliquer({ q: FOYER.q - 1, r: FOYER.r });
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([{ q: FOYER.q - 1, r: FOYER.r }]);
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiche()).not.toBeNull();
+    expect(repere().getAttribute("aria-expanded")).toBe("false");
+    toucher(ici);
+    expect(ficheDeLExpedition()).not.toBeNull();
+    expect(fiche()).toBeNull();
+  });
+
+  it("se ferme comme la fiche d'une Case : par sa croix, par Échap, ou en touchant la carte hors de ses Cases", async () => {
+    render(carte([vers(7, avant(30))]));
+    const user = userEvent.setup();
+    const ici = entre(EST[0], EST[1], 0.5);
+    toucher(ici);
+    await user.click(screen.getByRole("button", { name: "Fermer la fiche" }));
+    expect(ficheDeLExpedition()).toBeNull();
+    toucher(ici);
+    await user.keyboard("{Escape}");
+    expect(ficheDeLExpedition()).toBeNull();
+    toucher(ici);
+    cliquer({ q: FOYER.q, r: FOYER.r - 9 });
+    expect(ficheDeLExpedition()).toBeNull();
+  });
+
+  it("montre la main au survol du repère à la souris, sans rien changer d'autre à la carte", () => {
+    const { container } = render(carte([vers(7, avant(30))]));
+    const canvas = container.querySelector("canvas")!;
+    const ici = entre(EST[0], EST[1], 0.5);
+    pointeur("pointermove", ici.x + 3, ici.y + 64);
+    expect(canvas.style.cursor).toBe("pointer");
+    pointeur("pointermove", ici.x + 60, ici.y + 64);
+    expect(canvas.style.cursor).toBe("");
+  });
+
+  it("ne pose aucun repère ni fanion sans Expédition en cours", () => {
+    render(carte([]));
+    expect(screen.queryAllByRole("button", { name: /^Expédition/ })).toEqual([]);
+    expect(toile.gestes).not.toContain("remplir var(--ciel)");
+  });
+
+  it("touché encore, passe à l'Expédition posée au même point, puis à la Case qu'elles cachent, puis revient à la première", () => {
+    // Deux Expéditions qui viennent de partir, toutes deux encore sur le Foyer.
+    render(carte([vers(7, MAINTENANT), versLInconnue(8, MAINTENANT)]));
+    const titre = () => ficheDeLExpedition()?.querySelector("[data-ligne] strong")?.textContent;
+    const foyer = aLEcran(FOYER, ouverte());
+    toucher(foyer);
+    expect(titre()).toBe("Prairie");
+    toucher(foyer);
+    expect(titre()).toBe("Case inconnue");
+    toucher(foyer);
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([FOYER]);
+    toucher(foyer);
+    expect(titre()).toBe("Prairie");
+  });
+
+  it("choisit toujours la Case sous le doigt pendant le choix d'une destination, même sous un repère", () => {
+    render(<CarteDuJeu carte={GRANDE} fonds={FONDS} destination="choix=destination" expeditions={[vers(7, avant(60 + 30))]} maintenant={MAINTENANT} />);
+    // En séjour sur sa destination.
+    toucher(aLEcran(EST[2], ouverte()));
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches.map(({ q, r }) => ({ q, r }))).toEqual([EST[2]]);
+  });
+
+  it("ne montre plus ni repère ni chemin d'une Expédition rentrée au Foyer, et efface le sien à son retour", async () => {
+    vi.useFakeTimers({ toFake: ["setInterval", "clearInterval", "performance"] });
+    // L'une rentrée depuis une minute ; l'autre rentre dans 30 secondes (1 h d'aller, 4 h de séjour, 1 h de retour).
+    render(carte([vers(7, avant(60 + 240 + 60 + 1)), versLInconnue(8, new Date(avant(40 + 240 + 40).getTime() + 30_000))]));
+    expect(document.querySelector('button[aria-label^="Expédition vers Prairie"]')).toBeNull();
+    expect(repere("Expédition vers une Case inconnue, à 2 Cases de votre Foyer")).not.toBeNull();
+    // Seule la hampe du fanion de la seconde part du centre de sa destination.
+    const centre = (c: { q: number; r: number }) => `${aLEcran(c, ouverte()).x.toFixed(6)},${aLEcran(c, ouverte()).y.toFixed(6)}`;
+    expect(departs().has(centre(NORD_OUEST[1]))).toBe(true);
+    expect(departs().has(centre(EST[2]))).toBe(false);
+    toile.gestes = [];
+    await attendre(30_000);
+    expect(screen.queryAllByRole("button", { name: /^Expédition/ })).toEqual([]);
+    // Redessinée aussitôt, sans chemin ni fanion.
+    expect(toile.gestes).toContain("remplir var(--galet)");
+    expect(toile.gestes).not.toContain("remplir var(--ciel)");
+  });
+
+  it("ne garde aucun repère à toucher une fois les Expéditions parties de la page", () => {
+    const { rerender } = render(carte([vers(7, avant(30))]));
+    const ici = entre(EST[0], EST[1], 0.5);
+    rerender(carte([]));
+    toucher(ici);
+    expect(ficheDeLExpedition()).toBeNull();
+    expect(fiches).toHaveLength(1);
   });
 });

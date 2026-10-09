@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import type { CarteDuJoueur } from "@/monde/carte";
 
 // La vraie garde, branchée sur une session simulée.
@@ -33,6 +34,11 @@ const donnees = vi.hoisted(() => ({
   ]),
 }));
 vi.mock("@/donnees/en-base", () => donnees);
+// US-0913 : les Expéditions en cours du Territoire, et l'heure du jeu, à × 3 en développement.
+const enCours = vi.hoisted(() => ({ expeditionsEnCours: vi.fn(async (): Promise<ExpeditionEnCours[]> => []) }));
+vi.mock("@/expeditions/en-cours", () => enCours);
+const MAINTENANT = vi.hoisted(() => new Date("2026-10-09T07:42:13.250Z"));
+vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT, vitesse: () => 3 }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -117,6 +123,25 @@ describe("page Carte (US-0417)", () => {
   it("n'a pas de carte à montrer sans Foyer, ni de légende, ni rien à attendre", async () => {
     connecte(null);
     expect(renderToStaticMarkup(await Carte(ouverte()))).not.toMatch(/<canvas|<aside|data-attente/);
+  });
+
+  it("donne à la carte les Expéditions en cours du joueur, lues pour son Territoire à l'heure du jeu, avec cette heure et le rythme du jeu (US-0913)", async () => {
+    connecte();
+    const expedition: ExpeditionEnCours = {
+      id: 5,
+      destination: { q: 33, r: -57, inconnue: true, distance: 2 },
+      phase: "aller",
+      partLe: new Date("2026-10-09T07:30:00.000Z"),
+      trajetMinutes: 40,
+      sejourMinutes: 60,
+      explorateurs: ["Joran"],
+      escorte: [],
+    };
+    enCours.expeditionsEnCours.mockClear().mockResolvedValueOnce([expedition]);
+    const { expeditions, maintenant, vitesse } = proprietes(renderToStaticMarkup(await Carte(ouverte())));
+    expect(enCours.expeditionsEnCours).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, MAINTENANT);
+    expect(expeditions).toEqual([{ ...expedition, partLe: expedition.partLe.toISOString() }]);
+    expect([maintenant, vitesse]).toEqual([MAINTENANT.toISOString(), 3]);
   });
 
   it("prend toute la place sous la barre du haut, sans défiler", () => {
