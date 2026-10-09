@@ -217,6 +217,10 @@ export default async function Controle({ searchParams }: PageProps<"/controle">)
               </li>
             ))}
           </ul>
+          {/* US-0931 : les Raretés des Bêtes sauvages d'un Monde simulées sur une longue période, Anneau par Anneau. */}
+          <p className={styles.note}>
+            <Link href="/controle/raretes">Simulation par Anneau</Link>
+          </p>
         </Bloc>
         <Bloc titre={`Rôles en base · ${roles.length}`} largeur={6}>
           <ul className={styles.lignes}>

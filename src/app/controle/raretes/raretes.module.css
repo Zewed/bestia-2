@@ -1,0 +1,139 @@
+/* US-0931 : la simulation des Raretés par Anneau, des blocs Bento comme la page de contrôle. */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 40px 56px;
+}
+
+.entete {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  align-items: baseline;
+  margin-bottom: 20px;
+}
+
+.titre {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+.retour {
+  color: var(--texte-discret);
+}
+
+.valeur {
+  font-size: 24px;
+  font-weight: var(--graisse-titre);
+}
+
+.note {
+  margin-top: 4px;
+  color: var(--texte-discret);
+}
+
+/* Choisir une graine : le champ et le bouton côte à côte, l'erreur dessous. */
+.graine {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page à la saisie. */
+.champ {
+  width: 12em;
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-moyen);
+  background: var(--bloc-2);
+  color: var(--encre);
+  font: inherit;
+  font-size: 16px;
+}
+
+.champ:focus-visible {
+  border-color: var(--encre);
+  background: var(--bloc);
+  outline: 2px solid var(--encre-douce);
+  outline-offset: 2px;
+}
+
+.champ[aria-invalid="true"] {
+  border-color: var(--rose-fonce);
+}
+
+.bouton {
+  min-height: 40px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.bouton:hover {
+  background: var(--encre-survol);
+}
+
+.bouton:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.erreur {
+  flex-basis: 100%;
+  color: var(--rose-fonce);
+  font-size: 13px;
+}
+
+/* Ce qui fait échouer le contrôle, un écart par ligne. */
+.echecs {
+  display: grid;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 0;
+  list-style: none;
+  font-weight: var(--graisse-titre);
+}
+
+/* Sur un écran étroit, le tableau défile dans son bloc plutôt que d'élargir la page. */
+.defilement {
+  margin-top: 8px;
+  overflow-x: auto;
+}
+
+.tableau {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tableau th {
+  padding: 6px 12px 6px 0;
+  color: var(--texte-discret);
+  font-size: var(--taille-etiquette);
+  text-align: left;
+}
+
+.tableau td {
+  padding: 8px 12px 8px 0;
+  border-top: 1px solid var(--trait-doux);
+}
+
+.echec {
+  color: var(--rose-fonce);
+  font-weight: var(--graisse-titre);
+}
+
+@media (max-width: 820px) {
+  .page {
+    padding: 20px 16px 40px;
+  }
+}

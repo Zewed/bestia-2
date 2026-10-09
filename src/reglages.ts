@@ -291,3 +291,11 @@ export const PORTEE_D_EXPLORATION_CASES = 8;
  * à régler en jouant). La durée du trajet (US-0912) en tirera l'aller et le retour (src/expeditions/allure.ts).
  */
 export const PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE = 20;
+
+/**
+ * US-0931 : la simulation des Raretés de la page de contrôle fait apparaître les Bêtes sauvages d'un Monde pendant 30
+ * jours de jeu (valeur provisoire, à régler en jouant), et échoue dès que, dans un Anneau, la part obtenue d'une Rareté
+ * s'écarte de plus de 1 point de pourcentage de sa part attendue (valeur provisoire, à régler en jouant).
+ */
+export const SIMULATION_DES_RARETES_JOURS = 30;
+export const SIMULATION_DES_RARETES_TOLERANCE_POINTS = 1;
