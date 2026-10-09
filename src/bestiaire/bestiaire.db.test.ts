@@ -32,6 +32,11 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
   let mondeId: number;
   const lancement = `bestiaire-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
+  /**
+   * Les Cases déjà prises par un essai de ce fichier : chacun a la sienne. Sans escorte, une Bête commune suit l'Expédition
+   * qui la voit (US-0935) : deux chefs nés côte à côte choisiraient sinon la même Bête, et le premier l'emmènerait.
+   */
+  const prises = new Set<number>();
   /** Une heure du jeu, `minutes` après `instant`. */
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
 
@@ -82,6 +87,7 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
   const uneBeteSeule = async (territoireId: number, apresLe: Date, voulue: (b: BeteSauvage) => boolean = () => true) => {
     const fin = apres(apresLe, 30 * JOUR);
     for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
+      if (prises.has(ici.caseId)) continue;
       const betes = await betesSauvagesDUneCase(pool, ici.caseId, apresLe, fin);
       const bete = betes.find(
         (b, i) =>
@@ -91,7 +97,10 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
           (i === 0 || betes[i - 1].arrivee <= apres(b.arrivee, -CALME)) &&
           (i === betes.length - 1 || betes[i + 1].arrivee >= apres(b.arrivee, CALME)),
       );
-      if (bete) return { ...ici, bete };
+      if (bete) {
+        prises.add(ici.caseId);
+        return { ...ici, bete };
+      }
     }
     throw new Error("Aucune Bête seule qui convienne.");
   };
@@ -199,9 +208,13 @@ describe.skipIf(!URL_TEST)("l'Espèce croisée entre au Bestiaire (US-0933, sur 
     const uneCaseAnimee = async () => {
       const { territoireId, ne } = territoires[0];
       for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
+        if (prises.has(ici.caseId)) continue;
         const betes = await betesSauvagesDUneCase(pool, ici.caseId, apres(ne, 3 * JOUR), apres(ne, 30 * JOUR));
         const i = betes.findIndex((b, j) => plusRare(b) && j + 1 < betes.length && betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE));
-        if (i >= 0) return { caseId: ici.caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        if (i >= 0) {
+          prises.add(ici.caseId);
+          return { caseId: ici.caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        }
       }
       throw new Error("Aucune Case animée.");
     };

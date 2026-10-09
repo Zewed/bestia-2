@@ -32,6 +32,11 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
   let mondeId: number;
   const lancement = `rencontre-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
+  /**
+   * Les Cases déjà prises par un essai de ce fichier : chacun a la sienne. Sans escorte, une Bête commune suit l'Expédition
+   * qui la voit (US-0935) : deux chefs nés côte à côte choisiraient sinon la même Bête, et le premier l'emmènerait.
+   */
+  const prises = new Set<number>();
   /** Une heure du jeu, `minutes` après `instant`. */
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
   /** L'instant `instant`, à `ms` millisecondes près. */
@@ -117,6 +122,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
   const uneBeteSeule = async (territoireId: number, ecart: number, apresLe: Date) => {
     const fin = apres(apresLe, 30 * JOUR);
     for (let rang = 0, ici = await aLEcart(territoireId, ecart); ici; ici = await aLEcart(territoireId, ecart, ++rang)) {
+      if (prises.has(ici.caseId)) continue;
       const betes = await betesSauvagesDUneCase(pool, ici.caseId, apresLe, fin);
       const bete = betes.find(
         (b, i) =>
@@ -125,7 +131,10 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
           (i === 0 || betes[i - 1].arrivee <= apres(b.arrivee, -CALME)) &&
           (i === betes.length - 1 || betes[i + 1].arrivee >= apres(b.arrivee, CALME)),
       );
-      if (bete) return { ...ici, bete };
+      if (bete) {
+        prises.add(ici.caseId);
+        return { ...ici, bete };
+      }
     }
     throw new Error("Aucune Bête seule à cet écart.");
   };
@@ -195,9 +204,13 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
           const retour = apres(depart, 2 * ECART * PAS + HEURE);
           if (betes.get(caseId)!.some((b) => b.arrivee < retour && b.depart > depart)) continue;
           for (const { id, q, r, rang: k } of etapes) {
+            if (prises.has(id)) continue;
             const [entree, sortie] = [apres(depart, (Number(k) - 1) * PAS), apres(depart, Number(k) * PAS)];
             const bete = betes.get(id)!.find((b) => b.arrivee < sortie && b.depart > entree);
-            if (bete) return { destination, depart, etape: { place: { q, r }, caseId: id, entree }, bete };
+            if (bete) {
+              prises.add(id);
+              return { destination, depart, etape: { place: { q, r }, caseId: id, entree }, bete };
+            }
           }
         }
       }
@@ -266,9 +279,13 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
       const { territoireId } = territoires[0];
       for (let rang = 0, ici = await aLEcart(territoireId, 2); ici; ici = await aLEcart(territoireId, 2, ++rang)) {
         const { caseId } = ici;
+        if (prises.has(caseId)) continue;
         const betes = await betesSauvagesDUneCase(pool, caseId, apres(territoires[0].ne, 3 * JOUR), apres(territoires[0].ne, 30 * JOUR));
         const i = betes.findIndex((b, j) => j + 1 < betes.length && betes[j + 1].arrivee < apres(b.arrivee, 10 * HEURE));
-        if (i >= 0) return { caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        if (i >= 0) {
+          prises.add(caseId);
+          return { caseId, debut: apres(betes[i].arrivee, -HEURE) };
+        }
       }
       throw new Error("Aucune Case animée.");
     };
