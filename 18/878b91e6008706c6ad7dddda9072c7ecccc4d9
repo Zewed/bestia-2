@@ -1,0 +1,37 @@
+src/monde/explorateurs.ts
+  s_97a431cfa65ca7::t_9c957a28c01770 1-26
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_7ca5807c762a2a 17-21,131-168
+src/app/jeu/expeditions/nouvelle/Partir.tsx
+  s_97a431cfa65ca7::t_15537c798eb47e 1-29
+src/app/jeu/expeditions/nouvelle/Explorateurs.tsx
+  s_97a431cfa65ca7::t_8ff0d58c83de0f 1-63
+src/app/jeu/expeditions/nouvelle/Explorateurs.test.tsx
+  s_97a431cfa65ca7::t_3f2a273cddfd4b 1-144
+src/app/jeu/expeditions/nouvelle/Explorateurs.module.css
+  s_97a431cfa65ca7::t_75796e276930ec 1-84
+src/app/jeu/expeditions/nouvelle/Explorateurs.css.test.ts
+  s_97a431cfa65ca7::t_475ef43a070a47 1-35
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_ad19554946ad5b 9,12-13,68-69,85-86
+src/monde/explorateurs.db.test.ts
+  s_97a431cfa65ca7::t_deacdf7cda7f8b 1-53
+src/app/jeu/expeditions/nouvelle/Partir.module.css
+  s_97a431cfa65ca7::t_1b03c63814376a 1-46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "18878b91e6008706c6ad7dddda9072c7ecccc4d9",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
