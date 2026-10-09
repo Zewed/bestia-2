@@ -1,0 +1,21 @@
+src/expeditions/en-mon-absence.db.test.ts
+  s_97a431cfa65ca7::t_4679743f3ddb62 89-90,207,363-365
+src/expeditions/recit-de-retour.db.test.ts
+  s_97a431cfa65ca7::t_38b86c1075ac0b 95-110,196,207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a76a2980d3231cbc6d16e6d40323c5789fd42e00",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
