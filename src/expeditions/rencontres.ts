@@ -6,10 +6,12 @@
 // base (table rencontre), à son instant exact, par le mécanisme du temps (src/temps/regles.ts) : en direct, au rattrapage
 // ou par la tâche planifiée, les mêmes Rencontres, aux mêmes instants. US-0934 : la Bête à portée suit l'Expédition, c'est
 // l'Apprivoisement (src/expeditions/apprivoisement.ts), retenu avec sa Rencontre ; elle a alors quitté sa Case, et personne
-// ne la rencontre plus. Le Bestiaire (US-0933), l'arrivée au Foyer (US-0938) et le récit (US-0940) les liront ici. Côté
+// ne la rencontre plus. US-0933 : chaque Rencontre retenue inscrit son Espèce au Bestiaire du Territoire, dans la même
+// transaction (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938) et le récit (US-0940) les liront ici. Côté
 // serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
+import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
 import { betesDeNaissanceDesCases } from "@/monde/betes-de-naissance";
 import { betesSauvagesDesCases, emmenerUneBete } from "@/monde/betes-sauvages";
 import { type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
@@ -20,7 +22,9 @@ import { expeditionsPresentesDuTerritoire, expeditionsPresentesSurLesCases } fro
  * US-0932 : une Rencontre : l'instant du jeu où l'Expédition a vu la Bête (vueLe), sur sa Case (caseId), et la Bête :
  * l'instant de son apparition, son Espèce et la Rareté de celle-ci ; une Bête sauvage ordinaire par son numéro sur la Case
  * (numero), une Bête de naissance par sa ligne (beteDeNaissanceId), l'autre restant null. US-0934 : apprivoisee, la Bête
- * suit l'Expédition depuis vueLe.
+ * suit l'Expédition depuis vueLe. US-0933 : nouvelleEspece est vrai pour la Rencontre qui a inscrit son Espèce au
+ * Bestiaire du Territoire, la première où le joueur l'a vue : les récits de retour (US-0917) et de Rencontre (US-0940) y
+ * liront « Nouvelle Espèce au Bestiaire ».
  */
 export type Rencontre = {
   id: number;
@@ -32,6 +36,7 @@ export type Rencontre = {
   numero: number | null;
   beteDeNaissanceId: number | null;
   apprivoisee: boolean;
+  nouvelleEspece: boolean;
 };
 
 /** Une Rencontre à retenir : l'Expédition, la Bête, l'instant où elle la voit, et si elle la suit. */
@@ -119,7 +124,7 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   // sa seule Rencontre apprivoisée.
   for (const { caseId, numero, le } of emmenees) await emmenerUneBete(base, caseId, numero, le);
   // « on conflict do nothing » : une Expédition ne rencontre qu'une fois chaque Bête.
-  await base.query(
+  const { rowCount } = await base.query(
     `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le, apprivoisee)
      select * from unnest($1::int[], $2::bigint[], $3::int[], $4::text[], $5::timestamptz[], $6::timestamptz[], $7::boolean[])
      on conflict do nothing`,
@@ -133,6 +138,8 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
       aVoir.map((r) => r.apprivoisee),
     ],
   );
+  // US-0933 : l'Espèce de chaque Bête vue entre au Bestiaire, qu'elle suive l'Expédition ou non.
+  if (rowCount) await inscrireLesEspecesCroisees(base, territoireId);
 }
 
 /**
@@ -142,7 +149,8 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
 export async function rencontresDUneExpedition(base: Pool | PoolClient, expeditionId: number): Promise<Rencontre[]> {
   const { rows } = await base.query<Omit<Rencontre, "numero"> & { numero: string | null }>(
     `select r.id, r.vue_le as "vueLe", x.case_id as "caseId", r.apparue_le as "apparueLe", r.espece_id as "especeId",
-       e.rarete_id as "rareteId", r.numero, r.bete_de_naissance_id as "beteDeNaissanceId", r.apprivoisee
+       e.rarete_id as "rareteId", r.numero, r.bete_de_naissance_id as "beteDeNaissanceId", r.apprivoisee,
+       exists (select 1 from bestiaire b where b.rencontre_id = r.id) as "nouvelleEspece"
      from rencontre r join expedition x on x.id = r.expedition_id join espece e on e.id = r.espece_id
      where r.expedition_id = $1
      order by r.apparue_le, r.id`,
