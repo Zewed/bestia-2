@@ -1,0 +1,35 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_ecae86543834b4 235
+docs/stories/README.md
+  s_97a431cfa65ca7::t_775cc19fcd7795 7
+src/donnees/especes.db.test.ts
+  s_97a431cfa65ca7::t_82972513099b70 17-22,40-47
+src/expeditions/en-cours.db.test.ts
+  s_97a431cfa65ca7::t_b552ce93491ab1 64-66
+src/expeditions/en-mon-absence.db.test.ts
+  s_97a431cfa65ca7::t_7006d201fdc620 1-458
+src/expeditions/recit-de-retour.db.test.ts
+  s_97a431cfa65ca7::t_fef83b1e34b191 121-122,126-141,238,250
+src/monde/bascule.db.test.ts
+  s_97a431cfa65ca7::t_6c9d9e19d0bad6 6
+src/monde/betes-de-naissance.db.test.ts
+  s_97a431cfa65ca7::t_6858f0485a8008 176-178
+src/test/base.ts
+  s_97a431cfa65ca7::t_070327e50fad12 70-85
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ad9e673c8380903113dfb10c29206cf62ad480b5",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
