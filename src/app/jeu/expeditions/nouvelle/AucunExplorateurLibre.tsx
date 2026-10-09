@@ -19,14 +19,13 @@ export function AucunExplorateurLibre({ total, prochainRetour }: { total: number
   return (
     <Bloc titre="Explorateurs">
       <p className={styles.etat}>{total === 0 ? "Aucun explorateur" : "Tous les explorateurs sont déjà partis"}</p>
+      {total === 0 ? <p>Il faut au moins un explorateur pour partir.</p> : null}
       {total > 0 && prochainRetour ? (
         <p>
           {"Prochain retour le "}
           <time dateTime={prochainRetour.toISOString()}>{quand(prochainRetour)}</time>
         </p>
-      ) : (
-        <p>Il faut au moins un explorateur pour partir.</p>
-      )}
+      ) : null}
       <Link href="/jeu/habitants" className={styles.habitants}>
         {"Donner le Métier d'explorateur"}
       </Link>

@@ -33,8 +33,8 @@ describe("aucun explorateur libre (US-0903)", () => {
     expect(lien().getAttribute("href")).toBe("/jeu/habitants");
   });
 
-  it("sans heure de retour connue, se contente de dire qu'il en faut au moins un", () => {
+  it("sans heure de retour connue, dit seulement que tous sont partis", () => {
     render(<AucunExplorateurLibre total={2} prochainRetour={null} />);
-    expect(textes()).toEqual(["Explorateurs", "Tous les explorateurs sont déjà partis", "Il faut au moins un explorateur pour partir.", "Donner le Métier d'explorateur"]);
+    expect(textes()).toEqual(["Explorateurs", "Tous les explorateurs sont déjà partis", "Donner le Métier d'explorateur"]);
   });
 });

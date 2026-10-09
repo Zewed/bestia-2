@@ -39,7 +39,7 @@ export async function prochainRetourDUnExplorateur(base: Pool | PoolClient, terr
   const { rows } = await base.query<{ retour: Date | null }>(
     `select min(${RETOUR_DE_L_EXPLORATEUR}) as retour
      from habitant h
-     where h.territoire_id = $1 and h.metier = 'explorateur' and not (${EXPLORATEUR_LIBRE})`,
+     where h.territoire_id = $1 and h.metier = 'explorateur' and (${EXPLORATEUR_LIBRE}) is not true`,
     [territoireId],
   );
   return rows[0].retour;
