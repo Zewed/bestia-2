@@ -43,7 +43,7 @@ export type RetourARaconter = {
  * US-0917 : les durées réelles d'une Expédition rentrée à l'instant du jeu `rentreeLe` : l'aller jusqu'à son arrivée sur la
  * Case, son séjour, et son retour jusqu'à l'heure où elle est vraiment rentrée. Aucune tant que son trajet n'est pas
  * chiffré (US-0912). US-0920 : rappelée à l'aller, l'aller jusqu'au rappel, et aucun séjour ; en séjour, le séjour
- * jusqu'au rappel.
+ * jusqu'au rappel, à la minute supérieure : un séjour commencé, si court soit-il, n'est jamais « sans séjour ».
  */
 export function dureesReelles(horaires: HorairesDUneExpedition, rentreeLe: Date): DureesReelles | null {
   const demiTour = demiTourDUneExpedition(horaires);
@@ -52,19 +52,20 @@ export function dureesReelles(horaires: HorairesDUneExpedition, rentreeLe: Date)
   const minutes = (ms: number) => Math.round(ms / MINUTE_MS);
   return {
     aller: minutes(demiTour.allerMs),
-    sejour: sejour ? minutes(sejour.fin.getTime() - sejour.debut.getTime()) : 0,
+    sejour: sejour ? Math.ceil((sejour.fin.getTime() - sejour.debut.getTime()) / MINUTE_MS) : 0,
     retour: minutes(rentreeLe.getTime() - demiTour.le.getTime()),
   };
 }
 
 /**
  * US-0920 : le rappel d'une Expédition, s'il y en a eu un avant son demi-tour prévu : son instant, et la phase où il l'a
- * trouvée ; null sinon.
+ * trouvée : en séjour s'il a commencé, à l'aller sinon (rappelée à l'arrivée pile, elle n'a pas séjourné) ; null sinon.
  */
-function rappelDUneExpedition(horaires: HorairesDUneExpedition): RappelARaconter | null {
+export function rappelDUneExpedition(horaires: HorairesDUneExpedition): RappelARaconter | null {
   const demiTour = demiTourDUneExpedition(horaires);
   if (!demiTour || !horaires.rappeleeLe || demiTour.le.getTime() !== horaires.rappeleeLe.getTime()) return null;
-  return { le: horaires.rappeleeLe, pendant: sejourDUneExpedition(horaires) ? "sejour" : "aller" };
+  const sejour = sejourDUneExpedition(horaires);
+  return { le: horaires.rappeleeLe, pendant: sejour && sejour.fin > sejour.debut ? "sejour" : "aller" };
 }
 
 /** US-0920 : « Rappelée à l'aller le 9 octobre à 14:50. », « Rappelée pendant le séjour le 9 octobre à 15:30. ». */
@@ -125,6 +126,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   // Après la bascule d'un Monde (US-0414), une Expédition déjà partie garde sa destination dans l'ancien : sa distance au
   // nouveau Foyer n'y a pas de sens, comme son chemin (leverLeBrouillard) ; cas rare, accepté.
   const { biome, decouverte, destination, foyer, ...horaires } = rows[0];
+  const rappel = rappelDUneExpedition(horaires);
   // Un retour n'est programmé qu'au trajet chiffré (programmerLeRetour, migration 0052) : jamais atteint.
   const durees = dureesReelles(horaires, rentreeLe);
   if (!durees) throw new Error(`Retour sans trajet chiffré pour l'Expédition ${expeditionId}.`);
@@ -136,12 +138,12 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
     territoireId,
     recitDeRetour({
       // US-0920 : rappelée avant de l'atteindre, sa destination reste sous le brouillard : son Biome ne se dit pas (US-0438).
-      destination: { biome: decouverte ? biome : "Case inconnue", distance: distance(destination, foyer) },
+      destination: { biome: decouverte || !rappel ? biome : "Case inconnue", distance: distance(destination, foyer) },
       durees,
       casesLevees,
       rencontres,
       rentreeLe,
-      rappel: rappelDUneExpedition(horaires),
+      rappel,
     }),
   );
 }

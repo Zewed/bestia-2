@@ -28,6 +28,9 @@ class Refus extends Error {}
  * double clic) passent l'un après l'autre, et le second la trouve déjà au retour. Le rappel ne tombe jamais avant
  * l'heure jusqu'où le Territoire est déjà calculé (son marque-page) : ce qui est déjà retenu (Cases levées, Rencontres)
  * l'a été avec les mêmes horaires qu'après le rappel, et le reste se calcule ensuite, en direct comme au rattrapage.
+ * Les autres Territoires ne sont jamais calculés au-delà de l'heure du jeu : une Expédition rivale qui y aurait déjà vu sa
+ * présence après le rappel (une Bête qu'elle aurait emmenée, US-0934) ne tient qu'à quelques millisecondes d'écart entre
+ * deux lectures de l'horloge ; cas accepté.
  */
 export async function rappelerLExpedition(pool: Pool, territoireId: number, expeditionId: number, instant: Date): Promise<Rappel> {
   const client = await pool.connect();
@@ -61,8 +64,8 @@ async function rappeler(client: PoolClient, territoireId: number, expeditionId: 
   if (!territoires[0] || !rows[0]) throw new Refus(RAPPEL_SANS_EXPEDITION);
   const { rentreeLe, ...horaires } = rows[0];
   if (rentreeLe) throw new Refus(RAPPEL_DEJA_RENTREE);
-  const calcule = territoires[0].calculeJusquA;
-  const rappeleeLe = calcule > instant ? calcule : instant;
+  // Jamais avant son départ (la base le vérifie), ni avant l'heure jusqu'où son Territoire est calculé.
+  const rappeleeLe = new Date(Math.max(instant.getTime(), territoires[0].calculeJusquA.getTime(), horaires.partLe.getTime()));
   // Sans trajet chiffré (US-0912), elle n'a pas de retour à avancer ; la migration 0050 n'en a laissé aucune.
   if (horaires.trajetMinutes === null) throw new Refus(RAPPEL_SANS_EXPEDITION);
   if (phaseDUneExpedition(horaires, rappeleeLe) === "retour") throw new Refus(RAPPEL_DEJA_AU_RETOUR);

@@ -12,6 +12,7 @@ import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { casesRevelees } from "./brouillard";
 import { lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
 import { expeditionsPresentesSurLaCase } from "./presence";
@@ -267,30 +268,80 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
     expect(await retoursEnAttente(territoireId, expeditionId)).toEqual([apres(calcule, 50 * MINUTE)]);
   });
 
-  it("le même retour, page ouverte du rappel au retour qu'à la page fermée", async () => {
-    const lePasse = async (avancer: (territoireId: number, rappel: Date, retour: Date) => Promise<void>) => {
+  it("lève le même brouillard et fait le même récit, quel que soit le découpage du temps autour du rappel", async () => {
+    /** Les Cases du Territoire découvertes, en clés « q,r », et la place de son Foyer. */
+    const connues = async (territoireId: number) =>
+      new Set(
+        (
+          await pool.query<Coordonnees>(
+            "select c.q, c.r from case_decouverte d join case_du_monde c on c.id = d.case_id where d.territoire_id = $1",
+            [territoireId],
+          )
+        ).rows.map(({ q, r }) => `${q},${r}`),
+      );
+    const leFoyer = async (territoireId: number) =>
+      (
+        await pool.query<Coordonnees & { mondeId: number }>(
+          "select f.q, f.r, f.monde_id as \"mondeId\" from territoire t join case_du_monde f on f.id = t.foyer_case_id where t.id = $1",
+          [territoireId],
+        )
+      ).rows[0];
+    /**
+     * Un départ, un rappel 1 h 30 et quelques secondes plus tard (au-delà de la quatrième Case, la première hors des abords
+     * du Foyer), le Territoire calculé jusqu'à `calcule` minutes après le départ avant le rappel, puis `avancer` jusqu'après
+     * le retour : ce que le joueur en retrouve.
+     */
+    const lePasse = async (calcule: number, avancer: (territoireId: number, rappel: Date, retour: Date) => Promise<void>) => {
       const { territoireId, ne } = await naitre();
       const depart = apres(ne, MINUTE);
       const destination = await uneCase(territoireId);
       await aLHeure(territoireId, depart);
-      const avant = await decouvertes(territoireId);
+      const avant = await connues(territoireId);
       const expeditionId = await partir(territoireId, destination, depart);
-      const rappel = apres(depart, 47 * MINUTE + 13_457);
-      await aLHeure(territoireId, rappel);
-      await rappelerLExpedition(pool, territoireId, expeditionId, rappel);
+      const rappel = apres(depart, 90 * MINUTE + 13_457);
+      await aLHeure(territoireId, apres(depart, calcule * MINUTE));
+      expect(await rappelerLExpedition(pool, territoireId, expeditionId, rappel)).toEqual({ rappeleeLe: rappel });
       const retour = apres(rappel, rappel.getTime() - depart.getTime());
       await avancer(territoireId, rappel, retour);
+      // Les Cases que ses horaires disent révélées jusqu'au rappel, que le Monde a et que le Territoire ne connaissait pas.
+      const foyer = await leFoyer(territoireId);
+      const existantes = new Set(
+        (
+          await pool.query<Coordonnees>("select q, r from case_du_monde where monde_id = $1 and abs(q - $2) <= 12 and abs(r - $3) <= 12", [
+            foyer.mondeId,
+            foyer.q,
+            foyer.r,
+          ])
+        ).rows.map(({ q, r }) => `${q},${r}`),
+      );
+      const horaires = { partLe: depart, trajetMinutes: ALLER, sejourMinutes: SEJOUR, rappeleeLe: rappel };
+      const attendues = casesRevelees(foyer, destination, horaires, apres(retour, 60 * MINUTE))
+        .map(({ q, r }) => `${q},${r}`)
+        .filter((c) => existantes.has(c) && !avant.has(c));
+      const nouvelles = [...(await connues(territoireId))].filter((c) => !avant.has(c));
+      expect(new Set(nouvelles)).toEqual(new Set(attendues));
+      expect(nouvelles.length).toBeGreaterThan(0);
+      expect((await enBase(expeditionId)).rentreeLe).toEqual(retour);
       const [recit] = await recitsDeRetour(territoireId);
-      return { rentree: (await enBase(expeditionId)).rentreeLe!.getTime() - depart.getTime(), lignes: recit.texte.split("\n").slice(2), levees: (await decouvertes(territoireId)) - avant };
+      expect(recit.texte.split("\n").slice(1)).toEqual([
+        `Rappelée à l'aller le ${formaterJourEtHeure(rappel, "Europe/Paris")}.`,
+        "Aller 1 h 30, sans séjour, retour 1 h 30.",
+        nouvelles.length === 1 ? "Une Case est sortie du brouillard." : `${nouvelles.length} Cases sont sorties du brouillard.`,
+        "Aucune Bête ne s'est montrée.",
+      ]);
     };
-    const fermee = await lePasse(async (territoireId, _rappel, retour) => {
+    // Page fermée depuis le départ : un seul rattrapage, après le retour, qui passe par le rappel.
+    await lePasse(0, async (territoireId, _rappel, retour) => {
       await aLHeure(territoireId, apres(retour, 5 * 60 * MINUTE));
     });
-    const ouverte = await lePasse(async (territoireId, rappel, retour) => {
+    // Page ouverte du départ au retour : le temps avance par petits bouts, de part et d'autre du rappel.
+    await lePasse(0, async (territoireId, rappel, retour) => {
       for (let instant = rappel; instant < retour; instant = apres(instant, 3 * MINUTE + 1_234)) await aLHeure(territoireId, instant);
       await aLHeure(territoireId, apres(retour, 5 * 60 * MINUTE));
     });
-    expect(ouverte).toEqual(fermee);
-    expect(fermee.rentree).toBe(2 * (47 * MINUTE + 13_457));
+    // Le Territoire calculé jusqu'un peu avant le rappel, puis rattrapé d'un bloc.
+    await lePasse(83, async (territoireId, _rappel, retour) => {
+      await aLHeure(territoireId, retour);
+    });
   }, 60_000);
 });
