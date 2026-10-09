@@ -7,6 +7,7 @@ import {
   casesDesAnneaux,
   centre,
   CENTRE,
+  coordonneeValable,
   dansLeCoeur,
   dansLeMonde,
   distance,
@@ -35,6 +36,11 @@ describe("géométrie des Cases", () => {
     const autour = voisines({ q: 2, r: -1 });
     expect(autour).toHaveLength(6);
     for (const v of autour) expect(anneau({ q: v.q - 2, r: v.r + 1 })).toBe(1);
+  });
+
+  it("n'accepte de coordonnée de Case qu'entière et que la base peut tenir (US-0428, US-0901)", () => {
+    for (const n of [0, -5, 3, 2_147_483_647, -2_147_483_647]) expect(coordonneeValable(n)).toBe(true);
+    for (const n of [2_147_483_648, -2_147_483_648, 3.5, Number.NaN, Number.POSITIVE_INFINITY]) expect(coordonneeValable(n)).toBe(false);
   });
 });
 

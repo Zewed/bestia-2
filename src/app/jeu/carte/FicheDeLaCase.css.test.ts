@@ -49,3 +49,21 @@ describe("fermer la fiche d'une Case (US-0430)", () => {
     expect(regle(".fermer:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 });
+
+describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
+  it("se touche au pouce : un bouton de 44 px de haut, toute la largeur de la fiche, qui se voit au clavier", () => {
+    const envoyer = regle(".envoyer");
+    expect(envoyer).toMatch(/display: flex;[^}]*min-height: 44px;/);
+    expect(envoyer).toContain("width: 100%;");
+    expect(envoyer).toContain("cursor: pointer;");
+    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
+  });
+
+  it("reste à portée au pied de la fiche, même quand le panneau du mobile, plafonné, coupe ce qui le précède", () => {
+    const envoyer = regle(".envoyer");
+    expect(envoyer).toMatch(/position: sticky;[^}]*bottom: 0;/);
+    // Le fond de la fiche autour de lui : le texte coupé ne le touche pas, mais la croix reste au-dessus.
+    expect(envoyer).toContain("box-shadow: 0 0 0 16px var(--bloc);");
+    expect(regle(".fermer")).toContain("z-index: 1;");
+  });
+});

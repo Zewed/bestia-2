@@ -26,11 +26,12 @@
   font-weight: var(--graisse-titre);
 }
 
-/* US-0430 : sa croix, de 44 px, en haut à droite. */
+/* US-0430 : sa croix, de 44 px, en haut à droite ; au-dessus de « Envoyer une Expédition » collé au pied (US-0901). */
 .fermer {
   position: absolute;
   top: 4px;
   right: 4px;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -104,6 +105,42 @@
 
 .echec {
   color: var(--texte-discret);
+}
+
+/*
+ * US-0901 : « Envoyer une Expédition », au pied de la fiche, au pouce : toute sa largeur, sur l'Encre. Il y reste
+ * collé quand la fiche est coupée, comme dans le panneau plafonné d'un petit téléphone ou d'un téléphone en paysage,
+ * qui ne défile pas au doigt ; le fond de la fiche l'entoure, pour que le texte coupé ne le touche pas.
+ */
+.envoyer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 0 14px;
+  box-shadow: 0 0 0 16px var(--bloc);
+  border-radius: var(--arrondi-moyen);
+  background: var(--encre);
+  color: var(--blanc-chaud);
+  font-weight: var(--graisse-titre);
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .envoyer:hover {
+    background: var(--encre-survol);
+  }
+}
+
+.envoyer:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
 }
 
 /* En attendant le serveur : la place du titre et d'une ligne, qui palpitent. */

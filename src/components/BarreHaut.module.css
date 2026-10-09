@@ -601,9 +601,10 @@
 /*
  * US-0324 : sous 1280 px, la navigation à trois entrées ne laisse plus la place à coup sûr aux
  * ressources sur la ligne (quatre Stocks pleins, ou de grands nombres avec leur production) : elles passent
- * en bande sous la barre, centrées, toute la largeur sous un filet.
+ * en bande sous la barre, centrées, toute la largeur sous un filet. US-0901 : sous 1400 px depuis la cinquième
+ * entrée, « Expéditions », plus large de 113 px ; au-delà, le nom du chef garde la place qu'il avait.
  */
-@media (min-width: 821px) and (max-width: 1279px) {
+@media (min-width: 821px) and (max-width: 1399px) {
   .ressources {
     grid-column: 1 / -1;
     grid-row: 2;
@@ -628,7 +629,7 @@
   }
 
   /*
-   * La navigation en onglets fixés en bas de l'écran, au pouce : quatre onglets égaux (US-0324, US-0417),
+   * La navigation en onglets fixés en bas de l'écran, au pouce : cinq onglets (US-0324, US-0417, US-0901),
    * sur l'Encre de la barre, au-dessus de l'encoche du bas. La page s'arrête au-dessus (--hauteur-onglets,
    * formes.css).
    */
@@ -641,22 +642,26 @@
     background: var(--encre);
   }
 
+  /*
+   * US-0901 : les onglets se partagent la largeur à parts égales, sauf celui dont le nom n'y tiendrait pas, qui
+   * prend ce qu'il lui faut (1fr ne descend pas sous la largeur de son contenu).
+   */
   .entrees {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, 1fr);
     gap: 0;
     height: var(--hauteur-onglets);
   }
 
   /*
-   * Un onglet de 80 px sur 320 px (US-0417) : en 13 px, « Habitants » et son point, « Récits » et sa pastille,
-   * même à « 99+ », y tiennent.
+   * Cinq onglets de 64 px en moyenne sur 320 px (US-0901) : en 12 px, « Expéditions », « Habitants » et son
+   * point, « Récits » et sa pastille, même à « 99+ », y tiennent ensemble.
    */
   .entree {
     height: 100%;
     padding: 0 2px;
     border-radius: 0;
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .entree:focus-visible {
