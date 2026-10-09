@@ -26,6 +26,8 @@ const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async (
 vi.mock("@/monde/explorateurs", () => explorateurs);
 vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
 vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
+// US-0909 : l'escorte d'une Expédition sans Bête, réduite à sa place (testée à part).
+vi.mock("./SansEscorte", () => ({ SansEscorte: () => <i data-sans-escorte="" /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -128,16 +130,16 @@ describe("l'écran d'Expédition (US-0901)", () => {
     expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(7 + SEJOUR.length);
   });
 
-  it("propose la durée du séjour, avec ou sans destination, entre les explorateurs et le départ (US-0906)", async () => {
+  it("propose la durée du séjour, avec ou sans destination, entre l'escorte et le départ (US-0906)", async () => {
     connecte();
-    // Le bloc Séjour, seul entre le bloc Explorateurs et le départ (réduits ici à ce que la page leur donne).
-    const entreExplorateursEtDepart = /<i data-explorateurs="[^"]*"><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
+    // Le bloc Séjour, seul entre l'escorte (US-0909 : ici sans Bête) et le départ (réduits ici à ce que la page leur donne).
+    const entreEscorteEtDepart = /<i data-sans-escorte=""><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
     const sansDestination = await ouvrir();
     expect(sansDestination).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
-    expect(sansDestination).toMatch(entreExplorateursEtDepart);
+    expect(sansDestination).toMatch(entreEscorteEtDepart);
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     const avecDestination = await ouvrir({ q: "3", r: "-5", sejour: "240" });
-    expect(avecDestination).toMatch(entreExplorateursEtDepart);
+    expect(avecDestination).toMatch(entreEscorteEtDepart);
     // La durée que l'adresse garde, rapportée de la carte avec la Case touchée.
     expect(textes(avecDestination).slice(-SEJOUR.length)).toEqual(["Séjour", "4 h", ...SEJOUR.slice(2)]);
   });
@@ -236,5 +238,24 @@ describe("choisir la destination depuis l'écran d'Expédition (US-0907)", () =>
     expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Cette Case appartient à un Territoire.", "Choisir sur la carte", ...SEJOUR]);
     expect(html).not.toMatch(/Biome|Distance|Aucune destination/);
     expect(lien(html, "Choisir sur la carte")).toBe("/jeu/carte?choix=destination");
+  });
+});
+
+describe("partir sans escorte (US-0909)", () => {
+  afterEach(() => {
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+
+  it("dit l'Expédition sans escorte là où serait l'escorte, juste après les explorateurs, avec ou sans destination", async () => {
+    connecte();
+    const apresLesExplorateurs = /<i data-explorateurs="[^"]*"><\/i><i data-sans-escorte=""><\/i><section/;
+    expect(await ouvrir()).toMatch(apresLesExplorateurs);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(apresLesExplorateurs);
   });
 });

@@ -278,3 +278,9 @@ export const PRESENCE_D_UNE_BETE_HEURES = 6;
 export const SEJOUR_MINUTES = { min: 30, max: 24 * 60, pas: 30 };
 /** US-0906 : les durées de séjour toutes prêtes, qui se choisissent d'un doigt sur mobile : 1 h, 4 h, 8 h et 12 h (décidées le 2026-10-08). */
 export const SEJOURS_TOUT_PRETS_MINUTES = [60, 4 * 60, 8 * 60, 12 * 60];
+
+/**
+ * US-0909 : sans escorte, une Expédition avance au pas des explorateurs : 20 minutes de jeu par Case (valeur provisoire,
+ * à régler en jouant). La durée du trajet (US-0912) en tirera l'aller et le retour (src/expeditions/allure.ts).
+ */
+export const PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE = 20;

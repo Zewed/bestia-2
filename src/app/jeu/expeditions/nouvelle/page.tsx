@@ -12,6 +12,7 @@ import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
+import { SansEscorte } from "./SansEscorte";
 import { Sejour } from "./Sejour";
 import { VersLaCarte } from "./VersLaCarte";
 
@@ -87,6 +88,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
+      {/* US-0909 : sans Bête, l'Expédition part sans escorte, et l'écran le dit là où se choisira l'escorte (US-0904). */}
+      <SansEscorte />
       <Sejour />
       <Partir libres={explorateurs.libres} />
     </main>
