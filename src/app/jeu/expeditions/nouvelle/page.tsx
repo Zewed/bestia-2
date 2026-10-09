@@ -6,8 +6,11 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
 import { destinationDUneCase } from "@/expeditions/destination";
+import { explorateursDuTerritoire } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
+import { Explorateurs } from "./Explorateurs";
+import { Partir } from "./Partir";
 import styles from "./page.module.css";
 import { VersLaCarte } from "./VersLaCarte";
 
@@ -64,6 +67,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   const laCase = caseEnParametre(await searchParams);
   const { territoireId } = await exigerCompte(laCase ? `${ECRAN}?q=${laCase.q}&r=${laCase.r}` : ECRAN);
   const destination = laCase && territoireId !== null ? await destinationDUneCase(getPool(), territoireId, laCase) : null;
+  // US-0902 : les explorateurs libres sur total, lus à chaque affichage ; aucun pour un chef sans Territoire.
+  const explorateurs = territoireId !== null ? await explorateursDuTerritoire(getPool(), territoireId) : { libres: 0, total: 0 };
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
@@ -80,6 +85,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
           </>
         )}
       </Bloc>
+      <Explorateurs {...explorateurs} />
+      <Partir libres={explorateurs.libres} />
     </main>
   );
 }

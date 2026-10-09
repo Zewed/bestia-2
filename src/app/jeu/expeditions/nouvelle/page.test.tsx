@@ -19,6 +19,11 @@ vi.mock("@/expeditions/destination", () => destinations);
 // US-0907 : l'adresse de l'écran, telle que le navigateur l'a, que lit le lien vers la carte.
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
+// US-0902 : les explorateurs du Territoire, et leur bloc et le départ réduits à ce que la page leur donne (testés à part).
+const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })) }));
+vi.mock("@/monde/explorateurs", () => explorateurs);
+vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
+vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -136,6 +141,45 @@ describe("l'écran d'Expédition (US-0901)", () => {
     vi.stubEnv("VERCEL_ENV", "production");
     await expect(ouvrir({ q: "3", r: "-5" })).rejects.toMatchObject({ digest: expect.stringContaining("404") });
     expect(cookie.jetonDeSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
+  afterEach(() => {
+    explorateurs.explorateursDuTerritoire.mockClear();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  /** Ce que la page donne au bloc Explorateurs, puis au départ, tel qu'elle le rend. */
+  const donne = (nom: string, valeur: object) => `<i data-${nom}="${JSON.stringify(valeur).replaceAll('"', "&quot;")}"></i>`;
+
+  it("propose les explorateurs du Territoire de la garde, libres sur total, juste après la destination", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(explorateurs.explorateursDuTerritoire).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
+    // US-0907 : le bloc Destination finit sur le lien qui la change.
+    expect(html).toMatch(new RegExp(`7 Cases de votre Foyer</dd></div></dl><a [^>]*>Changer de destination</a></section>${donne("explorateurs", { libres: 2, total: 3 })}`));
+  });
+
+  it("finit sur le départ, qui sait combien d'explorateurs sont libres, avec ou sans destination", async () => {
+    connecte();
+    expect(await ouvrir()).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+  });
+
+  it("ne propose aucun explorateur à un chef sans Territoire, sans rien demander à la base", async () => {
+    connecte();
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
+    const html = await ouvrir();
+    expect(explorateurs.explorateursDuTerritoire).not.toHaveBeenCalled();
+    expect(html).toContain(donne("explorateurs", { libres: 0, total: 0 }));
+    expect(html).toContain(donne("partir", { libres: 0 }));
   });
 });
 
