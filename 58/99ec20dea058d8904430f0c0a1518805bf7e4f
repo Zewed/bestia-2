@@ -1,0 +1,16 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  h_1294ab5999dad1 31
+docs/stories/README.md
+  h_1294ab5999dad1 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "5899ec20dea058d8904430f0c0a1518805bf7e4f",
+  "prompts": {},
+  "humans": {
+    "h_1294ab5999dad1": {
+      "author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
