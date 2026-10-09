@@ -2,7 +2,7 @@ import { connection } from "next/server";
 import { passageDeLaTache } from "@/temps/absents";
 import { autoriserTache } from "@/temps/autorisation";
 
-// Appelée par la tâche planifiée de Vercel (vercel.json), toutes les 5 minutes.
+// Appelée par la tâche planifiée de Vercel (vercel.json), toutes les heures tant que le jeu n'est pas ouvert (src/reglages.ts).
 export const maxDuration = 60;
 
 export async function GET(request: Request) {
