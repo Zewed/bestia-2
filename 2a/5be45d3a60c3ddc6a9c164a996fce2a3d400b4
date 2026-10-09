@@ -1,0 +1,31 @@
+src/app/jeu/expeditions/nouvelle/SansEscorte.test.tsx
+  s_97a431cfa65ca7::t_dd47b798e423e0 1-62
+src/app/jeu/expeditions/nouvelle/SansEscorte.tsx
+  s_97a431cfa65ca7::t_4f83bbcabad542 1-14
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_c829161c88c64c 29-30,133,135-136,139,142,243-261
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_72a9c83d71e0f2 15,91-92
+src/expeditions/allure.test.ts
+  s_97a431cfa65ca7::t_fd855c0814bb4c 1-23
+src/expeditions/allure.ts
+  s_97a431cfa65ca7::t_33f22f283243bf 1-19
+src/reglages.ts
+  s_97a431cfa65ca7::t_9940ba6667c12d 281-286
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "2a5be45d3a60c3ddc6a9c164a996fce2a3d400b4",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
