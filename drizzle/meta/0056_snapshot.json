@@ -1,5 +1,5 @@
 {
-  "id": "62d77c3a-2548-424f-bb68-3f4bc9a19a1f",
+  "id": "7e4ef9e9-9aa1-45a9-8d7f-5e3845c51026",
   "prevId": "296a4d8c-9c54-4b26-8028-9d57266124be",
   "version": "7",
   "dialect": "postgresql",
@@ -1167,6 +1167,21 @@
           "columns": [
             {
               "expression": "territoire_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "expedition_par_case": {
+          "name": "expedition_par_case",
+          "columns": [
+            {
+              "expression": "case_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

@@ -706,6 +706,8 @@ export const expedition = pgTable(
   },
   (t) => [
     index("expedition_par_territoire").on(t.territoireId),
+    // US-0934 : les Expéditions de tous les Territoires présentes sur une Case, lues à chaque rattrapage d'une Rencontre.
+    index("expedition_par_case").on(t.caseId),
     check("expedition_trajet_positif", sql`${t.trajetMinutes} > 0`),
     check("expedition_sejour_positif", sql`${t.sejourMinutes} > 0`),
   ],
