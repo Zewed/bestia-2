@@ -6,8 +6,10 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { getPool } from "@/db";
 import { biomesEnBase } from "@/donnees/en-base";
 import { choixDeDestination, versLaCarte } from "@/expeditions/choix-de-destination";
+import { expeditionsEnCours } from "@/expeditions/en-cours";
 import { carteDuJoueur } from "@/monde/carte";
 import { couleur } from "@/monde/couleurs-de-la-carte";
+import { maintenant, vitesse } from "@/temps/horloge";
 import { Attente } from "./Attente";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { Legende } from "./Legende";
@@ -22,18 +24,26 @@ export const metadata: Metadata = { title: "Carte" };
  * légende, les Biomes de terre puis les eaux de leur nom en base. US-0434 : son attente, jusqu'à ce qu'elle soit
  * dessinée ; si sa lecture échoue, error.tsx. Sans session, la garde mène à la connexion, qui ramène ici. US-0907 :
  * ouverte depuis l'écran d'Expédition pour en choisir la destination (« ?choix=destination »), elle le dit à la carte,
- * avec son adresse, qui garde les autres choix de l'écran ; la connexion y ramène de même.
+ * avec son adresse, qui garde les autres choix de l'écran ; la connexion y ramène de même. US-0913 : les Expéditions en
+ * cours du joueur, les siennes seulement, lues pour son Territoire à l'heure du jeu, avec cette heure et le rythme du jeu :
+ * la carte les suit en direct.
  */
 export default async function Carte({ searchParams }: PageProps<"/jeu/carte">) {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const destination = choixDeDestination(await searchParams);
   const { territoireId } = await exigerCompte(destination === null ? "/jeu/carte" : versLaCarte(destination));
-  const [carte, biomes] = territoireId === null ? [null, []] : await Promise.all([carteDuJoueur(getPool(), territoireId), biomesEnBase(getPool())]);
+  const instant = maintenant();
+  const [carte, biomes, expeditions] =
+    territoireId === null
+      ? [null, [], []]
+      : await Promise.all([carteDuJoueur(getPool(), territoireId), biomesEnBase(getPool()), expeditionsEnCours(getPool(), territoireId, instant)]);
   return (
     <main className={styles.page}>
       <h1 className={styles.annonce}>Carte</h1>
-      {carte ? <CarteDuJeu carte={carte} fonds={carte.teintes.map(couleur)} destination={destination} /> : null}
+      {carte ? (
+        <CarteDuJeu carte={carte} fonds={carte.teintes.map(couleur)} destination={destination} expeditions={expeditions} maintenant={instant} vitesse={vitesse()} />
+      ) : null}
       {carte ? <Attente /> : null}
       {carte ? (
         <Legende

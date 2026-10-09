@@ -136,6 +136,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0913 · Suivre l'Expédition sur la carte
 **En tant que** joueur, **je veux** voir où en est mon Expédition sur la carte, **afin de** suivre sa progression d'un coup d'œil.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1371, Zewed/bestia-2#23). Sur la carte, chaque Expédition en cours du joueur a un repère posé sur son chemin, qui avance chaque seconde au rythme du jeu ; son chemin est tracé en pointillés du Foyer à la destination, marquée d'un fanion. Seul le joueur qui l'a envoyée les voit. Toucher le repère ouvre la fiche de l'Expédition, avec le même détail que la liste : phase, temps restant, explorateurs, escorte, retour prévu. Toucher encore passe au repère suivant posé au même point, puis à la Case dessous. La position sur le chemin se calcule en un seul endroit (src/expeditions/position.ts).
 - **Débloquée par** : US-0911, Étape 19
 - **Critères d'acceptation** :
   - Un repère montre l'endroit du chemin où se trouve l'Expédition, et la destination est marquée.
@@ -155,6 +156,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0915 · Le séjour sur la Case
 **En tant que** joueur, **je veux** que mon Expédition reste sur la Case le temps choisi, **afin de** lui laisser la chance d'y croiser des Bêtes sauvages.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1373, Zewed/bestia-2#22). À l'arrivée, l'Expédition passe en « séjour » avec le compte à rebours de la durée choisie, et repart seule vers le Foyer à sa fin, sans action ni rechargement. Le séjour va de l'arrivée (comprise) à la fin de la durée (exclue) ; un seul endroit dit quelles Expéditions sont présentes sur une Case, à un instant ou pendant une période (src/expeditions/presence.ts), la même réponse en direct et au rattrapage : c'est là que l'étape 40 fera ses Rencontres.
 - **Débloquée par** : US-0912
 - **Critères d'acceptation** :
   - À l'arrivée, l'Expédition passe en phase « séjour », avec le compte à rebours de la durée choisie.

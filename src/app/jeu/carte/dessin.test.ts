@@ -801,3 +801,88 @@ describe("la portée d'exploration, en choisissant la destination (US-0908)", ()
     expect(avec.fermetures()).toBe(dessiner(dezoomee, null, monde).fermetures());
   });
 });
+
+describe("les Expéditions en cours sur la carte (US-0913)", () => {
+  const FOYER = { q: -47, r: 56 };
+  const vue = vueSurLeFoyer(FOYER, 800, 600);
+  const autour = casesDesAnneaux(0, 8).map((c) => ({ q: c.q + FOYER.q, r: c.r + FOYER.r }));
+  const carte = { teintes: ["prairie"], cases: enColonnes(autour), foyer: FOYER, foyers: [] };
+  const HUTTE = { image: "hutte" as unknown as CanvasImageSource, largeur: 384, hauteur: 256 };
+  /** Deux Expéditions : l'une à 3 Cases à l'est, l'autre à 2 Cases au sud-ouest ; chacune de son chemin, Foyer exclu. */
+  const CHEMINS = [
+    [1, 2, 3].map((n) => ({ q: FOYER.q + n, r: FOYER.r })),
+    [1, 2].map((n) => ({ q: FOYER.q - n, r: FOYER.r + n })),
+  ];
+  const EXPEDITIONS = { chemins: CHEMINS, fanion: "ciel" };
+  const dessiner = (expeditions: typeof EXPEDITIONS | null, ici: Vue = vue, choisie: Coordonnees | null = null, portee: { cases: number; voile: string } | null = null) => {
+    const essai = pinceauDEssai();
+    dessinerLaCarte(essai.pinceau, carte, ici, peinture(["vert"]), HUTTE, choisie, portee, expeditions);
+    return essai;
+  };
+  /** Le trait pointillé des chemins : des points ronds, seul trait de la carte à tirets si serrés. */
+  const chemins = (peints: Peint[]) => peints.filter((p) => p.geste === "border" && p.bouts === "round" && p.tirets.length === 2 && p.tirets[0] < 0.1);
+
+  it("trace le chemin de chaque Expédition d'un trait de points d'Encre, de centre en centre, du Foyer à sa destination, d'un seul geste", () => {
+    const traits = chemins(dessiner(EXPEDITIONS).peints);
+    expect(traits).toHaveLength(1);
+    const [trait] = traits;
+    expect(trait.couleur).toBe("Encre");
+    expect(trait.traces.map((t) => t.map(cle))).toEqual(CHEMINS.map((chemin) => [FOYER, ...chemin].map((c) => cle(aLEcran(c, vue)))));
+    // Des points, à quelques pixels l'un de l'autre, à tout zoom : le vide entre eux ne dépend pas de la taille des Cases.
+    expect(trait.tirets[1]).toBeGreaterThan(trait.epaisseur);
+    expect(chemins(dessiner(EXPEDITIONS, { ...vue, rayon: 3 }).peints)[0].tirets).toEqual(trait.tirets);
+    // Léger, pour ne pas cacher les Biomes : à demi transparent.
+    expect(trait.opacite).toBeGreaterThan(0.3);
+    expect(trait.opacite).toBeLessThan(1);
+  });
+
+  it("marque la destination de chaque Expédition d'un fanion ciel cerné d'Encre, planté sur la Case, à la taille du repère du Foyer", () => {
+    const { peints } = dessiner(EXPEDITIONS);
+    const fanions = peints.filter((p) => p.couleur === "ciel");
+    expect(fanions).toHaveLength(1);
+    const [fanion] = fanions;
+    expect(fanion.geste).toBe("remplir");
+    expect(fanion.traces).toHaveLength(2);
+    expect(peints[peints.indexOf(fanion) + 1]).toMatchObject({ geste: "border", couleur: "Encre", traces: fanion.traces });
+    // Chaque fanion au-dessus de sa destination, à droite de la hampe qui part de son centre.
+    const taille = tailleDuRepere(vue.rayon);
+    CHEMINS.forEach((chemin, i) => {
+      const { x, y } = aLEcran(chemin.at(-1)!, vue);
+      for (const p of fanion.traces[i]) {
+        expect(p.x).toBeGreaterThanOrEqual(x - 1e-9);
+        expect(p.x).toBeLessThanOrEqual(x + 1.5 * taille);
+        expect(p.y).toBeLessThan(y);
+        expect(p.y).toBeGreaterThan(y - 2.5 * taille);
+      }
+    });
+    const hampes = peints.find((p) => p.geste === "border" && p.couleur === "Encre" && p.traces.length === 2 && p.traces.every((t) => t.length === 2))!;
+    expect(hampes.traces.map((t) => cle(t[0]))).toEqual(CHEMINS.map((chemin) => cle(aLEcran(chemin.at(-1)!, vue))));
+  });
+
+  it("se voit à tout zoom : le fanion garde la taille du repère du Foyer quand les Cases rapetissent", () => {
+    const petite = { ...vue, rayon: 3 };
+    const fanion = dessiner(EXPEDITIONS, petite).peints.find((p) => p.couleur === "ciel")!;
+    const ys = fanion.traces[0].map((p) => p.y);
+    expect(Math.max(...ys) - Math.min(...ys)).toBeGreaterThan(0.5 * tailleDuRepere(3));
+  });
+
+  it("pose les chemins et les fanions par-dessus les Cases et le voile de la portée, sous le Foyer, la Case choisie et le repère du Foyer", () => {
+    const sans = dessiner(null, vue, CHEMINS[0][1], { cases: 8, voile: "grisé" }).peints;
+    const avec = dessiner(EXPEDITIONS, vue, CHEMINS[0][1], { cases: 8, voile: "grisé" }).peints;
+    const debut = avec.findIndex((p, i) => JSON.stringify(p) !== JSON.stringify(sans[i]));
+    const ajoutes = avec.slice(debut, debut + avec.length - sans.length);
+    expect(ajoutes.map((p) => `${p.geste} ${p.couleur}`)).toEqual(["border Encre", "remplir ciel", "border Encre", "border Encre"]);
+    expect(avec.slice(debut + ajoutes.length)).toEqual(sans.slice(debut));
+    expect(avec[debut - 1].couleur).toBe("grisé");
+  });
+
+  it("ne dessine rien de plus sans Expédition en cours, ni d'un chemin vide", () => {
+    expect(dessiner({ chemins: [], fanion: "ciel" }).peints).toEqual(dessiner(null).peints);
+    expect(dessiner({ chemins: [[]], fanion: "ciel" }).peints).toEqual(dessiner(null).peints);
+    expect(dessiner({ chemins: [CHEMINS[0], []], fanion: "ciel" }).peints).toEqual(dessiner({ chemins: [CHEMINS[0]], fanion: "ciel" }).peints);
+  });
+
+  it("ne garde rien d'un dessin à l'autre : tout ce que save() met de côté, restore() le rend", () => {
+    expect(dessiner(EXPEDITIONS).misDeCote()).toBe(0);
+  });
+});
