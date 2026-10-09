@@ -379,6 +379,13 @@
       "when": 1791552797623,
       "tag": "0054_brouillard_leve_par_les_expeditions",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1791554419917,
+      "tag": "0055_bestiaire",
+      "breakpoints": true
     }
   ]
 }
