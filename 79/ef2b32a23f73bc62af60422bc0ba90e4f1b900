@@ -1,0 +1,55 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_dcefa44346dd26 149,152
+docs/stories/README.md
+  s_97a431cfa65ca7::t_f6014a8b38ef09 7,33
+drizzle/0054_brouillard_leve_par_les_expeditions.sql
+  s_97a431cfa65ca7::t_3d07038f903f06 1-7
+drizzle/meta/0054_snapshot.json
+  s_97a431cfa65ca7::t_8a3465587a6264 1-3081
+drizzle/meta/0056_snapshot.json
+  s_97a431cfa65ca7::t_1fb3236d889c0e 2-3,220-243,272-284
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_81f0857f3d2f04 376-382,386
+src/db/schema.ts
+  s_97a431cfa65ca7::t_966384f7dfa70c 596-598,609,611-614
+src/expeditions/apprivoisement.db.test.ts
+  s_97a431cfa65ca7::t_dc9f328d8abe28 211-249,251,253,255,258-262,265-269,273-274
+src/expeditions/brouillard.db.test.ts
+  s_97a431cfa65ca7::t_a7831e1ca1b8fc 1-323
+src/expeditions/brouillard.test.ts
+  s_97a431cfa65ca7::t_31bea56946ef9f 1-83
+src/expeditions/brouillard.ts
+  s_97a431cfa65ca7::t_c24ab929a2e03a 1-87
+src/expeditions/position.test.ts
+  s_97a431cfa65ca7::t_1cf669d58f8efd 4-5,77-123
+src/expeditions/position.ts
+  s_97a431cfa65ca7::t_3a4538ccc8d4d3 2-3,35-40,65-92
+src/monde/brouillard.db.test.ts
+  s_97a431cfa65ca7::t_bebca047e7f3d7 259-260
+src/monde/brouillard.ts
+  s_97a431cfa65ca7::t_3c00c57e27f60e 6,15,24-25,40-41,43-44
+src/monde/hex.test.ts
+  s_97a431cfa65ca7::t_22085bb4cf95ea 7,42-50
+src/monde/hex.ts
+  s_97a431cfa65ca7::t_934eeec2041b46 89-102
+src/reglages.ts
+  s_97a431cfa65ca7::t_34947872cfef0c 324-331
+src/temps/regles.ts
+  s_97a431cfa65ca7::t_613c9b0979c72e 6-7,9,23
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "79ef2b32a23f73bc62af60422bc0ba90e4f1b900",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
