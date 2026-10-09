@@ -180,31 +180,39 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
 
-    // Le chef naît avec ses trois Bêtes de naissance (US-0975) ; il a trois explorateurs, et deux Bêtes de l'Espèce la plus
-    // forte du jeu, qui escortent A et B : toute Bête sauvage est à leur portée (US-0934).
-    const compte = (await creerCompte(pool, `${lancement}@essai.test`, "une phrase de passe"))!;
-    const nom = `Abs${lancement.slice(-6).replace(/[^a-z]/g, "x")}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
-    territoireId = (await territoireDuCompte(pool, compte.id))!;
-    await pool.query(
-      "insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur'), ($1, 'Mael', 'explorateur')",
-      [territoireId],
-    );
     const { rows: especes } = await pool.query<{ id: string; attaque: number; vie: number; vitesse: number }>(
       "select id, attaque, vie, vitesse from espece order by id",
     );
     const forte = especes.reduce((x, y) => (forceDUneBete(y) > forceDUneBete(x) ? y : x));
-    await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2)", [territoireId, forte.id]);
-    const { rows: lieux } = await pool.query<{ foyer: Coordonnees; naissance: (Coordonnees & { id: number })[] }>(
-      `select json_build_object('q', f.q, 'r', f.r) as foyer,
-         coalesce((select json_agg(json_build_object('id', c.id, 'q', c.q, 'r', c.r) order by n.id)
-           from bete_de_naissance n join case_du_monde c on c.id = n.case_id where n.territoire_id = t.id), '[]') as naissance
-       from territoire t join case_du_monde f on f.id = t.foyer_case_id where t.id = $1`,
-      [territoireId],
-    );
-    const [{ foyer, naissance }] = lieux;
-    /** Les Cases libres à `ecart` Cases du Foyer, hors de celles des Bêtes de naissance, dans l'ordre de la carte. */
-    const aLEcart = async (ecart: number) =>
+    const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
+
+    /**
+     * Le `n`-ième chef qui naît dans le Monde d'essai, avec ses trois Bêtes de naissance (US-0975), trois explorateurs et
+     * deux Bêtes de l'Espèce la plus forte du jeu, qui escortent A et B : toute Bête sauvage est à leur portée (US-0934).
+     * Son Territoire, l'instant de sa naissance, la place de son Foyer et les Cases de ses Bêtes de naissance.
+     */
+    const naitre = async (n: number) => {
+      const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
+      const nom = `Abs${lancement.slice(-6).replace(/[^a-z]/g, "x")}${"abc"[n]}`;
+      expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const id = (await territoireDuCompte(pool, compte.id))!;
+      await pool.query(
+        "insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur'), ($1, 'Mael', 'explorateur')",
+        [id],
+      );
+      await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 2)", [id, forte.id]);
+      const { rows } = await pool.query<{ foyer: Coordonnees; naissance: (Coordonnees & { id: number })[] }>(
+        `select json_build_object('q', f.q, 'r', f.r) as foyer,
+           coalesce((select json_agg(json_build_object('id', c.id, 'q', c.q, 'r', c.r) order by n.id)
+             from bete_de_naissance n join case_du_monde c on c.id = n.case_id where n.territoire_id = t.id), '[]') as naissance
+         from territoire t join case_du_monde f on f.id = t.foyer_case_id where t.id = $1`,
+        [id],
+      );
+      return { territoireId: id, ne: await lireMarquePage(pool, "territoire", id), ...rows[0] };
+    };
+    type Chef = Awaited<ReturnType<typeof naitre>>;
+    /** Les Cases libres à `ecart` Cases du Foyer du chef, hors de celles de ses Bêtes de naissance, dans l'ordre de la carte. */
+    const aLEcart = async (chef: Chef, ecart: number) =>
       (
         await pool.query<Coordonnees & { id: number }>(
           `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
@@ -212,45 +220,57 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
            where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
              and not (c.id = any($3::int[]))
            order by c.q, c.r`,
-          [territoireId, ecart, naissance.map((c) => c.id)],
+          [chef.territoireId, ecart, chef.naissance.map((c) => c.id)],
         )
       ).rows;
-    /** Le premier départ, une minute après la naissance du chef. */
-    const premierDepart = apres(await lireMarquePage(pool, "territoire", territoireId), 1);
     /**
-     * L'Expédition `lettre` vers la Case `c`, partie `minutes` après le premier départ, pour `sejour` minutes, avec une Bête
-     * de chacune des Espèces `escorte` ; son trajet, comme son départ le chiffrera (US-0912).
+     * L'Expédition `lettre` du chef vers la Case `c`, partie à `partLe` pour `sejour` minutes, avec une Bête de chacune des
+     * Espèces `escorte` ; son trajet, comme son départ le chiffrera (US-0912).
      */
-    const prevoir = (lettre: Lettre, c: Coordonnees & { id: number }, minutes: number, sejour: number, escorte: typeof especes = []): Plan => {
-      const trajetMinutes = dureeDuTrajetMinutes(distance(foyer, c), escorte.map((e) => ({ vitesse: e.vitesse, nombre: 1 })));
-      const horaires = { partLe: apres(premierDepart, minutes), trajetMinutes, sejourMinutes: sejour };
+    const prevoir = (chef: Chef, lettre: Lettre, c: Coordonnees & { id: number }, partLe: Date, sejour: number, escorte: typeof especes = []): Plan => {
+      const trajetMinutes = dureeDuTrajetMinutes(distance(chef.foyer, c), escorte.map((e) => ({ vitesse: e.vitesse, nombre: 1 })));
+      const horaires = { partLe, trajetMinutes, sejourMinutes: sejour };
       const retour = retourDUneExpedition(horaires)!;
       return { lettre, destination: { q: c.q, r: c.r }, caseId: c.id, escorte: new Map(escorte.map((e) => [e.id, 1])), horaires, retour };
     };
-
-    const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
-    // B, escortée, part dix minutes après A, pour quatre heures sur la Case d'une Bête de naissance, encore là à son arrivée.
-    const b = prevoir("B", naissance[0], 10, 4 * HEURE, [forte]);
-    // A, escortée, part la première, au plus loin, pour douze heures sur une Case où plusieurs Bêtes sauvages se montrent,
-    // dont une au moins pendant le séjour ; à plus de 4 Cases de B, qui ne sort donc pas sa destination du brouillard.
-    const versA = async () => {
-      for (const ecart of [8, 7, 6]) {
-        for (const c of (await aLEcart(ecart)).filter((x) => distance(x, b.destination) > 4)) {
-          const a = prevoir("A", c, 0, 12 * HEURE, [forte]);
+    /**
+     * A, escortée, part la première, une minute après la naissance du chef, au plus loin, pour un jour sur une Case où
+     * plusieurs Bêtes sauvages se montrent, dont une au moins pendant le séjour ; au-delà des abords du Foyer, et à plus de
+     * 4 Cases de la Bête de naissance où va B : elle seule sort sa destination du brouillard. null sans une telle Case.
+     */
+    const versA = async (chef: Chef) => {
+      for (const ecart of [8, 7, 6, 5]) {
+        for (const c of (await aLEcart(chef, ecart)).filter((x) => distance(x, chef.naissance[0]) > 4)) {
+          const a = prevoir(chef, "A", c, apres(chef.ne, 1), 24 * HEURE, [forte]);
           const { debut, fin: repart } = sejourDUneExpedition(a.horaires)!;
           const betes = await betesSauvagesDUneCase(pool, c.id, debut, repart);
           if (betes.length >= 2 && betes.some((x) => x.arrivee >= debut)) return a;
         }
       }
-      throw new Error(`Aucune Case où plusieurs Bêtes se montrent, à 6 à 8 Cases du Foyer ${cle(foyer)}, pour A partie le ${premierDepart.toISOString()}.`);
+      return null;
     };
-    const a = await versA();
+    // Né près de la banquise, où aucune Bête ne vit, le chef n'a pas de Case pour A : il renaît ailleurs, au hasard.
+    let chef = await naitre(0);
+    let a = await versA(chef);
+    for (let n = 1; !a && n < 3; n++) {
+      await pool.query("delete from compte where email = $1", [`${lancement}-${n - 1}@essai.test`]);
+      chef = await naitre(n);
+      a = await versA(chef);
+    }
+    if (!a) throw new Error(`Aucune Case où plusieurs Bêtes se montrent, à 5 à 8 Cases du Foyer ${cle(chef.foyer)}, au troisième essai.`);
+    const { foyer, naissance } = chef;
+    territoireId = chef.territoireId;
+    /** Le premier départ, celui de A. */
+    const premierDepart = a.horaires.partLe;
+    // B, escortée, part dix minutes après A, pour quatre heures sur la Case d'une Bête de naissance, encore là à son arrivée.
+    const b = prevoir(chef, "B", naissance[0], apres(premierDepart, 10), 4 * HEURE, [forte]);
     // C, sans escorte, part la dernière, tout près, pour une demi-heure, là où elle sort le plus de Cases du brouillard que
     // ni les abords du Foyer, découverts à sa naissance, ni A ni B ne sortent, et qui sont bien dans le Monde.
     const revelees = (p: Plan) => casesRevelees(foyer, p.destination, p.horaires, p.retour);
     const dejaVues = new Set([...(await casesDecouvertes(pool, territoireId)), ...revelees(a), ...revelees(b)].map(cle));
     const neuves = (p: Plan) => revelees(p).filter((x) => anneau(x) <= MONDE_RAYON && !dejaVues.has(cle(x))).length;
-    const c = (await aLEcart(3)).map((x) => prevoir("C", x, 40, 30)).reduce((x, y) => (neuves(y) > neuves(x) ? y : x));
+    const versC = (await aLEcart(chef, 3)).map((x) => prevoir(chef, "C", x, apres(premierDepart, 40), 30));
+    const c = versC.reduce((x, y) => (neuves(y) > neuves(x) ? y : x));
     expect(neuves(c)).toBeGreaterThan(0);
     plans = [a, b, c];
     // Elles rentrent dans l'ordre inverse de leurs départs.
@@ -283,7 +303,7 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       .map((t) => new Date(t));
 
     for (const maniere of MANIERES) bilans[maniere] = await vivre(maniere, instantsDeLaPage, passagesDeLaTache);
-    // Près de 300 rattrapages à la suite, page ouverte : sous la charge de la suite complète, bien plus que les 30 s par défaut.
+    // Environ 400 rattrapages à la suite, page ouverte : sous la charge de la suite complète, bien plus que les 30 s par défaut.
   }, 240_000);
 
   afterAll(async () => {
