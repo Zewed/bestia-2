@@ -337,6 +337,13 @@
       "when": 1791517377434,
       "tag": "0047_effectif",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1791527192957,
+      "tag": "0048_betes_de_naissance",
+      "breakpoints": true
     }
   ]
 }

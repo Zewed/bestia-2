@@ -2,9 +2,10 @@ import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { calculerEmpreinte } from "@/comptes/empreinte";
-import { ABORDS_DU_FOYER_CASES } from "@/reglages";
+import { ABORDS_DU_FOYER_CASES, BETES_DE_NAISSANCE, PORTEE_D_EXPLORATION_CASES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { basculerLeMonde, MONDE_DU_JEU } from "./bascule";
+import { recevoirLesBetesDeNaissance } from "./betes-de-naissance";
 import { casesDecouvertes } from "./brouillard";
 import { choisirCaseDeNaissance } from "./foyers";
 import { creerUnMonde } from "./generer";
@@ -244,6 +245,34 @@ describe.skipIf(!URL_TEST)("naître sur le Monde généré, et y basculer les ch
         expect(attendues.length).toBeGreaterThan(10);
         expect((await casesDecouvertes(client, territoire)).map(({ q, r }) => ({ q, r }))).toEqual(attendues);
       }
+    });
+  }, 60_000);
+
+  it("leur pose de nouvelles Bêtes de naissance autour de leur nouveau Foyer, au retour de chacun (US-0975)", async () => {
+    await dansUnJeuDEssai(async (client, essai) => {
+      const comptes = await chefsNes(client, essai, ["Ourse", "Lynx"]);
+      /** Les Bêtes de naissance du Territoire sur le Monde `monde`, avec leur Case. */
+      const betes = async (territoire: number, monde: number) =>
+        (
+          await client.query<Coordonnees>(
+            "select c.q, c.r from bete_de_naissance b join case_du_monde c on c.id = b.case_id where b.territoire_id = $1 and c.monde_id = $2",
+            [territoire, monde],
+          )
+        ).rows;
+      const nes = await foyers(client, comptes);
+      for (const { territoire } of nes) expect(await betes(territoire, essai.id)).toHaveLength(BETES_DE_NAISSANCE);
+      await basculerLeMonde(client, MONDE_GENERE);
+      for (const compte of comptes) expect(await chefDuCompte(client as unknown as Pool, compte)).toMatchObject({ betesAttendues: true });
+      for (const { territoire, q, r } of await foyers(client, comptes)) {
+        expect(await betes(territoire, genereId)).toEqual([]);
+        expect(await recevoirLesBetesDeNaissance(essai.pool, territoire, new Date())).toBe(BETES_DE_NAISSANCE);
+        const nouvelles = await betes(territoire, genereId);
+        expect(nouvelles).toHaveLength(BETES_DE_NAISSANCE);
+        for (const c of nouvelles) expect(distance(c, { q, r })).toBeLessThanOrEqual(PORTEE_D_EXPLORATION_CASES);
+        // Celles de l'ancien Monde y restent, hors de portée.
+        expect(await betes(territoire, essai.id)).toHaveLength(BETES_DE_NAISSANCE);
+      }
+      for (const compte of comptes) expect(await chefDuCompte(client as unknown as Pool, compte)).toMatchObject({ betesAttendues: false });
     });
   }, 60_000);
 

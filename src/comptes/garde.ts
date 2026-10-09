@@ -7,12 +7,14 @@ import { redirect } from "next/navigation";
 import { cache } from "react";
 import { chefDuCompte, naitreSurLaCouronne } from "@/chefs/chef";
 import { getPool } from "@/db";
+import { recevoirLesBetesDeNaissance } from "@/monde/betes-de-naissance";
 import { famineDepuis } from "@/monde/famine";
 import { entretienDesHabitants, nombreDHabitants, nombreSansMetier } from "@/monde/habitants";
 import { famineImminenteDepuis } from "@/monde/production";
 import { nombreDeRecitsNonLus } from "@/monde/recits";
 import { type Stock, stocksDuTerritoire } from "@/monde/stocks";
 import { nombreDeVoyageurs } from "@/monde/voyageurs";
+import { maintenant } from "@/temps/horloge";
 import { rattraper } from "@/temps/rattraper";
 import { jetonDeSession } from "./cookie-session";
 import { compteDeLaSession } from "./session";
@@ -35,6 +37,7 @@ export const PAGE_ARRIVEE = "/jeu/arrivee";
  * toute action mènent à l'écran qui le demande (US-0131). Sinon, son Territoire est d'abord mis
  * à l'heure (US-0156). US-0160 : l'arrivée reprend là où elle s'était arrêtée ; un chef sans Foyer
  * en reçoit un, et tant que le récit d'arrivée n'a pas été montré, il passe avant tout le reste.
+ * US-0975 : un chef qui attend encore ses Bêtes de naissance les reçoit, une seule fois.
  */
 export async function exigerCompte(chemin = "/jeu"): Promise<ChefConnecte> {
   const compte = await exigerSession(chemin);
@@ -42,6 +45,8 @@ export async function exigerCompte(chemin = "/jeu"): Promise<ChefConnecte> {
   if (!chef) redirect(PAGE_NOM_DE_CHEF);
   // Un chef né avant les Foyers (avant US-0153) reçoit le sien à son retour.
   const territoireId = chef.territoireId ?? (await naitreSurLaCouronne(getPool(), compte.id));
+  // US-0975 : un chef né avant les Bêtes de naissance, ou dont le Foyer a changé de Monde, reçoit les siennes à son retour.
+  if (chef.territoireId !== null && chef.betesAttendues) await recevoirLesBetesDeNaissance(getPool(), chef.territoireId, maintenant());
   // US-0156 : le Territoire du joueur est mis à l'heure avant toute page ou action du jeu.
   if (territoireId !== null) await mettreALHeure(territoireId);
   if (territoireId !== null && !chef.recitLu && chemin !== PAGE_ARRIVEE) redirect(PAGE_ARRIVEE);
