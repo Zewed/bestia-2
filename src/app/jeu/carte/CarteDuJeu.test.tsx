@@ -791,6 +791,28 @@ describe("ouvrir la fiche d'une Case (US-0428)", () => {
   });
 });
 
+describe("choisir la destination d'une Expédition sur la carte (US-0907)", () => {
+  /** La Case au sud-ouest du Foyer, une forêt libre, à une Case de lui. */
+  const FORET: Fiche = { ...AUTOUR[1], biome: "Forêt", chef: null, aVous: false, zone: 0, distance: 1, anneau: 2 };
+  const lien = (nom: string) => screen.queryByRole("link", { name: nom });
+
+  it("ouverte pour choisir la destination, le dit à la fiche : « Choisir cette destination », qui revient à l'écran avec ses autres choix", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} destination="choix=destination&sejour=60" />);
+    cliquer(AUTOUR[1]);
+    await act(async () => fiches[0].repondre(FORET));
+    expect(lien("Choisir cette destination")!.getAttribute("href")).toBe(`/jeu/expeditions/nouvelle?q=${AUTOUR[1].q}&r=${AUTOUR[1].r}&sejour=60`);
+    expect(lien("Envoyer une Expédition")).toBeNull();
+  });
+
+  it("ouverte depuis la navigation, garde « Envoyer une Expédition »", async () => {
+    render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);
+    cliquer(AUTOUR[1]);
+    await act(async () => fiches[0].repondre(FORET));
+    expect(lien("Envoyer une Expédition")!.getAttribute("href")).toBe(`/jeu/expeditions/nouvelle?q=${AUTOUR[1].q}&r=${AUTOUR[1].r}`);
+    expect(lien("Choisir cette destination")).toBeNull();
+  });
+});
+
 describe("fermer la fiche d'une Case (US-0430)", () => {
   it("la ferme en touchant la carte hors de ses Cases, et retire le surlignage", () => {
     render(<CarteDuJeu carte={CARTE} fonds={FONDS} />);

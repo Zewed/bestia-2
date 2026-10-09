@@ -47,7 +47,7 @@ describe.skipIf(!URL_TEST)("ce que la page de la carte envoie au navigateur, sur
   /** Ce que la page donne à la carte du Territoire, lu dans le HTML qu'elle envoie, et ce HTML. */
   const envoye = async (territoireId: number) => {
     garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId, recitLu: true });
-    const html = renderToStaticMarkup(await Carte());
+    const html = renderToStaticMarkup(await Carte({ params: Promise.resolve({}), searchParams: Promise.resolve({}) } as PageProps<"/jeu/carte">));
     const brut = html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"');
     return { brut, proprietes: JSON.parse(brut) as { carte: CarteDuJoueur; fonds: string[] } };
   };

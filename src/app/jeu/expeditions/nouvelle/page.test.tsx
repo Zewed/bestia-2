@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Fiche, FicheInconnue } from "@/monde/fiche";
+import type { Destination } from "@/expeditions/destination";
+import type { Fiche } from "@/monde/fiche";
 import { SEJOUR_MINUTES } from "@/reglages";
 import { formaterMinutes } from "@/temps/affichage";
 
@@ -14,8 +15,12 @@ const chefs = vi.hoisted(() => ({
   naitreSurLaCouronne: vi.fn(async (): Promise<number | null> => null),
 }));
 vi.mock("@/chefs/chef", () => chefs);
-const fiches = vi.hoisted(() => ({ ficheDUneCase: vi.fn(async (): Promise<Fiche | FicheInconnue | null> => null) }));
-vi.mock("@/monde/fiche", () => fiches);
+// US-0907 : la destination lue sur base (destination.db.test.ts) : ici, ce que l'écran en montre.
+const destinations = vi.hoisted(() => ({ destinationDUneCase: vi.fn(async (): Promise<Destination | null> => null) }));
+vi.mock("@/expeditions/destination", () => destinations);
+// US-0907 : l'adresse de l'écran, telle que le navigateur l'a, que lit le lien vers la carte.
+const adresse = vi.hoisted(() => ({ recherche: "" }));
+vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
 // US-0902 : les explorateurs du Territoire, et leur bloc et le départ réduits à ce que la page leur donne (testés à part).
 const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })) }));
 vi.mock("@/monde/explorateurs", () => explorateurs);
@@ -28,12 +33,16 @@ vi.mock("next/server", async (original) => ({ ...(await original<object>()), con
 import NouvelleExpedition, { metadata } from "./page";
 
 /** L'écran d'Expédition ouvert avec `recherche` dans son adresse (« ?q=3&r=-5 » : { q: "3", r: "-5" }). */
-const ouvrir = async (recherche: Record<string, string | string[]> = {}) =>
-  renderToStaticMarkup(
+const ouvrir = async (recherche: Record<string, string | string[]> = {}) => {
+  adresse.recherche = new URLSearchParams(Object.entries(recherche).flatMap(([nom, valeur]) => [valeur].flat().map((v) => [nom, v]))).toString();
+  return renderToStaticMarkup(
     await NouvelleExpedition({ params: Promise.resolve({}), searchParams: Promise.resolve(recherche) } as PageProps<"/jeu/expeditions/nouvelle">),
   );
+};
 /** Les textes de la page, dans l'ordre de la lecture. */
 const textes = (html: string) => html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean);
+/** L'adresse du lien `nom` de la page. */
+const lien = (html: string, nom: string) => html.match(new RegExp(`<a [^>]*href="([^"]*)"[^>]*>${nom}</a>`))?.[1].replace(/&amp;/g, "&");
 
 /** US-0906 : les textes du bloc Séjour, après la destination : la durée choisie, les bornes du curseur, les durées toutes prêtes. */
 const SEJOUR = ["Séjour", "1 h", formaterMinutes(SEJOUR_MINUTES.min), formaterMinutes(SEJOUR_MINUTES.max), "1 h", "4 h", "8 h", "12 h"];
@@ -46,8 +55,8 @@ describe("l'écran d'Expédition (US-0901)", () => {
     vi.unstubAllEnvs();
     session.compteDeLaSession.mockReset();
     cookie.jetonDeSession.mockReset();
-    fiches.ficheDUneCase.mockReset();
-    fiches.ficheDUneCase.mockResolvedValue(null);
+    destinations.destinationDUneCase.mockReset();
+    destinations.destinationDUneCase.mockResolvedValue(null);
   });
 
   const connecte = () => {
@@ -63,31 +72,40 @@ describe("l'écran d'Expédition (US-0901)", () => {
 
   it("a pour destination la Case de son adresse, touchée sur la carte : son Biome et sa distance au Foyer", async () => {
     connecte();
-    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     const html = await ouvrir({ q: "3", r: "-5" });
     // Le Monde vient du Territoire de la garde, jamais de l'adresse, qui ne dit que la Case.
-    expect(fiches.ficheDUneCase).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, { q: 3, r: -5 });
-    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Biome", "Forêt", "Distance", "7 Cases de votre Foyer", ...SEJOUR]);
+    expect(destinations.destinationDUneCase).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, { q: 3, r: -5 });
+    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Biome", "Forêt", "Distance", "7 Cases de votre Foyer", "Changer de destination", ...SEJOUR]);
   });
 
   it("accorde la distance : « 1 Case de votre Foyer »", async () => {
     connecte();
-    fiches.ficheDUneCase.mockResolvedValue({ ...FORET, distance: 1 });
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: { ...FORET, distance: 1 } });
     expect(textes(await ouvrir({ q: "3", r: "-5" }))).toContain("1 Case de votre Foyer");
   });
 
   it("dit le Biome « inconnu » d'une Case encore sous le brouillard", async () => {
     connecte();
-    fiches.ficheDUneCase.mockResolvedValue({ q: 3, r: -5, inconnue: true, distance: 12 });
-    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toEqual(["Nouvelle Expédition", "Destination", "Biome", "inconnu", "Distance", "12 Cases de votre Foyer", ...SEJOUR]);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: { q: 3, r: -5, inconnue: true, distance: 12 } });
+    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toEqual([
+      "Nouvelle Expédition",
+      "Destination",
+      "Biome",
+      "inconnu",
+      "Distance",
+      "12 Cases de votre Foyer",
+      "Changer de destination",
+      ...SEJOUR,
+    ]);
   });
 
   it("ouverte depuis le menu, sans Case, n'a pas de destination, et mène à la carte pour en choisir une", async () => {
     connecte();
     const html = await ouvrir();
-    expect(fiches.ficheDUneCase).not.toHaveBeenCalled();
+    expect(destinations.destinationDUneCase).not.toHaveBeenCalled();
     expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte", ...SEJOUR]);
-    expect(html).toMatch(/<a [^>]*href="\/jeu\/carte"[^>]*>Choisir sur la carte<\/a>/);
+    expect(lien(html, "Choisir sur la carte")).toBe("/jeu/carte?choix=destination");
   });
 
   it("n'a pas de destination pour une Case que l'adresse dit mal, sans rien demander à la base", async () => {
@@ -96,20 +114,18 @@ describe("l'écran d'Expédition (US-0901)", () => {
     for (const recherche of fausses) {
       expect(textes(await ouvrir(recherche))).toContain("Aucune destination");
     }
-    expect(fiches.ficheDUneCase).not.toHaveBeenCalled();
+    expect(destinations.destinationDUneCase).not.toHaveBeenCalled();
   });
 
-  it("n'a pas de destination pour une Case que le Monde du joueur n'a pas, ni pour son propre Foyer (US-0907)", async () => {
+  it("n'a pas de destination pour une Case que le Monde du joueur n'a pas", async () => {
     connecte();
-    expect(textes(await ouvrir({ q: "999", r: "0" }))).toContain("Aucune destination");
-    fiches.ficheDUneCase.mockResolvedValue({ ...FORET, q: 0, r: 0, biome: "Prairie", chef: "Ourse", aVous: true, distance: 0 });
-    expect(textes(await ouvrir({ q: "0", r: "0" }))).toContain("Aucune destination");
+    expect(textes(await ouvrir({ q: "999", r: "0" }))).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte", ...SEJOUR]);
   });
 
-  it("n'ajoute aucune phrase d'explication : le titre, la destination, puis le séjour", async () => {
+  it("n'ajoute aucune phrase d'explication : le titre, la destination et de quoi la changer, puis le séjour", async () => {
     connecte();
-    fiches.ficheDUneCase.mockResolvedValue(FORET);
-    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(6 + SEJOUR.length);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(7 + SEJOUR.length);
   });
 
   it("propose la durée du séjour, avec ou sans destination, entre les explorateurs et le départ (US-0906)", async () => {
@@ -119,10 +135,11 @@ describe("l'écran d'Expédition (US-0901)", () => {
     const sansDestination = await ouvrir();
     expect(sansDestination).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
     expect(sansDestination).toMatch(entreExplorateursEtDepart);
-    fiches.ficheDUneCase.mockResolvedValue(FORET);
-    const avecDestination = await ouvrir({ q: "3", r: "-5" });
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const avecDestination = await ouvrir({ q: "3", r: "-5", sejour: "240" });
     expect(avecDestination).toMatch(entreExplorateursEtDepart);
-    expect(textes(avecDestination).slice(-SEJOUR.length)).toEqual(SEJOUR);
+    // La durée que l'adresse garde, rapportée de la carte avec la Case touchée.
+    expect(textes(avecDestination).slice(-SEJOUR.length)).toEqual(["Séjour", "4 h", ...SEJOUR.slice(2)]);
   });
 
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {
@@ -137,7 +154,7 @@ describe("l'écran d'Expédition (US-0901)", () => {
     await expect(ouvrir({ q: "3", r: "-5" })).rejects.toMatchObject({
       digest: expect.stringContaining(`;/connexion?suite=${encodeURIComponent("/jeu/expeditions/nouvelle?q=3&r=-5")};`),
     });
-    expect(fiches.ficheDUneCase).not.toHaveBeenCalled();
+    expect(destinations.destinationDUneCase).not.toHaveBeenCalled();
   });
 
   it("reste introuvable en production tant que l'entrée du jeu est fermée", async () => {
@@ -150,7 +167,7 @@ describe("l'écran d'Expédition (US-0901)", () => {
 describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
   afterEach(() => {
     explorateurs.explorateursDuTerritoire.mockClear();
-    fiches.ficheDUneCase.mockResolvedValue(null);
+    destinations.destinationDUneCase.mockResolvedValue(null);
   });
 
   const connecte = () => {
@@ -162,16 +179,17 @@ describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
 
   it("propose les explorateurs du Territoire de la garde, libres sur total, juste après la destination", async () => {
     connecte();
-    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     const html = await ouvrir({ q: "3", r: "-5" });
     expect(explorateurs.explorateursDuTerritoire).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
-    expect(html).toContain(`7 Cases de votre Foyer</dd></div></dl></section>${donne("explorateurs", { libres: 2, total: 3 })}`);
+    // US-0907 : le bloc Destination finit sur le lien qui la change.
+    expect(html).toMatch(new RegExp(`7 Cases de votre Foyer</dd></div></dl><a [^>]*>Changer de destination</a></section>${donne("explorateurs", { libres: 2, total: 3 })}`));
   });
 
   it("finit sur le départ, qui sait combien d'explorateurs sont libres, avec ou sans destination", async () => {
     connecte();
     expect(await ouvrir()).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
-    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     expect(await ouvrir({ q: "3", r: "-5" })).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
   });
 
@@ -182,5 +200,41 @@ describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
     expect(explorateurs.explorateursDuTerritoire).not.toHaveBeenCalled();
     expect(html).toContain(donne("explorateurs", { libres: 0, total: 0 }));
     expect(html).toContain(donne("partir", { libres: 0 }));
+  });
+});
+
+describe("choisir la destination depuis l'écran d'Expédition (US-0907)", () => {
+  afterEach(() => {
+    session.compteDeLaSession.mockReset();
+    cookie.jetonDeSession.mockReset();
+    destinations.destinationDUneCase.mockReset();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+
+  it("mène à la carte ouverte pour choisir la destination, même quand l'écran en a déjà une, pour la changer", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(lien(await ouvrir({ q: "3", r: "-5" }), "Changer de destination")).toBe("/jeu/carte?choix=destination");
+  });
+
+  it("garde en chemin les autres choix de l'écran, que la carte lui rendra avec la Case touchée", async () => {
+    connecte();
+    expect(lien(await ouvrir({ sejour: "60" }), "Choisir sur la carte")).toBe("/jeu/carte?choix=destination&sejour=60");
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    expect(lien(await ouvrir({ q: "3", r: "-5", explorateurs: "2" }), "Changer de destination")).toBe("/jeu/carte?choix=destination&explorateurs=2");
+  });
+
+  it("refuse une Case qui appartient à un Territoire, le Foyer du joueur compris, avec le message décidé, et mène à la carte", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ refus: "Cette Case appartient à un Territoire." });
+    const html = await ouvrir({ q: "0", r: "0" });
+    expect(textes(html)).toEqual(["Nouvelle Expédition", "Destination", "Cette Case appartient à un Territoire.", "Choisir sur la carte", ...SEJOUR]);
+    expect(html).not.toMatch(/Biome|Distance|Aucune destination/);
+    expect(lien(html, "Choisir sur la carte")).toBe("/jeu/carte?choix=destination");
   });
 });

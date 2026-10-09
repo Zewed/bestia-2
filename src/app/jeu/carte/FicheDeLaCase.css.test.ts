@@ -67,3 +67,19 @@ describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
     expect(regle(".fermer")).toContain("z-index: 1;");
   });
 });
+
+describe("choisir la destination sur la carte (US-0907)", () => {
+  it("dit le refus d'une Case d'un Territoire au pied de la fiche, à la place du bouton, dans la couleur d'alerte", () => {
+    const refus = regle(".refus");
+    expect(refus).toContain("margin-top: 16px;");
+    expect(refus).toContain("color: var(--mauvais);");
+  });
+
+  it("garde le refus lisible au pied de la fiche, comme le bouton, quand le panneau du mobile, plafonné, coupe ce qui le précède", () => {
+    const refus = regle(".refus");
+    expect(refus).toMatch(/position: sticky;[^}]*bottom: 0;/);
+    // Le fond de la fiche autour de lui : le texte coupé ne le touche pas.
+    expect(refus).toContain("background: var(--bloc);");
+    expect(refus).toContain("box-shadow: 0 0 0 16px var(--bloc);");
+  });
+});

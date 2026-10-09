@@ -53,7 +53,9 @@ const CARTE: CarteDuJoueur = {
   cases: { q: [30, 31, 32], r: [-57, -57, -57], teinte: [0, 1, 2], zone: [1, 1, 1] },
 };
 /** Ce que la page donne à la carte. */
-const proprietes = (html: string) => JSON.parse(html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"'));
+const proprietes = (html: string) => JSON.parse(html.match(/data-proprietes="([^"]*)"/)![1].replace(/&quot;/g, '"').replace(/&amp;/g, "&"));
+/** La page ouverte avec `recherche` dans son adresse (« ?choix=destination » : { choix: "destination" }). */
+const ouverte = (recherche: Record<string, string | string[]> = {}) => ({ params: Promise.resolve({}), searchParams: Promise.resolve(recherche) }) as PageProps<"/jeu/carte">;
 
 describe("page Carte (US-0417)", () => {
   afterEach(() => {
@@ -72,21 +74,21 @@ describe("page Carte (US-0417)", () => {
   it("titre l'onglet « Carte », et le dit aux lecteurs d'écran sans phrase de plus : la carte et sa légende suffisent", async () => {
     connecte();
     expect(metadata.title).toBe("Carte");
-    const html = renderToStaticMarkup(await Carte());
+    const html = renderToStaticMarkup(await Carte(ouverte()));
     expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><canvas[^>]*><\/canvas><div data-attente=""><\/div><aside[^>]*><\/aside><\/main>$/);
   });
 
   it("attend la carte dans un bloc Bento, posé avec elle et caché dès qu'elle est dessinée (US-0434)", async () => {
     connecte();
     // L'attente vient avec la page : aucune frontière de chargement ne retarde la carte (Attente.test.tsx).
-    expect(renderToStaticMarkup(await Carte())).toContain("<canvas data-proprietes=");
-    expect(renderToStaticMarkup(await Carte())).toMatch(/<\/canvas><div data-attente=""><\/div>/);
+    expect(renderToStaticMarkup(await Carte(ouverte()))).toContain("<canvas data-proprietes=");
+    expect(renderToStaticMarkup(await Carte(ouverte()))).toMatch(/<\/canvas><div data-attente=""><\/div>/);
     expect(existsSync(join(process.cwd(), "src/app/jeu/carte/loading.tsx"))).toBe(false);
   });
 
   it("pose la légende de la carte : les Biomes de terre puis les eaux, dans leur ordre, de leur nom en base (US-0432)", async () => {
     connecte();
-    const html = renderToStaticMarkup(await Carte());
+    const html = renderToStaticMarkup(await Carte(ouverte()));
     const legende = JSON.parse(html.match(/data-legende="([^"]*)"/)![1].replace(/&quot;/g, '"'));
     expect(legende).toEqual({
       terre: [
@@ -102,19 +104,19 @@ describe("page Carte (US-0417)", () => {
 
   it("dessine la carte du Monde du joueur, lue pour son Territoire", async () => {
     connecte();
-    const html = renderToStaticMarkup(await Carte());
+    const html = renderToStaticMarkup(await Carte(ouverte()));
     expect(lecture.carteDuJoueur).toHaveBeenCalledWith(expect.anything(), 12);
     expect(proprietes(html).carte).toEqual(CARTE);
   });
 
   it("peint chaque teinte de la couleur de la page de contrôle du Monde (US-0418)", async () => {
     connecte();
-    expect(proprietes(renderToStaticMarkup(await Carte())).fonds).toEqual(["var(--biome-foret)", "var(--biome-prairie)", "var(--sarcelle-fonce)"]);
+    expect(proprietes(renderToStaticMarkup(await Carte(ouverte()))).fonds).toEqual(["var(--biome-foret)", "var(--biome-prairie)", "var(--sarcelle-fonce)"]);
   });
 
   it("n'a pas de carte à montrer sans Foyer, ni de légende, ni rien à attendre", async () => {
     connecte(null);
-    expect(renderToStaticMarkup(await Carte())).not.toMatch(/<canvas|<aside|data-attente/);
+    expect(renderToStaticMarkup(await Carte(ouverte()))).not.toMatch(/<canvas|<aside|data-attente/);
   });
 
   it("prend toute la place sous la barre du haut, sans défiler", () => {
@@ -126,18 +128,51 @@ describe("page Carte (US-0417)", () => {
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {
     connecte();
     chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: 12, recitLu: false });
-    await expect(Carte()).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
+    await expect(Carte(ouverte())).rejects.toMatchObject({ digest: expect.stringContaining(";/jeu/arrivee;") });
   });
 
   it("renvoie vers la connexion sans session, qui ramènera ensuite ici", async () => {
     cookie.jetonDeSession.mockResolvedValue(undefined);
-    await expect(Carte()).rejects.toMatchObject({ digest: expect.stringContaining(";/connexion?suite=%2Fjeu%2Fcarte;") });
+    await expect(Carte(ouverte())).rejects.toMatchObject({ digest: expect.stringContaining(";/connexion?suite=%2Fjeu%2Fcarte;") });
     expect(lecture.carteDuJoueur).not.toHaveBeenCalled();
   });
 
   it("reste introuvable en production tant que l'entrée du jeu est fermée", async () => {
     vi.stubEnv("VERCEL_ENV", "production");
-    await expect(Carte()).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+    await expect(Carte(ouverte())).rejects.toMatchObject({ digest: expect.stringContaining("404") });
     expect(cookie.jetonDeSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("la carte ouverte pour choisir la destination d'une Expédition (US-0907)", () => {
+  afterEach(() => {
+    session.compteDeLaSession.mockReset();
+    cookie.jetonDeSession.mockReset();
+    lecture.carteDuJoueur.mockReset();
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+    lecture.carteDuJoueur.mockResolvedValue(CARTE);
+  };
+
+  it("le dit à la carte, avec son adresse, où l'écran d'Expédition retrouvera ses autres choix", async () => {
+    connecte();
+    expect(proprietes(renderToStaticMarkup(await Carte(ouverte({ choix: "destination" })))).destination).toBe("choix=destination");
+    expect(proprietes(renderToStaticMarkup(await Carte(ouverte({ choix: "destination", sejour: "60" })))).destination).toBe("choix=destination&sejour=60");
+  });
+
+  it("ouverte depuis la navigation, ou pour un autre choix, ne choisit pas de destination", async () => {
+    connecte();
+    expect(proprietes(renderToStaticMarkup(await Carte(ouverte()))).destination).toBeNull();
+    expect(proprietes(renderToStaticMarkup(await Carte(ouverte({ choix: "autre" })))).destination).toBeNull();
+  });
+
+  it("renvoie vers la connexion sans session, qui ramènera ensuite au même choix", async () => {
+    cookie.jetonDeSession.mockResolvedValue(undefined);
+    await expect(Carte(ouverte({ choix: "destination", sejour: "60" }))).rejects.toMatchObject({
+      digest: expect.stringContaining(`;/connexion?suite=${encodeURIComponent("/jeu/carte?choix=destination&sejour=60")};`),
+    });
   });
 });

@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0902** · Choisir les explorateurs ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
+Dernière story livrée : **US-0907** · Choisir la destination ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
 
 ## Sommaire
 
@@ -14,12 +14,12 @@ Dernière story livrée : **US-0902** · Choisir les explorateurs ; les jalons 2
 | [1 · Entrer dans le jeu](01-entrer-dans-le-jeu.md) | 5 à 9, sans la 8 | 54 | 0 |
 | [2 · Le territoire respire](02-le-territoire-respire.md) | 10 à 12 | 32 | 0 |
 | [3 · Les Habitants](03-les-habitants.md) | 13 à 17 | 43 | 0 |
-| [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 1 |
+| [4 · La carte du Monde](04-la-carte-du-monde.md) | 18 à 20 | 43 | 0 |
 | [5 · Récolter](05-recolter.md) | 21 à 24 | 52 | 24 |
 | [6 · Construire](06-construire.md) | 25 à 30 | 46 | 13 |
 | [7 · La Recherche](07-la-recherche.md) | 31 à 32 | 31 | 6 |
 | [8 · Les Bêtes à la maison](08-les-betes-a-la-maison.md) | 33 à 37 | 44 | 13 |
-| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 76 | 36 |
+| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 76 | 35 |
 | [10 · Le Bestiaire](10-le-bestiaire.md) | 46 à 49 | 47 | 20 |
 | [11 · S'étendre](11-s-etendre.md) | 50 à 52 | 42 | 25 |
 | [12 · Les Épreuves](12-les-epreuves.md) | 53 | 34 | 7 |
@@ -28,9 +28,9 @@ Dernière story livrée : **US-0902** · Choisir les explorateurs ; les jalons 2
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **65 étapes** | **748** | **228** |
+| **Total** | **65 étapes** | **748** | **226** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (135 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (133 au total).
 
 ## Lire une story
 
