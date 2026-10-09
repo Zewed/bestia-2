@@ -17,7 +17,14 @@ export function formaterInstant(instant: Date, fuseau: string): string {
  * de 24 heures, en jours et en heures : « 2 j 5 h ».
  */
 export function formaterDuree(heures: number): string {
-  const minutes = Math.max(1, Math.ceil(heures * 60));
+  return formaterMinutes(Math.max(1, Math.ceil(heures * 60)));
+}
+
+/**
+ * US-0906 : une durée en minutes entières, écrite comme formaterDuree, sans repasser par les heures (où 500 minutes,
+ * arrondies à la minute supérieure, deviendraient 501) : « 30 min », « 8 h 20 », « 1 j ».
+ */
+export function formaterMinutes(minutes: number): string {
   if (minutes < 60) return `${minutes} min`;
   if (minutes < 24 * 60) {
     const reste = minutes % 60;
