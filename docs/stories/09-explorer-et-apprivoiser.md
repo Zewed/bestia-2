@@ -365,6 +365,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0933 · L'Espèce croisée entre au Bestiaire
 **En tant que** joueur, **je veux** que chaque Espèce croisée s'inscrive dans mon Bestiaire, **afin de** garder la trace de tout ce que j'ai vu.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1393, Zewed/bestia-2#29). Toute Espèce vue lors d'une Rencontre s'inscrit au Bestiaire du Territoire, « croisée », à l'instant de sa première Rencontre, qu'elle suive l'Expédition ou non, une seule fois ; son état (croisée, apprivoisée, Couple réuni) ne fait qu'avancer, même quand toutes ses Bêtes meurent (table bestiaire, migration 0057). La Rencontre qui l'a inscrite est marquée, pour que les récits disent « Nouvelle Espèce au Bestiaire » (US-0940). La page Bestiaire arrive au jalon 10.
 - **Débloquée par** : US-0932
 - **Critères d'acceptation** :
   - Toute Espèce vue lors d'une Rencontre s'inscrit au Bestiaire du joueur à l'état « croisée », qu'elle suive l'Expédition ou non.
