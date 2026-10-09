@@ -1,7 +1,7 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
 import { Bloc } from "@/components/Bloc";
 import { SEJOUR_PAR_DEFAUT_MINUTES, sejourChoisi } from "@/expeditions/sejour";
 import { SEJOUR_MINUTES, SEJOURS_TOUT_PRETS_MINUTES } from "@/reglages";
@@ -14,8 +14,29 @@ const PARAMETRE_DU_SEJOUR = "sejour";
 /** La durée que dit l'adresse, ou la première toute prête si elle n'en dit aucune qu'on aurait pu choisir. */
 const dureeDeLAdresse = (valeur: string | null) => sejourChoisi(valeur) ?? SEJOUR_PAR_DEFAUT_MINUTES;
 
-/** US-0910 : la durée du séjour que l'adresse garde, telle que le bloc Séjour la montre, pour le récapitulatif. */
-export const sejourDeLAdresse = (recherche: URLSearchParams) => dureeDeLAdresse(recherche.get(PARAMETRE_DU_SEJOUR));
+/**
+ * US-0910 : la durée que le bloc Séjour montre, à chaque pas du curseur, avant même que l'adresse la garde (au lâcher) ;
+ * null tant qu'aucun bloc Séjour n'est affiché. Ses abonnés, le récapitulatif, la suivent ainsi au fil du geste.
+ */
+let dureeAffichee: number | null = null;
+const abonnes = new Set<() => void>();
+function afficher(minutes: number | null) {
+  dureeAffichee = minutes;
+  abonnes.forEach((prevenir) => prevenir());
+}
+const suivre = (prevenir: () => void) => {
+  abonnes.add(prevenir);
+  return () => abonnes.delete(prevenir);
+};
+
+/**
+ * US-0910 : la durée du séjour telle que le bloc Séjour la montre, curseur encore tenu compris, sinon celle que l'adresse
+ * `recherche` garde : celle du récapitulatif. Au rendu du serveur, celle de l'adresse, que le bloc Séjour montre aussi.
+ */
+export function useSejourAffiche(recherche: URLSearchParams): number {
+  const affichee = useSyncExternalStore(suivre, () => dureeAffichee, () => null);
+  return affichee ?? dureeDeLAdresse(recherche.get(PARAMETRE_DU_SEJOUR));
+}
 
 /**
  * US-0906 : l'adresse garde `minutes`, sans toucher à ses autres paramètres, si elle ne les garde pas déjà. replaceState,
@@ -50,6 +71,9 @@ export function Sejour() {
     setLue(dansLAdresse);
     setMinutes(dureeDeLAdresse(dansLAdresse));
   }
+  // US-0910 : le récapitulatif suit la durée montrée, pas après pas ; plus rien quand le bloc disparaît.
+  useEffect(() => afficher(minutes), [minutes]);
+  useEffect(() => () => afficher(null), []);
   const curseur = useId();
   const champ = useRef<HTMLInputElement>(null);
   // React fait de onChange l'évènement « input », à chaque pas : la fin du geste s'écoute sur le champ lui-même.

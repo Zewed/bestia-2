@@ -15,13 +15,21 @@ describe("le récapitulatif sur un téléphone (US-0910)", () => {
     const recap = regle(".recap", mobile);
     expect(recap).toContain("position: sticky;");
     expect(recap).toContain("bottom: calc(var(--hauteur-onglets) + var(--bord-bas) + 12px);");
-    expect(recap).toMatch(/max-height: calc\(var\(--hauteur-utile\) - 24px\);[^}]*overflow-y: auto;/);
+    expect(recap).toContain("max-height: calc(var(--hauteur-utile) - 24px);");
+    // Déplié, seules les lignes défilent : le titre, son bouton et « Partir » restent en vue.
+    expect(recap).toMatch(/display: flex;[^}]*flex-direction: column;/);
+    expect(regle(".defilant", mobile)).toMatch(/min-height: 0;[^}]*overflow-y: auto;/);
     // Sur ordinateur, il reste à sa place, au pied de l'écran.
     expect(regle(".recap", RECAP)).not.toContain("position");
   });
 
-  it("y est replié sur l'heure de retour prévue et le départ : son bouton, au pouce, déplie tout", () => {
-    expect(regle(".recap:not(.deplie) .lignes > :not(.essentiel),\n  .recap:not(.deplie) .manger", mobile)).toContain("display: none;");
+  it("ne cache jamais ce que le clavier atteint : la page garde au bas de l'écran la place du récapitulatif replié", () => {
+    expect(regle(":global(html):has(.recap)", mobile)).toContain("scroll-padding-bottom: calc(var(--hauteur-onglets) + var(--bord-bas) + 176px);");
+  });
+
+  it("y est replié sur l'heure de retour prévue et le départ : son bouton, au pouce, déplie tout, sans rien cacher dessous", () => {
+    expect(regle(".recap:not(.deplie) .lignes > :not([data-essentiel]),\n  .recap:not(.deplie) .manger", mobile)).toContain("display: none;");
+    expect(regle(".lignes > :first-child,\n  .recap:not(.deplie) [data-essentiel]", mobile)).toContain("padding-right: 30px;");
     expect(regle(".deplier", mobile)).toMatch(/width: 44px;[^}]*height: 44px;/);
     expect(regle(".deplier", mobile)).toContain("cursor: pointer;");
     expect(regle(".deplier:focus-visible", mobile)).toContain("outline: 2px solid var(--encre);");

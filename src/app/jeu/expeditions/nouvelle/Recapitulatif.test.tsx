@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, cleanup, render, screen, within } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EspeceDisponible } from "@/monde/effectif";
@@ -25,6 +25,7 @@ vi.mock("next/navigation", async () => {
 });
 
 import { Recapitulatif } from "./Recapitulatif";
+import { Sejour } from "./Sejour";
 
 /** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes. */
 const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 };
@@ -196,7 +197,46 @@ describe("partir depuis le récapitulatif (US-0910)", () => {
   });
 });
 
+describe("le récapitulatif et le bloc Séjour (US-0910)", () => {
+  it("suit la durée du séjour pas à pas, curseur encore tenu, avant même que l'adresse la garde au lâcher", () => {
+    window.history.replaceState(null, "", "/jeu/expeditions/nouvelle?explorateurs=1");
+    render(
+      <>
+        <Sejour />
+        <Recapitulatif libres={2} especes={[POULE, SOURIS]} destination={FORET} maintenant={MAINTENANT} />
+      </>,
+    );
+    expect(ligne("Séjour")).toBe("1 h");
+    const curseur = screen.getByRole<HTMLInputElement>("slider", { name: "Durée du séjour" });
+    fireEvent.input(curseur, { target: { value: "150" } });
+    expect(window.location.search).toBe("?explorateurs=1");
+    // 9 h 42 à Paris, plus 2 h 20 d'aller, 2 h 30 de séjour et 2 h 20 de retour.
+    expect([ligne("Séjour"), ligne("Retour prévu")]).toEqual(["2 h 30", "9 octobre à 16:52"]);
+    fireEvent.change(curseur);
+    expect(window.location.search).toBe("?explorateurs=1&sejour=150");
+    expect(ligne("Séjour")).toBe("2 h 30");
+  });
+
+  it("reprend la durée de l'adresse quand le bloc Séjour n'est plus là", () => {
+    window.history.replaceState(null, "", "/jeu/expeditions/nouvelle?explorateurs=1&sejour=240");
+    const { unmount } = render(<Sejour />);
+    fireEvent.input(screen.getByRole("slider", { name: "Durée du séjour" }), { target: { value: "150" } });
+    unmount();
+    ouvrir("?explorateurs=1&sejour=240");
+    expect(ligne("Séjour")).toBe("4 h");
+  });
+});
+
 describe("le récapitulatif sur un téléphone (US-0910)", () => {
+  it("garde en vue, replié, l'heure de retour prévue, seule ligne essentielle, et « Partir », hors des lignes", () => {
+    ouvrir("?explorateurs=2");
+    const essentielles = [...bloc().querySelectorAll("dl > [data-essentiel]")].map((l) => l.querySelector("dt")!.textContent);
+    expect(essentielles).toEqual(["Retour prévu"]);
+    // « Partir » et ce qui manque, enfants du bloc, ni repliés ni défilants avec les lignes.
+    expect(partir().parentElement!.parentElement).toBe(bloc());
+    expect(bloc().querySelector("dl")!.contains(partir())).toBe(false);
+  });
+
   it("se déplie et se replie d'un bouton qui dit son état, sans rien changer à ce qu'il montre", async () => {
     const joueur = userEvent.setup();
     ouvrir("?explorateurs=2");

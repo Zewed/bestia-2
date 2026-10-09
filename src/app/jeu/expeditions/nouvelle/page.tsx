@@ -5,6 +5,7 @@ import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
+import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { destinationDUneCase } from "@/expeditions/destination";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
@@ -37,9 +38,6 @@ function caseEnParametre(recherche: { q?: string | string[]; r?: string | string
   const [q, r] = [coordonnee(recherche.q), coordonnee(recherche.r)];
   return q === null || r === null ? null : { q, r };
 }
-
-/** « 7 Cases de votre Foyer », « 1 Case de votre Foyer ». */
-const casesDuFoyer = (n: number) => `${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
 
 /** US-0901 : la destination choisie : son Biome, « inconnu » sous le brouillard (US-0907), et sa distance au Foyer. */
 function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
