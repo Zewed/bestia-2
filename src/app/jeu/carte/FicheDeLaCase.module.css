@@ -143,6 +143,13 @@
   outline-offset: 2px;
 }
 
+/* US-0907 : sur la carte ouverte pour choisir la destination, le refus d'une Case d'un Territoire, à la place du bouton. */
+.refus {
+  margin-top: 16px;
+  color: var(--mauvais);
+  font-weight: var(--graisse-titre);
+}
+
 /* En attendant le serveur : la place du titre et d'une ligne, qui palpitent. */
 .attente {
   display: grid;

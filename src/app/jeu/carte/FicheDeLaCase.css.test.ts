@@ -67,3 +67,11 @@ describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
     expect(regle(".fermer")).toContain("z-index: 1;");
   });
 });
+
+describe("choisir la destination sur la carte (US-0907)", () => {
+  it("dit le refus d'une Case d'un Territoire au pied de la fiche, à la place du bouton, dans la couleur d'alerte", () => {
+    const refus = regle(".refus");
+    expect(refus).toContain("margin-top: 16px;");
+    expect(refus).toContain("color: var(--mauvais);");
+  });
+});

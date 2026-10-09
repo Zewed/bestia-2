@@ -18,6 +18,20 @@ describe("l'écran d'Expédition sur un téléphone (US-0901)", () => {
     expect(regle(".choisir:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 
+  it("change une destination déjà choisie d'un lien secondaire, cerné d'un trait, qui reste lisible au survol (US-0907)", () => {
+    const changer = regle(".changer");
+    expect(changer).toContain("background: var(--bloc);");
+    expect(changer).toContain("color: var(--encre);");
+    expect(changer).toContain("box-shadow: inset 0 0 0 1px var(--trait);");
+    // Écrit après celui de « Choisir sur la carte », dont il garde la taille au pouce, pour l'emporter au survol.
+    expect(CSS.indexOf(".changer:hover {")).toBeGreaterThan(CSS.indexOf(".choisir:hover {"));
+    expect(regle(".changer:hover")).toContain("background: var(--bloc-3);");
+  });
+
+  it("dit le refus d'une Case d'un Territoire dans la couleur d'alerte (US-0907)", () => {
+    expect(regle(".refus")).toContain("color: var(--mauvais);");
+  });
+
   it("tient sans défilement de côté : rien n'y a de largeur fixe plus grande que l'écran", () => {
     expect(regle(".page", mobile)).toContain("padding: 12px;");
     expect(CSS).not.toMatch(/(?:^|[^-])width: \d{3,}px/);

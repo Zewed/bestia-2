@@ -56,9 +56,18 @@ const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
 /**
  * La carte et la fiche de sa Case choisie, la carte glissant au besoin (`montrer`), avec un bouton pour choisir chaque
- * Case, et un pour toucher la carte hors de ses Cases.
+ * Case, et un pour toucher la carte hors de ses Cases. US-0907 : ouverte pour choisir la destination d'une Expédition
+ * (`destination`, son adresse), ou non (null).
  */
-function Carte({ montrer = () => {}, cases = [ICI] }: { montrer?: (c: Coordonnees, cache: { x: number; y: number; largeur: number; hauteur: number }) => void; cases?: Coordonnees[] }) {
+function Carte({
+  montrer = () => {},
+  cases = [ICI],
+  destination = null,
+}: {
+  montrer?: (c: Coordonnees, cache: { x: number; y: number; largeur: number; hauteur: number }) => void;
+  cases?: Coordonnees[];
+  destination?: string | null;
+}) {
   const { choix, choisir, fermer } = useFicheDeLaCase();
   const carte = useRef<HTMLCanvasElement>(null);
   return (
@@ -72,7 +81,7 @@ function Carte({ montrer = () => {}, cases = [ICI] }: { montrer?: (c: Coordonnee
       <button type="button" onClick={() => choisir(null)}>
         dehors
       </button>
-      {choix ? <FicheDeLaCase choix={choix} carte={carte} montrer={montrer} fermer={fermer} /> : null}
+      {choix ? <FicheDeLaCase choix={choix} carte={carte} montrer={montrer} fermer={fermer} destination={destination} /> : null}
     </>
   );
 }
@@ -255,6 +264,63 @@ describe("envoyer une Expédition depuis la fiche d'une Case (US-0901)", () => {
     toucher(ICI);
     await repondre({ ...FORET, biome: "Prairie", chef: "Ourse", aVous: true, distance: 0 });
     expect(envoyer()).toBeNull();
+  });
+
+  it("ne le propose pas non plus sur une Case du Territoire d'un autre joueur, sans rien dire de plus (US-0907)", async () => {
+    render(<Carte />);
+    toucher(ICI);
+    await repondre({ ...FORET, chef: "Loutre" });
+    expect(envoyer()).toBeNull();
+    expect(fiche()!.textContent).not.toContain("Territoire");
+  });
+});
+
+describe("choisir la destination sur la carte (US-0907)", () => {
+  /** La carte ouverte depuis l'écran d'Expédition, qui avait déjà choisi un séjour d'une heure. */
+  const DEPUIS_L_ECRAN = "choix=destination&sejour=60";
+  const choisir = () => screen.queryByRole("link", { name: "Choisir cette destination" });
+  const REFUS = "Cette Case appartient à un Territoire.";
+
+  it("propose « Choisir cette destination », qui revient à l'écran d'Expédition avec la Case et ses autres choix", async () => {
+    render(<Carte destination={DEPUIS_L_ECRAN} />);
+    toucher(ICI);
+    await repondre(FORET);
+    // La distance de la Case au Foyer, en Cases, avant de la choisir.
+    expect(fiche()!.textContent).toContain("À 7 Cases de votre Foyer");
+    expect(choisir()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5&sejour=60");
+    expect(fiche()!.contains(choisir())).toBe(true);
+    expect(screen.queryByRole("link", { name: "Envoyer une Expédition" })).toBeNull();
+  });
+
+  it("le propose pour une Case sous le brouillard, inconnue", async () => {
+    render(<Carte destination="choix=destination" />);
+    toucher(ICI);
+    await repondre({ ...ICI, inconnue: true, distance: 12 });
+    expect(screen.getByRole("heading", { name: "Case inconnue" })).toBeTruthy();
+    expect(fiche()!.textContent).toContain("À 12 Cases de votre Foyer");
+    expect(choisir()!.getAttribute("href")).toBe("/jeu/expeditions/nouvelle?q=3&r=-5");
+  });
+
+  it("refuse le Foyer du joueur, et une Case du Territoire d'un autre joueur, avec le message décidé à la place", async () => {
+    render(<Carte destination={DEPUIS_L_ECRAN} cases={[ICI, { q: 0, r: 0 }]} />);
+    toucher({ q: 0, r: 0 });
+    await repondre({ ...FORET, q: 0, r: 0, biome: "Prairie", chef: "Ourse", aVous: true, distance: 0 });
+    expect(choisir()).toBeNull();
+    expect([...fiche()!.querySelectorAll("p")].map((p) => p.textContent)).toEqual([REFUS]);
+    toucher(ICI);
+    await repondre({ ...FORET, chef: "Loutre" });
+    expect(choisir()).toBeNull();
+    expect([...fiche()!.querySelectorAll("p")].map((p) => p.textContent)).toEqual(["À 7 Cases de votre Foyer", REFUS]);
+  });
+
+  it("ne propose rien et ne refuse rien avant la fiche, ni quand elle n'a pas pu s'ouvrir", async () => {
+    render(<Carte destination={DEPUIS_L_ECRAN} />);
+    toucher(ICI);
+    expect(choisir()).toBeNull();
+    expect(fiche()!.textContent).not.toContain(REFUS);
+    await act(async () => demandes[0].echouer());
+    expect(choisir()).toBeNull();
+    expect(fiche()!.textContent).not.toContain(REFUS);
   });
 });
 
