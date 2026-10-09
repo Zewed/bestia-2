@@ -1,0 +1,65 @@
+drizzle/0060_recit_des_rencontres.sql
+  s_97a431cfa65ca7::t_4c3864d0061881 1-3
+drizzle/meta/0060_snapshot.json
+  s_97a431cfa65ca7::t_006ef354737b78 1-3255
+drizzle/meta/_journal.json
+  s_97a431cfa65ca7::t_13e3d0c25a9f7f 410-416
+src/app/jeu/recits/ListeDesRecits.test.tsx
+  s_97a431cfa65ca7::t_9edd4e48a87d8d 68-122
+src/app/jeu/recits/ListeDesRecits.tsx
+  s_97a431cfa65ca7::t_2948df49dbb517 6,8-12,44-45,48-54,69
+src/app/jeu/recits/RencontresDuRecit.css.test.ts
+  s_4ce34ec42d9105::t_84a4a13c80a2a5 1-38
+src/app/jeu/recits/RencontresDuRecit.module.css
+  s_4ce34ec42d9105::t_bebd2f5929e276 1-104
+src/app/jeu/recits/RencontresDuRecit.test.tsx
+  s_97a431cfa65ca7::t_42089e9f4ca9e6 1-89
+src/app/jeu/recits/RencontresDuRecit.tsx
+  s_97a431cfa65ca7::t_53ddb91d9174fd 1-58
+src/app/jeu/recits/page.test.tsx
+  s_97a431cfa65ca7::t_12ec92f889f877 98-160
+src/app/jeu/recits/page.tsx
+  s_97a431cfa65ca7::t_0f01e0bb4ccbe3 9,18-28,54-66
+src/db/schema.ts
+  s_97a431cfa65ca7::t_382e117ef85e78 553-558
+src/expeditions/recit-de-rencontre.db.test.ts
+  s_4ce34ec42d9105::t_24f12f2c34ae1b 1-211
+src/expeditions/recit-de-rencontre.test.ts
+  s_4ce34ec42d9105::t_146f6dbcd56ca4 1-26
+src/expeditions/recit-de-rencontre.ts
+  s_97a431cfa65ca7::t_2b5a1b679dbc15 1-81
+src/expeditions/recit-de-retour.ts
+  s_4ce34ec42d9105::t_f017db73dadef3 3-4,17,195-196,215
+src/monde/recits.db.test.ts
+  s_97a431cfa65ca7::t_dcb0b47c04ceed 103-142
+src/monde/recits.ts
+  s_4ce34ec42d9105::t_1c37ae2f8af978 5,7-27,35-36,38,40-41,46-50,52-59,62
+src/temps/affichage.test.ts
+  s_97a431cfa65ca7::t_96b33c70745021 2,31-37
+src/temps/affichage.ts
+  s_97a431cfa65ca7::t_2cb63259641736 45-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "42b83342b5d0124af5073a28b27a91734f86d23e",
+  "prompts": {},
+  "sessions": {
+    "s_4ce34ec42d9105": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "986afa6c-8f0b-494f-9694-d93f52c5ef9e",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
