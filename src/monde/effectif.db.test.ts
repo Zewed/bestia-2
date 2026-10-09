@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { forceDUneBete } from "@/expeditions/force";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
 import { betesDisponibles } from "./effectif";
 
@@ -57,16 +58,16 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
     ]);
     // Ni le pigeon ni les souris d'un autre Territoire ; de la plus commune à la plus rare, puis par nom.
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1 },
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 },
+      { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 },
     ]);
   });
 
   it("range une Espèce plus rare après les communes, même sans illustration", async () => {
     const t = (await nouveauTerritoire()).territoireId;
     // La plus rare des Espèces chargées, sans illustration : l'une des Espèces d'essai (US-0924), jamais nommée ici.
-    const { rows } = await pool.query<{ id: string; nom: string }>(
-      `select e.id, e.nom from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
+    const { rows } = await pool.query<{ id: string; nom: string; attaque: number; vie: number }>(
+      `select e.id, e.nom, e.attaque, e.vie from espece e join rarete r on r.id = e.rarete_id where e.illustration is null order by r.rang desc, e.id limit 1`,
     );
     const [rare] = rows;
     await ajouter(t, [
@@ -74,9 +75,33 @@ describe.skipIf(!URL_TEST)("les Bêtes disponibles pour l'escorte (US-0904, sur 
       ["souris", "male", 4],
     ]);
     expect(await betesDisponibles(pool, t)).toEqual([
-      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4 },
-      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1 },
+      { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 4, force: 473 },
+      { id: rare.id, nom: rare.nom, illustration: null, disponibles: 1, force: forceDUneBete(rare) },
     ]);
+  });
+
+  it("donne à chaque Bête la force de son Espèce (US-0905) : la même pour toutes, chez tous les joueurs, sans rien du Territoire", async () => {
+    const [t, voisin] = [(await nouveauTerritoire()).territoireId, (await nouveauTerritoire()).territoireId];
+    await ajouter(t, [
+      ["souris", "male", 1],
+      ["pigeon", "femelle", 2],
+    ]);
+    await ajouter(voisin, [
+      ["souris", "femelle", 30],
+      ["pigeon", "male", 1],
+    ]);
+    // Tirée de l'attaque et de la vie de l'Espèce, telles qu'elles sont en base : aucune Recherche n'y entre (ADR 0005).
+    const { rows } = await pool.query<{ id: string; attaque: number; vie: number }>(
+      "select id, attaque, vie from espece where id in ('pigeon', 'souris') order by id",
+    );
+    const attendues = rows.map((e) => [e.id, forceDUneBete(e)]);
+    expect(attendues).toEqual([
+      ["pigeon", 2216],
+      ["souris", 473],
+    ]);
+    for (const territoireId of [t, voisin]) {
+      expect((await betesDisponibles(pool, territoireId)).map((e) => [e.id, e.force])).toEqual(attendues);
+    }
   });
 
   it("ne propose pas une Espèce dont il ne reste aucune Bête", async () => {

@@ -120,6 +120,31 @@
   text-align: center;
 }
 
+/* US-0905 : sous les Espèces, la force de l'escorte, comme les lignes des autres blocs : sa petite étiquette, puis le total. */
+.force {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 12px;
+  align-items: baseline;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--trait);
+}
+
+.force dt {
+  color: var(--texte-discret);
+}
+
+.force dd {
+  margin: 0;
+}
+
+.total {
+  color: var(--encre);
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+}
+
 /* Sur un téléphone en portrait, quand la ligne n'a plus la place, les choix passent sous le nom, sur toute la largeur ;
    en paysage, ils restent sur la ligne : l'écran y manque de hauteur, pas de largeur. */
 @media (max-width: 560px) {
