@@ -353,7 +353,15 @@ describe.skipIf(!URL_TEST)("naître sur le Monde généré, et y basculer les ch
       expect(pres).toBeGreaterThan(0);
       const { rows: plein } = await client.query("select id from chef where monde_id = $1 and nom = 'Ourse'", [genereId]);
       await client.query("update case_du_monde set chef_id = $1 where id = any($2)", [plein[0].id, loin]);
-      const compter = async () => (await client.query("select (select count(*)::int from chef) as chefs, (select count(*)::int from territoire) as territoires")).rows[0];
+      // Les chefs et les Territoires des comptes de l'essai seulement : les naissances que d'autres fichiers font au même moment ne comptent pas.
+      const compter = async () =>
+        (
+          await client.query(
+            `select (select count(*)::int from chef where compte_id = any($1)) as chefs,
+               (select count(*)::int from territoire t join chef ch on ch.id = t.chef_id where ch.compte_id = any($1)) as territoires`,
+            [[premier, ancien, tardif]],
+          )
+        ).rows[0];
       const avant = await compter();
       expect(await enregistrerNomDeChef(essai.pool, tardif, "Tardif")).toEqual({ statut: "complet" });
       expect(await naitreSurLaCouronne(essai.pool, ancien)).toBeNull();
