@@ -1,6 +1,7 @@
 // Les explorateurs d'un Territoire tels que l'écran d'Expédition les propose. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
+import { type HorairesDUneExpedition, retourDUneExpedition } from "@/expeditions/phase";
 
 /** US-0902 : les explorateurs du Territoire : ceux qui ne sont pas déjà partis, et tous. */
 export type Explorateurs = { libres: number; total: number };
@@ -26,22 +27,18 @@ export async function explorateursDuTerritoire(base: Pool | PoolClient, territoi
 }
 
 /**
- * US-0903 : l'heure à laquelle rentre un explorateur parti (expression sur `h`, l'Habitant). US-0911 : celle du retour
- * de son Expédition : son départ, l'aller, le séjour, qui ne commence qu'à l'arrivée (US-0906), puis le retour, qui dure
- * autant que l'aller (US-0912), escorte comprise.
- */
-const RETOUR_DE_L_EXPLORATEUR = `(select x.part_le + make_interval(mins => 2 * x.trajet_minutes + x.sejour_minutes) from expedition x where x.id = h.expedition_id)`;
-
-/**
  * US-0903 : le prochain retour d'un explorateur parti du Territoire, quand aucun n'est libre ; null si aucun n'est
- * parti.
+ * parti. US-0911 : celui de son Expédition, à l'heure que donnent ses horaires : son départ, l'aller, le séjour, qui ne
+ * commence qu'à l'arrivée (US-0906), puis le retour, qui dure autant que l'aller (US-0912), escorte comprise. US-0916 :
+ * cette heure ne se calcule qu'à un endroit, retourDUneExpedition (src/expeditions/phase.ts), comme le retour lui-même.
  */
 export async function prochainRetourDUnExplorateur(base: Pool | PoolClient, territoireId: number): Promise<Date | null> {
-  const { rows } = await base.query<{ retour: Date | null }>(
-    `select min(${RETOUR_DE_L_EXPLORATEUR}) as retour
-     from habitant h
-     where h.territoire_id = $1 and h.metier = 'explorateur' and (${EXPLORATEUR_LIBRE}) is not true`,
+  const { rows } = await base.query<HorairesDUneExpedition>(
+    `select x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes"
+     from expedition x
+     where x.territoire_id = $1 and exists (select 1 from habitant h where h.expedition_id = x.id and h.metier = 'explorateur')`,
     [territoireId],
   );
-  return rows[0].retour;
+  const retours = rows.flatMap((horaires) => retourDUneExpedition(horaires) ?? []);
+  return retours.length === 0 ? null : new Date(Math.min(...retours.map((retour) => retour.getTime())));
 }

@@ -19,10 +19,11 @@ const BETES_EN_RESERVE = "0";
 
 /**
  * US-0904 : les Bêtes déjà sorties : combien l'Espèce en a hors du Foyer (expression sur `e`, comme BETES_EN_RESERVE).
- * US-0911 : celles des escortes de ses Expéditions en cours, jusqu'à leur retour.
+ * US-0911 : celles des escortes de ses Expéditions en cours, jusqu'à leur retour. US-0916 : rentrées, elles n'en sont
+ * plus.
  */
 const BETES_SORTIES = `select coalesce(sum(s.nombre), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
-  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id`;
+  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is null`;
 
 /**
  * US-0904 : les Bêtes que le joueur peut emmener en escorte, Espèce par Espèce, lues à chaque affichage de l'écran
