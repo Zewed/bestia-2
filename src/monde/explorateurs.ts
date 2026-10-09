@@ -6,10 +6,10 @@ import type { Pool, PoolClient } from "pg";
 export type Explorateurs = { libres: number; total: number };
 
 /**
- * US-0902 : un explorateur libre, qui n'est pas déjà parti (condition sur `h`, l'Habitant). Aucune Expédition ne
- * part encore : tous le sont. US-0911 écrira ici ce qui fait un explorateur parti, et le compteur suivra.
+ * US-0902 : un explorateur libre, qui n'est pas déjà parti (condition sur `h`, l'Habitant). US-0911 : un explorateur
+ * parti porte son Expédition jusqu'à son retour.
  */
-const EXPLORATEUR_LIBRE = "true";
+const EXPLORATEUR_LIBRE = "h.expedition_id is null";
 
 /**
  * US-0902 : les Habitants au Métier d'explorateur du Territoire, lus à chaque affichage de l'écran d'Expédition :
@@ -26,10 +26,11 @@ export async function explorateursDuTerritoire(base: Pool | PoolClient, territoi
 }
 
 /**
- * US-0903 : l'heure à laquelle rentre un explorateur parti (expression sur `h`, l'Habitant). Aucune Expédition ne
- * part encore : aucune. US-0911 écrira ici l'heure du retour de son Expédition, et le prochain retour suivra.
+ * US-0903 : l'heure à laquelle rentre un explorateur parti (expression sur `h`, l'Habitant). US-0911 : celle du retour
+ * de son Expédition : son départ, l'aller, le séjour, qui ne commence qu'à l'arrivée (US-0906), puis le retour, qui dure
+ * autant que l'aller (US-0912) ; aucune tant que le trajet d'une escorte n'est pas chiffré.
  */
-const RETOUR_DE_L_EXPLORATEUR = "null::timestamptz";
+const RETOUR_DE_L_EXPLORATEUR = `(select x.part_le + make_interval(mins => 2 * x.trajet_minutes + x.sejour_minutes) from expedition x where x.id = h.expedition_id)`;
 
 /**
  * US-0903 : le prochain retour d'un explorateur parti du Territoire, quand aucun n'est libre ; null si aucun n'est

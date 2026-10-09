@@ -706,3 +706,21 @@ describe("renvoyer un Habitant depuis sa ligne (US-0330)", () => {
     expect(container.textContent).toBe("Aucun Habitant pour l'instant. Des Voyageurs finiront par passer aux portes.");
   });
 });
+
+describe("un explorateur parti en Expédition (US-0911)", () => {
+  /** Arno, sans Métier, et Dara, partie en Expédition. */
+  const AVEC_UNE_PARTIE: HabitantAffiche[] = [HABITANTS[0], { id: 43, prenom: "Dara", metier: "Explorateur", etat: "en Expédition" }];
+
+  it("est « en Expédition » sur sa ligne, son Métier écrit sans bouton : ni changé, ni retiré, ni renvoyé avant son retour", () => {
+    render(<ListeDesHabitants habitants={AVEC_UNE_PARTIE} metiers={METIERS} />);
+    expect(lignes()).toEqual(["Arno · Choisir un Métier · libre", "Dara · Explorateur · en Expédition"]);
+    expect(within(ligne("Dara")).queryAllByRole("button")).toEqual([]);
+  });
+
+  it("compte toujours parmi les explorateurs, et se filtre avec eux (US-0309, US-0314)", async () => {
+    render(<ListeDesHabitants habitants={AVEC_UNE_PARTIE} metiers={METIERS} />);
+    expect(effectifs()).toContain("Explorateur 1");
+    await userEvent.setup().click(compteur("Explorateur"));
+    expect(lignes()).toEqual(["Dara · Explorateur · en Expédition"]);
+  });
+});

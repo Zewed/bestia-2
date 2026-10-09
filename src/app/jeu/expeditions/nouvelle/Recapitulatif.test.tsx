@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { EspeceDisponible } from "@/monde/effectif";
 import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, SEJOURS_TOUT_PRETS_MINUTES } from "@/reglages";
+import type { EtatDuDepart } from "./actions";
 
 /**
  * Next.js relie window.history.replaceState à useSearchParams ; la simulation fait de même : l'écran relit
@@ -23,20 +24,23 @@ vi.mock("next/navigation", async () => {
   };
   return { useSearchParams: () => new URLSearchParams(useSyncExternalStore(suivre, () => window.location.search)) };
 });
+// US-0911 : le départ, côté serveur (actions.test.ts) : ici, ce que « Partir » lui envoie, et ce qu'il en dit.
+const actions = vi.hoisted(() => ({ partir: vi.fn<(avant: EtatDuDepart, formulaire: FormData) => Promise<EtatDuDepart>>(async () => ({ refus: null })) }));
+vi.mock("./actions", () => actions);
 
-import { Recapitulatif } from "./Recapitulatif";
+import { type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
 import { Sejour } from "./Sejour";
 
 /** Deux Espèces de l'effectif, rangées comme la base les rend, avec la force d'une de leurs Bêtes. */
 const POULE: EspeceDisponible = { id: "poule", nom: "Poule", illustration: "especes/poule.webp", disponibles: 1, force: 9457 };
 const SOURIS: EspeceDisponible = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3, force: 473 };
 /** Une forêt à 7 Cases du Foyer, et une Case encore sous le brouillard, à 12. */
-const FORET = { biome: "Forêt", distance: 7 };
-const BROUILLARD = { biome: null, distance: 12 };
+const FORET = { q: 3, r: -5, biome: "Forêt", distance: 7 };
+const BROUILLARD = { q: -9, r: 2, biome: null, distance: 12 };
 /** L'heure du jeu à l'ouverture de l'écran : 9 h 42 à Paris, pas à la minute pile. */
 const MAINTENANT = new Date("2026-10-09T07:42:13.250Z");
 
-type Choix = { libres?: number; especes?: EspeceDisponible[]; destination?: { biome: string | null; distance: number } | null; vitesse?: number };
+type Choix = { libres?: number; especes?: EspeceDisponible[]; destination?: DestinationChoisie | null; vitesse?: number };
 /** L'écran d'Expédition ouvert à l'adresse `recherche` (« ?explorateurs=2&sejour=240 »), réduit à son récapitulatif. */
 const ouvrir = (recherche = "", { libres = 2, especes = [POULE, SOURIS], destination = FORET, vitesse }: Choix = {}) => {
   window.history.replaceState(null, "", `/jeu/expeditions/nouvelle${recherche}`);
@@ -194,6 +198,72 @@ describe("partir depuis le récapitulatif (US-0910)", () => {
     expect([partir().disabled, raison()]).toEqual([false, null]);
     choisir("");
     expect([partir().disabled, raison()]).toEqual([true, "Il faut au moins un explorateur."]);
+  });
+});
+
+describe("confirmer le départ (US-0911)", () => {
+  afterEach(() => actions.partir.mockReset());
+  /** Ce que « Partir » a envoyé au départ, champ par champ, dans l'ordre du formulaire. */
+  const envoye = () => [...actions.partir.mock.calls[0][1].entries()];
+
+  it("envoie la destination, les explorateurs et l'escorte que l'écran montre, et le séjour du curseur", async () => {
+    const joueur = userEvent.setup();
+    actions.partir.mockResolvedValue({ refus: null });
+    // Plus de souris que de disponibles : l'écran en montre trois, et c'est ce qui part.
+    window.history.replaceState(null, "", "/jeu/expeditions/nouvelle?explorateurs=2&escorte=souris.9&escorte=poule.1&sejour=240");
+    render(
+      <>
+        <Sejour />
+        <Recapitulatif libres={2} especes={[POULE, SOURIS]} destination={FORET} maintenant={MAINTENANT} />
+      </>,
+    );
+    // Le curseur encore tenu, avant que l'adresse garde la durée : elle part telle qu'il la montre.
+    fireEvent.input(screen.getByRole("slider", { name: "Durée du séjour" }), { target: { value: "150" } });
+    await joueur.click(partir());
+    expect(actions.partir).toHaveBeenCalledTimes(1);
+    expect(envoye()).toEqual([
+      ["sejour", "150"],
+      ["q", "3"],
+      ["r", "-5"],
+      ["explorateurs", "2"],
+      ["escorte", "poule.1"],
+      ["escorte", "souris.3"],
+    ]);
+  });
+
+  it("n'envoie aucune Bête sans escorte (US-0909)", async () => {
+    const joueur = userEvent.setup();
+    ouvrir("?explorateurs=1&escorte=souris.0");
+    await joueur.click(partir());
+    expect(envoye().filter(([nom]) => nom === "escorte")).toEqual([]);
+  });
+
+  it("se grise le temps de l'envoi, pour ne partir qu'une fois", async () => {
+    const joueur = userEvent.setup();
+    let repondre: (etat: EtatDuDepart) => void = () => {};
+    actions.partir.mockImplementation(() => new Promise((fin) => (repondre = fin)));
+    ouvrir("?explorateurs=1");
+    await joueur.click(partir());
+    expect(partir().disabled).toBe(true);
+    await act(async () => repondre({ refus: null }));
+    expect(partir().disabled).toBe(false);
+  });
+
+  it("dit pourquoi le départ est refusé, juste sous « Partir », sans quitter l'écran", async () => {
+    const joueur = userEvent.setup();
+    actions.partir.mockResolvedValue({ refus: "Départ refusé : un explorateur n'est plus libre." });
+    ouvrir("?explorateurs=2");
+    await joueur.click(partir());
+    expect(within(bloc()).getByRole("alert").textContent).toBe("Départ refusé : un explorateur n'est plus libre.");
+    expect(raison()).toBe("Départ refusé : un explorateur n'est plus libre.");
+    expect(partir().disabled).toBe(false);
+  });
+
+  it("ne part pas tant qu'un choix manque", async () => {
+    const joueur = userEvent.setup();
+    ouvrir("", { destination: null });
+    await joueur.click(partir());
+    expect(actions.partir).not.toHaveBeenCalled();
   });
 });
 

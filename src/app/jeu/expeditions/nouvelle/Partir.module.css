@@ -39,6 +39,13 @@
   color: var(--texte-discret);
 }
 
+/* US-0911 : un départ refusé, à la même place, dans la couleur d'alerte. */
+.refus {
+  margin-top: 6px;
+  color: var(--mauvais);
+  font-weight: var(--graisse-titre);
+}
+
 @media (max-width: 820px), (max-height: 500px) {
   .partir {
     width: 100%;

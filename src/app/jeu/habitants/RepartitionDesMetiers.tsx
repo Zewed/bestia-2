@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useTransition } from "react";
 import { Bloc } from "@/components/Bloc";
+import { EN_EXPEDITION } from "@/monde/etat-habitant";
 import { ajouterAuMetier, retirerDuMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
 import type { HabitantAffiche } from "./ListeDesHabitants";
@@ -14,10 +15,13 @@ export type MetierARepartir = { id: string; nom: string; icone: string; phrase: 
 /**
  * US-0312 : celui que « − » remet sans Métier : le dernier arrivé au Territoire de ceux qui exercent le Métier
  * `nom`, soit le plus grand identifiant (les Habitants sont numérotés à leur arrivée), comme la base le choisira ;
- * null quand personne ne l'exerce.
+ * null quand personne ne l'exerce. US-0911 : parmi ceux restés au Foyer : le Métier d'un explorateur parti ne change
+ * pas avant son retour.
  */
 function dernierArrive(habitants: HabitantAffiche[], nom: string): HabitantAffiche | null {
-  return habitants.filter((h) => h.metier === nom).reduce<HabitantAffiche | null>((dernier, h) => (dernier && dernier.id > h.id ? dernier : h), null);
+  return habitants
+    .filter((h) => h.metier === nom && h.etat !== EN_EXPEDITION)
+    .reduce<HabitantAffiche | null>((dernier, h) => (dernier && dernier.id > h.id ? dernier : h), null);
 }
 
 /**
@@ -26,7 +30,8 @@ function dernierArrive(habitants: HabitantAffiche[], nom: string): HabitantAffic
  *
  * US-0312 : c'est là qu'on répartit les Habitants. Au bout de chaque ligne, l'effectif du Métier entre « − » et
  * « + », au pouce. « + » donne le Métier au premier Habitant sans Métier de la liste, et se grise quand il n'en
- * reste aucun ; « − » remet sans Métier le dernier arrivé de ce Métier, et se grise quand personne ne l'exerce.
+ * reste aucun ; « − » remet sans Métier le dernier arrivé de ce Métier, et se grise quand personne ne l'exerce
+ * (US-0911 : au Foyer ; un explorateur parti compte dans l'effectif, mais garde son Métier jusqu'à son retour).
  * Gratuit et immédiat : l'effectif, les compteurs, la liste et le bandeau des sans Métier suivent aussitôt
  * (HabitantsMontres), le temps que l'action, qui choisit l'Habitant dans la base et jamais dans le navigateur,
  * l'enregistre et relise la page, qui fait alors foi.
@@ -55,6 +60,7 @@ export function RepartitionDesMetiers({ metiers }: { metiers: MetierARepartir[] 
       <ul className={styles.metiers}>
         {metiers.map((m) => {
           const nombre = affiches.filter((h) => h.metier === m.nom).length;
+          const auFoyer = dernierArrive(affiches, m.nom);
           return (
             <li key={m.id} className={styles.ligneMetier}>
               {/* Le nom est écrit juste à côté : l'icône est muette, pour qu'un lecteur d'écran ne le dise pas deux fois. */}
@@ -65,8 +71,8 @@ export function RepartitionDesMetiers({ metiers }: { metiers: MetierARepartir[] 
                   type="button"
                   className={styles.plusMoins}
                   aria-label={`Un ${m.nom} de moins`}
-                  disabled={nombre === 0}
-                  onClick={() => repartir(dernierArrive(affiches, m.nom), null, () => retirerDuMetier(m.id))}
+                  disabled={auFoyer === null}
+                  onClick={() => repartir(auFoyer, null, () => retirerDuMetier(m.id))}
                 >
                   −
                 </button>

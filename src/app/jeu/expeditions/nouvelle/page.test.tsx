@@ -250,7 +250,7 @@ describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
   it("quand tous les explorateurs sont déjà partis, lit l'heure du prochain retour sur le Territoire de la garde, pour le message", async () => {
     connecte();
     explorateurs.explorateursDuTerritoire.mockResolvedValueOnce({ libres: 0, total: 2 });
-    // Une valeur simulée : les départs, et donc les retours, arrivent avec US-0911.
+    // Une valeur simulée : le retour se lit sur base (src/expeditions/depart.db.test.ts).
     explorateurs.prochainRetourDUnExplorateur.mockResolvedValueOnce(new Date("2026-10-09T12:05:00Z"));
     const html = await ouvrir();
     expect(explorateurs.prochainRetourDUnExplorateur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
@@ -400,11 +400,11 @@ describe("le récapitulatif avant le départ (US-0910)", () => {
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     const html = await ouvrir({ q: "3", r: "-5" });
     expect(html).toMatch(/<h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-recapitulatif="[^"]*"><\/i><\/main>$/);
-    // De la destination, seulement ce que le récapitulatif en montre : son Biome et sa distance au Foyer.
+    // De la destination, seulement ce que le récapitulatif en montre, son Biome et sa distance au Foyer, et sa Case, que « Partir » envoie.
     expect(confie(html, "recapitulatif")).toEqual({
       libres: 2,
       especes: [SOURIS],
-      destination: { biome: "Forêt", distance: 7 },
+      destination: { q: 3, r: -5, biome: "Forêt", distance: 7 },
       maintenant: "2026-10-09T07:42:13.250Z",
       vitesse: 60,
     });
@@ -413,7 +413,7 @@ describe("le récapitulatif avant le départ (US-0910)", () => {
   it("lui donne une destination sans Biome sous le brouillard, et aucune sans Case ou pour une Case refusée", async () => {
     connecte();
     destinations.destinationDUneCase.mockResolvedValue({ fiche: { q: 3, r: -5, inconnue: true, distance: 12 } });
-    expect(confie(await ouvrir({ q: "3", r: "-5" }), "recapitulatif").destination).toEqual({ biome: null, distance: 12 });
+    expect(confie(await ouvrir({ q: "3", r: "-5" }), "recapitulatif").destination).toEqual({ q: 3, r: -5, biome: null, distance: 12 });
     destinations.destinationDUneCase.mockResolvedValue({ refus: "Cette Case est hors de portée." });
     expect(confie(await ouvrir({ q: "30", r: "-5" }), "recapitulatif").destination).toBeNull();
     destinations.destinationDUneCase.mockResolvedValue(null);

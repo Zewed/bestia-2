@@ -1,8 +1,9 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
-import { useId } from "react";
-import { explorateursChoisis } from "./Explorateurs";
+import { useActionState, useId } from "react";
+import type { Coordonnees } from "@/monde/hex";
+import { type EtatDuDepart, partir } from "./actions";
+import { FORMULAIRE_DE_DEPART } from "./formulaire";
 import styles from "./Partir.module.css";
 
 /**
@@ -14,26 +15,41 @@ function ceQuiManque(destination: boolean, explorateurs: number): string | null 
   return manque.length > 0 ? `Il faut ${manque.join(" et ")}.` : null;
 }
 
+const SANS_REFUS: EtatDuDepart = { refus: null };
+
 /**
  * US-0902 : le bouton de départ, au pied de l'écran d'Expédition. Il faut au moins un explorateur : à zéro, il reste
- * grisé et dit pourquoi, juste dessous (lu aussi par un lecteur d'écran). Dès un explorateur choisi, il se dégrise ;
- * il ne fait encore rien : le départ arrive avec US-0911. US-0910 : il finit le récapitulatif, et il faut aussi une
- * `destination` : tant qu'un choix manque, il reste grisé et le nomme.
+ * grisé et dit pourquoi, juste dessous (lu aussi par un lecteur d'écran). US-0910 : il finit le récapitulatif, et il faut
+ * aussi une `destination` : tant qu'un choix manque, il reste grisé et le nomme.
+ *
+ * US-0911 : il confirme le départ : il envoie la destination, les `explorateurs` et l'`escorte` choisis (Espèce par
+ * Espèce, telle que l'écran la montre), et le séjour du curseur. Grisé le temps de l'envoi, pour ne partir qu'une fois.
+ * Fait, le départ mène à la liste des Expéditions en cours ; refusé, rien n'est retenu, et il dit pourquoi, juste dessous,
+ * dans la couleur d'alerte, sur l'écran relu.
  */
-export function Partir({ libres, destination }: { libres: number; destination: boolean }) {
-  const recherche = useSearchParams();
+export function Partir({ destination, explorateurs, escorte }: { destination: Coordonnees | null; explorateurs: number; escorte: ReadonlyMap<string, number> }) {
+  const [{ refus }, envoyer, enCours] = useActionState(partir, SANS_REFUS);
   const idRaison = useId();
-  const raison = ceQuiManque(destination, explorateursChoisis(recherche, libres));
+  const raison = ceQuiManque(destination !== null, explorateurs);
+  const dit = raison ?? refus;
   return (
-    <div className={styles.depart}>
-      <button type="button" className={styles.partir} disabled={raison !== null} aria-describedby={raison ? idRaison : undefined}>
+    <form id={FORMULAIRE_DE_DEPART} action={envoyer} className={styles.depart}>
+      {destination ? (
+        <>
+          <input type="hidden" name="q" value={destination.q} />
+          <input type="hidden" name="r" value={destination.r} />
+        </>
+      ) : null}
+      <input type="hidden" name="explorateurs" value={explorateurs} />
+      {[...escorte].map(([especeId, nombre]) => (nombre > 0 ? <input key={especeId} type="hidden" name="escorte" value={`${especeId}.${nombre}`} /> : null))}
+      <button type="submit" className={styles.partir} disabled={raison !== null || enCours} aria-describedby={dit ? idRaison : undefined}>
         Partir
       </button>
-      {raison ? (
-        <p id={idRaison} className={styles.raison}>
-          {raison}
+      {dit ? (
+        <p id={idRaison} className={raison ? styles.raison : styles.refus} role={raison ? undefined : "alert"}>
+          {dit}
         </p>
       ) : null}
-    </div>
+    </form>
   );
 }

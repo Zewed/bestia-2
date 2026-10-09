@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { type MouseEvent, useEffect, useId, useRef, useState, useTransition } from "react";
+import { EN_EXPEDITION } from "@/monde/etat-habitant";
 import { donnerUnMetier, renvoyerUnHabitant, retirerLeMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
 import { BoutonDuMetier, type MetierAuChoix, MetiersAuChoix } from "./MetiersAuChoix";
@@ -69,6 +70,9 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  * clic ne confirme pas. La ligne part aussitôt, et avec elle les compteurs et le bandeau des sans Métier
  * (HabitantsMontres), le temps que l'action le renvoie et relise la page, qui fait alors foi ; la main passe à la ligne
  * qui prend sa place, ou à celle d'avant. Le dernier Habitant se renvoie aussi : la phrase d'US-0329 prend sa place.
+ *
+ * US-0911 : un explorateur parti est « en Expédition » sur sa ligne, son Métier écrit sans bouton : rien ne se déplie,
+ * ni Métier ni renvoi, avant son retour.
  */
 export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
   const [affiches, montrerDAvance] = useHabitantsMontres(habitants);
@@ -197,7 +201,7 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
             return (
               <li key={h.id} className={styles.habitant}>
                 <span className={styles.prenom}>{h.prenom}</span>
-                {metiers.length > 0 ? (
+                {metiers.length > 0 && h.etat !== EN_EXPEDITION ? (
                   <BoutonDuMetier
                     id={idBouton(h.id)}
                     texte={h.metier ?? "Choisir un Métier"}

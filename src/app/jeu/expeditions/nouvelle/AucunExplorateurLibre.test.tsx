@@ -20,7 +20,7 @@ describe("aucun explorateur libre (US-0903)", () => {
   });
 
   it("quand tous les explorateurs sont déjà partis, donne l'heure du prochain retour, dans le fuseau du joueur", () => {
-    // Une valeur simulée : le départ des explorateurs, et donc leur retour, arrive avec US-0911.
+    // Une valeur simulée : le retour se lit sur base (src/expeditions/depart.db.test.ts).
     const retour = new Date("2026-10-09T12:05:00Z");
     render(<AucunExplorateurLibre total={3} prochainRetour={retour} />);
     expect(textes()).toEqual(["Explorateurs", "Tous les explorateurs sont déjà partis", "Prochain retour le ", "9 octobre à 14:05", "Donner le Métier d'explorateur"]);

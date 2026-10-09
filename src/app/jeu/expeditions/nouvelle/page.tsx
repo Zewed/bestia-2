@@ -55,8 +55,16 @@ function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
   );
 }
 
-/** US-0910 : d'une destination, ce que le récapitulatif en montre : son Biome (null sous le brouillard) et sa distance au Foyer. */
-const destinationChoisie = (fiche: Fiche | FicheInconnue): DestinationChoisie => ({ biome: "inconnue" in fiche ? null : fiche.biome, distance: fiche.distance });
+/**
+ * US-0910 : d'une destination, ce que le récapitulatif en montre : son Biome (null sous le brouillard) et sa distance au
+ * Foyer. US-0911 : et sa Case, que « Partir » envoie.
+ */
+const destinationChoisie = (fiche: Fiche | FicheInconnue): DestinationChoisie => ({
+  q: fiche.q,
+  r: fiche.r,
+  biome: "inconnue" in fiche ? null : fiche.biome,
+  distance: fiche.distance,
+});
 
 /**
  * US-0901 : l'écran d'Expédition, une page du jeu. Depuis la fiche d'une Case, la Case est en paramètre et devient la

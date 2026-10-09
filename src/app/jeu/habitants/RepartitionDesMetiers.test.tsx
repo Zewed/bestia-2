@@ -170,3 +170,23 @@ describe("répartir les Habitants avec plus et moins, dans le bloc Métiers (US-
     expect(bandeau()).toBe("2 Habitants sans Métier");
   });
 });
+
+describe("un Habitant parti en Expédition, dans le bloc Métiers (US-0911)", () => {
+  /** Dara, Chasseur partie en Expédition, arrivée après Cael. */
+  const DARA: HabitantAffiche = { id: 43, prenom: "Dara", metier: "Chasseur", etat: "en Expédition" };
+
+  it("compte dans l'effectif de son Métier, mais « − » ne la remet pas sans Métier : il prend le dernier arrivé resté au Foyer", async () => {
+    render(page([...HABITANTS, DARA]));
+    expect(effectif("Chasseur")).toBe("2");
+    await userEvent.setup().click(moins("Chasseur"));
+    expect(actions.retirerDuMetier).toHaveBeenCalledExactlyOnceWith("chasseur");
+    expect(lignes()).toContain("Dara · Chasseur");
+    expect(lignes()).toContain("Cael · Choisir un Métier");
+  });
+
+  it("grise « − » quand tous ceux du Métier sont partis", () => {
+    render(page([HABITANTS[0], DARA]));
+    expect(effectif("Chasseur")).toBe("1");
+    expect(moins("Chasseur").disabled).toBe(true);
+  });
+});

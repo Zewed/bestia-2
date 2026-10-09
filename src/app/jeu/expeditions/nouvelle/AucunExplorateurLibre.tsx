@@ -12,8 +12,8 @@ const quand = (instant: Date) => formaterJourEtHeure(instant, FUSEAU);
 /**
  * US-0903 : à la place du formulaire de l'écran d'Expédition, quand aucun explorateur n'est libre : sans aucun
  * explorateur, pourquoi l'on ne peut pas partir ; quand tous sont déjà partis, l'heure du prochain retour
- * (`prochainRetour`, que US-0911 alimentera). Dans les deux cas, un lien mène à la page Habitants pour donner ce
- * Métier, au pouce sur mobile.
+ * (`prochainRetour`, celui de leur Expédition, US-0911). Dans les deux cas, un lien mène à la page Habitants pour
+ * donner ce Métier, au pouce sur mobile.
  */
 export function AucunExplorateurLibre({ total, prochainRetour }: { total: number; prochainRetour: Date | null }) {
   return (
