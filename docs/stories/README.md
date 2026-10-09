@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0921** · Ceux qui sont partis mangent toujours ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
+Dernière story livrée : **US-0912** · La durée du trajet ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
 
 ## Sommaire
 
@@ -19,7 +19,7 @@ Dernière story livrée : **US-0921** · Ceux qui sont partis mangent toujours ;
 | [6 · Construire](06-construire.md) | 25 à 30 | 46 | 13 |
 | [7 · La Recherche](07-la-recherche.md) | 31 à 32 | 31 | 6 |
 | [8 · Les Bêtes à la maison](08-les-betes-a-la-maison.md) | 33 à 37 | 44 | 13 |
-| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 76 | 30 |
+| [9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md) | 38 à 45 | 76 | 28 |
 | [10 · Le Bestiaire](10-le-bestiaire.md) | 46 à 49 | 47 | 20 |
 | [11 · S'étendre](11-s-etendre.md) | 50 à 52 | 42 | 25 |
 | [12 · Les Épreuves](12-les-epreuves.md) | 53 | 34 | 7 |
@@ -28,9 +28,9 @@ Dernière story livrée : **US-0921** · Ceux qui sont partis mangent toujours ;
 | [15 · Le Monde vivant](15-le-monde-vivant.md) | 61 à 63 | 28 | 16 |
 | [16 · Le confort](16-le-confort.md) | 64 à 66 | 36 | 12 |
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
-| **Total** | **65 étapes** | **748** | **221** |
+| **Total** | **65 étapes** | **748** | **219** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (125 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (124 au total).
 
 ## Lire une story
 

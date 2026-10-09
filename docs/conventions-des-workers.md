@@ -17,7 +17,7 @@ Lis d'abord `AGENTS.md` (ce Next.js 16 a des changements cassants ; les guides s
 ## Avant chaque envoi
 - **Bases** : les tests sur base et le serveur de dev de vérification tournent sur le Postgres local de Bestia (conteneur Docker `bestia-db`, `postgres://bestia@127.0.0.1:5433/<base>`, sans mot de passe), sur la base que le coordinateur t'attribue (`bestia_test_a` à `bestia_test_e`). Jamais Neon : il ne sert que la production, dans son plan gratuit.
 - `npm run lint`, `npm run typecheck`, puis la suite : `NODE_ENV=production VERCEL_ENV=production npx vitest run --maxWorkers=2`. La CI les repasse sur ta branche, sur son propre Postgres : attends-la verte.
-- Tests sur base connus pour échouer parfois sous charge : la naissance dans `chef.db.test.ts` et `habitants.db.test.ts`, le seuil de vitesse de `longue-absence.db.test.ts` et `synchroniser-horloge.db.test.ts`. Relance-les seuls et dis-le dans ton rapport.
+- Tests sur base : un chef naît dans un Monde d'essai propre à ton fichier (`mondeDEssai(pool, "<nom>")`, `src/test/base.ts`), jamais sur Aube, sauf si l'essai porte vraiment sur le Monde du jeu : sa Couronne n'a de place que pour quelques dizaines de Foyers, partagés par toute la suite.
 - Un critère visible se vérifie en vrai, dans un navigateur, de 320 à 1 440 px, sans défilement de côté ; joins une capture avec `armada attach`.
 
 ## La pull request

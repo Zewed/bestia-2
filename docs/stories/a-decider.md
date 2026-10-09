@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-221 points au total.
+219 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -87,8 +87,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 
 ## [Jalon 9 · Explorer et apprivoiser](09-explorer-et-apprivoiser.md)
 
-- [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : l'Expédition avance au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce ; que le pas des explorateurs soit aussi une limite.
-- [US-0912](09-explorer-et-apprivoiser.md) · La durée du trajet : le chemin passe de Case en Case ; la traversée de la mer, des lacs et des rivières (plus lente, contournée ou interdite).
 - [US-0919](09-explorer-et-apprivoiser.md) · Plusieurs Expéditions à la fois : un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs.
 - [US-0920](09-explorer-et-apprivoiser.md) · Rappeler une Expédition à l'aller : rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
