@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { MissingEnvError } from "./env";
 import { checkHealth } from "./health";
+import { TACHE_EN_RETARD_MINUTES } from "./reglages";
 
 // Le rattrapage du Monde a ses propres tests sur base ; ici, il répond tout de suite.
 const rattrapage = vi.hoisted(() => ({ rattraper: vi.fn(async () => new Date("2026-10-02T08:00:00Z")) }));
@@ -69,7 +70,10 @@ describe("page de santé", () => {
       dernierPassage: "2026-10-02T08:00:00.000Z",
       enRetard: false,
     });
-    vi.setSystemTime(new Date("2026-10-02T08:30:00Z"));
+    // Trois passages manqués : en retard (US-0029), quel que soit le rythme de la tâche (src/reglages.ts).
+    vi.setSystemTime(new Date(Date.parse("2026-10-02T08:00:00Z") + TACHE_EN_RETARD_MINUTES * 60_000));
+    expect((await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE))).body.tache?.enRetard).toBe(false);
+    vi.setSystemTime(new Date(Date.parse("2026-10-02T08:00:00Z") + TACHE_EN_RETARD_MINUTES * 60_000 + 60_000));
     expect((await checkHealth(poolAnswering("neondb", PRODUCTION_TIMELINE))).body.tache?.enRetard).toBe(true);
     vi.useRealTimers();
   });
