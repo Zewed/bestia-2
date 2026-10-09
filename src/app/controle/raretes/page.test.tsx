@@ -17,7 +17,7 @@ vi.mock("./simulation", async (original) => {
   // La vraie simulation, faite une seule fois par graine et par période pour tous les essais : tout un Monde, un mois.
   const faites = new Map<string, ReturnType<typeof vraie.simulerLesRaretes>>();
   simulation.simulerLesRaretes.mockImplementation((options: Parameters<typeof vraie.simulerLesRaretes>[0]) => {
-    const cle = `${options.graine} ${options.de.toISOString()}`;
+    const cle = `${options.graine} ${options.de?.toISOString()}`;
     if (!faites.has(cle)) faites.set(cle, vraie.simulerLesRaretes(options));
     return faites.get(cle);
   });
@@ -28,9 +28,6 @@ import { proxy } from "@/proxy";
 import Raretes from "./page";
 
 const MOT_DE_PASSE = "mot-de-passe-d-essai";
-/** L'heure du jeu pendant les essais : la simulation part du début de ce jour-là. */
-const AUJOURD_HUI = new Date("2026-10-09T15:42:00Z");
-const MINUIT = new Date("2026-10-09T00:00:00Z");
 const ouvrir = (recherche: Record<string, string> = {}) => Raretes({ params: Promise.resolve({}), searchParams: Promise.resolve(recherche) } as PageProps<"/controle/raretes">);
 /** La page en HTML, ses espaces fines (« 2 070 ») rendues en espaces simples. */
 const afficher = async (recherche: Record<string, string> = {}) => renderToStaticMarkup(await ouvrir(recherche)).replaceAll(" ", " ");
@@ -43,12 +40,9 @@ const deuxDecimales = (n: number) => n.toLocaleString("fr-FR", { minimumFraction
 describe("page de simulation des Raretés par Anneau (US-0931)", () => {
   beforeEach(() => {
     vi.stubEnv("CONTROLE_MOT_DE_PASSE", MOT_DE_PASSE);
-    vi.useFakeTimers({ toFake: ["Date"] });
-    vi.setSystemTime(AUJOURD_HUI);
     simulation.simulerLesRaretes.mockClear();
   });
   afterEach(() => {
-    vi.useRealTimers();
     vi.unstubAllEnvs();
     entetes.authorization = null;
   });
@@ -71,10 +65,10 @@ describe("page de simulation des Raretés par Anneau (US-0931)", () => {
   });
 
   describe("une graine simulée", () => {
-    it(`simule ${SIMULATION_DES_RARETES_JOURS} jours de jeu à partir du début du jour, et donne le résultat du contrôle en tête`, async () => {
+    it(`simule ${SIMULATION_DES_RARETES_JOURS} jours de jeu, et donne le résultat du contrôle en tête`, async () => {
       connecte();
       const html = await afficher({ graine: "12345" });
-      expect(simulation.simulerLesRaretes).toHaveBeenCalledWith({ graine: 12345, de: MINUIT });
+      expect(simulation.simulerLesRaretes).toHaveBeenCalledWith({ graine: 12345 });
       expect(html).toContain(`Graine 12345 · ${SIMULATION_DES_RARETES_JOURS} jours de jeu`);
       expect(html).toContain("Contrôle réussi");
       expect(html).not.toContain("Contrôle échoué");

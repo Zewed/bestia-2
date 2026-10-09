@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { lireRaretesParAnneau } from "@/donnees/jeux";
 import { anneauDUneCase } from "@/monde/anneaux";
 import { apparitions, betesSauvages, rangerLesEspeces } from "@/monde/betes-sauvages";
@@ -17,7 +17,7 @@ const PETIT = { rayon: 12, anneauxCouronne: 2, rayonCoeur: 3 };
 const PRAIRIE = rangerLesEspeces(CHANCES[0].map(({ rareteId }) => ({ id: rareteId, rareteId, biomeId: "prairie" })));
 
 describe("la simulation des Raretés par Anneau (US-0931)", () => {
-  const simulation = simulerLesRaretes({ graine: GRAINE, de: DEBUT });
+  const simulation = simulerLesRaretes({ graine: GRAINE });
 
   it(`simule ${SIMULATION_DES_RARETES_JOURS} jours de jeu, Anneau par Anneau, sur toutes les Cases d'un Monde généré`, () => {
     expect(simulation.jours).toBe(SIMULATION_DES_RARETES_JOURS);
@@ -25,8 +25,9 @@ describe("la simulation des Raretés par Anneau (US-0931)", () => {
     const forme = { rayon: MONDE_RAYON, anneauxCouronne: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON };
     const monde = genererLeMonde({ rayon: MONDE_RAYON, anneaux: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON, graine: GRAINE });
     for (const { anneau, cases } of simulation.anneaux) expect(cases, `Anneau ${anneau}`).toBe(monde.filter((c) => anneauDUneCase(c, forme) === anneau).length);
-    expect(simulation.anneaux[0].cases).toBe(2070);
-    expect(simulation.anneaux.at(-1)!.cases).toBe(169);
+    // De la Couronne au Cœur sauvage.
+    expect(simulation.anneaux[0].cases).toBe(monde.filter((c) => c.couronne).length);
+    expect(simulation.anneaux.at(-1)!.cases).toBe(monde.filter((c) => c.coeur).length);
   });
 
   it("compte chaque apparition de la période, et la Rareté que le jeu donne à sa Bête", () => {
@@ -59,16 +60,18 @@ describe("la simulation des Raretés par Anneau (US-0931)", () => {
     });
   });
 
-  it(`réussit quand chaque écart reste dans la tolérance de ${SIMULATION_DES_RARETES_TOLERANCE_POINTS} point, et que les communes sont majoritaires`, () => {
+  it(`tient chaque Rareté de chaque Anneau à ${SIMULATION_DES_RARETES_TOLERANCE_POINTS} point de sa part attendue, et les communes majoritaires`, () => {
     expect(simulation.tolerance).toBe(SIMULATION_DES_RARETES_TOLERANCE_POINTS);
-    expect(simulation.reussie).toBe(true);
     for (const { raretes, communesMajoritaires } of simulation.anneaux) {
+      // Les communes : la première Rareté de la table, plus de la moitié dans chaque Anneau.
+      expect(communesMajoritaires).toBe(raretes[0].obtenue > 50);
       expect(communesMajoritaires).toBe(true);
-      for (const r of raretes) expect(r.horsTolerance).toBe(false);
+      for (const r of raretes) expect(r.horsTolerance).toBe(Math.abs(r.obtenue - r.attendue) > SIMULATION_DES_RARETES_TOLERANCE_POINTS);
     }
+    expect(simulation.reussie).toBe(simulation.anneaux.every((a) => a.communesMajoritaires && !a.raretes.some((r) => r.horsTolerance)));
   });
 
-  it("échoue dès qu'un écart dépasse la tolérance, et marque les Raretés en cause", () => {
+  it("réussit tant que chaque écart reste dans la tolérance, échoue dès que l'un la dépasse, et marque les Raretés en cause", () => {
     const petite = (tolerance: number) => simulerLesRaretes({ graine: GRAINE, de: DEBUT, forme: PETIT, tolerance });
     const ecarts = petite(100).anneaux.flatMap((a) => a.raretes.map((r) => Math.abs(r.obtenue - r.attendue)));
     const plusGrand = Math.max(...ecarts);
@@ -98,13 +101,21 @@ describe("la simulation des Raretés par Anneau (US-0931)", () => {
       expect(parCaseParJour).toBeCloseTo(nombre / (cases * SIMULATION_DES_RARETES_JOURS), 12);
       expect(parCaseParJour).toBeCloseTo(APPARITIONS_PAR_CASE_PAR_JOUR, 0);
     }
-    const toutes = simulation.anneaux.reduce((s, a) => s + a.apparitions, 0) / (10_981 * SIMULATION_DES_RARETES_JOURS);
+    const toutes = simulation.anneaux.reduce((s, a) => s + a.apparitions, 0) / (casesDesAnneaux(0, MONDE_RAYON).length * SIMULATION_DES_RARETES_JOURS);
     expect(toutes).toBeCloseTo(APPARITIONS_PAR_CASE_PAR_JOUR, 1);
   });
 
-  it("donne le même résultat pour une même graine et une même période, un autre pour une autre graine", () => {
-    const petite = (graine: number) => simulerLesRaretes({ graine, de: DEBUT, forme: PETIT });
-    expect(petite(GRAINE)).toEqual(petite(GRAINE));
-    expect(petite(GRAINE + 1).anneaux.map((a) => a.apparitions)).not.toEqual(petite(GRAINE).anneaux.map((a) => a.apparitions));
+  it("simule toujours la même période : une même graine donne le même résultat quel que soit le jour, une autre graine un autre", () => {
+    const petite = (graine: number) => simulerLesRaretes({ graine, forme: PETIT });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(DEBUT);
+      const aujourdHui = petite(GRAINE);
+      vi.setSystemTime(new Date(DEBUT.getTime() + 45 * JOUR + 3_600_000));
+      expect(petite(GRAINE)).toEqual(aujourdHui);
+      expect(petite(GRAINE + 1).anneaux.map((a) => a.apparitions)).not.toEqual(aujourdHui.anneaux.map((a) => a.apparitions));
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

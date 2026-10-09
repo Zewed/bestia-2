@@ -10,13 +10,10 @@ import { motDePasseAccepte } from "@/controle/acces";
 import { lireJeu } from "@/donnees/charger";
 import { RARETES } from "@/donnees/jeux";
 import { lireUneGraine } from "@/monde/generer";
-import { maintenant } from "@/temps/horloge";
 import { simulerLesRaretes } from "./simulation";
 import styles from "./raretes.module.css";
 
 export const metadata: Metadata = { title: "Raretés par Anneau", robots: { index: false, follow: false } };
-
-const JOUR_MS = 86_400_000;
 
 const nombre = (n: number) => n.toLocaleString("fr-FR");
 const decimales = (n: number) => n.toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -42,8 +39,7 @@ export default async function SimulationDesRaretes({ searchParams }: PageProps<"
       erreur = e instanceof Error ? e.message : String(e);
     }
   }
-  // Du début du jour du jeu : la même graine donne le même résultat toute la journée.
-  const simulation = graine === null ? null : simulerLesRaretes({ graine, de: new Date(Math.floor(maintenant().getTime() / JOUR_MS) * JOUR_MS) });
+  const simulation = graine === null ? null : simulerLesRaretes({ graine });
   const raretes = new Map(lireJeu(RARETES).map((r) => [r.id, r]));
   const rarete = (id: string) => raretes.get(id) ?? { id, nom: id };
   const derniers = simulation?.anneaux.length ?? 0;

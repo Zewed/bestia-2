@@ -12,6 +12,12 @@ const JOUR_MS = 86_400_000;
 /** La forme d'un Monde généré aujourd'hui (src/reglages.ts). */
 const FORME_D_UN_MONDE: FormeDuMonde = { rayon: MONDE_RAYON, anneauxCouronne: COURONNE_ANNEAUX, rayonCoeur: COEUR_SAUVAGE_RAYON };
 
+/**
+ * La période simulée commence toujours au même instant, l'origine des tranches du temps du jeu (betes-sauvages.ts) : une
+ * même graine donne toujours le même résultat, qui ne change qu'avec les réglages et la table des Raretés.
+ */
+const DEBUT_SIMULE = new Date(0);
+
 /** Une Rareté dans un Anneau : sa part obtenue et sa part attendue, en pourcentages, et si leur écart dépasse la tolérance. */
 export type PartDUneRarete = { rareteId: string; obtenue: number; attendue: number; horsTolerance: boolean };
 
@@ -38,14 +44,14 @@ export type SimulationDesRaretes = { jours: number; tolerance: number; anneaux: 
  */
 export function simulerLesRaretes({
   graine,
-  de,
+  de = DEBUT_SIMULE,
   forme = FORME_D_UN_MONDE,
   jours = SIMULATION_DES_RARETES_JOURS,
   tolerance = SIMULATION_DES_RARETES_TOLERANCE_POINTS,
   chances = raretesParAnneau(),
 }: {
   graine: number;
-  de: Date;
+  de?: Date;
   forme?: FormeDuMonde;
   jours?: number;
   tolerance?: number;
