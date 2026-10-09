@@ -13,7 +13,7 @@ import { DEPART_VOYAGEUR } from "@/monde/voyageurs";
 import { programmerEvenement } from "@/temps/avancer";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
-import { casesRevelees } from "./brouillard";
+import { casesLeveesParLExpedition, casesRevelees } from "./brouillard";
 import { cheminDUneExpedition } from "./chemin";
 import { lancerLExpedition } from "./depart";
 import { type HorairesDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
@@ -70,14 +70,14 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
   const aLHeure = (territoireId: number, instant: Date) => rattraper("territoire", territoireId, { pool, jusqua: instant });
   /**
    * Le départ, à `instant`, de l'explorateur du Territoire vers `destination`, après la mise à l'heure du Territoire, comme
-   * depuis l'écran d'Expédition ; rend les horaires de l'Expédition, tels qu'enregistrés.
+   * depuis l'écran d'Expédition ; rend l'Expédition et ses horaires, tels qu'enregistrés.
    */
-  const partir = async (territoireId: number, destination: Coordonnees, instant: Date): Promise<HorairesDUneExpedition> => {
+  const partir = async (territoireId: number, destination: Coordonnees, instant: Date): Promise<HorairesDUneExpedition & { id: number }> => {
     await aLHeure(territoireId, instant);
     const depart = await lancerLExpedition(pool, territoireId, { destination, explorateurs: 1, escorte: new Map(), sejourMinutes: 60 }, instant);
     if (!("expeditionId" in depart)) throw new Error(depart.refus);
-    const { rows } = await pool.query<HorairesDUneExpedition>(
-      `select part_le as "partLe", trajet_minutes as "trajetMinutes", sejour_minutes as "sejourMinutes" from expedition where id = $1`,
+    const { rows } = await pool.query<HorairesDUneExpedition & { id: number }>(
+      `select id, part_le as "partLe", trajet_minutes as "trajetMinutes", sejour_minutes as "sejourMinutes" from expedition where id = $1`,
       [depart.expeditionId],
     );
     return rows[0];
@@ -146,6 +146,25 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
       }
     }
     expect(uneAUne).toBe(PORTEE_D_EXPLORATION_CASES - ABORDS_DU_FOYER_CASES);
+  });
+
+  it("compte, pour le Récit du retour, les Cases que l'Expédition a sorties du brouillard, sans celles déjà découvertes", async () => {
+    const { territoireId, foyer, ne, abords } = await naitre();
+    const destination = await auBoutDeLaPortee(territoireId);
+    const horaires = await partir(territoireId, destination, decale(ne, MINUTE_MS));
+    const passages = passagesDUneExpedition(foyer, destination, horaires);
+
+    // Tant qu'elle ne voit que les abords du Foyer, déjà découverts, elle n'a rien levé.
+    await aLHeure(territoireId, passages[ABORDS_DU_FOYER_CASES - 2].le);
+    expect(await casesLeveesParLExpedition(pool, horaires.id)).toBe(0);
+    await aLHeure(territoireId, passages[5].le);
+    expect(await casesLeveesParLExpedition(pool, horaires.id)).toBe((await decouvertes(territoireId)).size - abords.size);
+    // Au retour, tout son aller : toutes les Cases découvertes en plus des abords, et elles seules.
+    await aLHeure(territoireId, retourDUneExpedition(horaires)!);
+    const levees = (await decouvertes(territoireId)).size - abords.size;
+    expect(levees).toBeGreaterThan(PORTEE_D_EXPLORATION_CASES);
+    expect(await casesLeveesParLExpedition(pool, horaires.id)).toBe(levees);
+    expect(await casesLeveesParLExpedition(pool, 2_000_000_000)).toBe(0);
   });
 
   it("révèle à l'arrivée la destination et ses voisines, Biome compris", async () => {
@@ -265,6 +284,20 @@ describe.skipIf(!URL_TEST)("le brouillard se lève sur le chemin (US-0914, sur b
       expect(await decouvertes(territoireId)).toEqual(await attenduesDe(territoireId, abords, foyer, [lUne, lAutre], instant));
     }
     expect(await decouvertes(territoireId)).not.toEqual(await attenduesDe(territoireId, abords, foyer, [lUne], decale(ne, 24 * 60 * MINUTE_MS)));
+    // Chaque Case levée compte pour la première des deux qui l'a révélée, jamais pour les deux.
+    const fin = decale(ne, 24 * 60 * MINUTE_MS);
+    const dansLeMonde = await attenduesDe(territoireId, new Set(), foyer, [lUne, lAutre], fin);
+    const premiere = new Map<string, { id: number; le: number }>();
+    for (const x of [lUne, lAutre]) {
+      for (const c of casesRevelees(foyer, x.destination, x.horaires, fin)) {
+        const avant = premiere.get(cle(c));
+        if (dansLeMonde.has(cle(c)) && !abords.has(cle(c)) && (!avant || c.le.getTime() < avant.le)) premiere.set(cle(c), { id: x.horaires.id, le: c.le.getTime() });
+      }
+    }
+    const [deLUne, deLAutre] = [await casesLeveesParLExpedition(pool, lUne.horaires.id), await casesLeveesParLExpedition(pool, lAutre.horaires.id)];
+    expect([deLUne, deLAutre]).toEqual([lUne, lAutre].map((x) => [...premiere.values()].filter((p) => p.id === x.horaires.id).length));
+    expect(deLUne + deLAutre).toBe((await decouvertes(territoireId)).size - abords.size);
+    expect(deLAutre).toBeGreaterThan(0);
     // L'événement a bien coupé le rattrapage, à son instant.
     const { rows } = await pool.query<{ traiteLe: Date }>(
       `select traite_le as "traiteLe" from evenement where element = 'territoire' and element_id = $1 and type = $2 and donnees->>'voyageur' = '2000000000'`,

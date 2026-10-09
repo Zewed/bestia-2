@@ -66,6 +66,16 @@ describe("le brouillard se lève sur le chemin (US-0914)", () => {
     expect(a(30 * 24 * 60, { ...EXPEDITION, trajetMinutes: null })).toEqual(new Set());
   });
 
+  it("dit pour chaque Case l'instant où l'Expédition l'a sortie du brouillard : son premier passage d'où elle la voit", () => {
+    const quand = new Map(casesRevelees(FOYER, DESTINATION, EXPEDITION, apres(30 * 24 * 60)).map((c) => [cle(c), c.le]));
+    expect(quand.get(cle(CHEMIN[0]))).toEqual(apres(20));
+    // La troisième Case du chemin se voit dès la deuxième.
+    expect(quand.get(cle(CHEMIN[2]))).toEqual(apres(40));
+    expect(quand.get(cle(DESTINATION))).toEqual(apres(100));
+    expect(quand.get(cle({ q: 20, r: -7 }))).toEqual(apres(120));
+    for (const le of quand.values()) expect(le.getTime()).toBeLessThanOrEqual(apres(120).getTime());
+  });
+
   it("révèle chaque Case une seule fois", () => {
     const revelees = casesRevelees(FOYER, DESTINATION, EXPEDITION, apres(120)).map(cle);
     expect(revelees).toHaveLength(new Set(revelees).size);

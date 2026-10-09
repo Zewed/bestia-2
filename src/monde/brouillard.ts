@@ -21,8 +21,8 @@ export function abordsDuFoyer(foyer: Coordonnees, rayon: number = ABORDS_DU_FOYE
  * sans jamais se bloquer. Une Case déjà découverte ne change pas.
  */
 const DECOUVRIR = `
-  insert into case_decouverte (territoire_id, case_id)
-  select t.id, c.id
+  insert into case_decouverte (territoire_id, case_id, expedition_id)
+  select t.id, c.id, $4::int
   from territoire t
   join case_du_monde f on f.id = t.foyer_case_id
   join unnest($2::int[], $3::int[]) as v(q, r) on true
@@ -37,10 +37,11 @@ const DECOUVRIR = `
  * et les Avant-postes s'en serviront (US-0442). US-0441 : une Case déjà découverte le reste, sans que rien ne change :
  * découvrir deux fois, même en même temps, ne fait rien de plus ; et rien dans le jeu n'efface une ligne du brouillard,
  * qui ne part qu'avec son Territoire. Rend le nombre de Cases tout juste découvertes. Appelée avec le client d'une
- * transaction, elle tient dedans.
+ * transaction, elle tient dedans. US-0914 : `expeditionId`, l'Expédition qui les sort du brouillard sur son chemin ; une
+ * Case déjà découverte reste à qui l'a découverte la première.
  */
-export async function decouvrir(base: Pool | PoolClient, territoireId: number, cases: Coordonnees[]): Promise<number> {
-  const { rowCount } = await base.query(DECOUVRIR, [territoireId, cases.map((c) => c.q), cases.map((c) => c.r)]);
+export async function decouvrir(base: Pool | PoolClient, territoireId: number, cases: Coordonnees[], expeditionId: number | null = null): Promise<number> {
+  const { rowCount } = await base.query(DECOUVRIR, [territoireId, cases.map((c) => c.q), cases.map((c) => c.r), expeditionId]);
   return rowCount ?? 0;
 }
 
