@@ -17,7 +17,8 @@ import { dureeDuTrajetMinutes } from "./allure";
 import { BETE_PLUS_DISPONIBLE, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
-import { retourDUneExpedition, sejourDUneExpedition } from "./phase";
+import { type HorairesDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
+import { rappelerLExpedition } from "./rappel";
 import { rencontresDUneExpedition } from "./rencontres";
 import { betesQuiSuivent } from "./sexe";
 
@@ -96,15 +97,20 @@ describe.skipIf(!URL_TEST)("la Bête apprivoisée arrive au Foyer (US-0938, sur 
     if (!("expeditionId" in resultat)) throw new Error(resultat.refus);
     return resultat.expeditionId;
   };
+  /** Les horaires d'une Expédition, tels qu'ils sont en base, rappel compris (US-0920). */
+  const horaires = async (expeditionId: number) =>
+    (
+      await pool.query<HorairesDUneExpedition>(
+        `select part_le as "partLe", trajet_minutes as "trajetMinutes", sejour_minutes as "sejourMinutes", rappelee_le as "rappeleeLe" from expedition where id = $1`,
+        [expeditionId],
+      )
+    ).rows[0];
   /** Une Expédition partie vers une Bête de naissance du Territoire, et ses heures d'arrivée et de retour. */
   const allerChercherSaBete = async (t: { territoireId: number; ne: Date }) => {
     const voulue = await uneBeteDeNaissanceACalme(t);
     const expeditionId = await partir(t.territoireId, voulue.bete, voulue.escorte, voulue.depart);
-    const { rows } = await pool.query<{ partLe: Date; trajetMinutes: number; sejourMinutes: number }>(
-      `select part_le as "partLe", trajet_minutes as "trajetMinutes", sejour_minutes as "sejourMinutes" from expedition where id = $1`,
-      [expeditionId],
-    );
-    return { ...voulue, expeditionId, arrivee: sejourDUneExpedition(rows[0])!.debut, retour: retourDUneExpedition(rows[0])! };
+    const prevus = await horaires(expeditionId);
+    return { ...voulue, expeditionId, arrivee: sejourDUneExpedition(prevus)!.debut, retour: retourDUneExpedition(prevus)! };
   };
   /** Le Territoire mis à l'heure du jeu `instant`, comme à l'ouverture d'une page : le mécanisme unique du temps. */
   const aLHeure = (territoireId: number, instant: Date) => rattraper("territoire", territoireId, { pool, jusqua: instant });
@@ -180,6 +186,33 @@ describe.skipIf(!URL_TEST)("la Bête apprivoisée arrive au Foyer (US-0938, sur 
 
       await aLHeure(t.territoireId, retour);
       expect(await finDuRecitDeRetour(t.territoireId)).toBe(`Bête ramenée au Foyer : ${especes.get(bete.especeId)!.nom} (${DIT[sexe]}).`);
+    });
+
+    it("rappelée pendant son séjour, l'Expédition rentre plus tôt, avec la Bête déjà apprivoisée (US-0920)", async () => {
+      const t = await naitre();
+      const { bete, sexe, expeditionId, arrivee, retour } = await allerChercherSaBete(t);
+      const rappel = apres(arrivee, 10 * MINUTE);
+
+      await aLHeure(t.territoireId, rappel);
+      expect(await rappelerLExpedition(pool, t.territoireId, expeditionId, rappel)).toEqual({ rappeleeLe: rappel });
+      const rentree = retourDUneExpedition(await horaires(expeditionId))!;
+      expect(rentree < retour).toBe(true);
+      await aLHeure(t.territoireId, rentree);
+      expect(await effectifDe(t.territoireId, bete.especeId)).toEqual([{ sexe, nombre: 1 }]);
+      expect(await auBestiaire(t.territoireId, bete.especeId)).toBe("apprivoisee");
+    });
+
+    it("rappelée à l'aller, l'Expédition ne ramène rien : elle n'a jamais vu la Bête (US-0920)", async () => {
+      const t = await naitre();
+      const { bete, expeditionId, arrivee } = await allerChercherSaBete(t);
+      const rappel = apres(arrivee, -10 * MINUTE);
+
+      await aLHeure(t.territoireId, rappel);
+      expect(await rappelerLExpedition(pool, t.territoireId, expeditionId, rappel)).toEqual({ rappeleeLe: rappel });
+      await aLHeure(t.territoireId, apres(retourDUneExpedition(await horaires(expeditionId))!, HEURE));
+      expect(await betesQuiSuivent(pool, expeditionId)).toEqual([]);
+      expect(await effectifDe(t.territoireId, bete.especeId)).toEqual([]);
+      expect(await finDuRecitDeRetour(t.territoireId)).toBe("Aucune Bête ne s'est montrée.");
     });
 
     it("elle s'ajoute aux Bêtes de son Espèce déjà au Foyer, à son sexe", async () => {
