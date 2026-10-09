@@ -1,0 +1,31 @@
+src/bestiaire/bestiaire.ts
+  s_97a431cfa65ca7::t_74afd5c79b1592 20,22,24,26,31-37,39-48
+src/expeditions/rencontres.ts
+  s_97a431cfa65ca7::t_c3ca41b716f92f 12,68,71,82
+src/bestiaire/bestiaire.db.test.ts
+  s_c6063da5fc4875::t_033cd36db30015 239-253
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "709b6aef49dfb29e6f43e304b1e58fb5e8e0ad00",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    },
+    "s_c6063da5fc4875": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a110aaaf1ccc4575f",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
