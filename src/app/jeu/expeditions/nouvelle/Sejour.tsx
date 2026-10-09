@@ -14,6 +14,9 @@ const PARAMETRE_DU_SEJOUR = "sejour";
 /** La durée que dit l'adresse, ou la première toute prête si elle n'en dit aucune qu'on aurait pu choisir. */
 const dureeDeLAdresse = (valeur: string | null) => sejourChoisi(valeur) ?? SEJOUR_PAR_DEFAUT_MINUTES;
 
+/** US-0910 : la durée du séjour que l'adresse garde, telle que le bloc Séjour la montre, pour le récapitulatif. */
+export const sejourDeLAdresse = (recherche: URLSearchParams) => dureeDeLAdresse(recherche.get(PARAMETRE_DU_SEJOUR));
+
 /**
  * US-0906 : l'adresse garde `minutes`, sans toucher à ses autres paramètres, si elle ne les garde pas déjà. replaceState,
  * que Next.js relie à useSearchParams : ni requête, ni historique ; Safari en limite les réécritures (une centaine en

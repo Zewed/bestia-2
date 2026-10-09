@@ -21,7 +21,7 @@ vi.mock("@/expeditions/destination", () => destinations);
 // US-0907 : l'adresse de l'écran, telle que le navigateur l'a, que lit le lien vers la carte.
 const adresse = vi.hoisted(() => ({ recherche: "" }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useSearchParams: () => new URLSearchParams(adresse.recherche) }));
-// US-0902 : les explorateurs du Territoire, et leur bloc et le départ réduits à ce que la page leur donne (testés à part).
+// US-0902 : les explorateurs du Territoire, et leur bloc réduit à ce que la page lui donne (testé à part).
 // US-0903 : de même pour l'heure du prochain retour, et le message qui remplace le formulaire sans explorateur libre.
 const explorateurs = vi.hoisted(() => ({
   explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })),
@@ -29,7 +29,10 @@ const explorateurs = vi.hoisted(() => ({
 }));
 vi.mock("@/monde/explorateurs", () => explorateurs);
 vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
-vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
+// US-0910 : le récapitulatif, qui finit sur le départ, réduit à ce que la page lui donne (testé à part), et l'heure du jeu.
+vi.mock("./Recapitulatif", () => ({ Recapitulatif: (p: object) => <i data-recapitulatif={JSON.stringify(p)} /> }));
+const horloge = vi.hoisted(() => ({ maintenant: () => new Date("2026-10-09T07:42:13.250Z"), vitesse: () => 60 }));
+vi.mock("@/temps/horloge", () => horloge);
 vi.mock("./AucunExplorateurLibre", () => ({ AucunExplorateurLibre: (p: object) => <i data-aucun={JSON.stringify(p)} /> }));
 // US-0904 : les Bêtes disponibles du Territoire, et le bloc Escorte réduit à ce que la page lui donne (testé à part).
 const effectif = vi.hoisted(() => ({
@@ -56,6 +59,9 @@ const ouvrir = async (recherche: Record<string, string | string[]> = {}) => {
 const textes = (html: string) => html.replace(/<[^>]+>/g, "|").split("|").filter(Boolean);
 /** L'adresse du lien `nom` de la page. */
 const lien = (html: string, nom: string) => html.match(new RegExp(`<a [^>]*href="([^"]*)"[^>]*>${nom}</a>`))?.[1].replace(/&amp;/g, "&");
+/** Ce que la page donne au bloc `nom`, réduit à sa place (« recapitulatif » : data-recapitulatif). */
+const confie = (html: string, nom: string) =>
+  JSON.parse(html.match(new RegExp(`<i data-${nom}="([^"]*)"></i>`))![1].replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&amp;/g, "&"));
 
 /** US-0906 : les textes du bloc Séjour, après la destination : la durée choisie, les bornes du curseur, les durées toutes prêtes. */
 const SEJOUR = ["Séjour", "1 h", formaterMinutes(SEJOUR_MINUTES.min), formaterMinutes(SEJOUR_MINUTES.max), "1 h", "4 h", "8 h", "12 h"];
@@ -144,7 +150,7 @@ describe("l'écran d'Expédition (US-0901)", () => {
   it("propose la durée du séjour, avec ou sans destination, entre les explorateurs et le départ (US-0906)", async () => {
     connecte();
     // Le bloc Séjour, seul entre les blocs Explorateurs et Escorte (US-0904) et le départ (réduits ici à ce que la page leur donne).
-    const entreExplorateursEtDepart = /<i data-explorateurs="[^"]*"><\/i><i data-escorte="[^"]*"><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
+    const entreExplorateursEtDepart = /<i data-explorateurs="[^"]*"><\/i><i data-escorte="[^"]*"><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-recapitulatif="[^"]*"><\/i><\/main>$/;
     const sansDestination = await ouvrir();
     expect(sansDestination).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
     expect(sansDestination).toMatch(entreExplorateursEtDepart);
@@ -199,11 +205,11 @@ describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
     expect(html).toMatch(new RegExp(`7 Cases de votre Foyer</dd></div></dl><a [^>]*>Changer de destination</a></section>${donne("explorateurs", { libres: 2, total: 3 })}`));
   });
 
-  it("finit sur le départ, qui sait combien d'explorateurs sont libres, avec ou sans destination", async () => {
+  it("finit sur le récapitulatif et son départ, qui savent combien d'explorateurs sont libres, avec ou sans destination (US-0910)", async () => {
     connecte();
-    expect(await ouvrir()).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+    expect(confie(await ouvrir(), "recapitulatif").libres).toBe(2);
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
-    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+    expect(confie(await ouvrir({ q: "3", r: "-5" }), "recapitulatif").libres).toBe(2);
   });
 
   it("ne propose aucun explorateur à un chef sans Territoire, sans rien demander à la base : le message à la place (US-0903)", async () => {
@@ -249,7 +255,7 @@ describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
     const html = await ouvrir();
     expect(explorateurs.prochainRetourDUnExplorateur).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
     expect(html).toMatch(new RegExp(`<h1[^>]*>Nouvelle Expédition</h1>${donne({ total: 2, prochainRetour: "2026-10-09T12:05:00.000Z" })}</main>$`));
-    expect(html).not.toContain("data-partir");
+    expect(html).not.toContain("data-recapitulatif");
   });
 
   it("garde le formulaire dès un explorateur libre, sans chercher de retour", async () => {
@@ -259,7 +265,7 @@ describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
     expect(html).not.toContain("data-aucun");
     expect(textes(html).slice(0, 4)).toEqual(["Nouvelle Expédition", "Destination", "Aucune destination", "Choisir sur la carte"]);
     expect(html).toContain(donne({ libres: 2, total: 3 }).replace("data-aucun", "data-explorateurs"));
-    expect(html).toMatch(/<i data-partir="[^"]*"><\/i><\/main>$/);
+    expect(html).toMatch(/<i data-recapitulatif="[^"]*"><\/i><\/main>$/);
   });
 });
 
@@ -374,5 +380,49 @@ describe("partir sans escorte (US-0909)", () => {
     const html = await ouvrir();
     expect(html).toContain("data-escorte");
     expect(html).not.toContain("data-sans-escorte");
+  });
+});
+
+describe("le récapitulatif avant le départ (US-0910)", () => {
+  afterEach(() => {
+    effectif.betesDisponibles.mockClear();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  const SOURIS = { id: "souris", nom: "Souris grise", illustration: "especes/souris.webp", disponibles: 3 };
+
+  it("finit l'écran, après le séjour, avec de quoi tout chiffrer : explorateurs libres, Bêtes disponibles, destination, heure et vitesse du jeu", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(html).toMatch(/<h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-recapitulatif="[^"]*"><\/i><\/main>$/);
+    // De la destination, seulement ce que le récapitulatif en montre : son Biome et sa distance au Foyer.
+    expect(confie(html, "recapitulatif")).toEqual({
+      libres: 2,
+      especes: [SOURIS],
+      destination: { biome: "Forêt", distance: 7 },
+      maintenant: "2026-10-09T07:42:13.250Z",
+      vitesse: 60,
+    });
+  });
+
+  it("lui donne une destination sans Biome sous le brouillard, et aucune sans Case ou pour une Case refusée", async () => {
+    connecte();
+    destinations.destinationDUneCase.mockResolvedValue({ fiche: { q: 3, r: -5, inconnue: true, distance: 12 } });
+    expect(confie(await ouvrir({ q: "3", r: "-5" }), "recapitulatif").destination).toEqual({ biome: null, distance: 12 });
+    destinations.destinationDUneCase.mockResolvedValue({ refus: "Cette Case est hors de portée." });
+    expect(confie(await ouvrir({ q: "30", r: "-5" }), "recapitulatif").destination).toBeNull();
+    destinations.destinationDUneCase.mockResolvedValue(null);
+    expect(confie(await ouvrir(), "recapitulatif").destination).toBeNull();
+  });
+
+  it("ne lui donne aucune Bête quand le Territoire n'en a pas de disponible : il dira « Sans escorte » (US-0909)", async () => {
+    connecte();
+    effectif.betesDisponibles.mockResolvedValueOnce([]);
+    expect(confie(await ouvrir(), "recapitulatif").especes).toEqual([]);
   });
 });

@@ -31,8 +31,8 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
 
-/** « 10 403 » : les milliers séparés d'une espace insécable, que le total ne se coupe jamais. */
-const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/ /g, " ");
+/** « 10 403 » : les milliers séparés d'une espace insécable, que le total ne se coupe jamais ; US-0910 : de même au récapitulatif. */
+export const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/ /g, " ");
 
 /**
  * US-0904 : le bloc Escorte de l'écran d'Expédition, après les Explorateurs. Chaque Espèce de l'effectif qui a des Bêtes
