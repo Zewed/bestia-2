@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type PointerEvent, type RefObject, useCallback, useEffect, useRef, useState } from "react";
+import { type PointerEvent, type ReactNode, type RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE, versLEcran } from "@/expeditions/choix-de-destination";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import type { Coordonnees } from "@/monde/hex";
@@ -73,37 +73,34 @@ function fermerVersLaCarte(fermer: () => void, carte: RefObject<HTMLCanvasElemen
 }
 
 /**
- * US-0428 : la fiche de la Case choisie (`choix`) : son Biome, puis à qui elle est, « Libre », « Votre Foyer » ou le
- * nom du chef. US-0429 : sa zone, sa distance au Foyer (sauf pour le Foyer lui-même) et, au Cœur sauvage, ce qui y
- * vit. Sur ordinateur, un bloc flottant en haut à gauche de la carte (la légende est à droite) : à
- * l'ouverture, à chaque Case et chaque fois que sa taille change, elle demande à la carte de montrer la Case hors
- * d'elle (`montrer`). Vide en attendant le serveur ; les lecteurs d'écran l'entendent une fois remplie. Elle se
- * déclare posée sur la carte : la flèche du Foyer la contourne. US-0430 : elle se ferme (`fermer`) par sa croix, ou
- * par Échap, le regard sur la carte, ses boutons ou la fiche (ailleurs, Échap revient à ce qui l'a, comme le menu du
- * chef) ; la main revient alors à la carte. US-0431 : sur mobile, un panneau en bas de l'écran, comme celui de la
- * légende, qu'on ferme en le faisant glisser vers le bas au-delà de CARTE_FICHE_FERMETURE_PIXELS (en deçà, il
- * revient) ; tant qu'il est ouvert, il publie sa hauteur dans --hauteur-fiche, sur la racine de la page, pour les
- * boutons de la carte et la flèche du Foyer. Un seul panneau en bas à la fois : la légende qui s'y montre la ferme.
- * US-0438 : d'une Case sous le brouillard, seulement « Case inconnue », sa distance au Foyer, et qu'une Expédition
- * pourra la découvrir, comme le serveur la donne. US-0901 : une fois remplie, « Envoyer une Expédition » ouvre l'écran
- * d'Expédition avec la Case pour destination, sauf sur une Case d'un Territoire, Foyer du joueur compris, qui ne peut
- * pas en être une (US-0907) ; le doigt qui le touche ne fait pas glisser le panneau. US-0907 : sur la carte ouverte
- * pour choisir la destination (`destination`), « Choisir cette destination » à sa place, ou le refus d'une Case d'un
- * Territoire. US-0908 : de même d'une Case au-delà de la portée d'exploration, découverte ou non : aucun des deux
- * liens, et son refus sur la carte ouverte pour choisir la destination.
+ * Le panneau d'une fiche posée sur la carte, celle d'une Case (US-0428) ou, avec US-0913, celle d'une Expédition : `nom`,
+ * ce qu'il est pour les lecteurs d'écran, et ce qu'il montre (`children`). Sur ordinateur, un bloc flottant en haut à
+ * gauche de la carte (la légende est à droite) : à l'ouverture, à chaque Case `laCase` et chaque fois que sa taille
+ * change, il demande à la carte de montrer cette Case hors de lui (`montrer`). Rempli par le serveur (`remplie`), les
+ * lecteurs d'écran l'entendent une fois rempli ; sans `remplie`, rien n'y est annoncé. Il se déclare posé sur la carte :
+ * la flèche du Foyer le contourne. US-0430 : il se ferme (`fermer`) par sa croix, ou par Échap, le regard sur la carte,
+ * ses boutons ou la fiche (ailleurs, Échap revient à ce qui l'a, comme le menu du chef) ; la main revient alors à la
+ * carte. US-0431 : sur mobile, un panneau en bas de l'écran, comme celui de la légende, qu'on ferme en le faisant glisser
+ * vers le bas au-delà de CARTE_FICHE_FERMETURE_PIXELS (en deçà, il revient) ; tant qu'il est ouvert, il publie sa hauteur
+ * dans --hauteur-fiche, sur la racine de la page, pour les boutons de la carte et la flèche du Foyer. Un seul panneau en
+ * bas à la fois : la légende qui s'y montre le ferme. Le doigt qui touche un lien ou un bouton ne le fait pas glisser.
  */
-export function FicheDeLaCase({
-  choix,
+export function PanneauSurLaCarte({
+  nom,
+  laCase,
   carte,
   montrer,
   fermer,
-  destination = null,
+  remplie,
+  children,
 }: {
-  choix: Choix;
+  nom: string;
+  laCase: Coordonnees;
   carte: RefObject<HTMLCanvasElement | null>;
   montrer: (c: Coordonnees, cache: Cadre) => void;
   fermer: () => void;
-  destination?: string | null;
+  remplie?: boolean;
+  children: ReactNode;
 }) {
   const panneau = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -124,7 +121,6 @@ export function FicheDeLaCase({
     document.addEventListener(LEGENDE_MONTREE, ceder);
     return () => document.removeEventListener(LEGENDE_MONTREE, ceder);
   }, [fermer]);
-  const laCase = choix.case;
   // La Case montrée, pour le suivi de taille : la dernière choisie.
   const montree = useRef(laCase);
   useEffect(() => {
@@ -163,14 +159,13 @@ export function FicheDeLaCase({
     if (evenement.type === "pointerup" && evenement.clientY - tirage.depart > CARTE_FICHE_FERMETURE_PIXELS) fermer();
   };
 
-  const { fiche, echec } = choix;
   return (
     <section
       ref={panneau}
       className={styles.fiche}
-      aria-label="Fiche de la Case"
-      aria-live="polite"
-      aria-busy={!fiche && !echec}
+      aria-label={nom}
+      aria-live={remplie === undefined ? undefined : "polite"}
+      aria-busy={remplie === undefined ? undefined : !remplie}
       // US-0431 : la légende s'efface sur mobile tant qu'elle est ouverte. US-0428 : la flèche vers le Foyer l'évite.
       data-fiche-de-la-case=""
       data-sur-la-carte=""
@@ -186,6 +181,39 @@ export function FicheDeLaCase({
           <path d="M2.5 2.5l7 7M9.5 2.5l-7 7" />
         </svg>
       </button>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * US-0428 : la fiche de la Case choisie (`choix`), dans son panneau sur la carte (PanneauSurLaCarte) : son Biome, puis
+ * à qui elle est, « Libre », « Votre Foyer » ou le nom du chef. US-0429 : sa zone, sa distance au Foyer (sauf pour le
+ * Foyer lui-même) et, au Cœur sauvage, ce qui y vit. Vide en attendant le serveur ; les lecteurs d'écran l'entendent une
+ * fois remplie. US-0438 : d'une Case sous le brouillard, seulement « Case inconnue », sa distance au Foyer, et qu'une
+ * Expédition pourra la découvrir, comme le serveur la donne. US-0901 : une fois remplie, « Envoyer une Expédition »
+ * ouvre l'écran d'Expédition avec la Case pour destination, sauf sur une Case d'un Territoire, Foyer du joueur compris,
+ * qui ne peut pas en être une (US-0907) ; le doigt qui le touche ne fait pas glisser le panneau. US-0907 : sur la carte
+ * ouverte pour choisir la destination (`destination`), « Choisir cette destination » à sa place, ou le refus d'une Case
+ * d'un Territoire. US-0908 : de même d'une Case au-delà de la portée d'exploration, découverte ou non : aucun des deux
+ * liens, et son refus sur la carte ouverte pour choisir la destination.
+ */
+export function FicheDeLaCase({
+  choix,
+  carte,
+  montrer,
+  fermer,
+  destination = null,
+}: {
+  choix: Choix;
+  carte: RefObject<HTMLCanvasElement | null>;
+  montrer: (c: Coordonnees, cache: Cadre) => void;
+  fermer: () => void;
+  destination?: string | null;
+}) {
+  const { case: laCase, fiche, echec } = choix;
+  return (
+    <PanneauSurLaCarte nom="Fiche de la Case" laCase={laCase} carte={carte} montrer={montrer} fermer={fermer} remplie={Boolean(fiche) || echec}>
       {fiche && "inconnue" in fiche ? (
         <>
           <h2 className={styles.biome}>Case inconnue</h2>
@@ -218,7 +246,7 @@ export function FicheDeLaCase({
           <span />
         </div>
       )}
-    </section>
+    </PanneauSurLaCarte>
   );
 }
 
