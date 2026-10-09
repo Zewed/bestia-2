@@ -61,6 +61,9 @@ describe.skipIf(!URL_TEST)("le détail des Expéditions en cours (US-0918, sur b
   });
 
   afterAll(async () => {
+    // Les Foyers de l'essai rendent leur place à la Couronne d'Aube, que toute la suite se partage : sans cela, chaque
+    // passage y en laissait cinq, jusqu'à la remplir.
+    await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
     await pool.end();
   });
 
