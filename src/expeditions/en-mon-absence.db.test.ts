@@ -86,6 +86,8 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
   let pool: Pool;
   let mondeId: number;
   let territoireId: number;
+  /** L'Espèce la plus forte du jeu, dont deux Bêtes escortent A et B. */
+  let forteId: string;
   const lancement = `absence-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   /** Les Expéditions de l'essai, dans l'ordre de leur départ. */
   let plans: Plan[];
@@ -202,6 +204,7 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
       "select id, attaque, vie, vitesse from espece order by id",
     );
     const forte = especes.reduce((x, y) => (forceDUneBete(y) > forceDUneBete(x) ? y : x));
+    forteId = forte.id;
     const cle = ({ q, r }: Coordonnees) => `${q},${r}`;
 
     /**
@@ -357,8 +360,9 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     for (const maniere of MANIERES) {
       const { expeditions, enCours, explorateursAuFoyer, disponibles } = bilans[maniere];
       for (const { lettre, retour } of plans) expect(expeditions[lettre]?.rentreeLe, `${lettre}, ${maniere}`).toEqual(retour);
-      const auFoyer = { enCours, explorateursAuFoyer, disponibles: disponibles.map((e) => e.disponibles) };
-      expect(auFoyer, maniere).toEqual({ enCours: 0, explorateursAuFoyer: 5, disponibles: [2] });
+      // Les deux Bêtes de l'escorte de A et B sont de nouveau disponibles.
+      const auFoyer = { enCours, explorateursAuFoyer, escorte: disponibles.find((x) => x.id === forteId)?.disponibles };
+      expect(auFoyer, maniere).toEqual({ enCours: 0, explorateursAuFoyer: 5, escorte: 2 });
     }
   });
 
