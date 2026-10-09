@@ -1,0 +1,19 @@
+src/expeditions/rappel.db.test.ts
+  s_a3e95ec8e513ae::t_b874cb4c86fc46 224-225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7feb4568b067e50c2f6e5da26fa6b45bbb2f6fe2",
+  "prompts": {},
+  "sessions": {
+    "s_a3e95ec8e513ae": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a9983fc42ac129e3f",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
