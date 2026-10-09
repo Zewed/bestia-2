@@ -1,0 +1,45 @@
+docs/stories/09-explorer-et-apprivoiser.md
+  s_97a431cfa65ca7::t_5b8dd4edd1b5ef 60,63-64
+docs/stories/README.md
+  s_97a431cfa65ca7::t_e095ce5701c259 7,22,31,33
+docs/stories/a-decider.md
+  s_97a431cfa65ca7::t_a26fc42bf03d1e 5
+src/app/jeu/expeditions/nouvelle/Sejour.css.test.ts
+  s_97a431cfa65ca7::t_a9181a04c1a313 1-29
+src/app/jeu/expeditions/nouvelle/Sejour.module.css
+  s_97a431cfa65ca7::t_2167ad545636cc 1-86
+src/app/jeu/expeditions/nouvelle/Sejour.test.tsx
+  s_97a431cfa65ca7::t_c5d4178b297d0d 1-155
+src/app/jeu/expeditions/nouvelle/Sejour.tsx
+  s_97a431cfa65ca7::t_551ad3f4080dde 1-102
+src/app/jeu/expeditions/nouvelle/page.test.tsx
+  s_97a431cfa65ca7::t_f746c9cdc0d58a 5-6,47-49,79,99,107,122-128,131,133-137,139-142,236,245
+src/app/jeu/expeditions/nouvelle/page.tsx
+  s_97a431cfa65ca7::t_89efa55737b423 15,90
+src/expeditions/sejour.test.ts
+  s_97a431cfa65ca7::t_629e563311d7b6 1-45
+src/expeditions/sejour.ts
+  s_97a431cfa65ca7::t_4818f8beac123d 1-29
+src/reglages.ts
+  s_97a431cfa65ca7::t_315b26cecf486e 274-281
+src/temps/affichage.test.ts
+  s_97a431cfa65ca7::t_549fc5df21f977 2,18-23
+src/temps/affichage.ts
+  s_97a431cfa65ca7::t_1c4a98c7f9c58d 20-27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "3ae239068a9fb844aded0810ab6132cda2271a21",
+  "prompts": {},
+  "sessions": {
+    "s_97a431cfa65ca7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0fb77bea-e470-4301-91e2-b9c67ca65e18",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
