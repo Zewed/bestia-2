@@ -17,6 +17,8 @@ import { avancer, bornesDuZoom, cadrer, deplacer, devoiler, enChemin, flecheVers
 let fiches: { q: number; r: number; repondre: (fiche: Fiche | null) => void }[] = [];
 const serveur = vi.hoisted(() => ({ ficheDeLaCase: vi.fn(), decouvertesDepuis: vi.fn() }));
 vi.mock("./actions", () => serveur);
+// US-0920 : le rappel d'une Expédition, depuis sa fiche, une action du serveur, comme ces fiches.
+vi.mock("@/app/jeu/expeditions/actions", () => ({ rappeler: vi.fn() }));
 
 /**
  * Ce que le <canvas> a reçu : ses gestes (mise à l'échelle, remplissages et traits avec leur couleur), le départ de

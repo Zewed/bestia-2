@@ -17,7 +17,8 @@ export type CaseRevelee = Coordonnees & { le: Date };
  * `instant`, chacune une fois, avec l'instant où elle l'a fait : chaque Case de son chemin déjà atteinte et ses voisines
  * à BROUILLARD_LEVE_SUR_LE_CHEMIN_CASES Cases ; la destination, une fois atteinte (à l'arrivée), et ses voisines à
  * BROUILLARD_LEVE_AUTOUR_DE_LA_DESTINATION_CASES Cases, Biome compris comme toute Case découverte. Rien au départ, ni tant
- * que son trajet n'est pas chiffré ; rien de neuf pendant le séjour ni au retour, qui repasse par le même chemin. Ne
+ * que son trajet n'est pas chiffré ; rien de neuf pendant le séjour ni au retour, qui repasse par le même chemin. US-0920 :
+ * rappelée, rien de neuf après son rappel, ses passages s'arrêtant au demi-tour ; ce qu'elle a révélé le reste. Ne
  * dépend que de ses horaires et de l'instant : les mêmes Cases en direct qu'au rattrapage d'une absence. Certaines
  * peuvent manquer au Monde, au bord : decouvrir les passe.
  */
@@ -48,7 +49,7 @@ export async function leverLeBrouillard(client: PoolClient, territoireId: number
   // Une Expédition qui passe sur une Case pendant la période est à l'aller : partie avant sa fin, arrivée après son début.
   const { rows } = await client.query<HorairesDUneExpedition & { id: number; foyer: Coordonnees; destination: Coordonnees }>(
     `select x.id, json_build_object('q', f.q, 'r', f.r) as foyer, json_build_object('q', c.q, 'r', c.r) as destination,
-       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes"
+       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes", x.rappelee_le as "rappeleeLe"
      from expedition x join territoire t on t.id = x.territoire_id join case_du_monde f on f.id = t.foyer_case_id
        join case_du_monde c on c.id = x.case_id and c.monde_id = f.monde_id
      where x.territoire_id = $1 and x.part_le < $3 and x.part_le + make_interval(mins => x.trajet_minutes) > $2

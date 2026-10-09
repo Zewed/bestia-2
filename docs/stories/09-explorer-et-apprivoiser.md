@@ -209,13 +209,14 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0920 · Rappeler une Expédition à l'aller
 **En tant que** joueur, **je veux** rappeler une Expédition pendant son trajet aller, **afin de** récupérer mes Bêtes si j'en ai besoin ailleurs.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1378, Zewed/bestia-2#33). Un bouton « Rappeler », dans la liste comme sur la fiche de la carte, fait faire demi-tour à l'Expédition à l'aller ou en séjour ; il disparaît au retour. Rappelée à l'aller, elle rentre après le temps déjà parcouru, ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent. Rappelée en séjour, elle y met fin et rentre après le temps de l'aller. Son retour programmé est déplacé, et le récit de retour dit qu'elle a été rappelée, et quand. Deux rappels au même instant n'en font qu'un. Migration 0059.
 - **Débloquée par** : US-0912
 - **Critères d'acceptation** :
   - Pendant l'aller, un bouton « Rappeler » fait faire demi-tour ; le retour dure le temps déjà parcouru.
   - Une Expédition rappelée ne séjourne pas, ne voit aucune Bête et ne rapporte rien ; les Cases déjà révélées le restent.
   - Pendant le retour, le bouton disparaît.
   - Le récit indique que l'Expédition a été rappelée, et à quel moment.
-  - Rappeler une Expédition pendant son séjour, pour la faire rentrer plus tôt (à décider).
+  - Pendant le séjour aussi, « Rappeler » met fin au séjour et lance le retour aussitôt (décidé le 2026-10-08).
 
 ### US-0921 · Ceux qui sont partis mangent toujours
 **En tant que** joueur, **je veux** que mes explorateurs continuent de manger pendant l'Expédition, **afin de** prévoir mes stocks de Nourriture avant un long départ.
@@ -407,11 +408,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0937 · Le sexe tiré au hasard
 **En tant que** joueur, **je veux** connaître le sexe de chaque Bête apprivoisée, **afin de** savoir s'il me manque un mâle ou une femelle pour réunir le Couple.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1397, Zewed/bestia-2#31). À l'Apprivoisement, la Bête est mâle ou femelle au hasard, à chances égales, tiré comme ses apparitions (de la graine du Monde, de sa Case et de son numéro) : le même en direct, au rattrapage ou par la tâche planifiée ; il est retenu avec sa Rencontre et ne change plus (migration 0058). Sous chaque Espèce du bloc Escorte, l'effectif dit ses mâles et ses femelles (« 2 mâles · 1 femelle »). Sur 10 000 Apprivoisements, les mâles restent à 2 points de la moitié.
 - **Débloquée par** : US-0934
 - **Critères d'acceptation** :
   - Au moment de l'Apprivoisement, la Bête est mâle ou femelle au hasard, à chances égales, et ne change plus.
   - Tant que le Couple de son Espèce n'est pas réuni, l'effectif de l'Espèce indique combien de mâles et de femelles on possède.
-  - Sur une longue simulation, mâles et femelles sont à parts égales, à la tolérance près (chiffre à régler).
+  - Sur une longue simulation, mâles et femelles sont à parts égales, à 2 points de pourcentage près sur 10 000 Apprivoisements (décidé le 2026-10-09).
 
 ### US-0938 · La Bête apprivoisée arrive au Foyer
 **En tant que** joueur, **je veux** voir ma nouvelle Bête rejoindre mon effectif au retour de l'Expédition, **afin de** pouvoir m'en servir.

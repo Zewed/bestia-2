@@ -91,9 +91,9 @@ describe("la liste des Expéditions en cours (US-0911, US-0918)", () => {
     const html = renderToStaticMarkup(await ExpeditionsEnCours());
     expect(enCours.expeditionsEnCours).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, INSTANT);
     expect(lignes(html)).toEqual([
-      // 9 h 24 à Paris, plus 1 h d'aller, 4 h de séjour et 1 h de retour.
-      "Forêt · 3 Cases de votre Foyer · Aller · arrive dans · 42 min · Explorateurs · Joran, Ines · Escorte · Souris grise × 2 · Retour prévu · 9 octobre à 15:24",
-      "Case inconnue · 1 Case de votre Foyer · Séjour · repart dans · 50 min · Explorateurs · Mael · Escorte · Sans escorte · Retour prévu · 9 octobre à 10:52",
+      // 9 h 24 à Paris, plus 1 h d'aller, 4 h de séjour et 1 h de retour ; à l'aller comme en séjour, « Rappeler » (US-0920).
+      "Forêt · 3 Cases de votre Foyer · Aller · arrive dans · 42 min · Explorateurs · Joran, Ines · Escorte · Souris grise × 2 · Retour prévu · 9 octobre à 15:24 · Rappeler",
+      "Case inconnue · 1 Case de votre Foyer · Séjour · repart dans · 50 min · Explorateurs · Mael · Escorte · Sans escorte · Retour prévu · 9 octobre à 10:52 · Rappeler",
     ]);
   });
 

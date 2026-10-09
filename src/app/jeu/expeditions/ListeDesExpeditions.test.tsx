@@ -7,6 +7,8 @@ import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 // US-0916 : le routeur, observé pour voir la page se relire au retour d'une Expédition.
 const routeur = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => routeur }));
+// US-0920 : le rappel, une action du serveur (src/app/jeu/expeditions/actions.ts).
+vi.mock("./actions", () => ({ rappeler: vi.fn() }));
 
 import { ListeDesExpeditions } from "./ListeDesExpeditions";
 
@@ -87,7 +89,7 @@ describe("la liste des Expéditions en cours, en direct (US-0918)", () => {
 
   it("se déplie Expédition par Expédition sur un téléphone, et se replie de même", async () => {
     render(<ListeDesExpeditions expeditions={[vers(5, avant(18)), vers(6, avant(90))]} maintenant={MAINTENANT} />);
-    const boutons = () => [...document.querySelectorAll("li button")];
+    const boutons = () => [...document.querySelectorAll("li button[aria-expanded]")];
     const etats = () => boutons().map((b) => b.getAttribute("aria-expanded"));
     expect(etats()).toEqual(["false", "false"]);
     await userEvent.click(boutons()[1]);

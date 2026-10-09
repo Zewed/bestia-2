@@ -72,6 +72,38 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* US-0920 : « Rappeler », sous le détail, au pouce : 44 px de haut, discret à côté des boutons sur l'Encre. */
+.rappeler {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  box-shadow: inset 0 0 0 1px var(--trait);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+/* Grisé le temps que le serveur réponde : un double clic ne rappelle qu'une fois. */
+.rappeler:disabled {
+  color: var(--texte-pale);
+  cursor: not-allowed;
+}
+
+@media (hover: hover) {
+  .rappeler:enabled:hover {
+    background: var(--bloc-3);
+  }
+}
+
+.rappeler:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
 /* Sur ordinateur, tout se lit : rien à déplier. */
 .deplier {
   display: none;
@@ -93,6 +125,11 @@
 
   .detail dt {
     font-size: inherit;
+  }
+
+  /* US-0920 : « Rappeler », toute la largeur, comme « Partir ». */
+  .rappeler {
+    width: 100%;
   }
 
   /*
@@ -130,6 +167,11 @@
 
   .repliable:not(.deplie) .distance,
   .repliable:not(.deplie) .detail {
+    display: none;
+  }
+
+  /* US-0920 : « Rappeler » attend aussi qu'on la déplie, sous son détail. */
+  .repliable:not(.deplie) .rappeler {
     display: none;
   }
 
@@ -240,5 +282,9 @@
 
   .detail dt {
     font-size: inherit;
+  }
+
+  .rappeler {
+    width: 100%;
   }
 }

@@ -22,6 +22,22 @@ export async function programmerLeRetour(client: PoolClient, territoireId: numbe
 }
 
 /**
+ * US-0920 : déplace le retour au Foyer de l'Expédition `expeditionId`, encore à venir, à l'heure que donnent ses horaires
+ * nouveaux, une fois rappelée : retourDUneExpedition, toujours. Dans la transaction du rappel. Un seul retour reste
+ * programmé ; s'il manquait (aucun retour en attente), il est programmé à cette heure.
+ */
+export async function deplacerLeRetour(client: PoolClient, territoireId: number, expeditionId: number, horaires: HorairesDUneExpedition): Promise<void> {
+  const retour = retourDUneExpedition(horaires);
+  if (!retour) return;
+  const { rowCount } = await client.query(
+    `update evenement set survient_le = $4
+     where element = 'territoire' and element_id = $1 and type = $2 and traite_le is null and donnees->>'expedition' = $3::text`,
+    [territoireId, RETOUR_EXPEDITION, expeditionId, retour],
+  );
+  if (rowCount === 0) await programmerLeRetour(client, territoireId, expeditionId, horaires);
+}
+
+/**
  * US-0916 : le retour d'une Expédition au Foyer, à son instant : elle est rentrée (expedition.rentree_le) et n'est plus en
  * cours ; ses explorateurs encore là redeviennent libres, et les Bêtes de son escorte, restées comptées dans l'effectif, ne
  * sont plus sorties (src/monde/effectif.ts). Le temps qui avance a mis le Territoire à l'heure du retour avant de
