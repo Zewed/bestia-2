@@ -36,8 +36,9 @@ const uneEspece = (nom: string, nombre: number) => `${nom} × ${nombre}`;
  * phase change d'elle-même. Tant que le trajet d'une escorte n'est pas chiffré (US-0912), ni le temps restant ni le
  * retour : « — ». Aucune zone annoncée : un lecteur d'écran lit le compte quand on y passe, comme celui des Voyageurs.
  *
- * Repliable (`repliable`), sur un téléphone, elle tient sur une ligne, la sienne, qu'un toucher n'importe où déplie
- * pour montrer son détail, et replie de même (DetailDeLExpedition.module.css) ; sur ordinateur, tout se lit.
+ * Repliable (`repliable`), sur un téléphone, elle tient sur une ligne, la sienne : la destination, la phase et le temps
+ * restant, sans son annonce, qui n'y tiendrait pas à 320 px. Un toucher n'importe où sur elle la déplie pour montrer sa
+ * distance et son détail, et la replie de même (DetailDeLExpedition.module.css) ; sur ordinateur, tout se lit.
  */
 export function DetailDeLExpedition({ expedition, instant, repliable = false }: { expedition: ExpeditionEnCours; instant: Date; repliable?: boolean }) {
   const [deplie, setDeplie] = useState(false);

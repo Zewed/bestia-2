@@ -19,10 +19,18 @@ describe("le détail d'une Expédition sur un téléphone (US-0918)", () => {
     expect(regle(".deplier")).toContain("display: none;");
   });
 
-  it("repliée, tient sur une ligne : la destination se coupe, la distance, l'annonce et le détail attendent qu'on la déplie", () => {
+  it("repliée, tient sur une ligne : la destination se coupe, le temps restant sans son annonce, la distance et le détail attendent qu'on la déplie", () => {
     expect(regle(".repliable .ligne", mobile)).toContain("grid-template-columns: minmax(0, 1fr) auto auto 12px;");
+    expect(regle(".repliable .ligne > *", mobile)).toContain("grid-row: 1;");
+    expect(regle(".repliable .annonce", mobile)).toContain("display: none;");
     expect(regle(".repliable:not(.deplie) .destination", mobile)).toMatch(/overflow: hidden;[^}]*white-space: nowrap;[^}]*text-overflow: ellipsis;/);
-    expect(regle(".repliable:not(.deplie) .distance,\n  .repliable:not(.deplie) .annonce,\n  .repliable:not(.deplie) .detail", mobile)).toContain("display: none;");
+    expect(regle(".repliable:not(.deplie) .distance,\n  .repliable:not(.deplie) .detail", mobile)).toContain("display: none;");
+  });
+
+  it("dépliée, garde la même ligne, la distance dessous sur toute la largeur", () => {
+    expect(regle(".repliable .distance", mobile)).toMatch(/grid-row: 2;[^}]*grid-column: 1 \/ -1;/);
+    // La distance vient après la règle du premier rang, qu'elle remplace.
+    expect(mobile.indexOf(".repliable .distance {")).toBeGreaterThan(mobile.indexOf(".repliable .ligne > * {"));
   });
 
   it("se déplie d'un toucher n'importe où sur elle, au pouce, et montre où est le clavier", () => {
