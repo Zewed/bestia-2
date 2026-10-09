@@ -1,10 +1,10 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { habitantsDuTerritoire } from "@/monde/habitants";
 import { recitsDuTerritoire } from "@/monde/recits";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; l'action écrit pour de bon dans la base de test.
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
@@ -15,15 +15,19 @@ vi.mock("next/cache", () => ({ refresh: vi.fn() }));
 
 import { ajouterAuMetier, donnerUnMetier, renvoyerUnHabitant, retirerDuMetier, retirerLeMetier } from "./actions";
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des actions des Habitants (US-0308)";
+
 describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant, ou le renvoyer, sur base (US-0308, US-0310, US-0311, US-0312, US-0315, US-0330)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `donner-metier-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nomUnique = () => `Met${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
   };
   /** Les Habitants du Territoire, du premier arrivé au dernier, avec le nom de leur Métier. */
   const metiers = async (territoireId: number) => (await habitantsDuTerritoire(pool, territoireId)).sort((a, b) => a.id - b.id).map((h) => [h.id, h.metier]);
@@ -32,6 +36,7 @@ describe.skipIf(!URL_TEST)("donner, changer ou retirer le Métier d'un Habitant,
     pool = poolDeTest();
     base.pool = pool;
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

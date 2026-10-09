@@ -1,15 +1,19 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { entretienDesHabitants } from "./habitants";
 import { nourriturePourEncore, type StockDeNourriture } from "./nourriture";
 import { PRODUIRE } from "./production";
 import { stocksDuTerritoire } from "./stocks";
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai de la Nourriture (US-0320)";
+
 describe.skipIf(!URL_TEST)("combien de temps tiendra la Nourriture, contre le calcul du jeu (US-0320, sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `nourriture-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const HEURE = 3_600_000;
@@ -23,8 +27,8 @@ describe.skipIf(!URL_TEST)("combien de temps tiendra la Nourriture, contre le ca
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
     const nom = `Nour${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom)).toMatchObject({ statut: "enregistre" });
-    const territoireId = (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const territoireId = (await territoireDuCompte(pool, compte.id))!;
     for (const [ressource, reglage] of [
       ["viande", viande],
       ["vegetaux", vegetaux],
@@ -66,6 +70,7 @@ describe.skipIf(!URL_TEST)("combien de temps tiendra la Nourriture, contre le ca
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);

@@ -1,15 +1,19 @@
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef } from "@/chefs/chef";
+import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
 import { ajouterUnHabitantAuMetier, enregistrerLeMetier, habitantsDuTerritoire, nombreSansMetier, retirerUnHabitantDuMetier } from "./habitants";
 
 // US-0315 : un joueur répartit ses Habitants sur deux appareils à la fois. Chaque appareil a ses propres
 // connexions à la base, et leurs changements se croisent pour de bon : rien n'est mis en file d'attente ici.
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai des deux appareils (US-0315)";
+
 describe.skipIf(!URL_TEST)("des effectifs justes sur deux appareils (US-0315, sur base)", () => {
   let appareilA: Pool;
   let appareilB: Pool;
+  let mondeId: number;
   const lancement = `deux-appareils-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nomUnique = () => `Duo${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
@@ -17,8 +21,8 @@ describe.skipIf(!URL_TEST)("des effectifs justes sur deux appareils (US-0315, su
   /** Un Territoire neuf, avec `dePlus` Habitants sans Métier de plus que les trois du départ ; rend aussi leurs identifiants. */
   async function naitre(dePlus = 0): Promise<{ t: number; ids: number[] }> {
     const compte = (await creerCompte(appareilA, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-    expect(await enregistrerNomDeChef(appareilA, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    const t = (await chefDuCompte(appareilA, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(appareilA, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    const t = (await territoireDuCompte(appareilA, compte.id))!;
     for (let i = 0; i < dePlus; i++) await appareilA.query("insert into habitant (territoire_id, prenom) values ($1, $2)", [t, ["Arno", "Dara", "Elio"][i % 3]]);
     const { rows } = await appareilA.query<{ id: number }>("select id from habitant where territoire_id = $1 order by id", [t]);
     return { t, ids: rows.map((h) => h.id) };
@@ -36,6 +40,7 @@ describe.skipIf(!URL_TEST)("des effectifs justes sur deux appareils (US-0315, su
     appareilA = poolDeTest({ max: 6 });
     appareilB = poolDeTest({ max: 6 });
     await preparerMondeDeTest(appareilA);
+    mondeId = await mondeDEssai(appareilA, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await appareilA.query("delete from compte where email like $1", [`${lancement}-%`]);

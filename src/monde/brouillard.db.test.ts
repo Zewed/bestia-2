@@ -2,14 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { chefDuCompte, enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
+import { enregistrerNomDeChef, naitreSurLaCouronne } from "@/chefs/chef";
 import { cleDuNom } from "@/chefs/nom";
 import { creerCompte } from "@/comptes/compte";
 import { MIGRATIONS_FOLDER } from "@/db/migrations";
 import { ABORDS_DU_FOYER_CASES, ECART_ENTRE_FOYERS } from "@/reglages";
 import { rattraper } from "@/temps/rattraper";
-import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { MONDE_DU_JEU, VERROU_DES_NAISSANCES } from "./bascule";
+import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { VERROU_DES_NAISSANCES } from "./bascule";
 import { abordsDuFoyer, casesDecouvertes, decouvrir } from "./brouillard";
 import { peutAccueillirUnFoyer } from "./foyers";
 import { habitantsDuTerritoire, renvoyerLHabitant } from "./habitants";
@@ -29,8 +29,12 @@ const rangees = (cases: Coordonnees[]) => [...cases].sort((a, b) => a.q - b.q ||
 /** La place de chaque Case que le Territoire a découverte, sans ce qu'on y voit (US-0441), dans l'ordre de casesDecouvertes. */
 const placesDecouvertes = async (base: Pool | PoolClient, territoireId: number) => (await casesDecouvertes(base, territoireId)).map(({ q, r }) => ({ q, r }));
 
+/** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
+const MONDE_D_ESSAI = "Essai du brouillard (US-0436)";
+
 describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
   let pool: Pool;
+  let mondeId: number;
   const lancement = `brouillard-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let numero = 0;
   const nouveauCompte = async () => (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
@@ -38,8 +42,8 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
   /** Un Territoire tout neuf, né comme dans le jeu. */
   const naitre = async () => {
     const compte = await nouveauCompte();
-    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-    return (await chefDuCompte(pool, compte.id))!.territoireId!;
+    expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    return (await territoireDuCompte(pool, compte.id))!;
   };
   /** Le Foyer du Territoire, et toutes les Cases de son Monde. */
   const sonMonde = async (base: Pool | PoolClient, territoireId: number) => {
@@ -60,6 +64,7 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
   beforeAll(async () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
+    mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
   });
   afterAll(async () => {
     await pool.query("delete from compte where email like $1", [`${lancement}-%`]);
@@ -73,7 +78,7 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       const decouvertes = await placesDecouvertes(pool, territoireId);
       expect(decouvertes).toEqual(await abordsAttendus(pool, territoireId));
       expect(decouvertes).toContainEqual(foyer);
-      // Sur la Couronne d'Aube, la seule partie du Monde en base, une bonne part des abords existe.
+      // Au bord du Monde d'essai, une bonne part des abords existe.
       expect(decouvertes.length).toBeGreaterThan(10);
       for (const c of decouvertes) expect(distance(c, foyer)).toBeLessThanOrEqual(ABORDS_DU_FOYER_CASES);
     });
@@ -166,7 +171,12 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
           await client.query("delete from case_decouverte where territoire_id = $1", [ancien]);
           expect(await placesDecouvertes(client, ancien)).toEqual([]);
           const avant = await placesDecouvertes(client, voisin);
+          // La migration ne voit que les Territoires de l'essai, recopiés dans une table temporaire qui masque la vraie :
+          // rejouée sur tous ceux de la base de test, elle verrouillerait aussi ceux des autres fichiers, qui naissent et
+          // disparaissent en même temps, jusqu'à l'interblocage.
+          await client.query("create temp table territoire on commit drop as select * from public.territoire where id = any($1)", [[ancien, voisin]]);
           await client.query(abordsDesTerritoiresDejaNes());
+          await client.query("drop table pg_temp.territoire");
           expect(await placesDecouvertes(client, ancien)).toEqual(await abordsAttendus(client, ancien));
           expect(await placesDecouvertes(client, voisin)).toEqual(avant);
         } finally {
@@ -193,7 +203,7 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
 
   describe("un brouillard à chaque joueur (US-0440)", () => {
     /**
-     * Un Territoire d'essai né sur la Case libre de prairie de la Couronne du Monde du jeu la plus éloignée de `loinDe`
+     * Un Territoire d'essai né sur la Case libre de prairie de la Couronne du Monde d'essai la plus éloignée de `loinDe`
      * (un autre Foyer), ou sur la première venue, à l'écart des autres Foyers ; il découvre les abords de son Foyer comme
      * à une naissance. Sous le verrou des naissances : aucune autre ne vise la même Case en même temps.
      */
@@ -205,22 +215,24 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
         await client.query("begin");
         await client.query("select pg_advisory_xact_lock($1)", [VERROU_DES_NAISSANCES]);
         const { rows: libres } = await client.query<Coordonnees & { id: number; biome: string }>(
-          `select id, q, r, biome_id as biome from case_du_monde where monde_id = ${MONDE_DU_JEU} and couronne and biome_id = 'prairie' and chef_id is null`,
+          "select id, q, r, biome_id as biome from case_du_monde where monde_id = $1 and couronne and biome_id = 'prairie' and chef_id is null",
+          [mondeId],
         );
         const { rows: foyers } = await client.query<Coordonnees>(
-          `select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id where c.monde_id = ${MONDE_DU_JEU}`,
+          "select c.q, c.r from territoire t join case_du_monde c on c.id = t.foyer_case_id where c.monde_id = $1",
+          [mondeId],
         );
         const [choisie] = libres
           .filter((c) => peutAccueillirUnFoyer(c, foyers))
           .sort((a, b) => (loinDe ? distance(b, loinDe) - distance(a, loinDe) : 0) || a.id - b.id);
         const { rows } = await client.query<{ id: number }>(
           `with nouveau as (
-             insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, ${MONDE_DU_JEU}, $2, $3) returning id
+             insert into chef (compte_id, monde_id, nom, cle_nom) values ($1, $5, $2, $3) returning id
            ), prise as (
              update case_du_monde set chef_id = (select id from nouveau), imprenable = true where id = $4 and chef_id is null returning id
            )
            insert into territoire (chef_id, foyer_case_id) select nouveau.id, prise.id from nouveau, prise returning id`,
-          [compte.id, nom, cleDuNom(nom), choisie.id],
+          [compte.id, nom, cleDuNom(nom), choisie.id, mondeId],
         );
         await decouvrir(client, rows[0].id, abordsDuFoyer(choisie));
         await client.query("commit");
@@ -282,8 +294,8 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
 
     it("part avec son Territoire, et lui seul", async () => {
       const compte = await nouveauCompte();
-      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique())).toMatchObject({ statut: "enregistre" });
-      const parti = (await chefDuCompte(pool, compte.id))!.territoireId!;
+      expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+      const parti = (await territoireDuCompte(pool, compte.id))!;
       const reste = await naitre();
       const avant = await placesDecouvertes(pool, reste);
       expect((await casesDecouvertes(pool, parti)).length).toBeGreaterThan(0);
