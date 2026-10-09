@@ -208,65 +208,70 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
     expect(await partieLe(caseId, bete.numero)).toEqual(bete.arrivee);
   });
 
-  it("dès qu'elle suit une Expédition, la Bête quitte sa Case : personne d'autre ne la rencontre plus, quel que soit l'ordre des rattrapages", async () => {
-    /**
-     * Trois Territoires sur la Case d'une Bête rare : avant l'Apprivoisement, une escorte trop faible et une Expédition sans
-     * escorte la voient ; l'escorte forte de B arrive une heure après elle et l'emmène ; ensuite, ni une autre de B, ni une
-     * escorte forte de A, ni celle de C arrivée au même instant mais partie plus tard, ne la voient. `rattrapages` met les
-     * Territoires à l'heure ; rend ce que chaque Expédition a vu et l'instant où la Bête est partie.
-     */
-    const scenario = async (rattrapages: (a: number, b: number, c: number, debut: Date, fin: Date) => Promise<void>) => {
-      const [a, b, c] = [await naitre(), await naitre(), await naitre()];
-      const { caseId, bete } = await uneBeteSeule(a.territoireId, apres(a.ne, 3 * JOUR), rare);
-      const [debut, fin] = [apres(bete.arrivee, -3 * HEURE), apres(bete.depart, 3 * HEURE)];
-      const faibleDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, -2 * HEURE), 6 * HEURE, [[faible, 1]]);
-      const sansEscorteDeC = await poser(c.territoireId, caseId, apres(bete.arrivee, 30), 4 * HEURE);
-      const forteDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
-      const forteDeCEnMemeTemps = await poser(c.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
-      const autreDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, 90), 4 * HEURE, [[forte, 2]]);
-      const forteDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, 2 * HEURE), 4 * HEURE, [[forte, 5]]);
-      await rattrapages(a.territoireId, b.territoireId, c.territoireId, debut, fin);
-      const vues = async (id: number) => (await rencontres(id)).map((r) => ({ ...r, depuisLApparition: r.vueLe.getTime() - bete.arrivee.getTime(), vueLe: undefined }));
-      const sans = { caseId, apparueLe: bete.arrivee, especeId: bete.especeId, rareteId: bete.rareteId, numero: bete.numero, beteDeNaissanceId: null };
-      return {
-        attendues: {
-          faibleDeA: [{ ...sans, depuisLApparition: 0, apprivoisee: false }],
-          sansEscorteDeC: [{ ...sans, depuisLApparition: 30 * MINUTE_MS, apprivoisee: false }],
-          forteDeB: [{ ...sans, depuisLApparition: HEURE * MINUTE_MS, apprivoisee: true }],
-          forteDeCEnMemeTemps: [],
-          autreDeB: [],
-          forteDeA: [],
-          partie: apres(bete.arrivee, HEURE),
-        },
-        vues: {
-          faibleDeA: await vues(faibleDeA),
-          sansEscorteDeC: await vues(sansEscorteDeC),
-          forteDeB: await vues(forteDeB),
-          forteDeCEnMemeTemps: await vues(forteDeCEnMemeTemps),
-          autreDeB: await vues(autreDeB),
-          forteDeA: await vues(forteDeA),
-          partie: await partieLe(caseId, bete.numero),
-        },
-      };
+  /**
+   * Trois Territoires sur la Case d'une Bête rare : avant l'Apprivoisement, une escorte trop faible et une Expédition sans
+   * escorte la voient ; l'escorte forte de B arrive une heure après elle et l'emmène ; ensuite, ni une autre de B, ni une
+   * escorte forte de A, ni celle de C arrivée au même instant mais partie plus tard, ne la voient. `rattrapages` met les
+   * Territoires à l'heure ; rend ce que chaque Expédition a vu et l'instant où la Bête est partie (vues), à côté de ce
+   * qu'on en attend (attendues).
+   */
+  const troisTerritoires = async (rattrapages: (a: number, b: number, c: number, debut: Date, fin: Date) => Promise<void>) => {
+    const [a, b, c] = [await naitre(), await naitre(), await naitre()];
+    const { caseId, bete } = await uneBeteSeule(a.territoireId, apres(a.ne, 3 * JOUR), rare);
+    const [debut, fin] = [apres(bete.arrivee, -3 * HEURE), apres(bete.depart, 3 * HEURE)];
+    const faibleDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, -2 * HEURE), 6 * HEURE, [[faible, 1]]);
+    const sansEscorteDeC = await poser(c.territoireId, caseId, apres(bete.arrivee, 30), 4 * HEURE);
+    const forteDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
+    const forteDeCEnMemeTemps = await poser(c.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
+    const autreDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, 90), 4 * HEURE, [[forte, 2]]);
+    const forteDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, 2 * HEURE), 4 * HEURE, [[forte, 5]]);
+    await rattrapages(a.territoireId, b.territoireId, c.territoireId, debut, fin);
+    const vues = async (id: number) => (await rencontres(id)).map((r) => ({ ...r, depuisLApparition: r.vueLe.getTime() - bete.arrivee.getTime(), vueLe: undefined }));
+    const sans = { caseId, apparueLe: bete.arrivee, especeId: bete.especeId, rareteId: bete.rareteId, numero: bete.numero, beteDeNaissanceId: null };
+    return {
+      attendues: {
+        faibleDeA: [{ ...sans, depuisLApparition: 0, apprivoisee: false }],
+        sansEscorteDeC: [{ ...sans, depuisLApparition: 30 * MINUTE_MS, apprivoisee: false }],
+        forteDeB: [{ ...sans, depuisLApparition: HEURE * MINUTE_MS, apprivoisee: true }],
+        forteDeCEnMemeTemps: [],
+        autreDeB: [],
+        forteDeA: [],
+        partie: apres(bete.arrivee, HEURE),
+      },
+      vues: {
+        faibleDeA: await vues(faibleDeA),
+        sansEscorteDeC: await vues(sansEscorteDeC),
+        forteDeB: await vues(forteDeB),
+        forteDeCEnMemeTemps: await vues(forteDeCEnMemeTemps),
+        autreDeB: await vues(autreDeB),
+        forteDeA: await vues(forteDeA),
+        partie: await partieLe(caseId, bete.numero),
+      },
     };
+  };
 
+  it("dès qu'elle suit une Expédition, la Bête quitte sa Case : personne d'autre ne la rencontre plus, de son Territoire ou d'un autre", async () => {
     // Le Territoire de l'Expédition suivie rattrapé le premier, puis les autres, chacun d'un bloc.
-    const enPremier = await scenario(async (a, b, c, _debut, fin) => {
+    const { vues, attendues } = await troisTerritoires(async (a, b, c, _debut, fin) => {
       for (const t of [b, a, c]) await rattraperA(t, fin);
     });
-    expect(enPremier.vues).toEqual(enPremier.attendues);
-    // Rattrapé le dernier, alors que les autres ont déjà retenu leurs Rencontres.
-    const enDernier = await scenario(async (a, b, c, _debut, fin) => {
+    expect(vues).toEqual(attendues);
+  });
+
+  it("la même Bête suit la même Expédition quand son Territoire est rattrapé le dernier, après les autres", async () => {
+    const { vues, attendues } = await troisTerritoires(async (a, b, c, _debut, fin) => {
       for (const t of [a, c, b]) await rattraperA(t, fin);
     });
-    expect(enDernier.vues).toEqual(enDernier.attendues);
-    // Tous trois par tranches de vingt minutes, chacun à son tour.
-    const parTranches = await scenario(async (a, b, c, debut, fin) => {
+    expect(vues).toEqual(attendues);
+  });
+
+  it("la même Bête suit la même Expédition quand les Territoires sont rattrapés par tranches de vingt minutes, chacun à son tour", async () => {
+    const { vues, attendues } = await troisTerritoires(async (a, b, c, debut, fin) => {
       for (let instant = debut; instant < fin; instant = apres(instant, 20)) for (const t of [c, b, a]) await rattraperA(t, instant);
       for (const t of [a, b, c]) await rattraperA(t, fin);
     });
-    expect(parTranches.vues).toEqual(parTranches.attendues);
-  });
+    expect(vues).toEqual(attendues);
+  }, 60_000);
 
   it("une Bête de naissance qui suit une Expédition quitte sa Case : les suivantes ne la voient plus, et elle ne rôde plus dans les abords", async () => {
     const { territoireId, ne } = await naitre();

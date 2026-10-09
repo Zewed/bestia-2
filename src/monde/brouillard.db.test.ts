@@ -256,6 +256,8 @@ describe.skipIf(!URL_TEST)("le brouillard (sur base)", () => {
       expect(colonnes).toEqual([
         { table_name: "case_decouverte", column_name: "territoire_id" },
         { table_name: "case_decouverte", column_name: "case_id" },
+        // US-0914 : l'Expédition qui l'a sortie du brouillard, pour le Récit de son retour (US-0917).
+        { table_name: "case_decouverte", column_name: "expedition_id" },
       ]);
       const { rows: cle } = await pool.query<{ colonnes: string[] }>(
         `select array_agg(a.attname::text order by array_position(k.conkey, a.attnum)) as colonnes from pg_constraint k

@@ -146,9 +146,10 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0914 · Le brouillard se lève sur le chemin
 **En tant que** joueur, **je veux** que le brouillard se lève là où passe mon Expédition, **afin de** découvrir le Monde en l'explorant.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1372, Zewed/bestia-2#26). Le brouillard se lève là où passe une Expédition, Case après Case, à l'heure exacte de son passage : 1 Case autour de chaque Case du chemin, puis 2 autour de la destination à l'arrivée, Biome compris ; rien au départ. Levé, il le reste, pour ce joueur seulement, et un joueur absent retrouve exactement les mêmes Cases qu'en direct. Chaque Case levée revient à l'Expédition qui l'a révélée la première (case_decouverte.expedition_id, migration 0054), pour le récit de retour. Une carte ouverte montre les nouvelles Cases à sa relecture suivante, une minute au plus.
 - **Débloquée par** : US-0912, Étape 20
 - **Critères d'acceptation** :
-  - Les Cases traversées, et leurs voisines dans un rayon (chiffre à régler), sortent du brouillard au fur et à mesure du passage, pas toutes au départ.
+  - Les Cases traversées, et leurs voisines dans un rayon de 1 Case (2 autour de la destination, décidé le 2026-10-09), sortent du brouillard au fur et à mesure du passage, pas toutes au départ.
   - À l'arrivée, la destination et ses voisines sont révélées, Biome compris.
   - Le brouillard levé le reste pour toujours, et pour ce joueur seulement.
   - Après une absence, les Cases révélées sont exactement celles qu'on aurait vues en suivant l'Expédition en direct.
