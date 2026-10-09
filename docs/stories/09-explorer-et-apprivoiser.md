@@ -124,12 +124,13 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0912 · La durée du trajet
 **En tant que** joueur, **je veux** que le trajet dure selon la distance et l'allure de mon escorte, **afin de** choisir entre aller loin et revenir vite.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1370, Zewed/bestia-2#19). L'aller dure la distance en Cases multipliée par l'allure de l'Expédition, et le retour autant. L'allure est celle des explorateurs, 20 minutes de jeu par Case pour une marche à 5 km/h, ou celle de la Bête la plus lente de l'escorte si elle va moins vite : 20 × 5 / v minutes par Case à v km/h, arrondies à la minute supérieure. Aucune Espèce du jeu n'étant aujourd'hui plus lente que 5 km/h, une escorte va pour l'instant au pas des explorateurs. Le chemin va en ligne droite, Case par Case, l'eau comprise (src/expeditions/chemin.ts). Le récapitulatif chiffre maintenant l'aller, le retour et l'heure prévue d'une escorte ; la migration 0050 a chiffré les Expéditions parties sans trajet.
 - **Débloquée par** : US-0911
 - **Critères d'acceptation** :
-  - La durée de l'aller dépend de la distance en Cases (chiffre à régler par Case).
-  - L'Expédition avance au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce ; que le pas des explorateurs soit aussi une limite (à décider).
+  - La durée de l'aller dépend de la distance en Cases : 20 minutes de jeu par Case au pas des explorateurs (décidé le 2026-10-08).
+  - L'Expédition avance au pas de la Bête la plus lente de l'escorte, d'après la vitesse de son Espèce ; le pas des explorateurs, une marche à 5 km/h, est aussi une limite : l'Expédition va au plus lent des deux (décidé le 2026-10-08).
   - Le retour dure autant que l'aller.
-  - Le chemin passe de Case en Case ; la traversée de la mer, des lacs et des rivières (plus lente, contournée ou interdite) (à décider).
+  - Le chemin passe de Case en Case ; l'eau se traverse à la même allure, en ligne droite, comme la distance de la carte (décidé le 2026-10-08).
   - En vitesse accélérée de développement, toutes ces durées sont raccourcies d'autant.
 
 ### US-0913 · Suivre l'Expédition sur la carte
@@ -182,6 +183,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0918 · La liste des Expéditions en cours
 **En tant que** joueur, **je veux** voir toutes mes Expéditions en cours au même endroit, **afin de** savoir quand chacune revient.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1376, Zewed/bestia-2#20). La page /jeu/expeditions montre chaque Expédition en cours : destination, distance, phase et temps restant de la phase (« arrive dans », « repart dans », « rentre dans », puis « de retour »), puis ses explorateurs par prénom, son escorte et son retour prévu. Les comptes à rebours avancent sans recharger, au rythme du jeu. Sans Expédition, « Aucune Expédition en cours » et un bouton « Préparer une Expédition ». Sur mobile (jusqu'à 820 px), chacune tient sur une ligne qu'on déplie. Le détail est un composant réutilisable (DetailDeLExpedition), repris par la carte (US-0913).
 - **Débloquée par** : US-0911
 - **Critères d'acceptation** :
   - Chaque Expédition montre sa destination, sa phase (aller, séjour, retour), son temps restant, ses explorateurs et son escorte.
@@ -192,11 +194,12 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0919 · Plusieurs Expéditions à la fois
 **En tant que** joueur, **je veux** lancer une nouvelle Expédition pendant qu'une autre est en route, **afin de** fouiller plusieurs directions en même temps.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1377, Zewed/bestia-2#18). Le départ respectait déjà la règle : la story est prouvée par des tests. Plusieurs Expéditions partent tant qu'il reste un explorateur libre, chacune avec sa destination, son escorte et ses horaires, sans effet sur les autres ; le prochain retour affiché est celui de la plus proche. Aucun plafond hors des explorateurs libres. Deux Expéditions peuvent viser la même Case.
 - **Débloquée par** : US-0911
 - **Critères d'acceptation** :
   - On peut lancer une nouvelle Expédition tant qu'il reste au moins un explorateur libre.
   - Chaque Expédition a sa destination, son escorte et ses horaires, sans effet sur les autres.
-  - Un plafond d'Expéditions simultanées, en plus du nombre d'explorateurs (à décider).
+  - Aucun plafond d'Expéditions simultanées autre que le nombre d'explorateurs libres (décidé le 2026-10-08).
 
 ### US-0920 · Rappeler une Expédition à l'aller
 **En tant que** joueur, **je veux** rappeler une Expédition pendant son trajet aller, **afin de** récupérer mes Bêtes si j'en ai besoin ailleurs.
