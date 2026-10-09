@@ -42,10 +42,10 @@ export function dureesReelles(horaires: HorairesDUneExpedition, rentreeLe: Date)
   return { aller: minutes(horaires.partLe, sejour.debut), sejour: minutes(sejour.debut, sejour.fin), retour: minutes(sejour.fin, rentreeLe) };
 }
 
-/** US-0917 : « 12 Cases sont sorties du brouillard. », « 1 Case est sortie… », « Aucune Case n'est sortie… ». */
+/** US-0917 : « 12 Cases sont sorties du brouillard. », « Une Case est sortie… », « Aucune Case n'est sortie… ». */
 function casesSorties(nombre: number): string {
   if (nombre === 0) return "Aucune Case n'est sortie du brouillard.";
-  return nombre === 1 ? "1 Case est sortie du brouillard." : `${nombre} Cases sont sorties du brouillard.`;
+  return nombre === 1 ? "Une Case est sortie du brouillard." : `${nombre} Cases sont sorties du brouillard.`;
 }
 
 /** US-0917 : quand rien ne s'est passé, « Aucune Bête ne s'est montrée. » ; sinon « Une Bête s'est montrée. », « 3 Bêtes se sont montrées. ». */
@@ -89,8 +89,10 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
      where x.id = $2 and x.territoire_id = $1`,
     [territoireId, expeditionId],
   );
+  // Après la bascule d'un Monde (US-0414), une Expédition déjà partie garde sa destination dans l'ancien : sa distance au
+  // nouveau Foyer n'y a pas de sens, comme son chemin (leverLeBrouillard) ; cas rare, accepté.
   const { biome, destination, foyer, ...horaires } = rows[0];
-  // Un retour n'est programmé qu'au trajet chiffré (programmerLeRetour, migration 0052).
+  // Un retour n'est programmé qu'au trajet chiffré (programmerLeRetour, migration 0052) : jamais atteint.
   const durees = dureesReelles(horaires, rentreeLe);
   if (!durees) throw new Error(`Retour sans trajet chiffré pour l'Expédition ${expeditionId}.`);
   // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.

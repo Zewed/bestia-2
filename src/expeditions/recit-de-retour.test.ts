@@ -29,7 +29,7 @@ describe("le récit de retour d'une Expédition (US-0917)", () => {
     });
   });
 
-  it("dit une eau par sa variante, et une destination à une Case", () => {
+  it("dit une destination à une Case, au singulier", () => {
     expect(recitDeRetour(retour({ destination: { biome: "Lac", distance: 1 } })).texte).toMatch(/^Destination : Lac, à 1 Case de votre Foyer\.\n/);
   });
 
@@ -43,7 +43,7 @@ describe("le récit de retour d'une Expédition (US-0917)", () => {
 
   it("compte les Cases sorties du brouillard, une seule ou aucune", () => {
     const cases = (casesLevees: number) => recitDeRetour(retour({ casesLevees })).texte.split("\n")[2];
-    expect(cases(1)).toBe("1 Case est sortie du brouillard.");
+    expect(cases(1)).toBe("Une Case est sortie du brouillard.");
     expect(cases(0)).toBe("Aucune Case n'est sortie du brouillard.");
     expect(cases(31)).toBe("31 Cases sont sorties du brouillard.");
   });
