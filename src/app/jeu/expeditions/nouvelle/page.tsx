@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
+import { destinationDUneCase } from "@/expeditions/destination";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire } from "@/monde/explorateurs";
-import { type Fiche, type FicheInconnue, ficheDUneCase } from "@/monde/fiche";
+import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import { Partir } from "./Partir";
 import styles from "./page.module.css";
+import { VersLaCarte } from "./VersLaCarte";
 
 export const metadata: Metadata = { title: "Nouvelle Expédition" };
 
@@ -56,17 +57,18 @@ function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
  * US-0901 : l'écran d'Expédition, une page du jeu. Depuis la fiche d'une Case, la Case est en paramètre et devient la
  * destination, lue dans le Monde du Territoire de la garde, jamais dans l'adresse, qui ne dit que la Case. Depuis la
  * navigation, sans Case, il n'a pas de destination et mène à la carte pour en choisir une ; de même pour une Case que
- * l'adresse dit mal, que le Monde n'a pas, ou pour le Foyer du joueur, qui ne peut pas être une destination (US-0907).
- * Sur un téléphone, une seule colonne, et chaque choix au pouce. Sans session, la garde mène à la connexion, qui
- * ramène ici avec la même Case.
+ * l'adresse dit mal ou que le Monde n'a pas. US-0907 : la carte s'ouvre pour choisir la destination, et la Case qu'on
+ * y touche revient ici ; une destination déjà choisie se change de même. Une Case d'un Territoire, le sien (son Foyer
+ * compris) ou celui d'un autre joueur, est refusée par un message, à la place de la destination. Sur un téléphone,
+ * une seule colonne, et chaque choix au pouce. Sans session, la garde mène à la connexion, qui ramène ici avec la
+ * même Case.
  */
 export default async function NouvelleExpedition({ searchParams }: PageProps<"/jeu/expeditions/nouvelle">) {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const laCase = caseEnParametre(await searchParams);
   const { territoireId } = await exigerCompte(laCase ? `${ECRAN}?q=${laCase.q}&r=${laCase.r}` : ECRAN);
-  const fiche = laCase && territoireId !== null ? await ficheDUneCase(getPool(), territoireId, laCase) : null;
-  const destination = fiche && fiche.distance > 0 ? fiche : null;
+  const destination = laCase && territoireId !== null ? await destinationDUneCase(getPool(), territoireId, laCase) : null;
   // US-0902 : les explorateurs libres sur total, lus à chaque affichage ; aucun pour un chef sans Territoire.
   const explorateurs = territoireId !== null ? await explorateursDuTerritoire(getPool(), territoireId) : { libres: 0, total: 0 };
   // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage ; aucune sans Territoire.
@@ -75,14 +77,15 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
       <Bloc titre="Destination">
-        {destination ? (
-          <Destination fiche={destination} />
+        {destination && "fiche" in destination ? (
+          <>
+            <Destination fiche={destination.fiche} />
+            <VersLaCarte className={`${styles.choisir} ${styles.changer}`}>Changer de destination</VersLaCarte>
+          </>
         ) : (
           <>
-            <p className={styles.aucune}>Aucune destination</p>
-            <Link href="/jeu/carte" className={styles.choisir}>
-              Choisir sur la carte
-            </Link>
+            {destination ? <p className={styles.refus}>{destination.refus}</p> : <p className={styles.aucune}>Aucune destination</p>}
+            <VersLaCarte className={styles.choisir}>Choisir sur la carte</VersLaCarte>
           </>
         )}
       </Bloc>

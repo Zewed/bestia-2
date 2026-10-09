@@ -358,12 +358,13 @@ Le joueur découvre le Monde qu'il partage avec les autres : une grande carte en
 ### US-0435 · Garder la carte fluide sur mobile
 **En tant que** joueur, **je veux** une carte fluide sur mon téléphone, **afin de** parcourir le Monde sans saccades.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1357, Zewed/bestia-2#6). Dézoomée au maximum, la carte tombait à 1 ou 2 images par seconde sur le téléphone de référence : refermer chaque hexagone d'un même grand tracé coûtait de plus en plus cher dans Chrome. Les remplissages ne referment plus les hexagones et les bords se referment autrement, pour le même dessin à l'œil. Mesures (build de production, Chrome sans tête, processeur ralenti 4 fois, 390 × 844, densité 3, tout le Monde découvert) : 54 à 56 images par seconde au zoom par défaut, 49 à 52 dézoomé au maximum, encore 45 à 57 après 5 minutes de navigation, sans montée de la mémoire. Seules les Cases à l'écran, et une de marge, sont dessinées.
 - **Débloquée par** : US-0424
 - **Critères d'acceptation** :
-  - Déplacements et zoom tiennent (chiffre à régler) images par seconde sur un téléphone de référence, dont le modèle reste à choisir (à décider).
+  - Déplacements et zoom tiennent 30 images par seconde (provisoire) sur le téléphone de référence : Chrome en émulation mobile, processeur ralenti 4 fois, 390 × 844 px, densité 3 (décidé le 2026-10-08).
   - Seules les Cases à l'écran, et un peu autour, sont dessinées.
   - Dézoomer au maximum reste aussi fluide.
-  - Après (chiffre à régler) minutes de navigation continue, la carte ne ralentit pas.
+  - Après 5 minutes (provisoire) de navigation continue, la carte ne ralentit pas.
 
 ## Étape 20 · Le brouillard
 
