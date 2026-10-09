@@ -42,3 +42,8 @@ export function formaterMinutes(minutes: number): string {
   const heuresRestantes = Math.floor((minutes % (24 * 60)) / 60);
   return heuresRestantes === 0 ? `${jours} j` : `${jours} j ${heuresRestantes} h`;
 }
+
+/** US-0940 : l'heure d'une Rencontre, dans le fuseau d'un joueur, sans le jour, que son Récit donne déjà : « 14:05 ». */
+export function formaterHeure(instant: Date, fuseau: string): string {
+  return new Intl.DateTimeFormat("fr-FR", { hour: "2-digit", minute: "2-digit", timeZone: fuseau }).format(instant);
+}
