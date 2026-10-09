@@ -63,6 +63,18 @@ describe("le détail d'une Expédition en cours (US-0918)", () => {
     expect(ligne().slice(2)).toEqual(["Retour", "de retour"]);
   });
 
+  it("compte les minutes entières sans en ajouter une : 31 min tout rond restent « 31 min »", () => {
+    const { rerender } = render(<DetailDeLExpedition expedition={FORET} instant={apres(29)} />);
+    expect(ligne()[3]).toBe("arrive dans 31 min");
+    rerender(<DetailDeLExpedition expedition={FORET} instant={apres(60 + 240 - 125)} />);
+    expect(ligne()[3]).toBe("repart dans 2 h 05");
+  });
+
+  it("dit « Aucun » quand aucun de ses explorateurs n'est plus là, plutôt qu'une ligne vide", () => {
+    render(<DetailDeLExpedition expedition={{ ...FORET, explorateurs: [] }} instant={DEPART} />);
+    expect(detail().Explorateurs).toBe("Aucun");
+  });
+
   it("lit sa phase à l'heure qu'on lui donne, pas à celle où la liste a été lue", () => {
     render(<DetailDeLExpedition expedition={{ ...FORET, phase: "aller" }} instant={apres(61)} />);
     expect(ligne()[2]).toBe("Séjour");
@@ -88,8 +100,12 @@ describe("le détail d'une Expédition en cours (US-0918)", () => {
     render(<DetailDeLExpedition expedition={FORET} instant={DEPART} repliable />);
     expect(deplier().getAttribute("aria-expanded")).toBe("false");
     expect(document.getElementById(deplier().getAttribute("aria-controls")!)?.tagName).toBe("DL");
-    // Un lecteur d'écran entend aussi de quelle Expédition il s'agit.
-    expect(document.getElementById(deplier().getAttribute("aria-describedby")!)?.textContent).toContain("Forêt");
+    // Un lecteur d'écran entend aussi de quelle Expédition il s'agit, et où elle en est.
+    const decrit = deplier()
+      .getAttribute("aria-describedby")!
+      .split(" ")
+      .map((id) => document.getElementById(id)?.textContent);
+    expect(decrit).toEqual(["Forêt", "Aller", "arrive dans 1 h"]);
     await userEvent.click(deplier());
     expect(deplier().getAttribute("aria-expanded")).toBe("true");
     await userEvent.click(deplier());

@@ -33,13 +33,19 @@ describe("le détail d'une Expédition sur un téléphone (US-0918)", () => {
     expect(mobile.indexOf(".repliable .distance {")).toBeGreaterThan(mobile.indexOf(".repliable .ligne > * {"));
   });
 
-  it("se déplie d'un toucher n'importe où sur elle, au pouce, et montre où est le clavier", () => {
+  it("se déplie d'un toucher n'importe où sur sa ligne, marges comprises, au pouce, et montre où est le clavier", () => {
     expect(regle(".repliable", mobile)).toContain("padding: 12px;");
-    expect(regle(".expedition")).toContain("position: relative;");
+    expect(regle(".repliable .ligne", mobile.slice(mobile.indexOf("Toute sa ligne")))).toContain("position: relative;");
     expect(regle(".deplier", mobile)).toContain("display: flex;");
     expect(regle(".deplier", mobile)).toContain("cursor: pointer;");
-    expect(regle(".deplier::after", mobile)).toMatch(/position: absolute;[^}]*inset: 0;/);
+    // Le bouton couvre la ligne et la marge de la carte (padding: 12px), pas le détail déplié dessous.
+    expect(regle(".deplier::after", mobile)).toMatch(/position: absolute;[^}]*inset: -12px;/);
     expect(regle(".deplier:focus-visible::after", mobile)).toContain("outline: 2px solid var(--encre);");
+  });
+
+  it("tourne son chevron sans animation quand le joueur réduit les animations", () => {
+    const reduit = CSS.match(/@media \(prefers-reduced-motion: reduce\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(regle(".fleche", reduit)).toContain("transition: none;");
   });
 
   it("tient sans défilement de côté : rien n'y a de largeur fixe plus grande que l'écran", () => {

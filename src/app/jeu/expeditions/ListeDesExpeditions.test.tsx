@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, render } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import { ListeDesExpeditions } from "./ListeDesExpeditions";
@@ -68,8 +69,26 @@ describe("la liste des Expéditions en cours, en direct (US-0918)", () => {
     expect(comptes()).toEqual([["Aller", "arrive dans 39 min"]]);
   });
 
-  it("se déplie Expédition par Expédition sur un téléphone", () => {
+  it("repart de la nouvelle heure du jeu quand la page est relue", async () => {
+    vi.useFakeTimers();
+    const { rerender } = render(<ListeDesExpeditions expeditions={[vers(5, avant(18))]} maintenant={MAINTENANT} />);
+    await act(async () => vi.advanceTimersByTime(2 * MINUTE_MS));
+    expect(comptes()).toEqual([["Aller", "arrive dans 40 min"]]);
+    // Relue 10 minutes du jeu plus tard : le temps déjà écoulé dans le navigateur ne compte plus.
+    rerender(<ListeDesExpeditions expeditions={[vers(5, avant(18))]} maintenant={new Date(MAINTENANT.getTime() + 10 * MINUTE_MS)} />);
+    expect(comptes()).toEqual([["Aller", "arrive dans 32 min"]]);
+  });
+
+  it("se déplie Expédition par Expédition sur un téléphone, et se replie de même", async () => {
     render(<ListeDesExpeditions expeditions={[vers(5, avant(18)), vers(6, avant(90))]} maintenant={MAINTENANT} />);
-    expect([...document.querySelectorAll("li button")].map((b) => b.getAttribute("aria-expanded"))).toEqual(["false", "false"]);
+    const boutons = () => [...document.querySelectorAll("li button")];
+    const etats = () => boutons().map((b) => b.getAttribute("aria-expanded"));
+    expect(etats()).toEqual(["false", "false"]);
+    await userEvent.click(boutons()[1]);
+    expect(etats()).toEqual(["false", "true"]);
+    await userEvent.click(boutons()[0]);
+    expect(etats()).toEqual(["true", "true"]);
+    await userEvent.click(boutons()[1]);
+    expect(etats()).toEqual(["true", "false"]);
   });
 });

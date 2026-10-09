@@ -101,8 +101,6 @@ describe.skipIf(!URL_TEST)("le détail des Expéditions en cours (US-0918, sur b
           { id: "poule", nom: "Poule", nombre: 1 },
           { id: "souris", nom: "Souris grise", nombre: 2 },
         ],
-        // Le trajet d'une escorte n'est pas encore chiffré (US-0912).
-        trajetMinutes: null,
       }),
     ]);
   });

@@ -1,6 +1,5 @@
 /* US-0918 : une Expédition en cours : sa ligne, puis son détail, sur le fond d'une ligne de liste. */
 .expedition {
-  position: relative;
   min-width: 0;
   padding: 10px 12px;
   border-radius: var(--arrondi-petit);
@@ -134,10 +133,16 @@
     display: none;
   }
 
-  /* Toute l'Expédition se touche pour la déplier : le bouton la couvre, son chevron au bout de la ligne. */
+  /*
+   * Toute sa ligne se touche pour la déplier ou la replier : le bouton la couvre, marges comprises, son chevron au bout ;
+   * le détail déplié, lui, reste à lire et à sélectionner.
+   */
+  .repliable .ligne {
+    position: relative;
+  }
+
   .deplier {
     display: flex;
-    grid-row: 1 / span 2;
     grid-column: 4;
     align-items: center;
     justify-content: center;
@@ -150,7 +155,7 @@
 
   .deplier::after {
     position: absolute;
-    inset: 0;
+    inset: -12px;
     border-radius: var(--arrondi-petit);
     content: "";
   }
@@ -177,5 +182,12 @@
 
   .deplie .fleche {
     transform: rotate(180deg);
+  }
+}
+
+/* Le chevron tourne sans animation quand le joueur réduit les animations. */
+@media (prefers-reduced-motion: reduce) {
+  .fleche {
+    transition: none;
   }
 }
