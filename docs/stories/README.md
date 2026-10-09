@@ -4,7 +4,7 @@ Le découpage fin de l'[ordre d'attaque](../ordre-d-attaque.md) : 748 stories en
 
 ## Où on en est
 
-Dernière story livrée : **US-0906** · Choisir la durée du séjour ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
+Dernière story livrée : **US-0908** · La portée d'exploration ; les jalons 2 et 3 sont terminés, le jalon 4 avance. US-0141, livrée le 2026-10-05, est retirée avec le Couple de départ ([ADR 0008](../adr/0008-pas-de-couple-de-depart.md)). Les e-mails ne partent pas encore pour de vrai, voir Zewed/bestia-2#1, et l'entrée reste fermée en production jusqu'à ce qu'Antoine décide de l'ouvrir (jalons 0 et 1 terminés). Prochaines : le dessin du brouillard et la fluidité sur mobile (fin du jalon 4), puis le jalon 9, dont les Anneaux et les apparitions de Bêtes avancent déjà en parallèle.
 
 ## Sommaire
 
@@ -30,7 +30,7 @@ Dernière story livrée : **US-0906** · Choisir la durée du séjour ; les jalo
 | [17 · Plus tard](17-plus-tard.md) | hors étapes | 15 | 18 |
 | **Total** | **65 étapes** | **748** | **225** |
 
-Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (131 au total).
+Les points encore ouverts sont rassemblés dans [a-decider.md](a-decider.md). Les valeurs à fixer en jouant sont marquées « (chiffre à régler) » dans les stories (130 au total).
 
 ## Lire une story
 
