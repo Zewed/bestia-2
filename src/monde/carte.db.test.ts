@@ -81,9 +81,10 @@ describe.skipIf(!URL_TEST)("la carte du Monde du joueur (US-0417, sur base)", ()
     expect(carte.teintes[carte.cases.teinte[places(carte.cases).indexOf(`${foyer.q},${foyer.r}`)]]).toBe("prairie");
     // Chaque teinte une fois : celles des Cases découvertes, et le brouillard.
     expect([...carte.teintes].sort()).toEqual([...new Set(attendues)].sort());
-    // Une Case découverte ensuite, loin de son Foyer, montre sa teinte à la lecture suivante.
-    const loin = monde.find((c) => c.biome === "eau" && c.variante === "mer")!;
-    expect(distance(loin, foyer)).toBeGreaterThan(ABORDS_DU_FOYER_CASES);
+    // Une Case découverte ensuite, loin de son Foyer, montre sa teinte à la lecture suivante. Le Foyer naît au hasard sur
+    // la Couronne : la mer est cherchée hors de ses abords, jamais la première venue, qui peut en être.
+    const loin = monde.find((c) => c.biome === "eau" && c.variante === "mer" && distance(c, foyer) > ABORDS_DU_FOYER_CASES)!;
+    expect(attendues[monde.indexOf(loin)]).toBe(BROUILLARD);
     await decouvrir(pool, territoireId, [loin]);
     const apres = (await carteDuJoueur(pool, territoireId))!;
     expect(apres.cases.teinte.map((t) => apres.teintes[t])).toEqual(monde.map((c, i) => (c === loin ? "mer" : attendues[i])));
