@@ -90,7 +90,10 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
    */
   const rencontres = async (expeditionId: number) =>
     (await rencontresDUneExpedition(pool, expeditionId)).map((r) => ({ ...r, id: undefined, nouvelleEspece: undefined }));
-  /** Ce que retient la Rencontre de la Bête sauvage `b` de la Case `caseId`, vue à `vueLe` : sans escorte, elle ne la suit pas (US-0935). */
+  /**
+   * Ce que retient la Rencontre de la Bête sauvage `b` de la Case `caseId`, vue à `vueLe` : sans escorte, une Bête commune
+   * suit l'Expédition, une plus rare jamais (US-0935).
+   */
   const vue = (b: BeteSauvage, caseId: number, vueLe: Date) => ({
     vueLe,
     caseId,
@@ -99,7 +102,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     rareteId: b.rareteId,
     numero: b.numero,
     beteDeNaissanceId: null,
-    apprivoisee: false,
+    apprivoisee: b.rareteId === "commune",
   });
   /** Toutes les Rencontres que le Territoire a retenues sur la Case `caseId`, quelle que soit l'Expédition. */
   const retenuesSur = async (territoireId: number, caseId: number) =>
@@ -244,10 +247,13 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
 
     for (const { territoireId } of [joueur, voisin]) await rattraperA(territoireId, apres(arrivee, JOUR));
     const siennes = await rencontres(sienne);
+    // Commune, la Bête de naissance suit l'Expédition sans escorte (US-0935).
     expect(siennes.filter((r) => r.beteDeNaissanceId !== null)).toEqual([
-      { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id, apprivoisee: false },
+      { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id, apprivoisee: true },
     ]);
-    expect(await rencontres(chezLeVoisin)).toEqual(siennes.filter((r) => r.beteDeNaissanceId === null));
+    // Le voisin voit les mêmes Bêtes sauvages, sauf les communes : arrivées au même instant, elles ont suivi celle du joueur,
+    // de plus petit identifiant (US-0934, US-0935).
+    expect(await rencontres(chezLeVoisin)).toEqual(siennes.filter((r) => r.beteDeNaissanceId === null && !r.apprivoisee));
   });
 
   it("retient les mêmes Rencontres, aux mêmes instants, en direct, par morceaux, d'un bloc au rattrapage, ou par la tâche planifiée", async () => {
@@ -271,31 +277,44 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
       [300, 25, 4 * HEURE],
       [500, 60, 90],
     ];
-    const expeditions: number[][] = [];
-    for (const { territoireId } of territoires) {
+    const fin = apres(debut, 16 * HEURE);
+    const coupures = Array.from({ length: 30 }, (_, i) => debut.getTime() + Math.floor(hacher(i, 932) * (fin.getTime() - debut.getTime()))).sort((x, y) => x - y);
+    const facons = [
+      // En direct, page ouverte, toutes les cinq minutes.
+      async (territoireId: number) => {
+        for (let instant = debut; instant < fin; instant = apres(instant, 5)) await rattraperA(territoireId, instant);
+        await rattraperA(territoireId, fin);
+      },
+      // Par morceaux coupés au hasard.
+      async (territoireId: number) => {
+        for (const t of [...coupures, fin.getTime()]) await rattraperA(territoireId, new Date(t));
+      },
+      // D'un bloc, au retour du joueur, ou par la tâche planifiée pendant son absence.
+      async (territoireId: number) => {
+        await rattraperA(territoireId, fin);
+      },
+      async (territoireId: number) => {
+        await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [territoireId] } });
+      },
+    ];
+    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit et quitte la Case (US-0935) : chaque
+    // façon de compter le temps y passe seule, puis la Case redevient ce qu'elle était, sans ses Expéditions ni la trace
+    // des Bêtes parties avec elles.
+    const vues = [];
+    for (const [k, { territoireId }] of territoires.entries()) {
       const ids: number[] = [];
       for (const [partie, trajet, sejour] of HORAIRES) ids.push(await poser(territoireId, caseId, apres(debut, partie), trajet, sejour));
-      expeditions.push(ids);
+      await facons[k](territoireId);
+      vues.push(await Promise.all(ids.map(rencontres)));
+      await pool.query("delete from expedition where id = any($1::int[])", [ids]);
+      await pool.query("delete from bete_partie where case_id = $1", [caseId]);
     }
-    const fin = apres(debut, 16 * HEURE);
-    const [enDirect, parMorceaux, dUnBloc, planifiee] = territoires.map((t) => t.territoireId);
-
-    // En direct, page ouverte, toutes les cinq minutes.
-    for (let instant = debut; instant < fin; instant = apres(instant, 5)) await rattraperA(enDirect, instant);
-    await rattraperA(enDirect, fin);
-    // Par morceaux coupés au hasard.
-    const coupures = Array.from({ length: 30 }, (_, i) => debut.getTime() + Math.floor(hacher(i, 932) * (fin.getTime() - debut.getTime()))).sort((x, y) => x - y);
-    for (const t of [...coupures, fin.getTime()]) await rattraperA(parMorceaux, new Date(t));
-    // D'un bloc, au retour du joueur, ou par la tâche planifiée pendant son absence.
-    await rattraperA(dUnBloc, fin);
-    await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [planifiee] } });
-
-    const vues = await Promise.all(expeditions.map((ids) => Promise.all(ids.map(rencontres))));
     for (const autres of vues.slice(1)) expect(autres).toEqual(vues[0]);
     // Celle qui séjourne douze heures voit chaque Bête présente pendant son séjour : dès son arrivée si elle était déjà là, à son apparition sinon.
     const [arrivee, depart] = [apres(debut, 40), apres(debut, 40 + 12 * HEURE)];
     const attendues = (await betesSauvagesDUneCase(pool, caseId, arrivee, depart)).map((b) => vue(b, caseId, b.arrivee < arrivee ? arrivee : b.arrivee));
     expect(attendues.length).toBeGreaterThanOrEqual(2);
     expect(vues[0][0]).toEqual(attendues);
-  });
+    // Près de 200 rattrapages à la suite : sous la charge de la suite complète, plus que les 20 s par défaut.
+  }, 60_000);
 });

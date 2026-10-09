@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dureesReelles, type RetourARaconter, recitDeRetour } from "./recit-de-retour";
+import { dureesReelles, especesVuesSansSuite, type RetourARaconter, recitDeRetour } from "./recit-de-retour";
 
 const MINUTE = 60_000;
 /** Une heure de Paris en octobre (UTC+2), comme le jeu l'enregistre, en temps universel. */
@@ -77,5 +77,29 @@ describe("les durées réelles d'une Expédition rentrée (US-0917)", () => {
 
   it("aucune tant que son trajet n'est pas chiffré (US-0912)", () => {
     expect(dureesReelles({ partLe, trajetMinutes: null, sejourMinutes: 60 }, aParis(9, 18))).toBeNull();
+  });
+});
+
+describe("quand seules des Bêtes plus rares se sont montrées (US-0935)", () => {
+  /** Une Rencontre d'une Bête de l'Espèce `especeId`, de Rareté `rareteId`, qui a suivi l'Expédition ou non. */
+  const vue = (especeId: string, rareteId: string, apprivoisee = false) => ({ especeId, rareteId, apprivoisee });
+
+  it("le récit dit ce que les explorateurs ont vu, chaque Espèce nommée une fois, mais qu'aucune Bête ne les a suivis", () => {
+    const betes = (vuesSansSuite: string[], rencontres = vuesSansSuite.length) => recitDeRetour(retour({ rencontres, vuesSansSuite })).texte.split("\n").at(-1);
+    expect(betes(["Renard roux"])).toBe("Vos explorateurs ont vu Renard roux, mais aucune Bête ne les a suivis.");
+    expect(betes(["Renard roux", "Loup gris"], 3)).toBe("Vos explorateurs ont vu Renard roux et Loup gris, mais aucune Bête ne les a suivis.");
+    expect(betes(["Renard roux", "Loup gris", "Lion"])).toBe("Vos explorateurs ont vu Renard roux, Loup gris et Lion, mais aucune Bête ne les a suivis.");
+  });
+
+  it("ses Espèces, chacune une fois, dans l'ordre des apparitions, quand aucune des Bêtes vues n'est commune ni n'a suivi", () => {
+    expect(especesVuesSansSuite([vue("goupil", "peu_commune"), vue("isard", "rare"), vue("goupil", "peu_commune")])).toEqual(["goupil", "isard"]);
+  });
+
+  it("aucune quand une Bête commune s'est montrée ou qu'une Bête a suivi l'Expédition, ni quand rien ne s'est montré : le récit garde le nombre de Bêtes", () => {
+    expect(especesVuesSansSuite([vue("goupil", "peu_commune"), vue("mulot", "commune", true)])).toBeNull();
+    expect(especesVuesSansSuite([vue("goupil", "peu_commune"), vue("mulot", "commune")])).toBeNull();
+    expect(especesVuesSansSuite([vue("isard", "rare", true)])).toBeNull();
+    expect(especesVuesSansSuite([])).toBeNull();
+    expect(recitDeRetour(retour({ rencontres: 2 })).texte.split("\n").at(-1)).toBe("2 Bêtes se sont montrées.");
   });
 });
