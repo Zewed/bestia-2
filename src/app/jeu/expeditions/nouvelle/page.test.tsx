@@ -16,6 +16,11 @@ const chefs = vi.hoisted(() => ({
 vi.mock("@/chefs/chef", () => chefs);
 const fiches = vi.hoisted(() => ({ ficheDUneCase: vi.fn(async (): Promise<Fiche | FicheInconnue | null> => null) }));
 vi.mock("@/monde/fiche", () => fiches);
+// US-0902 : les explorateurs du Territoire, et leur bloc et le départ réduits à ce que la page leur donne (testés à part).
+const explorateurs = vi.hoisted(() => ({ explorateursDuTerritoire: vi.fn(async () => ({ libres: 2, total: 3 })) }));
+vi.mock("@/monde/explorateurs", () => explorateurs);
+vi.mock("./Explorateurs", () => ({ Explorateurs: (p: object) => <i data-explorateurs={JSON.stringify(p)} /> }));
+vi.mock("./Partir", () => ({ Partir: (p: object) => <i data-partir={JSON.stringify(p)} /> }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -107,11 +112,17 @@ describe("l'écran d'Expédition (US-0901)", () => {
     expect(textes(await ouvrir({ q: "3", r: "-5" }))).toHaveLength(6 + SEJOUR.length);
   });
 
-  it("propose la durée du séjour, avec ou sans destination (US-0906)", async () => {
+  it("propose la durée du séjour, avec ou sans destination, entre les explorateurs et le départ (US-0906)", async () => {
     connecte();
-    expect(await ouvrir()).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
+    // Le bloc Séjour, seul entre le bloc Explorateurs et le départ (réduits ici à ce que la page leur donne).
+    const entreExplorateursEtDepart = /<i data-explorateurs="[^"]*"><\/i><section[^>]*><h2[^>]*>Séjour<\/h2>((?!<section).)*<\/section><i data-partir="[^"]*"><\/i><\/main>$/;
+    const sansDestination = await ouvrir();
+    expect(sansDestination).toMatch(/<input [^>]*type="range"[^>]*name="sejour"/);
+    expect(sansDestination).toMatch(entreExplorateursEtDepart);
     fiches.ficheDUneCase.mockResolvedValue(FORET);
-    expect(textes(await ouvrir({ q: "3", r: "-5" })).slice(-SEJOUR.length)).toEqual(SEJOUR);
+    const avecDestination = await ouvrir({ q: "3", r: "-5" });
+    expect(avecDestination).toMatch(entreExplorateursEtDepart);
+    expect(textes(avecDestination).slice(-SEJOUR.length)).toEqual(SEJOUR);
   });
 
   it("montre d'abord le récit d'arrivée s'il ne l'a pas été (US-0160)", async () => {
@@ -133,5 +144,43 @@ describe("l'écran d'Expédition (US-0901)", () => {
     vi.stubEnv("VERCEL_ENV", "production");
     await expect(ouvrir({ q: "3", r: "-5" })).rejects.toMatchObject({ digest: expect.stringContaining("404") });
     expect(cookie.jetonDeSession).not.toHaveBeenCalled();
+  });
+});
+
+describe("les explorateurs de l'écran d'Expédition (US-0902)", () => {
+  afterEach(() => {
+    explorateurs.explorateursDuTerritoire.mockClear();
+    fiches.ficheDUneCase.mockResolvedValue(null);
+  });
+
+  const connecte = () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+  };
+  /** Ce que la page donne au bloc Explorateurs, puis au départ, tel qu'elle le rend. */
+  const donne = (nom: string, valeur: object) => `<i data-${nom}="${JSON.stringify(valeur).replaceAll('"', "&quot;")}"></i>`;
+
+  it("propose les explorateurs du Territoire de la garde, libres sur total, juste après la destination", async () => {
+    connecte();
+    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    const html = await ouvrir({ q: "3", r: "-5" });
+    expect(explorateurs.explorateursDuTerritoire).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12);
+    expect(html).toContain(`7 Cases de votre Foyer</dd></div></dl></section>${donne("explorateurs", { libres: 2, total: 3 })}`);
+  });
+
+  it("finit sur le départ, qui sait combien d'explorateurs sont libres, avec ou sans destination", async () => {
+    connecte();
+    expect(await ouvrir()).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+    fiches.ficheDUneCase.mockResolvedValue(FORET);
+    expect(await ouvrir({ q: "3", r: "-5" })).toMatch(new RegExp(`${donne("partir", { libres: 2 })}</main>$`));
+  });
+
+  it("ne propose aucun explorateur à un chef sans Territoire, sans rien demander à la base", async () => {
+    connecte();
+    chefs.chefDuCompte.mockResolvedValueOnce({ nom: "Ourse", territoireId: null, recitLu: true });
+    const html = await ouvrir();
+    expect(explorateurs.explorateursDuTerritoire).not.toHaveBeenCalled();
+    expect(html).toContain(donne("explorateurs", { libres: 0, total: 0 }));
+    expect(html).toContain(donne("partir", { libres: 0 }));
   });
 });
