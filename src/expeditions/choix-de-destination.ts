@@ -1,9 +1,12 @@
 // Le choix de la destination d'une Expédition sur la carte (US-0907), tel que l'écran d'Expédition, la carte et sa
-// fiche le partagent : les adresses de l'aller et du retour, et le refus que lit le joueur.
+// fiche le partagent : les adresses de l'aller et du retour, et les refus que lit le joueur.
 import type { Coordonnees } from "@/monde/hex";
 
 /** US-0907 : le refus d'une Case qui appartient à un Territoire, le sien ou celui d'un autre joueur (décidé le 2026-10-08). */
 export const CASE_D_UN_TERRITOIRE = "Cette Case appartient à un Territoire.";
+
+/** US-0908 : le refus d'une Case au-delà de la portée d'exploration (PORTEE_D_EXPLORATION_CASES). */
+export const CASE_HORS_DE_PORTEE = "Cette Case est hors de portée.";
 
 /** US-0901 : l'écran d'Expédition, où mènent la fiche d'une Case et la navigation. */
 const ECRAN = "/jeu/expeditions/nouvelle";

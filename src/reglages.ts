@@ -278,3 +278,10 @@ export const PRESENCE_D_UNE_BETE_HEURES = 6;
 export const SEJOUR_MINUTES = { min: 30, max: 24 * 60, pas: 30 };
 /** US-0906 : les durées de séjour toutes prêtes, qui se choisissent d'un doigt sur mobile : 1 h, 4 h, 8 h et 12 h (décidées le 2026-10-08). */
 export const SEJOURS_TOUT_PRETS_MINUTES = [60, 4 * 60, 8 * 60, 12 * 60];
+
+/**
+ * US-0908 : la portée d'exploration de départ : la destination d'une Expédition est à 8 Cases du Foyer au plus (valeur
+ * provisoire, à régler en jouant), comptées par `distance` (src/monde/hex.ts) ; au-delà des abords découverts à la
+ * naissance (ABORDS_DU_FOYER_CASES). Des Recherches de la branche Explorer l'agrandiront (US-0731, jalon 7).
+ */
+export const PORTEE_D_EXPLORATION_CASES = 8;

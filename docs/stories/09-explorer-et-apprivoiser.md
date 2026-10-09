@@ -28,6 +28,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0903 · Aucun explorateur libre
 **En tant que** nouveau joueur, **je veux** comprendre pourquoi je ne peux pas encore partir, **afin de** trouver comment lancer ma première Expédition.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1361, Zewed/bestia-2#8). Quand aucun explorateur n'est libre, un bloc « Explorateurs » remplace tout le formulaire de l'écran d'Expédition. Il dit « Aucun explorateur » et « Il faut au moins un explorateur pour partir. », ou, quand tous sont partis, « Prochain retour le 9 octobre à 14:05 » (heure de Paris, alimentée par le départ, US-0911). Un lien « Donner le Métier d'explorateur » mène à la page Habitants. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0902
 - **Critères d'acceptation** :
   - Sans aucun explorateur, l'écran affiche un message clair à la place du formulaire, avec un lien vers la page Habitants pour donner ce Métier.
@@ -78,9 +79,10 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0908 · La portée d'exploration
 **En tant que** joueur, **je veux** voir jusqu'où mes Expéditions peuvent aller, **afin de** choisir une destination qu'elles peuvent atteindre.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1366, Zewed/bestia-2#10). La destination d'une Expédition est à 8 Cases du Foyer au plus (`PORTEE_D_EXPLORATION_CASES`, provisoire). Pendant le choix sur la carte, les Cases au-delà sont voilées et leur fiche dit « Cette Case est hors de portée. ». Le serveur refuse de même une destination hors de portée, d'où que vienne la demande. Le voile ne coûte rien de plus à la carte, même dézoomée. Vérifié en vrai de 320 à 1 440 px.
 - **Débloquée par** : US-0907
 - **Critères d'acceptation** :
-  - Une portée d'exploration de départ limite la distance d'une destination, comptée en Cases depuis le Foyer (chiffre à régler).
+  - Une portée d'exploration de départ limite la distance d'une destination à 8 Cases du Foyer (provisoire, `PORTEE_D_EXPLORATION_CASES`).
   - Pendant le choix de la destination, les Cases hors de portée sont grisées et ne peuvent pas être choisies.
   - Le jeu refuse une destination hors de portée, même demandée par un autre chemin que l'écran.
   - Des Recherches de la branche Explorer agrandiront cette portée (US-0731, jalon 7).
