@@ -1,0 +1,23 @@
+docs/stories/04-la-carte-du-monde.md
+  s_8a111c933b45c9::t_53ac302ec4bd7f 361,364,367
+docs/stories/README.md
+  s_8a111c933b45c9::t_9368d6e9f547de 7,17,31,33
+docs/stories/a-decider.md
+  s_8a111c933b45c9::t_5a2563bafc2548 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6a6568fea3122279703e2469a0cf0947f5f6b16b",
+  "prompts": {},
+  "sessions": {
+    "s_8a111c933b45c9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a7b2708cf699d906b",
+        "model": "unknown"
+      },
+      "human_author": "Zewed <dewez.antoine2@gmail.com>"
+    }
+  }
+}
