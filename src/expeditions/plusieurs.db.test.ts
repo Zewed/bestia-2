@@ -5,12 +5,16 @@ import { creerCompte } from "@/comptes/compte";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Coordonnees } from "@/monde/hex";
-import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PORTEE_D_EXPLORATION_CASES, SEJOUR_MINUTES } from "@/reglages";
+import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PORTEE_D_EXPLORATION_CASES, SEJOUR_MINUTES, SEJOURS_TOUT_PRETS_MINUTES } from "@/reglages";
 import { poolDeTest, preparerMondeDeTest, URL_TEST } from "@/test/base";
-import { type ChoixDuDepart, EXPLORATEUR_PLUS_LIBRE, lancerLExpedition } from "./depart";
+import { type ChoixDuDepart, type Depart, EXPLORATEUR_PLUS_LIBRE, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
+import type { Phase } from "./phase";
 
 const MINUTE_MS = 60_000;
+
+/** US-0919 : ce qu'une Expédition a retenu à son départ : sa destination, ses horaires, son escorte et ses explorateurs. */
+type Retenue = Coordonnees & { partLe: Date; trajetMinutes: number | null; sejourMinutes: number; escorte: Record<string, number>; explorateurs: number[] };
 
 describe.skipIf(!URL_TEST)("plusieurs Expéditions à la fois (US-0919, sur base)", () => {
   let pool: Pool;
@@ -20,6 +24,8 @@ describe.skipIf(!URL_TEST)("plusieurs Expéditions à la fois (US-0919, sur base
   const INSTANT = new Date("2026-10-09T07:42:00.000Z");
   /** L'heure du jeu `minutes` après le premier départ. */
   const apres = (minutes: number) => new Date(INSTANT.getTime() + minutes * MINUTE_MS);
+  /** Le pas des explorateurs, en minutes de jeu par Case (valeur provisoire). */
+  const p = PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE;
 
   /** Un joueur qui vient de naître, et son Territoire, avec ses trois Habitants sans Métier et sans Bête. */
   const nouveauTerritoire = async () => {
@@ -57,15 +63,15 @@ describe.skipIf(!URL_TEST)("plusieurs Expéditions à la fois (US-0919, sur base
     sejourMinutes,
   });
   /** Une Expédition partie : son identifiant. */
-  const partie = async (depart: Promise<{ expeditionId: number } | { refus: string }>) => {
+  const partie = async (depart: Promise<Depart>) => {
     const fait = await depart;
     expect(fait).toEqual({ expeditionId: expect.any(Number) });
     return (fait as { expeditionId: number }).expeditionId;
   };
-  /** Tout ce qu'une Expédition a retenu à son départ : sa destination, ses horaires, son escorte et ses explorateurs. */
+  /** Ce que l'Expédition a retenu à son départ. */
   const retenue = async (expeditionId: number) =>
     (
-      await pool.query(
+      await pool.query<Retenue>(
         `select c.q, c.r, x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes",
            (select coalesce(json_object_agg(s.espece_id, s.nombre order by s.espece_id), '{}') from expedition_escorte s where s.expedition_id = x.id) as escorte,
            (select coalesce(array_agg(h.id order by h.id), '{}') from habitant h where h.expedition_id = x.id) as explorateurs
@@ -88,21 +94,31 @@ describe.skipIf(!URL_TEST)("plusieurs Expéditions à la fois (US-0919, sur base
 
   it("lance une nouvelle Expédition pendant qu'une autre est en route, tant qu'il reste au moins un explorateur libre", async () => {
     const t = await nouveauTerritoire();
-    await explorateurs(t, 3);
-    const premiere = await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, PORTEE_D_EXPLORATION_CASES), 2, 240), INSTANT));
-    expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 1, total: 3 });
+    await explorateurs(t, 4);
+    const premiere = await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, 1), 1, SEJOUR_MINUTES.min), INSTANT));
+    expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 3, total: 4 });
 
-    // Une heure plus tard, la première est encore à l'aller, et le dernier explorateur libre part à son tour.
-    expect(await phase(t, premiere, apres(60))).toBe("aller");
-    const seconde = await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, 240), apres(60)));
-    expect((await expeditionsEnCours(pool, t, apres(60))).map((x) => x.id)).toEqual([premiere, seconde]);
-    expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 0, total: 3 });
+    // Le joueur repart pendant que la première marche, puis pendant qu'elle séjourne, puis pendant qu'elle rentre : au
+    // milieu de chaque phase, d'après les réglages du moment.
+    const moments: [number, Phase, number][] = [
+      [p / 2, "aller", 2],
+      [p + SEJOUR_MINUTES.min / 2, "sejour", 1],
+      [p + SEJOUR_MINUTES.min + p / 2, "retour", 0],
+    ];
+    const departs = [premiere];
+    for (const [i, [minutes, laPremiere, libres]] of moments.entries()) {
+      expect(await phase(t, premiere, apres(minutes))).toBe(laPremiere);
+      departs.push(await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, 2 + i), 1, SEJOUR_MINUTES.min), apres(minutes))));
+      expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres, total: 4 });
+    }
+    const enfin = apres(moments[2][0]);
+    expect((await expeditionsEnCours(pool, t, enfin)).map((x) => x.id)).toEqual(departs);
 
-    // Plus aucun explorateur libre : un troisième départ est refusé, sans rien changer aux deux autres.
-    const avant = await Promise.all([retenue(premiere), retenue(seconde)]);
-    expect(await lancerLExpedition(pool, t, choix(await aLEcart(t, 1), 1, 240), apres(61))).toEqual({ refus: EXPLORATEUR_PLUS_LIBRE });
-    expect(await Promise.all([retenue(premiere), retenue(seconde)])).toEqual(avant);
-    expect((await expeditionsEnCours(pool, t, apres(61))).map((x) => x.id)).toEqual([premiere, seconde]);
+    // Plus aucun explorateur libre : un départ de plus est refusé, sans rien changer aux autres.
+    const avant = await Promise.all(departs.map(retenue));
+    expect(await lancerLExpedition(pool, t, choix(await aLEcart(t, 5), 1, SEJOUR_MINUTES.min), enfin)).toEqual({ refus: EXPLORATEUR_PLUS_LIBRE });
+    expect(await Promise.all(departs.map(retenue))).toEqual(avant);
+    expect((await expeditionsEnCours(pool, t, enfin)).map((x) => x.id)).toEqual(departs);
   });
 
   it("donne à chaque Expédition sa destination, son escorte et ses horaires, sans effet sur les autres", async () => {
@@ -113,44 +129,43 @@ describe.skipIf(!URL_TEST)("plusieurs Expéditions à la fois (US-0919, sur base
       ["souris", "femelle", 1],
       ["poule", "femelle", 2],
     ]);
-    const p = PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE;
-    const [loin, proche] = [await aLEcart(t, PORTEE_D_EXPLORATION_CASES), await aLEcart(t, 1)];
+    const plusLong = SEJOURS_TOUT_PRETS_MINUTES.at(-1)!;
+    const [versA, versB, versC, versD] = [await aLEcart(t, PORTEE_D_EXPLORATION_CASES), await aLEcart(t, 2), await aLEcart(t, 1), await aLEcart(t, 3)];
+    // Le trajet d'une escorte change avec US-0912 : de b et de d, tout ce qu'elles ont retenu sauf lui.
+    const sansTrajet = (retenu: Retenue) => ({ ...retenu, trajetMinutes: undefined });
+    const un = [expect.any(Number)];
 
     // La plus lointaine part la première, deux explorateurs sans escorte, pour le plus long séjour tout prêt.
-    const a = await partie(lancerLExpedition(pool, t, choix(loin, 2, 720), INSTANT));
+    const a = await partie(lancerLExpedition(pool, t, choix(versA, 2, plusLong), INSTANT));
     const aAuDepart = await retenue(a);
-    expect(aAuDepart).toEqual({
-      ...loin,
-      partLe: INSTANT,
-      trajetMinutes: PORTEE_D_EXPLORATION_CASES * p,
-      sejourMinutes: 720,
-      escorte: {},
-      explorateurs: [expect.any(Number), expect.any(Number)],
-    });
+    expect(aAuDepart).toEqual({ ...versA, partLe: INSTANT, trajetMinutes: PORTEE_D_EXPLORATION_CASES * p, sejourMinutes: plusLong, escorte: {}, explorateurs: [...un, ...un] });
     // Puis deux escortes, chacune avec ses Bêtes, et la plus proche, sans escorte, pour le plus court séjour.
-    const b = await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, SEJOUR_MINUTES.max, [["souris", 2]]), apres(5)));
-    const c = await partie(lancerLExpedition(pool, t, choix(proche, 1, SEJOUR_MINUTES.min), apres(10)));
-    const d = await partie(lancerLExpedition(pool, t, choix(await aLEcart(t, 3), 1, SEJOUR_MINUTES.max, [["souris", 1], ["poule", 1]]), apres(15)));
+    const b = await partie(lancerLExpedition(pool, t, choix(versB, 1, SEJOUR_MINUTES.max, [["souris", 2]]), apres(5)));
+    const c = await partie(lancerLExpedition(pool, t, choix(versC, 1, SEJOUR_MINUTES.min), apres(10)));
+    const d = await partie(lancerLExpedition(pool, t, choix(versD, 1, SEJOUR_MINUTES.max, [["souris", 1], ["poule", 1]]), apres(15)));
 
     // Chacune a retenu ce qu'on lui a choisi, et rien de celles parties avant ou après elle.
     expect(await retenue(a)).toEqual(aAuDepart);
-    expect(await retenue(b)).toMatchObject({ partLe: apres(5), sejourMinutes: SEJOUR_MINUTES.max, escorte: { souris: 2 }, explorateurs: [expect.any(Number)] });
-    expect(await retenue(c)).toEqual({ ...proche, partLe: apres(10), trajetMinutes: p, sejourMinutes: SEJOUR_MINUTES.min, escorte: {}, explorateurs: [expect.any(Number)] });
-    expect(await retenue(d)).toMatchObject({ partLe: apres(15), sejourMinutes: SEJOUR_MINUTES.max, escorte: { poule: 1, souris: 1 }, explorateurs: [expect.any(Number)] });
+    expect(sansTrajet(await retenue(b))).toEqual({ ...versB, partLe: apres(5), sejourMinutes: SEJOUR_MINUTES.max, escorte: { souris: 2 }, explorateurs: un });
+    expect(await retenue(c)).toEqual({ ...versC, partLe: apres(10), trajetMinutes: p, sejourMinutes: SEJOUR_MINUTES.min, escorte: {}, explorateurs: un });
+    expect(sansTrajet(await retenue(d))).toEqual({ ...versD, partLe: apres(15), sejourMinutes: SEJOUR_MINUTES.max, escorte: { poule: 1, souris: 1 }, explorateurs: un });
     const partis = (await Promise.all([a, b, c, d].map(retenue))).flatMap((x) => x.explorateurs);
     expect(new Set(partis).size).toBe(5);
     // Les Bêtes disponibles retirent l'escorte de chacune : il ne reste qu'une poule.
     expect(await betesDisponibles(pool, t)).toEqual([expect.objectContaining({ id: "poule", disponibles: 1 })]);
 
-    // Chacune vit à ses horaires : la plus proche arrive, séjourne et repart pendant que la plus lointaine marche encore.
-    const arriveeDeC = 10 + p;
-    const retourDeC = arriveeDeC + SEJOUR_MINUTES.min;
-    expect([await phase(t, a, apres(arriveeDeC)), await phase(t, c, apres(arriveeDeC))]).toEqual(["aller", "sejour"]);
-    expect([await phase(t, a, apres(retourDeC)), await phase(t, c, apres(retourDeC))]).toEqual(["aller", "retour"]);
-    expect([await phase(t, a, apres(PORTEE_D_EXPLORATION_CASES * p)), await phase(t, c, apres(PORTEE_D_EXPLORATION_CASES * p))]).toEqual(["sejour", "retour"]);
-    // Le prochain retour (US-0903) est celui de la dernière partie, la plus proche, et non celui de la première.
+    // Chacune vit à ses horaires : la plus proche arrive, séjourne et rentre pendant que la plus lointaine marche encore.
+    // Avec les réglages du moment (valeurs provisoires), c est rentrée avant que a n'arrive.
+    const [arriveeDeC, departDeC, retourDeC, arriveeDeA] = [10 + p, 10 + p + SEJOUR_MINUTES.min, 10 + 2 * p + SEJOUR_MINUTES.min, PORTEE_D_EXPLORATION_CASES * p];
+    expect(retourDeC).toBeLessThan(arriveeDeA);
+    const auSejourDeC = apres(arriveeDeC + SEJOUR_MINUTES.min / 2);
+    const auRetourDeC = apres(departDeC + p / 2);
+    expect([await phase(t, a, auSejourDeC), await phase(t, c, auSejourDeC)]).toEqual(["aller", "sejour"]);
+    expect([await phase(t, a, auRetourDeC), await phase(t, c, auRetourDeC)]).toEqual(["aller", "retour"]);
+    expect(await phase(t, a, apres(arriveeDeA + plusLong / 2))).toBe("sejour");
+    // Le prochain retour (US-0903) est celui de c, la plus proche sans escorte, partie après a.
     expect(await explorateursDuTerritoire(pool, t)).toEqual({ libres: 0, total: 5 });
-    expect(await prochainRetourDUnExplorateur(pool, t)).toEqual(apres(retourDeC + p));
+    expect(await prochainRetourDUnExplorateur(pool, t)).toEqual(apres(retourDeC));
   });
 
   it("n'a d'autre plafond que les explorateurs libres : une Expédition par explorateur, puis une de plus dès qu'un explorateur s'ajoute", async () => {

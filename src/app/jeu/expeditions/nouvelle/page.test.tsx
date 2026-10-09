@@ -277,7 +277,8 @@ describe("aucun explorateur libre sur l'écran d'Expédition (US-0903)", () => {
     expect(html).not.toContain("data-aucun");
     expect(html).toContain(donne({ libres: 1, total: 3 }).replace("data-aucun", "data-explorateurs"));
     expect(html).toContain("data-escorte");
-    // Aucun plafond d'Expéditions (décidé le 2026-10-08) : le départ ne compte que l'explorateur libre.
+    // Aucun plafond d'Expéditions (décidé le 2026-10-08) : l'écran ne compte que les explorateurs libres, jamais les
+    // Expéditions en cours ; le départ en relit autant (src/expeditions/plusieurs.db.test.ts).
     expect(confie(html, "recapitulatif")).toMatchObject({ libres: 1, destination: { q: 3, r: -5, biome: "Forêt", distance: 7 } });
   });
 });
