@@ -5,16 +5,18 @@ import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
+import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { destinationDUneCase } from "@/expeditions/destination";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
+import { maintenant, vitesse } from "@/temps/horloge";
 import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
 import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
-import { Partir } from "./Partir";
 import styles from "./page.module.css";
+import { type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
 import { SansEscorte } from "./SansEscorte";
 import { Sejour } from "./Sejour";
 import { VersLaCarte } from "./VersLaCarte";
@@ -37,9 +39,6 @@ function caseEnParametre(recherche: { q?: string | string[]; r?: string | string
   return q === null || r === null ? null : { q, r };
 }
 
-/** « 7 Cases de votre Foyer », « 1 Case de votre Foyer ». */
-const casesDuFoyer = (n: number) => `${n} Case${n > 1 ? "s" : ""} de votre Foyer`;
-
 /** US-0901 : la destination choisie : son Biome, « inconnu » sous le brouillard (US-0907), et sa distance au Foyer. */
 function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
   return (
@@ -56,6 +55,9 @@ function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
   );
 }
 
+/** US-0910 : d'une destination, ce que le récapitulatif en montre : son Biome (null sous le brouillard) et sa distance au Foyer. */
+const destinationChoisie = (fiche: Fiche | FicheInconnue): DestinationChoisie => ({ biome: "inconnue" in fiche ? null : fiche.biome, distance: fiche.distance });
+
 /**
  * US-0901 : l'écran d'Expédition, une page du jeu. Depuis la fiche d'une Case, la Case est en paramètre et devient la
  * destination, lue dans le Monde du Territoire de la garde, jamais dans l'adresse, qui ne dit que la Case. Depuis la
@@ -64,7 +66,7 @@ function Destination({ fiche }: { fiche: Fiche | FicheInconnue }) {
  * y touche revient ici ; une destination déjà choisie se change de même. Une Case d'un Territoire, le sien (son Foyer
  * compris) ou celui d'un autre joueur, est refusée par un message, à la place de la destination. Sur un téléphone,
  * une seule colonne, et chaque choix au pouce. Sans session, la garde mène à la connexion, qui ramène ici avec la
- * même Case.
+ * même Case. US-0910 : l'écran finit sur le récapitulatif, et son départ.
  */
 export default async function NouvelleExpedition({ searchParams }: PageProps<"/jeu/expeditions/nouvelle">) {
   await connection();
@@ -85,7 +87,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
     );
   }
   // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage du formulaire.
-  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];  return (
+  const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
+  return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
       <Bloc titre="Destination">
@@ -105,7 +108,14 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
       {/* US-0909 : sans Bête disponible, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. */}
       {escorte.length > 0 ? <Escorte especes={escorte} /> : <SansEscorte />}
       <Sejour />
-      <Partir libres={explorateurs.libres} />
+      {/* US-0910 : tout ce qui a été choisi, à relire avant de partir, à l'heure et au rythme du jeu ; rien d'une Case refusée. */}
+      <Recapitulatif
+        libres={explorateurs.libres}
+        especes={escorte}
+        destination={destination && "fiche" in destination ? destinationChoisie(destination.fiche) : null}
+        maintenant={maintenant()}
+        vitesse={vitesse()}
+      />
     </main>
   );
 }

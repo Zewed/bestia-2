@@ -27,12 +27,12 @@ import { Partir } from "./Partir";
 
 /** L'adresse de l'écran d'Expédition, avec `recherche` (« ?q=3&r=-5 ») : un rechargement, ou un lien. */
 const ouvrir = (recherche = "") => window.history.replaceState(null, "", `/jeu/expeditions/nouvelle${recherche}`);
-/** L'écran réduit à ce qui compte ici : le bloc Explorateurs, puis le départ, comme la page les range. */
+/** L'écran réduit à ce qui compte ici : le bloc Explorateurs, puis le départ, comme la page les range, la destination déjà choisie (US-0910). */
 const ecran = (libres: number, total: number) =>
   render(
     <>
       <Explorateurs libres={libres} total={total} />
-      <Partir libres={libres} />
+      <Partir libres={libres} destination />
     </>,
   );
 
