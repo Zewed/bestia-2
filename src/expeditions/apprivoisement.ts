@@ -29,6 +29,14 @@ export function aPortee(escorte: number | null, bete: Pick<BeteSurLaCase, "force
 }
 
 /**
+ * US-0942 : la force qui manque à l'escorte `escorte` pour avoir la Bête `bete` à portée : l'écart entre la force de son
+ * Espèce et celle de l'escorte, nulle sans escorte (null) ; aucune quand elle l'a à portée (aPortee).
+ */
+export function forceQuiManque(escorte: number | null, bete: Pick<BeteSurLaCase, "force" | "rareteId">): number {
+  return aPortee(escorte, bete) ? 0 : bete.force - (escorte ?? 0);
+}
+
+/**
  * US-0932 : l'instant où l'Expédition `x` voit la Bête `bete` : dès qu'elles sont toutes deux sur la Case, à l'apparition
  * de la Bête ou à l'arrivée de l'Expédition, si aucune n'en est partie ; null si elles ne s'y croisent pas.
  */

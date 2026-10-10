@@ -57,7 +57,7 @@ type AVoir = {
  * US-0934 : la force de l'escorte de chacune des Expéditions `ids` (US-0905), tirée des caractéristiques de ses Espèces ;
  * une Expédition sans escorte n'y figure pas.
  */
-async function forcesDesEscortes(base: Pool | PoolClient, ids: number[]): Promise<Map<number, number>> {
+export async function forcesDesEscortes(base: Pool | PoolClient, ids: number[]): Promise<Map<number, number>> {
   const { rows } = await base.query<{ id: number; attaque: number; vie: number; nombre: number }>(
     `select s.expedition_id as id, e.attaque, e.vie, s.nombre from expedition_escorte s join espece e on e.id = s.espece_id
      where s.expedition_id = any($1::int[])`,
@@ -69,7 +69,7 @@ async function forcesDesEscortes(base: Pool | PoolClient, ids: number[]): Promis
 }
 
 /** US-0934 : la force d'une Bête de chacune des Espèces `ids` (US-0905). */
-async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): Promise<Map<string, number>> {
+export async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): Promise<Map<string, number>> {
   const { rows } = await base.query<{ id: string; attaque: number; vie: number }>("select id, attaque, vie from espece where id = any($1::text[])", [ids]);
   return new Map(rows.map(({ id, ...espece }) => [id, forceDUneBete(espece)]));
 }

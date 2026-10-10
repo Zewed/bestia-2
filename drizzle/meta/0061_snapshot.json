@@ -1,6 +1,6 @@
 {
   "id": "89d078c1-2435-4ed8-91e3-52a021900193",
-  "prevId": "97c1c3a4-08a7-4a8d-8eed-66ed616fadcd",
+  "prevId": "d932fb62-e677-483d-befe-31f9ae05feb3",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2452,6 +2452,12 @@
         "lu_le": {
           "name": "lu_le",
           "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rencontres": {
+          "name": "rencontres",
+          "type": "jsonb",
           "primaryKey": false,
           "notNull": false
         }
