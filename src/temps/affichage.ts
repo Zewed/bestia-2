@@ -35,11 +35,12 @@ export function jusquAEnviron(fin: Date, maintenant: Date, fuseau: string): stri
   const pile = fin.getTime() - (minute * 60 + second) * 1000 - fin.getUTCMilliseconds();
   const arrondie = new Date(minute >= 30 ? pile + HEURE_MS : pile);
   const h = parties(arrondie).hour;
+  // Minuit se dit « minuit », jamais « 0 h ».
+  const dite = h === 0 ? "minuit" : `${h} h`;
   const jour = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: fuseau });
   const [ce, aujourdhui, demain] = [arrondie, maintenant, new Date(maintenant.getTime() + 24 * HEURE_MS)].map((instant) => jour.format(instant));
-  if (ce === aujourdhui) return `jusqu'à ${h} h environ`;
-  if (h === 0 && ce === demain) return "jusqu'à minuit environ";
-  return `jusqu'au ${ce} à ${h} h environ`;
+  if (ce === aujourdhui || (h === 0 && ce === demain)) return `jusqu'à ${dite} environ`;
+  return `jusqu'au ${ce} à ${dite} environ`;
 }
 
 /**

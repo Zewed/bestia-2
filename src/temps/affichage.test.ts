@@ -50,6 +50,8 @@ describe("jusqu'à quand une Bête repérée devrait rester, à l'heure près (U
 
   it("dit « minuit » pour la nuit qui vient, et le jour pour un autre jour", () => {
     expect(jusqua("2026-10-09T21:50:00Z")).toBe("jusqu'à minuit environ");
+    // Peu après minuit, pour une Bête qui part avant la demie : « minuit » encore, jamais « 0 h ».
+    expect(jusquAEnviron(new Date("2026-10-09T22:20:00Z"), new Date("2026-10-09T22:05:00Z"), "Europe/Paris")).toBe("jusqu'à minuit environ");
     expect(jusqua("2026-10-10T00:10:00Z")).toBe("jusqu'au 10 octobre à 2 h environ");
     expect(jusqua("2026-10-11T08:05:00Z")).toBe("jusqu'au 11 octobre à 10 h environ");
   });
