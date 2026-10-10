@@ -100,6 +100,46 @@ describe.skipIf(!URL_TEST)("les Récits d'un Territoire (US-0324, sur base)", ()
     expect(await marquerUnRecitLu(pool, joueur.territoireId, -1, a("12:00"))).toBe(false);
   });
 
+  it("joint au Récit d'un retour ses Rencontres, dans leur ordre, chacune avec le nom, l'illustration et la Rareté de son Espèce (US-0940)", async () => {
+    const { territoireId } = await naitre();
+    /** La première Espèce de la Rareté `rareteId`, avec le nom de celle-ci. */
+    const uneEspece = async (rareteId: string) =>
+      (
+        await pool.query<{ id: string; nom: string; illustration: string | null; rareteId: string; rarete: string }>(
+          `select e.id, e.nom, e.illustration, e.rarete_id as "rareteId", ra.nom as rarete from espece e join rarete ra on ra.id = e.rarete_id
+           where e.rarete_id = $1 order by e.id limit 1`,
+          [rareteId],
+        )
+      ).rows[0];
+    const [rare, commune] = [await uneEspece("rare"), await uneEspece("commune")];
+    expect([rare.rareteId, commune.rareteId]).toEqual(["rare", "commune"]);
+    const rencontres = [
+      { especeId: rare.id, vueLe: a("10:00"), issue: "restee" as const, sexe: null, nouvelleEspece: true },
+      { especeId: commune.id, vueLe: a("10:40"), issue: "apprivoisee" as const, sexe: "femelle" as const, nouvelleEspece: false },
+    ];
+    const retour = await ecrireUnRecit(pool, territoireId, { titre: "Retour d'Expédition", texte: "Deux Bêtes se sont montrées.", survenuLe: a("12:00") }, rencontres);
+    // Les autres Récits, et un retour sans Bête, restent du texte.
+    const famine = await ecrireUnRecit(pool, territoireId, { titre: "Famine", texte: "Un Habitant est parti.", survenuLe: a("11:00") });
+    const calme = await ecrireUnRecit(pool, territoireId, { titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("10:00") }, []);
+
+    expect(await recitsDuTerritoire(pool, territoireId)).toEqual([
+      {
+        id: retour,
+        titre: "Retour d'Expédition",
+        texte: "Deux Bêtes se sont montrées.",
+        survenuLe: a("12:00"),
+        luLe: null,
+        rencontres: [
+          { ...rencontres[0], nom: rare.nom, illustration: rare.illustration, rarete: { id: "rare", nom: rare.rarete } },
+          { ...rencontres[1], nom: commune.nom, illustration: commune.illustration, rarete: { id: "commune", nom: commune.rarete } },
+        ],
+      },
+      { id: famine, titre: "Famine", texte: "Un Habitant est parti.", survenuLe: a("11:00"), luLe: null },
+      { id: calme, titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("10:00"), luLe: null },
+    ]);
+    expect((await recitsDuTerritoire(pool, territoireId)).map((r) => "rencontres" in r)).toEqual([true, false, false]);
+  });
+
   it("les retire avec leur Territoire", async () => {
     const { compteId, territoireId } = await naitre();
     await ecrireUnRecit(pool, territoireId, { titre: "Éphémère", texte: "Bientôt parti.", survenuLe: a("10:00") });

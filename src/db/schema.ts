@@ -550,6 +550,12 @@ export const recit = pgTable(
     survenuLe: timestamp("survenu_le", { withTimezone: true }).notNull(),
     /** L'heure du jeu où le joueur l'a ouvert ; null tant qu'il ne l'a pas lu. */
     luLe: timestamp("lu_le", { withTimezone: true }),
+    /**
+     * US-0940 : le récit de Rencontre d'un retour d'Expédition : chaque Bête vue, à son heure, et ce qu'il en advint
+     * (RencontreRacontee, src/monde/recits.ts), dans l'ordre des apparitions ; null pour les autres Récits, qui restent du
+     * texte.
+     */
+    rencontres: jsonb("rencontres"),
   },
   (t) => [index("recit_par_territoire").on(t.territoireId, t.survenuLe)],
 );
