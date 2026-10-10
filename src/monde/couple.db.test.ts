@@ -385,8 +385,9 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
         [t.territoireId, bete.caseId, apres(retour, HEURE)],
       );
       await client.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, 1)", [rows[0].id, escorte]);
-      // Et un mâle et une femelle d'une troisième Espèce, sans arrivée connue : réunis au marque-page du Territoire.
-      sansArrivee = [escorte, especeId].includes("pigeon") ? "marmotte" : "pigeon";
+      // Et un mâle et une femelle d'une troisième Espèce, sans arrivée connue : réunis au marque-page du Territoire. Une
+      // Espèce validée : celles d'essai ne se nomment pas dans le code (US-0924).
+      sansArrivee = ["souris", "poule", "pigeon"].find((id) => id !== escorte && id !== especeId)!;
       await client.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 1), ($1, $2, 'femelle', 1)", [
         t.territoireId,
         sansArrivee,
