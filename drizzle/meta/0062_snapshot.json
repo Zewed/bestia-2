@@ -1,6 +1,6 @@
 {
   "id": "9c160652-c697-416a-88c8-a3aeeda247ba",
-  "prevId": "d932fb62-e677-483d-befe-31f9ae05feb3",
+  "prevId": "89d078c1-2435-4ed8-91e3-52a021900193",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -791,6 +791,72 @@
           "value": "\"compte\".\"empreinte_mot_de_passe\" ~ '^scrypt\\$[0-9]+\\$[0-9]+\\$[0-9]+\\$[A-Za-z0-9+/=]+\\$[A-Za-z0-9+/=]+$'"
         }
       },
+      "isRLSEnabled": false
+    },
+    "public.couple": {
+      "name": "couple",
+      "schema": "",
+      "columns": {
+        "territoire_id": {
+          "name": "territoire_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "espece_id": {
+          "name": "espece_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reuni_le": {
+          "name": "reuni_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "couple_territoire_id_territoire_id_fk": {
+          "name": "couple_territoire_id_territoire_id_fk",
+          "tableFrom": "couple",
+          "tableTo": "territoire",
+          "columnsFrom": [
+            "territoire_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "couple_espece_id_espece_id_fk": {
+          "name": "couple_espece_id_espece_id_fk",
+          "tableFrom": "couple",
+          "tableTo": "espece",
+          "columnsFrom": [
+            "espece_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "couple_territoire_id_espece_id_pk": {
+          "name": "couple_territoire_id_espece_id_pk",
+          "columns": [
+            "territoire_id",
+            "espece_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": false
     },
     "public.couple_de_depart": {
