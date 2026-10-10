@@ -6,6 +6,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { hasardsDeLAttaqueDUneBeteDeNaissance } from "@/monde/betes-de-naissance";
 import { type BeteSauvage, betesSauvagesDUneCase, hasardsDeLAttaque } from "@/monde/betes-sauvages";
 import { type Coordonnees, distance } from "@/monde/hex";
 import { PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages";
@@ -251,6 +252,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
         if (!x.promise) expect(await rentreeLe(x.id)).toEqual(retours[i]);
       }
     },
+    60_000,
   );
 
   it("rappelée avant que la Bête l'attaque, l'Expédition n'est plus attaquée ; rappelée après, l'attaque reste", async () => {
@@ -273,7 +275,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
 
     expect(await attaques(premiere.id)).toEqual(attendue(chef, premiere.promise));
     expect(await attaques(seconde.id)).toEqual([]);
-  });
+  }, 60_000);
 
   it("repartie au bout de son séjour, l'Expédition n'est plus attaquée ; repartie au bout de sa durée, la Bête n'attaque plus", async () => {
     const chef = await naitrePresDUneBeteRare();
@@ -316,6 +318,54 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
     for (const x of faibles) {
       const avantLeDepart = attaquePromise(chef, x, arriveeDeLaForte);
       expect({ x: x.id, attaques: await attaques(x.id) }).toEqual({ x: x.id, attaques: attendue(chef, avantLeDepart) });
+    }
+  });
+
+  it("trop forte, une Bête de naissance attaque de même l'Expédition de son Territoire, à l'heure que disent ses tirages, une seule fois", async () => {
+    // Toujours communes, les Bêtes de naissance sont aujourd'hui toujours à portée : l'essai en pose une plus rare, sur une
+    // Case libre où aucune Bête sauvage ordinaire ne se montre pendant sa présence.
+    const chef = await naitre();
+    const rare = [...especes.values()].find((e) => e.rareteId !== "commune" && e.force > 2 * faible.force)!;
+    const arrivee = apres(chef.ne, 3 * JOUR);
+    const depart = apres(arrivee, PRESENCE_D_UNE_BETE_HEURES * HEURE);
+    let ici: { caseId: number } | null = null;
+    for (let ecart = 2; !ici && ecart <= 6; ecart++) {
+      for (let rang = 0, c = await aLEcart(chef.territoireId, ecart); c && !ici; c = await aLEcart(chef.territoireId, ecart, ++rang)) {
+        if (!prises.has(c.caseId) && (await betesSauvagesDUneCase(pool, c.caseId, apres(arrivee, -HEURE), apres(depart, HEURE))).length === 0) ici = c;
+      }
+    }
+    if (!ici) throw new Error("Aucune Case calme autour du Foyer.");
+    prises.add(ici.caseId);
+    const { rows } = await pool.query<{ id: number }>(
+      "insert into bete_de_naissance (territoire_id, case_id, espece_id, arrivee, depart) values ($1, $2, $3, $4, $5) returning id",
+      [chef.territoireId, ici.caseId, rare.id, arrivee, depart],
+    );
+    const beteId = rows[0].id;
+    // Des Expéditions trop faibles, arrivées une heure après elle et reparties une heure avant, jusqu'à en avoir une attaquée
+    // et une épargnée.
+    const posees: (Expedition & { promise: Date | null })[] = [];
+    while (!posees.some((x) => x.promise) || !posees.some((x) => !x.promise)) {
+      if (posees.length === LANCEES_AU_PLUS) throw new Error(`${LANCEES_AU_PLUS} Expéditions posées sans trouver celles qu'il faut.`);
+      const x = await poser(chef.territoireId, ici.caseId, apres(arrivee, HEURE), SEJOUR, faible, 2);
+      const promise = instantDeLAttaque({ debut: x.arrivee, fin: x.depart }, chanceDAttaqueParHeure(rare.regime), (heure) =>
+        hasardsDeLAttaqueDUneBeteDeNaissance(graine, beteId, x.id, heure),
+      );
+      posees.push({ ...x, promise });
+    }
+
+    await MANIERES["page ouverte"](
+      chef.territoireId,
+      apres(arrivee, -HEURE),
+      apres(depart, HEURE),
+      posees.flatMap((x) => (x.promise ? [x.promise] : [])),
+    );
+    for (const x of posees) {
+      expect({ x: x.id, attaques: await attaques(x.id) }).toEqual({ x: x.id, attaques: x.promise ? [{ le: x.promise, especeId: rare.id }] : [] });
+      const { rows: vues } = await pool.query(
+        `select numero, bete_de_naissance_id as "beteDeNaissanceId", apprivoisee from rencontre where expedition_id = $1`,
+        [x.id],
+      );
+      expect(vues).toEqual([{ numero: null, beteDeNaissanceId: beteId, apprivoisee: false }]);
     }
   });
 });

@@ -761,8 +761,8 @@ export const expeditionEscorte = pgTable(
  * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici. US-0937 : `sexe`,
  * celui de la Bête apprivoisée, tiré à chances égales à l'Apprivoisement (src/expeditions/sexe.ts), qui ne change plus ;
  * null pour une Bête restée sur sa Case. US-0943 : `attaque_le`, l'instant du jeu où la Bête, trop forte pour l'escorte et
- * restée sur sa Case, a attaqué l'Expédition, au plus une fois par séjour (src/expeditions/attaque.ts) ; null tant qu'elle
- * ne l'a pas fait. Le combat (US-0944) la lira.
+ * restée sur sa Case, a attaqué l'Expédition, au plus une fois par Bête et par Expédition (src/expeditions/attaque.ts) ;
+ * null tant qu'elle ne l'a pas fait. Le combat (US-0944) la lira.
  */
 export const rencontre = pgTable(
   "rencontre",

@@ -196,8 +196,8 @@ async function retenirLesVues(base: Pool | PoolClient, territoireId: number, aVo
  * son `Ensemble` avec l'Expédition qui la voit, à l'instant que disent ses tirages (instantDeLAttaque), à la chance de son
  * régime : celle d'une Bête sauvage ordinaire tirée de la graine de son Monde, de sa Case et de son numéro, celle d'une
  * Bête de naissance de la graine et de sa ligne. Seule la première attaque de chaque Bête compte, même tombée dans une
- * tranche passée : au plus une par séjour, la même quel que soit le découpage du temps. Dans la transaction de
- * retenirLesRencontres.
+ * tranche passée : au plus une par Bête et par Expédition, la même quel que soit le découpage du temps. Dans la
+ * transaction de retenirLesRencontres.
  */
 async function retenirLesAttaques(base: Pool | PoolClient, ensembles: Ensemble[], de: Date, a: Date): Promise<void> {
   const { rows: cases } = await base.query<{ id: number; q: number; r: number; graine: string }>(

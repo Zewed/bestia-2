@@ -2,16 +2,19 @@
 // Case et, tant que toutes deux y sont, peut s'en prendre à l'Expédition : une chance par heure passée ensemble
 // (CHANCE_D_ATTAQUE_PAR_HEURE), selon son régime (décidé le 2026-10-09). Chaque heure, comptée depuis leur Rencontre, a
 // ses tirages, fonction de la graine du Monde, de la Bête, de l'Expédition et de l'heure (src/monde/betes-sauvages.ts) :
-// la même attaque, au même instant, en direct, au rattrapage ou par la tâche planifiée. Elle attaque au plus une fois par
-// séjour ; celle qui n'attaque pas laisse l'Expédition finir son séjour normalement. Les Rencontres l'appliquent et la
-// retiennent à son instant (src/expeditions/rencontres.ts), pour le combat (US-0944). Côté serveur comme dans le navigateur.
+// la même attaque, au même instant, en direct, au rattrapage ou par la tâche planifiée. Chaque Bête attaque au plus une
+// fois chaque Expédition qu'elle voit ; plusieurs Bêtes trop fortes peuvent attaquer la même, chacune à son tour, jusqu'à
+// ce que la fuite (US-0945) mette fin au séjour à la première. Celle qui n'attaque pas laisse l'Expédition finir son séjour
+// normalement. Les Rencontres l'appliquent et la retiennent à son instant (src/expeditions/rencontres.ts), pour le combat
+// (US-0944). Côté serveur comme dans le navigateur.
+import type { regime } from "@/db/schema";
 import type { HasardsDeLAttaque } from "@/monde/betes-sauvages";
 import { CHANCE_D_ATTAQUE_PAR_HEURE } from "@/reglages";
 
 const HEURE_MS = 3_600_000;
 
-/** Le régime d'une Espèce (donnees/especes.yaml). */
-export type Regime = "carnivore" | "herbivore" | "omnivore";
+/** Le régime d'une Espèce (donnees/especes.yaml), celui de la base : un régime ajouté là sans sa chance ici ne compile pas. */
+export type Regime = (typeof regime.enumValues)[number];
 
 /** US-0943 : ce que le régime fait de la chance d'attaque : un carnivore est plus agressif, un herbivore moins (décidé le 2026-10-09). */
 const SELON_LE_REGIME: Record<Regime, number> = { carnivore: 2, omnivore: 1, herbivore: 0.5 };
