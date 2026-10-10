@@ -29,8 +29,11 @@ const JOUR = 24 * HEURE;
 const CALME = PRESENCE_D_UNE_BETE_HEURES * HEURE + 6 * HEURE;
 /** Le séjour d'une Expédition arrivée une heure après la Bête et repartie une heure avant elle. */
 const SEJOUR = (PRESENCE_D_UNE_BETE_HEURES - 2) * HEURE;
-/** Au plus tant d'Expéditions lancées vers une même Bête pour trouver celles qu'un essai demande. */
-const LANCEES_AU_PLUS = 40;
+/**
+ * Au plus tant d'Expéditions lancées vers une même Bête pour trouver celles qu'un essai demande : avec un herbivore, à 5 %
+ * par heure, 40 manquaient encore une fois sur vingt-cinq à l'essai d'un séjour repris au bout de deux heures.
+ */
+const LANCEES_AU_PLUS = 100;
 
 /** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
 const MONDE_D_ESSAI = "Essai de l'attaque de la Bête trop forte (US-0943)";
