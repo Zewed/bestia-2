@@ -3,9 +3,13 @@
 import { useId, useState, useTransition } from "react";
 import { lireUnRecit } from "./actions";
 import styles from "./page.module.css";
+import { type RencontreAffichee, RencontresDuRecit } from "./RencontresDuRecit";
 
-/** Un Récit tel que la liste le montre : sa date déjà écrite par le serveur, dans le fuseau du joueur. */
-export type RecitAffiche = { id: number; titre: string; texte: string; instant: string; quand: string; lu: boolean };
+/**
+ * Un Récit tel que la liste le montre : sa date déjà écrite par le serveur, dans le fuseau du joueur. US-0940 : et les
+ * Rencontres d'un retour d'Expédition, le cas échéant.
+ */
+export type RecitAffiche = { id: number; titre: string; texte: string; instant: string; quand: string; lu: boolean; rencontres?: RencontreAffichee[] };
 
 /**
  * US-0324 : une ligne par Récit, son titre et sa date ; un Récit non lu porte la marque « nouveau ».
@@ -37,9 +41,17 @@ export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
         const ouvert = ouverts.has(recit.id);
         const nonLu = !recit.lu && !lusIci.has(recit.id);
         const idTexte = `${prefixe}-recit-${recit.id}`;
+        // US-0940 : les Rencontres d'un retour se déplient sous son texte, du même toucher.
+        const idRencontres = recit.rencontres?.length ? `${idTexte}-rencontres` : null;
         return (
           <li key={recit.id} className={styles.recit} data-non-lu={nonLu ? "" : undefined}>
-            <button type="button" className={styles.entete} aria-expanded={ouvert} aria-controls={idTexte} onClick={() => basculer(recit)}>
+            <button
+              type="button"
+              className={styles.entete}
+              aria-expanded={ouvert}
+              aria-controls={idRencontres ? `${idTexte} ${idRencontres}` : idTexte}
+              onClick={() => basculer(recit)}
+            >
               <span className={styles.titreRecit}>
                 {recit.titre}
                 {nonLu ? <span className={styles.nouveau}>nouveau</span> : null}
@@ -54,6 +66,7 @@ export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
             <p id={idTexte} className={styles.texte} hidden={!ouvert}>
               {recit.texte}
             </p>
+            {idRencontres ? <RencontresDuRecit id={idRencontres} rencontres={recit.rencontres!} hidden={!ouvert} /> : null}
           </li>
         );
       })}

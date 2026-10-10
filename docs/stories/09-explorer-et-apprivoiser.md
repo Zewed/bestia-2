@@ -441,6 +441,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0940 · Le récit de Rencontre
 **En tant que** joueur, **je veux** un récit détaillé de chaque Rencontre, **afin de** revivre ce qui s'est passé sur la Case.
 
+- **Statut** : Livrée le 2026-10-09 (Armada, THE-1399, Zewed/bestia-2#37). Le récit de retour garde son texte comme résumé ; dessous se déplie chaque Bête vue, à son heure : vignette, Espèce, Rareté, et ce qu'il en advint : « Apprivoisée, mâle » ou « femelle », « Trop forte, restée sur sa Case : il manquait N de force », ou « Repartie à la fin de sa durée ». Une Bête apprivoisée ou une nouvelle Espèce est mise en avant (« Nouvelle Espèce au Bestiaire »). Sur mobile, les vignettes se réduisent sans que le texte déborde. Les Rencontres sont retenues avec le Récit (migration 0060).
 - **Débloquée par** : US-0933, US-0938, US-0917
 - **Critères d'acceptation** :
   - Le récit liste chaque Bête vue, à son heure : illustration, Espèce, Rareté.

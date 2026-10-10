@@ -6,7 +6,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
 import { recitsDuTerritoire } from "@/monde/recits";
-import { formaterInstant } from "@/temps/affichage";
+import { formaterHeure, formaterInstant, formaterJourEtHeure } from "@/temps/affichage";
 import { ListeDesRecits } from "./ListeDesRecits";
 import styles from "./page.module.css";
 
@@ -14,6 +14,17 @@ export const metadata: Metadata = { title: "Récits" };
 
 /** Le fuseau des dates, comme sur la page de contrôle, en attendant celui de chaque joueur. */
 const FUSEAU = "Europe/Paris";
+
+/** Le jour d'un instant dans le fuseau du joueur, pour comparer deux instants. */
+const jour = (instant: Date) => new Intl.DateTimeFormat("fr-FR", { dateStyle: "short", timeZone: FUSEAU }).format(instant);
+
+/**
+ * US-0940 : l'heure d'une Rencontre, « 14:05 » ; un séjour peut passer minuit, d'où son jour aussi, « 12 octobre à
+ * 14:05 », quand il n'est plus celui de la Rencontre d'avant, ou du retour pour la première (`reference`).
+ */
+function heureDUneRencontre(vueLe: Date, reference: Date): string {
+  return jour(vueLe) === jour(reference) ? formaterHeure(vueLe, FUSEAU) : formaterJourEtHeure(vueLe, FUSEAU);
+}
 
 /**
  * La page Récits (US-0324), ouverte depuis la navigation : ce qui est arrivé sur le Territoire, du plus
@@ -40,6 +51,20 @@ export default async function Recits() {
               instant: r.survenuLe.toISOString(),
               quand: formaterInstant(r.survenuLe, FUSEAU),
               lu: r.luLe !== null,
+              // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
+              ...(r.rencontres && {
+                rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque }, i, toutes) => ({
+                  instant: vueLe.toISOString(),
+                  heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
+                  nom,
+                  illustration,
+                  rarete,
+                  issue,
+                  sexe,
+                  nouvelleEspece,
+                  ...(manque && { manque }),
+                })),
+              }),
             }))}
           />
         )}
