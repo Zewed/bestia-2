@@ -515,7 +515,7 @@
 }
 
 .solde[data-nulle] {
-  color: var(--sur-encre-pale);
+  color: var(--galet);
 }
 
 .solde[data-negatif] {

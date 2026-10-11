@@ -25,6 +25,7 @@ export function Scene(proprietes: Omit<ComponentProps<typeof CarteDuJeu>, "quitt
       <div className={styles.monde}>
         <CarteDuJeu {...proprietes} quitter={quitter} />
       </div>
+      <div className={styles.nuages} aria-hidden="true" />
       <div className={styles.lumiere} aria-hidden="true" />
     </div>
   );

@@ -12,8 +12,7 @@
 
 /* Juste sous la plaque du volet, ou en tête d'une colonne : pas de filet au-dessus. */
 :where(h1) + .bloc,
-:where(h1) + * > .bloc:first-child,
-.bloc:first-child {
+.bloc:where(:first-child) {
   padding-top: 4px;
   border-top: 0;
   box-shadow: none;
@@ -29,6 +28,7 @@
 /* L'étiquette : un ruban de bois, ses lettres de jeu en petites capitales claires. */
 .titre {
   display: inline-flex;
+  justify-self: start;
   align-items: center;
   min-height: 26px;
   margin-bottom: 12px;

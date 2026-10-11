@@ -4,6 +4,10 @@
  */
 .recap {
   margin-top: var(--ecart);
+}
+
+/* Plus précis que la partie qui le porte (components/Bloc.module.css), dont il remplace le filet par son creux. */
+section.recap {
   padding: 16px 18px 18px;
   border: 0;
   border-radius: var(--arrondi);
@@ -62,6 +66,9 @@
     display: flex;
     flex-direction: column;
     max-height: calc(var(--hauteur-utile) - 24px);
+  }
+
+  section.recap {
     padding: 12px 14px;
     box-shadow:
       inset 0 0 0 2px var(--dore),

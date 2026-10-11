@@ -52,9 +52,9 @@ function publierLaHauteur(panneau: HTMLElement): void {
 
 /** Les couleurs de la carte en CSS, que le SVG comprend telles quelles : celles que CarteDuJeu donne au <canvas> (un test le vérifie). */
 const PEINTURE: Omit<Peinture, "fonds"> = {
-  bord: "color-mix(in oklch, var(--encre) 14%, transparent)",
-  motifSombre: "color-mix(in oklch, var(--encre) 26%, transparent)",
-  motifClair: "color-mix(in oklch, var(--ivoire) 45%, transparent)",
+  bord: "color-mix(in oklch, var(--bois-sombre) 38%, transparent)",
+  motifSombre: "color-mix(in oklch, var(--bois-sombre) 30%, transparent)",
+  motifClair: "color-mix(in oklch, var(--ivoire) 50%, transparent)",
   encre: "var(--encre)",
   repere: "var(--citron)",
 };

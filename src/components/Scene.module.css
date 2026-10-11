@@ -40,3 +40,32 @@
     radial-gradient(ellipse 120% 100% at 60% 50%, transparent 55%, var(--ombre-du-soir) 100%);
   pointer-events: none;
 }
+
+/* Des bancs de brume qui passent lentement sur le Monde : la carte vit, même quand rien n'y bouge. */
+.nuages {
+  position: absolute;
+  inset: -10% -20%;
+  background:
+    radial-gradient(ellipse 18% 9% at 22% 28%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 26% 11% at 68% 62%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 15% 8% at 44% 86%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 20% 9% at 86% 18%, var(--nuage), transparent 70%);
+  animation: deriver 80s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes deriver {
+  from {
+    transform: translateX(-5%);
+  }
+
+  to {
+    transform: translateX(5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nuages {
+    animation: none;
+  }
+}

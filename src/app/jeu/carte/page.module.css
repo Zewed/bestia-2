@@ -22,10 +22,56 @@
   pointer-events: none;
 }
 
+/* Des bancs de brume qui passent lentement sur le Monde, comme sur la scène (components/Scene.module.css). */
+.page::before {
+  content: "";
+  position: absolute;
+  inset: -10% -20%;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 18% 9% at 22% 28%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 26% 11% at 68% 62%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 15% 8% at 44% 86%, var(--nuage), transparent 70%),
+    radial-gradient(ellipse 20% 9% at 86% 18%, var(--nuage), transparent 70%);
+  animation: deriver 80s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes deriver {
+  from {
+    transform: translateX(-5%);
+  }
+
+  to {
+    transform: translateX(5%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page::before {
+    animation: none;
+  }
+}
+
 /* US-0425 : la carte et ses boutons de zoom, posés par-dessus, dans toute la place de la page. */
 .cadre {
   position: relative;
   height: 100%;
+}
+
+/*
+ * Le grain d'une peinture, fondu dans les couleurs de la carte : les Cases et la brume prennent la matière du Monde peint
+ * des illustrations. Il laisse passer les gestes, sous les boutons de la carte.
+ */
+.cadre::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.33 0 0 0 0 0.2 0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  opacity: 0.8;
+  pointer-events: none;
 }
 
 /*

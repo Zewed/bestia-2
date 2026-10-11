@@ -32,8 +32,8 @@
   /* Sur le bois, l'Encre ou une image */
   --blanc-chaud: oklch(0.99 0.003 90);
   --sur-encre-discret: oklch(0.86 0.03 80);
-  /* Aussi la brume du brouillard sur la carte : un gris chaud de fin de jour. */
-  --sur-encre-pale: oklch(0.72 0.016 65);
+  /* Aussi le brouillard sur la carte : la brume bleue de la nuit qui tombe sur les terres qu’on n’a pas vues. */
+  --sur-encre-pale: oklch(0.385 0.02 252);
   --sur-encre-survol: oklch(1 0 0 / 0.12);
   --sur-encre-trait: oklch(0.85 0.1 82 / 0.35);
   --sur-encre-eteint: oklch(1 0 0 / 0.3);
@@ -54,8 +54,9 @@
   /* La scène : la mer du soir au-delà du Monde, la lumière du soleil couchant, l'ombre des bords. */
   --mer-du-soir: oklch(0.36 0.07 232);
   --mer-profonde: oklch(0.25 0.055 245);
-  --soleil: oklch(0.86 0.13 72 / 0.3);
+  --soleil: oklch(0.86 0.13 72 / 0.42);
   --ombre-du-soir: oklch(0.18 0.04 40 / 0.55);
+  --nuage: oklch(0.97 0.03 78 / 0.2);
 
   /* Signaux : un gain, un danger, une attente */
   --bon: oklch(0.5 0.12 155);
