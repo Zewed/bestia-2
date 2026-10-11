@@ -1,27 +1,26 @@
 /*
  * LE KIT DU JEU — comment les pages s'en servent.
  *
- * Bestia se joue sur sa carte : le Monde peint reste l'écran principal, et tout le reste s'ouvre par-dessus lui.
- *
  * 1. Les couleurs, les formes et les polices sont des noms (src/styles/palette.css, formes.css, typographie.css) :
- *    une page n'écrit jamais une couleur en clair. Le volet est en paille claire (--bloc, ses creux --bloc-2), les
- *    pièces posées sur la carte en bois ciré (--bois, --bois-clair, --bois-sombre) cerclé de doré (--dore), l'action
- *    principale au miel (--miel, sa lèvre --miel-fonce), le texte à l'Encre. Les titres, les nombres et les boutons
- *    prennent --police-titre ; le reste, --police.
- * 2. Le cadre est le même partout dans le jeu, et aucune page ne le refait :
- *    - la scène (src/app/jeu/layout.tsx, components/Scene) : la carte du Monde en fond, vivante, sous tout le reste ;
- *    - le haut de l'écran (components/BarreHaut et ses pièces) : le blason du loup et le nom du chef à gauche, les
- *      Stocks en jetons à droite, l'avertissement de famine dessous ;
- *    - la rangée des médaillons au pied de l'écran (components/Navigation), l'Expédition au milieu, plus grande ;
- *    - le volet (components/Volet) : chaque page du jeu autre que la Carte s'ouvre dedans, à gauche de la carte sur
- *      ordinateur, monté du bas sur un téléphone, la carte toujours visible au-dessus. Son premier <h1> devient la
- *      plaque de bois du volet, à côté du médaillon de la page ; sa croix ramène à la carte.
- * 3. Dans un volet, une page range son contenu en parties (components/Bloc) : une étiquette en petites capitales,
- *    puis le contenu posé sur la paille, les parties séparées d'un filet. Les lignes qu'on choisit (un Habitant, une
- *    Espèce, une durée) sont des cases creusées en --bloc-2. Pas de grille de cartes blanches.
- * 4. Un bouton est un jeton qu'on presse : coins ronds (--arrondi-moyen), relief (--relief : éclairé dessus, ombré
- *    dessous), 44 px au moins, la main au survol et un contour d'Encre au clavier ; l'action principale au miel, les
- *    autres à l'Encre, ou en paille cernée de --trait quand elles sont secondaires.
+ *    une page n'écrit jamais une couleur en clair. Les titres, les nombres et les boutons prennent --police-titre
+ *    (des lettres rondes de jeu) ; le reste, --police.
+ * 2. Le cadre du jeu est le même sur chaque écran, et aucune page ne le refait (components/BarreHaut et ses pièces) :
+ *    en haut à gauche le blason du loup et la plaque du nom du chef, en haut à droite les Stocks en jetons de bois,
+ *    au pied de l'écran la rangée des médaillons, l'Expédition au milieu, plus grande. Les médaillons sont la
+ *    navigation : il n'y a rien d'autre à ouvrir ni à fermer.
+ * 3. Entre le haut et la rangée des médaillons, chaque écran est le fond lui-même, d'un bord à l'autre : une page donne
+ *    son décor (--decor : une illustration du jeu, que la règle « ::before » ci-dessous assombrit et dore de la lumière
+ *    du soir), ou est la carte elle-même (/jeu/carte, marquée data-carte). Le cadre passe par-dessus ; la page défile
+ *    dessous.
+ * 4. Sur le décor, tout est taillé dans le bois. Dans un écran du jeu, les noms des couleurs y prennent leur sens de
+ *    jeu (la règle « main » ci-dessous) : --bloc est le bois des pièces, --bloc-2 le creux sombre d'une case, --encre
+ *    le miel des actions et des nombres, --texte-2 et --texte-discret les clairs du texte. Une page écrit donc ses
+ *    règles avec les mêmes noms partout, et elles se lisent sur le bois.
+ * 5. Une page range ce qu'elle montre en planches (components/Bloc : une planche de bois cerclée d'or, son étiquette en
+ *    ruban). Les Habitants sont des portraits, les Bêtes des vignettes rondes, les Ressources leurs icônes peintes.
+ * 6. Une seule famille de boutons, des jetons qu'on presse, 44 px au moins, la main au survol, un contour au clavier :
+ *    l'action au miel (fond --encre dans un écran du jeu, ou --miel), sa lèvre plus sombre dessous ; la seconde en bois
+ *    cerclé d'or (fond --bloc, bord --trait) ; jamais de bouton noir.
  */
 * {
   box-sizing: border-box;
@@ -40,12 +39,64 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dans le jeu, rien ne défile autour de la carte : le volet défile seul, et la mer du soir borde le Monde. */
+/* Dans le jeu, le haut est posé sur l'écran : la page commence sous lui, et la nuit du soir borde tout. */
+html:has([data-onglets]) {
+  background: var(--bois-sombre);
+}
+
 body:has([data-onglets]) {
-  height: 100dvh;
-  overflow: hidden;
-  padding: 0;
-  background: var(--mer-profonde);
+  padding-top: var(--hauteur-barre);
+  background: none;
+}
+
+/*
+ * Un écran du jeu, hors de la carte : son décor reste derrière lui (isolation), et les noms des couleurs y prennent
+ * leur sens de jeu, sur le bois. La carte garde les siens.
+ */
+body:has([data-onglets]) main:not([data-carte]) {
+  --bloc: var(--bois);
+  --bloc-2: var(--bois-sombre);
+  --bloc-3: var(--bois-clair);
+  --trait: var(--dore-sombre);
+  --trait-doux: var(--bois-clair);
+  --encre: var(--miel);
+  --encre-survol: var(--miel-survol);
+  --ivoire: var(--voile);
+  --blanc-chaud: var(--voile);
+  --texte-2: var(--sur-encre-discret);
+  --texte-discret: var(--galet);
+  --texte-pale: var(--galet);
+  --survol: var(--sur-encre-survol);
+  --mauvais: var(--rose);
+  --mauvais-doux: var(--sur-encre-survol);
+  --bon: var(--menthe-vive);
+  position: relative;
+  isolation: isolate;
+  color: var(--sur-image-doux);
+}
+
+/*
+ * Le décor d'un écran du jeu, d'un bord à l'autre de la fenêtre, fixé derrière lui : l'illustration que la page donne
+ * (--decor, cadrée sur --cadrage), sous un voile de bois sombre, plus fort en haut et en bas où se posent les pièces du
+ * cadre, et la lumière dorée d'une fin de journée qui vient du haut. Une page peut le refaire à sa façon (le Foyer).
+ */
+:where(body:has([data-onglets]) main:not([data-carte])) {
+  --decor: none;
+  --cadrage: 50% 50%;
+}
+
+:where(body:has([data-onglets]) main:not([data-carte]))::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 70% 50% at 60% 8%, var(--soleil), transparent 70%),
+    linear-gradient(to bottom, var(--ombre-du-soir), transparent 24%, transparent 58%, var(--ombre-du-soir) 86%, var(--bois-sombre)),
+    linear-gradient(color-mix(in oklch, var(--bois-sombre) 46%, transparent), color-mix(in oklch, var(--bois-sombre) 46%, transparent)),
+    var(--decor) var(--cadrage) / cover no-repeat,
+    radial-gradient(ellipse at 50% 20%, var(--mer-du-soir), var(--mer-profonde) 70%);
+  pointer-events: none;
 }
 
 h1,
@@ -54,6 +105,14 @@ h2 {
   font-weight: 400;
   font-synthesis: none;
   letter-spacing: 0.005em;
+}
+
+/* Le titre d'un écran du jeu, en grandes lettres de jeu, posé sur le décor. */
+body:has([data-onglets]) main:not([data-carte]) > h1:first-of-type {
+  color: var(--sur-image-doux);
+  text-shadow:
+    0 3px 0 var(--bois-sombre),
+    0 0 22px var(--bois-sombre);
 }
 
 button,

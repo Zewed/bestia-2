@@ -29,9 +29,6 @@
      hauteur sur la page ; rien tant qu'ils sont fermés, et sur ordinateur. */
   --hauteur-legende: 0px;
   --hauteur-fiche: 0px;
-  /* Le volet ouvert par-dessus la carte : sa largeur sur ordinateur, son haut sur un téléphone. */
-  --largeur-volet: clamp(380px, 46vw, 620px);
-  --haut-du-volet: 38dvh;
 }
 
 /* Dans le jeu, la ligne du haut porte le blason du loup, de 60 px. */

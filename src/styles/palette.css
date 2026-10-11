@@ -105,15 +105,15 @@
   --or: oklch(0.56 0.14 80);
 
   /* Les Biomes, sur la carte : les tons du Monde peint, chauds et pleins, assez distincts pour se lire de loin */
-  --biome-prairie: oklch(0.8 0.15 126);
-  --biome-foret: oklch(0.55 0.12 146);
+  --biome-prairie: oklch(0.76 0.14 120);
+  --biome-foret: oklch(0.53 0.12 145);
   --biome-jungle: oklch(0.44 0.12 156);
   --biome-savane: oklch(0.81 0.13 90);
-  --biome-desert: oklch(0.7 0.13 55);
+  --biome-desert: oklch(0.67 0.14 50);
   --biome-montagne: oklch(0.6 0.04 48);
   --biome-toundra: oklch(0.84 0.04 172);
   --biome-banquise: oklch(0.95 0.022 225);
-  --biome-eau: oklch(0.63 0.11 222);
+  --biome-eau: oklch(0.62 0.11 215);
 
   /* Ombres : chaudes, comme sous une lampe ; le relief d'un jeton, éclairé dessus, ombré dessous. */
   --ombre: 0 2px 3px oklch(0.2 0.04 45 / 0.16), 0 12px 28px oklch(0.2 0.04 45 / 0.24);

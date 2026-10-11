@@ -1,49 +1,99 @@
 /*
- * L'écran du Foyer, ouvert dans le volet par-dessus la carte : en tête, toute la largeur du volet, la hutte du chef
- * peinte, le Biome du Foyer écrit dessus en lettres de jeu ; dessous, ce que le Foyer produit par heure, une Ressource
- * par case creusée. Hors du volet (un chef sans Foyer), la même page, au milieu de l'écran.
+ * L'écran du Foyer : la hutte du chef peinte est la scène, d'un bord à l'autre de l'écran, sous le haut et la rangée des
+ * médaillons. Posés sur elle, en colonne à gauche (en haut, au pied de l'écran sur un téléphone) : le Biome du Foyer en
+ * grandes lettres de jeu, les écriteaux de bois de ce qui attend le chef, et la planche de sa production.
  */
 .page {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: min(440px, 100%);
+  min-height: calc(100dvh - var(--hauteur-barre) - var(--hauteur-onglets) - var(--bord-bas));
+  margin: 0;
+  padding: 18px 24px 28px max(24px, var(--bord-gauche));
 }
 
+/* La hutte prend tout l'écran, derrière ce qui est posé sur elle ; un voile assombrit le côté de la colonne. */
 .foyer {
-  position: relative;
-  width: auto;
-  aspect-ratio: 2 / 1;
-  min-height: 220px;
-  margin: 0 -22px 6px;
-  overflow: hidden;
-  box-shadow: inset 0 -3px 0 var(--dore-sombre);
+  display: contents;
 }
 
-/* Le haut du volet : la hutte en épouse les coins. */
-.foyer:first-child {
-  border-radius: 24px 24px 0 0;
+/* Sélecteur double pour passer devant le cadre du composant Illustration. */
+.foyer .remplir {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: none;
+}
+
+.foyer img {
+  object-position: 62% 45%;
+}
+
+.page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 60% 45% at 70% 10%, var(--soleil), transparent 70%),
+    linear-gradient(to right, var(--ombre-du-soir), transparent 46%),
+    linear-gradient(to bottom, var(--ombre-du-soir), transparent 20%, transparent 70%, var(--ombre-du-soir));
+  pointer-events: none;
+}
+
+/* Le Biome du Foyer, en grandes lettres de jeu sur le ciel du soir. */
+.legende {
+  order: -3;
+  color: var(--sur-image-doux);
+  font-size: clamp(34px, 3.4vw, 46px);
+  letter-spacing: 0.01em;
+  line-height: 1.05;
+  text-shadow:
+    0 3px 0 var(--bois-sombre),
+    0 0 22px var(--bois-sombre);
 }
 
 /*
- * US-0327 : en haut, toute la largeur, les Habitants partis pendant l'absence, tant que leur Récit n'est pas lu ;
- * « Lire » mène aux Récits. Un bandeau de sable, à droite du médaillon du volet.
+ * Les écriteaux : US-0327, les Habitants partis pendant l'absence, tant que leur Récit n'est pas lu ; US-0332, les
+ * Voyageurs aux portes ; US-0324, les Récits non lus. Chacun une plaque de bois cerclée d'or, l'icône peinte de ce
+ * qu'il signale, la phrase, puis son jeton au miel.
  */
-.departs {
+.departs,
+.avis {
+  order: -2;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 0 12px;
-  margin: 0 -22px;
-  padding: 10px 64px 10px 64px;
-  border-radius: 24px 24px 0 0;
-  background: var(--sable);
-  color: var(--encre);
+  gap: 10px;
+  padding: 6px 6px 6px 8px;
+  border-radius: var(--arrondi-moyen);
+  background: var(--bloc);
+  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 50%);
+  box-shadow:
+    0 0 0 2px var(--trait),
+    var(--relief-bois),
+    var(--ombre);
 }
 
-/* À l'étroit, la phrase passe à la ligne et « Lire » reste à droite. */
-.nombreDeDeparts {
+.departs::before,
+.avis::before {
+  content: "";
+  flex: none;
+  width: 40px;
+  height: 40px;
+  background: url("/illustrations/icones/habitants.webp") center / contain no-repeat;
+  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
+}
+
+.avis[data-avis="recits"]::before {
+  background-image: url("/illustrations/metiers/chercheur.webp");
+}
+
+/* À l'étroit, la phrase passe à la ligne et le jeton reste à droite. */
+.nombreDeDeparts,
+.texteAvis {
+  flex: 1;
   min-width: 0;
-  padding: 4px 0;
   font-weight: var(--graisse-titre);
 }
 
@@ -52,13 +102,13 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 18px;
+  border-bottom: 3px solid var(--miel-fonce);
   border-radius: var(--arrondi-moyen);
   background: var(--encre);
-  box-shadow: var(--relief);
   color: var(--blanc-chaud);
   font-family: var(--police-titre);
-  font-size: 16px;
+  font-size: 17px;
   text-decoration: none;
   cursor: pointer;
 }
@@ -74,26 +124,44 @@
   outline-offset: 2px;
 }
 
-/* US-0217 : sous la hutte, la production. */
-.avecProduction {
-  display: block;
-}
-
-.ligneProduction {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  min-height: 50px;
-  padding: 6px 16px 6px 10px;
+/* US-0216 : ce que le Foyer a produit pendant l'absence, une plaque sous les écriteaux ; un toucher la ferme. */
+.recap {
+  order: -1;
+  display: grid;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 0;
   border-radius: var(--arrondi-moyen);
   background: var(--bloc-2);
-  box-shadow: inset 0 2px 3px var(--encre-douce);
+  box-shadow:
+    0 0 0 2px var(--trait),
+    var(--ombre);
+  color: var(--sur-image-doux);
+  font: inherit;
+  font-weight: var(--graisse-titre);
+  text-align: left;
+  cursor: pointer;
 }
 
-.ligneProduction img {
-  width: 36px;
-  height: 36px;
-  filter: drop-shadow(0 2px 1px var(--encre-douce));
+@media (hover: hover) {
+  .recap:hover {
+    background: var(--bloc);
+  }
+}
+
+/* US-0228 : un Stock rempli pendant l'absence, dans le ton du Stock plein. */
+.recapPlein {
+  color: var(--mauvais);
+}
+
+.recap:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+/* US-0217 : la planche de la production, sous ce qui attend le chef. */
+.avecProduction > section:last-child {
+  order: 1;
 }
 
 .productions {
@@ -101,6 +169,24 @@
   gap: 8px;
   padding: 0;
   list-style: none;
+}
+
+/* Chaque Ressource dans sa case creusée : son icône peinte, son nom, et ce qu'elle rapporte par heure. */
+.ligneProduction {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-height: 48px;
+  padding: 4px 16px 4px 8px;
+  border-radius: var(--arrondi-moyen);
+  background: var(--bloc-2);
+  box-shadow: inset 0 2px 4px var(--ombre-du-soir);
+}
+
+.ligneProduction img {
+  width: 36px;
+  height: 36px;
+  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
 }
 
 .nomProduction {
@@ -116,103 +202,41 @@
 }
 
 .ligneProduction[data-nulle] {
-  background: transparent;
-  box-shadow: inset 0 0 0 2px var(--trait-doux);
   color: var(--texte-discret);
 }
 
 .ligneProduction[data-nulle] img {
-  opacity: 0.55;
+  opacity: 0.6;
   filter: grayscale(0.6);
 }
 
-/* Sélecteur double pour passer devant le cadre du composant Illustration. */
-.foyer .remplir {
-  position: absolute;
-  inset: 0;
-}
-
-.foyer img {
-  object-position: 50% 45%;
-}
-
-/* Le Biome du Foyer, en lettres de jeu sur l'herbe de la hutte, sur un voile qui le rend lisible. */
-.legende {
-  position: absolute;
-  inset: auto 0 0;
-  padding: 72px 24px 20px;
-  background: linear-gradient(to top, var(--ombre-du-soir), transparent);
-  color: var(--blanc-chaud);
-  font-size: clamp(26px, 3vw, 34px);
-  letter-spacing: 0.01em;
-  line-height: 1.1;
-  text-shadow:
-    0 2px 0 var(--bois-sombre),
-    0 0 18px var(--bois-sombre);
-}
-
-/* US-0216 : ce que le Foyer a produit pendant l'absence, posé en haut de la hutte, entre le médaillon et la croix ; un toucher le ferme. */
-.recap {
-  position: absolute;
-  top: 12px;
-  left: 60px;
-  z-index: 1;
-  display: grid;
-  gap: 2px;
-  max-width: calc(100% - 128px);
-  padding: 10px 14px;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--ombre);
-  color: var(--encre);
-  font: inherit;
-  font-weight: var(--graisse-titre);
-  text-align: left;
-  cursor: pointer;
-}
-
-@media (hover: hover) {
-  .recap:hover {
-    background: var(--bloc-2);
-  }
-}
-
-/* US-0228 : un Stock rempli pendant l'absence, dans le ton du Stock plein. */
-.recapPlein {
-  color: var(--mauvais);
-}
-
-.recap:focus-visible {
-  outline: 2px solid var(--encre);
-  outline-offset: 2px;
-}
-
-/* Mobile : la hutte un peu plus basse, pour laisser voir la production sous elle dans le volet monté du bas. */
+/* Sur un téléphone : la colonne prend la largeur, la production au pied de l'écran, la hutte en vue entre les deux. */
 @media (max-width: 820px) {
   .page {
-    padding: 12px;
+    width: 100%;
+    padding: 14px max(14px, var(--bord-droit)) 18px max(14px, var(--bord-gauche));
   }
-  .foyer {
-    aspect-ratio: 16 / 9;
-    min-height: 0;
-    margin-right: calc(-1 * max(14px, var(--bord-droit)));
-    margin-left: calc(-1 * max(14px, var(--bord-gauche)));
+
+  .foyer img {
+    object-position: 58% 40%;
   }
-  .departs {
-    margin-right: calc(-1 * max(14px, var(--bord-droit)));
-    margin-left: calc(-1 * max(14px, var(--bord-gauche)));
-    padding: 8px 60px 8px 74px;
+
+  .page::before {
+    background:
+      radial-gradient(ellipse 80% 40% at 60% 8%, var(--soleil), transparent 70%),
+      linear-gradient(to bottom, var(--ombre-du-soir), transparent 30%, transparent 46%, var(--ombre-du-soir) 80%);
   }
-  .legende {
-    padding: 48px 16px 14px;
+
+  .avecProduction > section:last-child {
+    margin-top: auto;
   }
-  .recap {
-    left: 72px;
-    max-width: calc(100% - 132px);
-    padding: 8px 12px;
-    font-size: 13px;
+
+  .ligneProduction {
+    min-height: 42px;
+  }
+
+  .ligneProduction img {
+    width: 30px;
+    height: 30px;
   }
 }

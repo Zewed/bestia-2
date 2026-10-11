@@ -716,10 +716,11 @@ describe("page Habitants au pouce (US-0306)", () => {
   it("pose le bandeau des sans Métier sur le sable, sans rien de criard, son lien « Voir » au pouce (US-0313)", () => {
     const bandeau = regle(".sansMetier");
     expect(bandeau).toContain("background: var(--sable);");
-    expect(bandeau).toContain("color: var(--encre);");
+    // Le texte sombre du jeu sur le sable clair, même là où l'Encre devient le miel des planches (globals.css).
+    expect(bandeau).toContain("color: var(--voile);");
     expect(bandeau).toContain("flex-wrap: wrap;");
     expect(bandeau).not.toMatch(/animation|var\(--mauvais\)|var\(--rose\)/);
-    // « Voir », un jeton à l'Encre qu'on presse, comme les autres actions de la page.
+    // « Voir », un jeton au miel qu'on presse (l'Encre d'un écran du jeu), comme les autres actions de la page.
     const voir = regle(".voirSansMetier");
     expect(voir).toContain("min-height: 44px;");
     expect(voir).toContain("background: var(--encre);");
@@ -734,17 +735,16 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".tenue[data-baisse]")).toContain("color: var(--mauvais);");
   });
 
-  it("garde le nombre d'Habitants et la place en haut du volet au défilement, collés en haut de ce qui défile", () => {
+  it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {
     const entete = regle(".entete");
     expect(entete).toContain("position: sticky;");
-    // Le volet défile seul, sous sa croix et son médaillon (components/Volet.module.css).
-    expect(entete).toContain("top: 0;");
-    expect(lire("src/components/Volet.module.css")).toMatch(/\.defilant \{[^}]*overflow-y: auto;/);
-    // La liste passe dessous sans se voir au travers : le fond de l'en-tête est la paille du volet.
+    // Les pièces du haut, la rangée des Stocks et l'encoche comprises sur mobile (formes.css).
+    expect(entete).toContain("top: var(--hauteur-barre);");
+    // La liste passe dessous sans se voir au travers : l'en-tête est une plaque du bois des planches.
     expect(entete).toContain("background: var(--bloc);");
-    expect(lire("src/components/Volet.module.css")).toMatch(/\n\.volet \{[^}]*background: var\(--bloc\);/);
-    // Rien ne coupe la partie qui le porte : une partie qui rognerait son contenu le décollerait.
     const bloc = regle(".bloc", lire("src/components/Bloc.module.css"));
+    expect(bloc).toContain("background: var(--bloc);");
+    // Rien ne coupe la planche qui le porte : une planche qui rognerait son contenu le décollerait.
     expect(bloc).not.toContain("overflow:");
   });
 });

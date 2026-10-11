@@ -28,6 +28,10 @@ const stocks = vi.hoisted(() => ({
 vi.mock("@/monde/stocks", () => stocks);
 const famine = vi.hoisted(() => ({ departsNonLus: vi.fn(async (): Promise<{ recitId: number; habitants: number } | null> => null) }));
 vi.mock("@/monde/famine", async (original) => ({ ...(await original<object>()), departsNonLus: famine.departsNonLus }));
+// Ce que la navigation signale déjà, posé aussi sur la scène du Foyer : les Voyageurs aux portes, les Récits non lus.
+const signales = vi.hoisted(() => ({ nombreDeVoyageurs: vi.fn(async () => 0), nombreDeRecitsNonLus: vi.fn(async () => 0) }));
+vi.mock("@/monde/voyageurs", async (original) => ({ ...(await original<object>()), nombreDeVoyageurs: signales.nombreDeVoyageurs }));
+vi.mock("@/monde/recits", async (original) => ({ ...(await original<object>()), nombreDeRecitsNonLus: signales.nombreDeRecitsNonLus }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -101,6 +105,18 @@ describe("écran du Foyer (US-0157)", () => {
     expect(html).toMatch(/<p[^>]*><strong[^>]*>3 Habitants sont partis pendant votre absence<\/strong> ?<a[^>]*href="\/jeu\/recits"[^>]*>Lire<\/a><\/p>/);
     // En haut de la page, avant l'illustration.
     expect(html.indexOf("partis pendant votre absence")).toBeLessThan(html.indexOf("<img"));
+  });
+
+  it("pose sur la scène les Voyageurs aux portes et les Récits non lus, que la navigation signale, chacun avec son lien", async () => {
+    connecte();
+    signales.nombreDeVoyageurs.mockResolvedValueOnce(2);
+    signales.nombreDeRecitsNonLus.mockResolvedValueOnce(1);
+    const html = renderToStaticMarkup(await Foyer());
+    expect(signales.nombreDeVoyageurs).toHaveBeenCalledWith(expect.anything(), 12);
+    expect(html).toMatch(/<p[^>]*><strong[^>]*>2 Voyageurs aux portes<\/strong> ?<a[^>]*href="\/jeu\/habitants"[^>]*>Voir<\/a><\/p>/);
+    expect(html).toMatch(/<p[^>]*><strong[^>]*>1 Récit non lu<\/strong> ?<a[^>]*href="\/jeu\/recits"[^>]*>Lire<\/a><\/p>/);
+    signales.nombreDeVoyageurs.mockResolvedValueOnce(1);
+    expect(renderToStaticMarkup(await Foyer())).toContain("Un Voyageur aux portes");
   });
 
   it("montre « Foyer » seul pour un chef toujours sans Foyer (Monde complet)", async () => {

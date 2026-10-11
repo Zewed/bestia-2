@@ -44,7 +44,23 @@ export type Pinceau = Pick<
  * teintes de la carte (US-0418), le bord léger des Cases, et les deux tons des motifs : un sombre pour les teintes
  * claires, un clair pour les sombres. US-0419 : l'Encre des Foyers, et le citron du repère de son Foyer.
  */
-export type Peinture = { fonds: string[]; bord: string; motifSombre: string; motifClair: string; encre: string; repere: string };
+export type Peinture = {
+  fonds: string[];
+  bord: string;
+  motifSombre: string;
+  motifClair: string;
+  encre: string;
+  repere: string;
+  /**
+   * Le relief peint, posé sur les Cases par-dessus leur couleur et sous leur motif (relief.ts) : pour la vue, et la Case
+   * (0, 0) là où la vue la met, ce qui peint les Cases découvertes (`terre`) et celles sous le brouillard (`brume`) ;
+   * rien sans lui (la légende, une carte sans navigateur).
+   */
+  relief?: { terre: Relief; brume: Relief };
+};
+
+/** Ce qui peint le relief d'une sorte de Cases pour une vue, la Case (0, 0) en `origine` ; null s'il n'y en a pas. */
+export type Relief = (vue: Vue, origine: { x: number; y: number }) => CanvasPattern | null;
 
 /**
  * La carte telle que le serveur l'envoie (src/monde/carte.ts) : ses teintes, ses Cases en colonnes (US-0433 : avec
@@ -538,6 +554,26 @@ function tracerLesExpeditions(pinceau: Pinceau, foyer: Coordonnees, vue: Vue, pe
 }
 
 /**
+ * Le relief peint (Peinture.relief) : d'un geste, toutes les Cases découvertes à l'écran prennent le relief de la terre ;
+ * d'un autre, celles sous le brouillard prennent sa brume. Le motif, recalé sur la Case (0, 0), tombe sur chaque Case.
+ */
+function poserLeRelief(pinceau: Pinceau, parTeinte: { x: number; y: number }[][], brume: number, vue: Vue, relief: { terre: Relief; brume: Relief }) {
+  const origine = aLEcran({ q: 0, r: 0 }, vue);
+  for (const [sorte, peindre] of [
+    ["terre", relief.terre],
+    ["brume", relief.brume],
+  ] as const) {
+    const centres = parTeinte.flatMap((liste, t) => ((t === brume) === (sorte === "brume") ? liste : []));
+    const motif = centres.length > 0 ? peindre(vue, origine) : null;
+    if (!motif) continue;
+    pinceau.beginPath();
+    for (const { x, y } of centres) tracerLaCase(pinceau, x, y, vue.rayon);
+    pinceau.fillStyle = motif;
+    pinceau.fill();
+  }
+}
+
+/**
  * US-0417 : dessine les Cases du Monde en hexagones, en colonnes comme le serveur les envoie. Seules celles qui
  * touchent l'écran sont tracées. US-0418 : chacune de la couleur de sa teinte (son Biome, ou sa variante d'eau),
  * puis le motif de sa teinte par-dessus, d'un geste par teinte ; enfin une légère bordure d'un pixel entre toutes.
@@ -576,6 +612,7 @@ export function dessinerLaCarte(
     pinceau.fillStyle = peinture.fonds[t];
     pinceau.fill();
   });
+  if (peinture.relief) poserLeRelief(pinceau, parTeinte, brume, vue, peinture.relief);
   parTeinte.forEach((centres, t) => {
     const motif = MOTIFS[carte.teintes[t]];
     if (!motif || centres.length === 0) return;

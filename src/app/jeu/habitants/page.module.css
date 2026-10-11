@@ -1,18 +1,21 @@
 /*
- * La page Habitants (US-0302), ouverte dans le volet par-dessus la carte : son titre sur la plaque du volet, puis ses
- * parties ; chaque Habitant dans une case creusée dans la paille, chaque choix un jeton qu'on presse.
+ * L'écran des Habitants (US-0302) : le village peint, d'un bord à l'autre de l'écran ; posés sur lui, son titre en
+ * grandes lettres de jeu, ses Habitants en portraits sur leurs plaques de bois, et à côté les planches des portes, de
+ * l'Entretien et des Métiers. Chaque choix est un jeton qu'on presse.
  */
 .page {
+  --decor: url("/illustrations/prototype/biomes/forest-1.webp");
+  --cadrage: 30% 60%;
   max-width: 1180px;
   margin: 0 auto;
-  padding: 24px;
+  padding: 20px 24px 32px;
 }
 
 .titre {
-  margin-bottom: 16px;
-  font-size: 28px;
-  letter-spacing: -0.02em;
-  line-height: 1.15;
+  margin-bottom: 14px;
+  font-size: clamp(32px, 3.2vw, 44px);
+  letter-spacing: 0.01em;
+  line-height: 1.1;
 }
 
 /* US-0306 : au pouce, chaque bouton de la page offre une surface de toucher d'au moins 44 px de côté. */
@@ -35,8 +38,10 @@
   padding: 6px 6px 6px 16px;
   border-radius: var(--arrondi-moyen);
   background: var(--sable);
-  box-shadow: inset 0 0 0 2px var(--dore);
-  color: var(--encre);
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--ombre);
+  color: var(--voile);
 }
 
 .nombreSansMetier {
@@ -49,9 +54,9 @@
   align-items: center;
   min-height: 44px;
   padding: 0 18px;
+  border-bottom: 3px solid var(--miel-fonce);
   border-radius: var(--arrondi-moyen);
   background: var(--encre);
-  box-shadow: var(--relief);
   color: var(--blanc-chaud);
   font-family: var(--police-titre);
   font-size: 16px;
@@ -72,24 +77,29 @@
 
 /*
  * US-0305 : le nombre d'Habitants sur la place du Territoire, et « Plus de place » à côté quand elle est
- * toute prise. US-0306 : quand on fait défiler la liste, cet en-tête reste collé en haut du volet, qui défile seul ;
- * la liste passe dessous, sur la paille du volet. Il garde un peu d'air au-dessus une fois collé, et reste à sa place
- * au repos.
+ * toute prise. US-0306 : quand on fait défiler la liste, cet en-tête, une plaque de bois, reste collé sous les pièces
+ * du haut (formes.css) ; les portraits passent dessous.
  */
 .entete {
   position: sticky;
-  top: 0;
+  top: var(--hauteur-barre);
   z-index: 1;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px 12px;
-  margin-top: -8px;
-  padding: 8px 0 12px;
+  margin-bottom: 12px;
+  padding: 8px 16px;
+  border-radius: var(--arrondi-moyen);
   background: var(--bloc);
+  box-shadow:
+    0 0 0 2px var(--trait),
+    var(--relief-bois),
+    var(--ombre);
 }
 
 .nombre {
+  color: var(--encre);
   font-family: var(--police-titre);
   font-size: 24px;
   font-variant-numeric: tabular-nums;
@@ -125,10 +135,11 @@
   padding: 0 12px;
   border: 0;
   border-radius: 999px;
-  background: var(--bloc-2);
+  background: var(--bloc);
   box-shadow:
     inset 0 0 0 1px var(--trait),
-    var(--relief);
+    var(--relief-bois),
+    var(--ombre);
   color: var(--texte-2);
   font: inherit;
   font-size: 13px;
@@ -138,7 +149,9 @@
 
 .effectif[aria-pressed="true"] {
   background: var(--encre);
-  box-shadow: var(--relief);
+  box-shadow:
+    inset 0 -3px 0 var(--miel-fonce),
+    var(--ombre);
   color: var(--ivoire);
 }
 
@@ -172,7 +185,7 @@
 
 /* US-0314 : sur l'Encre du filtre pressé, le nombre en citron, 0 compris. */
 .effectif[aria-pressed="true"] .nombreEffectif {
-  color: var(--citron);
+  color: var(--ivoire);
 }
 
 /* US-0314 : un filtre qui ne trouve personne le dit à la place de la liste. */
@@ -180,33 +193,66 @@
   padding: 14px 16px;
   border-radius: var(--arrondi-moyen);
   background: var(--bloc-2);
-  box-shadow: inset 0 2px 3px var(--encre-douce);
+  box-shadow: 0 0 0 2px var(--trait);
   color: var(--texte-discret);
 }
 
-/* US-0303 : une ligne par Habitant ; prénom, Métier et état côte à côte sur ordinateur. */
+/*
+ * US-0303 : chaque Habitant, son portrait sur sa plaque de bois : l'icône peinte de son Métier dans un médaillon cerclé
+ * d'or, puis son prénom en lettres de jeu, son état et son Métier. Trois plaques par rangée sur ordinateur ; celle dont
+ * on choisit le Métier prend toute la rangée.
+ */
 .habitants {
   display: grid;
-  gap: 6px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px;
   padding: 0;
   list-style: none;
 }
 
 .habitant {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 160px) minmax(0, 1fr) auto;
-  gap: 4px 12px;
-  align-items: center;
-  min-height: 52px;
-  padding: 8px 12px 8px 14px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  justify-items: start;
+  gap: 6px 12px;
+  min-height: 84px;
+  padding: 12px 12px 12px 76px;
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc-2);
-  box-shadow: inset 0 2px 3px var(--encre-douce);
+  background: var(--bloc);
+  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 50%);
+  box-shadow:
+    0 0 0 2px var(--trait),
+    var(--relief-bois),
+    var(--ombre);
+}
+
+.habitant:has(> .choix) {
+  grid-column: 1 / -1;
+}
+
+/* Le portrait : un médaillon de bois sombre cerclé d'or, l'icône peinte posée dedans. */
+.portrait {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  width: 44px;
+  height: 44px;
+  padding: 4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore),
+    0 0 0 4px var(--bois-sombre),
+    0 4px 8px var(--ombre-du-soir);
+  object-fit: contain;
 }
 
 .prenom {
   font-family: var(--police-titre);
-  font-size: 17px;
+  font-size: 19px;
+  line-height: 1.1;
 }
 
 .metier {
@@ -218,6 +264,8 @@
 }
 
 .etat {
+  align-self: start;
+  justify-self: start;
   padding: 2px 10px;
   border-radius: 999px;
   background: var(--menthe);
@@ -245,10 +293,10 @@
   padding: 0 14px;
   border: 0;
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
+  background: var(--bloc-2);
   box-shadow:
     inset 0 0 0 1px var(--trait),
-    var(--relief);
+    var(--relief-bois);
   color: var(--encre);
   font: inherit;
   font-weight: var(--graisse-titre);
@@ -291,11 +339,11 @@
   padding: 8px 6px;
   border: 0;
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
+  background: var(--bloc-2);
   box-shadow:
     inset 0 0 0 1px var(--trait),
-    var(--relief);
-  color: var(--encre);
+    var(--relief-bois);
+  color: var(--texte-2);
   font: inherit;
   font-size: 13px;
   font-weight: var(--graisse-titre);
@@ -310,7 +358,7 @@
 
 /* US-0310 : dans le dépliant d'un Habitant qui a un Métier, le sien, pressé en Encre comme un filtre, hors d'atteinte. */
 .metierAuChoix[aria-pressed="true"] {
-  box-shadow: var(--relief);
+  box-shadow: inset 0 -3px 0 var(--miel-fonce);
   background: var(--encre);
   color: var(--ivoire);
   cursor: default;
@@ -482,7 +530,9 @@
   border: 0;
   border-radius: 50%;
   background: var(--encre);
-  box-shadow: var(--relief);
+  box-shadow:
+    inset 0 -3px 0 var(--miel-fonce),
+    var(--ombre);
   color: var(--blanc-chaud);
   font: inherit;
   font-family: var(--police-titre);
@@ -496,6 +546,7 @@
   box-shadow: inset 0 0 0 1px var(--trait-doux);
   color: var(--galet);
   cursor: default;
+  opacity: 0.7;
 }
 
 @media (hover: hover) {
@@ -530,11 +581,15 @@
     padding: 12px;
   }
   .titre {
-    margin: 8px 0 12px;
-    font-size: 24px;
+    margin: 6px 0 12px;
+    font-size: 30px;
   }
   .colonne {
     gap: var(--ecart-mobile);
+  }
+  /* Deux portraits par rangée. */
+  .habitants {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
   /* Sur mobile, le Métier, ou le bouton qui en choisit un (US-0308), passe sous le prénom ; l'état reste à droite. */
   .habitant {
@@ -550,8 +605,12 @@
   }
 }
 
-/* US-0308 : sur un petit écran, deux Métiers au choix par ligne. */
+/* US-0308 : sur un petit écran, deux Métiers au choix par ligne, et un portrait par rangée. */
 @media (max-width: 540px) {
+  .habitants {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .choix {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
@@ -605,15 +664,42 @@
   }
 }
 
+/* La liste n'est pas une planche : ses portraits sont posés sur le village, chacun sur sa plaque. */
+section.liste {
+  padding: 0;
+  background: none;
+  box-shadow: none;
+}
+
 /*
- * Dans le volet, la page se range à la largeur du volet, pas de l'écran : la colonne passe sous la liste, ses parties
- * dans la grille de la page, « Aux portes » en tête (AuxPortes.module.css).
+ * Sur ordinateur, la colonne se défait dans la grille de l'écran : « Aux portes » et l'Entretien à droite des portraits,
+ * les Métiers sous eux, sur deux colonnes, pour que tout tienne d'un regard.
  */
-@container (max-width: 900px) {
+@media (width > 1100px) {
   .colonne {
     display: contents;
   }
-  .colonne > * {
-    grid-column: 1 / -1;
+
+  .colonne > :first-child {
+    grid-column: 9 / -1;
+    grid-row: 1;
+    align-self: start;
+  }
+
+  .colonne > :nth-child(2) {
+    grid-column: 9 / -1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .colonne > :nth-child(3) {
+    grid-column: 1 / span 8;
+    grid-row: 2 / span 2;
+    align-self: start;
+  }
+
+  .metiers {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 14px 24px;
   }
 }

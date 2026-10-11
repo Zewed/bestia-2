@@ -106,7 +106,6 @@ export function ExpeditionsSurLaCarte({
   fermer,
   carte,
   montrer,
-  auClavier = true,
 }: {
   expeditions: readonly ExpeditionSurLaCarte[];
   foyer: Coordonnees;
@@ -118,8 +117,6 @@ export function ExpeditionsSurLaCarte({
   fermer: () => void;
   carte: RefObject<HTMLCanvasElement | null>;
   montrer: (c: Coordonnees, cache: Cadre) => void;
-  /** Sous un volet, la carte n'est qu'une scène : ses repères ne se prennent pas au clavier. */
-  auClavier?: boolean;
 }) {
   const instant = useHeureDuJeu(maintenant, vitesse);
   const positions = expeditions.map(({ expedition, chemin }) => positionDUneExpedition(foyer, expedition.destination, expedition, instant, chemin));
@@ -160,7 +157,6 @@ export function ExpeditionsSurLaCarte({
           type="button"
           className={styles.repere}
           hidden
-          tabIndex={auClavier ? undefined : -1}
           aria-label={versOu(expedition)}
           aria-expanded={expedition.id === suivie}
           onClick={() => suivre(expedition.id)}

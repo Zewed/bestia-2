@@ -1,21 +1,19 @@
 /*
- * Une partie d'un volet : son étiquette sur un petit ruban de bois, puis son contenu posé sur la paille. Les parties se
- * suivent, séparées d'un filet creusé (une ligne d'ombre, une ligne de lumière), sans cadre ni carte blanche.
+ * Une planche : ce qu'une page montre, taillé dans la matière de l'écran (--bloc : le bois ciré dans un écran du jeu,
+ * voir globals.css), cerclée d'un filet d'or, éclairée en haut, posée sur le décor avec son ombre. Son étiquette, un
+ * ruban en lettres de jeu.
  */
 .bloc {
   min-width: 0;
-  padding: 18px 0 4px;
-  border-top: 1px solid var(--trait-doux);
-  box-shadow: inset 0 1px 0 var(--blanc-chaud);
+  padding: 16px 18px 18px;
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 38%);
+  box-shadow:
+    0 0 0 2px var(--trait),
+    var(--relief-bois),
+    var(--ombre-forte);
   overflow-wrap: anywhere;
-}
-
-/* Juste sous la plaque du volet, ou en tête d'une colonne : pas de filet au-dessus. */
-:where(h1) + .bloc,
-.bloc:where(:first-child) {
-  padding-top: 4px;
-  border-top: 0;
-  box-shadow: none;
 }
 
 .bloc img {
@@ -25,7 +23,7 @@
   border-radius: var(--arrondi-petit);
 }
 
-/* L'étiquette : un ruban de bois, ses lettres de jeu en petites capitales claires. */
+/* L'étiquette : un ruban creusé, ses lettres de jeu en petites capitales. */
 .titre {
   display: inline-flex;
   align-self: flex-start;
@@ -35,23 +33,21 @@
   margin-bottom: 12px;
   padding: 2px 12px 1px;
   border-radius: 8px;
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois));
-  box-shadow: var(--relief-bois);
-  color: var(--ivoire);
+  background: var(--bloc-2);
+  box-shadow: inset 0 1px 2px var(--ombre-du-soir);
+  color: var(--encre);
   font-family: var(--police-titre);
   font-size: 13px;
   font-weight: 400;
   letter-spacing: var(--espacement-etiquette);
   line-height: 1.2;
   text-transform: uppercase;
-  text-shadow: 0 1px 0 var(--bois-sombre);
 }
 
-/* Plein : le contenu (une illustration) touche les bords de la partie. */
+/* Plein : le contenu (une illustration) touche les bords de la planche. */
 .plein {
   padding: 0;
   overflow: hidden;
-  border-radius: var(--arrondi);
 }
 
 .plein img {
@@ -64,41 +60,28 @@
   margin: 14px 16px 10px;
 }
 
-/*
- * Teintes : une partie mise en avant, posée dans un creux de sa couleur, son étiquette dans son ton foncé ; ou l'Encre,
- * son étiquette au citron.
- */
-.menthe,
-.sable,
-.lilas,
-.ciel,
-.rose,
-.sarcelle,
-.peche,
-.citron,
-.encre {
-  margin-top: 8px;
-  padding: var(--marge-bloc);
-  border: 0;
-  border-radius: var(--arrondi);
-  box-shadow: inset 0 2px 4px var(--encre-douce);
-}
-
-.menthe { background: var(--menthe); }
-.menthe .titre { background: var(--menthe-fonce); }
-.sable { background: var(--sable); }
-.sable .titre { background: var(--sable-fonce); }
-.lilas { background: var(--lilas); }
-.lilas .titre { background: var(--lilas-fonce); }
-.ciel { background: var(--ciel); }
-.ciel .titre { background: var(--ciel-fonce); }
-.rose { background: var(--rose); }
-.rose .titre { background: var(--rose-fonce); }
-.sarcelle { background: var(--sarcelle); }
-.sarcelle .titre { background: var(--sarcelle-fonce); }
-.peche { background: var(--peche); }
-.peche .titre { background: var(--peche-fonce); }
-.citron { background: var(--citron); }
-.citron .titre { background: var(--citron-fonce); }
+/* Teintes : une planche mise en avant, de sa couleur, son étiquette dans son ton foncé ; ou l'Encre, au citron. */
+.menthe { background: var(--menthe); color: var(--menthe-fonce); }
+.menthe .titre { color: var(--menthe-fonce); }
+.sable { background: var(--sable); color: var(--sable-fonce); }
+.sable .titre { color: var(--sable-fonce); }
+.lilas { background: var(--lilas); color: var(--lilas-fonce); }
+.lilas .titre { color: var(--lilas-fonce); }
+.ciel { background: var(--ciel); color: var(--ciel-fonce); }
+.ciel .titre { color: var(--ciel-fonce); }
+.rose { background: var(--rose); color: var(--rose-fonce); }
+.rose .titre { color: var(--rose-fonce); }
+.sarcelle { background: var(--sarcelle); color: var(--sarcelle-fonce); }
+.sarcelle .titre { color: var(--sarcelle-fonce); }
+.peche { background: var(--peche); color: var(--peche-fonce); }
+.peche .titre { color: var(--peche-fonce); }
+.citron { background: var(--citron); color: var(--citron-fonce); }
+.citron .titre { color: var(--citron-fonce); }
 .encre { background: var(--encre); color: var(--ivoire); }
-.encre .titre { background: var(--citron); color: var(--encre); text-shadow: none; }
+.encre .titre { color: var(--citron); }
+
+@media (max-width: 820px) {
+  .bloc {
+    padding: 14px 14px 16px;
+  }
+}

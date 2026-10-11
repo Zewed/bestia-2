@@ -5,7 +5,7 @@
  *
  * Chacune a son médaillon, une illustration peinte du jeu : la hutte du chef pour le Foyer (`hutte` : recadrée sur
  * elle), le Monde pour la Carte, la carte roulée et sa boussole de l'explorateur pour les Expéditions, un Habitant,
- * et la tablette et sa plume pour les Récits. Le volet d'une page montre le même que son entrée.
+ * et la tablette et sa plume pour les Récits.
  */
 export type EntreeDuJeu = { chemin: string; section?: string; libelle: string; icone: string; hutte?: boolean };
 
@@ -25,9 +25,4 @@ export const ENTREES_DU_JEU: readonly EntreeDuJeu[] = [
 export function estOuverte(chemin: string, page: string): boolean {
   if (chemin === "/jeu") return page === chemin;
   return page === chemin || page.startsWith(`${chemin}/`);
-}
-
-/** L'entrée dont relève la page affichée, pour le médaillon de son volet ; le Foyer pour une page qui n'en a pas. */
-export function entreeDeLaPage(page: string): EntreeDuJeu {
-  return ENTREES_DU_JEU.find((entree) => estOuverte(entree.section ?? entree.chemin, page)) ?? ENTREES_DU_JEU[0];
 }

@@ -8,13 +8,16 @@
 
 /* Plus précis que la partie qui le porte (components/Bloc.module.css), dont il remplace le filet par son creux. */
 section.recap {
-  padding: 16px 18px 18px;
+  padding: 18px 20px 20px;
   border: 0;
   border-radius: var(--arrondi);
-  background: var(--bloc-2);
+  background: var(--bloc);
+  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 40%);
   box-shadow:
-    inset 0 0 0 2px var(--dore),
-    inset 0 3px 6px var(--encre-douce);
+    0 0 0 3px var(--dore),
+    0 0 0 5px var(--bois-sombre),
+    var(--relief-bois),
+    var(--ombre-forte);
 }
 
 /* Chaque ligne : sa petite étiquette, puis ce qu'elle dit, alignées sur les lignes des autres blocs. */
@@ -36,6 +39,7 @@ section.recap {
 
 .lignes dd {
   margin: 0;
+  color: var(--encre);
   font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
 }
@@ -68,11 +72,19 @@ section.recap {
     max-height: calc(var(--hauteur-utile) - 24px);
   }
 
+  /*
+   * Sur un téléphone, le récapitulatif replié est le quai du départ, posé sur la rangée des médaillons : de bord à
+   * bord, cerclé d'or en haut, son ombre comblant l'écart jusqu'à la rangée. Ce qu'on compose défile dessous.
+   */
   section.recap {
-    padding: 12px 14px;
+    margin-right: calc(-1 * max(12px, var(--bord-droit)));
+    margin-left: calc(-1 * max(12px, var(--bord-gauche)));
+    padding: 10px max(14px, var(--bord-droit)) 12px max(14px, var(--bord-gauche));
+    border-radius: 22px 22px 0 0;
     box-shadow:
-      inset 0 0 0 2px var(--dore),
-      var(--ombre-forte);
+      0 -3px 0 var(--dore),
+      0 12px 0 var(--bloc),
+      0 -12px 28px var(--ombre-du-soir);
   }
 
   .defilant {
@@ -138,5 +150,24 @@ section.recap {
   .recap:not(.deplie) .lignes > :not([data-essentiel]),
   .recap:not(.deplie) .manger {
     display: none;
+  }
+
+  /*
+   * Replié, le quai tient en deux rangées : l'étiquette et l'heure de retour prévue côte à côte, puis « Partir » et ce
+   * qui lui manque. Ce qu'on compose garde ainsi la place au-dessus de lui.
+   */
+  .recap:not(.deplie) {
+    flex-flow: row wrap;
+    align-items: center;
+    column-gap: 12px;
+  }
+
+  .recap:not(.deplie) > h2 {
+    margin-bottom: 0;
+  }
+
+  .recap:not(.deplie) > :last-child {
+    flex: 1 1 100%;
+    margin-top: 8px;
   }
 }

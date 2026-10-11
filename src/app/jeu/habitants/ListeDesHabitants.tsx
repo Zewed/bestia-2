@@ -24,6 +24,9 @@ type Effectif = { id: string; nom: string; icone: string | null; metier: string 
 /** US-0314 : le paramètre de l'adresse qui porte le filtre. */
 const PARAMETRE_DU_FILTRE = "metier";
 
+/** Le portrait d'un Habitant sans Métier : un Habitant du jeu, du même trait que les icônes des Métiers. */
+const PORTRAIT_SANS_METIER = "/illustrations/icones/habitants.webp";
+
 /** US-0330 : « de Brune », « d'Arno ». */
 const de = (prenom: string) => (/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.test(prenom) ? `d'${prenom}` : `de ${prenom}`);
 
@@ -203,6 +206,8 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
             const confirmer = deplie && aRenvoyer === h.id;
             return (
               <li key={h.id} className={styles.habitant}>
+                {/* Son portrait : l'icône peinte de son Métier, ou un Habitant sans Métier ; son prénom le dit déjà. */}
+                <Image src={metiers.find((m) => m.nom === h.metier)?.icone ?? PORTRAIT_SANS_METIER} alt="" width={44} height={44} className={styles.portrait} />
                 <span className={styles.prenom}>{h.prenom}</span>
                 {metiers.length > 0 && h.etat !== EN_EXPEDITION ? (
                   <BoutonDuMetier

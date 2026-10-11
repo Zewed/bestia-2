@@ -97,7 +97,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage du formulaire.
   const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
   return (
-    <main className={styles.page}>
+    <main className={`${styles.page} ${styles.preparation}`}>
       <h1 className={styles.titre}>Nouvelle Expédition</h1>
       <Bloc titre="Destination">
         {destination && "fiche" in destination ? (
