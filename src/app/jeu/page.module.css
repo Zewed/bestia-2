@@ -12,7 +12,7 @@
 .foyer {
   position: relative;
   width: auto;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 2 / 1;
   min-height: 220px;
   margin: 0 -22px 6px;
   overflow: hidden;
@@ -83,7 +83,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
-  min-height: 52px;
+  min-height: 50px;
   padding: 6px 16px 6px 10px;
   border-radius: var(--arrondi-moyen);
   background: var(--bloc-2);

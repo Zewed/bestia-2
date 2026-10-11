@@ -28,6 +28,7 @@
 /* L'étiquette : un ruban de bois, ses lettres de jeu en petites capitales claires. */
 .titre {
   display: inline-flex;
+  align-self: flex-start;
   justify-self: start;
   align-items: center;
   min-height: 26px;

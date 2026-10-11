@@ -1,5 +1,5 @@
 import { connection } from "next/server";
-import { joueurConnecte } from "@/comptes/garde";
+import { exigerCompte, joueurConnecte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Scene } from "@/components/Scene";
 import { Volet } from "@/components/Volet";
@@ -13,13 +13,19 @@ import { mondeDuJoueur } from "./carte/monde-du-joueur";
  * récit d'arrivée lu), la carte reste en scène sous chaque page du jeu (Scene), lue comme la page de la Carte la lit
  * (mondeDuJoueur), et la page s'ouvre dans un volet (Volet). Avant, ou sans session, la page est seule : chaque page
  * garde sa propre garde. Rien n'y est lu de plus que ce que la carte lit déjà.
+ *
+ * US-0121 : comme chaque page du jeu, la scène passe par exigerCompte avant de lire le Monde : elle ne le fait qu'une
+ * fois le chef entré dans son Foyer, où la garde laisse passer sans détour (la mise à l'heure du Territoire est faite
+ * une fois par affichage, avec la page).
  */
 export default async function MiseEnPageDuJeu({ children }: LayoutProps<"/jeu">) {
   await connection();
   if (!entreeDuJeuOuverte()) return children;
   const joueur = await joueurConnecte();
   if (!joueur?.nomDeChef || !joueur.recitLu || joueur.territoireId === null) return children;
-  const { carte, expeditions, instant } = await mondeDuJoueur(joueur.territoireId);
+  const { territoireId } = await exigerCompte();
+  if (territoireId === null) return children;
+  const { carte, expeditions, instant } = await mondeDuJoueur(territoireId);
   if (!carte) return children;
   return (
     <>
