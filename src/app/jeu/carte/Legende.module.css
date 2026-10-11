@@ -46,7 +46,10 @@
 
 .bouton:focus-visible {
   outline: 2px solid var(--encre);
-  outline-offset: 3px;
+  outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px var(--citron),
+    var(--relief-bois);
 }
 
 /* Un petit volet de paille cerclé de bois, qui défile s'il dépasse la carte. */

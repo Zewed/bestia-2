@@ -53,9 +53,13 @@
   }
 }
 
+/* Au clavier : un anneau citron autour du jeton, cerné d'Encre, qui se voit sur la brume comme sur les Cases claires. */
 .bouton:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
+  box-shadow:
+    0 0 0 2px var(--citron),
+    var(--relief-bois);
 }
 
 /* US-0426 : le repère du Foyer, comme sur la carte : une épingle citron cernée d'Encre, un œil d'Encre au milieu. */
