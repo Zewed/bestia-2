@@ -9,14 +9,14 @@ const CSS = readFileSync(join(process.cwd(), "src/app/jeu/carte/FicheDeLaCase.mo
 const regle = (selecteur: string, texte = CSS) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\:,]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
 
 describe("la fiche d'une Case à l'écran (US-0428)", () => {
-  it("flotte sur ordinateur en haut à gauche de la carte, à hauteur du bouton de la légende, qui est à droite", () => {
+  it("flotte sur ordinateur en haut à gauche de la carte, sous les pièces du haut, à hauteur du bouton de la légende, qui est à droite", () => {
     const fiche = regle(".fiche");
     expect(fiche).toContain("position: absolute;");
-    expect(fiche).toContain("top: 12px;");
+    expect(fiche).toContain("top: calc(var(--hauteur-barre) + 12px);");
     expect(fiche).toContain("left: calc(12px + var(--bord-gauche));");
-    // Un bloc Bento qui défile s'il dépasse la carte.
-    expect(fiche).toMatch(/max-height: calc\(100% - 24px\);[^}]*overflow-y: auto;/);
-    expect(fiche).toMatch(/border-radius: var\(--arrondi\);[^}]*background: var\(--bloc\);[^}]*box-shadow: var\(--ombre\);/);
+    // Un petit volet de paille cerclé de bois, qui défile s'il dépasse la carte.
+    expect(fiche).toMatch(/max-height: calc\(100% - var\(--hauteur-barre\) - 24px\);[^}]*overflow-y: auto;/);
+    expect(fiche).toMatch(/border-radius: var\(--arrondi\);[^}]*background: var\(--bloc\);[^}]*box-shadow:[^;]*var\(--bois\)/);
   });
 });
 

@@ -1,11 +1,12 @@
 /*
- * La grille Bento du prototype : 12 colonnes sur ordinateur. Chaque bloc prend toute
- * la largeur, sauf s'il en demande moins (largeur, de 1 à 12).
+ * La grille des parties d'une page : 12 colonnes quand la place le permet. Chaque partie prend toute la largeur, sauf
+ * si elle en demande moins (largeur, de 1 à 12). Dans un volet, elle se range à la largeur du volet, pas de l'écran :
+ * une seule colonne, dans l'ordre de lecture.
  */
 .grille {
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: var(--ecart);
+  gap: 0 var(--ecart);
   min-width: 0;
 }
 
@@ -15,7 +16,7 @@
   min-width: 0;
 }
 
-/* Tablette : deux colonnes au plus. Un bloc large prend toute la ligne, les autres une moitié. */
+/* Tablette : deux colonnes au plus. Une partie large prend toute la ligne, les autres une moitié. */
 @media (max-width: 1100px) {
   .grille > * {
     grid-column: 1 / -1;
@@ -25,11 +26,15 @@
   }
 }
 
-/* Mobile : une seule colonne, dans l'ordre de lecture. */
+/* Mobile, ou un volet : une seule colonne, dans l'ordre de lecture. */
 @media (max-width: 820px) {
-  .grille {
-    gap: var(--ecart-mobile);
+  .grille > *,
+  .grille > [data-etroit] {
+    grid-column: 1 / -1;
   }
+}
+
+@container (max-width: 900px) {
   .grille > *,
   .grille > [data-etroit] {
     grid-column: 1 / -1;

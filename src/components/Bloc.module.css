@@ -1,10 +1,22 @@
-/* Le bloc Bento du prototype : blanc, coins de 12 px, sans bordure ni ombre. */
+/*
+ * Une partie d'un volet : son étiquette sur un petit ruban de bois, puis son contenu posé sur la paille. Les parties se
+ * suivent, séparées d'un filet creusé (une ligne d'ombre, une ligne de lumière), sans cadre ni carte blanche.
+ */
 .bloc {
   min-width: 0;
-  padding: var(--marge-bloc);
-  border-radius: var(--arrondi);
-  background: var(--bloc);
+  padding: 18px 0 4px;
+  border-top: 1px solid var(--trait-doux);
+  box-shadow: inset 0 1px 0 var(--blanc-chaud);
   overflow-wrap: anywhere;
+}
+
+/* Juste sous la plaque du volet, ou en tête d'une colonne : pas de filet au-dessus. */
+:where(h1) + .bloc,
+:where(h1) + * > .bloc:first-child,
+.bloc:first-child {
+  padding-top: 4px;
+  border-top: 0;
+  box-shadow: none;
 }
 
 .bloc img {
@@ -14,19 +26,31 @@
   border-radius: var(--arrondi-petit);
 }
 
+/* L'étiquette : un ruban de bois, ses lettres de jeu en petites capitales claires. */
 .titre {
-  margin-bottom: 10px;
-  color: var(--texte-discret);
-  font-size: var(--taille-etiquette);
-  font-weight: var(--graisse-titre);
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  margin-bottom: 12px;
+  padding: 2px 12px 1px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois));
+  box-shadow: var(--relief-bois);
+  color: var(--ivoire);
+  font-family: var(--police-titre);
+  font-size: 13px;
+  font-weight: 400;
   letter-spacing: var(--espacement-etiquette);
+  line-height: 1.2;
   text-transform: uppercase;
+  text-shadow: 0 1px 0 var(--bois-sombre);
 }
 
-/* Plein : le contenu (une illustration) touche les bords du bloc. */
+/* Plein : le contenu (une illustration) touche les bords de la partie. */
 .plein {
   padding: 0;
   overflow: hidden;
+  border-radius: var(--arrondi);
 }
 
 .plein img {
@@ -36,27 +60,44 @@
 }
 
 .plein .titre {
-  margin: 0;
-  padding: var(--marge-bloc);
-  padding-bottom: 10px;
+  margin: 14px 16px 10px;
 }
 
-/* Teintes : un pastel avec son titre dans le ton foncé, ou l'Encre avec un titre citron. */
+/*
+ * Teintes : une partie mise en avant, posée dans un creux de sa couleur, son étiquette dans son ton foncé ; ou l'Encre,
+ * son étiquette au citron.
+ */
+.menthe,
+.sable,
+.lilas,
+.ciel,
+.rose,
+.sarcelle,
+.peche,
+.citron,
+.encre {
+  margin-top: 8px;
+  padding: var(--marge-bloc);
+  border: 0;
+  border-radius: var(--arrondi);
+  box-shadow: inset 0 2px 4px var(--encre-douce);
+}
+
 .menthe { background: var(--menthe); }
-.menthe .titre { color: var(--menthe-fonce); }
+.menthe .titre { background: var(--menthe-fonce); }
 .sable { background: var(--sable); }
-.sable .titre { color: var(--sable-fonce); }
+.sable .titre { background: var(--sable-fonce); }
 .lilas { background: var(--lilas); }
-.lilas .titre { color: var(--lilas-fonce); }
+.lilas .titre { background: var(--lilas-fonce); }
 .ciel { background: var(--ciel); }
-.ciel .titre { color: var(--ciel-fonce); }
+.ciel .titre { background: var(--ciel-fonce); }
 .rose { background: var(--rose); }
-.rose .titre { color: var(--rose-fonce); }
+.rose .titre { background: var(--rose-fonce); }
 .sarcelle { background: var(--sarcelle); }
-.sarcelle .titre { color: var(--sarcelle-fonce); }
+.sarcelle .titre { background: var(--sarcelle-fonce); }
 .peche { background: var(--peche); }
-.peche .titre { color: var(--peche-fonce); }
+.peche .titre { background: var(--peche-fonce); }
 .citron { background: var(--citron); }
-.citron .titre { color: var(--citron-fonce); }
+.citron .titre { background: var(--citron-fonce); }
 .encre { background: var(--encre); color: var(--ivoire); }
-.encre .titre { color: var(--citron); }
+.encre .titre { background: var(--citron); color: var(--encre); text-shadow: none; }

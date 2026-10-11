@@ -1,7 +1,25 @@
-/* US-0417 : la carte du Monde dans toute la place sous la barre du haut (et au-dessus des onglets sur mobile), sans défiler. */
+/*
+ * US-0417 : la carte du Monde dans tout l'écran, sans défiler : les pièces du haut et la rangée des médaillons sont
+ * posées dessus. Au-delà du Monde, la mer du soir ; par-dessus, la lumière dorée d'une fin de journée et l'ombre des
+ * bords, comme un plateau peint sous la lampe (la même que la scène, components/Scene.module.css). Sur un téléphone, la
+ * carte s'arrête au-dessus de la rangée des médaillons, qui tient toute la largeur.
+ */
 .page {
-  height: var(--hauteur-utile);
+  position: fixed;
+  inset: 0;
   overflow: hidden;
+  background: radial-gradient(ellipse at 55% 40%, var(--mer-du-soir), var(--mer-profonde) 75%);
+}
+
+.page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse 70% 55% at 55% 12%, var(--soleil), transparent 70%),
+    radial-gradient(ellipse 120% 100% at 50% 50%, transparent 60%, var(--ombre-du-soir) 100%);
+  pointer-events: none;
 }
 
 /* US-0425 : la carte et ses boutons de zoom, posés par-dessus, dans toute la place de la page. */
@@ -41,6 +59,11 @@
 @media (max-width: 820px) {
   .page:has([data-fiche-de-la-case]) [aria-controls] + [id] {
     display: none;
+  }
+
+  /* Sur un téléphone, la carte s'arrête au-dessus de la rangée des médaillons, qui tient toute la largeur. */
+  .page {
+    bottom: calc(var(--hauteur-onglets) + var(--bord-bas));
   }
 }
 

@@ -3,29 +3,47 @@
   margin-top: var(--ecart);
 }
 
-/* Au pouce : un bouton de 44 px de haut, sur l'Encre ; toute la largeur sur mobile. */
+/*
+ * L'action du jeu, au pouce : un grand jeton de miel, sa lèvre plus sombre dessous, qui s'enfonce quand on le presse ;
+ * 52 px de haut, toute la largeur du volet.
+ */
 .partir {
+  width: 100%;
   min-height: 44px;
+  height: 56px;
   padding: 0 24px;
   border: 0;
+  border-bottom: 5px solid var(--miel-fonce);
   border-radius: var(--arrondi-moyen);
-  background: var(--encre);
-  color: var(--blanc-chaud);
+  background: linear-gradient(to bottom, var(--miel-survol), var(--miel));
+  box-shadow:
+    inset 0 2px 0 var(--blanc-chaud),
+    0 6px 14px var(--encre-douce);
+  color: var(--encre);
   font: inherit;
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 22px;
+  letter-spacing: 0.02em;
   cursor: pointer;
+}
+
+.partir:enabled:active {
+  border-bottom-width: 2px;
+  transform: translateY(3px);
 }
 
 /* Grisé tant qu'il manque un explorateur ; la raison est écrite dessous. */
 .partir:disabled {
+  border-bottom-color: var(--trait);
   background: var(--bloc-3);
+  box-shadow: none;
   color: var(--texte-pale);
   cursor: not-allowed;
 }
 
 @media (hover: hover) {
   .partir:enabled:hover {
-    background: var(--encre-survol);
+    background: var(--miel-survol);
   }
 }
 

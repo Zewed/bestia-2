@@ -14,8 +14,10 @@
   padding: 0 18px;
   border-radius: var(--arrondi-moyen);
   background: var(--encre);
+  box-shadow: var(--relief);
   color: var(--blanc-chaud);
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 17px;
   text-align: center;
   text-decoration: none;
   cursor: pointer;

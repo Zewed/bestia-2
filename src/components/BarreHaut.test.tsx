@@ -28,11 +28,21 @@ describe("barre du haut", () => {
     expect(lire("src/components/BarreHaut.module.css")).toMatch(/@media \(max-width: 820px\) \{[\s\S]*\.navigation \{[^}]*position: fixed;[^}]*bottom: 0;[^}]*var\(--bord-bas\)/);
   });
 
-  it("sur un petit écran d'ordinateur, sous 1 400 px depuis la cinquième entrée (US-0901), passe les ressources en bande sous la barre, la navigation restant en haut (US-0324)", () => {
+  it("dans le jeu, n'est plus une barre : ses pièces se posent sur la carte, qui passe dessous et se manie entre elles", () => {
+    const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
+    const jeu = css.match(/\n\.barre:has\(\.navigation\) \{([^}]*)\}/)?.[1] ?? "";
+    expect(jeu).toContain("position: fixed;");
+    expect(jeu).toContain("pointer-events: none;");
+    expect(css).toMatch(/\n\.barre:has\(\.navigation\) > \* \{\s*pointer-events: auto;/);
+    // Sur ordinateur, la rangée des médaillons est posée au milieu, au pied de l'écran.
+    expect(css).toMatch(/\n\.navigation \{[^}]*position: fixed;[^}]*bottom: calc\(10px \+ var\(--bord-bas\)\);[^}]*left: 50%;/);
+  });
+
+  it("sur un petit écran d'ordinateur, sous 1 100 px, passe les Stocks en rangée sous le blason et le nom (US-0324)", () => {
     const lire = (chemin: string) => readFileSync(join(process.cwd(), chemin), "utf8");
-    expect(lire("src/styles/formes.css")).toMatch(/@media \(max-width: 1399px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 44px;/);
+    expect(lire("src/styles/formes.css")).toMatch(/@media \(max-width: 1099px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 56px;/);
     const css = lire("src/components/BarreHaut.module.css");
-    const petit = css.slice(css.indexOf("@media (min-width: 821px) and (max-width: 1399px)"), css.indexOf("@media (max-width: 820px)"));
+    const petit = css.slice(css.indexOf("@media (min-width: 821px) and (max-width: 1099px)"), css.indexOf("@media (max-width: 820px) {"));
     expect(petit).not.toBe("");
     expect(petit).toMatch(/\.ressources \{[^}]*grid-column: 1 \/ -1;[^}]*grid-row: 2;/);
     expect(petit).not.toMatch(/\.navigation/);
@@ -51,21 +61,22 @@ describe("barre du haut", () => {
 
   it("sur mobile, range les quatre ressources puis le compteur d'Habitants en colonnes égales : cinq sur la bande (US-0304)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
-    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px) {"));
     expect(mobile).toMatch(/\.ressources \{[^}]*grid-auto-columns: minmax\(0, 1fr\);[^}]*grid-auto-flow: column;/);
     expect(mobile).toMatch(/\.groupes \{[^}]*grid-column: span 4;/);
-    // Le compteur, séparé des ressources du même trait que les deux groupes entre eux.
-    expect(mobile).toMatch(/\.groupe \+ \.groupe,\s*\.groupes \+ \.habitants \{[^}]*background: linear-gradient/);
+    // Chaque Stock, et le compteur, dans son propre jeton, écartés du même pas.
+    expect(mobile).toMatch(/\.groupe \{[^}]*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);[^}]*gap: 6px;/);
   });
 
   it("montre le solde horaire sous la quantité sur mobile, sur une troisième ligne de la bande, qui grandit d'autant (US-0319)", () => {
     const css = readFileSync(join(process.cwd(), "src/components/BarreHaut.module.css"), "utf8");
-    const mobile = css.slice(css.indexOf("@media (max-width: 820px)"));
-    // Jamais caché : à côté de la quantité dès 821 px, dessous sur mobile.
+    const mobile = css.slice(css.indexOf("@media (max-width: 820px) {"));
+    // Jamais caché : sous la quantité, l'icône à gauche des deux, sur ordinateur comme sur mobile.
     expect(css).not.toMatch(/\.solde \{[^}]*display: none/);
-    expect(mobile).toMatch(/grid-template-areas: "icone" "quantite" "solde";/);
-    expect(mobile).toMatch(/\.solde \{[^}]*grid-area: solde;/);
-    expect(readFileSync(join(process.cwd(), "src/styles/formes.css"), "utf8")).toMatch(/@media \(max-width: 820px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 56px;/);
+    expect(css).toMatch(/grid-template-areas: "icone quantite plein" "icone solde solde";/);
+    expect(mobile).toMatch(/grid-template-areas: "icone quantite" "icone solde";/);
+    expect(css).toMatch(/\n\.solde \{[^}]*grid-area: solde;/);
+    expect(readFileSync(join(process.cwd(), "src/styles/formes.css"), "utf8")).toMatch(/@media \(max-width: 820px\) \{\s*:root:has\(\[data-bande-ressources\]\) \{\s*--hauteur-bande: 52px;/);
   });
 
   describe("l'avertissement « famine imminente » (US-0321)", () => {
@@ -75,22 +86,21 @@ describe("barre du haut", () => {
     /** Les déclarations d'une règle, dans `texte` (toute la feuille de la barre par défaut). */
     const regle = (selecteur: string, texte = css) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
 
-    it("est une bande toute la largeur au bas de la barre, sous la ligne et sous la bande des ressources", () => {
+    it("est un bandeau au milieu, sous les pièces du haut et la rangée des Stocks, au pouce", () => {
       expect(regle(".barre")).toContain("grid-template-rows: var(--hauteur-ligne) var(--hauteur-bande) var(--hauteur-alerte);");
       const famine = regle(".famine");
       expect(famine).toContain("grid-column: 1 / -1;");
       expect(famine).toContain("grid-row: 3;");
-      // Collée aux bords de l'écran, comme la bande des ressources ; son texte reste à l'écart de l'encoche.
-      expect(famine).toMatch(/margin: 0 calc\(-1 \* max\(20px, var\(--bord-droit\)\)\) 0 calc\(-1 \* max\(20px, var\(--bord-gauche\)\)\);/);
-      expect(regle(".famine", css.slice(css.indexOf("@media (max-width: 820px)")))).toMatch(/margin: 0 calc\(-1 \* max\(12px, var\(--bord-droit\)\)\)/);
+      expect(famine).toContain("justify-self: center;");
+      expect(famine).toContain("min-height: 44px;");
     });
 
     it("fait grandir la barre de sa hauteur, pour que la page et les en-têtes collés restent justes dessous", () => {
       expect(formes).toMatch(/:root \{[^}]*--hauteur-alerte: 0px;/);
       expect(formes).toContain("--hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--hauteur-alerte) + var(--bord-haut));");
-      expect(formes).toMatch(/\n:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 36px;/);
-      // Sur un téléphone, sur deux lignes : la bande grandit d'autant.
-      expect(formes).toMatch(/@media \(max-width: 540px\) \{\s*:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 52px;/);
+      expect(formes).toMatch(/\n:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 52px;/);
+      // Sur un téléphone, sur deux lignes : le bandeau grandit d'autant.
+      expect(formes).toMatch(/@media \(max-width: 540px\) \{\s*:root:has\(\[data-alerte-famine\]\) \{\s*--hauteur-alerte: 60px;/);
     });
 
     it("prend la couleur d'alerte, un texte clair et lisible, sans clignoter, sur ordinateur comme sur mobile", () => {

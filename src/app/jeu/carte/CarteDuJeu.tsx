@@ -66,6 +66,11 @@ function couleurCalculee(element: HTMLElement, expression: string): string {
  * centre, ouvre la fiche de son Expédition à la place de celle d'une Case : une seule fiche à la fois ; touché encore, il
  * passe à l'Expédition posée au même point, puis à la Case dessous. Pendant le choix d'une destination, le toucher choisit
  * toujours la Case.
+ *
+ * Sous les autres pages du jeu, la même carte reste en scène (`quitter`, que donne la scène, components/Scene) : elle se
+ * fait glisser et zoomer, ses Expéditions avancent, mais elle n'a ni boutons, ni flèche du Foyer, ni fiche ; elle ne se
+ * prend pas au clavier, et ne demande rien au serveur. La toucher, une Case ou un repère, ferme le volet ouvert par-dessus
+ * elle et ramène à la carte (`quitter`).
  */
 export function CarteDuJeu({
   carte,
@@ -74,6 +79,7 @@ export function CarteDuJeu({
   expeditions = AUCUNE_EXPEDITION,
   maintenant = null,
   vitesse = 1,
+  quitter = null,
 }: {
   carte: CarteDuJoueur;
   fonds: string[];
@@ -81,7 +87,13 @@ export function CarteDuJeu({
   expeditions?: ExpeditionEnCours[];
   maintenant?: Date | null;
   vitesse?: number;
+  quitter?: (() => void) | null;
 }) {
+  const enScene = quitter !== null;
+  const pourQuitter = useRef(quitter);
+  useEffect(() => {
+    pourQuitter.current = quitter;
+  }, [quitter]);
   const toile = useRef<HTMLCanvasElement>(null);
   // US-0425 : si l'on peut encore rapprocher ou éloigner la carte, et le zoom d'un cran autour du milieu de l'écran.
   const [zoom, setZoom] = useState({ rapprocher: true, eloigner: true });
@@ -135,7 +147,7 @@ export function CarteDuJeu({
   }, []);
   // US-0442 : la carte à jour des Cases découvertes depuis sa lecture, redessinée dès qu'il y en a ; avant le dessin
   // ci-dessous, qu'une nouvelle lecture de la page remet en place avec elle.
-  const decouverte = useDecouvertes(carte);
+  const decouverte = useDecouvertes(carte, !enScene);
   const decouvertes = useMemo(() => nombreDeDecouvertes(decouverte), [decouverte]);
   const aDessiner = useRef(decouverte);
   useEffect(() => {
@@ -226,6 +238,10 @@ export function CarteDuJeu({
       // la Case : une Expédition qui y séjourne ne l'empêche pas d'être choisie.
       toucher: (x, y) => {
         if (!vue) return;
+        if (pourQuitter.current) {
+          pourQuitter.current();
+          return;
+        }
         const touchee = enChoix.current ? null : repereTouche(reperes.current, x, y, suivieActuelle.current);
         if (touchee === null) choisirUneCase(caseSous(carte, vue, x, y));
         else suivre(touchee);
@@ -238,7 +254,7 @@ export function CarteDuJeu({
         return;
       }
       const { left, top } = canvas.getBoundingClientRect();
-      const dessus = !enChoix.current && reperesSous(reperes.current, evenement.clientX - left, evenement.clientY - top).length > 0;
+      const dessus = pourQuitter.current !== null || (!enChoix.current && reperesSous(reperes.current, evenement.clientX - left, evenement.clientY - top).length > 0);
       canvas.style.cursor = dessus ? "pointer" : "";
     };
     canvas.addEventListener("pointermove", survoler);
@@ -306,7 +322,11 @@ export function CarteDuJeu({
   return (
     <div className={styles.cadre}>
       {/* US-0422 : une carte qu'on manie, au clavier aussi : elle se sélectionne, et les flèches lui reviennent. */}
-      <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
+      {enScene ? (
+        <canvas ref={toile} className={styles.carte} tabIndex={-1} aria-hidden="true" />
+      ) : (
+        <canvas ref={toile} className={styles.carte} tabIndex={0} role="application" aria-roledescription="carte" aria-label="Carte du Monde" />
+      )}
       {suivies.length > 0 && maintenant ? (
         <ExpeditionsSurLaCarte
           expeditions={suivies}
@@ -319,12 +339,17 @@ export function CarteDuJeu({
           fermer={nePlusSuivre}
           carte={toile}
           montrer={montrer}
+          auClavier={!enScene}
         />
       ) : null}
-      <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
-      <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
-      <CasesDecouvertes nombre={decouvertes} total={decouverte.cases.q.length} />
-      {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} fermer={fermer} destination={destination} /> : null}
+      {enScene ? null : (
+        <>
+          <FlecheDuFoyer ref={fleche} revenir={() => revenirAuFoyer.current()} />
+          <BoutonsDeLaCarte {...zoom} zoomer={(facteur) => zoomerAuMilieu.current(facteur)} revenir={() => revenirAuFoyer.current()} />
+          <CasesDecouvertes nombre={decouvertes} total={decouverte.cases.q.length} />
+          {choix ? <FicheDeLaCase choix={choix} carte={toile} montrer={montrer} fermer={fermer} destination={destination} /> : null}
+        </>
+      )}
     </div>
   );
 }

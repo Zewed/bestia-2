@@ -1,14 +1,16 @@
 /*
- * La barre du haut Encre du prototype : collée aux bords de la fenêtre, sans cadre,
- * accrochée en haut de l'écran au défilement. Plus basse sur mobile.
+ * Le haut de l'écran. Hors du jeu, une barre Encre où se pose le blason du loup. Dans le jeu (dès que la navigation est
+ * là), plus de barre : des pièces de bois ciré posées sur le cadre de la carte, qui passe dessous. En haut à gauche, le
+ * blason du loup et la plaque du nom du chef (US-0140) ; en haut à droite, les Stocks en jetons (US-0203) et le compteur
+ * d'Habitants (US-0304) ; dessous, l'avertissement de famine (US-0321) ; au pied de l'écran, la rangée des médaillons de
+ * la navigation (US-0302). Entre les pièces, la carte se voit et se manie.
  */
 .barre {
   position: sticky;
   top: 0;
   z-index: 40;
-  /* Le logo à gauche, puis la navigation (US-0302), les ressources au milieu, le nom du chef à droite ;
-     la bande des ressources en dessous sur mobile, et l'avertissement de famine au pied (US-0321). Le
-     logo, la navigation et les ressources gardent leur largeur : à l'étroit, c'est le nom du chef qui se coupe. */
+  /* Le logo à gauche, puis la navigation, les ressources au milieu, le nom du chef à droite ; la rangée des ressources
+     dessous quand elle n'y tient pas, et l'avertissement de famine au pied (US-0321). */
   display: grid;
   grid-template-columns: max-content max-content 1fr minmax(0, max-content);
   grid-template-rows: var(--hauteur-ligne) var(--hauteur-bande) var(--hauteur-alerte);
@@ -22,22 +24,52 @@
   color: var(--ivoire);
 }
 
-/* Une action du joueur, à droite : un bouton discret sur l'Encre, assez haut pour le pouce. */
+/*
+ * Dans le jeu : les pièces se posent par-dessus la carte, qui prend tout l'écran. Une ombre douce descend du haut, comme
+ * le bord d'un plateau sous la lampe, pour que les pièces se lisent sur toutes les couleurs du Monde ; elle laisse
+ * passer les gestes vers la carte, et seules les pièces se touchent.
+ */
+.barre:has(.navigation) {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  grid-template-columns: max-content minmax(0, max-content) 1fr;
+  column-gap: 10px;
+  margin: 0;
+  padding: var(--bord-haut) max(16px, var(--bord-droit)) 0 max(16px, var(--bord-gauche));
+  background: linear-gradient(to bottom, var(--ombre-du-soir), transparent);
+  pointer-events: none;
+}
+
+.barre:has(.navigation) > * {
+  pointer-events: auto;
+}
+
+/* Le blason du loup, toujours en premier, en haut à gauche. */
+.barre > :first-child {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* Une action du joueur, à droite hors du jeu : un bouton discret sur l'Encre, assez haut pour le pouce. */
 .barre > .action,
 .chef {
   grid-column: 4;
+  grid-row: 1;
 }
 
 .action {
   min-height: 44px;
   margin-left: auto;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 1px solid var(--sur-encre-trait);
   border-radius: var(--arrondi-moyen);
   background: transparent;
   color: var(--ivoire);
   font: inherit;
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 16px;
   cursor: pointer;
 }
 
@@ -55,7 +87,7 @@
   opacity: 0.75;
 }
 
-/* US-0140 : le nom de chef, dans la même pastille, avec une flèche ; il ouvre le menu juste en dessous. */
+/* US-0140 : le nom de chef, sur sa plaque, avec une flèche ; il ouvre le menu juste en dessous. */
 .chef {
   position: relative;
   display: flex;
@@ -64,13 +96,40 @@
   min-width: 0;
 }
 
+/* Dans le jeu, la plaque du nom suit le blason, à gauche. */
+.barre:has(.navigation) .chef {
+  grid-column: 2;
+  justify-content: flex-start;
+}
+
 .nom {
   display: flex;
   gap: 8px;
   align-items: center;
   min-width: 0;
-  max-width: min(44vw, 260px);
+  max-width: min(44vw, 280px);
   margin-left: 0;
+}
+
+/* Dans le jeu, une plaque de bois ciré, cerclée de doré, comme celle d'un chef sur la carte. */
+.barre:has(.navigation) .nom {
+  min-height: 44px;
+  padding: 0 14px 0 16px;
+  border: 0;
+  border-radius: var(--arrondi-moyen);
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--relief-bois),
+    0 6px 14px var(--ombre-du-soir);
+  font-size: 18px;
+  text-shadow: 0 1px 0 var(--bois-sombre);
+}
+
+@media (hover: hover) {
+  .barre:has(.navigation) .nom:hover {
+    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 40%, var(--bois));
+  }
 }
 
 /* Un nom trop long pour l'écran est coupé net, avec des points de suspension. */
@@ -86,7 +145,7 @@
   height: 12px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.6;
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
   transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
@@ -98,23 +157,30 @@
 
 .menu {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 10px);
   right: 0;
   min-width: 220px;
   max-width: calc(100vw - 24px);
   overflow: hidden;
-  border: 1px solid var(--trait-doux);
   border-radius: var(--arrondi-moyen);
   background: var(--bloc);
   color: var(--encre);
-  box-shadow: var(--ombre);
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--ombre-forte);
 }
 
-/* Le nom en entier, en tête du menu : on le lit même s'il est coupé dans la barre. */
+.barre:has(.navigation) .menu {
+  right: auto;
+  left: 0;
+}
+
+/* Le nom en entier, en tête du menu : on le lit même s'il est coupé sur la plaque. */
 .nomComplet {
   padding: 12px 14px;
   border-bottom: 1px solid var(--trait-doux);
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 17px;
   overflow-wrap: anywhere;
 }
 
@@ -127,6 +193,7 @@
   background: transparent;
   color: var(--encre);
   font: inherit;
+  font-weight: var(--graisse-titre);
   text-align: left;
   cursor: pointer;
 }
@@ -143,32 +210,100 @@
 }
 
 /*
- * US-0302 : la navigation du jeu, juste à droite du logo : du texte sur l'Encre, comme les actions de
- * la barre. L'entrée de la page affichée passe en clair et se souligne : jamais la couleur seule.
+ * US-0302 : la navigation du jeu, une rangée de médaillons dans un plateau de bois au pied de l'écran, au milieu sur
+ * ordinateur. Chaque entrée, son médaillon puis son nom ; l'Expédition, au milieu, plus grande, cerclée de miel, déborde
+ * au-dessus du plateau. L'entrée de la page affichée se soulève, cerclée de citron, et son nom se souligne : jamais la
+ * couleur seule.
  */
 .navigation {
-  grid-column: 2;
-  grid-row: 1;
+  position: fixed;
+  bottom: calc(10px + var(--bord-bas));
+  left: 50%;
+  z-index: 41;
+  transform: translateX(-50%);
 }
 
 .entrees {
   display: flex;
+  align-items: flex-end;
   gap: 4px;
-  padding: 0;
+  padding: 8px 12px 6px;
+  border-radius: 26px;
+  background: linear-gradient(to bottom, var(--bois), var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    0 0 0 4px var(--bois-sombre),
+    var(--relief-bois),
+    var(--ombre-forte);
   list-style: none;
 }
 
-.entree {
+.place {
   display: flex;
+}
+
+.entree {
+  --taille-medaillon: 48px;
+  --icone: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 80px;
   min-height: 44px;
-  padding: 0 12px;
-  border-radius: var(--arrondi-moyen);
+  padding: 2px 8px 2px;
+  border-radius: 18px;
   color: var(--sur-encre-discret);
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 15px;
+  line-height: 1.1;
   text-decoration: none;
+  text-shadow: 0 1px 0 var(--bois-sombre);
   white-space: nowrap;
+  cursor: pointer;
+}
+
+/*
+ * Le médaillon de l'entrée : un rond de bois sombre éclairé en haut, cerclé d'un filet doré, son illustration peinte
+ * posée dedans (--icone, que pose la navigation) ; la hutte du chef, en grand, recadrée sur son toit.
+ */
+.entree::before {
+  content: "";
+  flex: none;
+  width: var(--taille-medaillon);
+  height: var(--taille-medaillon);
+  border-radius: 50%;
+  background:
+    var(--icone) 50% 50% / 82% no-repeat,
+    radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore),
+    0 0 0 4px var(--bois-sombre),
+    var(--relief-bois),
+    0 6px 12px var(--ombre-du-soir);
+  transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.entree[data-hutte]::before {
+  background-position: 58% 30%, 50% 50%;
+  background-size: 175% auto, auto;
+}
+
+/* L'Expédition, l'action du jeu : plus grande, cerclée de miel, au-dessus du plateau. */
+.entree[data-principale] {
+  --taille-medaillon: 68px;
+  margin-top: -30px;
+  color: var(--ivoire);
+}
+
+.entree[data-principale]::before {
+  box-shadow:
+    0 0 0 3px var(--miel),
+    0 0 0 6px var(--bois-sombre),
+    var(--relief-bois),
+    0 8px 16px var(--ombre-du-soir);
 }
 
 @media (hover: hover) {
@@ -176,91 +311,97 @@
     background: var(--sur-encre-survol);
     color: var(--ivoire);
   }
+
+  .entree:hover::before {
+    transform: translateY(-3px);
+  }
 }
 
 .entree:focus-visible {
-  outline: 2px solid var(--ivoire);
+  outline: 2px solid var(--citron);
   outline-offset: 2px;
 }
 
-/* Le trait sous le nom seul, pas sous la pastille des Récits non lus (US-0324). */
+/* La page affichée : son médaillon se soulève, cerclé de citron ; son nom passe en clair, souligné de citron. */
 .entree[aria-current="page"] {
   color: var(--ivoire);
 }
 
+.entree[aria-current="page"]::before {
+  transform: translateY(-5px);
+  box-shadow:
+    0 0 0 3px var(--citron),
+    0 0 0 6px var(--bois-sombre),
+    var(--relief-bois),
+    0 10px 18px var(--ombre-du-soir);
+}
+
+/* Le trait sous le nom seul, pas sous la pastille des Récits non lus (US-0324). */
 .entree[aria-current="page"] .libelle {
   text-decoration: underline 2px var(--citron);
   text-decoration-skip-ink: none;
-  text-underline-offset: 7px;
+  text-underline-offset: 4px;
 }
 
-/* US-0324 : le nombre de Récits non lus, en chiffres sur une pastille citron : lisible sans la couleur. */
+/* US-0324 : le nombre de Récits non lus, sur une pastille citron au coin du médaillon : lisible sans la couleur. */
 .pastille {
-  flex: none;
-  min-width: 20px;
-  height: 20px;
-  margin-left: 6px;
+  position: absolute;
+  top: -6px;
+  right: calc(50% - 32px);
+  min-width: 24px;
+  height: 24px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--citron);
+  box-shadow: 0 0 0 2px var(--bois-sombre);
   color: var(--encre);
-  font-size: 12px;
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 14px;
   font-variant-numeric: tabular-nums;
-  line-height: 20px;
+  line-height: 24px;
   text-align: center;
+  text-shadow: none;
 }
 
-/* US-0332 : un Voyageur attend aux portes : un point citron sur l'entrée « Habitants », sans chiffre. */
+/* US-0332 : un Voyageur attend aux portes : un point citron au coin du médaillon « Habitants », sans chiffre. */
 .repere {
-  flex: none;
+  position: absolute;
+  top: 0;
+  right: calc(50% - 21px);
   width: 8px;
   height: 8px;
-  margin-left: 6px;
   border-radius: 999px;
   background: var(--citron);
+  box-shadow:
+    0 0 0 3px var(--bois-sombre),
+    0 0 0 4px var(--citron);
 }
 
 /*
- * US-0203 : les quatre ressources, chacune son icône (US-0204) puis la quantité en chiffres de même
- * largeur, en deux groupes séparés d'un fin trait : la Nourriture, puis les Matériaux (US-0205).
+ * US-0203 : les Stocks, en jetons de bois en haut à droite : l'icône peinte de chaque Ressource (US-0204) déborde à
+ * gauche de son jeton, la quantité en chiffres de jeu, le solde horaire dessous (US-0319). La Nourriture, puis les
+ * Matériaux (US-0205), un peu écartés ; après eux, le compteur d'Habitants (US-0304).
  */
 .ressources {
   grid-column: 3;
-  justify-self: center;
+  grid-row: 1;
+  justify-self: end;
   display: flex;
   align-items: center;
+  gap: 18px;
 }
 
-/* Les deux groupes de ressources ; après eux, le compteur d'Habitants (US-0304), séparé du même trait. */
 .groupes {
   display: flex;
   align-items: center;
+  gap: 18px;
 }
 
 .groupe {
   display: flex;
-  gap: 8px;
+  gap: 18px;
   padding: 0;
   list-style: none;
-}
-
-.groupe + .groupe,
-.groupes + .habitants {
-  position: relative;
-  margin-left: 12px;
-  padding-left: 12px;
-}
-
-.groupe + .groupe::before,
-.groupes + .habitants::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 0;
-  height: 24px;
-  border-left: 1px solid var(--sur-encre-eteint);
-  transform: translateY(-50%);
 }
 
 .ressource {
@@ -270,25 +411,39 @@
 }
 
 .boutonRessource {
-  display: flex;
-  gap: 6px;
+  display: grid;
+  grid-template-areas: "icone quantite plein" "icone solde solde";
+  grid-template-columns: auto auto auto;
   align-items: center;
-  min-height: 44px;
-  padding: 0 8px;
+  justify-items: start;
+  column-gap: 6px;
+  min-height: 46px;
+  padding: 3px 14px 3px 0;
   border: 0;
   border-radius: var(--arrondi-moyen);
-  background: transparent;
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--relief-bois),
+    0 6px 14px var(--ombre-du-soir);
   color: var(--ivoire);
   font: inherit;
-  cursor: default;
+  text-shadow: 0 1px 0 var(--bois-sombre);
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .boutonRessource:hover {
+    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
+  }
 }
 
 .boutonRessource:focus-visible {
-  outline: 2px solid var(--ivoire);
-  outline-offset: -2px;
+  outline: 2px solid var(--citron);
+  outline-offset: 3px;
 }
 
-/* US-0304 : le compteur d'Habitants, posé comme une ressource ; c'est un lien vers la page Habitants. */
+/* US-0304 : le compteur d'Habitants, posé comme un Stock ; c'est un lien vers la page Habitants. */
 .habitants {
   display: flex;
 }
@@ -300,20 +455,26 @@
 
 @media (hover: hover) {
   .lienHabitants:hover {
-    background: var(--sur-encre-survol);
+    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
   }
 }
 
+/* L'icône peinte, plus grande que le jeton, qui en déborde à gauche. */
 .icone {
+  grid-area: icone;
   flex: none;
-  width: 22px;
-  height: 22px;
+  width: 42px;
+  height: 42px;
+  margin: -6px 0 -6px -16px;
+  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
 }
 
 .quantite {
-  font-size: 15px;
-  font-weight: var(--graisse-titre);
+  grid-area: quantite;
+  font-family: var(--police-titre);
+  font-size: 20px;
   font-variant-numeric: tabular-nums;
+  line-height: 1;
 }
 
 /* US-0224 : un Stock plein, en couleur d'alerte et avec le mot « plein » : jamais la couleur seule. */
@@ -327,6 +488,7 @@
 }
 
 .plein {
+  grid-area: plein;
   padding: 1px 6px;
   border-radius: var(--arrondi-petit);
   background: var(--mauvais);
@@ -334,28 +496,30 @@
   font-size: 11px;
   font-weight: var(--graisse-titre);
   letter-spacing: var(--espacement-etiquette);
+  text-shadow: none;
   text-transform: uppercase;
 }
 
 /*
- * US-0212 : la production horaire, à côté de la quantité. US-0319 : c'est le solde, production moins
- * Entretien, partout : à côté de la quantité dès 821 px, dessous sur mobile. Négatif, il passe dans la
- * couleur d'alerte d'un Stock plein, avec son signe moins : jamais la couleur seule.
+ * US-0212 : la production horaire, sous la quantité. US-0319 : c'est le solde, production moins Entretien. Négatif,
+ * il passe dans la couleur d'alerte d'un Stock plein, avec son signe moins : jamais la couleur seule.
  */
 .solde {
-  color: var(--sur-encre-pale);
+  grid-area: solde;
+  color: var(--sur-encre-discret);
   font-size: 12px;
+  font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
 .solde[data-nulle] {
-  color: var(--sur-encre-eteint);
+  color: var(--sur-encre-pale);
 }
 
 .solde[data-negatif] {
   color: var(--rose);
-  font-weight: var(--graisse-titre);
 }
 
 /* Un texte pour les lecteurs d'écran seulement. */
@@ -368,25 +532,27 @@
   white-space: nowrap;
 }
 
-/* Le nom de la ressource et de son groupe, dans une bulle sous elle : au survol, au clavier ou au toucher. */
+/* Le détail d'un Stock, dans une bulle de paille sous lui : au survol, au clavier ou au toucher. */
 .bulle {
-  /* Centrée sous sa ressource ; collée au bord pour la première et la dernière, pour ne jamais sortir de l'écran. */
+  /* Centrée sous sa ressource ; collée au bord pour la dernière, pour ne jamais sortir de l'écran. */
   --decalage: -50%;
   position: absolute;
-  top: calc(100% + 4px);
+  top: calc(100% + 10px);
   left: 50%;
   z-index: 1;
   display: grid;
   gap: 2px;
-  padding: 6px 10px;
-  border: 1px solid var(--trait-doux);
-  border-radius: var(--arrondi-petit);
+  padding: 10px 14px;
+  border-radius: var(--arrondi-moyen);
   background: var(--bloc);
-  box-shadow: var(--ombre);
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--ombre-forte);
   color: var(--encre);
   font-size: 13px;
   font-weight: var(--graisse-titre);
   text-align: center;
+  text-shadow: none;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
@@ -403,18 +569,15 @@
   font-weight: var(--graisse-texte);
 }
 
-.groupe:first-child .ressource:first-child .bulle {
-  --decalage: 0%;
-  left: 4px;
-}
-
 .groupe:last-child .ressource:last-child .bulle {
   --decalage: -100%;
   left: calc(100% - 4px);
 }
 
 .nomBulle {
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 17px;
+  font-weight: 400;
 }
 
 .quantiteBulle {
@@ -423,18 +586,19 @@
 }
 
 .jauge {
-  height: 6px;
+  height: 8px;
   margin-bottom: 4px;
   overflow: hidden;
-  border-radius: 3px;
+  border-radius: 4px;
   background: var(--bloc-3);
+  box-shadow: inset 0 1px 2px var(--ombre-du-soir);
 }
 
 .remplissage {
   display: block;
   height: 100%;
-  border-radius: 3px;
-  background: var(--encre);
+  border-radius: 4px;
+  background: linear-gradient(to bottom, var(--miel), var(--miel-fonce));
 }
 
 .ressource[data-plein] .remplissage {
@@ -505,27 +669,35 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fleche,
-  .bulle {
+  .bulle,
+  .entree::before {
     transition: none;
   }
 }
 
 /*
- * US-0321 : l'avertissement « famine imminente », une fine bande toute la largeur au pied de la barre, sous la
- * ligne et sous la bande des ressources quand il y en a une ; toute la bande mène à la page Habitants. Dans la
- * couleur d'alerte, son texte clair en gras dit l'alerte : jamais la couleur seule, et rien qui clignote.
+ * US-0321 : l'avertissement « famine imminente », un bandeau d'alerte arrondi sous les pièces du haut, au milieu ; tout
+ * le bandeau mène à la page Habitants. Dans la couleur d'alerte, son texte clair en gras dit l'alerte : jamais la
+ * couleur seule, et rien qui clignote.
  */
 .famine {
   grid-column: 1 / -1;
   grid-row: 3;
-  align-self: stretch;
+  justify-self: center;
   display: flex;
   gap: 8px;
   align-items: center;
+  width: min(620px, 100%);
   min-width: 0;
-  margin: 0 calc(-1 * max(20px, var(--bord-droit))) 0 calc(-1 * max(20px, var(--bord-gauche)));
-  padding: 0 max(20px, var(--bord-droit)) 0 max(20px, var(--bord-gauche));
+  min-height: 44px;
+  margin: 0;
+  padding: 0 20px;
+  border-radius: var(--arrondi-moyen);
   background: var(--mauvais);
+  box-shadow:
+    0 0 0 2px var(--bois-sombre),
+    var(--relief),
+    0 6px 14px var(--ombre-du-soir);
   color: var(--blanc-chaud);
   font-size: 14px;
   text-decoration: none;
@@ -533,14 +705,16 @@
 
 .famine:focus-visible {
   outline: 2px solid var(--ivoire);
-  outline-offset: -4px;
+  outline-offset: 3px;
 }
 
 .titreFamine {
+  font-family: var(--police-titre);
+  font-size: 16px;
   font-weight: var(--graisse-titre);
 }
 
-/* US-0325 : en Famine, la même bande à la même place, plus marquée : « FAMINE » en capitales espacées, un peu plus grand. */
+/* US-0325 : en Famine, le même bandeau à la même place, plus marqué : « FAMINE » en capitales espacées. */
 .famine[data-famine] {
   font-size: 15px;
 }
@@ -598,21 +772,12 @@
   }
 }
 
-/*
- * US-0324 : sous 1280 px, la navigation à trois entrées ne laisse plus la place à coup sûr aux
- * ressources sur la ligne (quatre Stocks pleins, ou de grands nombres avec leur production) : elles passent
- * en bande sous la barre, centrées, toute la largeur sous un filet. US-0901 : sous 1400 px depuis la cinquième
- * entrée, « Expéditions », plus large de 113 px ; au-delà, le nom du chef garde la place qu'il avait.
- */
-@media (min-width: 821px) and (max-width: 1399px) {
+/* Sous 1 100 px, les Stocks passent en rangée sous le blason et le nom, à droite, sans changer de forme. */
+@media (min-width: 821px) and (max-width: 1099px) {
   .ressources {
     grid-column: 1 / -1;
     grid-row: 2;
-    justify-self: stretch;
-    align-self: stretch;
-    justify-content: center;
-    margin: 0 calc(-1 * max(20px, var(--bord-droit))) 0 calc(-1 * max(20px, var(--bord-gauche)));
-    border-top: 1px solid var(--sur-encre-trait);
+    align-self: center;
   }
 }
 
@@ -622,16 +787,22 @@
     padding-left: max(12px, var(--bord-gauche));
   }
 
-  /* US-0321 : l'avertissement de famine, toujours de bord à bord. */
-  .famine {
-    margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
-    padding: 0 max(12px, var(--bord-droit)) 0 max(12px, var(--bord-gauche));
+  .barre:has(.navigation) {
+    column-gap: 8px;
+    padding-right: max(10px, var(--bord-droit));
+    padding-left: max(10px, var(--bord-gauche));
+  }
+
+  .barre:has(.navigation) .nom {
+    min-height: 40px;
+    padding: 0 12px;
+    font-size: 16px;
   }
 
   /*
-   * La navigation en onglets fixés en bas de l'écran, au pouce : cinq onglets (US-0324, US-0417, US-0901),
-   * sur l'Encre de la barre, au-dessus de l'encoche du bas. La page s'arrête au-dessus (--hauteur-onglets,
-   * formes.css).
+   * La navigation : la rangée des médaillons tient toute la largeur au pied de l'écran, au pouce, au-dessus de
+   * l'encoche du bas ; cinq places égales (US-0324, US-0417, US-0901), l'Expédition au milieu, qui déborde au-dessus.
+   * La page s'arrête au-dessus (--hauteur-onglets, formes.css).
    */
   .navigation {
     position: fixed;
@@ -639,126 +810,131 @@
     bottom: 0;
     left: 0;
     padding: 0 var(--bord-droit) var(--bord-bas) var(--bord-gauche);
-    background: var(--encre);
+    background: var(--bois-sombre);
+    transform: none;
   }
 
-  /*
-   * US-0901 : les onglets se partagent la largeur à parts égales, sauf celui dont le nom n'y tiendrait pas, qui
-   * prend ce qu'il lui faut (1fr ne descend pas sous la largeur de son contenu).
-   */
   .entrees {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
     gap: 0;
     height: var(--hauteur-onglets);
+    padding: 6px 2px 4px;
+    border-radius: 22px 22px 0 0;
+    box-shadow:
+      0 -2px 0 var(--dore-sombre),
+      var(--relief-bois),
+      0 -8px 24px var(--ombre-du-soir);
   }
 
-  /*
-   * Cinq onglets de 64 px en moyenne sur 320 px (US-0901) : en 12 px, « Expéditions », « Habitants » et son
-   * point, « Récits » et sa pastille, même à « 99+ », y tiennent ensemble.
-   */
+  .place {
+    justify-content: center;
+    min-width: 0;
+  }
+
+  /* Cinq places de 64 px au moins sur 320 px : le nom en 12 px, « Expéditions », « Habitants » et « Récits » y tiennent. */
   .entree {
-    height: 100%;
+    --taille-medaillon: 38px;
+    gap: 3px;
+    width: 100%;
+    min-width: 0;
     padding: 0 2px;
-    border-radius: 0;
+    border-radius: 14px;
     font-size: 12px;
   }
 
+  .entree[data-principale] {
+    --taille-medaillon: 56px;
+    margin-top: -26px;
+  }
+
   .entree:focus-visible {
-    outline-offset: -4px;
+    outline-offset: -2px;
   }
 
   .pastille {
-    margin-left: 3px;
+    min-width: 22px;
+    height: 22px;
     padding: 0 5px;
+    font-size: 13px;
+    line-height: 22px;
   }
 
   /*
-   * La bande des ressources : toute la largeur de l'écran, sous un filet, une colonne égale par
-   * ressource puis une pour le compteur d'Habitants (US-0304) : cinq colonnes, de 64 px sur 320 px.
+   * Les Stocks en rangée sous le blason et le nom : cinq jetons égaux sur toute la largeur, les quatre Ressources puis
+   * le compteur d'Habitants (US-0304), l'icône à gauche, la quantité et dessous le solde (US-0319).
    */
   .ressources {
     grid-column: 1 / -1;
     grid-row: 2;
     justify-self: stretch;
-    align-self: stretch;
+    align-self: center;
     display: grid;
     grid-auto-columns: minmax(0, 1fr);
     grid-auto-flow: column;
-    align-items: stretch;
-    margin: 0 calc(-1 * max(12px, var(--bord-droit))) 0 calc(-1 * max(12px, var(--bord-gauche)));
-    border-top: 1px solid var(--sur-encre-trait);
+    gap: 6px;
   }
 
-  /* Les quatre ressources prennent quatre colonnes de la bande. */
   .groupes {
     grid-column: span 4;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: stretch;
+    gap: 6px;
   }
 
-  /* Deux colonnes par groupe : quatre colonnes égales, le trait entre la 2e et la 3e. */
   .groupe {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0;
+    gap: 6px;
   }
 
-  /* Le trait entre les groupes, et avant le compteur, dessiné en fond : le groupe reste sans position propre. */
-  .groupe + .groupe,
-  .groupes + .habitants {
-    position: static;
-    margin-left: 0;
-    padding-left: 0;
-    background: linear-gradient(var(--sur-encre-eteint), var(--sur-encre-eteint)) left center / 1px 24px no-repeat;
+  .ressource,
+  .habitants {
+    min-width: 0;
   }
 
-  .groupe + .groupe::before,
-  .groupes + .habitants::before {
-    display: none;
-  }
-
-  /*
-   * Toute la colonne se touche ; l'icône au-dessus de la quantité, pour tenir six chiffres sur 320 px.
-   * US-0319 : le solde dessous, sur une troisième ligne gardée partout, pour que les quantités restent alignées.
-   */
   .boutonRessource {
-    display: grid;
-    grid-template-areas: "icone" "quantite" "solde";
-    grid-template-rows: auto auto 12px;
-    gap: 1px 4px;
-    align-content: center;
-    justify-content: center;
-    justify-items: center;
+    grid-template-areas: "icone quantite" "icone solde";
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: 3px;
     width: 100%;
-    min-height: 0;
-    padding: 0 4px;
+    min-height: 44px;
+    padding: 2px 4px 2px 2px;
+    border-radius: var(--arrondi-petit);
   }
 
-  .boutonRessource .icone {
-    grid-area: icone;
+  .icone {
+    width: 24px;
+    height: 24px;
+    margin: 0;
   }
 
-  .boutonRessource .quantite {
-    grid-area: quantite;
-    line-height: 18px;
+  .quantite {
+    font-size: 15px;
   }
 
-  /* « −1 234/h » tient dans une colonne de 64 px. */
+  /* « −1 234/h » tient dans un jeton de 64 px. */
   .solde {
-    grid-area: solde;
     font-size: 10px;
     line-height: 12px;
   }
 
+  /* Un Stock plein : le mot « plein » prend la place du solde, la quantité au-dessus. */
+  .ressource[data-plein] .boutonRessource {
+    grid-template-areas: "icone quantite" "icone plein";
+  }
+
+  .plein {
+    justify-self: start;
+    padding: 0 4px;
+    font-size: 9px;
+  }
+
   /*
-   * US-0319 : le détail d'une ressource s'ouvre dans un panneau en bas de l'écran, toute la largeur,
-   * juste au-dessus des onglets ; son contenu reste en colonne sur un écran plus large. Pas de voile : la
-   * page reste là, et la toucher le referme, comme Échap ou son bouton « Fermer ».
+   * US-0319 : le détail d'une ressource s'ouvre dans un panneau en bas de l'écran, toute la largeur, juste au-dessus
+   * des médaillons. Pas de voile : la carte reste là, et la toucher le referme, comme Échap ou son bouton « Fermer ».
    */
   .bulle,
-  .groupe:first-child .ressource:first-child .bulle,
   .groupe:last-child .ressource:last-child .bulle {
     --decalage: 0%;
     --marge-panneau: max(16px, calc((100vw - 480px) / 2));
@@ -770,8 +946,7 @@
     max-height: var(--hauteur-utile);
     overflow-y: auto;
     gap: 4px;
-    padding: 16px max(var(--marge-panneau), var(--bord-droit)) 16px max(var(--marge-panneau), var(--bord-gauche));
-    border-width: 1px 0 0;
+    padding: 18px max(var(--marge-panneau), var(--bord-droit)) 18px max(var(--marge-panneau), var(--bord-gauche));
     border-radius: var(--arrondi) var(--arrondi) 0 0;
     font-size: 14px;
     text-align: left;
@@ -790,7 +965,7 @@
   }
 
   .nomBulle {
-    font-size: 16px;
+    font-size: 19px;
   }
 
   .groupeBulle,
@@ -807,35 +982,19 @@
 
   .fermer {
     position: absolute;
-    top: 8px;
+    top: 10px;
     right: max(var(--marge-panneau), var(--bord-droit));
     display: block;
     min-height: 44px;
-    padding: 0 14px;
-    border: 1px solid var(--trait);
+    padding: 0 16px;
+    border: 0;
     border-radius: var(--arrondi-moyen);
-    background: var(--bloc);
-    color: var(--encre);
+    background: var(--encre);
+    box-shadow: var(--relief);
+    color: var(--blanc-chaud);
     font: inherit;
-    font-size: 14px;
-    font-weight: var(--graisse-titre);
+    font-family: var(--police-titre);
+    font-size: 15px;
     cursor: pointer;
-  }
-
-  /* Un Stock plein : le mot « plein » à côté de l'icône, la quantité dessous ; serrés, pour tenir dans une colonne de 64 px (US-0304). */
-  .ressource[data-plein] .boutonRessource {
-    grid-template-areas: "icone plein" "quantite quantite" "solde solde";
-    column-gap: 2px;
-  }
-
-  .plein {
-    grid-area: plein;
-    padding: 0 4px;
-    font-size: 9px;
-  }
-
-  .icone {
-    width: 18px;
-    height: 18px;
   }
 }

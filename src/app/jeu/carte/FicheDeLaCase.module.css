@@ -1,29 +1,33 @@
 /*
- * US-0428 : la fiche d'une Case, sur ordinateur un bloc Bento flottant en haut à gauche de la carte, à hauteur du
- * bouton de la légende, qui est à droite ; elle défile si elle dépasse la carte.
+ * US-0428 : la fiche d'une Case, sur ordinateur un petit volet de paille cerclé de bois et de doré, flottant en haut à
+ * gauche de la carte, sous le blason et le nom du chef, à hauteur du bouton de la légende, qui est à droite ; elle
+ * défile si elle dépasse la carte.
  */
 .fiche {
   position: absolute;
-  top: 12px;
+  top: calc(var(--hauteur-barre) + 12px);
   left: calc(12px + var(--bord-gauche));
   z-index: 10;
-  width: 300px;
-  max-width: calc(100% - 24px - var(--bord-gauche) - var(--bord-droit));
-  max-height: calc(100% - 24px);
+  width: 320px;
+  max-width: calc(100% - 32px - var(--bord-gauche) - var(--bord-droit));
+  max-height: calc(100% - var(--hauteur-barre) - 24px);
   overflow-y: auto;
   padding: var(--marge-bloc);
   border-radius: var(--arrondi);
   background: var(--bloc);
-  box-shadow: var(--ombre);
+  box-shadow:
+    0 0 0 3px var(--bois),
+    0 0 0 5px var(--dore-sombre),
+    var(--ombre-forte);
   overflow-wrap: anywhere;
 }
 
-/* Son Biome, en titre, à côté de la croix. */
+/* Son Biome, en titre de jeu, à côté de la croix. */
 .biome {
   margin-bottom: 10px;
   padding-right: 32px;
-  font-size: 18px;
-  font-weight: var(--graisse-titre);
+  font-size: 22px;
+  line-height: 1.15;
 }
 
 /* US-0430 : sa croix, de 44 px, en haut à droite ; au-dessus de « Envoyer une Expédition » collé au pied (US-0901). */
@@ -39,7 +43,7 @@
   height: 44px;
   padding: 0;
   border: 0;
-  border-radius: var(--arrondi-moyen);
+  border-radius: 50%;
   background: none;
   color: var(--texte-discret);
   cursor: pointer;
@@ -120,13 +124,16 @@
   justify-content: center;
   width: 100%;
   min-height: 44px;
+  height: 50px;
   margin-top: 16px;
   padding: 0 14px;
   box-shadow: 0 0 0 16px var(--bloc);
+  border-bottom: 4px solid var(--miel-fonce);
   border-radius: var(--arrondi-moyen);
-  background: var(--encre);
-  color: var(--blanc-chaud);
-  font-weight: var(--graisse-titre);
+  background: linear-gradient(to bottom, var(--miel-survol), var(--miel));
+  color: var(--encre);
+  font-family: var(--police-titre);
+  font-size: 18px;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
@@ -134,7 +141,7 @@
 
 @media (hover: hover) {
   .envoyer:hover {
-    background: var(--encre-survol);
+    background: var(--miel-survol);
   }
 }
 
@@ -208,6 +215,10 @@
     max-height: calc(0.45 * var(--hauteur-utile));
     padding: 22px max(16px, var(--bord-droit)) 16px max(16px, var(--bord-gauche));
     border-radius: var(--arrondi) var(--arrondi) 0 0;
+    box-shadow:
+      0 -3px 0 var(--bois),
+      0 -5px 0 var(--dore-sombre),
+      var(--ombre-forte);
     touch-action: none;
     user-select: none;
     transition: transform 0.2s ease-out;

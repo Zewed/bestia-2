@@ -15,13 +15,13 @@ export function BlocProduction({ biome, productions }: { biome: string; producti
         {productions.map((p) =>
           Number(p.parHeure) > 0 ? (
             <li key={p.id} className={styles.ligneProduction}>
-              <Image src={iconeDeRessource(p.id)} alt="" width={22} height={22} />
-              <span>{p.nom}</span>
+              <Image src={iconeDeRessource(p.id)} alt="" width={36} height={36} />
+              <span className={styles.nomProduction}>{p.nom}</span>
               <span className={styles.parHeure}>{productionAffichee(p.parHeure)}</span>
             </li>
           ) : (
             <li key={p.id} className={styles.ligneProduction} data-nulle="">
-              <Image src={iconeDeRessource(p.id)} alt="" width={22} height={22} />
+              <Image src={iconeDeRessource(p.id)} alt="" width={36} height={36} />
               <span>Ce Biome ne donne pas de {p.nom}.</span>
             </li>
           ),

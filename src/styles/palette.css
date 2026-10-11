@@ -1,63 +1,84 @@
 /*
- * La palette de Bestia, reprise du prototype (thème Bento et barre Encre).
- * C'est le seul fichier où une couleur s'écrit en clair : partout ailleurs, on
- * utilise ces noms. Changer une couleur ici la change sur toutes les pages.
- * Chaque couleur n'a qu'un nom (un test le vérifie).
+ * La palette de Bestia, prise dans ses illustrations : le Monde peint dans la lumière dorée de fin de journée, les
+ * volets de paille au soleil, le bois sombre et ciré des pièces du jeu, le citron du loup sur l'Encre.
+ * C'est le seul fichier où une couleur s'écrit en clair : partout ailleurs, on utilise ces noms. Changer une
+ * couleur ici la change sur toutes les pages. Chaque couleur n'a qu'un nom (un test le vérifie).
  */
 :root {
   color-scheme: light;
 
-  /* Fonds et blocs */
+  /* Le fond des pages hors du jeu, et le galet des traits forts et des boutons grisés. */
   --fond: oklch(0.955 0.008 90);
-  --galet: oklch(0.86 0.012 80);
-  --bloc: oklch(0.995 0.003 90);
-  --bloc-2: oklch(0.972 0.006 90);
-  --bloc-3: oklch(0.94 0.008 90);
-  --ivoire: oklch(0.97 0.005 90); /* les creux sur fond clair, le texte de la barre Encre */
-  --trait: oklch(0.87 0.008 90);
-  --trait-doux: oklch(0.925 0.006 90);
+  --galet: oklch(0.78 0.03 70);
 
-  /* Encre : le texte, l'action principale et la barre du haut */
+  /* Les volets : une paille claire au soleil, ses creux plus dorés, le survol plus doré encore. */
+  --bloc: oklch(0.972 0.02 86);
+  --bloc-2: oklch(0.93 0.034 82);
+  --bloc-3: oklch(0.89 0.045 80);
+  --ivoire: oklch(0.975 0.012 88); /* le texte clair, sur le bois et l'Encre */
+  --trait: oklch(0.8 0.045 72);
+  --trait-doux: oklch(0.875 0.035 78);
+
+  /* Encre : le texte, l'action ordinaire, le blason du loup */
   --encre: oklch(0.22 0.02 270);
   --encre-survol: oklch(0.33 0.025 270);
-  --texte-2: oklch(0.34 0.02 270);
-  --texte-discret: oklch(0.5 0.02 270);
-  --texte-pale: oklch(0.62 0.015 270);
+  --texte-2: oklch(0.37 0.04 52);
+  --texte-discret: oklch(0.45 0.045 55);
+  --texte-pale: oklch(0.6 0.035 62);
   --voile: oklch(0.15 0.02 270);
   --encre-douce: oklch(0.22 0.02 270 / 0.07);
-  --survol: oklch(0.22 0.02 270 / 0.05);
+  --survol: oklch(0.36 0.06 55 / 0.08);
 
-  /* Sur fond sombre ou sur image */
+  /* Sur le bois, l'Encre ou une image */
   --blanc-chaud: oklch(0.99 0.003 90);
-  --sur-encre-discret: oklch(0.8 0.012 270);
-  --sur-encre-pale: oklch(0.74 0.015 270);
-  --sur-encre-survol: oklch(1 0 0 / 0.1);
-  --sur-encre-trait: oklch(1 0 0 / 0.12);
+  --sur-encre-discret: oklch(0.86 0.03 80);
+  /* Aussi la brume du brouillard sur la carte : un gris chaud de fin de jour. */
+  --sur-encre-pale: oklch(0.72 0.016 65);
+  --sur-encre-survol: oklch(1 0 0 / 0.12);
+  --sur-encre-trait: oklch(0.85 0.1 82 / 0.35);
   --sur-encre-eteint: oklch(1 0 0 / 0.3);
   --sur-image-doux: oklch(0.93 0.01 90);
 
+  /* Les pièces du jeu : un bois sombre et ciré, du clair au sombre, cerclé d'un filet doré. */
+  --bois-clair: oklch(0.43 0.065 52);
+  --bois: oklch(0.33 0.052 48);
+  --bois-sombre: oklch(0.24 0.04 44);
+  --dore: oklch(0.82 0.12 82);
+  --dore-sombre: oklch(0.6 0.11 68);
+
+  /* L'action principale : le miel, avec sa lèvre plus sombre dessous, comme un jeton qu'on presse. */
+  --miel: oklch(0.84 0.15 84);
+  --miel-survol: oklch(0.88 0.14 88);
+  --miel-fonce: oklch(0.63 0.13 62);
+
+  /* La scène : la mer du soir au-delà du Monde, la lumière du soleil couchant, l'ombre des bords. */
+  --mer-du-soir: oklch(0.36 0.07 232);
+  --mer-profonde: oklch(0.25 0.055 245);
+  --soleil: oklch(0.86 0.13 72 / 0.3);
+  --ombre-du-soir: oklch(0.18 0.04 40 / 0.55);
+
   /* Signaux : un gain, un danger, une attente */
   --bon: oklch(0.5 0.12 155);
-  --mauvais: oklch(0.55 0.19 25);
-  --mauvais-doux: oklch(0.55 0.19 25 / 0.1);
+  --mauvais: oklch(0.53 0.19 28);
+  --mauvais-doux: oklch(0.53 0.19 28 / 0.1);
   --attention: oklch(0.52 0.12 70);
 
   /* Pastels, chacun avec son ton foncé pour le texte posé dessus */
-  --menthe: oklch(0.93 0.05 160);
-  --menthe-fonce: oklch(0.45 0.1 160);
+  --menthe: oklch(0.92 0.06 150);
+  --menthe-fonce: oklch(0.43 0.1 155);
   --menthe-vive: oklch(0.8 0.12 160);
-  --sable: oklch(0.935 0.055 80);
-  --sable-fonce: oklch(0.49 0.1 68);
+  --sable: oklch(0.925 0.065 82);
+  --sable-fonce: oklch(0.46 0.1 66);
   --lilas: oklch(0.915 0.05 300);
-  --lilas-fonce: oklch(0.48 0.12 300);
-  --ciel: oklch(0.925 0.045 235);
+  --lilas-fonce: oklch(0.47 0.12 300);
+  --ciel: oklch(0.89 0.06 228);
   --ciel-fonce: oklch(0.46 0.11 240);
-  --rose: oklch(0.925 0.05 22);
-  --rose-fonce: oklch(0.52 0.15 25);
-  --sarcelle: oklch(0.93 0.04 195);
+  --rose: oklch(0.92 0.055 30);
+  --rose-fonce: oklch(0.5 0.15 28);
+  --sarcelle: oklch(0.92 0.045 195);
   --sarcelle-fonce: oklch(0.44 0.08 200);
-  --peche: oklch(0.92 0.05 55);
-  --peche-fonce: oklch(0.5 0.12 50);
+  --peche: oklch(0.915 0.06 58);
+  --peche-fonce: oklch(0.49 0.12 50);
   --citron: oklch(0.94 0.08 100);
   --citron-fonce: oklch(0.44 0.1 85);
 
@@ -76,24 +97,26 @@
   --rarete-mythique: var(--rose);
   --rarete-mythique-texte: var(--rose-fonce);
 
-  /* Teintes de rareté du prototype */
-  --ardoise: oklch(0.5 0.03 250);
+  /* Teintes de rareté du prototype ; l'ardoise est aussi l'eau de la côte sur la carte. */
+  --ardoise: oklch(0.47 0.025 255);
   --cuivre: oklch(0.55 0.14 55);
   --violet: oklch(0.5 0.16 300);
   --or: oklch(0.56 0.14 80);
 
-  /* Les Biomes, sur la carte : des tons de paysage, assez distincts pour se lire de loin */
-  --biome-prairie: oklch(0.83 0.12 128);
-  --biome-foret: oklch(0.56 0.1 150);
-  --biome-jungle: oklch(0.47 0.12 162);
-  --biome-savane: oklch(0.8 0.11 88);
-  --biome-desert: oklch(0.88 0.07 78);
-  --biome-montagne: oklch(0.62 0.025 60);
-  --biome-toundra: oklch(0.84 0.03 195);
-  --biome-banquise: oklch(0.95 0.02 225);
-  --biome-eau: oklch(0.66 0.1 238);
+  /* Les Biomes, sur la carte : les tons du Monde peint, chauds et pleins, assez distincts pour se lire de loin */
+  --biome-prairie: oklch(0.8 0.15 126);
+  --biome-foret: oklch(0.55 0.12 146);
+  --biome-jungle: oklch(0.44 0.12 156);
+  --biome-savane: oklch(0.81 0.13 90);
+  --biome-desert: oklch(0.7 0.13 55);
+  --biome-montagne: oklch(0.6 0.04 48);
+  --biome-toundra: oklch(0.84 0.04 172);
+  --biome-banquise: oklch(0.95 0.022 225);
+  --biome-eau: oklch(0.63 0.11 222);
 
-  /* Ombres */
-  --ombre: 0 1px 2px oklch(0.22 0.02 270 / 0.06), 0 14px 36px oklch(0.22 0.02 270 / 0.12);
-  --ombre-forte: 0 2px 4px oklch(0.22 0.02 270 / 0.08), 0 24px 60px oklch(0.22 0.02 270 / 0.18);
+  /* Ombres : chaudes, comme sous une lampe ; le relief d'un jeton, éclairé dessus, ombré dessous. */
+  --ombre: 0 2px 3px oklch(0.2 0.04 45 / 0.16), 0 12px 28px oklch(0.2 0.04 45 / 0.24);
+  --ombre-forte: 0 3px 6px oklch(0.18 0.04 45 / 0.22), 0 24px 56px oklch(0.18 0.04 45 / 0.36);
+  --relief: inset 0 2px 0 oklch(1 0 0 / 0.4), inset 0 -3px 0 oklch(0.25 0.05 50 / 0.22);
+  --relief-bois: inset 0 1px 0 oklch(0.9 0.08 80 / 0.35), inset 0 -2px 0 oklch(0.12 0.03 40 / 0.45);
 }

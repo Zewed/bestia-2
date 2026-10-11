@@ -3,23 +3,20 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { getPool } from "@/db";
-import { biomesEnBase } from "@/donnees/en-base";
 import { choixDeDestination, versLaCarte } from "@/expeditions/choix-de-destination";
-import { expeditionsEnCours } from "@/expeditions/en-cours";
-import { carteDuJoueur } from "@/monde/carte";
 import { couleur } from "@/monde/couleurs-de-la-carte";
-import { maintenant, vitesse } from "@/temps/horloge";
+import { vitesse } from "@/temps/horloge";
 import { Attente } from "./Attente";
 import { CarteDuJeu } from "./CarteDuJeu";
 import { Legende } from "./Legende";
+import { mondeDuJoueur } from "./monde-du-joueur";
 import styles from "./page.module.css";
 
 export const metadata: Metadata = { title: "Carte" };
 
 /**
- * La carte du Monde (US-0417), ouverte depuis la navigation : le Monde du joueur dans toute la place sous la barre
- * du haut, son Foyer au milieu, sans un mot de plus. US-0437 : les Cases que le joueur n'a pas découvertes sous le
+ * La carte du Monde (US-0417), ouverte depuis la navigation : le Monde du joueur dans tout l'écran, sous les pièces du
+ * haut et la rangée des médaillons, son Foyer au milieu, sans un mot de plus. US-0437 : les Cases que le joueur n'a pas découvertes sous le
  * brouillard. US-0418 : chaque Biome, et chaque eau, de sa couleur sur la page de contrôle du Monde. US-0432 : sa
  * légende, les Biomes de terre puis les eaux de leur nom en base. US-0434 : son attente, jusqu'à ce qu'elle soit
  * dessinée ; si sa lecture échoue, error.tsx. Sans session, la garde mène à la connexion, qui ramène ici. US-0907 :
@@ -33,11 +30,9 @@ export default async function Carte({ searchParams }: PageProps<"/jeu/carte">) {
   if (!entreeDuJeuOuverte()) notFound();
   const destination = choixDeDestination(await searchParams);
   const { territoireId } = await exigerCompte(destination === null ? "/jeu/carte" : versLaCarte(destination));
-  const instant = maintenant();
-  const [carte, biomes, expeditions] =
-    territoireId === null
-      ? [null, [], []]
-      : await Promise.all([carteDuJoueur(getPool(), territoireId), biomesEnBase(getPool()), expeditionsEnCours(getPool(), territoireId, instant)]);
+  // Lu une fois par affichage : la scène du jeu (src/app/jeu/layout.tsx) lit le même Monde.
+  const { carte, biomes, expeditions, instant } =
+    territoireId === null ? { carte: null, biomes: [], expeditions: [], instant: null } : await mondeDuJoueur(territoireId);
   return (
     <main className={styles.page}>
       <h1 className={styles.annonce}>Carte</h1>

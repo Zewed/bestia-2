@@ -1,17 +1,18 @@
 /*
  * US-0425 : « + » au-dessus de « − », en bas à droite de la carte, à portée de pouce sur mobile, où la carte s'arrête
- * au-dessus des onglets ; à l'écart de l'encoche d'un téléphone tourné. US-0426 : le bouton du Foyer au-dessus d'eux ;
- * sur mobile, tous au-dessus du panneau ouvert en bas, la légende ou la fiche d'une Case, qui publient leur hauteur ;
- * sur un écran d'ordinateur peu haut, par-dessus le panneau flottant de la légende quand il descend jusqu'à eux.
+ * au-dessus de la rangée des médaillons ; à l'écart de l'encoche d'un téléphone tourné. US-0426 : le bouton du Foyer
+ * au-dessus d'eux ; sur mobile, tous au-dessus du panneau ouvert en bas, la légende ou la fiche d'une Case, qui publient
+ * leur hauteur ; sur un écran d'ordinateur peu haut, par-dessus le panneau flottant de la légende quand il descend
+ * jusqu'à eux. Des jetons de bois ronds, comme les autres pièces posées sur la carte.
  */
 .boutons {
   position: absolute;
-  right: calc(12px + var(--bord-droit));
+  right: calc(16px + var(--bord-droit));
   bottom: calc(12px + max(var(--hauteur-legende, 0px), var(--hauteur-fiche, 0px)));
   z-index: 11;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* Chacun sa surface de 44 px, comme les « − » et « + » des Métiers ; grisé, il reste à sa place sans réagir. */
@@ -22,29 +23,33 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 1px solid var(--trait);
-  border-radius: var(--arrondi-petit);
-  background: var(--bloc);
-  box-shadow: var(--ombre);
-  color: var(--encre);
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois) 60%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--relief-bois),
+    0 5px 12px var(--ombre-du-soir);
+  color: var(--ivoire);
   font: inherit;
-  font-size: 22px;
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 26px;
   line-height: 1;
+  text-shadow: 0 1px 0 var(--bois-sombre);
   cursor: pointer;
 }
 
 .bouton:disabled {
-  border-color: var(--trait-doux);
-  background: var(--bloc-2);
+  background: var(--bois-sombre);
   color: var(--galet);
   cursor: default;
+  opacity: 0.8;
 }
 
 @media (hover: hover) {
   .bouton:enabled:hover {
-    border-color: var(--galet);
-    background: var(--bloc-3);
+    background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois-clair) 50%, var(--bois));
+    color: var(--citron);
   }
 }
 
@@ -55,8 +60,8 @@
 
 /* US-0426 : le repère du Foyer, comme sur la carte : une épingle citron cernée d'Encre, un œil d'Encre au milieu. */
 .repere {
-  width: 24px;
-  height: 24px;
+  width: 26px;
+  height: 26px;
 }
 
 .repere path {

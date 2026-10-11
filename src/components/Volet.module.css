@@ -1,0 +1,152 @@
+/*
+ * Le volet : un panneau de paille au soleil, cerclé de bois sombre et d'un filet doré, posé sur la carte. Sur
+ * ordinateur, à gauche, entre les pièces du haut et la rangée des médaillons, la carte en vue à sa droite ; sur un
+ * téléphone, monté du bas jusqu'au tiers de l'écran, la carte en vue au-dessus. Il défile seul, et ne pousse jamais la
+ * page de côté.
+ */
+.volet {
+  position: fixed;
+  top: calc(var(--hauteur-barre) + 18px);
+  bottom: calc(var(--hauteur-onglets) + var(--bord-bas) + 8px);
+  left: calc(16px + var(--bord-gauche));
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: var(--largeur-volet);
+  border-radius: 24px;
+  background: var(--bloc);
+  box-shadow:
+    0 0 0 3px var(--bois),
+    0 0 0 5px var(--dore-sombre),
+    0 0 0 7px var(--bois-sombre),
+    var(--ombre-forte);
+}
+
+/* Le médaillon de la page, à cheval sur le coin du volet, comme le sceau d'une fenêtre de jeu. */
+.volet > span:first-child {
+  position: absolute;
+  top: -20px;
+  left: -14px;
+  z-index: 2;
+}
+
+/* La croix : un jeton de bois rond, en haut à droite, qui ramène à la carte. */
+.fermer {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois) 60%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--relief-bois),
+    0 4px 10px var(--ombre-du-soir);
+  color: var(--ivoire);
+  cursor: pointer;
+}
+
+.fermer svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
+
+@media (hover: hover) {
+  .fermer:hover {
+    background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois-clair) 50%, var(--bois));
+    color: var(--citron);
+  }
+}
+
+.fermer:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 3px;
+}
+
+/* Ce qui défile : la page, sans rien qui dépasse sur le côté ; ses parties se rangent à sa largeur, pas à l'écran. */
+.defilant {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-radius: 24px;
+  container-type: inline-size;
+  scrollbar-color: var(--trait) transparent;
+}
+
+/* La page dans le volet : toute sa largeur, ses propres marges remplacées par celles du volet. */
+.defilant > main {
+  max-width: none;
+  margin: 0;
+  padding: 0 22px 28px;
+}
+
+/*
+ * Le premier titre de la page : la plaque de bois du volet, toute sa largeur, en lettres de jeu, à droite du médaillon
+ * et à gauche de la croix.
+ */
+.defilant > main > h1:first-child {
+  margin: 0 -22px 18px;
+  padding: 16px 68px 15px 70px;
+  border-radius: 24px 24px 0 0;
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 60%, var(--bois-sombre));
+  box-shadow:
+    inset 0 -3px 0 var(--dore-sombre),
+    var(--relief-bois);
+  color: var(--ivoire);
+  font-size: 27px;
+  letter-spacing: 0.01em;
+  line-height: 1.15;
+  text-shadow: 0 2px 0 var(--bois-sombre);
+}
+
+/* Sur un téléphone : monté du bas, toute la largeur ; la rangée des médaillons passe par-dessus son pied. */
+@media (max-width: 820px) {
+  .volet {
+    top: var(--haut-du-volet);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    border-radius: 24px 24px 0 0;
+    box-shadow:
+      0 -3px 0 var(--bois),
+      0 -5px 0 var(--dore-sombre),
+      0 -7px 0 var(--bois-sombre),
+      var(--ombre-forte);
+  }
+
+  .volet > span:first-child {
+    --taille-medaillon: 54px;
+    top: -22px;
+    left: 12px;
+  }
+
+  .fermer {
+    top: 8px;
+    right: max(10px, var(--bord-droit));
+  }
+
+  .defilant {
+    border-radius: 24px 24px 0 0;
+  }
+
+  .defilant > main {
+    padding: 0 max(14px, var(--bord-droit)) calc(var(--hauteur-onglets) + var(--bord-bas) + 24px) max(14px, var(--bord-gauche));
+  }
+
+  .defilant > main > h1:first-child {
+    margin: 0 calc(-1 * max(14px, var(--bord-droit))) 14px calc(-1 * max(14px, var(--bord-gauche)));
+    padding: 14px 64px 13px 78px;
+    font-size: 23px;
+  }
+}

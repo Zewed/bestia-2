@@ -11,11 +11,13 @@
   /* Jamais sous la colonne des boutons, de 44 px, à 12 px du bord droit : elle passe plutôt à la ligne. */
   max-width: calc(100% - 80px - var(--bord-gauche) - var(--bord-droit));
   margin: 0;
-  padding: 3px 9px;
+  padding: 4px 12px;
   border-radius: var(--arrondi-petit);
-  background: color-mix(in oklch, var(--bloc) 85%, transparent);
-  color: var(--texte-2);
+  background: color-mix(in oklch, var(--bois-sombre) 82%, transparent);
+  box-shadow: 0 0 0 1px var(--dore-sombre);
+  color: var(--ivoire);
   font-size: var(--taille-etiquette);
+  font-weight: var(--graisse-titre);
   line-height: 1.5;
   pointer-events: none;
 }

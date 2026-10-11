@@ -144,9 +144,9 @@ describe("page Carte (US-0417)", () => {
     expect([maintenant, vitesse]).toEqual([MAINTENANT.toISOString(), 3]);
   });
 
-  it("prend toute la place sous la barre du haut, sans défiler", () => {
+  it("prend tout l'écran, sous les pièces du haut et la rangée des médaillons posées sur elle, sans défiler", () => {
     const css = readFileSync(join(process.cwd(), "src/app/jeu/carte/page.module.css"), "utf8");
-    expect(css).toMatch(/\.page \{[^}]*height: var\(--hauteur-utile\);[^}]*overflow: hidden;/);
+    expect(css).toMatch(/\n\.page \{[^}]*position: fixed;[^}]*inset: 0;[^}]*overflow: hidden;/);
     expect(css).toMatch(/\.carte \{[^}]*display: block;[^}]*width: 100%;[^}]*height: 100%;/);
   });
 

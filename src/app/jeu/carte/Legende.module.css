@@ -1,6 +1,6 @@
 /*
- * US-0432 : la légende de la carte, en haut à droite sous la barre du haut (la carte ne défile pas) : un bouton de
- * 44 px, et sous lui, sur ordinateur, le panneau flottant de la légende.
+ * US-0432 : la légende de la carte, en haut à droite sous les Stocks (la carte ne défile pas) : un jeton de bois de
+ * 44 px, et sous lui, sur ordinateur, le panneau flottant de la légende, en paille cerclée de bois.
  */
 .legende {
   position: fixed;
@@ -14,33 +14,42 @@
 
 .bouton {
   min-height: 44px;
-  padding: 0 16px;
+  padding: 0 18px;
   border: 0;
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  box-shadow: var(--ombre);
-  color: var(--encre);
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
+  box-shadow:
+    0 0 0 2px var(--dore-sombre),
+    var(--relief-bois),
+    0 6px 14px var(--ombre-du-soir);
+  color: var(--ivoire);
   font: inherit;
-  font-weight: var(--graisse-titre);
+  font-family: var(--police-titre);
+  font-size: 16px;
+  text-shadow: 0 1px 0 var(--bois-sombre);
   cursor: pointer;
 }
 
 .bouton[aria-expanded="true"] {
-  background: var(--encre);
-  color: var(--blanc-chaud);
+  box-shadow:
+    0 0 0 2px var(--citron),
+    var(--relief-bois),
+    0 6px 14px var(--ombre-du-soir);
+  color: var(--citron);
 }
 
 @media (hover: hover) {
   .bouton:hover {
-    background: var(--bloc-2);
-  }
-
-  .bouton[aria-expanded="true"]:hover {
-    background: var(--encre-survol);
+    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
   }
 }
 
-/* Un bloc Bento, qui défile s'il dépasse la carte. */
+.bouton:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 3px;
+}
+
+/* Un petit volet de paille cerclé de bois, qui défile s'il dépasse la carte. */
 .panneau {
   display: grid;
   gap: 14px;
@@ -50,21 +59,28 @@
   padding: var(--marge-bloc);
   border-radius: var(--arrondi);
   background: var(--bloc);
-  box-shadow: var(--ombre);
+  box-shadow:
+    0 0 0 3px var(--bois),
+    0 0 0 5px var(--dore-sombre),
+    var(--ombre-forte);
 }
 
 .panneau[hidden] {
   display: none;
 }
 
-/* Les petits titres des blocs Bento. */
+/* Les étiquettes des parties, sur un petit ruban de bois, comme dans les volets. */
 .titre {
+  display: inline-flex;
   margin-bottom: 8px;
-  color: var(--texte-discret);
+  padding: 2px 10px 1px;
+  border-radius: 8px;
+  background: linear-gradient(to bottom, var(--bois-clair), var(--bois));
+  color: var(--ivoire);
   font-size: var(--taille-etiquette);
-  font-weight: var(--graisse-titre);
   letter-spacing: var(--espacement-etiquette);
   text-transform: uppercase;
+  text-shadow: 0 1px 0 var(--bois-sombre);
 }
 
 .liste {
@@ -114,5 +130,9 @@
     overflow-y: auto;
     padding: 16px max(16px, var(--bord-droit)) 16px max(16px, var(--bord-gauche));
     border-radius: var(--arrondi) var(--arrondi) 0 0;
+    box-shadow:
+      0 -3px 0 var(--bois),
+      0 -5px 0 var(--dore-sombre),
+      var(--ombre-forte);
   }
 }

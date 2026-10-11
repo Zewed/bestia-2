@@ -719,9 +719,11 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(bandeau).toContain("color: var(--encre);");
     expect(bandeau).toContain("flex-wrap: wrap;");
     expect(bandeau).not.toMatch(/animation|var\(--mauvais\)|var\(--rose\)/);
+    // « Voir », un jeton à l'Encre qu'on presse, comme les autres actions de la page.
     const voir = regle(".voirSansMetier");
     expect(voir).toContain("min-height: 44px;");
-    expect(voir).toContain("text-decoration: underline;");
+    expect(voir).toContain("background: var(--encre);");
+    expect(voir).toContain("cursor: pointer;");
     expect(regle(".voirSansMetier:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 
@@ -732,16 +734,17 @@ describe("page Habitants au pouce (US-0306)", () => {
     expect(regle(".tenue[data-baisse]")).toContain("color: var(--mauvais);");
   });
 
-  it("garde le nombre d'Habitants et la place en haut de la page au défilement, collés sous la barre du haut", () => {
+  it("garde le nombre d'Habitants et la place en haut du volet au défilement, collés en haut de ce qui défile", () => {
     const entete = regle(".entete");
     expect(entete).toContain("position: sticky;");
-    // La barre du haut, bande des ressources et encoche comprises sur mobile (formes.css).
-    expect(entete).toContain("top: var(--hauteur-barre);");
-    // La liste passe dessous sans se voir au travers.
+    // Le volet défile seul, sous sa croix et son médaillon (components/Volet.module.css).
+    expect(entete).toContain("top: 0;");
+    expect(lire("src/components/Volet.module.css")).toMatch(/\.defilant \{[^}]*overflow-y: auto;/);
+    // La liste passe dessous sans se voir au travers : le fond de l'en-tête est la paille du volet.
     expect(entete).toContain("background: var(--bloc);");
-    // Rien ne coupe le bloc qui le porte : un bloc qui rognerait son contenu le décollerait.
+    expect(lire("src/components/Volet.module.css")).toMatch(/\n\.volet \{[^}]*background: var\(--bloc\);/);
+    // Rien ne coupe la partie qui le porte : une partie qui rognerait son contenu le décollerait.
     const bloc = regle(".bloc", lire("src/components/Bloc.module.css"));
-    expect(bloc).toContain("background: var(--bloc);");
     expect(bloc).not.toContain("overflow:");
   });
 });

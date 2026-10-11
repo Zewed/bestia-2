@@ -38,7 +38,7 @@ export function avecLesDecouvertes(carte: CarteDuJoueur, decouvertes: Decouverte
  * redevient visible, et toutes les CARTE_DECOUVERTES_SECONDES secondes tant qu'il l'est ; une demande à la fois, et
  * une demande qui échoue attend la suivante. Une nouvelle lecture de la page repart d'elle.
  */
-export function useDecouvertes(carte: CarteDuJoueur): CarteDuJoueur {
+export function useDecouvertes(carte: CarteDuJoueur, actif = true): CarteDuJoueur {
   // La carte à jour, et celle de la page dont elle part.
   const [suivie, setSuivie] = useState({ lue: carte, aJour: carte });
   const aJour = suivie.lue === carte ? suivie.aJour : carte;
@@ -47,6 +47,8 @@ export function useDecouvertes(carte: CarteDuJoueur): CarteDuJoueur {
     connues.current = nombreDeDecouvertes(aJour);
   }, [aJour]);
   useEffect(() => {
+    // Sous un volet, la carte n'est qu'une scène : elle ne demande rien au serveur, et se relit avec la page.
+    if (!actif) return;
     let [enCours, ouverte] = [false, true];
     const demander = () => {
       if (enCours || document.visibilityState !== "visible") return;
@@ -70,6 +72,6 @@ export function useDecouvertes(carte: CarteDuJoueur): CarteDuJoueur {
       clearInterval(minuterie);
       document.removeEventListener("visibilitychange", demander);
     };
-  }, [carte]);
+  }, [carte, actif]);
   return aJour;
 }
