@@ -1,14 +1,20 @@
 /*
- * La typographie du jeu : Nunito partout, ronde et claire ; en gras pour les titres, les nombres et les boutons
- * (--police-titre avec --graisse-titre), sans autre effet.
+ * La typographie du jeu, celle de « l'écran de stratégie » : Marcellus pour les titres, gravée et sans gras ; Barlow pour
+ * le texte, les nombres et les boutons ; Barlow Semi Condensed pour les étiquettes en capitales espacées et les petites
+ * données (un solde, une date) ; Marcellus SC pour un mot gravé. Les polices viennent de src/styles/fonts.ts.
  */
 :root {
-  --police: var(--font-nunito), system-ui, sans-serif;
-  --police-titre: var(--font-nunito), system-ui, sans-serif;
-  --taille-texte: 15px;
-  --graisse-texte: 600;
-  --graisse-titre: 800;
-  /* Les étiquettes, rares : en petites capitales espacées */
-  --taille-etiquette: 12px;
-  --espacement-etiquette: 0.08em;
+  --police: var(--font-barlow), "Helvetica Neue", Arial, sans-serif;
+  --police-titre: var(--font-marcellus), Georgia, serif;
+  --police-capitales: var(--font-marcellus-sc), var(--font-marcellus), Georgia, serif;
+  --police-etroite: var(--font-barlow-etroite), var(--font-barlow), sans-serif;
+  --taille-texte: 14px;
+  /* Le texte courant ; l'interface (un onglet, un libellé) ; ce qui compte (un nombre, un bouton, un nom). Les titres en
+     Marcellus restent en 400 : la police n'a pas de gras. */
+  --graisse-texte: 400;
+  --graisse-moyenne: 500;
+  --graisse-titre: 600;
+  /* Les étiquettes : en Barlow Semi Condensed, petites, en capitales très espacées (au cuivre dans le jeu). */
+  --taille-etiquette: 11px;
+  --espacement-etiquette: 0.16em;
 }

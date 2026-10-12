@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { BarreHaut } from "@/components/BarreHaut";
-import { nunito } from "@/styles/fonts";
+import { polices } from "@/styles/fonts";
 import "@/styles/palette.css";
 import "@/styles/typographie.css";
 import "@/styles/formes.css";
@@ -20,11 +20,11 @@ export const metadata: Metadata = {
 // sous l'encoche, et en laisse les bords libres (US-0164).
 export const viewport: Viewport = { themeColor: couleurs.encre, viewportFit: "cover" };
 
-// `actions` : ce que le haut de l'écran montre, rempli par chaque page (src/app/@actions) : dans le jeu, les pièces
-// posées sur le cadre de la carte (le nom du chef, les Stocks, la rangée des médaillons).
+// `actions` : ce que le haut de l'écran montre, rempli par chaque page (src/app/@actions) : dans le jeu, le nom du chef,
+// la navigation, les Stocks et le compteur d'Habitants, posés dans la barre du haut.
 export default function RootLayout({ children, actions }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={nunito.variable}>
+    <html lang="fr" className={polices}>
       <body>
         <BarreHaut actions={actions} />
         {children}

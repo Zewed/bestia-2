@@ -76,8 +76,9 @@
   margin-left: 8px;
   padding: 1px 6px;
   border-radius: var(--arrondi-petit);
-  background: var(--citron);
-  color: var(--encre);
+  /* Le cuivre du kit, son texte sombre (kit.nouveau). */
+  background: var(--fond-cuivre);
+  color: var(--sur-cuivre);
   font-size: 11px;
   font-weight: var(--graisse-titre);
   letter-spacing: var(--espacement-etiquette);

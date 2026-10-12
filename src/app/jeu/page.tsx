@@ -5,6 +5,8 @@ import { connection } from "next/server";
 import { exigerCompte, recitsNonLusALHeure, voyageursALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Illustration } from "@/components/Illustration";
+import kit from "@/components/kit.module.css";
+import { Medaillon } from "@/components/Medaillon";
 import { getPool } from "@/db";
 import { recapitulatifDAbsence } from "@/monde/absence";
 import { departsNonLus, departsPendantLAbsence } from "@/monde/famine";
@@ -26,13 +28,20 @@ const voyageursAuxPortes = (n: number) => `${n > 1 ? `${n} Voyageurs` : "Un Voya
 /** « 1 Récit non lu », « 2 Récits non lus ». */
 const recitsNonLus = (n: number) => `${n} ${n > 1 ? "Récits non lus" : "Récit non lu"}`;
 
+/** Le médaillon de chaque écriteau : un Habitant pour ceux qui arrivent ou partent, la tablette pour les Récits. */
+const ICONE_HABITANTS = "/illustrations/icones/habitants.webp";
+const ICONE_RECITS = "/illustrations/metiers/chercheur.webp";
+
+/** Un écriteau posé sur la scène : un panneau de verre orné, son médaillon, sa phrase en Marcellus et son bouton. */
+const ecriteau = (...classes: string[]) => [kit.panneau, kit.verre, styles.ecriteau, ...classes].join(" ");
+
 /**
- * L'écran du Foyer (US-0157) : la hutte du chef en grand, toute la place de l'écran entre le haut et la rangée des
- * médaillons, et le Biome du Foyer posé dessus. Rien
- * d'autre : le nom du chef est dans la barre du haut, et rien ne mène à une fonction qui n'existe
- * pas encore (US-0163) ; au retour d'une absence, ce que le Foyer a produit entre-temps (US-0216) ;
- * à côté, ou dessous sur mobile, sa production horaire (US-0217). Sans session, la garde mène à la
- * connexion ; sans nom de chef, à son choix.
+ * L'écran du Foyer (US-0157), l'une des deux scènes pleines du jeu : la hutte du chef peinte, toute la place de l'écran
+ * sous la barre du haut (sur un téléphone, en tête de la page), et posés dessus, en colonne à gauche, le Biome du Foyer en
+ * grand, les écriteaux de verre de ce qui attend le chef, et le panneau de sa production horaire (US-0217). Rien d'autre :
+ * le nom du chef est dans la barre du haut, et rien ne mène à une fonction qui n'existe pas encore (US-0163) ; au retour
+ * d'une absence, ce que le Foyer a produit entre-temps (US-0216). Sans session, la garde mène à la connexion ; sans nom
+ * de chef, à son choix.
  *
  * US-0327 : en haut, tant que le joueur n'a pas lu le Récit des départs de Famine, une ligne le signale, « 3 Habitants
  * sont partis pendant votre absence », et « Lire » mène aux Récits.
@@ -52,30 +61,41 @@ export default async function Foyer() {
   return (
     <main className={`${styles.page} ${foyer ? styles.avecProduction : ""}`}>
       {departs ? (
-        <p className={styles.departs} data-avis="departs">
-          <strong className={styles.nombreDeDeparts}>{departsPendantLAbsence(departs.habitants)}</strong>{" "}
-          <Link href="/jeu/recits" className={styles.lireDeparts}>
+        <p className={ecriteau(styles.alerte)} data-avis="departs">
+          <Medaillon src={ICONE_HABITANTS} taille="lg" />
+          <strong className={styles.texteEcriteau}>{departsPendantLAbsence(departs.habitants)}</strong>{" "}
+          <Link href="/jeu/recits" className={`${kit.bouton} ${kit.principal} ${styles.boutonEcriteau}`}>
             Lire
           </Link>
         </p>
       ) : null}
       <section className={styles.foyer}>
-        <Illustration chemin={ILLUSTRATION_DU_FOYER.chemin} alt={ILLUSTRATION_DU_FOYER.alt} sizes="100vw" prioritaire className={styles.remplir} />
+        <Illustration chemin={ILLUSTRATION_DU_FOYER.chemin} alt={ILLUSTRATION_DU_FOYER.alt} sizes="100vw" prioritaire className={styles.scene} />
         <RecapAbsence recap={recap} />
-        <h1 className={styles.legende}>{foyer ? `Foyer · ${foyer.biome.nom.toLocaleLowerCase("fr")}` : "Foyer"}</h1>
+        <h1 className={styles.titre}>
+          {foyer ? (
+            <>
+              Foyer <span className={styles.biome}>· {foyer.biome.nom.toLocaleLowerCase("fr")}</span>
+            </>
+          ) : (
+            "Foyer"
+          )}
+        </h1>
       </section>
       {voyageurs > 0 ? (
-        <p className={styles.avis} data-avis="voyageurs">
-          <strong className={styles.texteAvis}>{voyageursAuxPortes(voyageurs)}</strong>{" "}
-          <Link href="/jeu/habitants" className={styles.lireDeparts}>
+        <p className={ecriteau(styles.enAvant)} data-avis="voyageurs">
+          <Medaillon src={ICONE_HABITANTS} taille="lg" />
+          <strong className={styles.texteEcriteau}>{voyageursAuxPortes(voyageurs)}</strong>{" "}
+          <Link href="/jeu/habitants" className={`${kit.bouton} ${kit.principal} ${styles.boutonEcriteau}`}>
             Voir
           </Link>
         </p>
       ) : null}
       {nonLus > 0 ? (
-        <p className={styles.avis} data-avis="recits">
-          <strong className={styles.texteAvis}>{recitsNonLus(nonLus)}</strong>{" "}
-          <Link href="/jeu/recits" className={styles.lireDeparts}>
+        <p className={ecriteau()} data-avis="recits">
+          <Medaillon src={ICONE_RECITS} taille="lg" />
+          <strong className={styles.texteEcriteau}>{recitsNonLus(nonLus)}</strong>{" "}
+          <Link href="/jeu/recits" className={`${kit.bouton} ${kit.secondaire} ${styles.boutonEcriteau}`}>
             Lire
           </Link>
         </p>

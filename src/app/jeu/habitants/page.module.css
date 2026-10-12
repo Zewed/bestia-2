@@ -79,7 +79,9 @@
   background: var(--bloc-2);
 }
 
+/* --plein : la part des places prises, que la page pose sur l'élément (vide tant qu'elle ne l'a pas fait). */
 .remplissage {
+  --plein: 0%;
   display: block;
   width: var(--plein);
   height: 100%;

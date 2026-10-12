@@ -38,32 +38,37 @@
 }
 
 /*
- * Dans le jeu, le loup devient le blason du chef : un rond d'Encre au filet à peine visible, au début de la barre du
- * haut ; le nom du jeu s'efface derrière lui (le lien garde son nom « Bestia »).
+ * Dans le jeu, le loup devient le blason du chef : la tête citron, une lueur autour, sur un rond d'Encre plus clair au
+ * cœur, cerclé de cuivre sombre puis de cuivre, au début de la barre du haut ; le nom du jeu s'efface derrière lui (le
+ * lien garde son nom « Bestia »).
  */
 :root:has([data-onglets]) .logo {
   justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--filet);
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
   border-radius: 50%;
-  background: var(--encre);
+  background: radial-gradient(circle at 50% 35%, var(--encre-claire), var(--encre));
+  box-shadow:
+    0 0 0 1px var(--cuivre-sombre),
+    0 0 0 2px var(--anneau-cuivre-fort),
+    0 3px 10px var(--ombre-noire);
 }
 
 :root:has([data-onglets]) .loup {
-  width: 26px;
-  height: 26px;
-  margin-top: 2px;
+  width: 28px;
+  height: 28px;
+  filter: drop-shadow(0 0 6px var(--citron-lueur));
 }
 
 :root:has([data-onglets]) .nom {
   display: none;
 }
 
-@media (hover: hover) {
-  :root:has([data-onglets]) .logo:hover {
-    background: var(--nuit-survol);
-  }
+:root:has([data-onglets]) .logo:focus-visible {
+  outline: 2px solid var(--cuivre-clair);
+  outline-offset: 4px;
 }
 
 @media (max-width: 820px), (max-height: 500px) {
@@ -76,13 +81,5 @@
   }
   .nom {
     font-size: 16px;
-  }
-  :root:has([data-onglets]) .logo {
-    width: 40px;
-    height: 40px;
-  }
-  :root:has([data-onglets]) .loup {
-    width: 24px;
-    height: 24px;
   }
 }

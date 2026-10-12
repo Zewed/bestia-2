@@ -32,10 +32,11 @@ function signalesEnMots(sansMetier: number, voyageurs: number): string | null {
 }
 
 /**
- * US-0302 : la navigation du jeu, une fois le joueur entré dans son Foyer : une rangée de médaillons au pied de l'écran,
- * posée sur le cadre de la carte, au pouce sur un téléphone (voir BarreHaut.module.css). Chaque entrée, son médaillon
- * peint puis son nom ; l'Expédition au milieu, plus grande, au miel : c'est l'action du jeu. L'entrée de la page
- * affichée se soulève et se souligne : jamais la couleur seule.
+ * US-0302 : la navigation du jeu, une fois le joueur entré dans son Foyer : cinq entrées dans la barre du haut, sur
+ * toutes les tailles (sur un téléphone, une rangée sous les Stocks ; voir BarreHaut.module.css). Chaque entrée, son
+ * médaillon peint (dessiné par la feuille de style, il ne sert qu'aux yeux) puis son nom ; l'Expédition, l'action du jeu,
+ * a l'anneau de cuivre vif. L'entrée de la page affichée passe en crème, soulignée d'un trait de cuivre et marquée d'un
+ * losange : jamais la couleur seule.
  * US-0324 : l'entrée « Récits » porte en pastille le nombre de Récits non lus, s'il y en a, et le dit dans son nom
  * (« Récits, 2 non lus »). US-0332 : l'entrée « Habitants » porte un point, sans chiffre, quand des Voyageurs attendent
  * aux portes, et le dit dans son nom (« Habitants, un Voyageur attend »). US-0313 : le même point, un seul, quand des

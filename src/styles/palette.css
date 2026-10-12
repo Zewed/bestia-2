@@ -1,11 +1,114 @@
 /*
- * La palette de Bestia : des surfaces sombres et calmes, une ardoise de nuit, pour laisser chanter les peintures du jeu ;
- * le miel du soleil couchant pour l'action ; le citron du loup sur l'Encre ; les tons du Monde peint pour la carte.
+ * La palette de Bestia. Dans le jeu, « l'écran de stratégie » : une encre sarcelle profonde pour les fonds et les
+ * panneaux, la crème pour le texte, des verts gris pour ce qui est discret, des filets de cuivre pour les bords, les
+ * ornements et l'action, la feuille pour ce qui monte, la braise pour ce qui alerte, le citron du loup sur l'Encre ; les
+ * tons du Monde peint pour la carte. Hors du jeu (l'accueil, la connexion, les e-mails), le papier clair d'avant.
  * C'est le seul fichier où une couleur s'écrit en clair : partout ailleurs, on utilise ces noms. Changer une
  * couleur ici la change sur toutes les pages. Chaque couleur n'a qu'un nom (un test le vérifie).
  */
 :root {
   color-scheme: light;
+
+  /*
+   * LE JEU : l'encre sarcelle et le cuivre, chaque valeur reprise de la maquette retenue (directions/maquettes/strategie).
+   * Les fonds : le dégradé de l'écran, du haut (nuit) vers le bas (abysse), une lumière froide en haut à gauche, une
+   * brume de cuivre en bas à droite ; la barre du haut, un peu plus claire en haut.
+   */
+  --sarcelle-nuit: oklch(0.201 0.022 211);
+  --sarcelle-abysse: oklch(0.179 0.021 207.1);
+  --sarcelle-lumiere: oklch(0.454 0.06 204.7 / 0.35);
+  --barre-haut: oklch(0.232 0.029 211);
+  --barre-bas: oklch(0.191 0.022 205.9);
+
+  /* Les panneaux : leur fond (plus clair en haut), le relief d'une ligne survolée ou d'un bouton, la ligne choisie ; les
+     en-têtes collés d'un tableau et de ses groupes ; le verre posé sur une peinture (le Foyer, la carte), et ses voiles. */
+  --panneau: oklch(0.252 0.031 213.1);
+  --panneau-haut: oklch(0.278 0.035 213.6);
+  --panneau-releve: oklch(0.319 0.042 215.4);
+  --panneau-choisi: oklch(0.358 0.047 212.6);
+  --entete-tableau: oklch(0.236 0.029 210.9);
+  --entete-groupe: oklch(0.263 0.032 212.3);
+  --panneau-voile: oklch(0.252 0.031 213.1 / 0.9);
+  --panneau-fondu: oklch(0.252 0.031 213.1 / 0.97);
+  --verre-haut: oklch(0.278 0.035 213.6 / 0.93);
+  --verre-bas: oklch(0.236 0.029 210.9 / 0.93);
+  --pastille-sombre: oklch(0.189 0.021 212.9 / 0.82);
+  --voile-sarcelle-fort: oklch(0.179 0.021 207.1 / 0.82);
+  --voile-sarcelle: oklch(0.179 0.021 207.1 / 0.55);
+  --voile-sarcelle-leger: oklch(0.179 0.021 207.1 / 0.35);
+  /* Le cœur du blason du loup, autour de l'Encre ; le noir sous une peinture ronde (le Monde). */
+  --encre-claire: oklch(0.288 0.03 273.5);
+  --noir: oklch(0 0 0);
+
+  /* Les textes : la crème des titres et des nombres, le parchemin du texte courant, la crème vive d'un titre posé sur une
+     peinture ; la mousse de ce qui est secondaire, le lichen de ce qui est discret, l'éteint d'un bouton grisé. */
+  --creme: oklch(0.92 0.027 87.9);
+  --parchemin: oklch(0.898 0.027 90.1);
+  --creme-vive: oklch(0.965 0.026 87.9);
+  --mousse: oklch(0.734 0.027 181.6);
+  --lichen: oklch(0.581 0.032 182.6);
+  --eteint: oklch(0.444 0.034 187.7);
+
+  /* Le cuivre : les étiquettes et les ornements, son clair pour ce qui est choisi et les liens, son sombre pour l'anneau
+     des médaillons ; le bouton principal (son dégradé, son bord, le texte sombre posé dessus) ; le curseur. */
+  --cuivre: oklch(0.683 0.1 56.9);
+  --cuivre-clair: oklch(0.8 0.088 61);
+  --cuivre-sombre: oklch(0.461 0.08 49.9);
+  --cuivre-pale: oklch(0.885 0.062 66.9);
+  --cuivre-bouton-haut: oklch(0.835 0.081 63.3);
+  --cuivre-bouton: oklch(0.688 0.098 57.4);
+  --cuivre-bouton-bas: oklch(0.633 0.097 56.3);
+  --cuivre-bouton-bord: oklch(0.847 0.074 63.2);
+  --sur-cuivre: oklch(0.197 0.025 65.6);
+  /* Les filets de cuivre : le bord d'un panneau, le filet doux entre deux lignes, l'anneau d'un médaillon, le trait plus
+     marqué (un emplacement vide, le blason), et les voiles du cuivre clair : la ligne choisie, le survol, le halo, la lueur. */
+  --filet-cuivre: oklch(0.683 0.1 56.9 / 0.26);
+  --filet-cuivre-doux: oklch(0.683 0.1 56.9 / 0.12);
+  --anneau-cuivre: oklch(0.683 0.1 56.9 / 0.35);
+  --anneau-cuivre-fort: oklch(0.683 0.1 56.9 / 0.45);
+  --cuivre-trace: oklch(0.683 0.1 56.9 / 0.55);
+  --cuivre-brume: oklch(0.683 0.1 56.9 / 0.1);
+  --cuivre-voile: oklch(0.8 0.088 61 / 0.14);
+  --cuivre-survol: oklch(0.8 0.088 61 / 0.07);
+  --cuivre-halo: oklch(0.8 0.088 61 / 0.18);
+  --cuivre-lueur: oklch(0.8 0.088 61 / 0.5);
+
+  /* Les signes : la feuille de ce qui monte (un solde, « libre », « Nourriture assurée ») ; la braise de ce qui alerte
+     (un solde qui baisse, « Renvoyer », un repère), ses rayures d'un trop-plein ; l'eau des trajets faits ; la lueur
+     du citron sur le loup. */
+  --feuille: oklch(0.807 0.1 135.8);
+  --feuille-halo: oklch(0.807 0.1 135.8 / 0.12);
+  --braise: oklch(0.733 0.133 41.3);
+  --braise-claire: oklch(0.766 0.116 43.1);
+  --braise-sombre: oklch(0.66 0.141 39.4);
+  --braise-filet: oklch(0.733 0.133 41.3 / 0.45);
+  --braise-voile: oklch(0.733 0.133 41.3 / 0.1);
+  --braise-lueur: oklch(0.733 0.133 41.3 / 0.8);
+  --eau-claire: oklch(0.746 0.043 184.8);
+  --eau: oklch(0.611 0.052 185.9);
+  --citron-lueur: oklch(0.94 0.08 100 / 0.25);
+
+  /* Le disque crème des médaillons, sous les icônes peintes détourées sur blanc : clair au cœur, plus doré au bord. */
+  --disque-coeur: oklch(0.974 0.017 88);
+  --disque: oklch(0.909 0.039 87.6);
+  --disque-bord: oklch(0.821 0.059 85);
+
+  /* Lumières et creux : la lumière en haut d'un panneau, le trait clair de son bord haut et celui du bouton principal,
+     le creux d'une jauge ; le creux sombre d'un compteur ou d'une rangée ; les ombres, de la plus douce (un médaillon) à
+     la plus forte (la barre). */
+  --lumiere-haut: oklch(1 0 0 / 0.025);
+  --lumiere-trait: oklch(1 0 0 / 0.03);
+  --lumiere-bouton: oklch(1 0 0 / 0.35);
+  --creux-clair: oklch(1 0 0 / 0.06);
+  --creux: oklch(0 0 0 / 0.2);
+  --creux-fort: oklch(0 0 0 / 0.34);
+  --ombre-medaillon: oklch(0 0 0 / 0.45);
+  --ombre-creux: oklch(0 0 0 / 0.55);
+  --ombre-noire: oklch(0 0 0 / 0.6);
+  --ombre-profonde: oklch(0 0 0 / 0.7);
+  --ombre-barre: oklch(0 0 0 / 0.8);
+
+  /* HORS DU JEU, et les anciens noms que les pages du jeu emploient encore (globals.css les reprend dans le jeu). */
 
   /* Le fond des pages hors du jeu, et le galet des traits forts et des boutons grisés. */
   --fond: oklch(0.955 0.008 90);
@@ -103,7 +206,6 @@
 
   /* Teintes de rareté du prototype ; l'ardoise est aussi l'eau de la côte sur la carte. */
   --ardoise: oklch(0.47 0.025 255);
-  --cuivre: oklch(0.55 0.14 55);
   --violet: oklch(0.5 0.16 300);
   --or: oklch(0.56 0.14 80);
 
