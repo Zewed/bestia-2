@@ -2,15 +2,10 @@
 // rappelée en séjour (US-0920) : son retour dure le temps de l'aller (src/expeditions/phase.ts), avec tous ses
 // explorateurs, jamais blessés ni tués, et les Bêtes de son escorte qui restent ; attaquée sans escorte, elle fuit de même,
 // sans rien perdre. Sa fuite s'écrit comme un rappel, à l'instant de l'attaque, marquée en fuite (expedition.en_fuite), et
-// son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact.
-//
-// Cas accepté : la fuite s'écrit au rattrapage du Territoire de l'Expédition. Un autre Territoire qui partage sa Case,
-// rattrapé avant lui au-delà de la fuite, la voit encore sur la Case jusqu'à la fin prévue de son séjour. Le tirage d'une
-// Bête apparue après la fuite (US-0963) peut alors la lui donner, et personne ne l'emmène ; et la fin de l'ensemble d'une
-// attaque, qui dépend de la Bête qu'une Expédition suit, change de même. Quand une Expédition fuit d'une Case partagée avec
-// un autre Territoire, ce qui s'y passe ensuite dépend donc de l'ordre des rattrapages. À reprendre avec US-0965 (quelle
-// Expédition une Bête trop forte pour toutes attaque, à décider), si le propriétaire le veut : la fuite pourrait s'écrire
-// pour la Case entière, de tous les Territoires. Côté serveur uniquement.
+// son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact. Elle
+// s'écrit au rattrapage du Territoire de l'Expédition ; les autres Territoires de la Case ne l'attendent pas : ils la
+// calculent eux-mêmes, des mêmes faits (src/expeditions/fuites-de-la-case.ts), et ne la trouvent plus sur la Case après
+// sa fuite, quel que soit l'ordre des rattrapages. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { HorairesDUneExpedition } from "./phase";
