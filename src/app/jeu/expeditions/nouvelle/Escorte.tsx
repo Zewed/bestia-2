@@ -5,8 +5,8 @@ import { useId } from "react";
 import { Bloc } from "@/components/Bloc";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { forceDeLEscorte } from "@/expeditions/force";
+import { type BlessesAffiches, blessesDans } from "@/monde/blesses-affiches";
 import type { EspeceDisponible } from "@/monde/effectif";
-import { formaterMinutes } from "@/temps/affichage";
 import styles from "./Escorte.module.css";
 
 /** US-0904 : le paramètre de l'adresse qui garde l'escorte choisie, une fois par Espèce (« ?escorte=souris.3&escorte=poule.1 »). */
@@ -32,15 +32,6 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
 
-/**
- * US-0952 : un groupe de Blessés d'une Espèce au Foyer, tel que le bloc le montre : combien, et dans combien de minutes du
- * jeu ils seront guéris, comptées par le serveur à l'ouverture de l'écran.
- */
-export type BlessesAffiches = { nombre: number; dansMinutes: number };
-
-/** US-0952 : « dont 2 Blessés, guéris dans 5 h », « dont 1 Blessé, guéri dans 45 min ». */
-const blessesDont = ({ nombre, dansMinutes }: BlessesAffiches) =>
-  `dont ${nombre} Blessé${nombre > 1 ? "s" : ""}, guéri${nombre > 1 ? "s" : ""} dans ${formaterMinutes(dansMinutes)}`;
 
 /** US-0937 : « 2 mâles · 1 femelle », « 0 mâle · 3 femelles ». */
 const sexes = ({ males, femelles }: Pick<EspeceDisponible, "males" | "femelles">) =>
@@ -97,7 +88,7 @@ export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]
                 {!e.coupleReuni && <span className={styles.disponibles}>{sexes(e)}</span>}
                 {(blesses[e.id] ?? []).map((groupe, i) => (
                   <span key={i} className={styles.disponibles}>
-                    {blessesDont(groupe)}
+                    {`dont ${blessesDans(groupe)}`}
                   </span>
                 ))}
               </p>

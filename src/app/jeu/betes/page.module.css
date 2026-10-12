@@ -82,6 +82,15 @@
   overflow-wrap: anywhere;
 }
 
+/* US-0952 : chaque groupe de Blessés, sous le nom et la Rareté, sur sa propre ligne. */
+.blesses {
+  flex-basis: 100%;
+  min-width: 0;
+  color: var(--texte-2);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
 .effectif {
   font-size: 22px;
   font-weight: var(--graisse-titre);

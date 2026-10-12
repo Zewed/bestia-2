@@ -9,13 +9,14 @@ import { betesReperees } from "@/expeditions/betes-reperees";
 import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { destinationDUneCase } from "@/expeditions/destination";
 import { blessesAuFoyer } from "@/monde/blesses";
+import { type BlessesAffiches, blessesAffiches } from "@/monde/blesses-affiches";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import { maintenant, vitesse } from "@/temps/horloge";
 import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
-import { type BlessesAffiches, Escorte } from "./Escorte";
+import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import styles from "./page.module.css";
 import { type BeteAChercher, type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
@@ -89,12 +90,7 @@ async function blessesDuFoyer(territoireId: number, instant: Date, auFoyer: Map<
   const groupes = await blessesAuFoyer(getPool(), territoireId, instant);
   return Object.fromEntries(
     [...groupes].flatMap(([especeId, liste]) => {
-      let reste = auFoyer.get(especeId) ?? 0;
-      const affiches = liste.flatMap(({ nombre, gueriLe }) => {
-        const montres = Math.min(nombre, reste);
-        reste -= montres;
-        return montres > 0 ? [{ nombre: montres, dansMinutes: Math.ceil((gueriLe.getTime() - instant.getTime()) / 60_000) }] : [];
-      });
+      const affiches = blessesAffiches(liste, instant, auFoyer.get(especeId) ?? 0);
       return affiches.length > 0 ? [[especeId, affiches]] : [];
     }),
   );

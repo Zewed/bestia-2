@@ -29,4 +29,9 @@ describe("la page Bêtes (US-0810)", () => {
   it("se touche au pouce et se voit au clavier", () => {
     expect(regle(".espece:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
+
+  it("met chaque groupe de Blessés sur sa propre ligne, sous le nom et la Rareté, sans déborder (US-0952)", () => {
+    expect(regle(".blesses")).toMatch(/flex-basis: 100%;[^}]*min-width: 0;/);
+    expect(regle(".blesses")).toContain("overflow-wrap: anywhere;");
+  });
 });
