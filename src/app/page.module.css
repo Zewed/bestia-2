@@ -31,7 +31,7 @@
 .scene .monde {
   position: absolute;
   top: 0;
-  right: 0;
+  right: clamp(0px, 3%, 48px);
   width: auto;
   max-width: 68%;
   height: 100%;
@@ -151,6 +151,8 @@
 
   .scene .monde {
     position: relative;
+    top: auto;
+    right: auto;
     width: auto;
     max-width: none;
     height: auto;
