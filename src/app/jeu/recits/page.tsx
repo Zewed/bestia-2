@@ -81,7 +81,7 @@ export default async function Recits() {
               // sans combat (US-0944), son escorte ne perd encore aucune Bête.
               ...(r.titre === RETOUR_D_EXPEDITION && { resume: resumeDUnRetour(r.rencontres ?? [], 0) }),
               // US-0958 : les Couples que ce retour a réunis, annoncés en tête de son récit.
-              ...(r.couples && { couples: r.couples.map(({ nom, illustration }) => ({ nom, illustration })) }),
+              ...(r.couples && { couples: r.couples.map(({ especeId, nom, illustration }) => ({ especeId, nom, illustration })) }),
               // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
               ...(r.rencontres && {
                 rencontres: r.rencontres.map((rencontre, i, toutes) => {
