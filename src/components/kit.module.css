@@ -389,6 +389,61 @@
   font: var(--graisse-moyenne) 13px / 1 var(--police);
 }
 
+/* Une marque courte de braise, en contour : « Plus de place », « plein ». */
+.marque {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 6px;
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--braise-filet);
+  border-radius: var(--arrondi-net);
+  background: var(--braise-voile);
+  color: var(--braise);
+  font: var(--graisse-titre) 12px / 1 var(--police);
+}
+
+.marque svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Une puce ronde au filet de cuivre, sur un creux : une rareté (« Commune »), un gain (« 1 Bête ramenée »). */
+.puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 22px;
+  padding: 0 9px;
+  border: 1px solid var(--filet-cuivre);
+  border-radius: 999px;
+  background: var(--creux);
+  color: var(--mousse);
+  font: var(--graisse-titre) 12px / 1 var(--police);
+}
+
+/* Le ruban de cuivre, sa queue taillée en V : ce qu'un Récit apporte de neuf (« NOUVELLE ESPÈCE AU BESTIAIRE »). */
+.ruban {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 22px 0 10px;
+  background: var(--fond-cuivre);
+  color: var(--sur-cuivre);
+  font: var(--graisse-titre) 11.5px / 1 var(--police-etroite);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
+  clip-path: polygon(0 0, 100% 0, calc(100% - 9px) 50%, 100% 100%, 0 100%);
+}
+
+.ruban svg {
+  width: 14px;
+  height: 14px;
+}
+
 /* ---------- Les données ---------- */
 
 /* Une liste libellé / valeur (dl) : le libellé en mousse, la valeur en crème, alignés en deux colonnes. */

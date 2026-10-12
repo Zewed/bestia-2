@@ -32,6 +32,7 @@
  */
 .barre:has(.navigation) {
   --marge-barre: max(18px, var(--bord-droit));
+  --marge-barre-gauche: max(18px, var(--bord-gauche));
   position: fixed;
   top: 0;
   right: 0;
@@ -45,7 +46,7 @@
   column-gap: 0;
   height: auto;
   margin: 0;
-  padding: var(--bord-haut) var(--marge-barre) 0 max(18px, var(--bord-gauche));
+  padding: var(--bord-haut) var(--marge-barre) 0 var(--marge-barre-gauche);
   border-bottom: 1px solid var(--filet-cuivre);
   background: linear-gradient(180deg, var(--barre-haut), var(--barre-bas));
   box-shadow:
@@ -741,8 +742,8 @@
   justify-content: center;
   min-width: 0;
   min-height: 44px;
-  margin: 0 calc(-1 * var(--marge-barre)) 0 calc(-1 * max(18px, var(--bord-gauche)));
-  padding: 0 18px;
+  margin: 0 calc(-1 * var(--marge-barre)) 0 calc(-1 * var(--marge-barre-gauche));
+  padding: 0 var(--marge-barre) 0 var(--marge-barre-gauche);
   border-top: 1px solid var(--braise-filet);
   background: linear-gradient(90deg, transparent, var(--braise-voile) 25%, var(--braise-voile) 75%, transparent);
   color: var(--parchemin);
@@ -863,13 +864,14 @@
 @media (max-width: 1023px) {
   .barre:has(.navigation) {
     --marge-barre: max(14px, var(--bord-droit));
+    --marge-barre-gauche: max(14px, var(--bord-gauche));
     grid-template-columns: max-content minmax(0, 1fr) max-content;
     grid-template-areas:
       "logo chef compteur"
       "bande bande bande"
       "onglets onglets onglets"
       "alerte alerte alerte";
-    padding: var(--bord-haut) var(--marge-barre) 0 max(14px, var(--bord-gauche));
+    padding: var(--bord-haut) var(--marge-barre) 0 var(--marge-barre-gauche);
   }
 
   /* Les Stocks et le compteur sortent de leur creux : le compteur va sur la ligne du blason, les Stocks dessous. */
@@ -918,7 +920,7 @@
   /* La rangée des onglets : cinq places égales, d'un bord à l'autre de l'écran, sur un creux sous un filet. */
   .barre:has(.navigation) .navigation {
     grid-area: onglets;
-    margin: 0 calc(-1 * var(--marge-barre)) 0 calc(-1 * max(14px, var(--bord-gauche)));
+    margin: 0 calc(-1 * var(--marge-barre)) 0 calc(-1 * var(--marge-barre-gauche));
     border-top: 1px solid var(--filet-cuivre-doux);
     background: var(--creux);
   }

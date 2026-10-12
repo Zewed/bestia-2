@@ -35,7 +35,8 @@
  *      kit.discret (le texte seul) ou kit.danger (« Renvoyer »), et kit.grand, kit.large ; kit.pas, kit.pasBouton,
  *      kit.pasValeur (+ kit.pasGrand) : « − 6 + » ; kit.segments : un choix en segments (1 h | 4 h | 8 h | 12 h) ;
  *      kit.badge (un nombre sur le cuivre), kit.nouveau (« NOUVEAU »), kit.repere (le point de braise), kit.alerte (un
- *      avertissement court sur un filet de braise) ; kit.cles : une liste libellé / valeur (dl) ; kit.note : une phrase
+ *      avertissement court sur un filet de braise), kit.marque (« Plus de place »), kit.puce (une rareté, un gain),
+ *      kit.ruban (« NOUVELLE ESPÈCE AU BESTIAIRE ») ; kit.cles : une liste libellé / valeur (dl) ; kit.note : une phrase
  *      discrète ; kit.nombre : un grand nombre ; kit.choisie : la ligne choisie d'une liste (un voile et un trait de
  *      cuivre à gauche) ; kit.vignette : une peinture en bandeau dans un panneau.
  * 5. Les règles. Un panneau n'en contient jamais un autre : dedans, des filets doux (--filet-cuivre-doux) séparent les
