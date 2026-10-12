@@ -11,19 +11,23 @@ import { couplesDuTerritoire } from "@/monde/couple";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire } from "@/monde/explorateurs";
 import { type Coordonnees, distance } from "@/monde/hex";
+import { recitsDuTerritoire } from "@/monde/recits";
 import { PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
+import { formaterJourEtHeure } from "@/temps/affichage";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { dureeDuTrajetMinutes } from "./allure";
 import { chanceDAttaqueParHeure, instantDeLAttaque, type Regime } from "./attaque";
-import { type Perte, pertesDuCombat } from "./combat";
+import { blessesParmi, type Perte, pertesDuCombat } from "./combat";
 import { lancerLExpedition } from "./depart";
 import { subirLesCombats } from "./pertes";
 import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
 import { retourDUneExpedition } from "./phase";
+import { raconterLeRetour } from "./recit-de-retour";
+import { combatsDUneExpedition } from "./recit-du-combat";
 import { attaquesSubies } from "./rencontres";
 
 const MINUTE_MS = 60_000;
@@ -185,6 +189,11 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     Object.fromEntries(
       (await betesDisponibles(jeu, territoireId)).filter((e) => escorte.has(e.id)).map((e) => [e.id, { disponibles: e.disponibles, males: e.males, femelles: e.femelles }]),
     );
+  /** US-0951 : parmi les pertes `pertes`, combien de Bêtes de l'Espèce `id` sont mortes : les autres ne sont que blessées (blessesParmi). */
+  const mortes = (pertes: Perte[], id: string) => {
+    const perdues = pertes.find((p) => p.especeId === id)?.nombre ?? 0;
+    return perdues - blessesParmi(perdues);
+  };
   /** Ce que l'escorte `escorte` perd au combat contre la Bête du chef, Espèce par Espèce, selon la règle (src/expeditions/combat.ts). */
   const pertesAttendues = ({ bete }: Chef, escorte: Map<string, number>): Perte[] =>
     pertesDuCombat(
@@ -232,11 +241,10 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect(await escorteEnCours(chef.territoireId, x.id, le)).toEqual(
       Object.fromEntries([...escorte].map(([id, nombre]) => [id, nombre - (pertes.find((p) => p.especeId === id)?.nombre ?? 0)])),
     );
-    // Les Bêtes perdues ont quitté l'effectif, prises au sexe le plus nombreux : les mâles ; celles du Foyer, toujours là.
+    // Les Bêtes mortes ont quitté l'effectif, prises au sexe le plus nombreux : les mâles ; celles du Foyer, toujours là.
+    // US-0951 : les Blessés y restent, sortis avec l'Expédition jusqu'à son retour.
     expect(await proposees(chef.territoireId, escorte)).toEqual(
-      Object.fromEntries(
-        Object.entries(avant).map(([id, p]) => [id, { ...p, males: p.males - (pertes.find((x) => x.especeId === id)?.nombre ?? 0) }]),
-      ),
+      Object.fromEntries(Object.entries(avant).map(([id, p]) => [id, { ...p, males: p.males - mortes(pertes, id) }])),
     );
     // Les explorateurs n'ont rien perdu ; les Couples non plus.
     expect(await explorateursDuTerritoire(pool, chef.territoireId)).toEqual(explorateurs);
@@ -248,18 +256,36 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect((await betesSauvagesDUneCase(pool, chef.caseId, le, apres(le, 1))).map((b) => b.numero)).toEqual([chef.bete.numero]);
     expect(await attaquesSubies(pool, x.id)).toEqual([expect.objectContaining({ especeId: chef.bete.especeId, le })]);
 
-    // Au retour, l'escorte rentre sans les Bêtes perdues : l'écran d'Expédition en propose d'autant moins.
+    // Au retour, l'escorte rentre sans les Bêtes mortes, et avec ses Blessés (US-0951) : l'écran d'Expédition en propose
+    // d'autant moins que de mortes.
     const retour = new Date(Math.max(...lancees.map((l) => l.retour.getTime())));
     await rattraperA(chef.territoireId, retour);
     expect(await proposees(chef.territoireId, escorte)).toEqual(
       Object.fromEntries(
         [...escorte].map(([id, nombre]) => {
-          const perdue = pertes.find((p) => p.especeId === id)?.nombre ?? 0;
-          return [id, { disponibles: nombre * LANCEES_AU_PLUS + 1 - perdue, males: nombre * LANCEES_AU_PLUS - perdue, femelles: 1 }];
+          const morte = mortes(pertes, id);
+          return [id, { disponibles: nombre * LANCEES_AU_PLUS + 1 - morte, males: nombre * LANCEES_AU_PLUS - morte, femelles: 1 }];
         }),
       ),
     );
     expect(await explorateursDuTerritoire(pool, chef.territoireId)).toEqual({ libres: LANCEES_AU_PLUS, total: LANCEES_AU_PLUS });
+  }, 60_000);
+
+  it("au retour, le récit donne, Espèce par Espèce, le nombre de morts et de Blessés de l'escorte (US-0951)", async () => {
+    const chef = await naitrePresDUneBeteRare();
+    const escorte = presqueAussiForte(chef);
+    const lancees = await lancerJusquALAttaque(chef, escorte);
+    const pertes = pertesAttendues(chef, escorte);
+    await rattraperA(chef.territoireId, new Date(Math.max(...lancees.map((l) => l.retour.getTime()))));
+    const noms: Record<string, string> = { poule: "Poule", souris: "Souris grise" };
+    const dites = pertes.map(({ especeId, nombre }) => {
+      const [mortes, blessees] = [nombre - blessesParmi(nombre), blessesParmi(nombre)];
+      const dits = [mortes > 0 && `${mortes} ${mortes > 1 ? "morts" : "mort"}`, blessees > 0 && `${blessees} ${blessees > 1 ? "Blessés" : "Blessé"}`];
+      return `${noms[especeId]} (${dits.filter(Boolean).join(", ")})`;
+    });
+    // Seul le retour de l'Expédition attaquée le dit, une seule fois.
+    const lignes = (await recitsDuTerritoire(pool, chef.territoireId)).flatMap((r) => r.texte.split("\n")).filter((l) => l.startsWith("Pertes au combat"));
+    expect(lignes).toEqual([`Pertes au combat : ${dites.length > 1 ? `${dites.slice(0, -1).join(", ")} et ${dites.at(-1)}` : dites[0]}.`]);
   }, 60_000);
 
   it("attaquée sans escorte, l'Expédition ne perd aucune Bête, et celles du Foyer restent toutes", async () => {
@@ -275,12 +301,37 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect(await escorteEnCours(chef.territoireId, x.id, x.attaque!)).toEqual({});
   }, 60_000);
 
+  it("au retour, le récit dit le combat : son heure, la Bête et sa force, la force de l'escorte, ses pertes Espèce par Espèce, puis la fuite des explorateurs (US-0947)", async () => {
+    const chef = await naitrePresDUneBeteRare();
+    const escorte = presqueAussiForte(chef);
+    const lancees = await lancerJusquALAttaque(chef, escorte);
+    const x = lancees.at(-1)!;
+    await rattraperA(chef.territoireId, new Date(Math.max(...lancees.map((l) => l.retour.getTime()))));
+
+    const noms = new Map((await pool.query<{ id: string; nom: string }>("select id, nom from espece")).rows.map((e) => [e.id, e.nom]));
+    const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/\s/g, "\u00a0");
+    const pertes = pertesAttendues(chef, escorte);
+    const force = [...escorte].reduce((n, [id, nombre]) => n + especes.get(id)!.force * nombre, 0);
+    // Seul le retour de l'Expédition attaquée raconte un combat ; il le fait en dernier, ses pertes (US-0951) avant la fuite.
+    const recits = (await recitsDuTerritoire(pool, chef.territoireId)).filter((r) => r.texte.includes("\nCombat le "));
+    expect(recits).toHaveLength(1);
+    const lignes = recits[0].texte.split("\n");
+    expect(lignes.slice(-3, -2)).toEqual([
+      `Combat le ${formaterJourEtHeure(x.attaque!, "Europe/Paris")} : ${noms.get(chef.bete.especeId)}, de force ${entier(especes.get(chef.bete.especeId)!.force)}, contre votre escorte, de force ${entier(force)}.`,
+    ]);
+    expect(lignes.at(-2)).toMatch(/^Pertes au combat : /);
+    expect(lignes.at(-1)).toBe("Vos explorateurs ont fui et sont tous rentrés au Foyer.");
+    // Le résumé du récit compte ses Bêtes mortes sur la Rencontre de la Bête qui a attaqué (US-0941) ; rien sans mort.
+    const morts = pertes.reduce((n, p) => n + mortes(pertes, p.especeId), 0);
+    expect(recits[0].rencontres!.map((r) => r.perdues)).toEqual([morts > 0 ? morts : undefined]);
+  }, 60_000);
+
   describe("les mêmes pertes, au même instant, page ouverte, au retour du joueur ou par la tâche planifiée", () => {
     /** Ce que le combat laisse au Territoire : chaque escorte, et ses pertes, et l'effectif de chaque Espèce, par sexe. */
     const bilan = async (jeu: Pool, territoireId: number) => ({
       escortes: (
         await jeu.query(
-          `select s.expedition_id, s.espece_id, s.nombre, s.perdues from expedition_escorte s join expedition x on x.id = s.expedition_id
+          `select s.expedition_id, s.espece_id, s.nombre, s.perdues, s.blessees from expedition_escorte s join expedition x on x.id = s.expedition_id
            where x.territoire_id = $1 order by 1, 2`,
           [territoireId],
         )
@@ -329,11 +380,16 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
       ];
       expect(bilans[1]).toEqual(bilans[0]);
       expect(bilans[2]).toEqual(bilans[0]);
-      // Seule l'Expédition attaquée a perdu des Bêtes, celles que dit la règle.
+      // Seule l'Expédition attaquée a perdu des Bêtes, celles que dit la règle ; US-0951 : et les mêmes Blessés parmi elles.
       const pertes = new Map(pertesAttendues(chef, escorte).map((p) => [p.especeId, p.nombre]));
       expect(bilans[0].escortes).toEqual(
         lancees.flatMap((l) =>
-          [...escorte].map(([id, nombre]) => ({ expedition_id: l.id, espece_id: id, nombre, perdues: l.attaque ? (pertes.get(id) ?? 0) : 0 })).sort((a, b) => (a.espece_id < b.espece_id ? -1 : 1)),
+          [...escorte]
+            .map(([id, nombre]) => {
+              const perdues = l.attaque ? (pertes.get(id) ?? 0) : 0;
+              return { expedition_id: l.id, espece_id: id, nombre, perdues, blessees: blessesParmi(perdues) };
+            })
+            .sort((a, b) => (a.espece_id < b.espece_id ? -1 : 1)),
         ),
       );
     }, 60_000);
@@ -405,6 +461,13 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
           suite.push((await perdues(client, x)).souris);
         }
         expect(suite).toEqual([5, 9, 10, 10]);
+        // US-0951 : 3 Blessées parmi les 5 premières perdues, 2 parmi les 4 suivantes, et la dernière, seule perdue de son
+        // combat, Blessée : 2 + 2 mortes ont quitté l'effectif.
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 6, femelle: 0 });
+      });
+      // Un effectif plus court que les mortes de son escorte (deux souris pour dix sorties) s'arrête à zéro.
+      await avecDesExpeditions([["souris", 2, 0]], [[["souris", 10]]], async (client, territoireId, [x]) => {
+        for (let i = 0; i < 4; i++) await subirLesCombats(client, [combat(x, "poule", i)]);
         expect(await sexes(client, territoireId, "souris")).toEqual({ male: 0, femelle: 0 });
       });
     });
@@ -438,13 +501,125 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
       expect(await perduesSelon((x) => [combat(x, "pigeon", 5, null, 2), combat(x, "poule", 5, null, 1)])).toBe(6);
     }, 60_000);
 
+    it("le récit rejoue ces combats tels qu'ils se sont livrés : dans leur ordre, chacun contre les survivantes du précédent ; puis leurs pertes retenues (US-0947)", async () => {
+      // Six Souris grises (2 838) : au même instant, la poule (9 457, une Bête sauvage ordinaire, numéro 3) passe avant le
+      // pigeon (2 216, une Bête de naissance) : elle en emporte cinq, il prend la dernière.
+      await avecDesExpeditions([["souris", 6, 0]], [[["souris", 6]]], async (client, territoireId, [x]) => {
+        const { rows } = await client.query<{ id: number }>(
+          `insert into bete_de_naissance (territoire_id, case_id, espece_id, arrivee, depart) select $1, case_id, 'pigeon', $2, $3 from expedition where id = $4
+           on conflict (territoire_id, case_id) do update set espece_id = excluded.espece_id, arrivee = excluded.arrivee, depart = excluded.depart returning id`,
+          [territoireId, t0, apres(t0, 600), x],
+        );
+        const naissance = rows[0].id;
+        await client.query(
+          `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le, attaque_le)
+           values ($1, 3, null, 'poule', $2, $2, $3), ($1, null, $4, 'pigeon', $2, $2, $3)`,
+          [x, t0, apres(t0, 5), naissance],
+        );
+        await subirLesCombats(client, [combat(x, "pigeon", 5, null, naissance), combat(x, "poule", 5, 3)]);
+
+        const souris = especes.get("souris")!.force;
+        expect((await combatsDUneExpedition(client, x)).map((c) => [c.bete.nom, c.le, c.escorte, c.sansEscorte])).toEqual([
+          ["Poule", apres(t0, 5), 6 * souris, false],
+          ["Pigeon biset", apres(t0, 5), souris, false],
+        ]);
+        // Au retour, le récit dit les deux combats, puis leurs pertes retenues : 5 Souris grises au premier, dont 3 Blessées
+        // (US-0951), et la dernière, Blessée, au second ; le résumé compte les mortes sur la dernière Bête qui a attaqué.
+        expect(await perdues(client, x)).toEqual({ souris: 6 });
+        await raconterLeRetour(client, territoireId, x, apres(t0, 700));
+        const [recit] = await recitsDuTerritoire(client, territoireId);
+        const [entier, heure] = [(n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/\s/g, "\u00a0"), formaterJourEtHeure(apres(t0, 5), "Europe/Paris")];
+        const force = (id: string) => entier(especes.get(id)!.force);
+        expect(recit.texte.split("\n").slice(-4)).toEqual([
+          `Combat le ${heure} : Poule, de force ${force("poule")}, contre votre escorte, de force ${entier(6 * souris)}.`,
+          `Combat le ${heure} : Pigeon biset, de force ${force("pigeon")}, contre votre escorte, de force ${entier(souris)}.`,
+          `Pertes au combat : Souris grise (${5 - blessesParmi(5)} morts, ${blessesParmi(5) + blessesParmi(1)} Blessés).`,
+          "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+        ]);
+        expect(recit.rencontres!.map((r) => [r.especeId, r.perdues])).toEqual([
+          ["poule", undefined],
+          ["pigeon", 5 - blessesParmi(5)],
+        ]);
+      });
+    });
+
     it("deux Expéditions du même Territoire prennent leurs pertes à l'effectif l'une après l'autre, chacune au sexe le plus nombreux d'alors", async () => {
-      // Trois mâles et deux femelles ; chaque escorte de deux souris en perd deux contre une poule.
-      await avecDesExpeditions([["souris", 3, 2]], [[["souris", 2]], [["souris", 2]]], async (client, territoireId, [x, y]) => {
+      // Cinq mâles et quatre femelles ; chaque escorte de quatre souris (1 892) en perd quatre contre une poule (9 457),
+      // dont deux mortes (US-0951).
+      await avecDesExpeditions([["souris", 5, 4]], [[["souris", 4]], [["souris", 4]]], async (client, territoireId, [x, y]) => {
         await subirLesCombats(client, [combat(y, "poule", 1), combat(x, "poule", 1)]);
-        expect([await perdues(client, x), await perdues(client, y)]).toEqual([{ souris: 2 }, { souris: 2 }]);
-        // Mâle (3 contre 2), puis mâle à égalité (2 contre 2), puis femelle (1 contre 2), puis mâle à égalité (1 contre 1).
-        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 0, femelle: 1 });
+        expect([await perdues(client, x), await perdues(client, y)]).toEqual([{ souris: 4 }, { souris: 4 }]);
+        // Mâle (5 contre 4), puis mâle à égalité (4 contre 4), puis femelle (3 contre 4), puis mâle à égalité (3 contre 3).
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 2, femelle: 3 });
+      });
+    });
+
+    describe("des Blessés parmi les pertes (US-0951)", () => {
+      /** Les pertes de chaque Espèce de l'escorte de l'Expédition `id` : combien perdues, et combien de Blessés parmi elles. */
+      const blessees = async (client: PoolClient, id: number) =>
+        Object.fromEntries(
+          (await client.query("select espece_id, perdues, blessees from expedition_escorte where expedition_id = $1", [id])).rows.map((r) => [
+            r.espece_id,
+            { perdues: r.perdues, blessees: r.blessees },
+          ]),
+        );
+      /** Ce que l'écran d'Expédition propose de l'Espèce `especeId` : ses disponibles, et ses mâles et femelles possédés. */
+      const proposee = async (client: PoolClient, territoireId: number, especeId: string) => {
+        const e = (await betesDisponibles(client, territoireId)).find((x) => x.id === especeId);
+        return e ? { disponibles: e.disponibles, males: e.males, femelles: e.femelles } : null;
+      };
+
+      it("parmi les pertes d'un combat, une part sont des Blessés, Espèce par Espèce, retenus sur l'escorte ; les autres meurent", async () => {
+        // Quatre Souris grises et un pigeon (4 108) contre une poule (9 457) : deux souris et le pigeon perdus ; une souris
+        // blessée, l'autre morte ; le pigeon, seul perdu de son Espèce, blessé.
+        await avecDesExpeditions(
+          [
+            ["souris", 4, 0],
+            ["pigeon", 1, 0],
+          ],
+          [
+            [
+              ["souris", 4],
+              ["pigeon", 1],
+            ],
+          ],
+          async (client, territoireId, [x]) => {
+            await subirLesCombats(client, [combat(x, "poule", 1)]);
+            expect(await blessees(client, x)).toEqual({ souris: { perdues: 2, blessees: 1 }, pigeon: { perdues: 1, blessees: 1 } });
+            // Seule la souris morte quitte l'effectif.
+            expect([await sexes(client, territoireId, "souris"), await sexes(client, territoireId, "pigeon")]).toEqual([
+              { male: 3, femelle: 0 },
+              { male: 1, femelle: 0 },
+            ]);
+          },
+        );
+      });
+
+      it("les morts quittent l'effectif pour toujours ; les Blessés, sortis avec l'Expédition, rentrent au Foyer avec elle", async () => {
+        // Dix Souris grises sur douze contre une poule : cinq perdues, trois Blessées, deux mortes.
+        await avecDesExpeditions([["souris", 12, 0]], [[["souris", 10]]], async (client, territoireId, [x]) => {
+          expect(await proposee(client, territoireId, "souris")).toEqual({ disponibles: 2, males: 12, femelles: 0 });
+          await subirLesCombats(client, [combat(x, "poule", 1)]);
+          expect(await blessees(client, x)).toEqual({ souris: { perdues: 5, blessees: 3 } });
+          // Les deux mortes ne sont plus à personne ; les trois Blessées restent avec l'Expédition : rien de plus au Foyer.
+          expect(await proposee(client, territoireId, "souris")).toEqual({ disponibles: 2, males: 10, femelles: 0 });
+          // De retour au Foyer, les cinq survivantes et les trois Blessées y sont avec les deux qui n'étaient pas parties.
+          await client.query("update expedition set rentree_le = $2 where id = $1", [x, apres(t0, 60)]);
+          expect(await proposee(client, territoireId, "souris")).toEqual({ disponibles: 10, males: 10, femelles: 0 });
+          // Un second combat de la même Expédition ne compte que ses survivantes valides, sans ses Blessées.
+          await client.query("update expedition set rentree_le = null where id = $1", [x]);
+          await subirLesCombats(client, [combat(x, "poule", 2)]);
+          expect(await blessees(client, x)).toEqual({ souris: { perdues: 9, blessees: 5 } });
+        });
+      });
+
+      it("une seule Bête perdue n'est que blessée : aucune ne quitte l'effectif", async () => {
+        // Une Souris grise (473) contre un pigeon (2 216) : elle est perdue, blessée.
+        await avecDesExpeditions([["souris", 1, 1]], [[["souris", 1]]], async (client, territoireId, [x]) => {
+          await subirLesCombats(client, [combat(x, "pigeon", 1)]);
+          expect(await blessees(client, x)).toEqual({ souris: { perdues: 1, blessees: 1 } });
+          expect(await sexes(client, territoireId, "souris")).toEqual({ male: 1, femelle: 1 });
+        });
       });
     });
   });

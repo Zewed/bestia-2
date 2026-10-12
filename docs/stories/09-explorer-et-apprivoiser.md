@@ -515,6 +515,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0947 · Le récit du combat
 **En tant que** joueur, **je veux** un récit précis du combat, **afin de** savoir quelle force il m'aurait fallu.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#63). Au retour d'une Expédition attaquée, le récit finit par le combat, sans migration : une ligne par combat dans l'ordre du temps (« Combat le 14 octobre à 09:59 : Loup gris, de force 173 205, contre votre escorte, de force 170 280. », ou « Attaque … contre vos explorateurs, sans escorte. »), puis les pertes Espèce par Espèce telles qu'elles ont été retenues (US-0951), puis « Vos explorateurs ont fui et sont tous rentrés au Foyer. ». Le résumé en tête compte les Bêtes perdues. Tranché : la force exacte de la Bête est affichée (celle qu'il aurait fallu) ; le combat vient en fin de récit ; le résumé ne compte que les mortes (les Blessés rentrent), à reprendre avec US-0952 à US-0955. Vérifié en vrai avec 360 Souris grises contre un Loup gris.
 - **Débloquée par** : US-0944, US-0940
 - **Critères d'acceptation** :
   - Le récit donne l'heure du combat, l'Espèce de la Bête et la force de l'escorte ; afficher aussi la force exacte de la Bête (à décider).
@@ -557,6 +558,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0951 · Des Blessés parmi les pertes
 **En tant que** joueur, **je veux** qu'une partie de mes pertes soient seulement blessées, **afin de** ne pas tout perdre après un combat malheureux.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#58). Parmi les Bêtes qu'une Espèce de l'escorte perd au combat, une part ne sont que des Blessés : les mortes quittent l'effectif pour toujours, les Blessés rentrent au Foyer avec l'Expédition (et ne prennent pas part à un second combat). Le récit du retour le dit en une ligne, Espèce par Espèce : « Pertes au combat : Poule (2 morts, 2 Blessés) et Souris grise (6 morts, 6 Blessés). » (colonne `blessees`, migration 0066). Tranché : `PART_DES_BLESSES = 0.5` (provisoire) ; arrondi au plus proche, la demie aux Blessés, sans tirage (1 perdue = 1 Blessé), par combat et par Espèce. Vérifié en vrai contre un Loup gris. Restent les Blessés dans l'effectif, leur soin et leur guérison (US-0952 à US-0955).
 - **Débloquée par** : US-0944
 - **Critères d'acceptation** :
   - Parmi les pertes d'un combat, une part sont des Blessés (chiffre à régler), les autres meurent.
