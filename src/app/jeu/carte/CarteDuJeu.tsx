@@ -154,6 +154,13 @@ export function CarteDuJeu({
       motifClair: couleurCalculee(canvas, "color-mix(in oklch, var(--ivoire) 50%, transparent)"),
       encre: couleurCalculee(canvas, "var(--encre)"),
       repere: couleurCalculee(canvas, "var(--citron)"),
+      // US-0428 : la Case choisie, au cuivre et à la crème du kit.
+      surlignage: {
+        voile: couleurCalculee(canvas, "color-mix(in oklch, var(--cuivre-pale) 22%, transparent)"),
+        halo: couleurCalculee(canvas, "color-mix(in oklch, var(--cuivre) 65%, transparent)"),
+        trait: couleurCalculee(canvas, "var(--cuivre-pale)"),
+        anneau: couleurCalculee(canvas, "color-mix(in oklch, var(--cuivre-clair) 75%, transparent)"),
+      },
     };
     // Le relief peint des Cases, comme les pièces du plateau peint : la lumière du soir en haut, l'ombre des bords ; une
     // brume qui moutonne sous le brouillard. À la densité de l'écran, lue à chaque dessin.

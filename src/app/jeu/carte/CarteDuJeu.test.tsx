@@ -700,8 +700,8 @@ const cliquer = (c: { q: number; r: number }) => {
   pointeur("pointerdown", x, y);
   pointeur("pointerup", x, y);
 };
-/** US-0428 : si la carte surligne une Case : un trait citron, que seul le surlignage trace (le repère du Foyer est rempli). */
-const surlignee = () => toile.gestes.includes("border var(--citron)");
+/** US-0428 : si la carte surligne une Case : un trait crème, que seul le surlignage trace. */
+const surlignee = () => toile.gestes.includes("border var(--cuivre-pale)");
 const fiche = () => screen.queryByRole("region", { name: "Fiche de la Case" });
 
 describe("ouvrir la fiche d'une Case (US-0428)", () => {

@@ -52,6 +52,7 @@ const uneCase = (teinte: string, foyer = { q: 1000, r: 0 }, foyers: { q: number;
       motifClair: "color-mix(in oklch, var(--ivoire) 50%, transparent)",
       encre: "var(--encre)",
       repere: "var(--citron)",
+      surlignage: { voile: "voile", halo: "halo", trait: "trait", anneau: "anneau" },
     }),
   ).traits.map((t) => ({ d: t.d, couleur: t.couleur }));
 
