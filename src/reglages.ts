@@ -367,6 +367,6 @@ export const PLACES_DE_L_HABITAT_DU_FOYER = 500;
 
 /**
  * US-0813 : une Bête élevée coûte autant de Nourriture qu'elle en mange pendant 7 jours (valeur provisoire, à régler en
- * jouant) : son Entretien par heure, fois 24, fois ce nombre (src/monde/cout-d-elevage.ts) ; une souris 28, une poule 840.
+ * jouant) : son Entretien par heure, fois 24, fois ce nombre (src/monde/cout-d-elevage.ts) ; une souris environ 28, une poule 840.
  */
 export const JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE = 7;

@@ -17,7 +17,8 @@ const SANS_REFUS: EtatDeLElevage = { refus: null };
  * US-0822 : au-dessus du bouton, le même compteur des Places de l'Habitat du Foyer que la page Bêtes.
  * US-0813 : la quantité de Bêtes à élever, 1 d'abord, que « − » et « + » changent d'une Bête et que « Max » porte au plus
  * grand nombre que les Stocks de Nourriture permettent de payer (`max`, cout-d-elevage.ts) ; une quantité nulle, négative
- * ou non entière est refusée, dite sous le champ dès qu'elle s'écrit (ou, vide, quand on le quitte).
+ * ou non entière est refusée, dite sous le champ dès qu'elle s'écrit (ou, vide, quand on le quitte). Le champ prend neuf
+ * chiffres au plus, la plus grande quantité qui se lit.
  */
 export function BlocElever({ especeId, places, max }: { especeId: string; places: { occupees: number; total: number }; max: number }) {
   const [{ refus }, envoyer] = useActionState(elever, SANS_REFUS);
@@ -26,12 +27,15 @@ export function BlocElever({ especeId, places, max }: { especeId: string; places
   const idQuantiteRefusee = useId();
   const [texte, setTexte] = useState("1");
   const [quitte, setQuitte] = useState(false);
+  // Ce que « − », « + » et « Max » font du champ, dit aux lecteurs d'écran : la main reste sur le bouton.
+  const [annonce, setAnnonce] = useState("");
   const quantite = lireUneQuantite(texte);
   const refusee = quantite === null && (texte.trim() !== "" || quitte);
   const plafond = Math.min(max, QUANTITE_LA_PLUS_GRANDE);
   const choisir = (n: number) => {
     setTexte(String(n));
     setQuitte(false);
+    setAnnonce(`Quantité : ${n}`);
   };
   return (
     <div id="elever" className={styles.elever}>
@@ -52,12 +56,14 @@ export function BlocElever({ especeId, places, max }: { especeId: string; places
                 name="quantite"
                 className={styles.champ}
                 inputMode="numeric"
+                maxLength={String(QUANTITE_LA_PLUS_GRANDE).length}
                 autoComplete="off"
                 enterKeyHint="done"
                 value={texte}
                 onChange={(e) => {
                   setTexte(e.target.value);
                   setQuitte(false);
+                  setAnnonce("");
                 }}
                 onBlur={() => setQuitte(true)}
                 aria-invalid={refusee ? true : undefined}
@@ -76,6 +82,7 @@ export function BlocElever({ especeId, places, max }: { especeId: string; places
                 Max
               </button>
             </div>
+            <output className={styles.annonce}>{annonce}</output>
             {refusee ? (
               <p id={idQuantiteRefusee} className={styles.refus} role="alert">
                 {QUANTITE_REFUSEE}

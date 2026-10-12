@@ -45,13 +45,16 @@ describe.skipIf(!URL_TEST)("« Max » : les Bêtes que les Stocks permettent de 
 
   it("paie un omnivore en Viande et en Végétaux, un herbivore en Végétaux seuls, avec les Stocks de ce Territoire seulement", async () => {
     const [t, voisin] = [await nouveauTerritoire(), await nouveauTerritoire()];
-    await nourriture(t, 300, 200);
+    await nourriture(t, 300, 500);
     await nourriture(voisin, 100_000, 100_000);
     const [souris, pigeon] = [await cout("souris"), await cout("pigeon")];
     // La souris (omnivore) mange de tout, le pigeon (herbivore) des Végétaux.
-    expect(await maxAElever(pool, t, "souris")).toBe(Math.floor(500 / souris));
-    expect(await maxAElever(pool, t, "pigeon")).toBe(Math.floor(200 / pigeon));
-    expect(await maxAElever(pool, t, "souris")).toBeGreaterThan(0);
+    expect(await maxAElever(pool, t, "souris")).toBe(Math.floor(800 / souris));
+    expect(await maxAElever(pool, t, "pigeon")).toBe(Math.floor(500 / pigeon));
+    // Des deux côtés, de quoi payer : la souris paie avec les deux Nourritures, le pigeon avec les seuls Végétaux.
+    expect(await maxAElever(pool, t, "souris")).toBeGreaterThan(Math.floor(500 / souris));
+    expect(await maxAElever(pool, t, "pigeon")).toBeGreaterThan(0);
+    expect(await maxAElever(pool, t, "pigeon")).toBeLessThan(Math.floor(800 / pigeon));
   });
 
   it("ne propose rien quand les Stocks ne paient pas une Bête, ni pour une Espèce inconnue", async () => {

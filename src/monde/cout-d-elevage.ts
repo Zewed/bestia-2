@@ -3,13 +3,14 @@
 // Nourriture se disent avec US-0814 et se paient au lancement (US-0815). Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
+import type { Regime } from "@/expeditions/attaque";
 import { JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE } from "@/reglages";
 
-/** Le régime d'une Espèce, qui dit ce qu'elle mange. */
-export type Regime = "carnivore" | "herbivore" | "omnivore";
+/** La Nourriture en Stock au Territoire, Viande et Végétaux, en quantités exactes. */
+export type NourritureDisponible = { viande: number; vegetaux: number };
 
-/** Les Stocks de Nourriture du Territoire, Viande et Végétaux, en quantités exactes. */
-export type StocksDeNourriture = { viande: number; vegetaux: number };
+/** US-0813 : la Nourriture qui paie, régime par régime : un régime ajouté à la base sans la sienne ici ne compile pas. */
+const NOURRITURE_DU_REGIME: Record<Regime, ("viande" | "vegetaux")[]> = { carnivore: ["viande"], herbivore: ["vegetaux"], omnivore: ["viande", "vegetaux"] };
 
 /**
  * US-0813 : le coût en Nourriture d'une Bête élevée, un chiffre par Espèce : ce qu'elle mange pendant
@@ -25,16 +26,14 @@ export function coutDUneBeteElevee(entretienParHeure: number): number {
  * US-0814, qui le dira, et US-0815, qui le paiera.
  */
 export function nourritureQuiPaie(regime: Regime): ("viande" | "vegetaux")[] {
-  if (regime === "carnivore") return ["viande"];
-  if (regime === "herbivore") return ["vegetaux"];
-  return ["viande", "vegetaux"];
+  return NOURRITURE_DU_REGIME[regime];
 }
 
 /**
  * US-0813 : le plus grand nombre entier de Bêtes de l'Espèce que les Stocks de sa Nourriture permettent de payer : ce que
  * « Max » propose. Aucune pour une Espèce sans Entretien, dont aucun coût ne borne l'Élevage (aucune Espèce du jeu).
  */
-export function betesPayables(stocks: StocksDeNourriture, espece: { regime: Regime; entretienParHeure: number }): number {
+export function betesPayables(stocks: NourritureDisponible, espece: { regime: Regime; entretienParHeure: number }): number {
   const cout = coutDUneBeteElevee(espece.entretienParHeure);
   if (cout <= 0) return 0;
   const disponible = nourritureQuiPaie(espece.regime).reduce((somme, ressource) => somme + stocks[ressource], 0);

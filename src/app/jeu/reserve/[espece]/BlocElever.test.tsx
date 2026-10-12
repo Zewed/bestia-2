@@ -94,6 +94,28 @@ describe("choisir combien de Bêtes élever (US-0813)", () => {
     expect(bouton("Une Bête de moins").disabled).toBe(true);
   });
 
+  it("dit aux lecteurs d'écran la quantité que « − », « + » ou « Max » donnent, la main restant sur le bouton ; rien quand on l'écrit", async () => {
+    const u = userEvent.setup();
+    render(<BlocElever especeId="poule" places={PLACES} max={MAX} />);
+    const annonce = () => screen.getByRole("status").textContent;
+    expect(annonce()).toBe("");
+    await u.click(bouton("Une Bête de plus"));
+    expect(annonce()).toBe("Quantité : 2");
+    await u.click(bouton("Max"));
+    expect(annonce()).toBe("Quantité : 7");
+    await u.type(champ(), "0");
+    expect(annonce()).toBe("");
+  });
+
+  it("ne prend pas plus de neuf chiffres, la plus grande quantité qui se lit", async () => {
+    const u = userEvent.setup();
+    render(<BlocElever especeId="poule" places={PLACES} max={MAX} />);
+    await u.clear(champ());
+    await u.type(champ(), "1234567890");
+    expect(champ().value).toBe("123456789");
+    expect(raison()).toBeNull();
+  });
+
   it("« Max » donne le plus grand nombre de Bêtes que les Stocks de Nourriture permettent de payer", async () => {
     const u = userEvent.setup();
     render(<BlocElever especeId="poule" places={PLACES} max={MAX} />);
