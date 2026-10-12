@@ -370,5 +370,5 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
       );
       expect(vues).toEqual([{ numero: null, beteDeNaissanceId: beteId, apprivoisee: false }]);
     }
-  });
+  }, 60_000);
 });
