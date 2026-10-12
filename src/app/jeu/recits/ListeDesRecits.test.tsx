@@ -184,6 +184,14 @@ describe("le résumé en tête du récit d'un retour d'Expédition (US-0941)", (
     expect(screen.getByRole("button", { name: /^Retour de Récolte/ }).textContent).toBe("Retour de Récolte7 octobre 2026 à 00:30");
   });
 
+  it("nomme la ligne de son titre, de sa marque, de sa date et de son résumé, le médaillon muet", () => {
+    render(<ListeDesRecits recits={[RETOUR]} />);
+    // jsdom ne met pas en page : il colle les morceaux que le navigateur sépare d'une espace.
+    expect(
+      screen.getByRole("button", { name: /^Retour d'Expédition\s*nouveau\s*9 octobre 2026 à 18:05\s*1 Bête ramenée ·\s*1 nouvelle Espèce au Bestiaire$/ }),
+    ).toBeTruthy();
+  });
+
   it("déplie sous le résumé le détail, heure par heure, et le replie sans toucher au résumé", async () => {
     render(<ListeDesRecits recits={[RETOUR]} />);
     const utilisateur = userEvent.setup();
