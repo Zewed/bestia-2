@@ -21,6 +21,7 @@ import { betesSauvagesDesCases, emmenerUneBete, hasardsDeLAttaque } from "@/mond
 import { type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
 import { chanceDAttaqueParHeure, instantDeLAttaque, type Regime } from "./attaque";
 import { forceDeLEscorte, forceDUneBete } from "./force";
+import { subirLesCombats } from "./pertes";
 import { expeditionsPresentesDuTerritoire, expeditionsPresentesSurLesCases } from "./presence";
 import { sexesALApprivoisement } from "./sexe";
 
@@ -202,7 +203,7 @@ async function retenirLesVues(base: Pool | PoolClient, territoireId: number, aVo
  * régime : celle d'une Bête sauvage ordinaire tirée de la graine de son Monde, de sa Case et de son numéro, celle d'une
  * Bête de naissance de la graine et de sa ligne. Seule la première attaque de chaque Bête compte, même tombée dans une
  * tranche passée : au plus une par Bête et par Expédition, la même quel que soit le découpage du temps. Dans la
- * transaction de retenirLesRencontres.
+ * transaction de retenirLesRencontres. US-0944 : chacune livre aussitôt son combat, et l'escorte y perd des Bêtes.
  */
 async function retenirLesAttaques(base: Pool | PoolClient, ensembles: Ensemble[], de: Date, a: Date): Promise<void> {
   const { rows: cases } = await base.query<{ id: number; q: number; r: number; graine: string }>(
@@ -226,13 +227,16 @@ async function retenirLesAttaques(base: Pool | PoolClient, ensembles: Ensemble[]
   }
   if (attaques.length === 0) return;
   // « attaque_le is null » : une attaque retenue ne change plus.
-  await base.query(
+  const { rows: retenues } = await base.query<{ expeditionId: number; especeId: string; le: Date }>(
     `update rencontre r set attaque_le = v.le
      from unnest($1::int[], $2::bigint[], $3::int[], $4::timestamptz[]) as v(expedition_id, numero, bete_de_naissance_id, le)
      where r.expedition_id = v.expedition_id and (r.numero = v.numero or r.bete_de_naissance_id = v.bete_de_naissance_id)
-       and r.attaque_le is null`,
+       and r.attaque_le is null
+     returning r.expedition_id as "expeditionId", r.espece_id as "especeId", r.attaque_le as le`,
     [attaques.map((x) => x.expeditionId), attaques.map((x) => x.numero), attaques.map((x) => x.beteDeNaissanceId), attaques.map((x) => x.le)],
   );
+  // US-0944 : chaque attaque retenue livre son combat, à son instant (src/expeditions/pertes.ts).
+  await subirLesCombats(base, retenues);
 }
 
 /**
