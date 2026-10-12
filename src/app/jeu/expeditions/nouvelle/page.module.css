@@ -228,6 +228,10 @@
   .details > :first-child dd {
     font-size: 30px;
   }
+
+  .aucune {
+    font-size: 24px;
+  }
 }
 
 @media (max-width: 820px), (max-height: 500px) {

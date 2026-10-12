@@ -48,6 +48,8 @@ function debutDeLaPhase(expedition: ExpeditionEnCours, phase: Phase): Date | nul
  * d'une escorte n'est pas chiffré (US-0912), ni le temps restant ni le retour : « — ». Aucune zone annoncée : un lecteur
  * d'écran lit le compte quand on y passe. Un explorateur parti qui n'est plus là ne laisse pas la ligne vide : « Aucun ».
  *
+ * Serré (`serre`), quand la liste en a plus qu'une rangée, son paysage est moins haut : on en voit plus d'un coup d'œil.
+ *
  * Sur un téléphone, le panneau tient replié sur son paysage et sa frise ; un toucher n'importe où sur le paysage déplie
  * son détail, et le replie de même ; un lecteur d'écran entend avec le bouton de quelle Expédition il s'agit. Sur
  * ordinateur, tout se lit.
@@ -56,7 +58,7 @@ function debutDeLaPhase(expedition: ExpeditionEnCours, phase: Phase): Date | nul
  * montre au retour, d'où le bouton disparaît. Il attend la réponse du serveur, grisé : un double clic ne la rappelle
  * qu'une fois. Sans trajet chiffré (US-0912), aucun retour, donc rien à rappeler.
  */
-export function PanneauDeLExpedition({ expedition, instant }: { expedition: ExpeditionEnCours; instant: Date }) {
+export function PanneauDeLExpedition({ expedition, instant, serre = false }: { expedition: ExpeditionEnCours; instant: Date; serre?: boolean }) {
   const [deplie, setDeplie] = useState(false);
   const [rappelEnCours, demarrer] = useTransition();
   const prefixe = useId();
@@ -73,7 +75,7 @@ export function PanneauDeLExpedition({ expedition, instant }: { expedition: Expe
   const part = duree > 0 ? (instant.getTime() - debut!.getTime()) / duree : 0;
 
   return (
-    <article className={[kit.panneau, styles.panneau, deplie && styles.deplie].filter(Boolean).join(" ")} aria-labelledby={id("destination")}>
+    <article className={[kit.panneau, styles.panneau, serre && styles.serre, deplie && styles.deplie].filter(Boolean).join(" ")} aria-labelledby={id("destination")}>
       <div className={styles.tableau}>
         <Paysage biome={inconnue ? undefined : destination.biome} brume={inconnue} sizes="(max-width: 760px) 100vw, 50vw" className={styles.paysage} />
         <div className={styles.ligne} data-ligne="">

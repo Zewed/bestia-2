@@ -19,6 +19,11 @@
   height: clamp(220px, calc(var(--hauteur-utile) - 296px), 520px);
 }
 
+/* Plusieurs rangées de panneaux : un paysage moins haut, pour en voir plus d'un coup d'œil. */
+.serre .tableau {
+  height: clamp(200px, calc(var(--hauteur-utile) * 0.4), 300px);
+}
+
 .paysage {
   position: absolute;
   inset: 0;
@@ -241,7 +246,8 @@
 
 /* Sur un téléphone : la pastille au-dessus du nom, le paysage en bandeau, le détail une ligne sous son libellé. */
 @media (max-width: 760px) {
-  .tableau {
+  .tableau,
+  .serre .tableau {
     height: 190px;
   }
 

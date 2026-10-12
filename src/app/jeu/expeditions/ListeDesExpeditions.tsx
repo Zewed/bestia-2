@@ -17,7 +17,8 @@ const RELIRE_APRES_MS = 1_000;
  * US-0918 : la liste des Expéditions en cours, de la première partie à la dernière, chacune son grand panneau illustré
  * (PanneauDeLExpedition), rangés en grille, autant par rangée que la largeur en tient : leurs phases et leurs comptes à
  * rebours avancent ensemble, sans recharger la page, à l'heure du jeu partie de `maintenant` et au rythme du jeu
- * (`vitesse`). Sur un téléphone, une par rangée, chacune repliée sur son paysage, qu'on déplie pour voir le détail.
+ * (`vitesse`). Au-delà de deux, les panneaux se serrent : plus d'Expéditions tiennent à l'écran. Sur un téléphone, une
+ * par rangée, chacune repliée sur son paysage, qu'on déplie pour voir le détail.
  *
  * US-0916 : la page se relit juste après le prochain retour, une seconde réelle plus tard, le temps que le serveur ait
  * fait rentrer l'Expédition : elle quitte la liste, et la suivante prend le relais. Une Expédition déjà de retour à
@@ -42,7 +43,7 @@ export function ListeDesExpeditions({ expeditions, maintenant, vitesse = 1 }: { 
     <ul className={styles.expeditions}>
       {expeditions.map((expedition) => (
         <li key={expedition.id}>
-          <PanneauDeLExpedition expedition={expedition} instant={instant} />
+          <PanneauDeLExpedition expedition={expedition} instant={instant} serre={expeditions.length > 2} />
         </li>
       ))}
     </ul>
