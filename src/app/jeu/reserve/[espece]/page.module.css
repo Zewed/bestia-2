@@ -125,8 +125,15 @@
  * le nom juste à côté d'elle.
  */
 @media (max-height: 500px) and (orientation: landscape) {
+  /* US-0804 : « Fermer » passe en haut à droite, toujours à vue sous l'effectif et les caractéristiques qui s'allongent. */
   .fiche {
     grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas: "illustration fermer" "illustration entete";
+    grid-template-rows: auto 1fr;
+  }
+
+  .fermer {
+    justify-self: end;
   }
 
   .illustration {

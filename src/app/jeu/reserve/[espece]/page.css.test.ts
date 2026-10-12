@@ -44,4 +44,10 @@ describe("la fiche d'une Espèce (US-0803)", () => {
     const couche = CSS.match(/@media \(max-height: 500px\) and \(orientation: landscape\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
     expect(regle(".caracteristiques", couche)).toContain("grid-template-columns: max-content max-content max-content minmax(0, 1fr);");
   });
+
+  it("sur un téléphone couché, met « Fermer » en haut à droite, toujours à vue (US-0804)", () => {
+    const couche = CSS.match(/@media \(max-height: 500px\) and \(orientation: landscape\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(regle(".fiche", couche)).toContain('grid-template-areas: "illustration fermer" "illustration entete";');
+    expect(regle(".fermer", couche)).toContain("justify-self: end;");
+  });
 });
