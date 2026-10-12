@@ -14,9 +14,9 @@ describe("la fiche d'une Case à l'écran (US-0428)", () => {
     expect(fiche).toContain("position: absolute;");
     expect(fiche).toContain("top: calc(var(--hauteur-barre) + 12px);");
     expect(fiche).toContain("left: calc(12px + var(--bord-gauche));");
-    // Un petit volet de paille cerclé de bois, qui défile s'il dépasse la carte.
+    // Un panneau d'ardoise, son filet et son ombre, qui défile s'il dépasse la carte.
     expect(fiche).toMatch(/max-height: calc\(100% - var\(--hauteur-barre\) - 24px\);[^}]*overflow-y: auto;/);
-    expect(fiche).toMatch(/border-radius: var\(--arrondi\);[^}]*background: var\(--bloc\);[^}]*box-shadow:[^;]*var\(--bois\)/);
+    expect(fiche).toMatch(/border-radius: var\(--arrondi\);[^}]*background: var\(--bloc\);[^}]*border: 1px solid var\(--trait-doux\);[^}]*box-shadow: var\(--ombre-forte\);/);
   });
 });
 

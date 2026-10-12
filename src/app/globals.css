@@ -1,26 +1,24 @@
 /*
- * LE KIT DU JEU — comment les pages s'en servent.
+ * LE KIT DU JEU — comment les pages s'en servent. Sombre mais épuré : les peintures du jeu chantent, l'interface se tait.
  *
- * 1. Les couleurs, les formes et les polices sont des noms (src/styles/palette.css, formes.css, typographie.css) :
- *    une page n'écrit jamais une couleur en clair. Les titres, les nombres et les boutons prennent --police-titre
- *    (des lettres rondes de jeu) ; le reste, --police.
+ * 1. Les couleurs, les formes et la police sont des noms (src/styles/palette.css, formes.css, typographie.css) : une
+ *    page n'écrit jamais une couleur en clair. Une seule police, Nunito ; en gras (--graisse-titre) pour les titres, les
+ *    nombres et les boutons, sans autre effet.
  * 2. Le cadre du jeu est le même sur chaque écran, et aucune page ne le refait (components/BarreHaut et ses pièces) :
- *    en haut à gauche le blason du loup et la plaque du nom du chef, en haut à droite les Stocks en jetons de bois,
- *    au pied de l'écran la rangée des médaillons, l'Expédition au milieu, plus grande. Les médaillons sont la
- *    navigation : il n'y a rien d'autre à ouvrir ni à fermer.
+ *    en haut à gauche le blason du loup et le nom du chef, en haut à droite les Stocks, au pied de l'écran la rangée des
+ *    médaillons, l'Expédition au milieu, plus grande. Les médaillons sont la navigation.
  * 3. Entre le haut et la rangée des médaillons, chaque écran est le fond lui-même, d'un bord à l'autre : une page donne
- *    son décor (--decor : une illustration du jeu, que la règle « ::before » ci-dessous assombrit et dore de la lumière
- *    du soir), ou est la carte elle-même (/jeu/carte, marquée data-carte). Le cadre passe par-dessus ; la page défile
- *    dessous.
- * 4. Sur le décor, tout est taillé dans le bois. Dans un écran du jeu, les noms des couleurs y prennent leur sens de
- *    jeu (la règle « main » ci-dessous) : --bloc est le bois des pièces, --bloc-2 le creux sombre d'une case, --encre
- *    le miel des actions et des nombres, --texte-2 et --texte-discret les clairs du texte. Une page écrit donc ses
- *    règles avec les mêmes noms partout, et elles se lisent sur le bois.
- * 5. Une page range ce qu'elle montre en planches (components/Bloc : une planche de bois cerclée d'or, son étiquette en
- *    ruban). Les Habitants sont des portraits, les Bêtes des vignettes rondes, les Ressources leurs icônes peintes.
- * 6. Une seule famille de boutons, des jetons qu'on presse, 44 px au moins, la main au survol, un contour au clavier :
- *    l'action au miel (fond --encre dans un écran du jeu, ou --miel), sa lèvre plus sombre dessous ; la seconde en bois
- *    cerclé d'or (fond --bloc, bord --trait) ; jamais de bouton noir.
+ *    son décor (--decor : une illustration du jeu, sous un voile léger, voir la règle « ::before » ci-dessous), ou est
+ *    la carte elle-même (/jeu/carte, marquée data-carte). Le cadre passe par-dessus ; la page défile dessous.
+ * 4. Sur le décor, tout ce qui se lit est posé sur l'ardoise de nuit (--nuit) : des panneaux et des cartes pleins, un
+ *    seul filet à peine visible (--filet), de l'air dedans, jamais de boîte dans une boîte. Dans un écran du jeu, les
+ *    noms des couleurs y prennent leur sens sombre (la règle « main » ci-dessous, et les panneaux de la carte) : --bloc
+ *    est l'ardoise, --bloc-2 l'ardoise du survol, --encre le clair du texte, --texte-2 et --texte-discret ses gris.
+ * 5. Une page range ce qu'elle montre en panneaux (components/Bloc : l'ardoise, un titre simple) et en cartes (un
+ *    Habitant, un écriteau) : la peinture d'un Métier, d'une Bête ou d'une Ressource y est grande, le texte clair.
+ * 6. Une seule famille de boutons, 44 px au moins, la main au survol, un contour clair au clavier : l'action principale
+ *    au miel, à plat (--miel, le texte --voile) ; les autres en contour (--trait) ou en ardoise (--bloc-2) ; « − » et
+ *    « + » ronds ; ce qui est choisi passe en clair (--encre). Ni relief, ni lueur, ni bouton noir.
  */
 * {
   box-sizing: border-box;
@@ -39,9 +37,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dans le jeu, le haut est posé sur l'écran : la page commence sous lui, et la nuit du soir borde tout. */
+/* Dans le jeu, le haut est posé sur l'écran : la page commence sous lui, et la nuit borde tout. */
 html:has([data-onglets]) {
-  background: var(--bois-sombre);
+  background: var(--mer-profonde);
 }
 
 body:has([data-onglets]) {
@@ -50,35 +48,40 @@ body:has([data-onglets]) {
 }
 
 /*
- * Un écran du jeu, hors de la carte : son décor reste derrière lui (isolation), et les noms des couleurs y prennent
- * leur sens de jeu, sur le bois. La carte garde les siens.
+ * Un écran du jeu, hors de la carte, et les panneaux posés sur la carte : les noms des couleurs y prennent leur sens
+ * sombre, sur l'ardoise de nuit. La carte elle-même garde les siens.
  */
-body:has([data-onglets]) main:not([data-carte]) {
-  --bloc: var(--bois);
-  --bloc-2: var(--bois-sombre);
-  --bloc-3: var(--bois-clair);
-  --trait: var(--dore-sombre);
-  --trait-doux: var(--bois-clair);
-  --encre: var(--miel);
-  --encre-survol: var(--miel-survol);
+body:has([data-onglets]) main:not([data-carte]),
+[data-fiche-de-la-case],
+[data-sur-la-carte] {
+  --bloc: var(--nuit);
+  --bloc-2: var(--nuit-survol);
+  --bloc-3: var(--nuit-survol);
+  --trait: var(--sur-encre-trait);
+  --trait-doux: var(--filet);
+  --encre: var(--sur-image-doux);
+  --encre-survol: var(--fond);
   --ivoire: var(--voile);
   --blanc-chaud: var(--voile);
-  --texte-2: var(--sur-encre-discret);
-  --texte-discret: var(--galet);
-  --texte-pale: var(--galet);
+  --texte-2: var(--gris-clair);
+  --texte-discret: var(--gris);
+  --texte-pale: var(--gris);
   --survol: var(--sur-encre-survol);
   --mauvais: var(--rose);
   --mauvais-doux: var(--sur-encre-survol);
   --bon: var(--menthe-vive);
+  color: var(--sur-image-doux);
+}
+
+body:has([data-onglets]) main:not([data-carte]) {
   position: relative;
   isolation: isolate;
-  color: var(--sur-image-doux);
 }
 
 /*
  * Le décor d'un écran du jeu, d'un bord à l'autre de la fenêtre, fixé derrière lui : l'illustration que la page donne
- * (--decor, cadrée sur --cadrage), sous un voile de bois sombre, plus fort en haut et en bas où se posent les pièces du
- * cadre, et la lumière dorée d'une fin de journée qui vient du haut. Une page peut le refaire à sa façon (le Foyer).
+ * (--decor, cadrée sur --cadrage), sous un voile léger, un peu plus marqué en haut et en bas où se posent les pièces du
+ * cadre : la peinture se lit, les panneaux portent le contraste. Une page peut le refaire à sa façon (le Foyer).
  */
 :where(body:has([data-onglets]) main:not([data-carte])) {
   --decor: none;
@@ -91,9 +94,7 @@ body:has([data-onglets]) main:not([data-carte]) {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse 70% 50% at 60% 8%, var(--soleil), transparent 70%),
-    linear-gradient(to bottom, var(--ombre-du-soir), transparent 24%, transparent 58%, var(--ombre-du-soir) 86%, var(--bois-sombre)),
-    linear-gradient(color-mix(in oklch, var(--bois-sombre) 46%, transparent), color-mix(in oklch, var(--bois-sombre) 46%, transparent)),
+    linear-gradient(to bottom, var(--ombre-du-soir), transparent 22%, transparent 68%, var(--ombre-du-soir) 90%, var(--mer-profonde)),
     var(--decor) var(--cadrage) / cover no-repeat,
     radial-gradient(ellipse at 50% 20%, var(--mer-du-soir), var(--mer-profonde) 70%);
   pointer-events: none;
@@ -102,17 +103,14 @@ body:has([data-onglets]) main:not([data-carte]) {
 h1,
 h2 {
   font-family: var(--police-titre);
-  font-weight: 400;
-  font-synthesis: none;
-  letter-spacing: 0.005em;
+  font-weight: var(--graisse-titre);
+  letter-spacing: -0.01em;
 }
 
-/* Le titre d'un écran du jeu, en grandes lettres de jeu, posé sur le décor. */
+/* Le titre d'un écran du jeu, en grand et en clair, posé sur le décor. */
 body:has([data-onglets]) main:not([data-carte]) > h1:first-of-type {
   color: var(--sur-image-doux);
-  text-shadow:
-    0 3px 0 var(--bois-sombre),
-    0 0 22px var(--bois-sombre);
+  text-shadow: 0 1px 12px var(--ombre-du-soir);
 }
 
 button,

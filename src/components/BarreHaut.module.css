@@ -1,6 +1,6 @@
 /*
  * Le haut de l'écran. Hors du jeu, une barre Encre où se pose le blason du loup. Dans le jeu (dès que la navigation est
- * là), plus de barre : des pièces de bois ciré posées sur le cadre de la carte, qui passe dessous. En haut à gauche, le
+ * là), plus de barre : des pièces d'ardoise de nuit posées sur l'écran, qui passe dessous. En haut à gauche, le
  * blason du loup et la plaque du nom du chef (US-0140) ; en haut à droite, les Stocks en jetons (US-0203) et le compteur
  * d'Habitants (US-0304) ; dessous, l'avertissement de famine (US-0321) ; au pied de l'écran, la rangée des médaillons de
  * la navigation (US-0302). Entre les pièces, la carte se voit et se manie.
@@ -25,9 +25,8 @@
 }
 
 /*
- * Dans le jeu : les pièces se posent par-dessus la carte, qui prend tout l'écran. Une ombre douce descend du haut, comme
- * le bord d'un plateau sous la lampe, pour que les pièces se lisent sur toutes les couleurs du Monde ; elle laisse
- * passer les gestes vers la carte, et seules les pièces se touchent.
+ * Dans le jeu : les pièces se posent par-dessus l'écran, qui prend toute la place. Une ombre légère descend du haut pour
+ * qu'elles se lisent sur toutes les peintures ; elle laisse passer les gestes, et seules les pièces se touchent.
  */
 .barre:has(.navigation) {
   position: fixed;
@@ -68,8 +67,7 @@
   background: transparent;
   color: var(--ivoire);
   font: inherit;
-  font-family: var(--police-titre);
-  font-size: 16px;
+  font-weight: var(--graisse-titre);
   cursor: pointer;
 }
 
@@ -111,24 +109,21 @@
   margin-left: 0;
 }
 
-/* Dans le jeu, une plaque de bois ciré, cerclée de doré, comme celle d'un chef sur la carte. */
+/* Dans le jeu, le nom sur une pièce d'ardoise, à côté du blason. */
 .barre:has(.navigation) .nom {
   min-height: 44px;
   padding: 0 14px 0 16px;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--relief-bois),
-    0 6px 14px var(--ombre-du-soir);
-  font-size: 18px;
-  text-shadow: 0 1px 0 var(--bois-sombre);
+  border: 1px solid var(--filet);
+  border-radius: 999px;
+  background: var(--nuit);
+  box-shadow: var(--ombre);
+  color: var(--sur-image-doux);
+  font-size: 16px;
 }
 
 @media (hover: hover) {
   .barre:has(.navigation) .nom:hover {
-    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 40%, var(--bois));
+    background: var(--nuit-survol);
   }
 }
 
@@ -162,12 +157,11 @@
   min-width: 220px;
   max-width: calc(100vw - 24px);
   overflow: hidden;
+  border: 1px solid var(--filet);
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  color: var(--encre);
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--ombre-forte);
+  background: var(--nuit);
+  color: var(--sur-image-doux);
+  box-shadow: var(--ombre-forte);
 }
 
 .barre:has(.navigation) .menu {
@@ -177,10 +171,10 @@
 
 /* Le nom en entier, en tête du menu : on le lit même s'il est coupé sur la plaque. */
 .nomComplet {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--trait-doux);
-  font-family: var(--police-titre);
-  font-size: 17px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--filet);
+  font-size: 16px;
+  font-weight: var(--graisse-titre);
   overflow-wrap: anywhere;
 }
 
@@ -188,10 +182,10 @@
   display: block;
   width: 100%;
   min-height: 44px;
-  padding: 0 14px;
+  padding: 0 16px;
   border: 0;
   background: transparent;
-  color: var(--encre);
+  color: var(--sur-image-doux);
   font: inherit;
   font-weight: var(--graisse-titre);
   text-align: left;
@@ -200,7 +194,7 @@
 
 .choix:hover,
 .choix:focus-visible {
-  background: var(--bloc-2);
+  background: var(--nuit-survol);
   outline: none;
 }
 
@@ -210,10 +204,10 @@
 }
 
 /*
- * US-0302 : la navigation du jeu, une rangée de médaillons dans un plateau de bois au pied de l'écran, au milieu sur
- * ordinateur. Chaque entrée, son médaillon puis son nom ; l'Expédition, au milieu, plus grande, cerclée de miel, déborde
- * au-dessus du plateau. L'entrée de la page affichée se soulève, cerclée de citron, et son nom se souligne : jamais la
- * couleur seule.
+ * US-0302 : la navigation du jeu, une rangée de médaillons sur une pièce d'ardoise au pied de l'écran, au milieu sur
+ * ordinateur. Chaque entrée, son médaillon puis son nom ; l'Expédition, au milieu, plus grande, sur le miel, déborde
+ * au-dessus de la rangée. L'entrée de la page affichée est cerclée de clair et son nom se souligne : jamais la couleur
+ * seule.
  */
 .navigation {
   position: fixed;
@@ -228,13 +222,10 @@
   align-items: flex-end;
   gap: 4px;
   padding: 8px 12px 6px;
+  border: 1px solid var(--filet);
   border-radius: 26px;
-  background: linear-gradient(to bottom, var(--bois), var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    0 0 0 4px var(--bois-sombre),
-    var(--relief-bois),
-    var(--ombre-forte);
+  background: var(--nuit);
+  box-shadow: var(--ombre-forte);
   list-style: none;
 }
 
@@ -243,7 +234,7 @@
 }
 
 .entree {
-  --taille-medaillon: 48px;
+  --taille-medaillon: 46px;
   --icone: none;
   position: relative;
   display: flex;
@@ -251,23 +242,22 @@
   align-items: center;
   justify-content: flex-end;
   gap: 4px;
-  min-width: 80px;
+  min-width: 78px;
   min-height: 44px;
-  padding: 2px 8px 2px;
-  border-radius: 18px;
-  color: var(--sur-encre-discret);
-  font-family: var(--police-titre);
-  font-size: 15px;
+  padding: 2px 8px;
+  border-radius: 16px;
+  color: var(--gris-clair);
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
   line-height: 1.1;
   text-decoration: none;
-  text-shadow: 0 1px 0 var(--bois-sombre);
   white-space: nowrap;
   cursor: pointer;
 }
 
 /*
- * Le médaillon de l'entrée : un rond de bois sombre éclairé en haut, cerclé d'un filet doré, son illustration peinte
- * posée dedans (--icone, que pose la navigation) ; la hutte du chef, en grand, recadrée sur son toit.
+ * Le médaillon de l'entrée : un rond d'ardoise, son illustration peinte posée dedans (--icone, que pose la navigation) ;
+ * la hutte du chef, en grand, recadrée sur son toit.
  */
 .entree::before {
   content: "";
@@ -275,14 +265,7 @@
   width: var(--taille-medaillon);
   height: var(--taille-medaillon);
   border-radius: 50%;
-  background:
-    var(--icone) 50% 50% / 82% no-repeat,
-    radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore),
-    0 0 0 4px var(--bois-sombre),
-    var(--relief-bois),
-    0 6px 12px var(--ombre-du-soir);
+  background: var(--icone) 50% 50% / 80% no-repeat, var(--nuit-survol);
   transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -291,54 +274,53 @@
   background-size: 175% auto, auto;
 }
 
-/* L'Expédition, l'action du jeu : plus grande, cerclée de miel, au-dessus du plateau. */
+/* Le Monde, peint sur la nuit : il remplit son rond, la nuit autour de lui s'efface. */
+.entree[href="/jeu/carte"]::before {
+  background-size: 122% auto, auto;
+}
+
+/* L'Expédition, l'action du jeu : plus grande, sur le miel, au-dessus de la rangée. */
 .entree[data-principale] {
-  --taille-medaillon: 68px;
-  margin-top: -30px;
-  color: var(--ivoire);
+  --taille-medaillon: 62px;
+  margin-top: -26px;
+  color: var(--sur-image-doux);
 }
 
 .entree[data-principale]::before {
-  box-shadow:
-    0 0 0 3px var(--miel),
-    0 0 0 6px var(--bois-sombre),
-    var(--relief-bois),
-    0 8px 16px var(--ombre-du-soir);
+  background-color: var(--miel);
+  box-shadow: 0 0 0 4px var(--nuit);
 }
 
 @media (hover: hover) {
   .entree:hover {
     background: var(--sur-encre-survol);
-    color: var(--ivoire);
+    color: var(--sur-image-doux);
   }
 
   .entree:hover::before {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 }
 
 .entree:focus-visible {
-  outline: 2px solid var(--citron);
+  outline: 2px solid var(--sur-image-doux);
   outline-offset: 2px;
 }
 
-/* La page affichée : son médaillon se soulève, cerclé de citron ; son nom passe en clair, souligné de citron. */
+/* La page affichée : son médaillon cerclé de clair ; son nom passe en clair, souligné : jamais la couleur seule. */
 .entree[aria-current="page"] {
-  color: var(--ivoire);
+  color: var(--sur-image-doux);
 }
 
 .entree[aria-current="page"]::before {
-  transform: translateY(-5px);
   box-shadow:
-    0 0 0 3px var(--citron),
-    0 0 0 6px var(--bois-sombre),
-    var(--relief-bois),
-    0 10px 18px var(--ombre-du-soir);
+    0 0 0 2px var(--nuit),
+    0 0 0 4px var(--sur-image-doux);
 }
 
 /* Le trait sous le nom seul, pas sous la pastille des Récits non lus (US-0324). */
 .entree[aria-current="page"] .libelle {
-  text-decoration: underline 2px var(--citron);
+  text-decoration: underline 2px var(--sur-image-doux);
   text-decoration-skip-ink: none;
   text-underline-offset: 4px;
 }
@@ -348,39 +330,36 @@
   position: absolute;
   top: -6px;
   right: calc(50% - 32px);
-  min-width: 24px;
-  height: 24px;
+  min-width: 22px;
+  height: 22px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--citron);
-  box-shadow: 0 0 0 2px var(--bois-sombre);
+  box-shadow: 0 0 0 2px var(--nuit);
   color: var(--encre);
-  font-family: var(--police-titre);
-  font-size: 14px;
+  font-size: 13px;
+  font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
-  line-height: 24px;
+  line-height: 22px;
   text-align: center;
-  text-shadow: none;
 }
 
 /* US-0332 : un Voyageur attend aux portes : un point citron au coin du médaillon « Habitants », sans chiffre. */
 .repere {
   position: absolute;
   top: 0;
-  right: calc(50% - 21px);
+  right: calc(50% - 20px);
   width: 8px;
   height: 8px;
   border-radius: 999px;
   background: var(--citron);
-  box-shadow:
-    0 0 0 3px var(--bois-sombre),
-    0 0 0 4px var(--citron);
+  box-shadow: 0 0 0 3px var(--nuit);
 }
 
 /*
- * US-0203 : les Stocks, en jetons de bois en haut à droite : l'icône peinte de chaque Ressource (US-0204) déborde à
- * gauche de son jeton, la quantité en chiffres de jeu, le solde horaire dessous (US-0319). La Nourriture, puis les
- * Matériaux (US-0205), un peu écartés ; après eux, le compteur d'Habitants (US-0304).
+ * US-0203 : les Stocks, en pièces d'ardoise en haut à droite : l'icône peinte de chaque Ressource (US-0204), la
+ * quantité en gras, le solde horaire dessous (US-0319). La Nourriture, puis les Matériaux (US-0205), un peu écartés ;
+ * après eux, le compteur d'Habitants (US-0304).
  */
 .ressources {
   grid-column: 3;
@@ -388,18 +367,18 @@
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
 }
 
 .groupes {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 14px;
 }
 
 .groupe {
   display: flex;
-  gap: 18px;
+  gap: 8px;
   padding: 0;
   list-style: none;
 }
@@ -416,30 +395,26 @@
   grid-template-columns: auto auto auto;
   align-items: center;
   justify-items: start;
-  column-gap: 6px;
+  column-gap: 8px;
   min-height: 46px;
-  padding: 3px 14px 3px 0;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--relief-bois),
-    0 6px 14px var(--ombre-du-soir);
-  color: var(--ivoire);
+  padding: 4px 14px 4px 6px;
+  border: 1px solid var(--filet);
+  border-radius: 999px;
+  background: var(--nuit);
+  box-shadow: var(--ombre);
+  color: var(--sur-image-doux);
   font: inherit;
-  text-shadow: 0 1px 0 var(--bois-sombre);
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .boutonRessource:hover {
-    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
+    background: var(--nuit-survol);
   }
 }
 
 .boutonRessource:focus-visible {
-  outline: 2px solid var(--citron);
+  outline: 2px solid var(--sur-image-doux);
   outline-offset: 3px;
 }
 
@@ -455,26 +430,24 @@
 
 @media (hover: hover) {
   .lienHabitants:hover {
-    background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
+    background: var(--nuit-survol);
   }
 }
 
-/* L'icône peinte, plus grande que le jeton, qui en déborde à gauche. */
+/* L'icône peinte de la Ressource, à gauche de sa quantité. */
 .icone {
   grid-area: icone;
   flex: none;
-  width: 42px;
-  height: 42px;
-  margin: -6px 0 -6px -16px;
-  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
+  width: 32px;
+  height: 32px;
 }
 
 .quantite {
   grid-area: quantite;
-  font-family: var(--police-titre);
-  font-size: 20px;
+  font-size: 17px;
+  font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
-  line-height: 1;
+  line-height: 1.05;
 }
 
 /* US-0224 : un Stock plein, en couleur d'alerte et avec le mot « plein » : jamais la couleur seule. */
@@ -496,7 +469,6 @@
   font-size: 11px;
   font-weight: var(--graisse-titre);
   letter-spacing: var(--espacement-etiquette);
-  text-shadow: none;
   text-transform: uppercase;
 }
 
@@ -506,7 +478,7 @@
  */
 .solde {
   grid-area: solde;
-  color: var(--sur-encre-discret);
+  color: var(--gris);
   font-size: 12px;
   font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
@@ -515,7 +487,7 @@
 }
 
 .solde[data-nulle] {
-  color: var(--galet);
+  color: var(--gris);
 }
 
 .solde[data-negatif] {
@@ -532,8 +504,14 @@
   white-space: nowrap;
 }
 
-/* Le détail d'un Stock, dans une bulle de paille sous lui : au survol, au clavier ou au toucher. */
+/* Le détail d'un Stock, dans une bulle d'ardoise sous lui : au survol, au clavier ou au toucher. */
 .bulle {
+  --bloc-3: var(--nuit-survol);
+  --trait-doux: var(--filet);
+  --encre: var(--sur-image-doux);
+  --texte-2: var(--gris-clair);
+  --texte-discret: var(--gris);
+  --mauvais: var(--rose);
   /* Centrée sous sa ressource ; collée au bord pour la dernière, pour ne jamais sortir de l'écran. */
   --decalage: -50%;
   position: absolute;
@@ -542,17 +520,15 @@
   z-index: 1;
   display: grid;
   gap: 2px;
-  padding: 10px 14px;
+  padding: 12px 16px;
+  border: 1px solid var(--filet);
   border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--ombre-forte);
+  background: var(--nuit);
+  box-shadow: var(--ombre-forte);
   color: var(--encre);
   font-size: 13px;
   font-weight: var(--graisse-titre);
   text-align: center;
-  text-shadow: none;
   white-space: nowrap;
   pointer-events: none;
   opacity: 0;
@@ -575,9 +551,8 @@
 }
 
 .nomBulle {
-  font-family: var(--police-titre);
-  font-size: 17px;
-  font-weight: 400;
+  font-size: 16px;
+  font-weight: var(--graisse-titre);
 }
 
 .quantiteBulle {
@@ -586,19 +561,18 @@
 }
 
 .jauge {
-  height: 8px;
+  height: 6px;
   margin-bottom: 4px;
   overflow: hidden;
-  border-radius: 4px;
+  border-radius: 3px;
   background: var(--bloc-3);
-  box-shadow: inset 0 1px 2px var(--ombre-du-soir);
 }
 
 .remplissage {
   display: block;
   height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(to bottom, var(--miel), var(--miel-fonce));
+  border-radius: 3px;
+  background: var(--miel);
 }
 
 .ressource[data-plein] .remplissage {
@@ -694,10 +668,7 @@
   padding: 0 20px;
   border-radius: var(--arrondi-moyen);
   background: var(--mauvais);
-  box-shadow:
-    0 0 0 2px var(--bois-sombre),
-    var(--relief),
-    0 6px 14px var(--ombre-du-soir);
+  box-shadow: var(--ombre);
   color: var(--blanc-chaud);
   font-size: 14px;
   text-decoration: none;
@@ -709,8 +680,7 @@
 }
 
 .titreFamine {
-  font-family: var(--police-titre);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: var(--graisse-titre);
 }
 
@@ -796,7 +766,7 @@
   .barre:has(.navigation) .nom {
     min-height: 40px;
     padding: 0 12px;
-    font-size: 16px;
+    font-size: 15px;
   }
 
   /*
@@ -810,7 +780,7 @@
     bottom: 0;
     left: 0;
     padding: 0 var(--bord-droit) var(--bord-bas) var(--bord-gauche);
-    background: var(--bois-sombre);
+    background: var(--nuit);
     transform: none;
   }
 
@@ -820,11 +790,9 @@
     gap: 0;
     height: var(--hauteur-onglets);
     padding: 6px 2px 4px;
-    border-radius: 22px 22px 0 0;
-    box-shadow:
-      0 -2px 0 var(--dore-sombre),
-      var(--relief-bois),
-      0 -8px 24px var(--ombre-du-soir);
+    border-width: 1px 0 0;
+    border-radius: 0;
+    box-shadow: 0 -8px 24px var(--ombre-du-soir);
   }
 
   .place {
@@ -834,7 +802,7 @@
 
   /* Cinq places de 64 px au moins sur 320 px : le nom en 12 px, « Expéditions », « Habitants » et « Récits » y tiennent. */
   .entree {
-    --taille-medaillon: 38px;
+    --taille-medaillon: 36px;
     gap: 3px;
     width: 100%;
     min-width: 0;
@@ -844,8 +812,8 @@
   }
 
   .entree[data-principale] {
-    --taille-medaillon: 56px;
-    margin-top: -26px;
+    --taille-medaillon: 54px;
+    margin-top: -24px;
   }
 
   .entree:focus-visible {
@@ -896,21 +864,20 @@
   .boutonRessource {
     grid-template-areas: "icone quantite" "icone solde";
     grid-template-columns: auto minmax(0, 1fr);
-    column-gap: 3px;
+    column-gap: 4px;
     width: 100%;
     min-height: 44px;
-    padding: 2px 4px 2px 2px;
-    border-radius: var(--arrondi-petit);
+    padding: 2px 6px 2px 4px;
+    border-radius: var(--arrondi-moyen);
   }
 
   .icone {
-    width: 24px;
-    height: 24px;
-    margin: 0;
+    width: 22px;
+    height: 22px;
   }
 
   .quantite {
-    font-size: 15px;
+    font-size: 14px;
   }
 
   /* « −1 234/h » tient dans un jeton de 64 px. */
@@ -947,6 +914,7 @@
     overflow-y: auto;
     gap: 4px;
     padding: 18px max(var(--marge-panneau), var(--bord-droit)) 18px max(var(--marge-panneau), var(--bord-gauche));
+    border-width: 1px 0 0;
     border-radius: var(--arrondi) var(--arrondi) 0 0;
     font-size: 14px;
     text-align: left;
@@ -987,14 +955,12 @@
     display: block;
     min-height: 44px;
     padding: 0 16px;
-    border: 0;
-    border-radius: var(--arrondi-moyen);
-    background: var(--encre);
-    box-shadow: var(--relief);
-    color: var(--blanc-chaud);
+    border: 1px solid var(--sur-encre-trait);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--sur-image-doux);
     font: inherit;
-    font-family: var(--police-titre);
-    font-size: 15px;
+    font-weight: var(--graisse-titre);
     cursor: pointer;
   }
 }

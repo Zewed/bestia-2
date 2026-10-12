@@ -34,8 +34,8 @@ describe("la partie « Aux portes » sur mobile (US-0343)", () => {
     expect(regle(".accueillir,\n.refuser")).toMatch(/flex: 1 1 0;[^}]*min-width: 0;/);
   });
 
-  it("fait de « Refuser » le bouton secondaire : cerné d'un trait sur le fond du bloc, quand « Accueillir » est plein, en Encre", () => {
-    expect(regle(".accueillir")).toMatch(/background: var\(--encre\);[^}]*color: var\(--blanc-chaud\);/);
+  it("fait de « Refuser » le bouton secondaire : cerné d'un trait sur le fond du panneau, quand « Accueillir » est plein, au miel de l'action", () => {
+    expect(regle(".accueillir")).toMatch(/background: var\(--miel\);[^}]*color: var\(--voile\);/);
     expect(regle(".refuser")).toMatch(/background: var\(--bloc\);[^}]*box-shadow: inset 0 0 0 1px var\(--trait\);/);
   });
 

@@ -1,19 +1,19 @@
 /*
  * L'écran du Foyer : la hutte du chef peinte est la scène, d'un bord à l'autre de l'écran, sous le haut et la rangée des
- * médaillons. Posés sur elle, en colonne à gauche (en haut, au pied de l'écran sur un téléphone) : le Biome du Foyer en
- * grandes lettres de jeu, les écriteaux de bois de ce qui attend le chef, et la planche de sa production.
+ * médaillons. Posés sur elle, en colonne à gauche (en haut, et au pied de l'écran sur un téléphone) : le Biome du Foyer
+ * en grand, les cartes de ce qui attend le chef, et le panneau de sa production.
  */
 .page {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  width: min(440px, 100%);
+  width: min(420px, 100%);
   min-height: calc(100dvh - var(--hauteur-barre) - var(--hauteur-onglets) - var(--bord-bas));
   margin: 0;
-  padding: 18px 24px 28px max(24px, var(--bord-gauche));
+  padding: 20px 24px 28px max(24px, var(--bord-gauche));
 }
 
-/* La hutte prend tout l'écran, derrière ce qui est posé sur elle ; un voile assombrit le côté de la colonne. */
+/* La hutte prend tout l'écran, derrière ce qui est posé sur elle ; un voile léger, en haut et en bas seulement. */
 .foyer {
   display: contents;
 }
@@ -35,61 +35,51 @@
   position: fixed;
   inset: 0;
   z-index: -1;
-  background:
-    radial-gradient(ellipse 60% 45% at 70% 10%, var(--soleil), transparent 70%),
-    linear-gradient(to right, var(--ombre-du-soir), transparent 46%),
-    linear-gradient(to bottom, var(--ombre-du-soir), transparent 20%, transparent 70%, var(--ombre-du-soir));
+  background: linear-gradient(to bottom, var(--ombre-du-soir), transparent 22%, transparent 74%, var(--ombre-du-soir));
   pointer-events: none;
 }
 
-/* Le Biome du Foyer, en grandes lettres de jeu sur le ciel du soir. */
+/* Le Biome du Foyer, en grand et en clair sur le ciel du soir. */
 .legende {
   order: -3;
   color: var(--sur-image-doux);
-  font-size: clamp(34px, 3.4vw, 46px);
-  letter-spacing: 0.01em;
+  font-size: clamp(32px, 3.2vw, 42px);
   line-height: 1.05;
-  text-shadow:
-    0 3px 0 var(--bois-sombre),
-    0 0 22px var(--bois-sombre);
+  text-shadow: 0 1px 14px var(--ombre-du-soir);
 }
 
 /*
- * Les écriteaux : US-0327, les Habitants partis pendant l'absence, tant que leur Récit n'est pas lu ; US-0332, les
- * Voyageurs aux portes ; US-0324, les Récits non lus. Chacun une plaque de bois cerclée d'or, l'icône peinte de ce
- * qu'il signale, la phrase, puis son jeton au miel.
+ * Les cartes de ce qui attend le chef : US-0327, les Habitants partis pendant l'absence, tant que leur Récit n'est pas
+ * lu ; US-0332, les Voyageurs aux portes ; US-0324, les Récits non lus. Chacune l'icône peinte de ce qu'elle signale, sa
+ * phrase, et son bouton.
  */
 .departs,
 .avis {
   order: -2;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 6px 6px 8px;
-  border-radius: var(--arrondi-moyen);
+  gap: 14px;
+  padding: 12px 12px 12px 14px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi);
   background: var(--bloc);
-  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 50%);
-  box-shadow:
-    0 0 0 2px var(--trait),
-    var(--relief-bois),
-    var(--ombre);
+  box-shadow: var(--ombre);
 }
 
 .departs::before,
 .avis::before {
   content: "";
   flex: none;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: url("/illustrations/icones/habitants.webp") center / contain no-repeat;
-  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
 }
 
 .avis[data-avis="recits"]::before {
   background-image: url("/illustrations/metiers/chercheur.webp");
 }
 
-/* À l'étroit, la phrase passe à la ligne et le jeton reste à droite. */
+/* À l'étroit, la phrase passe à la ligne et le bouton reste à droite. */
 .nombreDeDeparts,
 .texteAvis {
   flex: 1;
@@ -102,20 +92,18 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 18px;
-  border-bottom: 3px solid var(--miel-fonce);
-  border-radius: var(--arrondi-moyen);
-  background: var(--encre);
-  color: var(--blanc-chaud);
-  font-family: var(--police-titre);
-  font-size: 17px;
+  padding: 0 20px;
+  border-radius: 999px;
+  background: var(--miel);
+  color: var(--voile);
+  font-weight: var(--graisse-titre);
   text-decoration: none;
   cursor: pointer;
 }
 
 @media (hover: hover) {
   .lireDeparts:hover {
-    background: var(--encre-survol);
+    background: var(--miel-survol);
   }
 }
 
@@ -124,19 +112,17 @@
   outline-offset: 2px;
 }
 
-/* US-0216 : ce que le Foyer a produit pendant l'absence, une plaque sous les écriteaux ; un toucher la ferme. */
+/* US-0216 : ce que le Foyer a produit pendant l'absence, une carte sous les autres ; un toucher la ferme. */
 .recap {
   order: -1;
   display: grid;
   gap: 2px;
-  padding: 10px 14px;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc-2);
-  box-shadow:
-    0 0 0 2px var(--trait),
-    var(--ombre);
-  color: var(--sur-image-doux);
+  padding: 12px 16px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
   font: inherit;
   font-weight: var(--graisse-titre);
   text-align: left;
@@ -145,7 +131,7 @@
 
 @media (hover: hover) {
   .recap:hover {
-    background: var(--bloc);
+    background: var(--bloc-2);
   }
 }
 
@@ -159,34 +145,32 @@
   outline-offset: 2px;
 }
 
-/* US-0217 : la planche de la production, sous ce qui attend le chef. */
+/* US-0217 : le panneau de la production, sous ce qui attend le chef. */
 .avecProduction > section:last-child {
   order: 1;
 }
 
 .productions {
   display: grid;
-  gap: 8px;
   padding: 0;
   list-style: none;
 }
 
-/* Chaque Ressource dans sa case creusée : son icône peinte, son nom, et ce qu'elle rapporte par heure. */
+/* Chaque Ressource sur sa ligne : son icône peinte, son nom, et ce qu'elle rapporte par heure ; un filet entre elles. */
 .ligneProduction {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  min-height: 48px;
-  padding: 4px 16px 4px 8px;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc-2);
-  box-shadow: inset 0 2px 4px var(--ombre-du-soir);
+  min-height: 56px;
+}
+
+.ligneProduction + .ligneProduction {
+  border-top: 1px solid var(--trait-doux);
 }
 
 .ligneProduction img {
-  width: 36px;
-  height: 36px;
-  filter: drop-shadow(0 2px 2px var(--ombre-du-soir));
+  width: 40px;
+  height: 40px;
 }
 
 .nomProduction {
@@ -196,8 +180,8 @@
 .parHeure {
   margin-left: auto;
   color: var(--bon);
-  font-family: var(--police-titre);
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
 }
 
@@ -214,17 +198,11 @@
 @media (max-width: 820px) {
   .page {
     width: 100%;
-    padding: 14px max(14px, var(--bord-droit)) 18px max(14px, var(--bord-gauche));
+    padding: 16px max(14px, var(--bord-droit)) 18px max(14px, var(--bord-gauche));
   }
 
   .foyer img {
     object-position: 58% 40%;
-  }
-
-  .page::before {
-    background:
-      radial-gradient(ellipse 80% 40% at 60% 8%, var(--soleil), transparent 70%),
-      linear-gradient(to bottom, var(--ombre-du-soir), transparent 30%, transparent 46%, var(--ombre-du-soir) 80%);
   }
 
   .avecProduction > section:last-child {
@@ -232,11 +210,11 @@
   }
 
   .ligneProduction {
-    min-height: 42px;
+    min-height: 46px;
   }
 
   .ligneProduction img {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
   }
 }

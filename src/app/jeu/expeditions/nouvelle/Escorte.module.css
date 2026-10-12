@@ -18,25 +18,24 @@
   grid-template-columns: 48px minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  padding: 8px 10px;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc-2);
-  box-shadow: inset 0 2px 3px var(--encre-douce);
+  padding: 12px 0;
+}
+
+/* Les Espèces l'une sous l'autre, un filet entre elles, sans cadre de plus. */
+.espece + .espece {
+  border-top: 1px solid var(--trait-doux);
 }
 
 .vignette {
   width: 48px;
   border-radius: 50%;
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    0 3px 6px var(--encre-douce);
 }
 
 .nom {
   display: grid;
   min-width: 0;
-  font-family: var(--police-titre);
-  font-size: 17px;
+  font-size: 16px;
+  font-weight: var(--graisse-titre);
 }
 
 .disponibles {
@@ -70,14 +69,13 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--trait);
   border-radius: 50%;
-  background: var(--encre);
-  box-shadow: var(--relief);
-  color: var(--blanc-chaud);
+  background: transparent;
+  color: var(--encre);
   font: inherit;
-  font-family: var(--police-titre);
-  font-size: 22px;
+  font-size: 20px;
+  font-weight: var(--graisse-titre);
   line-height: 1;
   cursor: pointer;
 }
@@ -86,31 +84,22 @@
 .mot {
   width: auto;
   min-width: 44px;
-  padding: 0 14px;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  box-shadow:
-    inset 0 0 0 1px var(--trait),
-    var(--relief);
-  color: var(--encre);
-  font-size: 15px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
 }
 
 /* Grisés, ils restent à leur place sans réagir. */
 .bouton:disabled {
-  background: var(--bloc-2);
-  box-shadow: inset 0 0 0 1px var(--trait-doux);
+  border-color: var(--trait-doux);
   color: var(--galet);
   cursor: default;
+  opacity: 0.5;
 }
 
 @media (hover: hover) {
   .bouton:enabled:hover {
-    background: var(--encre-survol);
-  }
-
-  .mot:enabled:hover {
-    background: var(--bloc-3);
+    background: var(--bloc-2);
   }
 }
 
@@ -122,8 +111,8 @@
 .nombre {
   min-width: 2ch;
   color: var(--encre);
-  font-family: var(--police-titre);
-  font-size: 20px;
+  font-size: 18px;
+  font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
   text-align: center;
 }
@@ -149,8 +138,6 @@
 
 .total {
   color: var(--encre);
-  font-family: var(--police-titre);
-  font-size: 18px;
   font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
 }

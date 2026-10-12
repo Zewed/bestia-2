@@ -12,9 +12,9 @@
 /* La durée choisie, en grand. */
 .duree {
   color: var(--encre);
-  font-family: var(--police-titre);
-  font-size: 30px;
-  letter-spacing: 0.01em;
+  font-size: 28px;
+  font-weight: var(--graisse-titre);
+  letter-spacing: -0.01em;
   line-height: 1.15;
 }
 
@@ -52,30 +52,25 @@
 .pret {
   min-height: 44px;
   padding: 0 8px;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: var(--bloc);
-  box-shadow:
-    inset 0 0 0 1px var(--trait),
-    var(--relief);
+  border: 1px solid var(--trait);
+  border-radius: 999px;
+  background: transparent;
   color: var(--texte-2);
   font: inherit;
-  font-family: var(--police-titre);
-  font-size: 16px;
+  font-weight: var(--graisse-titre);
   cursor: pointer;
 }
 
 .pret[aria-pressed="true"] {
   border-color: var(--encre);
   background: var(--encre);
-  box-shadow: inset 0 -3px 0 var(--miel-fonce);
   color: var(--ivoire);
 }
 
 @media (hover: hover) {
   .pret[aria-pressed="false"]:hover {
-    border-color: var(--galet);
-    background: var(--bloc-3);
+    background: var(--bloc-2);
+    color: var(--encre);
   }
 }
 

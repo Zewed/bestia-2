@@ -12,12 +12,10 @@
   min-height: 44px;
   margin-top: 12px;
   padding: 0 18px;
-  border-bottom: 3px solid var(--miel-fonce);
-  border-radius: var(--arrondi-moyen);
-  background: var(--encre);
-  color: var(--blanc-chaud);
-  font-family: var(--police-titre);
-  font-size: 17px;
+  border-radius: 999px;
+  background: var(--miel);
+  color: var(--voile);
+  font-weight: var(--graisse-titre);
   text-align: center;
   text-decoration: none;
   cursor: pointer;
@@ -25,7 +23,7 @@
 
 @media (hover: hover) {
   .habitants:hover {
-    background: var(--encre-survol);
+    background: var(--miel-survol);
   }
 }
 

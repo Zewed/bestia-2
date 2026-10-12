@@ -31,32 +31,29 @@
 }
 
 .nom {
-  font-family: var(--police-titre);
-  font-size: 19px;
+  font-size: 18px;
+  font-weight: var(--graisse-titre);
   letter-spacing: 0.16em;
   text-transform: uppercase;
 }
 
 /*
- * Dans le jeu, le loup devient le blason du chef : un rond d'Encre cerclé de doré et de bois, posé en haut à gauche
- * de la carte ; le nom du jeu s'efface derrière lui (le lien garde son nom « Bestia »).
+ * Dans le jeu, le loup devient le blason du chef : un rond d'Encre au filet à peine visible, posé en haut à gauche de
+ * l'écran ; le nom du jeu s'efface derrière lui (le lien garde son nom « Bestia »).
  */
 :root:has([data-onglets]) .logo {
   justify-content: center;
-  width: 60px;
-  height: 60px;
+  width: 56px;
+  height: 56px;
+  border: 1px solid var(--filet);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 35%, var(--encre-survol), var(--encre) 70%);
-  box-shadow:
-    0 0 0 3px var(--dore),
-    0 0 0 6px var(--bois-sombre),
-    var(--relief-bois),
-    0 8px 18px var(--ombre-du-soir);
+  background: var(--encre);
+  box-shadow: var(--ombre);
 }
 
 :root:has([data-onglets]) .loup {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   margin-top: 2px;
 }
 
@@ -66,7 +63,7 @@
 
 @media (hover: hover) {
   :root:has([data-onglets]) .logo:hover {
-    background: radial-gradient(circle at 50% 35%, var(--bois-clair), var(--encre) 75%);
+    background: var(--nuit-survol);
   }
 }
 

@@ -8,7 +8,7 @@ import manifest from "./manifest";
 import { metadata, viewport } from "./layout";
 
 // next/font ne tourne qu'avec Next : ici, une police factice suffit pour lire les métadonnées.
-vi.mock("@/styles/fonts", () => ({ nunito: { variable: "police" }, lilita: { variable: "titres" } }));
+vi.mock("@/styles/fonts", () => ({ nunito: { variable: "police" } }));
 
 const root = join(__dirname, "..", "..");
 const palette = readFileSync(join(root, "src/styles/palette.css"), "utf8");

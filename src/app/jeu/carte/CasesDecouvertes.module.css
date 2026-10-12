@@ -13,8 +13,8 @@
   margin: 0;
   padding: 4px 12px;
   border-radius: var(--arrondi-petit);
-  background: color-mix(in oklch, var(--bois-sombre) 82%, transparent);
-  box-shadow: 0 0 0 1px var(--dore-sombre);
+  background: var(--bloc);
+  box-shadow: inset 0 0 0 1px var(--trait-doux);
   color: var(--ivoire);
   font-size: var(--taille-etiquette);
   font-weight: var(--graisse-titre);

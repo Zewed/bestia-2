@@ -1,14 +1,14 @@
 /*
- * La typographie du jeu : Nunito, ronde et franche, pour lire ; Lilita One, grasse et ronde comme un jeton, pour les
- * titres, les nombres du jeu et les boutons qu'on presse.
+ * La typographie du jeu : Nunito partout, ronde et claire ; en gras pour les titres, les nombres et les boutons
+ * (--police-titre avec --graisse-titre), sans autre effet.
  */
 :root {
   --police: var(--font-nunito), system-ui, sans-serif;
-  --police-titre: var(--font-lilita), var(--font-nunito), system-ui, sans-serif;
+  --police-titre: var(--font-nunito), system-ui, sans-serif;
   --taille-texte: 15px;
   --graisse-texte: 600;
   --graisse-titre: 800;
-  /* Les étiquettes : titres des parties d'un volet, en petites capitales espacées */
+  /* Les étiquettes, rares : en petites capitales espacées */
   --taille-etiquette: 12px;
   --espacement-etiquette: 0.08em;
 }

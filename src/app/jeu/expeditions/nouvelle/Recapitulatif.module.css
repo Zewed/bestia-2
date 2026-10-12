@@ -1,23 +1,12 @@
-/*
- * US-0910 : le récapitulatif, au pied de l'écran d'Expédition, à l'écart des autres parties : un creux doré dans la
- * paille, où l'on relit tout avant de partir.
- */
+/* US-0910 : le récapitulatif, au pied de l'écran d'Expédition, à l'écart des autres panneaux : on y relit tout avant de partir. */
 .recap {
   margin-top: var(--ecart);
 }
 
 /* Plus précis que la partie qui le porte (components/Bloc.module.css), dont il remplace le filet par son creux. */
 section.recap {
-  padding: 18px 20px 20px;
-  border: 0;
-  border-radius: var(--arrondi);
-  background: var(--bloc);
-  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 40%);
-  box-shadow:
-    0 0 0 3px var(--dore),
-    0 0 0 5px var(--bois-sombre),
-    var(--relief-bois),
-    var(--ombre-forte);
+  padding: 22px 24px 24px;
+  box-shadow: var(--ombre-forte);
 }
 
 /* Chaque ligne : sa petite étiquette, puis ce qu'elle dit, alignées sur les lignes des autres blocs. */
@@ -74,15 +63,15 @@ section.recap {
 
   /*
    * Sur un téléphone, le récapitulatif replié est le quai du départ, posé sur la rangée des médaillons : de bord à
-   * bord, cerclé d'or en haut, son ombre comblant l'écart jusqu'à la rangée. Ce qu'on compose défile dessous.
+   * bord, son ombre comblant l'écart jusqu'à la rangée. Ce qu'on compose défile dessous.
    */
   section.recap {
     margin-right: calc(-1 * max(12px, var(--bord-droit)));
     margin-left: calc(-1 * max(12px, var(--bord-gauche)));
-    padding: 10px max(14px, var(--bord-droit)) 12px max(14px, var(--bord-gauche));
+    padding: 12px max(16px, var(--bord-droit)) 14px max(16px, var(--bord-gauche));
+    border-width: 1px 0 0;
     border-radius: 22px 22px 0 0;
     box-shadow:
-      0 -3px 0 var(--dore),
       0 12px 0 var(--bloc),
       0 -12px 28px var(--ombre-du-soir);
   }

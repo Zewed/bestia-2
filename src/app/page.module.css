@@ -1,6 +1,6 @@
 /*
- * La vitrine, comme l'écran titre du jeu : la mer du soir et la lumière dorée qui monte derrière ; le titre en lettres
- * de jeu à gauche, à droite les illustrations encadrées de bois et d'or comme des cartes posées sur la table.
+ * La vitrine, comme l'écran titre du jeu : la nuit du soir et la lumière dorée qui monte derrière ; le titre à gauche,
+ * à droite les illustrations du jeu, posées à plat, qui font tout le décor.
  */
 .accueil {
   display: grid;
@@ -30,12 +30,9 @@
 
 .titre {
   margin-top: 20px;
-  font-size: clamp(38px, 4.6vw, 66px);
+  font-size: clamp(36px, 4.4vw, 62px);
   line-height: 1.04;
-  letter-spacing: 0.005em;
-  text-shadow:
-    0 3px 0 var(--bois-sombre),
-    0 0 24px var(--bois-sombre);
+  letter-spacing: -0.02em;
 }
 
 .intro {
@@ -54,25 +51,24 @@
   margin-top: 28px;
 }
 
-/* Des jetons qu'on presse : l'entrée au miel, sa lèvre dessous ; la seconde en bois cerclé d'or. */
+/* L'entrée au miel, à plat ; la seconde en contour clair. */
 .principal,
 .secondaire {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 52px;
-  padding: 0 24px;
-  border-radius: var(--arrondi-moyen);
-  font-family: var(--police-titre);
-  font-size: 19px;
+  min-height: 50px;
+  padding: 0 26px;
+  border-radius: 999px;
+  font-size: 17px;
+  font-weight: var(--graisse-titre);
   text-decoration: none;
   cursor: pointer;
 }
 
 .principal {
-  border-bottom: 4px solid var(--miel-fonce);
-  background: linear-gradient(to bottom, var(--miel-survol), var(--miel));
-  color: var(--encre);
+  background: var(--miel);
+  color: var(--voile);
 }
 
 .principal:hover {
@@ -80,21 +76,18 @@
 }
 
 .secondaire {
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 55%, var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--relief-bois);
-  color: var(--ivoire);
-  text-shadow: 0 1px 0 var(--bois-sombre);
+  border: 1px solid var(--sur-encre-trait);
+  background: transparent;
+  color: var(--sur-image-doux);
 }
 
 .secondaire:hover {
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois-clair) 45%, var(--bois));
+  background: var(--sur-encre-survol);
 }
 
 .principal:focus-visible,
 .secondaire:focus-visible {
-  outline: 2px solid var(--citron);
+  outline: 2px solid var(--sur-image-doux);
   outline-offset: 3px;
 }
 
@@ -112,10 +105,7 @@
   grid-row: span 2;
   border-radius: var(--arrondi);
   overflow: hidden;
-  box-shadow:
-    0 0 0 3px var(--bois),
-    0 0 0 5px var(--dore-sombre),
-    var(--ombre-forte);
+  box-shadow: var(--ombre-forte);
 }
 
 /* L'illustration remplit sa tuile (sélecteur double pour passer devant le cadre du composant). */
@@ -135,17 +125,16 @@
   justify-content: flex-end;
   grid-row: span 1;
   padding: 16px;
-  background: linear-gradient(to bottom, var(--bois-clair), var(--bois) 60%, var(--bois-sombre));
-  color: var(--ivoire);
+  border: 1px solid var(--filet);
+  background: var(--nuit);
+  color: var(--sur-image-doux);
 }
 
 .chiffre b {
   color: var(--citron);
-  font-family: var(--police-titre);
-  font-size: 42px;
-  font-weight: 400;
+  font-size: 40px;
+  font-weight: var(--graisse-titre);
   line-height: 1;
-  text-shadow: 0 2px 0 var(--bois-sombre);
 }
 
 .chiffre span {

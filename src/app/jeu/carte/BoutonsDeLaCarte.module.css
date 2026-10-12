@@ -3,7 +3,7 @@
  * au-dessus de la rangée des médaillons ; à l'écart de l'encoche d'un téléphone tourné. US-0426 : le bouton du Foyer
  * au-dessus d'eux ; sur mobile, tous au-dessus du panneau ouvert en bas, la légende ou la fiche d'une Case, qui publient
  * leur hauteur ; sur un écran d'ordinateur peu haut, par-dessus le panneau flottant de la légende quand il descend
- * jusqu'à eux. Des jetons de bois ronds, comme les autres pièces posées sur la carte.
+ * jusqu'à eux. Des ronds d'ardoise, comme les autres pièces posées sur l'écran.
  */
 .boutons {
   position: absolute;
@@ -15,7 +15,7 @@
   gap: 10px;
 }
 
-/* Chacun sa surface de 44 px, comme les « − » et « + » des Métiers ; grisé, il reste à sa place sans réagir. */
+/* Chacun sa surface de 44 px, comme les « − » et « + » des Métiers : un rond d'ardoise ; grisé, il reste à sa place sans réagir. */
 .bouton {
   display: inline-flex;
   align-items: center;
@@ -23,43 +23,33 @@
   width: 44px;
   height: 44px;
   padding: 0;
-  border: 0;
+  border: 1px solid var(--trait-doux);
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois) 60%, var(--bois-sombre));
-  box-shadow:
-    0 0 0 2px var(--dore-sombre),
-    var(--relief-bois),
-    0 5px 12px var(--ombre-du-soir);
-  color: var(--ivoire);
+  background: var(--bloc);
+  box-shadow: var(--ombre);
+  color: var(--encre);
   font: inherit;
-  font-family: var(--police-titre);
-  font-size: 26px;
+  font-size: 22px;
+  font-weight: var(--graisse-titre);
   line-height: 1;
-  text-shadow: 0 1px 0 var(--bois-sombre);
   cursor: pointer;
 }
 
 .bouton:disabled {
-  background: var(--bois-sombre);
   color: var(--galet);
   cursor: default;
-  opacity: 0.8;
+  opacity: 0.6;
 }
 
 @media (hover: hover) {
   .bouton:enabled:hover {
-    background: radial-gradient(circle at 50% 30%, var(--bois-clair), var(--bois-clair) 50%, var(--bois));
-    color: var(--citron);
+    background: var(--bloc-2);
   }
 }
 
-/* Au clavier : un anneau citron autour du jeton, cerné d'Encre, qui se voit sur la brume comme sur les Cases claires. */
 .bouton:focus-visible {
   outline: 2px solid var(--encre);
   outline-offset: 2px;
-  box-shadow:
-    0 0 0 2px var(--citron),
-    var(--relief-bois);
 }
 
 /* US-0426 : le repère du Foyer, comme sur la carte : une épingle citron cernée d'Encre, un œil d'Encre au milieu. */

@@ -1,18 +1,14 @@
 /*
- * Une planche : ce qu'une page montre, taillé dans la matière de l'écran (--bloc : le bois ciré dans un écran du jeu,
- * voir globals.css), cerclée d'un filet d'or, éclairée en haut, posée sur le décor avec son ombre. Son étiquette, un
- * ruban en lettres de jeu.
+ * Un panneau : ce qu'une page montre, posé à plat sur le décor, dans la matière de l'écran (--bloc : l'ardoise de nuit
+ * dans un écran du jeu, voir globals.css), un seul filet à peine visible, de l'air dedans. Son titre, simple et clair.
  */
 .bloc {
   min-width: 0;
-  padding: 16px 18px 18px;
+  padding: 22px 24px 24px;
+  border: 1px solid var(--trait-doux);
   border-radius: var(--arrondi);
   background: var(--bloc);
-  background-image: linear-gradient(to bottom, var(--sur-encre-survol), transparent 38%);
-  box-shadow:
-    0 0 0 2px var(--trait),
-    var(--relief-bois),
-    var(--ombre-forte);
+  box-shadow: var(--ombre);
   overflow-wrap: anywhere;
 }
 
@@ -23,28 +19,16 @@
   border-radius: var(--arrondi-petit);
 }
 
-/* L'étiquette : un ruban creusé, ses lettres de jeu en petites capitales. */
+/* Le titre du panneau : du texte clair, en gras, sans cadre. */
 .titre {
-  display: inline-flex;
-  align-self: flex-start;
-  justify-self: start;
-  align-items: center;
-  min-height: 26px;
-  margin-bottom: 12px;
-  padding: 2px 12px 1px;
-  border-radius: 8px;
-  background: var(--bloc-2);
-  box-shadow: inset 0 1px 2px var(--ombre-du-soir);
+  margin-bottom: 14px;
   color: var(--encre);
-  font-family: var(--police-titre);
-  font-size: 13px;
-  font-weight: 400;
-  letter-spacing: var(--espacement-etiquette);
-  line-height: 1.2;
-  text-transform: uppercase;
+  font-size: 17px;
+  font-weight: var(--graisse-titre);
+  line-height: 1.25;
 }
 
-/* Plein : le contenu (une illustration) touche les bords de la planche. */
+/* Plein : le contenu (une illustration) touche les bords du panneau. */
 .plein {
   padding: 0;
   overflow: hidden;
@@ -57,10 +41,10 @@
 }
 
 .plein .titre {
-  margin: 14px 16px 10px;
+  margin: 16px 18px 10px;
 }
 
-/* Teintes : une planche mise en avant, de sa couleur, son étiquette dans son ton foncé ; ou l'Encre, au citron. */
+/* Teintes : un panneau mis en avant, de sa couleur, son titre et son texte dans son ton foncé ; ou l'Encre, au citron. */
 .menthe { background: var(--menthe); color: var(--menthe-fonce); }
 .menthe .titre { color: var(--menthe-fonce); }
 .sable { background: var(--sable); color: var(--sable-fonce); }
@@ -82,6 +66,6 @@
 
 @media (max-width: 820px) {
   .bloc {
-    padding: 14px 14px 16px;
+    padding: 18px 16px 20px;
   }
 }

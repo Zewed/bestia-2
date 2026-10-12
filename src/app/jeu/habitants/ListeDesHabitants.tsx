@@ -207,7 +207,7 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
             return (
               <li key={h.id} className={styles.habitant}>
                 {/* Son portrait : l'icône peinte de son Métier, ou un Habitant sans Métier ; son prénom le dit déjà. */}
-                <Image src={metiers.find((m) => m.nom === h.metier)?.icone ?? PORTRAIT_SANS_METIER} alt="" width={44} height={44} className={styles.portrait} />
+                <Image src={metiers.find((m) => m.nom === h.metier)?.icone ?? PORTRAIT_SANS_METIER} alt="" width={72} height={72} className={styles.portrait} />
                 <span className={styles.prenom}>{h.prenom}</span>
                 {metiers.length > 0 && h.etat !== EN_EXPEDITION ? (
                   <BoutonDuMetier

@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { BarreHaut } from "@/components/BarreHaut";
-import { lilita, nunito } from "@/styles/fonts";
+import { nunito } from "@/styles/fonts";
 import "@/styles/palette.css";
 import "@/styles/typographie.css";
 import "@/styles/formes.css";
@@ -24,7 +24,7 @@ export const viewport: Viewport = { themeColor: couleurs.encre, viewportFit: "co
 // posées sur le cadre de la carte (le nom du chef, les Stocks, la rangée des médaillons).
 export default function RootLayout({ children, actions }: LayoutProps<"/">) {
   return (
-    <html lang="fr" className={`${nunito.variable} ${lilita.variable}`}>
+    <html lang="fr" className={nunito.variable}>
       <body>
         <BarreHaut actions={actions} />
         {children}

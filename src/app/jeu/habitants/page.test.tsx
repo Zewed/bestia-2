@@ -594,8 +594,9 @@ describe("page Habitants au pouce (US-0306)", () => {
     for (const [, colonnes] of css.matchAll(/grid-template-columns: ([^;]+);/g)) {
       expect(colonnes.split(/ (?![^(]*\))/).every((c) => c === "auto" || c.startsWith("minmax(0,")), colonnes).toBe(true);
     }
-    // Aucune largeur fixe plus grande qu'une surface de toucher, aucun texte qui refuse d'aller à la ligne.
-    for (const [, largeur] of css.matchAll(/(?<![\w-])(?:min-)?width: (\d+)px/g)) expect(Number(largeur)).toBeLessThanOrEqual(44);
+    // Aucune largeur fixe plus grande qu'un portrait d'Habitant (72 px, qui tient sur 320 px), aucun texte qui refuse
+    // d'aller à la ligne.
+    for (const [, largeur] of css.matchAll(/(?<![\w-])(?:min-)?width: (\d+)px/g)) expect(Number(largeur)).toBeLessThanOrEqual(72);
     expect(css).not.toContain("nowrap");
     expect(regle(".entete")).toContain("flex-wrap: wrap;");
   });
