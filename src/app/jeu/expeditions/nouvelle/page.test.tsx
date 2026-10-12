@@ -447,21 +447,21 @@ describe("le récapitulatif avant le départ (US-0910)", () => {
 
   it("lui donne les Bêtes repérées sur la Case de destination, lues pour le Territoire à l'heure du jeu, et aucune ailleurs (US-0949)", async () => {
     connecte();
-    const RENARD: BeteReperee = {
+    const PIGEON: BeteReperee = {
       id: 41,
       laCase: { q: 3, r: -5 },
       numero: 7,
-      especeId: "renard_roux",
-      espece: "Renard roux",
-      rareteId: "peu_commune",
-      force: 37_340,
+      especeId: "pigeon",
+      espece: "Pigeon biset",
+      rareteId: "rare",
+      force: 9_000,
       jusquA: new Date("2026-10-09T11:42:13.250Z"),
     };
-    const LOUP: BeteReperee = { ...RENARD, id: 42, laCase: { q: 4, r: -5 }, especeId: "loup_gris", espece: "Loup gris", force: 150_000 };
-    reperees.betesReperees.mockResolvedValue([RENARD, LOUP]);
+    const POULE: BeteReperee = { ...PIGEON, id: 42, laCase: { q: 4, r: -5 }, especeId: "poule", espece: "Poule", force: 20_000 };
+    reperees.betesReperees.mockResolvedValue([PIGEON, POULE]);
     destinations.destinationDUneCase.mockResolvedValue({ fiche: FORET });
     expect(confie(await ouvrir({ q: "3", r: "-5" }), "recapitulatif").betes).toEqual([
-      { espece: "Renard roux", force: 37_340, rareteId: "peu_commune", jusquA: "2026-10-09T11:42:13.250Z" },
+      { espece: "Pigeon biset", force: 9_000, rareteId: "rare", jusquA: "2026-10-09T11:42:13.250Z" },
     ]);
     expect(reperees.betesReperees).toHaveBeenCalledWith(expect.anything(), 12, new Date("2026-10-09T07:42:13.250Z"));
     // Sans destination, ou pour une Case refusée, aucune.

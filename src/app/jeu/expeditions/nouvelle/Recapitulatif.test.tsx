@@ -323,62 +323,63 @@ describe("le récapitulatif et le bloc Séjour (US-0910)", () => {
 });
 
 describe("revenir chercher une Bête repérée (US-0949)", () => {
-  /** Un Renard roux repéré dans la forêt, qui devrait y rester jusqu'à 13 h 42 à Paris, bien après l'arrivée (12 h 02). */
-  const RENARD: BeteAChercher = { espece: "Renard roux", force: 37_340, rareteId: "peu_commune", jusquA: new Date("2026-10-09T11:42:00Z") };
-  /** Une Espèce de l'effectif assez forte pour lui, seule. */
-  const OURS: EspeceDisponible = { id: "ours", nom: "Ours brun", illustration: null, disponibles: 1, force: 40_000, vitesse: 40, males: 1, femelles: 0, coupleReuni: false };
+  /**
+   * Un Pigeon biset repéré dans la forêt, de force 9 000 pour l'essai, qui devrait y rester jusqu'à 13 h 42 à Paris, bien
+   * après l'arrivée (12 h 02) ; la Poule de l'effectif, seule, est assez forte pour lui.
+   */
+  const PIGEON: BeteAChercher = { espece: "Pigeon biset", force: 9_000, rareteId: "rare", jusquA: new Date("2026-10-09T11:42:00Z") };
 
   it("compare la force de l'escorte à celle de la Bête repérée sur la destination : il manque tant de force, ou elle est assez forte", () => {
-    ouvrir("?explorateurs=1&escorte=souris.2", { especes: [POULE, SOURIS, OURS], betes: [RENARD] });
+    ouvrir("?explorateurs=1&escorte=souris.2", { betes: [PIGEON] });
     expect(lignes()).toEqual([
       ["Explorateurs", "1"],
       ["Escorte", "Souris grise\u00a0×\u00a02"],
       ["Force", "946"],
       ["Destination", "7 Cases de votre Foyer"],
       ["Biome", "Forêt"],
-      ["Bête repérée", `Renard roux, force ${entier(37_340)}`],
-      ["Votre escorte", `Trop faible : il manque ${entier(36_394)} de force`],
+      ["Bête repérée", `Pigeon biset, force ${entier(9_000)}`],
+      ["Votre escorte", `Trop faible : il manque ${entier(8_054)} de force`],
       ["Aller", ALLER_EN_FORET],
       ["Séjour", "1 h"],
       ["Retour", ALLER_EN_FORET],
       ["Retour prévu", "9 octobre à 15:22"],
     ]);
-    choisir("?explorateurs=1&escorte=ours.1");
+    choisir("?explorateurs=1&escorte=poule.1");
     expect(ligne("Votre escorte")).toBe("Assez forte");
     // Sans escorte, toute sa force manque.
     choisir("?explorateurs=1");
-    expect(ligne("Votre escorte")).toBe(`Trop faible : il manque ${entier(37_340)} de force`);
+    expect(ligne("Votre escorte")).toBe(`Trop faible : il manque ${entier(9_000)} de force`);
   });
 
   it("prévient, même replié, quand la Bête sera partie avant l'arrivée prévue, et pas sinon", () => {
-    // Arrivée prévue à 12 h 02 à Paris (2 h 20 d'aller en forêt) : un Renard qui part à 12 h 02 pile est déjà parti.
-    ouvrir("?explorateurs=1", { betes: [{ ...RENARD, jusquA: new Date("2026-10-09T10:02:13.250Z") }] });
-    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
+    // Arrivée prévue à 12 h 02 à Paris (2 h 20 d'aller en forêt) : un Pigeon qui part à 12 h 02 pile est déjà parti.
+    ouvrir("?explorateurs=1", { betes: [{ ...PIGEON, jusquA: new Date("2026-10-09T10:02:13.250Z") }] });
+    expect(ligne("À l'arrivée")).toBe("Pigeon biset ne sera plus là");
     const essentielles = [...bloc().querySelectorAll("dl > [data-essentiel]")].map((l) => l.querySelector("dt")!.textContent);
     expect(essentielles).toEqual(["À l'arrivée", "Retour prévu"]);
     cleanup();
-    ouvrir("?explorateurs=1", { betes: [{ ...RENARD, jusquA: new Date("2026-10-09T10:02:14Z") }] });
+    ouvrir("?explorateurs=1", { betes: [{ ...PIGEON, jusquA: new Date("2026-10-09T10:02:14Z") }] });
     expect(ligne("À l'arrivée")).toBeUndefined();
   });
 
   it("prévient dès que l'heure du jeu fait arriver l'Expédition trop tard, sans recharger la page", async () => {
     vi.useFakeTimers();
-    // Le Renard part une minute de jeu après l'arrivée prévue à l'ouverture de l'écran : à × 60, une seconde.
-    const betes = [{ ...RENARD, jusquA: new Date("2026-10-09T10:03:13.250Z") }];
-    ouvrir("?explorateurs=1", { especes: [SOURIS, OURS], betes, vitesse: 60 });
+    // Le Pigeon part une minute de jeu après l'arrivée prévue à l'ouverture de l'écran : à × 60, une seconde.
+    const betes = [{ ...PIGEON, jusquA: new Date("2026-10-09T10:03:13.250Z") }];
+    ouvrir("?explorateurs=1", { betes, vitesse: 60 });
     expect(ligne("À l'arrivée")).toBeUndefined();
     await act(async () => vi.advanceTimersByTime(1_000));
-    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
-    // Une escorte ne va jamais plus vite que les explorateurs : avec l'Ours, toujours trop tard.
-    choisir("?explorateurs=1&escorte=ours.1");
-    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
+    expect(ligne("À l'arrivée")).toBe("Pigeon biset ne sera plus là");
+    // Une escorte ne va jamais plus vite que les explorateurs : avec la Poule, toujours trop tard.
+    choisir("?explorateurs=1&escorte=poule.1");
+    expect(ligne("À l'arrivée")).toBe("Pigeon biset ne sera plus là");
   });
 
   it("nomme chaque Bête qui ne sera plus là, pour que les lignes gardées en vue, replié, se distinguent", () => {
     const tot = new Date("2026-10-09T09:00:00Z");
-    ouvrir("?explorateurs=1", { betes: [{ ...RENARD, jusquA: tot }, { ...RENARD, espece: "Loutre d'Europe", jusquA: tot }] });
+    ouvrir("?explorateurs=1", { betes: [{ ...PIGEON, jusquA: tot }, { ...PIGEON, espece: "Poule", jusquA: tot }] });
     const essentielles = [...bloc().querySelectorAll("dl > [data-essentiel]")].map((l) => l.querySelector("dd")!.textContent);
-    expect(essentielles).toEqual(["Renard roux ne sera plus là", "Loutre d'Europe ne sera plus là", "9 octobre à 15:22"]);
+    expect(essentielles).toEqual(["Pigeon biset ne sera plus là", "Poule ne sera plus là", "9 octobre à 15:22"]);
   });
 
   it("ne dit rien de plus sans Bête repérée sur la destination", () => {

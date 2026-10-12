@@ -248,15 +248,15 @@ describe("d'autres joueurs séjournaient sur la Case (US-0962)", () => {
 
 describe("la Bête repérée partie avant l'arrivée (US-0949)", () => {
   it("une ligne nomme les Bêtes repérées sur la Case qui n'y étaient plus à l'arrivée, avant les Bêtes qui se sont montrées", () => {
-    expect(recitDeRetour(retour({ partiesAvant: ["Renard roux"] })).texte.split("\n")).toEqual([
+    expect(recitDeRetour(retour({ partiesAvant: ["Pigeon biset"] })).texte.split("\n")).toEqual([
       "Destination : Forêt, à 3 Cases de votre Foyer.",
       "Aller 1 h, séjour 4 h, retour 1 h.",
       "12 Cases sont sorties du brouillard.",
-      "Renard roux n'était plus sur la Case à votre arrivée.",
+      "Pigeon biset n'était plus sur la Case à votre arrivée.",
       "Aucune Bête ne s'est montrée.",
     ]);
-    expect(recitDeRetour(retour({ partiesAvant: ["Renard roux", "Loutre d'Europe"] })).texte.split("\n")[3]).toBe(
-      "Renard roux et Loutre d'Europe n'étaient plus sur la Case à votre arrivée.",
+    expect(recitDeRetour(retour({ partiesAvant: ["Pigeon biset", "Poule"] })).texte.split("\n")[3]).toBe(
+      "Pigeon biset et Poule n'étaient plus sur la Case à votre arrivée.",
     );
   });
 

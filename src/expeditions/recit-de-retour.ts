@@ -121,7 +121,7 @@ function casesSorties(nombre: number): string {
 /** US-0962 : la ligne qui dit que d'autres joueurs séjournaient sur la Case, sans nommer leurs chefs (décidé le 2026-10-10). */
 export const AUTRES_EXPEDITIONS = "D'autres Expéditions séjournaient sur la Case.";
 
-/** US-0949 : « Renard roux n'était plus sur la Case à votre arrivée. », « Renard roux et Loup gris n'étaient plus… ». */
+/** US-0949 : « Pigeon biset n'était plus sur la Case à votre arrivée. », « Pigeon biset et Poule n'étaient plus… ». */
 function partiesAvantLArrivee(especes: string[]): string {
   return `${enumeres(especes)} ${especes.length > 1 ? "n'étaient" : "n'était"} plus sur la Case à votre arrivée.`;
 }

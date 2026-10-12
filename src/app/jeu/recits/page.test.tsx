@@ -170,16 +170,16 @@ describe("page Récits (US-0324)", () => {
 
   it("mène une Bête restée sur sa Case à « Revenir la chercher » tant qu'elle y est repérée, à l'heure du jeu (US-0949)", async () => {
     const restee = (laCase?: { q: number; r: number }, numero?: number) => ({
-      especeId: "renard_roux",
+      especeId: "pigeon",
       vueLe: new Date("2026-10-12T18:46:00Z"),
       issue: "restee" as const,
       sexe: null,
       nouvelleEspece: false,
-      manque: 37_340,
+      manque: 8_054,
       ...(laCase && { laCase, numero }),
-      nom: "Renard roux",
+      nom: "Pigeon biset",
       illustration: null,
-      rarete: { id: "peu_commune", nom: "Peu commune" },
+      rarete: { id: "rare", nom: "Rare" },
     });
     connecte([
       {
@@ -192,18 +192,18 @@ describe("page Récits (US-0324)", () => {
         rencontres: [restee({ q: 3, r: -5 }, 7), restee({ q: 3, r: -5 }, 8), restee()],
       } as Recit,
     ]);
-    const RENARD: BeteReperee = {
+    const PIGEON: BeteReperee = {
       id: 41,
       laCase: { q: 3, r: -5 },
       numero: 7,
-      especeId: "renard_roux",
-      espece: "Renard roux",
-      rareteId: "peu_commune",
-      force: 37_340,
+      especeId: "pigeon",
+      espece: "Pigeon biset",
+      rareteId: "rare",
+      force: 9_000,
       jusquA: new Date("2026-10-13T01:00:00Z"),
     };
     // Une autre Bête repérée ailleurs, au même numéro : elle ne compte pas.
-    reperees.betesReperees.mockResolvedValueOnce([RENARD, { ...RENARD, id: 42, laCase: { q: 4, r: -5 }, numero: 8 }]);
+    reperees.betesReperees.mockResolvedValueOnce([PIGEON, { ...PIGEON, id: 42, laCase: { q: 4, r: -5 }, numero: 8 }]);
     const html = renderToStaticMarkup(await Recits());
     expect(reperees.betesReperees).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, MAINTENANT);
     const liens = [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>Revenir la chercher<\/a>/g)].map(([, href]) => href.replace(/&amp;/g, "&"));
@@ -220,8 +220,8 @@ describe("page Récits (US-0324)", () => {
     expect(reperees.betesReperees).not.toHaveBeenCalled();
     // Vue plus de PRESENCE_D_UNE_BETE_HEURES avant l'heure du jeu : elle est forcément partie depuis.
     const vueLe = new Date(MAINTENANT.getTime() - PRESENCE_D_UNE_BETE_HEURES * 3_600_000 - 1);
-    const ancienne = { especeId: "renard_roux", vueLe, issue: "restee" as const, sexe: null, nouvelleEspece: false, laCase: { q: 3, r: -5 }, numero: 7 };
-    connecte([{ id: 54, titre: "Retour d'Expédition", texte: "…", survenuLe: vueLe, luLe: null, rencontres: [{ ...ancienne, nom: "Renard roux", illustration: null, rarete: { id: "peu_commune", nom: "Peu commune" } }] } as Recit]);
+    const ancienne = { especeId: "pigeon", vueLe, issue: "restee" as const, sexe: null, nouvelleEspece: false, laCase: { q: 3, r: -5 }, numero: 7 };
+    connecte([{ id: 54, titre: "Retour d'Expédition", texte: "…", survenuLe: vueLe, luLe: null, rencontres: [{ ...ancienne, nom: "Pigeon biset", illustration: null, rarete: { id: "rare", nom: "Rare" } }] } as Recit]);
     expect(renderToStaticMarkup(await Recits())).not.toContain("Revenir la chercher");
     expect(reperees.betesReperees).not.toHaveBeenCalled();
   });

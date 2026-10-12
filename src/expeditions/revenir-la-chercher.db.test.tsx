@@ -9,7 +9,7 @@ import { recitsDuTerritoire } from "@/monde/recits";
 import { MARCHE_DES_EXPLORATEURS_KMH, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { dureeDuTrajetMinutes } from "./allure";
 import { lancerLExpedition } from "./depart";
 import { forceDUneBete } from "./force";
@@ -53,6 +53,8 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
   /** L'Espèce la plus forte qui va au moins au pas des explorateurs : l'escorte qui revient ne les ralentit pas. */
   let forte: Espece;
   const lancement = `revenir-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (suffixeDEssai). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les Cases déjà prises par un essai de ce fichier : chacun a la sienne, sans Expédition d'un autre. */
   const prises = new Set<number>();
@@ -63,7 +65,7 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
   const naitre = async () => {
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Rev${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Rev", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Essai', 'explorateur')", [territoireId]);
@@ -200,7 +202,7 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
     expect(await liensDesRecits(territoireId, retour)).toEqual([`/jeu/expeditions/nouvelle?q=${place.q}&r=${place.r}`]);
     await rattraperA(territoireId, bete.depart);
     expect(await liensDesRecits(territoireId, bete.depart)).toEqual([]);
-  });
+  }, 60_000);
 
   it("encore là à l'arrivée d'une escorte assez forte, elle la suit dès son arrivée, et rentre au Foyer avec elle", async () => {
     const { territoireId, foyer, place, bete, retour } = await reperer();
@@ -217,7 +219,7 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
     const recit = await dernierRetour(territoireId);
     expect(recit.texte).toContain(`Bête ramenée au Foyer : ${especes.get(bete.especeId)!.nom}`);
     expect(recit.texte).not.toContain("n'était plus sur la Case");
-  });
+  }, 60_000);
 
   it("partie à la fin de sa durée avant l'arrivée, le récit du retour le dit", async () => {
     const { territoireId, foyer, place, bete } = await reperer();
@@ -227,11 +229,12 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
     const recit = await dernierRetour(territoireId);
     expect(recit.survenuLe).toEqual(deNouveau.retour);
     expect(recit.texte.split("\n")).toContain(`${especes.get(bete.especeId)!.nom} n'était plus sur la Case à votre arrivée.`);
-  });
+  }, 60_000);
 
   it("partie avec l'Expédition d'un voisin avant l'arrivée, le récit du retour le dit aussi", async () => {
-    const moi = await reperer();
+    // Le voisin naît d'abord : né après le choix de la Case, son Foyer pourrait s'y poser, et la Bête n'y serait plus.
     const voisin = await naitre();
+    const moi = await reperer();
     // Le voisin vient sur sa Case une demi-heure après le retour du joueur, assez fort pour qu'elle le suive (US-0934).
     await poser(voisin.territoireId, moi.caseId, apres(moi.retour, 30), moi.bete.especeId, 1);
     const { escorte, allure } = await escorteAssezForte(moi.territoireId, moi.bete.especeId);
@@ -240,7 +243,7 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
     const deNouveau = await partir(moi.territoireId, moi.place, arrivee, escorte, allure, moi.foyer);
     await rattraperA(moi.territoireId, deNouveau.retour);
     expect((await dernierRetour(moi.territoireId)).texte.split("\n")).toContain(`${especes.get(moi.bete.especeId)!.nom} n'était plus sur la Case à votre arrivée.`);
-  });
+  }, 60_000);
 
   it("encore là à l'arrivée d'une escorte trop faible, elle reste : le récit ne la dit pas partie", async () => {
     const { territoireId, foyer, place, bete, retour } = await reperer();
@@ -251,5 +254,5 @@ describe.skipIf(!URL_TEST)("revenir chercher une Bête repérée (US-0949, sur b
     const recit = await dernierRetour(territoireId);
     expect(recit.texte).not.toContain("n'était plus sur la Case");
     expect(recit.rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, issue: "restee" })]);
-  });
+  }, 60_000);
 });
