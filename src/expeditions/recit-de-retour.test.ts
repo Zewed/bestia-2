@@ -282,4 +282,34 @@ describe("les Bêtes parties avec une autre Expédition (US-0964)", () => {
   it("aucune ligne quand aucune Bête n'est partie avec une autre Expédition", () => {
     for (const emmenees of [[], undefined]) expect(recitDeRetour(retour({ rencontres: 2, emmenees })).texte.split("\n").at(-1)).toBe("2 Bêtes se sont montrées.");
   });
+
+  it("la ligne vient après les Bêtes et avant les pertes au combat (US-0951)", () => {
+    const texte = recitDeRetour(retour({ rencontres: 2, emmenees: ["Écureuil roux"], pertes: [{ nom: "Souris grise", mortes: 1, blessees: 0 }] })).texte;
+    expect(texte.split("\n").slice(-3)).toEqual(["2 Bêtes se sont montrées.", "Écureuil roux a suivi une autre Expédition.", "Pertes au combat : Souris grise (1 mort)."]);
+  });
+});
+
+describe("les morts et les Blessés de l'escorte au combat (US-0951)", () => {
+  const lignes = (autre: Partial<RetourARaconter>) => recitDeRetour(retour({ rencontres: 1, ...autre })).texte.split("\n");
+
+  it("une ligne donne, Espèce par Espèce, le nombre de morts et de Blessés, après les Bêtes et avant celles ramenées au Foyer", () => {
+    const ramenees = [{ nom: "Poule", sexe: "femelle" as const }];
+    expect(lignes({ ramenees, pertes: [{ nom: "Souris grise", mortes: 2, blessees: 1 }, { nom: "Pigeon biset", mortes: 1, blessees: 2 }] })).toEqual([
+      "Destination : Forêt, à 3 Cases de votre Foyer.",
+      "Aller 1 h, séjour 4 h, retour 1 h.",
+      "12 Cases sont sorties du brouillard.",
+      "Une Bête s'est montrée.",
+      "Pertes au combat : Souris grise (2 morts, 1 Blessé) et Pigeon biset (1 mort, 2 Blessés).",
+      "Bête ramenée au Foyer : Poule (femelle).",
+    ]);
+  });
+
+  it("ne dit pas un nombre nul : une Espèce sans mort n'a que ses Blessés, une sans Blessé que ses morts", () => {
+    expect(lignes({ pertes: [{ nom: "Souris grise", mortes: 0, blessees: 1 }] }).at(-1)).toBe("Pertes au combat : Souris grise (1 Blessé).");
+    expect(lignes({ pertes: [{ nom: "Souris grise", mortes: 3, blessees: 0 }] }).at(-1)).toBe("Pertes au combat : Souris grise (3 morts).");
+  });
+
+  it("aucune ligne sans perte", () => {
+    for (const pertes of [[], undefined]) expect(lignes({ pertes })).toHaveLength(4);
+  });
 });
