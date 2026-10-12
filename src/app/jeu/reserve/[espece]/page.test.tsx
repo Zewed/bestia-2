@@ -130,4 +130,12 @@ describe("lire l'attaque, la vie, la vitesse et la charge (US-0804)", () => {
       ["Charge", "87,5"],
     ]);
   });
+
+  it("sépare les milliers, et la valeur de son unité, d'une espace insécable : rien ne se coupe ni ne disparaît", async () => {
+    connecte(POULE);
+    const html = await ouvrir("poule");
+    expect(html).toContain("<dd>5\u00a0981</dd>");
+    expect(html).toContain("<dd>14\u00a0953</dd>");
+    expect(html).toContain("<dd>14\u00a0km/h</dd>");
+  });
 });

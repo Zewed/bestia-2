@@ -8,13 +8,11 @@ import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
 import { coupleEnReserve } from "@/monde/couple";
+import { caracteristiqueAffichee as nombre } from "@/monde/quantite";
 import styles from "./page.module.css";
 
 // Le titre reste celui de la Réserve : le nom d'une Espèce ne se lit pas sans la garde.
 export const metadata: Metadata = { title: "Réserve" };
-
-/** US-0804 : un nombre à la française, ses milliers séparés d'une espace insécable et sa décimale d'une virgule. */
-const nombre = (n: number) => n.toLocaleString("fr-FR", { maximumFractionDigits: 3 });
 
 /** US-0803 : un identifiant d'Espèce, tel que les données du jeu les écrivent (« souris », « peu_commune »). */
 const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
@@ -55,7 +53,7 @@ export default async function FicheDeLEspece({ params }: { params: Promise<{ esp
             </div>
             <div>
               <dt>Vitesse</dt>
-              <dd>{nombre(couple.vitesse)} km/h</dd>
+              <dd>{nombre(couple.vitesse)}&nbsp;km/h</dd>
             </div>
             <div>
               <dt>Charge</dt>
