@@ -2,7 +2,8 @@
  * La palette de Bestia. Dans le jeu, « l'écran de stratégie » : une encre sarcelle profonde pour les fonds et les
  * panneaux, la crème pour le texte, des verts gris pour ce qui est discret, des filets de cuivre pour les bords, les
  * ornements et l'action, la feuille pour ce qui monte, la braise pour ce qui alerte, le citron du loup sur l'Encre ; les
- * tons du Monde peint pour la carte. Hors du jeu (l'accueil, la connexion, les e-mails), le papier clair d'avant.
+ * tons du Monde peint pour la carte ; les pages d'entrée (l'accueil, la connexion) prennent la même sarcelle. Ailleurs hors
+ * du jeu (le contrôle, les e-mails), le papier clair d'avant.
  * C'est le seul fichier où une couleur s'écrit en clair : partout ailleurs, on utilise ces noms. Changer une
  * couleur ici la change sur toutes les pages. Chaque couleur n'a qu'un nom (un test le vérifie).
  */

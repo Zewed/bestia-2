@@ -17,6 +17,9 @@
  *    peinture derrière les pages. Deux écrans seulement sont des scènes pleines : le Foyer (la hutte, d'un bord à
  *    l'autre) et la Carte (le Monde lui-même, main[data-carte]). Ailleurs, une peinture se montre en bandeau dans un
  *    panneau (un Voyageur, une destination, une Bête, un lieu), fondue dans le panneau vers le bas ou vers la gauche.
+ *    Les pages d'entrée (main[data-entree] : l'accueil, la connexion et ses suites, le nom de chef, le récit d'arrivée,
+ *    les pages d'erreur) sont posées sur le même fond, sous la même barre ; l'accueil est une scène peinte, les autres
+ *    un panneau orné dont la peinture remplit un côté.
  * 4. Les pièces, dans src/components, chacune documentée chez elle :
  *    - Bloc : le panneau orné (un filet de cuivre, les quatre petits coins de cuivre, une lumière en haut) ; son titre en
  *      petite étiquette de cuivre, ou en Marcellus (serif) ; « action » à droite du titre ; « verre » sur une peinture ;
@@ -65,27 +68,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Dans le jeu, l'encre sarcelle borde tout, et la barre de défilement prend le cuivre. */
-html:has([data-onglets]) {
+/* Dans le jeu et sur les pages d'entrée, l'encre sarcelle borde tout, et la barre de défilement prend le cuivre. */
+html:has([data-onglets]),
+html:has([data-entree]) {
   background: var(--sarcelle-abysse);
   scrollbar-color: var(--anneau-cuivre-fort) var(--sarcelle-abysse);
 }
 
 /*
- * Le fond d'un écran du jeu : le dégradé sarcelle de la maquette (une lumière froide en haut à gauche, une brume de cuivre
- * en bas à droite) ; la page commence sous la barre du haut.
+ * Le fond d'un écran du jeu et d'une page d'entrée : le dégradé sarcelle de la maquette (une lumière froide en haut à
+ * gauche, une brume de cuivre en bas à droite). Dans le jeu, la page commence sous la barre du haut, fixe ; hors du jeu,
+ * la barre reste dans le flux.
  */
-body:has([data-onglets]) {
+body:has([data-onglets]),
+body:has([data-entree]) {
   position: relative;
-  padding-top: var(--hauteur-barre);
   background: var(--fond-du-jeu);
   color: var(--parchemin);
   line-height: 1.4;
   font-variant-numeric: tabular-nums;
 }
 
+body:has([data-onglets]) {
+  padding-top: var(--hauteur-barre);
+}
+
 /* Son grain, très fin, par-dessus le dégradé et sous les panneaux, sur toute la hauteur de la page. */
-body:has([data-onglets])::before {
+body:has([data-onglets])::before,
+body:has([data-entree])::before {
   content: "";
   position: absolute;
   inset: 0;
@@ -137,7 +147,8 @@ body:has([data-onglets]) main:not([data-carte]),
   color: var(--parchemin);
 }
 
-body:has([data-onglets]) main:not([data-carte]) {
+body:has([data-onglets]) main:not([data-carte]),
+main[data-entree] {
   position: relative;
   isolation: isolate;
 }
@@ -149,8 +160,9 @@ h2 {
   letter-spacing: 0.01em;
 }
 
-/* Dans le jeu, les titres en crème ; une page leur donne une autre couleur sans effort (aucune priorité). */
-:where(body:has([data-onglets])) :where(h1, h2, h3) {
+/* Dans le jeu et sur les pages d'entrée, les titres en crème ; une page leur donne une autre couleur sans effort (aucune
+   priorité). */
+:where(body:has([data-onglets], [data-entree])) :where(h1, h2, h3) {
   color: var(--creme);
 }
 

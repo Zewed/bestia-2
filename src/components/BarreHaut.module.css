@@ -1,11 +1,12 @@
 /*
- * Le haut de l'écran. Hors du jeu, une barre Encre où se pose le logo du loup. Dans le jeu (dès que la navigation est
- * là), la barre de « l'écran de stratégie », fixe, d'un bord à l'autre : un dégradé sarcelle, un filet de cuivre dessous
- * et, 4 px plus bas, un second filet qui s'efface vers les bords. À gauche le blason du loup et le nom du chef (US-0140),
- * puis les cinq entrées de la navigation et leurs médaillons peints (US-0302) ; à droite, dans un creux arrondi, les
- * quatre Stocks (US-0203) et le compteur d'Habitants (US-0304) ; dessous, l'avertissement de famine (US-0321).
- * Sous 1 200 px, les Stocks passent en rangée dessous ; sous 1 024 px, le haut s'empile (la ligne du blason, la rangée des
- * Stocks, la rangée des onglets) : toujours en haut, jamais au pied de l'écran. Les hauteurs viennent de formes.css.
+ * Le haut de l'écran : la barre de « l'écran de stratégie », d'un bord à l'autre, un dégradé sarcelle, un filet de cuivre
+ * dessous et, 4 px plus bas, un second filet qui s'efface vers les bords. Hors du jeu, elle reste dans le flux de la page :
+ * le blason du loup et « BESTIA », et à droite une action du joueur. Dans le jeu (dès que la navigation est là), elle se
+ * fixe en haut de l'écran : à gauche le blason du loup et le nom du chef (US-0140), puis les cinq entrées de la navigation
+ * et leurs médaillons peints (US-0302) ; à droite, dans un creux arrondi, les quatre Stocks (US-0203) et le compteur
+ * d'Habitants (US-0304) ; dessous, l'avertissement de famine (US-0321). Sous 1 200 px, les Stocks passent en rangée
+ * dessous ; sous 1 024 px, le haut s'empile (la ligne du blason, la rangée des Stocks, la rangée des onglets) : toujours
+ * en haut, jamais au pied de l'écran. Les hauteurs viennent de formes.css.
  */
 .barre {
   position: sticky;
@@ -21,8 +22,12 @@
   /* Toute la largeur de l'écran, jusque sous l'encoche ; le logo et le nom restent à l'écart des bords. */
   margin: 0 calc(-1 * var(--bord-droit)) 0 calc(-1 * var(--bord-gauche));
   padding: var(--bord-haut) max(20px, var(--bord-droit)) 0 max(20px, var(--bord-gauche));
-  background: var(--encre);
-  color: var(--ivoire);
+  border-bottom: 1px solid var(--filet-cuivre);
+  background: linear-gradient(180deg, var(--barre-haut), var(--barre-bas));
+  box-shadow:
+    0 1px 0 var(--ombre-noire),
+    0 10px 26px -12px var(--ombre-barre);
+  color: var(--parchemin);
 }
 
 /*
@@ -56,7 +61,7 @@
 }
 
 /* Le second filet de cuivre, 4 px sous la barre, qui s'efface vers les bords. */
-.barre:has(.navigation)::after {
+.barre::after {
   content: "";
   position: absolute;
   right: 0;
@@ -78,7 +83,7 @@
   margin-right: 10px;
 }
 
-/* Une action du joueur, à droite hors du jeu : un bouton discret sur l'Encre, assez haut pour le pouce. */
+/* Une action du joueur, à droite hors du jeu : le bouton au contour de cuivre du kit, assez haut pour le pouce. */
 .barre > .action,
 .chef {
   grid-column: 4;
@@ -86,24 +91,28 @@
 }
 
 .action {
-  min-height: 44px;
+  min-height: 40px;
   margin-left: auto;
   padding: 0 16px;
-  border: 1px solid var(--sur-encre-trait);
-  border-radius: var(--arrondi-moyen);
+  border: 1px solid var(--filet-cuivre);
+  border-radius: var(--arrondi-net);
   background: transparent;
-  color: var(--ivoire);
-  font: inherit;
-  font-weight: var(--graisse-titre);
+  color: var(--parchemin);
+  font: var(--graisse-titre) 13.5px / 1 var(--police);
+  letter-spacing: 0.02em;
   cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .action:hover {
-  background: var(--sur-encre-survol);
+  border-color: var(--cuivre);
+  background: var(--cuivre-survol);
 }
 
 .action:focus-visible {
-  outline: 2px solid var(--ivoire);
+  outline: 2px solid var(--cuivre-clair);
   outline-offset: 2px;
 }
 
@@ -135,8 +144,8 @@
   margin-left: 0;
 }
 
-/* Dans le jeu : le nom du chef en Marcellus, en crème, sa flèche de cuivre ; à plat sur la barre. */
-.barre:has(.navigation) .nom {
+/* Le nom du chef en Marcellus, en crème, sa flèche de cuivre ; à plat sur la barre, dans le jeu comme avant d'y entrer. */
+.barre .nom {
   gap: 4px;
   min-height: 40px;
   padding: 0 4px;
@@ -147,12 +156,12 @@
   font: 400 19px / 1 var(--police-titre);
 }
 
-.barre:has(.navigation) .nom:hover {
+.barre .nom:hover {
   background: transparent;
   color: var(--creme-vive);
 }
 
-.barre:has(.navigation) .nom:focus-visible {
+.barre .nom:focus-visible {
   outline: 2px solid var(--cuivre-clair);
   outline-offset: 2px;
 }
@@ -176,7 +185,7 @@
   transition: transform 160ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.barre:has(.navigation) .fleche {
+.barre .fleche {
   width: 13px;
   height: 13px;
   margin-top: 2px;
