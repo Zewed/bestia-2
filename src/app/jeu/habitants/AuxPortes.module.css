@@ -1,8 +1,8 @@
 /*
- * US-0332 : la partie « Aux portes » de la page Habitants, une ligne par Voyageur qui attend : son prénom,
- * et dessous, en discret, depuis quand il attend ; US-0333 : à droite, son compte à rebours. US-0343 : chaque
- * Voyageur dans un bloc à lui, les uns sous les autres ; la liste mesure sa propre largeur, qui ne suit pas
- * celle de l'écran (colonne sur ordinateur, demi-ligne sur tablette, toute la largeur sur mobile).
+ * US-0332 : la partie « Aux portes » de la page Habitants, sur toute la largeur, au-dessus du tableau des Métiers : une
+ * ligne par Voyageur qui attend, son prénom et, dessous, en discret, depuis quand il attend ; US-0333 : son compte à
+ * rebours ; puis le Métier qu'il aura et les deux boutons. Sur un téléphone, la ligne s'empile. La liste mesure sa
+ * propre largeur, qui ne suit pas celle de l'écran.
  */
 .voyageurs {
   --bloc-2: var(--bloc);
@@ -86,14 +86,10 @@
   margin-top: 6px;
 }
 
-/*
- * US-0335 : dessous, les Métiers dépliés ; dans une ligne trop étroite pour quatre Métiers côte à côte (la colonne de
- * l'ordinateur, un téléphone), deux par ligne, comme sur un petit écran : « Explorateur » tient en entier.
- */
-@container (max-width: 479px) {
-  .voyageur > .metiers {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  }
+/* US-0335 : dessous, sur toute la largeur, les Métiers dépliés, en petits boutons qui passent à la ligne. */
+.voyageur > .metiers {
+  grid-column: 1 / -1;
+  margin-top: 6px;
 }
 
 /*
@@ -232,6 +228,27 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-content: start;
+  margin-bottom: 12px;
+  padding: 14px 20px 16px;
+  border-radius: var(--arrondi-moyen);
+}
+
+/* Quand personne n'attend, la partie tient en une ligne : son titre, la phrase, l'historique. */
+.auxPortes:has(> .personne) {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 16px;
+  padding-block: 6px;
+}
+
+.auxPortes:has(> .personne) > .personne {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.auxPortes:has(> .personne) > .historique {
+  grid-column: 3;
+  margin: 0 -8px 0 0;
 }
 
 .auxPortes > * {
@@ -240,6 +257,11 @@
 
 .auxPortes > h2 {
   grid-column: 1;
+  margin-bottom: 8px;
+}
+
+.auxPortes:has(> .personne) > h2 {
+  margin-bottom: 0;
 }
 
 /* Au pouce, 44 px de haut, sans grandir la ligne du titre : sa surface de toucher déborde dans la marge du bloc. */
@@ -271,11 +293,56 @@
 }
 
 /*
- * Sur ordinateur, en tête de la colonne, à côté de la liste. Dès que la colonne passe sous la liste, ses
- * blocs se rangent dans la grille de la page (page.module.css) : celui-ci remonte au-dessus de la liste.
+ * Sur une ligne assez large (un ordinateur), le Voyageur tient sur une rangée : son prénom et depuis quand, son compte à
+ * rebours et ce qu'il mangera, le Métier qu'il aura, puis « Accueillir » et « Refuser » ; ses Métiers dépliés dessous.
  */
-@media (max-width: 1100px) {
-  .auxPortes {
-    order: -1;
+@container (min-width: 760px) {
+  .voyageur {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+    column-gap: 20px;
+  }
+
+  .prenom {
+    grid-row: 1;
+    grid-column: 1;
+  }
+
+  .arrivee {
+    grid-row: 2;
+    grid-column: 1;
+  }
+
+  .depart {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  .entretien,
+  .confirmation {
+    grid-row: 2;
+    grid-column: 2;
+    text-align: right;
+  }
+
+  .voyageur > .metier {
+    grid-row: 1 / span 2;
+    grid-column: 3;
+    margin-top: 0;
+  }
+
+  .choix {
+    grid-row: 1 / span 2;
+    grid-column: 4;
+    margin-top: 0;
+  }
+
+  .accueillir,
+  .refuser {
+    flex: none;
+    width: 132px;
+  }
+
+  .voyageur > .metiers {
+    grid-row: 3;
   }
 }

@@ -4,8 +4,6 @@ import { connection } from "next/server";
 import type { CSSProperties } from "react";
 import { exigerCompte, famineALHeure, famineImminenteALHeure, stocksALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { Bloc } from "@/components/Bloc";
-import { Grille } from "@/components/Grille";
 import { getPool } from "@/db";
 import { type EntretienDesHabitants, entretienDesHabitants, habitantsDuTerritoire, placesDuTerritoire } from "@/monde/habitants";
 import { iconeDeMetier, lesMetiers } from "@/monde/metiers";
@@ -19,7 +17,6 @@ import { BandeauSansMetier } from "./BandeauSansMetier";
 import { HabitantsMontres } from "./HabitantsMontres";
 import { ListeDesHabitants } from "./ListeDesHabitants";
 import styles from "./page.module.css";
-import { RepartitionDesMetiers } from "./RepartitionDesMetiers";
 
 export const metadata: Metadata = { title: "Habitants" };
 
@@ -61,12 +58,6 @@ function TenueDeLaNourriture({ stocks, entretien }: { stocks: Stock[]; entretien
 }
 
 /**
- * US-0307 : la colonne qui empile l'Entretien puis les Métiers, placée dans la Grille comme un bloc étroit
- * de largeur 4 : à droite de la liste sur ordinateur, une demi-ligne sur tablette, toute la largeur sur mobile.
- */
-const COLONNE = { "--largeur": 4 } as CSSProperties;
-
-/**
  * La page Habitants (US-0302), ouverte depuis la navigation : sous le titre, tant qu'il y en a, le bandeau des
  * Habitants sans Métier (US-0313) ; puis leur nombre sur la place du Territoire,
  * avec « Plus de place » quand elle est toute prise (US-0305), leurs effectifs par Métier (US-0309), qui
@@ -94,46 +85,46 @@ export default async function Habitants() {
   ]);
   const montres = habitants.map(({ id, prenom, metier, etat }) => ({ id, prenom, metier, etat }));
   const auChoix = metiers.map(({ id, nom }) => ({ id, nom, icone: iconeDeMetier(id) }));
+  const auTableau = metiers.map(({ id, nom, phrase, servira }) => ({ id, nom, phrase, servira, icone: iconeDeMetier(id) }));
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Habitants</h1>
+      {/* US-0305, US-0318, US-0320 : la place, l'Entretien et la Nourriture, en une bande sous le titre. */}
+      <div className={styles.bilan}>
+        <div className={styles.place}>
+          <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
+          <span className={styles.jauge} aria-hidden="true">
+            <span className={styles.remplissage} style={{ "--plein": `${places > 0 ? Math.min(100, (100 * habitants.length) / places) : 0}%` } as CSSProperties} />
+          </span>
+          {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
+        </div>
+        {entretien ? (
+          <div className={styles.entretien}>
+            <h2 className={styles.etiquette}>Entretien</h2>
+            <LigneEntretien entretien={entretien} />
+            <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
+          </div>
+        ) : null}
+      </div>
       {/* US-0313 : le bandeau des sans Métier compte sur les Habitants de la liste, Métier donné d'avance compris. */}
       <HabitantsMontres habitants={montres}>
         <BandeauSansMetier />
-        <Grille>
-          <Bloc largeur={8} className={styles.liste}>
-            <div className={styles.entete}>
-              <p className={styles.nombre}>{habitantsSurPlaces(habitants.length, places)}</p>
-              {habitants.length >= places ? <p className={styles.plein}>Plus de place</p> : null}
-            </div>
-            {/* US-0329 : sans Habitant, la liste dit à sa place que des Voyageurs finiront par passer. */}
-            <ListeDesHabitants habitants={montres} metiers={auChoix} />
-          </Bloc>
-          <div className={styles.colonne} style={COLONNE} data-etroit="">
-            {/* US-0332 : les Voyageurs aux portes, en tête de la colonne ; au-dessus de la liste quand la colonne passe dessous. */}
-            {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
-            {/* US-0340 : la famine imminente lui fait confirmer, sur les Stocks et l'Entretien lus à l'heure. */}
-            {/* US-0341 : pendant une Famine, lue à l'heure, les Voyageurs évitent le Territoire. */}
-            {/* US-0335 : les mêmes Métiers au choix que la liste, pour en donner un dès l'accueil. */}
-            <AuxPortes
-              voyageurs={voyageurs}
-              maintenant={maintenant()}
-              vitesse={vitesse()}
-              placesLibres={places - habitants.length}
-              famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure, famineDepuis)}
-              famine={famine !== null}
-              metiers={auChoix}
-            />
-            {entretien ? (
-              <Bloc titre="Entretien">
-                <LigneEntretien entretien={entretien} />
-                <TenueDeLaNourriture stocks={stocks} entretien={entretien} />
-              </Bloc>
-            ) : null}
-            {/* US-0312 : les Métiers, où l'on répartit les Habitants avec « − » et « + », sur les Habitants que montre la liste. */}
-            {metiers.length > 0 ? <RepartitionDesMetiers metiers={metiers.map((m) => ({ ...m, icone: iconeDeMetier(m.id) }))} /> : null}
-          </div>
-        </Grille>
+        {/* US-0332 : les Voyageurs aux portes, avant le reste : ils repartent s'ils attendent trop. */}
+        {/* US-0333 : leur compte à rebours suit le temps du jeu, à sa vitesse ; US-0338 : la place qui reste règle l'accueil. */}
+        {/* US-0340 : la famine imminente lui fait confirmer, sur les Stocks et l'Entretien lus à l'heure. */}
+        {/* US-0341 : pendant une Famine, lue à l'heure, les Voyageurs évitent le Territoire. */}
+        {/* US-0335 : les mêmes Métiers au choix que le tableau, pour en donner un dès l'accueil. */}
+        <AuxPortes
+          voyageurs={voyageurs}
+          maintenant={maintenant()}
+          vitesse={vitesse()}
+          placesLibres={places - habitants.length}
+          famineImminente={entretien !== null && avertissementDeFamine(stocks, entretien.parHeure, famineDepuis)}
+          famine={famine !== null}
+          metiers={auChoix}
+        />
+        {/* US-0307, US-0309, US-0312 : une rangée par Métier, ses Habitants en étiquettes, « − » et « + » au bout. */}
+        <ListeDesHabitants habitants={montres} metiers={auTableau} />
       </HabitantsMontres>
     </main>
   );

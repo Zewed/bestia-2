@@ -1,6 +1,6 @@
 /*
- * Les formes du jeu : des coins ronds et épais, comme des pièces taillées dans le bois, et la place que prennent les
- * pièces posées sur le cadre de la carte (le blason et les Stocks en haut, la rangée des médaillons en bas).
+ * Les formes du jeu : des coins ronds, et la place que prend la barre du haut (le blason, le nom du chef, la navigation,
+ * les Stocks).
  */
 :root {
   --arrondi: 18px;
@@ -19,9 +19,12 @@
      tient pas (US-0203), l'avertissement de famine à son pied (US-0321), et l'encoche. */
   --hauteur-ligne: 64px;
   --hauteur-bande: 0px;
+  /* Sur un téléphone, la rangée des onglets de la navigation (US-0302), sous les Stocks ; sur ordinateur, ils tiennent
+     dans la ligne. */
+  --hauteur-nav: 0px;
   --hauteur-alerte: 0px;
-  --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--hauteur-alerte) + var(--bord-haut));
-  /* La rangée des médaillons de la navigation, au pied de l'écran (US-0302), au-dessus de l'encoche du bas. */
+  --hauteur-barre: calc(var(--hauteur-ligne) + var(--hauteur-bande) + var(--hauteur-nav) + var(--hauteur-alerte) + var(--bord-haut));
+  /* Plus rien au pied de l'écran : la navigation est en haut. */
   --hauteur-onglets: 0px;
   /* La hauteur de l'écran entre les pièces du haut et la rangée du bas. */
   --hauteur-utile: calc(100dvh - var(--hauteur-barre) - var(--hauteur-onglets) - var(--bord-bas));
@@ -31,14 +34,13 @@
   --hauteur-fiche: 0px;
 }
 
-/* Dans le jeu, la ligne du haut porte le blason du loup, de 60 px. */
+/* Dans le jeu, la barre du haut porte le blason, le nom, les onglets et les Stocks sur une ligne. */
 :root:has([data-onglets]) {
-  --hauteur-ligne: 84px;
-  --hauteur-onglets: 96px;
+  --hauteur-ligne: 64px;
 }
 
-/* Sous 1 100 px, les Stocks ne tiennent plus à coup sûr à côté du nom du chef : ils passent en rangée dessous. */
-@media (max-width: 1099px) {
+/* Sous 1 240 px, les Stocks ne tiennent plus à coup sûr à côté des onglets : ils passent en rangée dessous. */
+@media (max-width: 1239px) {
   :root:has([data-bande-ressources]) {
     --hauteur-bande: 56px;
   }
@@ -59,10 +61,10 @@
   }
 }
 
-/* Sur un téléphone, la rangée des médaillons tient toute la largeur au pied de l'écran : la page s'arrête au-dessus. */
+/* Sur un téléphone, les onglets passent en rangée sous les Stocks, sur toute la largeur. */
 @media (max-width: 820px) {
   :root:has([data-onglets]) {
-    --hauteur-onglets: 70px;
+    --hauteur-nav: 56px;
   }
 }
 

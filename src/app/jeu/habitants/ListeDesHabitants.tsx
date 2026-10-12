@@ -4,12 +4,15 @@ import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { type MouseEvent, useEffect, useId, useRef, useState, useTransition } from "react";
 import { EN_EXPEDITION } from "@/monde/etat-habitant";
-import { donnerUnMetier, renvoyerUnHabitant, retirerLeMetier } from "./actions";
+import { ajouterAuMetier, donnerUnMetier, renvoyerUnHabitant, retirerDuMetier, retirerLeMetier } from "./actions";
 import { useHabitantsMontres } from "./HabitantsMontres";
 import { BoutonDuMetier, type MetierAuChoix, MetiersAuChoix } from "./MetiersAuChoix";
 import styles from "./page.module.css";
 
 export type { MetierAuChoix };
+
+/** US-0307 : un Métier tel que le tableau le montre : son icône, sa phrase et, tant qu'il ne sert à rien, ce qu'il attend. */
+export type MetierDuTableau = MetierAuChoix & { phrase?: string; servira?: string | null };
 
 /** Un Habitant tel que la liste le montre : son prénom, le nom de son Métier (null sans Métier) et son état. */
 export type HabitantAffiche = { id: number; prenom: string; metier: string | null; etat: string };
@@ -19,7 +22,7 @@ export type HabitantAffiche = { id: number; prenom: string; metier: string | nul
  * liste le montre (null : sans Métier) et le nombre d'Habitants qui l'exercent. US-0314 : son identifiant
  * est celui du filtre dans l'adresse (?metier=bucheron, ?metier=sans).
  */
-type Effectif = { id: string; nom: string; icone: string | null; metier: string | null; nombre: number };
+type Effectif = { id: string; nom: string; icone: string | null; metier: string | null; nombre: number; phrase?: string; servira?: string | null; metierId?: string };
 
 /** US-0314 : le paramètre de l'adresse qui porte le filtre. */
 const PARAMETRE_DU_FILTRE = "metier";
@@ -35,12 +38,23 @@ const de = (prenom: string) => (/^[aeiouyhàâäéèêëîïôöùûüœæ]/i.te
  * Métier dans son ordre, même quand personne ne l'exerce. Chaque Habitant compte une fois : leur somme est
  * le nombre d'Habitants.
  */
-function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix[]): Effectif[] {
+function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierDuTableau[]): Effectif[] {
   const compter = (metier: string | null) => habitants.filter((h) => h.metier === metier).length;
   return [
     { id: "sans", nom: "Sans Métier", icone: null, metier: null, nombre: compter(null) },
-    ...metiers.map((m) => ({ ...m, metier: m.nom, nombre: compter(m.nom) })),
+    ...metiers.map((m) => ({ ...m, metierId: m.id, metier: m.nom, nombre: compter(m.nom) })),
   ];
+}
+
+/**
+ * US-0312 : celui que « − » remet sans Métier : le dernier arrivé au Territoire de ceux qui exercent le Métier
+ * `nom`, soit le plus grand identifiant (les Habitants sont numérotés à leur arrivée), comme la base le choisira ;
+ * null quand personne ne l'exerce. US-0911 : parmi ceux restés au Foyer.
+ */
+function dernierArrive(habitants: HabitantAffiche[], nom: string): HabitantAffiche | null {
+  return habitants
+    .filter((h) => h.metier === nom && h.etat !== EN_EXPEDITION)
+    .reduce<HabitantAffiche | null>((dernier, h) => (dernier && dernier.id > h.id ? dernier : h), null);
 }
 
 /**
@@ -77,7 +91,7 @@ function effectifsParMetier(habitants: HabitantAffiche[], metiers: MetierAuChoix
  * US-0911 : un explorateur parti est « en Expédition » sur sa ligne, son Métier écrit sans bouton : rien ne se déplie,
  * ni Métier ni renvoi, avant son retour.
  */
-export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierAuChoix[] }) {
+export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantAffiche[]; metiers: MetierDuTableau[] }) {
   const [affiches, montrerDAvance] = useHabitantsMontres(habitants);
   const recherche = useSearchParams();
   const effectifs = effectifsParMetier(affiches, metiers);
@@ -130,7 +144,18 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     document.getElementById(idBouton(habitant.id))?.focus();
     demarrer(async () => {
       montrerDAvance({ id: habitant.id, metier: metier?.nom ?? null });
+      // Son étiquette change de rangée : la main la suit.
+      requestAnimationFrame(() => document.getElementById(idBouton(habitant.id))?.focus());
       await (metier ? donnerUnMetier(habitant.id, metier.id) : retirerLeMetier(habitant.id));
+    });
+  }
+
+  /** US-0312 : « + » et « − » d'une rangée : montre aussitôt le Métier de l'Habitant que la base choisira. */
+  function repartir(habitant: HabitantAffiche | null, metier: string | null, action: () => Promise<void>) {
+    if (!habitant) return;
+    demarrer(async () => {
+      montrerDAvance({ id: habitant.id, metier });
+      await action();
     });
   }
 
@@ -167,84 +192,124 @@ export function ListeDesHabitants({ habitants, metiers }: { habitants: HabitantA
     window.history.replaceState(null, "", suite ? `?${suite}` : window.location.pathname);
   }
 
-  // US-0329 : sans Habitant, ni compteurs à zéro ni filtre : une phrase, à leur place et à celle de la liste.
+  // US-0329 : sans Habitant, ni rangées ni filtre : une phrase, à leur place.
   if (affiches.length === 0) {
     return <p className={styles.personne}>Aucun Habitant pour l&apos;instant. Des Voyageurs finiront par passer aux portes.</p>;
   }
 
+  // Les sans Métier passent les premiers dans la liste, rangés comme la base les range (HabitantsMontres).
+  const premierSansMetier = affiches.find((h) => h.metier === null) ?? null;
+  // La rangée des sans Métier ne paraît que s'il y en a, ou quand on la filtre ; US-0314 : un filtre ne garde que la sienne.
+  const rangees = effectifs.filter((e) => (filtre ? e === filtre : e.metier !== null || e.nombre > 0));
+
   return (
-    <>
-      <ul className={styles.effectifs} aria-label="Effectifs par Métier">
-        <li>
-          <button type="button" className={styles.effectif} aria-pressed={filtre === null} onClick={() => filtrer(null)}>
-            Tous
+    <section className={styles.tableau} aria-label="Métiers">
+      {filtre ? (
+        <div className={styles.filtreActif}>
+          <button type="button" className={styles.tous} onClick={() => filtrer(null)}>
+            Tous les Métiers
           </button>
-        </li>
-        {effectifs.map((e) => (
-          <li key={e.id}>
-            <button
-              type="button"
-              className={styles.effectif}
-              aria-pressed={filtre?.id === e.id}
-              data-personne={e.nombre === 0 ? "" : undefined}
-              onClick={() => filtrer(filtre?.id === e.id ? null : e.id)}
-            >
-              {/* Le nom est écrit juste à côté : l'icône est muette. */}
-              {e.icone ? <Image src={e.icone} alt="" width={22} height={22} className={styles.iconeEffectif} /> : null}
-              {e.nom} <strong className={styles.nombreEffectif}>{e.nombre}</strong>
-            </button>
-          </li>
-        ))}
-      </ul>
-      {montres.length === 0 ? (
-        <p className={styles.personne}>{filtre?.metier === null ? "Personne n'est sans Métier." : "Personne n'exerce ce Métier."}</p>
-      ) : (
-        <ul className={styles.habitants}>
-          {montres.map((h) => {
-            // US-0911 : rien ne reste déplié sur la ligne d'un explorateur parti entre-temps.
-            const deplie = ouvert === h.id && h.etat !== EN_EXPEDITION;
-            const confirmer = deplie && aRenvoyer === h.id;
-            return (
-              <li key={h.id} className={styles.habitant}>
-                {/* Son portrait : l'icône peinte de son Métier, ou un Habitant sans Métier ; son prénom le dit déjà. */}
-                <Image src={metiers.find((m) => m.nom === h.metier)?.icone ?? PORTRAIT_SANS_METIER} alt="" width={72} height={72} className={styles.portrait} />
-                <span className={styles.prenom}>{h.prenom}</span>
-                {metiers.length > 0 && h.etat !== EN_EXPEDITION ? (
-                  <BoutonDuMetier
-                    id={idBouton(h.id)}
-                    texte={h.metier ?? "Choisir un Métier"}
-                    deplie={deplie}
-                    depliant={idChoix(h.id)}
-                    onClick={() => setOuvert(deplie ? null : h.id)}
-                  />
-                ) : (
-                  <span className={styles.metier} data-sans-metier={h.metier === null ? "" : undefined}>
-                    {h.metier ?? "sans Métier"}
-                  </span>
-                )}
-                <span className={styles.etat} data-absent={h.etat === EN_EXPEDITION ? "" : undefined}>
-                  {h.etat}
-                </span>
-                {/* US-0310 : le Métier qu'il exerce déjà est marqué, et ne se redonne pas. */}
-                {deplie ? <MetiersAuChoix id={idChoix(h.id)} etiquette={`Métier de ${h.prenom}`} metiers={metiers} actuel={h.metier} choisir={(m) => donner(h, m)} /> : null}
-                {/* US-0330 : à part des Métiers, en dernier ; un lecteur d'écran entend aussi qui il renvoie. */}
-                {deplie ? (
-                  <button
-                    ref={confirmer ? boutonDeConfirmation : undefined}
-                    type="button"
-                    className={styles.renvoyer}
-                    aria-label={confirmer ? `Confirmer le renvoi ${de(h.prenom)}` : `Renvoyer ${h.prenom}`}
-                    data-confirmer={confirmer ? "" : undefined}
-                    onClick={(evenement) => renvoyer(h, evenement)}
-                  >
-                    {confirmer ? "Confirmer le renvoi" : "Renvoyer"}
+        </div>
+      ) : null}
+      <ul className={styles.rangees}>
+        {rangees.map((e) => {
+          const ceux = affiches.filter((h) => h.metier === e.metier);
+          const ouvertIci = ceux.find((h) => h.id === ouvert && h.etat !== EN_EXPEDITION) ?? null;
+          const auFoyer = e.metier === null ? null : dernierArrive(affiches, e.metier);
+          return (
+            <li key={e.id} className={styles.rangee} data-sans-metier={e.metier === null ? "" : undefined} data-personne={ceux.length === 0 ? "" : undefined}>
+              <div className={styles.metierDeLaRangee}>
+                {/* Le nom est écrit juste à côté : l'icône est muette. */}
+                <Image src={e.icone ?? PORTRAIT_SANS_METIER} alt="" width={40} height={40} className={styles.iconeRangee} />
+                <h3 className={styles.nomRangee}>
+                  {/* US-0314 : le nom filtre la liste sur sa rangée ; le toucher de nouveau retire le filtre. */}
+                  <button type="button" className={styles.filtre} aria-pressed={filtre?.id === e.id} onClick={() => filtrer(filtre?.id === e.id ? null : e.id)}>
+                    {e.nom}
                   </button>
+                </h3>
+                <p className={styles.phraseRangee}>
+                  {e.phrase}
+                  {e.servira ? <span className={styles.servira}>{`Servira ${e.servira}.`}</span> : null}
+                </p>
+                {e.metier !== null && e.metierId ? (
+                  <div className={styles.repartition}>
+                    <button
+                      type="button"
+                      className={styles.plusMoins}
+                      aria-label={`Un ${e.nom} de moins`}
+                      disabled={auFoyer === null}
+                      onClick={() => repartir(auFoyer, null, () => retirerDuMetier(e.metierId as string))}
+                    >
+                      −
+                    </button>
+                    <span className={styles.effectifRangee}>{e.nombre}</span>
+                    <button
+                      type="button"
+                      className={styles.plusMoins}
+                      aria-label={`Un ${e.nom} de plus`}
+                      disabled={premierSansMetier === null}
+                      onClick={() => repartir(premierSansMetier, e.metier, () => ajouterAuMetier(e.metierId as string))}
+                    >
+                      +
+                    </button>
+                  </div>
+                ) : (
+                  <span className={styles.effectifRangee}>{e.nombre}</span>
+                )}
+              </div>
+              {ceux.length === 0 && e.metier === null ? <p className={styles.personneIci}>Personne n&apos;est sans Métier.</p> : null}
+              {ceux.length > 0 ? (
+                <ul className={styles.jetons}>
+                  {ceux.map((h) => (
+                    <li key={h.id} className={styles.jeton} data-absent={h.etat === EN_EXPEDITION ? "" : undefined}>
+                      {metiers.length > 0 && h.etat !== EN_EXPEDITION ? (
+                        <BoutonDuMetier
+                          id={idBouton(h.id)}
+                          texte={h.prenom}
+                          etiquette={`${h.prenom}, ${h.metier ?? "sans Métier"}, ${h.etat}`}
+                          deplie={ouvert === h.id}
+                          depliant={idChoix(h.id)}
+                          className={styles.boutonJeton}
+                          onClick={() => setOuvert(ouvert === h.id ? null : h.id)}
+                        />
+                      ) : (
+                        <span className={styles.prenom}>{h.prenom}</span>
+                      )}
+                      <span className={styles.etat} data-absent={h.etat === EN_EXPEDITION ? "" : undefined}>
+                        {h.etat}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+                {/* US-0308, US-0310, US-0311 : les Métiers au choix de l'Habitant touché, sous les étiquettes de sa rangée. */}
+                {ouvertIci ? (
+                  <div className={styles.depliant}>
+                    <p className={styles.quiDeplie}>{`Métier ${de(ouvertIci.prenom)}`}</p>
+                    <MetiersAuChoix
+                      id={idChoix(ouvertIci.id)}
+                      etiquette={`Métier de ${ouvertIci.prenom}`}
+                      metiers={metiers}
+                      actuel={ouvertIci.metier}
+                      choisir={(m) => donner(ouvertIci, m)}
+                    />
+                    {/* US-0330 : à part des Métiers, en dernier ; un lecteur d'écran entend aussi qui il renvoie. */}
+                    <button
+                      ref={aRenvoyer === ouvertIci.id ? boutonDeConfirmation : undefined}
+                      type="button"
+                      className={styles.renvoyer}
+                      aria-label={aRenvoyer === ouvertIci.id ? `Confirmer le renvoi ${de(ouvertIci.prenom)}` : `Renvoyer ${ouvertIci.prenom}`}
+                      data-confirmer={aRenvoyer === ouvertIci.id ? "" : undefined}
+                      onClick={(evenement) => renvoyer(ouvertIci, evenement)}
+                    >
+                      {aRenvoyer === ouvertIci.id ? "Confirmer le renvoi" : "Renvoyer"}
+                    </button>
+                  </div>
                 ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
