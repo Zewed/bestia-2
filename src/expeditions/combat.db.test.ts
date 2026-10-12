@@ -388,7 +388,13 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
         (await client.query("select sexe, nombre from effectif where territoire_id = $1 and espece_id = $2", [territoireId, especeId])).rows.map((r) => [r.sexe, r.nombre]),
       );
     const t0 = new Date(Date.UTC(2031, 0, 1));
-    const combat = (expeditionId: number, especeId: string, minutes: number) => ({ expeditionId, especeId, le: apres(t0, minutes), numero: null, beteDeNaissanceId: null });
+    const combat = (expeditionId: number, especeId: string, minutes: number, numero: number | null = null, beteDeNaissanceId: number | null = null) => ({
+      expeditionId,
+      especeId,
+      le: apres(t0, minutes),
+      numero,
+      beteDeNaissanceId,
+    });
 
     it("le combat suivant ne compte que les survivantes ; une escorte perdue tout entière ne perd plus rien, et l'effectif jamais sous zéro", async () => {
       // Dix Souris grises (473 chacune, 4 730) contre des poules (9 457) : la moitié, puis les trois quarts des survivantes, puis la dernière.
@@ -414,6 +420,23 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
         expect(await perdues(client, x)).toEqual({ souris: 5 });
       });
     });
+
+    it("au même instant, dans l'ordre des Bêtes : les sauvages ordinaires par leur numéro, puis les Bêtes de naissance par leur ligne", async () => {
+      // Six Souris grises, comme ci-dessus : la poule d'abord, elles perdent tout ; le pigeon d'abord, cinq seulement.
+      const perduesSelon = async (combats: (x: number) => ReturnType<typeof combat>[]) => {
+        let resultat = 0;
+        await avecDesExpeditions([["souris", 6, 0]], [[["souris", 6]]], async (client, _territoireId, [x]) => {
+          await subirLesCombats(client, combats(x));
+          resultat = (await perdues(client, x)).souris;
+        });
+        return resultat;
+      };
+      expect(await perduesSelon((x) => [combat(x, "pigeon", 5, 8), combat(x, "poule", 5, 3)])).toBe(6);
+      expect(await perduesSelon((x) => [combat(x, "poule", 5, 3), combat(x, "pigeon", 5, 8)])).toBe(6);
+      expect(await perduesSelon((x) => [combat(x, "poule", 5, 8), combat(x, "pigeon", 5, 3)])).toBe(5);
+      expect(await perduesSelon((x) => [combat(x, "poule", 5, null, 1), combat(x, "pigeon", 5, 3)])).toBe(5);
+      expect(await perduesSelon((x) => [combat(x, "pigeon", 5, null, 2), combat(x, "poule", 5, null, 1)])).toBe(6);
+    }, 60_000);
 
     it("deux Expéditions du même Territoire prennent leurs pertes à l'effectif l'une après l'autre, chacune au sexe le plus nombreux d'alors", async () => {
       // Trois mâles et deux femelles ; chaque escorte de deux souris en perd deux contre une poule.

@@ -22,9 +22,11 @@ export type Combat = { expeditionId: number; especeId: string; le: Date; numero:
  * retenirLesRencontres (src/expeditions/rencontres.ts).
  */
 export async function subirLesCombats(base: Pool | PoolClient, combats: readonly Combat[]): Promise<void> {
-  const rang = (c: Combat) => [c.numero ?? Infinity, c.beteDeNaissanceId ?? Infinity];
+  // Un nombre absent passe après tous les autres.
+  const avant = (a: number | null, b: number | null) => (a === b ? 0 : a === null ? 1 : b === null ? -1 : a - b);
   const dansLOrdre = [...combats].sort(
-    (a, b) => a.le.getTime() - b.le.getTime() || a.expeditionId - b.expeditionId || rang(a)[0] - rang(b)[0] || rang(a)[1] - rang(b)[1],
+    (a, b) =>
+      a.le.getTime() - b.le.getTime() || a.expeditionId - b.expeditionId || avant(a.numero, b.numero) || avant(a.beteDeNaissanceId, b.beteDeNaissanceId),
   );
   // L'un après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
   for (const combat of dansLOrdre) await subirLeCombat(base, combat);
