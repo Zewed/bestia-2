@@ -347,6 +347,11 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     }));
     expect(attendues.length).toBeGreaterThanOrEqual(2);
     expect(vues[0][0]).toEqual(attendues);
+    // Et, sans s'en remettre à la règle : chaque Bête commune ne suit qu'une des quatre, une plus rare aucune.
+    for (const b of attendues) {
+      const suivies = vues[0].flat().filter((r) => r.numero === b.numero && r.apprivoisee);
+      expect(suivies.length, `${b.numero}`).toBe(b.rareteId === "commune" ? 1 : 0);
+    }
     // Près de 200 rattrapages à la suite : sous la charge de la suite complète, plus que les 20 s par défaut.
   }, 60_000);
 });
