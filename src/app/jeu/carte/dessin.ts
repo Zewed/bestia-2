@@ -42,7 +42,9 @@ export type Pinceau = Pick<
 /**
  * Les couleurs de la carte, telles que le <canvas> les comprend : le fond de chaque teinte, dans l'ordre des
  * teintes de la carte (US-0418), le bord léger des Cases, et les deux tons des motifs : un sombre pour les teintes
- * claires, un clair pour les sombres. US-0419 : l'Encre des Foyers, et le citron du repère de son Foyer.
+ * claires, un clair pour les sombres. US-0419 : l'Encre des Foyers, et le citron du repère de son Foyer. US-0428 : le
+ * surlignage de la Case choisie, au cuivre et à la crème du kit : le voile qui la remplit, le halo qui la cerne, le
+ * trait posé dessus, et l'anneau de tirets autour d'elle.
  */
 export type Peinture = {
   fonds: string[];
@@ -51,6 +53,7 @@ export type Peinture = {
   motifClair: string;
   encre: string;
   repere: string;
+  surlignage: { voile: string; halo: string; trait: string; anneau: string };
   /**
    * Le relief peint, posé sur les Cases par-dessus leur couleur et sous leur motif (relief.ts) : pour la vue, et la Case
    * (0, 0) là où la vue la met, ce qui peint les Cases découvertes (`terre`) et celles sous le brouillard (`brume`) ;
@@ -438,17 +441,32 @@ function tracerLesLimites(pinceau: Pinceau, carte: CarteADessiner, vue: Vue, pei
   pinceau.restore();
 }
 
+/** US-0428 : l'anneau de tirets autour de la Case choisie, en rayons de Case, et ses tirets, en pixels, à tout zoom. */
+const ANNEAU_DU_SURLIGNAGE = { rayon: 1.32, tiret: 3, epaisseur: 1.4 };
+
 /**
- * US-0428 : surligne la Case dont le centre tombe en (x, y) : son hexagone cerné d'un trait citron bordé d'Encre, plus
- * épais que tout autre trait de la carte, comme le repère du Foyer : il se voit sur les teintes claires et sombres.
+ * US-0428 : surligne la Case dont le centre tombe en (x, y), comme la maquette du kit : un anneau de tirets de cuivre
+ * autour d'elle ; son hexagone sous un voile crème, cerné d'un halo de cuivre et d'un trait crème par-dessus, plus
+ * épais que tout autre trait de la carte : il se voit sur les teintes claires et sombres.
  */
-function surligner(pinceau: Pinceau, peinture: Peinture, x: number, y: number, rayon: number) {
-  fermerLaCase(pinceau, x, y, rayon);
+function surligner(pinceau: Pinceau, { surlignage }: Peinture, x: number, y: number, rayon: number) {
+  pinceau.save();
+  fermerLaCase(pinceau, x, y, ANNEAU_DU_SURLIGNAGE.rayon * rayon);
+  pinceau.setLineDash([ANNEAU_DU_SURLIGNAGE.tiret, ANNEAU_DU_SURLIGNAGE.tiret]);
+  pinceau.lineDashOffset = 0;
   pinceau.lineJoin = "round";
-  pinceau.strokeStyle = peinture.encre;
+  pinceau.strokeStyle = surlignage.anneau;
+  pinceau.lineWidth = ANNEAU_DU_SURLIGNAGE.epaisseur;
+  pinceau.stroke();
+  pinceau.restore();
+  fermerLaCase(pinceau, x, y, rayon);
+  pinceau.fillStyle = surlignage.voile;
+  pinceau.fill();
+  pinceau.lineJoin = "round";
+  pinceau.strokeStyle = surlignage.halo;
   pinceau.lineWidth = 6;
   pinceau.stroke();
-  pinceau.strokeStyle = peinture.repere;
+  pinceau.strokeStyle = surlignage.trait;
   pinceau.lineWidth = 3;
   pinceau.stroke();
 }

@@ -106,12 +106,12 @@ body:has([data-entree])::before {
 }
 
 /*
- * Un écran du jeu, hors de la carte, et les panneaux posés sur la carte : les anciens noms des couleurs et des coins y
- * prennent leur sens sarcelle et cuivre (voir 6 ci-dessus). La carte elle-même garde les siens.
+ * Un écran du jeu, hors de la carte, et la fiche posée sur la carte (pour le détail d'une Expédition, qu'elle reprend) :
+ * les anciens noms des couleurs et des coins y prennent leur sens sarcelle et cuivre (voir 6 ci-dessus). La carte et
+ * ses pièces, refaites, gardent les leurs : la légende dessine ses Cases des couleurs mêmes de la carte.
  */
 body:has([data-onglets]) main:not([data-carte]),
-[data-fiche-de-la-case],
-[data-sur-la-carte] {
+[data-fiche-de-la-case] {
   --bloc: var(--panneau);
   --bloc-2: var(--panneau-haut);
   --bloc-3: var(--panneau-releve);
