@@ -7,7 +7,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
-import { coupleEnReserve } from "@/monde/couple";
+import { especeDuTerritoire } from "@/monde/effectif";
 import styles from "./page.module.css";
 
 // Le titre reste celui de la Réserve : le nom d'une Espèce ne se lit pas sans la garde.
@@ -21,15 +21,27 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
  * titre et sa Rareté, sur la pastille de ses couleurs. « Fermer » ramène à la Réserve. Seulement pour une Espèce dont le
  * joueur a réuni le Couple : toute autre adresse est introuvable, sans dire si un autre joueur l'a réuni. Ses
  * caractéristiques arrivent avec US-0804 à US-0806.
+ *
+ * US-0810 : elle s'ouvre aussi depuis la page Bêtes, pour toute Espèce dont le joueur a des Bêtes (especeDuTerritoire), et
+ * rappelle l'effectif de l'Espèce, vide quand ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes
+ * (`?depuis=betes`), « Fermer » y ramène.
  */
-export default async function FicheDeLEspece({ params }: { params: Promise<{ espece: string }> }) {
+export default async function FicheDeLEspece({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ espece: string }>;
+  searchParams: Promise<{ depuis?: string | string[] }>;
+}) {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { espece } = await params;
   if (!IDENTIFIANT.test(espece)) notFound();
   const { territoireId } = await exigerCompte(`/jeu/reserve/${espece}`);
-  const couple = territoireId === null ? null : await coupleEnReserve(getPool(), territoireId, espece);
+  // US-0810 : l'Espèce de la fiche, dont le joueur a réuni le Couple ou a des Bêtes, avec son effectif.
+  const couple = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
   if (!couple) notFound();
+  const retour = (await searchParams).depuis === "betes" ? "/jeu/betes" : "/jeu/reserve";
   return (
     <main className={styles.page}>
       <article className={styles.fiche}>
@@ -37,8 +49,11 @@ export default async function FicheDeLEspece({ params }: { params: Promise<{ esp
         <div className={styles.entete}>
           <h1 className={styles.nom}>{couple.nom}</h1>
           <PastilleRarete rarete={couple.rarete} />
+          <p className={styles.effectif}>
+            <span>Effectif</span> <strong className={styles.nombre}>{couple.effectif}</strong>
+          </p>
         </div>
-        <Link href="/jeu/reserve" className={styles.fermer}>
+        <Link href={retour} className={styles.fermer}>
           Fermer
         </Link>
       </article>

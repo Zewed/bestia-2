@@ -79,6 +79,41 @@
   align-items: start;
 }
 
+/* US-0810 : à droite de l'illustration, la production, puis le bloc « Bêtes », l'un sous l'autre. */
+.cote {
+  display: grid;
+  gap: var(--ecart);
+  min-width: 0;
+}
+
+/* Le bloc « Bêtes » ouvre la page Bêtes : tout le bloc se touche ; le total en grand. */
+.lienBetes {
+  display: block;
+  border-radius: var(--arrondi);
+  color: var(--encre);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .lienBetes:hover > section {
+    background: var(--bloc-2);
+  }
+}
+
+.lienBetes:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+.nombreDeBetes {
+  display: block;
+  font-size: 28px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
 .ligneProduction {
   display: flex;
   gap: 10px;
