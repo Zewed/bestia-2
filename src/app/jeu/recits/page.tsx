@@ -85,7 +85,7 @@ export default async function Recits() {
               // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
               ...(r.rencontres && {
                 rencontres: r.rencontres.map((rencontre, i, toutes) => {
-                  const { vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque } = rencontre;
+                  const { vueLe, nom, illustration, rarete, issue, repartieLe, sexe, nouvelleEspece, manque } = rencontre;
                   const versLaBete = revenir(rencontre, reperees);
                   return {
                     instant: vueLe.toISOString(),
@@ -94,9 +94,14 @@ export default async function Recits() {
                     illustration,
                     rarete,
                     issue,
+                    // US-0950 : repartie, l'heure de son départ, et son jour s'il n'est plus celui de la Rencontre.
+                    ...(repartieLe && {
+                      repartie: { instant: repartieLe.toISOString(), heure: heureDUneRencontre(repartieLe, vueLe), autreJour: jour(repartieLe) !== jour(vueLe) },
+                    }),
                     sexe,
                     nouvelleEspece,
                     ...(manque && { manque }),
+                    // US-0949 : restée et encore repérée, l'écran d'Expédition qui revient la chercher.
                     ...(versLaBete && { revenir: versLaBete }),
                   };
                 }),
