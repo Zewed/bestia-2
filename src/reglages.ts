@@ -359,6 +359,13 @@ export const PERTES_PAR_ECART_DES_FORCES = 1;
 export const PART_DES_BLESSES = 0.5;
 
 /**
+ * US-0822 : les Places qu'offre l'Habitat du Foyer (valeur provisoire, à régler en jouant), où logent les Bêtes de
+ * l'effectif, chacune selon la taille de son Espèce : une souris en prend 1, un pigeon près de 9, une poule 32
+ * (docs/adr/0007) ; src/monde/habitat.ts. Rien à voir avec PLACES_DU_FOYER, les places d'Habitant (US-0305).
+ */
+export const PLACES_DE_L_HABITAT_DU_FOYER = 500;
+
+/**
  * US-0968 : la simulation des chances de la page de contrôle juge 10 000 Rencontres disputées (valeur provisoire, à régler
  * en jouant) entre des Expéditions de forces données, et échoue dès que la part des victoires d'une escorte s'écarte de
  * plus de 2 points de pourcentage (valeur provisoire, à régler en jouant) de sa part attendue, à proportion de sa force
