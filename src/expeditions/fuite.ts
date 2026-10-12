@@ -4,12 +4,13 @@
 // sans rien perdre. Sa fuite s'écrit comme un rappel, à l'instant de l'attaque, marquée en fuite (expedition.en_fuite), et
 // son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact.
 //
-// Cas accepté, jusqu'à US-0965 : la fuite s'écrit au rattrapage du Territoire de l'Expédition. Un autre Territoire qui
-// partage sa Case, rattrapé avant lui au-delà de la fuite, la voit encore sur la Case jusqu'à la fin prévue de son
-// séjour : le tirage d'une Bête apparue après la fuite (US-0963) peut alors la lui donner, et personne ne l'emmène. Quand
-// une Expédition fuit d'une Case partagée avec un autre Territoire, ce qui s'y passe ensuite dépend donc de l'ordre des
-// rattrapages. US-0965, qui décide quelle Expédition une Bête attaque parmi toutes celles de la Case, calculera les
-// fuites pour la Case entière, de tous les Territoires. Côté serveur uniquement.
+// Cas accepté : la fuite s'écrit au rattrapage du Territoire de l'Expédition. Un autre Territoire qui partage sa Case,
+// rattrapé avant lui au-delà de la fuite, la voit encore sur la Case jusqu'à la fin prévue de son séjour. Le tirage d'une
+// Bête apparue après la fuite (US-0963) peut alors la lui donner, et personne ne l'emmène ; et la fin de l'ensemble d'une
+// attaque, qui dépend de la Bête qu'une Expédition suit, change de même. Quand une Expédition fuit d'une Case partagée avec
+// un autre Territoire, ce qui s'y passe ensuite dépend donc de l'ordre des rattrapages. À reprendre avec US-0965 (quelle
+// Expédition une Bête trop forte pour toutes attaque, à décider), si le propriétaire le veut : la fuite pourrait s'écrire
+// pour la Case entière, de tous les Territoires. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { HorairesDUneExpedition } from "./phase";

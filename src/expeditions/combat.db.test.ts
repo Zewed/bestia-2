@@ -364,7 +364,7 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     const chef = await naitrePresDUneBeteRare();
     const x = (await lancerJusquALAttaque(chef, new Map())).at(-1)!;
     // Sa Rencontre retenue, puis effacée, comme une donnée héritée incohérente : rien ne peut porter son attaque.
-    await rattraperA(chef.territoireId, apres(x.attaque!, -1));
+    await rattraperA(chef.territoireId, apres(x.attaque!, -1 / 60_000));
     await pool.query("delete from rencontre where expedition_id = $1", [x.id]);
 
     await rattraperA(chef.territoireId, x.retour);
