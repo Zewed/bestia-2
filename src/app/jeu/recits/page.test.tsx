@@ -295,7 +295,7 @@ describe("page Récits (US-0324)", () => {
     ]);
   });
 
-  it("compte dans le résumé les Bêtes que l'escorte a perdues aux combats de son séjour (US-0947)", async () => {
+  it("compte dans le résumé les Bêtes de l'escorte mortes aux combats de son séjour (US-0947)", async () => {
     const rencontre = (perdues?: number) => ({
       especeId: "pigeon",
       vueLe: new Date("2026-10-09T12:05:00Z"),

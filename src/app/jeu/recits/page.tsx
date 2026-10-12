@@ -78,7 +78,7 @@ export default async function Recits() {
               quand: formaterInstant(r.survenuLe, FUSEAU),
               lu: r.luLe !== null,
               // US-0941 : un retour d'Expédition se résume en une ligne, en tête de son récit, qu'il ait vu des Bêtes ou non ;
-              // US-0947 : avec les Bêtes que son escorte a perdues aux combats, comptées sur les Rencontres des Bêtes qui l'ont attaquée.
+              // US-0947 : avec les Bêtes de son escorte mortes aux combats, retenues sur la Rencontre de la dernière Bête qui l'a attaquée.
               ...(r.titre === RETOUR_D_EXPEDITION && { resume: resumeDUnRetour(r.rencontres ?? [], (r.rencontres ?? []).reduce((n, x) => n + (x.perdues ?? 0), 0)) }),
               // US-0958 : les Couples que ce retour a réunis, annoncés en tête de son récit.
               ...(r.couples && { couples: r.couples.map(({ nom, illustration }) => ({ nom, illustration })) }),

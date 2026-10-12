@@ -273,6 +273,31 @@ describe("la Bête repérée partie avant l'arrivée (US-0949)", () => {
   });
 });
 
+describe("les morts et les Blessés de l'escorte au combat (US-0951)", () => {
+  const lignes = (autre: Partial<RetourARaconter>) => recitDeRetour(retour({ rencontres: 1, ...autre })).texte.split("\n");
+
+  it("une ligne donne, Espèce par Espèce, le nombre de morts et de Blessés, après les Bêtes et celles ramenées au Foyer (US-0947)", () => {
+    const ramenees = [{ nom: "Poule", sexe: "femelle" as const }];
+    expect(lignes({ ramenees, pertes: [{ nom: "Souris grise", mortes: 2, blessees: 1 }, { nom: "Pigeon biset", mortes: 1, blessees: 2 }] })).toEqual([
+      "Destination : Forêt, à 3 Cases de votre Foyer.",
+      "Aller 1 h, séjour 4 h, retour 1 h.",
+      "12 Cases sont sorties du brouillard.",
+      "Une Bête s'est montrée.",
+      "Bête ramenée au Foyer : Poule (femelle).",
+      "Pertes au combat : Souris grise (2 morts, 1 Blessé) et Pigeon biset (1 mort, 2 Blessés).",
+    ]);
+  });
+
+  it("ne dit pas un nombre nul : une Espèce sans mort n'a que ses Blessés, une sans Blessé que ses morts", () => {
+    expect(lignes({ pertes: [{ nom: "Souris grise", mortes: 0, blessees: 1 }] }).at(-1)).toBe("Pertes au combat : Souris grise (1 Blessé).");
+    expect(lignes({ pertes: [{ nom: "Souris grise", mortes: 3, blessees: 0 }] }).at(-1)).toBe("Pertes au combat : Souris grise (3 morts).");
+  });
+
+  it("aucune ligne sans perte", () => {
+    for (const pertes of [[], undefined]) expect(lignes({ pertes })).toHaveLength(4);
+  });
+});
+
 describe("le récit du combat (US-0947)", () => {
   /** Un Pigeon biset, posé là en Bête trop forte, contre une escorte de Poules et de Souris grises, à 14:05 à Paris. */
   const combat = (autre: Partial<CombatDuRetour> = {}): CombatDuRetour => ({
@@ -280,61 +305,46 @@ describe("le récit du combat (US-0947)", () => {
     bete: { nom: "Pigeon biset", force: 37_340 },
     escorte: 35_900,
     sansEscorte: false,
-    pertes: [
-      { nom: "Poule", nombre: 2 },
-      { nom: "Souris grise", nombre: 1 },
-    ],
     ...autre,
   });
+  const pertes = [
+    { nom: "Poule", mortes: 1, blessees: 1 },
+    { nom: "Souris grise", mortes: 0, blessees: 1 },
+  ];
   const lignes = (autre: Partial<RetourARaconter>) => recitDeRetour(retour({ rencontres: 1, ...autre })).texte.split("\n");
 
   it("après tout le reste, donne l'heure du combat, l'Espèce et la force exacte de la Bête, la force de l'escorte, ses pertes Espèce par Espèce, et finit par la fuite et le retour des explorateurs", () => {
-    const texte = lignes({ ramenees: [{ nom: "Souris grise", sexe: "male" }], combats: [combat()] });
+    const texte = lignes({ ramenees: [{ nom: "Souris grise", sexe: "male" }], combats: [combat()], pertes });
     expect(texte.slice(-4)).toEqual([
       "Bête ramenée au Foyer : Souris grise (mâle).",
-      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre votre escorte, de force 35 900.",
-      "Pertes : Poule × 2 et Souris grise × 1.",
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 35\u00a0900.",
+      "Pertes au combat : Poule (1 mort, 1 Blessé) et Souris grise (1 Blessé).",
       "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
     ]);
   });
 
-  it("une seule Espèce perdue, une seule Bête : la même ligne, sans liste", () => {
-    expect(lignes({ combats: [combat({ pertes: [{ nom: "Poule", nombre: 1 }] })] }).at(-2)).toBe("Pertes : Poule × 1.");
-  });
-
   it("attaquée sans escorte, l'Expédition ne perd rien : le récit le dit, et la fuite de ses explorateurs", () => {
-    expect(lignes({ combats: [combat({ escorte: 0, sansEscorte: true, pertes: [] })] }).slice(-3)).toEqual([
-      "Attaque le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre vos explorateurs, sans escorte.",
+    expect(lignes({ combats: [combat({ escorte: 0, sansEscorte: true })] }).slice(-3)).toEqual([
+      "Attaque le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre vos explorateurs, sans escorte.",
       "Aucune perte.",
       "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
     ]);
   });
 
-  it("plusieurs combats, chacun à son heure, dans l'ordre du temps, puis une seule fois la fuite", () => {
-    const second = combat({ le: aParis(10, 0, 30), bete: { nom: "Poule", force: 40_000 }, escorte: 30_000, pertes: [{ nom: "Souris grise", nombre: 4 }] });
-    expect(lignes({ combats: [combat(), second] }).slice(-5)).toEqual([
-      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre votre escorte, de force 35 900.",
-      "Pertes : Poule × 2 et Souris grise × 1.",
-      "Combat le 10 octobre à 00:30 : Poule, de force 40 000, contre votre escorte, de force 30 000.",
-      "Pertes : Souris grise × 4.",
+  it("plusieurs combats, chacun à son heure, dans l'ordre du temps, puis leurs pertes et la fuite, une seule fois", () => {
+    const second = combat({ le: aParis(10, 0, 30), bete: { nom: "Poule", force: 40_000 }, escorte: 30_000 });
+    expect(lignes({ combats: [combat(), second], pertes }).slice(-4)).toEqual([
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 35\u00a0900.",
+      "Combat le 10 octobre à 00:30 : Poule, de force 40\u00a0000, contre votre escorte, de force 30\u00a0000.",
+      "Pertes au combat : Poule (1 mort, 1 Blessé) et Souris grise (1 Blessé).",
       "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
     ]);
   });
 
   it("une escorte de Bêtes sans arme, de force nulle, reste une escorte : un combat, et ses pertes", () => {
-    expect(lignes({ combats: [combat({ escorte: 0, pertes: [{ nom: "Poule", nombre: 3 }] })] }).slice(-3, -1)).toEqual([
+    expect(lignes({ combats: [combat({ escorte: 0 })], pertes: [{ nom: "Poule", mortes: 1, blessees: 2 }] }).slice(-3, -1)).toEqual([
       "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 0.",
-      "Pertes : Poule × 3.",
-    ]);
-  });
-
-  it("des combats sans leurs pertes, quand le rejeu ne retrouve pas celles retenues : chacun son heure et ses forces, puis les pertes en tout, une fois", () => {
-    const second = combat({ le: aParis(10, 0, 30), bete: { nom: "Poule", force: 40_000 }, escorte: 30_000, pertes: null });
-    expect(lignes({ combats: [combat({ pertes: null }), second], pertesDesCombats: [{ nom: "Souris grise", nombre: 5 }] }).slice(-4)).toEqual([
-      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 35\u00a0900.",
-      "Combat le 10 octobre à 00:30 : Poule, de force 40\u00a0000, contre votre escorte, de force 30\u00a0000.",
-      "Pertes : Souris grise × 5.",
-      "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+      "Pertes au combat : Poule (1 mort, 2 Blessés).",
     ]);
   });
 
