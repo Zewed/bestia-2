@@ -34,4 +34,9 @@ describe("la fiche d'une Espèce (US-0803)", () => {
     expect(regle(".fiche", etroit)).toContain("grid-template-columns: minmax(0, 1fr);");
     expect(regle(".fiche", mobile)).toBe("");
   });
+
+  it("range les caractéristiques en deux colonnes, nom et valeur, les valeurs en chiffres de même largeur (US-0804)", () => {
+    expect(regle(".caracteristiques")).toContain("grid-template-columns: max-content minmax(0, 1fr);");
+    expect(regle(".caracteristiques dd")).toContain("font-variant-numeric: tabular-nums;");
+  });
 });
