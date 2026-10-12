@@ -357,3 +357,9 @@ export const PERTES_PAR_ECART_DES_FORCES = 1;
  * régler en jouant), arrondie au plus proche, la demie aux Blessés ; les autres meurent (src/expeditions/combat.ts).
  */
 export const PART_DES_BLESSES = 0.5;
+
+/**
+ * US-0952 : un Blessé (US-0951) guérit en 24 heures de jeu (valeur provisoire, à régler en jouant, comme l'Espèce y
+ * comptera ou non, US-0954), comptées depuis son retour au Foyer avec son Expédition (src/monde/blesses.ts).
+ */
+export const GUERISON_DES_BLESSES_HEURES = 24;

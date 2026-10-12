@@ -6,6 +6,7 @@ import { Bloc } from "@/components/Bloc";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { forceDeLEscorte } from "@/expeditions/force";
 import type { EspeceDisponible } from "@/monde/effectif";
+import { formaterMinutes } from "@/temps/affichage";
 import styles from "./Escorte.module.css";
 
 /** US-0904 : le paramètre de l'adresse qui garde l'escorte choisie, une fois par Espèce (« ?escorte=souris.3&escorte=poule.1 »). */
@@ -31,6 +32,16 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
 
+/**
+ * US-0952 : un groupe de Blessés d'une Espèce au Foyer, tel que le bloc le montre : combien, et dans combien de minutes du
+ * jeu ils seront guéris, comptées par le serveur à l'ouverture de l'écran.
+ */
+export type BlessesAffiches = { nombre: number; dansMinutes: number };
+
+/** US-0952 : « dont 2 Blessés, guéris dans 5 h », « dont 1 Blessé, guéri dans 45 min ». */
+const blessesDont = ({ nombre, dansMinutes }: BlessesAffiches) =>
+  `dont ${nombre} Blessé${nombre > 1 ? "s" : ""}, guéri${nombre > 1 ? "s" : ""} dans ${formaterMinutes(dansMinutes)}`;
+
 /** US-0937 : « 2 mâles · 1 femelle », « 0 mâle · 3 femelles ». */
 const sexes = ({ males, femelles }: Pick<EspeceDisponible, "males" | "femelles">) =>
   `${males} mâle${males > 1 ? "s" : ""} · ${femelles} femelle${femelles > 1 ? "s" : ""}`;
@@ -49,8 +60,10 @@ export const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).re
  * Bête ajoutée ou retirée, comme au rechargement ; zéro tant qu'aucune Bête n'est choisie.
  * US-0937 : sous les disponibles de chaque Espèce, combien de mâles et de femelles le joueur en possède, Bêtes sorties
  * comprises, pour savoir lequel lui manque pour réunir son Couple. US-0956 : plus rien une fois son Couple réuni.
+ * US-0952 : puis, parmi les disponibles, chaque groupe de Blessés de l'Espèce (`blesses`, par Espèce) et le temps qui
+ * lui reste avant sa guérison ; rien sans Blessé.
  */
-export function Escorte({ especes }: { especes: EspeceDisponible[] }) {
+export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]; blesses?: Record<string, BlessesAffiches[]> }) {
   const recherche = useSearchParams();
   const id = useId();
   if (especes.length === 0) return null;
@@ -82,6 +95,11 @@ export function Escorte({ especes }: { especes: EspeceDisponible[] }) {
                 <span id={idNom}>{e.nom}</span>
                 <span className={styles.disponibles}>{disponibles(e.disponibles)}</span>
                 {!e.coupleReuni && <span className={styles.disponibles}>{sexes(e)}</span>}
+                {(blesses[e.id] ?? []).map((groupe, i) => (
+                  <span key={i} className={styles.disponibles}>
+                    {blessesDont(groupe)}
+                  </span>
+                ))}
               </p>
               <div role="group" aria-labelledby={idNom} className={styles.choix}>
                 <span className={styles.paire}>

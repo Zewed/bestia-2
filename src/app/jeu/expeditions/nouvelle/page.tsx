@@ -8,13 +8,14 @@ import { getPool } from "@/db";
 import { betesReperees } from "@/expeditions/betes-reperees";
 import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { destinationDUneCase } from "@/expeditions/destination";
+import { blessesAuFoyer } from "@/monde/blesses";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import type { Fiche, FicheInconnue } from "@/monde/fiche";
 import { type Coordonnees, coordonneeValable } from "@/monde/hex";
 import { maintenant, vitesse } from "@/temps/horloge";
 import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
-import { Escorte } from "./Escorte";
+import { type BlessesAffiches, Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import styles from "./page.module.css";
 import { type BeteAChercher, type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
@@ -79,6 +80,20 @@ async function betesAChercher(territoireId: number, c: Coordonnees, instant: Dat
 }
 
 /**
+ * US-0952 : les groupes de Blessés au Foyer du Territoire, Espèce par Espèce (blessesAuFoyer), tels que le bloc Escorte
+ * les montre à l'heure du jeu `instant` : combien, et dans combien de minutes, à la minute supérieure, ils seront guéris.
+ */
+async function blessesDuFoyer(territoireId: number, instant: Date): Promise<Record<string, BlessesAffiches[]>> {
+  const groupes = await blessesAuFoyer(getPool(), territoireId, instant);
+  return Object.fromEntries(
+    [...groupes].map(([especeId, liste]) => [
+      especeId,
+      liste.map(({ nombre, gueriLe }) => ({ nombre, dansMinutes: Math.ceil((gueriLe.getTime() - instant.getTime()) / 60_000) })),
+    ]),
+  );
+}
+
+/**
  * US-0901 : l'écran d'Expédition, une page du jeu. Depuis la fiche d'une Case, la Case est en paramètre et devient la
  * destination, lue dans le Monde du Territoire de la garde, jamais dans l'adresse, qui ne dit que la Case. Depuis la
  * navigation, sans Case, il n'a pas de destination et mène à la carte pour en choisir une ; de même pour une Case que
@@ -87,7 +102,8 @@ async function betesAChercher(territoireId: number, c: Coordonnees, instant: Dat
  * compris) ou celui d'un autre joueur, est refusée par un message, à la place de la destination. Sur un téléphone,
  * une seule colonne, et chaque choix au pouce. Sans session, la garde mène à la connexion, qui ramène ici avec la
  * même Case. US-0910 : l'écran finit sur le récapitulatif, et son départ. US-0949 : avec les Bêtes que le joueur a
- * repérées sur la Case de destination, pour qu'il compare son escorte à chacune avant de partir la chercher.
+ * repérées sur la Case de destination, pour qu'il compare son escorte à chacune avant de partir la chercher. US-0952 :
+ * et, dans l'escorte, les Blessés au Foyer de chaque Espèce.
  */
 export default async function NouvelleExpedition({ searchParams }: PageProps<"/jeu/expeditions/nouvelle">) {
   await connection();
@@ -110,6 +126,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   // US-0904 : les Bêtes disponibles pour l'escorte, par Espèce, lues à chaque affichage du formulaire.
   const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
   const instant = maintenant();
+  // US-0952 : les Blessés au Foyer de chaque Espèce, et le temps qui leur reste avant de guérir.
+  const blesses = territoireId !== null && escorte.length > 0 ? await blessesDuFoyer(territoireId, instant) : {};
   const choisie = destination && "fiche" in destination ? destinationChoisie(destination.fiche) : null;
   // US-0949 : les Bêtes repérées sur la Case de destination ; aucune sans destination.
   const betes = choisie && territoireId !== null ? await betesAChercher(territoireId, choisie, instant) : [];
@@ -131,7 +149,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
       </Bloc>
       <Explorateurs {...explorateurs} />
       {/* US-0909 : sans Bête disponible, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. */}
-      {escorte.length > 0 ? <Escorte especes={escorte} /> : <SansEscorte />}
+      {escorte.length > 0 ? <Escorte especes={escorte} blesses={blesses} /> : <SansEscorte />}
       <Sejour />
       {/* US-0910 : tout ce qui a été choisi, à relire avant de partir, à l'heure et au rythme du jeu ; rien d'une Case refusée. */}
       <Recapitulatif libres={explorateurs.libres} especes={escorte} destination={choisie} betes={betes} maintenant={instant} vitesse={vitesse()} />
