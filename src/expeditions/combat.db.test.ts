@@ -433,8 +433,14 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
           suite.push((await perdues(client, x)).souris);
         }
         expect(suite).toEqual([5, 9, 10, 10]);
-        // US-0951 : 3 Blessés parmi les 5 premières, 2 parmi les 4 suivantes, et la dernière : 4 mortes seulement.
+        // US-0951 : 3 Blessées parmi les 5 premières perdues, 2 parmi les 4 suivantes, et la dernière, seule perdue de son
+        // combat, Blessée : 2 + 2 mortes ont quitté l'effectif.
         expect(await sexes(client, territoireId, "souris")).toEqual({ male: 6, femelle: 0 });
+      });
+      // Un effectif plus court que les mortes de son escorte (deux souris pour dix sorties) s'arrête à zéro.
+      await avecDesExpeditions([["souris", 2, 0]], [[["souris", 10]]], async (client, territoireId, [x]) => {
+        for (let i = 0; i < 4; i++) await subirLesCombats(client, [combat(x, "poule", i)]);
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 0, femelle: 0 });
       });
     });
 
@@ -468,12 +474,13 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     }, 60_000);
 
     it("deux Expéditions du même Territoire prennent leurs pertes à l'effectif l'une après l'autre, chacune au sexe le plus nombreux d'alors", async () => {
-      // Trois mâles et deux femelles ; chaque escorte de deux souris en perd deux contre une poule.
-      await avecDesExpeditions([["souris", 3, 2]], [[["souris", 2]], [["souris", 2]]], async (client, territoireId, [x, y]) => {
+      // Cinq mâles et quatre femelles ; chaque escorte de quatre souris (1 892) en perd quatre contre une poule (9 457),
+      // dont deux mortes (US-0951).
+      await avecDesExpeditions([["souris", 5, 4]], [[["souris", 4]], [["souris", 4]]], async (client, territoireId, [x, y]) => {
         await subirLesCombats(client, [combat(y, "poule", 1), combat(x, "poule", 1)]);
-        expect([await perdues(client, x), await perdues(client, y)]).toEqual([{ souris: 2 }, { souris: 2 }]);
-        // US-0951 : de chaque escorte, une Bête morte et une Blessée : mâle (3 contre 2), puis mâle à égalité (2 contre 2).
-        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 1, femelle: 2 });
+        expect([await perdues(client, x), await perdues(client, y)]).toEqual([{ souris: 4 }, { souris: 4 }]);
+        // Mâle (5 contre 4), puis mâle à égalité (4 contre 4), puis femelle (3 contre 4), puis mâle à égalité (3 contre 3).
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 2, femelle: 3 });
       });
     });
 
