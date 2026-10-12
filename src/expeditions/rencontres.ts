@@ -11,7 +11,8 @@
 // (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938, src/expeditions/arrivee-au-foyer.ts) les lit ici, comme le
 // fera le récit (US-0940). US-0943 : la Bête trop forte, vue sans suivre l'Expédition, peut l'attaquer tant qu'elles sont
 // ensemble sur la Case (src/expeditions/attaque.ts) : son attaque est retenue avec sa Rencontre, à son instant, par le
-// même mécanisme, pour le combat (US-0944). Côté serveur uniquement.
+// même mécanisme, pour le combat (US-0944). US-0962 : chaque Expédition présente voit la Bête, de quelque joueur qu'elle
+// soit, même à l'instant où elle en suit une autre. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
@@ -104,9 +105,11 @@ export async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): 
  * retenue avec l'intervalle où elle tombait : rien ne se voit deux fois, quel que soit le découpage du temps. Appelée par
  * le mécanisme du temps, dans la transaction du rattrapage. US-0934 : la Bête suit la première Expédition qui la voit et
  * l'a à portée (lExpeditionSuivie), de ce Territoire ou d'un autre, lue parmi toutes celles présentes sur sa Case depuis
- * son apparition ; dès cet instant, plus aucune autre ne la voit, même dans la même tranche. Le Territoire de l'Expédition
- * suivie retient seul son départ, à l'heure de l'Apprivoisement (emmenerUneBete) : les autres le recalculent, d'où le
- * même résultat quel que soit l'ordre des rattrapages. US-0943 : puis les attaques des Bêtes trop fortes qui tombent dans
+ * son apparition ; après cet instant, plus aucune autre ne la voit, même dans la même tranche. US-0962 : à cet instant,
+ * toutes celles qui sont sur la Case la voient encore, de tous les joueurs, et son Espèce entre au Bestiaire de chacun.
+ * Le Territoire de l'Expédition suivie retient seul son départ, à l'heure de l'Apprivoisement (emmenerUneBete) : les
+ * autres le recalculent, sur les Bêtes lues jusqu'à l'instant de ce départ compris (departCompris), d'où le même
+ * résultat quel que soit l'ordre des rattrapages. US-0943 : puis les attaques des Bêtes trop fortes qui tombent dans
  * [de, a) (retenirLesAttaques).
  */
 export async function retenirLesRencontres(base: Pool | PoolClient, territoireId: number, de: Date, a: Date): Promise<void> {
@@ -114,7 +117,7 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   if (expeditions.length === 0) return;
   const caseIds = [...new Set(expeditions.map((x) => x.caseId))];
   // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
-  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a);
+  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a, { departCompris: true });
   const deNaissance = await betesDeNaissanceDesCases(base, territoireId, caseIds, de, a);
   const betes = caseIds.flatMap((caseId) => [
     ...sauvages.get(caseId)!.map((b) => ({ ...b, caseId, beteDeNaissanceId: null })),
@@ -141,11 +144,13 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
       const vue = vueLe(b, x);
       if (!vue) continue;
       const apprivoisee = suivie?.expeditionId === x.id;
-      // Partie avec une autre Expédition, la Bête n'est plus là pour celles qui la verraient ensuite, ou au même instant.
-      if (suivie && !apprivoisee && vue >= suivie.le) continue;
+      // Partie avec une autre Expédition, la Bête n'est plus là pour celles qui la verraient ensuite ; celles qui la voient
+      // au même instant la voient encore (US-0962).
+      if (suivie && !apprivoisee && vue > suivie.le) continue;
       // US-0943 : vue sans la suivre, la Bête est trop forte pour l'escorte (US-0942) : elle peut attaquer l'Expédition
       // jusqu'à son propre départ, à la fin de sa durée ou avec une autre Expédition, ou celui de l'Expédition, à la fin de
-      // son séjour ou à son rappel ; même vue dans une tranche passée, son attaque peut tomber dans celle-ci.
+      // son séjour ou à son rappel ; même vue dans une tranche passée, son attaque peut tomber dans celle-ci. Vue à l'instant
+      // même où elle en suit une autre (US-0962), elle n'a plus le temps d'attaquer : leur ensemble est vide.
       const fin = new Date(Math.min(b.depart.getTime(), x.depart.getTime(), suivie?.le.getTime() ?? Infinity));
       if (!apprivoisee && vue < a && fin > de) {
         ensembles.push({ expeditionId: x.id, caseId: b.caseId, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, debut: vue, fin });

@@ -300,7 +300,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
     expect(await attaques(longue.id)).toEqual([]);
   }, 60_000);
 
-  it("partie avec une Expédition assez forte arrivée après, la Bête n'attaque plus celle qu'elle n'a pas suivie, ni celle qu'elle suit", async () => {
+  it("partie avec une Expédition assez forte arrivée après, la Bête n'attaque plus celle qu'elle n'a pas suivie, ni celle qu'elle suit, ni celle arrivée en même temps", async () => {
     const chef = await naitrePresDUneBeteRare();
     const { territoireId, caseId, bete } = chef;
     // L'Expédition forte arrive deux heures après la Bête : elle la suit dès son arrivée.
@@ -314,10 +314,15 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
       faibles.push({ ...x, promise: attaquePromise(chef, x) });
     }
     const forte = await poser(territoireId, caseId, arriveeDeLaForte, HEURE, faible, Math.ceil(especes.get(bete.especeId)!.force / faible.force));
+    // Une Expédition trop faible arrivée au même instant que la forte voit encore la Bête (US-0962), sans plus de temps pour
+    // être attaquée.
+    const simultanee = await poser(territoireId, caseId, arriveeDeLaForte, SEJOUR, faible, 2);
 
     await rattraperA(territoireId, apres(bete.depart, JOUR));
     expect((await rencontresDUneExpedition(pool, forte.id)).map((r) => [r.apprivoisee, r.vueLe])).toEqual([[true, arriveeDeLaForte]]);
     expect(await attaques(forte.id)).toEqual([]);
+    expect((await rencontresDUneExpedition(pool, simultanee.id)).map((r) => [r.apprivoisee, r.vueLe])).toEqual([[false, arriveeDeLaForte]]);
+    expect(await attaques(simultanee.id)).toEqual([]);
     for (const x of faibles) {
       const avantLeDepart = attaquePromise(chef, x, arriveeDeLaForte);
       expect({ x: x.id, attaques: await attaques(x.id) }).toEqual({ x: x.id, attaques: attendue(chef, avantLeDepart) });
