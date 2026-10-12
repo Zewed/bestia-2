@@ -279,6 +279,7 @@ describe("le récit du combat (US-0947)", () => {
     le: aParis(9, 14, 5),
     bete: { nom: "Pigeon biset", force: 37_340 },
     escorte: 35_900,
+    sansEscorte: false,
     pertes: [
       { nom: "Poule", nombre: 2 },
       { nom: "Souris grise", nombre: 1 },
@@ -302,7 +303,7 @@ describe("le récit du combat (US-0947)", () => {
   });
 
   it("attaquée sans escorte, l'Expédition ne perd rien : le récit le dit, et la fuite de ses explorateurs", () => {
-    expect(lignes({ combats: [combat({ escorte: 0, pertes: [] })] }).slice(-3)).toEqual([
+    expect(lignes({ combats: [combat({ escorte: 0, sansEscorte: true, pertes: [] })] }).slice(-3)).toEqual([
       "Attaque le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre vos explorateurs, sans escorte.",
       "Aucune perte.",
       "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
@@ -316,6 +317,23 @@ describe("le récit du combat (US-0947)", () => {
       "Pertes : Poule × 2 et Souris grise × 1.",
       "Combat le 10 octobre à 00:30 : Poule, de force 40 000, contre votre escorte, de force 30 000.",
       "Pertes : Souris grise × 4.",
+      "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+    ]);
+  });
+
+  it("une escorte de Bêtes sans arme, de force nulle, reste une escorte : un combat, et ses pertes", () => {
+    expect(lignes({ combats: [combat({ escorte: 0, pertes: [{ nom: "Poule", nombre: 3 }] })] }).slice(-3, -1)).toEqual([
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 0.",
+      "Pertes : Poule × 3.",
+    ]);
+  });
+
+  it("des combats sans leurs pertes, quand le rejeu ne retrouve pas celles retenues : chacun son heure et ses forces, puis les pertes en tout, une fois", () => {
+    const second = combat({ le: aParis(10, 0, 30), bete: { nom: "Poule", force: 40_000 }, escorte: 30_000, pertes: null });
+    expect(lignes({ combats: [combat({ pertes: null }), second], pertesDesCombats: [{ nom: "Souris grise", nombre: 5 }] }).slice(-4)).toEqual([
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37\u00a0340, contre votre escorte, de force 35\u00a0900.",
+      "Combat le 10 octobre à 00:30 : Poule, de force 40\u00a0000, contre votre escorte, de force 30\u00a0000.",
+      "Pertes : Souris grise × 5.",
       "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
     ]);
   });

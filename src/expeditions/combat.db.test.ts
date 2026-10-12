@@ -26,6 +26,8 @@ import { subirLesCombats } from "./pertes";
 import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
 import { retourDUneExpedition } from "./phase";
+import { raconterLeRetour } from "./recit-de-retour";
+import { combatsDUneExpedition } from "./recit-du-combat";
 import { attaquesSubies } from "./rencontres";
 
 const MINUTE_MS = 60_000;
@@ -462,6 +464,52 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
       expect(await perduesSelon((x) => [combat(x, "poule", 5, null, 1), combat(x, "pigeon", 5, 3)])).toBe(5);
       expect(await perduesSelon((x) => [combat(x, "pigeon", 5, null, 2), combat(x, "poule", 5, null, 1)])).toBe(6);
     }, 60_000);
+
+    it("le récit rejoue ces combats tels qu'ils se sont livrés : dans leur ordre, contre les survivantes, et ses pertes en tout sont celles retenues (US-0947)", async () => {
+      // Six Souris grises (2 838) : au même instant, la poule (9 457, une Bête sauvage ordinaire, numéro 3) passe avant le
+      // pigeon (2 216, une Bête de naissance) : elle en emporte cinq, il prend la dernière.
+      await avecDesExpeditions([["souris", 6, 0]], [[["souris", 6]]], async (client, territoireId, [x]) => {
+        const { rows } = await client.query<{ id: number }>(
+          `insert into bete_de_naissance (territoire_id, case_id, espece_id, arrivee, depart) select $1, case_id, 'pigeon', $2, $3 from expedition where id = $4
+           on conflict (territoire_id, case_id) do update set espece_id = excluded.espece_id, arrivee = excluded.arrivee, depart = excluded.depart returning id`,
+          [territoireId, t0, apres(t0, 600), x],
+        );
+        const naissance = rows[0].id;
+        await client.query(
+          `insert into rencontre (expedition_id, numero, bete_de_naissance_id, espece_id, apparue_le, vue_le, attaque_le)
+           values ($1, 3, null, 'poule', $2, $2, $3), ($1, null, $4, 'pigeon', $2, $2, $3)`,
+          [x, t0, apres(t0, 5), naissance],
+        );
+        await subirLesCombats(client, [combat(x, "pigeon", 5, null, naissance), combat(x, "poule", 5, 3)]);
+
+        const { combats, pertes } = await combatsDUneExpedition(client, x);
+        const souris = especes.get("souris")!.force;
+        expect(combats.map((c) => [c.bete.nom, c.le, c.escorte, c.pertes])).toEqual([
+          ["Poule", apres(t0, 5), 6 * souris, [{ especeId: "souris", nom: "Souris grise", nombre: 5 }]],
+          ["Pigeon biset", apres(t0, 5), souris, [{ especeId: "souris", nom: "Souris grise", nombre: 1 }]],
+        ]);
+        expect(pertes).toEqual([{ especeId: "souris", nom: "Souris grise", nombre: (await perdues(client, x)).souris }]);
+        expect(pertes[0].nombre).toBe(6);
+
+        // La règle ou les Espèces ont changé depuis le combat : le rejeu ne retrouve plus les pertes retenues. Le récit dit
+        // chaque combat sans ses pertes, puis les pertes retenues, en tout ; le résumé les compte sur la dernière Bête.
+        await client.query("update expedition_escorte set perdues = 4 where expedition_id = $1", [x]);
+        await raconterLeRetour(client, territoireId, x, apres(t0, 700));
+        const [recit] = await recitsDuTerritoire(client, territoireId);
+        const [entier, heure] = [(n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/\s/g, "\u00a0"), formaterJourEtHeure(apres(t0, 5), "Europe/Paris")];
+        const force = (id: string) => entier(especes.get(id)!.force);
+        expect(recit.texte.split("\n").slice(-4)).toEqual([
+          `Combat le ${heure} : Poule, de force ${force("poule")}, contre votre escorte, de force ${entier(6 * souris)}.`,
+          `Combat le ${heure} : Pigeon biset, de force ${force("pigeon")}, contre votre escorte, de force ${entier(souris)}.`,
+          "Pertes : Souris grise × 4.",
+          "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+        ]);
+        expect(recit.rencontres!.map((r) => [r.especeId, r.perdues])).toEqual([
+          ["poule", undefined],
+          ["pigeon", 4],
+        ]);
+      });
+    });
 
     it("deux Expéditions du même Territoire prennent leurs pertes à l'effectif l'une après l'autre, chacune au sexe le plus nombreux d'alors", async () => {
       // Trois mâles et deux femelles ; chaque escorte de deux souris en perd deux contre une poule.

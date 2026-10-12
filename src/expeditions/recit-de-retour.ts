@@ -74,13 +74,21 @@ export type RetourARaconter = {
   partiesAvant?: string[];
   /** US-0947 : les combats qu'elle a livrés, dans l'ordre où ils se sont livrés (combatsDUneExpedition) ; absents : aucun. */
   combats?: CombatDuRetour[];
+  /**
+   * US-0947 : les Bêtes que son escorte a perdues aux combats, en tout, Espèce par Espèce, dites une fois quand les combats
+   * n'ont pas chacun les leurs (pertes à null) ; absentes : aucune.
+   */
+  pertesDesCombats?: PerteDuRetour[];
 };
+
+/** US-0947 : des Bêtes perdues d'une Espèce de l'escorte, par le nom de l'Espèce. */
+export type PerteDuRetour = { nom: string; nombre: number };
 
 /**
  * US-0947 : un combat tel que le récit du retour le dit (CombatARaconter) : son instant, le nom de l'Espèce de la Bête et sa
- * force, la force de l'escorte à cet instant, et ses pertes, Espèce par Espèce, par leur nom.
+ * force, la force de l'escorte à cet instant, si elle n'avait plus aucune Bête, et ses pertes, Espèce par Espèce, ou null.
  */
-export type CombatDuRetour = Pick<CombatARaconter, "le" | "bete" | "escorte"> & { pertes: { nom: string; nombre: number }[] };
+export type CombatDuRetour = Pick<CombatARaconter, "le" | "bete" | "escorte" | "sansEscorte"> & { pertes: PerteDuRetour[] | null };
 
 /** US-0942 : une Espèce trop forte pour l'escorte : son nom et la force qui manquait à l'escorte (forceQuiManque). */
 export type TropForte = { nom: string; manque: number };
@@ -222,15 +230,20 @@ function resteesSurLeurCase(tropFortes: TropForte[]): string {
 
 /**
  * US-0947 : « Combat le 9 octobre à 14:05 : <Espèce de la Bête>, de force 37 340, contre votre escorte, de force 35 900. »,
- * puis « Pertes : Poule × 2 et Souris grise × 1. » ; attaquée sans escorte, ou après l'avoir toute perdue : « Attaque le
- * … : <Espèce de la Bête>, de force 37 340, contre vos explorateurs, sans escorte. », puis « Aucune perte. ».
+ * puis ses pertes ; attaquée sans escorte, ou après l'avoir toute perdue : « Attaque le … : <Espèce de la Bête>, de force
+ * 37 340, contre vos explorateurs, sans escorte. ». Sans ses pertes (null), la seule ligne du combat.
  */
-function combat({ le, bete, escorte, pertes }: CombatDuRetour): string[] {
-  const contre = escorte > 0 ? `contre votre escorte, de force ${entier(escorte)}` : "contre vos explorateurs, sans escorte";
+function combat({ le, bete, escorte, sansEscorte, pertes }: CombatDuRetour): string[] {
+  const contre = sansEscorte ? "contre vos explorateurs, sans escorte" : `contre votre escorte, de force ${entier(escorte)}`;
   return [
-    `${escorte > 0 ? "Combat" : "Attaque"} le ${formaterJourEtHeure(le, FUSEAU)} : ${bete.nom}, de force ${entier(bete.force)}, ${contre}.`,
-    pertes.length ? `Pertes : ${enumeres(pertes.map((p) => `${p.nom} × ${p.nombre}`))}.` : "Aucune perte.",
+    `${sansEscorte ? "Attaque" : "Combat"} le ${formaterJourEtHeure(le, FUSEAU)} : ${bete.nom}, de force ${entier(bete.force)}, ${contre}.`,
+    ...(pertes ? [pertesDeLEscorte(pertes)] : []),
   ];
+}
+
+/** US-0947 : « Pertes : Poule × 2 et Souris grise × 1. », comme l'escorte dans la liste des Expéditions ; « Aucune perte. ». */
+function pertesDeLEscorte(pertes: readonly PerteDuRetour[]): string {
+  return pertes.length ? `Pertes : ${enumeres(pertes.map((p) => `${p.nom} × ${p.nombre}`))}.` : "Aucune perte.";
 }
 
 /** US-0947 : la ligne qui finit le récit d'un combat : les explorateurs ne combattent jamais, ils fuient (US-0945). */
@@ -261,6 +274,7 @@ export function recitDeRetour({
   autresExpeditions,
   partiesAvant,
   combats,
+  pertesDesCombats,
 }: RetourARaconter): NouveauRecit {
   const sejour = durees.sejour === 0 ? "sans séjour" : `séjour ${formaterMinutes(durees.sejour)}`;
   return {
@@ -277,7 +291,14 @@ export function recitDeRetour({
         ? [vuesSansQueRienNeSuive(vuesSansSuite, tropFortes)]
         : [betesMontrees(rencontres), ...(tropFortes?.length ? [resteesSurLeurCase(tropFortes)] : [])]),
       ...(ramenees?.length ? [betesRamenees(ramenees)] : []),
-      ...(combats?.length ? [...combats.flatMap(combat), FUITE_DES_EXPLORATEURS] : []),
+      ...(combats?.length
+        ? [
+            ...combats.flatMap(combat),
+            // Les pertes en tout, quand les combats n'ont pas chacun les leurs.
+            ...(combats.some((c) => !c.pertes) ? [pertesDeLEscorte(pertesDesCombats ?? [])] : []),
+            FUITE_DES_EXPLORATEURS,
+          ]
+        : []),
     ].join("\n"),
     survenuLe: rentreeLe,
   };
@@ -322,10 +343,14 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   // US-0949 : les Bêtes que le joueur y avait repérées à son départ, parties avant son arrivée.
   const partiesAvant = await betesPartiesAvantLArrivee(client, territoireId, destination, horaires, vues);
   // US-0947 : ses combats, et sur la Rencontre de chaque Bête qui l'a attaquée, les Bêtes perdues, que le résumé compte ;
-  // rien sur celle d'une attaque sans perte, sans escorte.
-  const combats = await combatsDUneExpedition(client, expeditionId);
+  // rien sur celle d'une attaque sans perte. Les combats sans leurs pertes les laissent toutes, en tout, à la dernière.
+  const { combats, pertes: pertesDesCombats } = await combatsDUneExpedition(client, expeditionId);
+  const total = (pertes: readonly PerteDuRetour[]) => pertes.reduce((n, p) => n + p.nombre, 0);
   const perdues = new Map(
-    combats.map((c): [number, number] => [c.rencontreId, c.pertes.reduce((n, p) => n + p.nombre, 0)]).filter(([, n]) => n > 0),
+    (combats.every((c) => c.pertes)
+      ? combats.map((c): [number, number] => [c.rencontreId, total(c.pertes!)])
+      : [[combats.at(-1)!.rencontreId, total(pertesDesCombats)] as [number, number]]
+    ).filter(([, n]) => n > 0),
   );
   await ecrireUnRecit(
     client,
@@ -344,6 +369,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
       autresExpeditions,
       partiesAvant,
       combats,
+      pertesDesCombats,
     }),
     detail.map((r, i) => (perdues.has(vues[i].id) ? { ...r, perdues: perdues.get(vues[i].id) } : r)),
   );
