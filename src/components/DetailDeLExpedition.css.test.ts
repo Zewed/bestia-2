@@ -27,6 +27,12 @@ describe("le détail d'une Expédition sur un téléphone (US-0918)", () => {
     expect(regle(".repliable:not(.deplie) .distance,\n  .repliable:not(.deplie) .detail", mobile)).toContain("display: none;");
   });
 
+  it("en fuite (US-0945), dit « En fuite » seul, pour laisser sa place à la destination ; « Retour · en fuite » ailleurs", () => {
+    expect(regle(".fuiteCourte")).toContain("display: none;");
+    expect(regle(".repliable .fuiteLongue", mobile)).toContain("display: none;");
+    expect(regle(".repliable .fuiteCourte", mobile)).toContain("display: inline;");
+  });
+
   it("dépliée, garde la même ligne, la distance dessous sur toute la largeur", () => {
     expect(regle(".repliable .distance", mobile)).toMatch(/grid-row: 2;[^}]*grid-column: 1 \/ -1;/);
     // La distance vient après la règle du premier rang, qu'elle remplace.

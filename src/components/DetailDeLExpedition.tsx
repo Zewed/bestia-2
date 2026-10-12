@@ -46,6 +46,9 @@ const uneEspece = (nom: string, nombre: number) => `${nom} × ${nombre}`;
  * US-0920 : sous son détail, « Rappeler », à l'aller comme en séjour (décidé le 2026-10-08) : elle fait demi-tour, et la
  * page relue la montre au retour, d'où le bouton disparaît. Il attend la réponse du serveur, grisé : un double clic ne la
  * rappelle qu'une fois. Sans trajet chiffré (US-0912), aucun retour, donc rien à rappeler.
+ *
+ * US-0945 : en fuite après un combat, elle est au retour avec la mention « en fuite », dans la liste comme sur la carte :
+ * « Retour · en fuite » ; sur la ligne repliable d'un téléphone, « En fuite », qui laisse sa place à la destination à 320 px.
  */
 export function DetailDeLExpedition({ expedition, instant, repliable = false }: { expedition: ExpeditionEnCours; instant: Date; repliable?: boolean }) {
   const [deplie, setDeplie] = useState(false);
@@ -67,7 +70,14 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
         </strong>
         <span className={styles.distance}>{casesDuFoyer(destination.distance)}</span>
         <span id={id("phase")} className={styles.phase}>
-          {PHASES[phase]}
+          {phase === "retour" && expedition.enFuite ? (
+            <>
+              <span className={styles.fuiteLongue}>{`${PHASES.retour} · en fuite`}</span>
+              <span className={styles.fuiteCourte}>En fuite</span>
+            </>
+          ) : (
+            PHASES[phase]
+          )}
         </span>
         <span id={id("reste")} className={styles.reste}>
           {reste === null ? (

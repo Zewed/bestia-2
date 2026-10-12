@@ -281,10 +281,13 @@ export function recitDeRetour({
  * Cases levées et ses Rencontres sont donc toutes retenues, les mêmes en direct qu'au rattrapage d'une absence.
  */
 export async function raconterLeRetour(client: PoolClient, territoireId: number, expeditionId: number, rentreeLe: Date): Promise<void> {
-  const { rows } = await client.query<HorairesDUneExpedition & { caseId: number; biome: string; decouverte: boolean; destination: Coordonnees; foyer: Coordonnees }>(
+  const { rows } = await client.query<
+    HorairesDUneExpedition & { caseId: number; biome: string; decouverte: boolean; destination: Coordonnees; foyer: Coordonnees; enFuite: boolean }
+  >(
     `select c.id as "caseId", coalesce(v.nom, b.nom) as biome, json_build_object('q', c.q, 'r', c.r) as destination, json_build_object('q', f.q, 'r', f.r) as foyer,
        exists (select 1 from case_decouverte d where d.territoire_id = x.territoire_id and d.case_id = c.id) as decouverte,
-       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes", x.rappelee_le as "rappeleeLe"
+       x.part_le as "partLe", x.trajet_minutes as "trajetMinutes", x.sejour_minutes as "sejourMinutes", x.rappelee_le as "rappeleeLe",
+       x.en_fuite as "enFuite"
      from expedition x join case_du_monde c on c.id = x.case_id join biome b on b.id = c.biome_id
        left join variante_biome v on v.id = c.variante_id
        join territoire t on t.id = x.territoire_id join case_du_monde f on f.id = t.foyer_case_id
@@ -293,8 +296,10 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   );
   // Après la bascule d'un Monde (US-0414), une Expédition déjà partie garde sa destination dans l'ancien : sa distance au
   // nouveau Foyer n'y a pas de sens, comme son chemin (leverLeBrouillard) ; cas rare, accepté.
-  const { caseId, biome, decouverte, destination, foyer, ...horaires } = rows[0];
-  const rappel = rappelDUneExpedition(horaires);
+  const { caseId, biome, decouverte, destination, foyer, enFuite, ...horaires } = rows[0];
+  // US-0945 : son demi-tour en fuite après un combat n'est pas un rappel du joueur : aucune ligne ne le dit ici, le récit
+  // du combat le dira (US-0947) ; ses durées sont celles de son séjour écourté.
+  const rappel = enFuite ? null : rappelDUneExpedition(horaires);
   // Un retour n'est programmé qu'au trajet chiffré (programmerLeRetour, migration 0052) : jamais atteint.
   const durees = dureesReelles(horaires, rentreeLe);
   if (!durees) throw new Error(`Retour sans trajet chiffré pour l'Expédition ${expeditionId}.`);

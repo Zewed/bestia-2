@@ -3,7 +3,7 @@
 // ouverte, au retour du joueur ou par la tâche planifiée : le brouillard levé (US-0914), les Rencontres (US-0932), les
 // Bêtes qui la suivent (US-0934), le Bestiaire (US-0933), le retour (US-0916), son récit (US-0917), et le rappel
 // (US-0920), à l'aller ou en séjour. Les mêmes Expéditions du même Territoire sont vécues ici des trois manières, et tout ce
-// qu'elles laissent se compare. Les combats (étape 41) n'existent pas encore.
+// qu'elles laissent se compare. Aucune n'est attaquée : la fuite (US-0945) se compare dans src/expeditions/combat.db.test.ts.
 import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { bestiaireDuTerritoire, type EspeceAuBestiaire } from "@/bestiaire/bestiaire";
@@ -292,7 +292,17 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     const revelees = (p: Plan) => casesRevelees(foyer, p.destination, p.horaires, p.retour);
     const dejaVues = new Set([...(await casesDecouvertes(pool, territoireId)), ...revelees(a), ...revelees(b)].map(cle));
     const neuves = (p: Plan) => revelees(p).filter((x) => anneau(x) <= MONDE_RAYON && !dejaVues.has(cle(x))).length;
-    const versC = (await aLEcart(chef, 3)).map((x) => prevoir(chef, "C", x, apres(premierDepart, 40), 30));
+    /**
+     * US-0945 : si aucune Bête plus rare que commune ne se montre sur la Case de `p`, sans escorte, de son arrivée à
+     * `jusqua` : aucune ne l'attaque, et elle ne fuit pas (src/expeditions/fuite.ts).
+     */
+    const calme = async (p: Plan, jusqua = sejourDUneExpedition(p.horaires)!.fin) =>
+      (await betesSauvagesDUneCase(pool, p.caseId, sejourDUneExpedition(p.horaires)!.debut, jusqua)).every((x) => x.rareteId === "commune");
+    const versC: Plan[] = [];
+    for (const x of await aLEcart(chef, 3)) {
+      const p = prevoir(chef, "C", x, apres(premierDepart, 40), 30);
+      if (await calme(p)) versC.push(p);
+    }
     const c = versC.reduce((x, y) => (neuves(y) > neuves(x) ? y : x));
     expect(neuves(c)).toBeGreaterThan(0);
     /** L'Expédition `p`, rappelée par le joueur à l'instant `le` (US-0920) : ses horaires, et son retour, en découlent. */
@@ -307,16 +317,20 @@ describe.skipIf(!URL_TEST)("une Expédition vécue en mon absence (US-0922, sur 
     expect(sejourDUneExpedition(d.horaires)).toBeNull();
     // E, sans escorte, part une heure après A, à 2 à 4 Cases, pour quatre heures là où se montrent le plus de Bêtes, et le
     // joueur la rappelle pendant son séjour, 2 h 03 après son arrivée : celles d'après ne la trouvent plus.
-    const versE = [...(await aLEcart(chef, 2)), ...(await aLEcart(chef, 3)), ...(await aLEcart(chef, 4))]
-      .filter((x) => ![a.caseId, c.caseId].includes(x.id))
-      .map((x) => prevoir(chef, "E", x, apres(premierDepart, 60), 4 * HEURE));
+    // US-0945 : jusqu'à son rappel, sans qu'aucune Bête ne l'attaque.
+    const rappelDeE = (p: Plan) => apres(sejourDUneExpedition(p.horaires)!.debut, 2 * HEURE + 3);
+    const versE: Plan[] = [];
+    for (const x of [...(await aLEcart(chef, 2)), ...(await aLEcart(chef, 3)), ...(await aLEcart(chef, 4))]) {
+      const p = prevoir(chef, "E", x, apres(premierDepart, 60), 4 * HEURE);
+      if (![a.caseId, c.caseId].includes(x.id) && (await calme(p, rappelDeE(p)))) versE.push(p);
+    }
     const animation = new Map<Plan, number>();
     for (const p of versE) {
       const { debut, fin: repart } = sejourDUneExpedition(p.horaires)!;
       animation.set(p, (await betesSauvagesDUneCase(pool, p.caseId, debut, repart)).length);
     }
     const e0 = versE.reduce((x, y) => (animation.get(y)! > animation.get(x)! ? y : x));
-    const e = rappelee(e0, apres(sejourDUneExpedition(e0.horaires)!.debut, 2 * HEURE + 3));
+    const e = rappelee(e0, rappelDeE(e0));
     plans = [a, b, c, d, e];
     // Elles ne rentrent pas dans l'ordre de leurs départs : C, partie après A et B, rentre la première ; A, la dernière.
     expect(parRetour()[0].lettre).toBe("C");

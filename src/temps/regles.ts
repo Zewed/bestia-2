@@ -18,9 +18,14 @@ export const REGLES: Record<ElementSuivi, Regles> = {
   monde: {},
   territoire: {
     evoluer: async (client, id, depuis, jusqua) => {
-      await produire(client, id, depuis, jusqua);
-      await retenirLesRencontres(client, id, depuis, jusqua);
-      await leverLeBrouillard(client, id, depuis, jusqua);
+      // US-0945 : les Rencontres d'abord : une attaque met son Expédition en fuite, et avance son retour ; le temps s'arrête
+      // alors à son instant (arret), et reprend après, le retour à son heure exacte.
+      const arret = await retenirLesRencontres(client, id, depuis, jusqua);
+      if (arret.getTime() > depuis.getTime()) {
+        await produire(client, id, depuis, arret);
+        await leverLeBrouillard(client, id, depuis, arret);
+      }
+      return arret;
     },
     evenements: { [ARRIVEE_VOYAGEUR]: arriveeDUnVoyageur, [DEPART_VOYAGEUR]: departDUnVoyageur, [RETOUR_EXPEDITION]: rentrerAuFoyer },
   },

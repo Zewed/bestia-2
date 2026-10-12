@@ -38,6 +38,11 @@
   font-weight: var(--graisse-titre);
 }
 
+/* US-0945 : en fuite, « Retour · en fuite » ; « En fuite » attend la ligne repliable d'un téléphone. */
+.fuiteCourte {
+  display: none;
+}
+
 /* Le temps restant, au bout : ses chiffres ne bougent pas la ligne quand ils changent. */
 .reste {
   grid-row: 1 / span 2;
@@ -156,6 +161,15 @@
 
   .repliable .annonce {
     display: none;
+  }
+
+  /* US-0945 : en fuite, « En fuite » seul : « Retour · en fuite » ne laisserait rien de la destination à 320 px. */
+  .repliable .fuiteLongue {
+    display: none;
+  }
+
+  .repliable .fuiteCourte {
+    display: inline;
   }
 
   /* Repliée, la destination se coupe plutôt que de passer à la ligne ; la distance et le détail attendent. */
