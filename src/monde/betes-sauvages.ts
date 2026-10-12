@@ -2,7 +2,8 @@
 // Bête par apparition, que les joueurs soient là ou non ; plusieurs peuvent s'y trouver en même temps. Rien n'en est
 // écrit en base : les apparitions d'une Case sont une fonction de la graine de son Monde, de sa place et du temps du
 // jeu, calculée à la demande, pour une Case et une période. Aucune ne se voit sur la carte : seules les Expéditions
-// présentes sur sa Case la verront (étape 40). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
+// présentes sur sa Case la verront (étape 40) ; US-0948 : celle qu'une Expédition a vue sans qu'elle la suive y est
+// ensuite repérée, pour son seul joueur (src/expeditions/betes-reperees.ts). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
 // seule une Bête partie plus tôt, en suivant une Expédition, laisse une trace en base (bete_partie). US-0927 : sa Rareté
 // se tire selon l'Anneau de sa Case ; US-0928 : son Espèce, parmi celles de cette Rareté qui vivent dans le Biome de sa
 // Case. US-0930 : tout se compte en temps du jeu, par tranches fixes : pour une Case et une période, les mêmes Bêtes,
@@ -197,8 +198,17 @@ type CaseEnBase = Coordonnees & {
  * seule, à la demande. Aucune sur une Case qui appartient à un Territoire ; une Case inconnue n'en a pas non plus.
  * US-0926 : une Bête partie en suivant une Expédition n'y est plus dès son départ. US-0927 : l'Anneau de chaque Case se
  * tire de la forme de son Monde. US-0928 : les Espèces sont celles de la base, lues une fois pour toutes les Cases.
+ * US-0962 : `departCompris`, celle qui a suivi une Expédition y compte encore à l'instant même de son départ : pour les
+ * Rencontres, où toutes les Expéditions présentes à cet instant la voient, que le Territoire de l'Expédition suivie ait
+ * déjà retenu ce départ ou non.
  */
-export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: number[], de: Date, a: Date): Promise<Map<number, BeteSauvage[]>> {
+export async function betesSauvagesDesCases(
+  base: Pool | PoolClient,
+  caseIds: number[],
+  de: Date,
+  a: Date,
+  { departCompris = false }: { departCompris?: boolean } = {},
+): Promise<Map<number, BeteSauvage[]>> {
   // US-0932 : l'une après l'autre : le mécanisme du temps l'appelle avec le client de sa transaction, où deux requêtes
   // ne partent pas à la fois.
   const { rows } = await base.query<CaseEnBase>(
@@ -216,7 +226,7 @@ export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: nu
       const c = parCase.get(id);
       if (!c?.libre) return [id, []];
       const laCase = { q: c.q, r: c.r, graine: Number(c.graine), anneau: anneauDUneCase(c, c.forme), biome: c.biome };
-      const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(p.partie_le)]));
+      const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(new Date(p.partie_le).getTime() + (departCompris ? 1 : 0))]));
       return [id, betesSauvages(laCase, de, a, rangees, { parties })];
     }),
   );
