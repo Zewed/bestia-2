@@ -221,8 +221,9 @@ describe.skipIf(!URL_TEST)("les Bêtes repérées que la carte reçoit, sur base
   });
 
   it("n'est visible que du joueur dont l'Expédition l'a vue, pas de son voisin", async () => {
-    const moi = await voirUneBeteTropForte();
+    // Le voisin naît d'abord : né après le choix de la Case, son Foyer pourrait s'y poser, et la Bête n'y serait plus.
     const voisin = await naitre();
+    const moi = await voirUneBeteTropForte();
     await rattraperA(moi.territoireId, moi.retour);
     await rattraperA(voisin.territoireId, moi.retour);
     expect(await surLaCarte(moi.territoireId, moi.retour)).toEqual([repereDe(moi.place, moi.bete)]);
@@ -240,8 +241,9 @@ describe.skipIf(!URL_TEST)("les Bêtes repérées que la carte reçoit, sur base
   });
 
   it("disparaît dès qu'elle a suivi une autre Expédition, même celle d'un voisin qui n'a pas encore ouvert de page, sans récit", async () => {
-    const moi = await voirUneBeteTropForte();
+    // Le voisin naît d'abord, comme ci-dessus.
     const voisin = await naitre();
+    const moi = await voirUneBeteTropForte();
     // Le voisin vient sur sa Case une demi-heure après le retour du joueur, assez fort pour qu'elle le suive (US-0934).
     const arrivee = apres(moi.retour, 30);
     await poser(voisin.territoireId, moi.caseId, arrivee, moi.bete.especeId, 1);
