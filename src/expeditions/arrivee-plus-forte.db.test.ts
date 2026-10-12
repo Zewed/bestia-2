@@ -1,8 +1,8 @@
 // US-0966 : une Bête restée sur sa Case, trop forte pour l'escorte qui l'a vue (US-0942), suit une Expédition assez forte
 // arrivée ensuite, d'un autre joueur ou du même, dès son arrivée ; quand plusieurs assez fortes arrivent au même instant,
 // le tirage proportionnel à la force (US-0963) désigne la seule qui l'emporte. L'Expédition déjà présente qui la perd
-// ainsi n'est plus attaquée (US-0943), et son récit retient l'heure du départ de la Bête (US-0950). Le même résultat quel
-// que soit le Territoire mis à l'heure le premier, d'un bloc ou page ouverte.
+// ainsi n'est plus attaquée (US-0943), et son récit dit qu'elle a suivi une autre Expédition, et à quelle heure (US-0964,
+// US-0950). Le même résultat quel que soit le Territoire mis à l'heure le premier, d'un bloc ou page ouverte.
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { bestiaireDuTerritoire } from "@/bestiaire/bestiaire";
@@ -154,6 +154,8 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
     );
     return promise && promise < ensuite() ? [promise] : [];
   };
+  /** Le nom de l'Espèce de la Bête, tel que les récits le disent. */
+  const nomDeLEspece = async () => (await pool.query<{ nom: string }>("select nom from espece where id = $1", [bete.especeId])).rows[0].nom;
   /** La Rencontre de la Bête dans le récit de retour de l'Expédition d'un joueur arrivée à `arrivee`. */
   const rencontreDuRecit = (recits: Awaited<ReturnType<typeof recitsDuTerritoire>>, arrivee: Date) =>
     recits.flatMap((r) => r.rencontres ?? []).find((r) => r.especeId === bete.especeId && r.vueLe.getTime() === Math.max(arrivee.getTime(), bete.arrivee.getTime()));
@@ -227,10 +229,11 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
     expect(joueurs.B.recits.map((r) => r.texte.split("\n").at(-1))).toEqual([expect.stringMatching(/^Bête ramenée au Foyer : /)]);
     // Partie avec B, elle n'attaque plus A : seule l'attaque que ses tirages lui promettaient avant l'arrivée de B.
     expect(vecues[0].attaques).toEqual(attaquesAttendues(vecues[0]));
-    // A, qui la perd, l'apprend à son retour : son récit dit qu'elle n'est pas restée, et l'heure de son départ.
+    // A, qui la perd, l'apprend à son retour : son récit dit qu'elle a suivi une autre Expédition (US-0964), et à quelle
+    // heure (« Partie à … avec une autre Expédition »).
     const perdue = rencontreDuRecit(joueurs.A.recits, posees[0].arrivee)!;
-    expect(perdue.issue).not.toMatch(/^(apprivoisee|restee)$/);
-    expect(perdue.repartieLe).toEqual(ensuite());
+    expect([perdue.issue, perdue.repartieLe]).toEqual(["emmenee", ensuite()]);
+    expect(joueurs.A.recits[0].texte.split("\n")).toContain(`${await nomDeLEspece()} a suivi une autre Expédition.`);
     // Le même résultat B mis à l'heure le premier, et page ouverte, toutes les vingt minutes.
     for (const maniere of [{ ordre: ["B", "A"] }, { ordre: ["A", "B"], pas: 20 }] as Maniere[]) {
       const autre = await vivre(posees, maniere);
@@ -249,7 +252,8 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
     expect([joueurs.A.effectif, joueurs.A.etat]).toEqual([1, "apprivoisee"]);
     expect(vecues[0].attaques).toEqual(attaquesAttendues(vecues[0]));
     expect(joueurs.A.recits).toHaveLength(2);
-    expect(rencontreDuRecit(joueurs.A.recits, posees[0].arrivee)?.repartieLe).toEqual(ensuite());
+    const perdue = rencontreDuRecit(joueurs.A.recits, posees[0].arrivee)!;
+    expect([perdue.issue, perdue.repartieLe]).toEqual(["emmenee", ensuite()]);
     expect(rencontreDuRecit(joueurs.A.recits, ensuite())?.issue).toBe("apprivoisee");
   }, 60_000);
 
