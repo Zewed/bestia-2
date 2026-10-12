@@ -9,6 +9,98 @@
   margin-top: 10px;
 }
 
+/*
+ * US-0813 : la quantité, son étiquette au-dessus, puis « − », le champ, « + » et « Max » d'une ligne, au-dessus du bouton ;
+ * la ligne ne déborde pas du bloc, même sur un écran de 320 px : le champ lui cède sa largeur.
+ */
+.quantite {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.etiquette {
+  color: var(--texte-2);
+  font-size: 13.5px;
+  font-weight: var(--graisse-titre);
+}
+
+.reglage {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Au pouce, comme l'escorte d'une Expédition : chaque bouton a sa surface de 44 px. */
+.pas {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc);
+  color: var(--encre);
+  font: inherit;
+  font-size: 18px;
+  font-weight: var(--graisse-titre);
+  cursor: pointer;
+}
+
+.max {
+  width: auto;
+  min-width: 44px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+/* Grisés, ils restent à leur place sans réagir. */
+.pas:disabled {
+  border-color: var(--trait-doux);
+  background: var(--bloc-2);
+  color: var(--galet);
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .pas:enabled:hover {
+    border-color: var(--galet);
+    background: var(--bloc-3);
+  }
+}
+
+.pas:focus-visible,
+.champ:focus-visible {
+  outline: 2px solid var(--encre);
+  outline-offset: 2px;
+}
+
+/* Le champ, qui cède de sa largeur sur un petit écran ; 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page. */
+.champ {
+  flex: 0 1 120px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--trait-doux);
+  border-radius: var(--arrondi-petit);
+  background: var(--bloc-2);
+  color: var(--encre);
+  font: inherit;
+  font-size: 16px;
+  font-weight: var(--graisse-titre);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+/* Une quantité refusée : contour et message dans la couleur d'alerte, le message en clair. */
+.champ[aria-invalid="true"] {
+  border-color: var(--mauvais);
+}
+
 /* Le bouton « Élever », au pouce, sur l'Encre ; grisé tant que l'Élevage ne se lance pas. */
 .bouton {
   min-height: 44px;
@@ -32,7 +124,7 @@
   outline-offset: 2px;
 }
 
-/* Le refus, juste sous le bouton, dans la couleur d'alerte, son texte en clair : jamais la couleur seule. */
+/* Le refus, juste sous le bouton (ou sous le champ), dans la couleur d'alerte, son texte en clair : jamais la couleur seule. */
 .refus {
   margin-top: 8px;
   color: var(--mauvais);

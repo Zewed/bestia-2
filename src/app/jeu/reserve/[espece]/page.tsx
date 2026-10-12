@@ -7,6 +7,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
+import { maxAElever } from "@/monde/cout-d-elevage";
 import { especeDuTerritoire } from "@/monde/effectif";
 import { elevageAcquis } from "@/monde/elevage";
 import { placesDeLHabitat } from "@/monde/habitat";
@@ -59,7 +60,7 @@ export default async function FicheDeLEspece({
           Fermer
         </Link>
       </article>
-      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} places={await placesDeLHabitat(getPool(), territoireId)} /> : null}
+      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} places={await placesDeLHabitat(getPool(), territoireId)} max={await maxAElever(getPool(), territoireId, espece)} /> : null}
     </main>
   );
 }

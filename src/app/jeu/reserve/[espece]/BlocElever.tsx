@@ -1,10 +1,11 @@
 "use client";
 
-import { useActionState, useId } from "react";
+import { useActionState, useId, useState } from "react";
 import { Bloc } from "@/components/Bloc";
 import { PlacesDeLHabitat } from "@/components/PlacesDeLHabitat";
 import { type EtatDeLElevage, elever } from "./actions";
 import styles from "./BlocElever.module.css";
+import { lireUneQuantite, QUANTITE_LA_PLUS_GRANDE, QUANTITE_REFUSEE } from "./quantite";
 
 const SANS_REFUS: EtatDeLElevage = { refus: null };
 
@@ -12,18 +13,75 @@ const SANS_REFUS: EtatDeLElevage = { refus: null };
  * US-0812 : le bloc « Élever » de la fiche d'une Espèce dont le joueur a réuni le Couple (la fiche ne le pose que pour
  * elles), ancré en « #elever » pour que le récit du Couple réuni y mène (US-0958). Son bouton « Élever » demande
  * l'Élevage de l'Espèce (actions.ts), qui refuse toute Espèce sans Couple et le dit, juste dessous ; il reste grisé tant
- * que l'Élevage ne se lance pas : l'éleveur (US-0843), la quantité (US-0813) et le lancement (US-0815) arrivent ensuite.
+ * que l'Élevage ne se lance pas : l'éleveur (US-0843) et le lancement (US-0815) arrivent ensuite.
  * US-0822 : au-dessus du bouton, le même compteur des Places de l'Habitat du Foyer que la page Bêtes.
+ * US-0813 : la quantité de Bêtes à élever, 1 d'abord, que « − » et « + » changent d'une Bête et que « Max » porte au plus
+ * grand nombre que les Stocks de Nourriture permettent de payer (`max`, cout-d-elevage.ts) ; une quantité nulle, négative
+ * ou non entière est refusée, dite sous le champ dès qu'elle s'écrit (ou, vide, quand on le quitte).
  */
-export function BlocElever({ especeId, places }: { especeId: string; places: { occupees: number; total: number } }) {
+export function BlocElever({ especeId, places, max }: { especeId: string; places: { occupees: number; total: number }; max: number }) {
   const [{ refus }, envoyer] = useActionState(elever, SANS_REFUS);
   const idRefus = useId();
+  const idQuantite = useId();
+  const idQuantiteRefusee = useId();
+  const [texte, setTexte] = useState("1");
+  const [quitte, setQuitte] = useState(false);
+  const quantite = lireUneQuantite(texte);
+  const refusee = quantite === null && (texte.trim() !== "" || quitte);
+  const plafond = Math.min(max, QUANTITE_LA_PLUS_GRANDE);
+  const choisir = (n: number) => {
+    setTexte(String(n));
+    setQuitte(false);
+  };
   return (
     <div id="elever" className={styles.elever}>
       <Bloc titre="Élever">
         <PlacesDeLHabitat {...places} />
         <form action={envoyer} className={styles.formulaire}>
           <input type="hidden" name="espece" value={especeId} />
+          <div className={styles.quantite}>
+            <label htmlFor={idQuantite} className={styles.etiquette}>
+              Quantité
+            </label>
+            <div className={styles.reglage}>
+              <button type="button" className={styles.pas} aria-label="Une Bête de moins" disabled={quantite === null || quantite <= 1} onClick={() => choisir(quantite! - 1)}>
+                −
+              </button>
+              <input
+                id={idQuantite}
+                name="quantite"
+                className={styles.champ}
+                inputMode="numeric"
+                autoComplete="off"
+                enterKeyHint="done"
+                value={texte}
+                onChange={(e) => {
+                  setTexte(e.target.value);
+                  setQuitte(false);
+                }}
+                onBlur={() => setQuitte(true)}
+                aria-invalid={refusee ? true : undefined}
+                aria-describedby={refusee ? idQuantiteRefusee : undefined}
+              />
+              <button
+                type="button"
+                className={styles.pas}
+                aria-label="Une Bête de plus"
+                disabled={quantite !== null && quantite >= QUANTITE_LA_PLUS_GRANDE}
+                onClick={() => choisir((quantite ?? 0) + 1)}
+              >
+                +
+              </button>
+              <button type="button" className={`${styles.pas} ${styles.max}`} disabled={plafond < 1} onClick={() => choisir(plafond)}>
+                Max
+              </button>
+            </div>
+            {refusee ? (
+              <p id={idQuantiteRefusee} className={styles.refus} role="alert">
+                {QUANTITE_REFUSEE}
+              </p>
+            ) : null}
+          </div>
           <button type="submit" className={styles.bouton} disabled aria-describedby={refus ? idRefus : undefined}>
             Élever
           </button>
