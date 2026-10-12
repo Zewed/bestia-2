@@ -8,7 +8,9 @@ import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
 import { especeDuTerritoire } from "@/monde/effectif";
+import { elevageAcquis } from "@/monde/elevage";
 import { caracteristiqueAffichee as nombre } from "@/monde/quantite";
+import { BlocElever } from "./BlocElever";
 import styles from "./page.module.css";
 
 // Le titre reste celui de la Réserve : le nom d'une Espèce ne se lit pas sans la garde.
@@ -80,6 +82,7 @@ export default async function FicheDeLEspece({
           Fermer
         </Link>
       </article>
+      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} /> : null}
     </main>
   );
 }

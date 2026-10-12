@@ -141,4 +141,20 @@ describe.skipIf(!URL_TEST)("ouvrir la fiche d'une Espèce, sur base (US-0803)", 
     // Rien du Territoire n'y entre : un autre joueur lit les mêmes valeurs pour la même Espèce.
     expect(await caracteristiques(b.territoireId, "pigeon")).toEqual(attendues);
   });
+
+  it("ne propose le bloc « Élever » que sur la fiche d'une Espèce dont le joueur a réuni le Couple (US-0812)", async () => {
+    const t = await naitre();
+    await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, 'poule', 'femelle', 3)", [t.territoireId]);
+    await reunir(t, "souris");
+    /** Le bloc « Élever » de la fiche, s'il y est. */
+    const elever = async (espece: string) => {
+      garde.exigerCompte.mockResolvedValue({ id: 1, email: "nom@exemple.fr", nomDeChef: "Ourse", territoireId: t.territoireId, recitLu: true });
+      const html = renderToStaticMarkup(await FicheDeLEspece({ params: Promise.resolve({ espece }), searchParams: Promise.resolve({}) }));
+      return /<div id="elever"[^>]*><section[^>]*><h2[^>]*>Élever<\/h2>/.test(html);
+    };
+
+    expect(await elever("souris")).toBe(true);
+    // Trois poules, sans Couple : leur fiche s'ouvre (US-0810), sans Élevage.
+    expect(await elever("poule")).toBe(false);
+  });
 });
