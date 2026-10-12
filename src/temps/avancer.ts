@@ -17,7 +17,8 @@ export type Regles = {
   /**
    * L'évolution continue entre deux instants sans événement au milieu (production, consommation…). US-0945 : elle peut
    * s'arrêter avant `jusqua`, à l'instant où elle a programmé ou avancé un événement (une fuite avance un retour), et rend
-   * alors l'instant où elle s'est arrêtée : le temps reprend de là, l'événement à son rang.
+   * alors l'instant où elle s'est arrêtée : le temps reprend de là, l'événement à son rang. Un événement qu'elle programme
+   * ou déplace sans s'arrêter plus tôt prend aussi son rang, au plus tôt à l'instant où elle s'est arrêtée.
    */
   evoluer?: (client: PoolClient, id: number, depuis: Date, jusqua: Date) => Promise<void | Date>;
   /** Ce que fait chaque type d'événement, à son instant exact. */
@@ -125,6 +126,9 @@ export async function avancer(
           }
           arretSansAvancer = false;
           curseur = instant;
+          // L'évolution a pu programmer ou déplacer un événement sans s'arrêter plus tôt : la file se relit, et chacun
+          // s'applique une fois, à son rang.
+          if (file[0] !== suivant) continue;
         }
         if (!suivant) break;
         file.shift();

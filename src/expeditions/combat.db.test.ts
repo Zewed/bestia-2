@@ -360,6 +360,20 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect(recit.texte).toContain(`séjour ${formaterMinutes(Math.ceil((le.getTime() - apres(x.partLe, x.aller).getTime()) / MINUTE_MS))}`);
   }, 60_000);
 
+  it("une attaque dont la Rencontre manque ne s'écrit pas : l'Expédition ne fuit pas, et le temps ne s'arrête pas sans fin", async () => {
+    const chef = await naitrePresDUneBeteRare();
+    const x = (await lancerJusquALAttaque(chef, new Map())).at(-1)!;
+    // Sa Rencontre retenue, puis effacée, comme une donnée héritée incohérente : rien ne peut porter son attaque.
+    await rattraperA(chef.territoireId, apres(x.attaque!, -1));
+    await pool.query("delete from rencontre where expedition_id = $1", [x.id]);
+
+    await rattraperA(chef.territoireId, x.retour);
+    expect(await attaquesSubies(pool, x.id)).toEqual([]);
+    expect(await rentreeLe(x.id)).toEqual(x.retour);
+    const { rows } = await pool.query("select rappelee_le, en_fuite from expedition where id = $1", [x.id]);
+    expect(rows[0]).toEqual({ rappelee_le: null, en_fuite: false });
+  }, 60_000);
+
   describe("les mêmes pertes, au même instant, page ouverte, au retour du joueur ou par la tâche planifiée", () => {
     /** Ce que le combat laisse au Territoire : chaque escorte, et ses pertes, et l'effectif de chaque Espèce, par sexe. */
     const bilan = async (jeu: Pool, territoireId: number) => ({

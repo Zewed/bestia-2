@@ -183,9 +183,10 @@ describe.skipIf(!URL_TEST)("mécanisme unique du temps (sur base)", () => {
   describe("une évolution qui s'arrête plus tôt, après avoir avancé un événement (US-0945)", () => {
     /**
      * Le compteur d'essai, et une rupture à `rupture` heures : l'évolution qui la traverse s'arrête à son instant, et
-     * avance alors le relevé programmé à 8 h à une heure après la rupture, comme une fuite avance un retour.
+     * déplace alors le relevé programmé à `vers` heures, une heure après la rupture par défaut, comme une fuite avance un
+     * retour.
      */
-    function avecRupture(rupture: number) {
+    function avecRupture(rupture: number, vers = rupture + 1) {
       const essai = compteurDEssai();
       const rompus = new Set<number>();
       const regles: Regles = {
@@ -196,7 +197,7 @@ describe.skipIf(!URL_TEST)("mécanisme unique du temps (sur base)", () => {
           rompus.add(id);
           await essai.regles.evoluer!(client, id, depuis, instant);
           const { rows } = await client.query<{ id: string }>("select id from evenement where element = 'monde' and element_id = $1 and type = 'noter'", [id]);
-          await deplacerEvenement(client, "monde", id, Number(rows[0].id), heures(rupture + 1));
+          await deplacerEvenement(client, "monde", id, Number(rows[0].id), heures(vers));
           return instant;
         },
       };
@@ -217,6 +218,69 @@ describe.skipIf(!URL_TEST)("mécanisme unique du temps (sur base)", () => {
       expect(parHeure.releves).toEqual([{ id: b, heure: 4.5, stock: 45 }]);
       expect(dUnCoup.stock.get(a)).toBeCloseTo(100, 9);
       expect(parHeure.stock.get(b)).toBeCloseTo(100, 9);
+    });
+
+    it("fait entrer dans la file un événement d'après la fin avancé avant elle, et l'applique dans la même avancée", async () => {
+      const essai = avecRupture(3.5);
+      const id = await mondeDEssai();
+      await programmerEvenement(pool, "monde", id, heures(20), "noter");
+
+      await avancer(pool, "monde", id, essai.regles, heures(10));
+
+      expect(essai.releves).toEqual([{ id, heure: 4.5, stock: 45 }]);
+      expect(await lireMarquePage(pool, "monde", id)).toEqual(heures(10));
+    });
+
+    it("fait sortir de la file un événement repoussé après la fin : il attend son instant", async () => {
+      const essai = avecRupture(3.5, 12);
+      const id = await mondeDEssai();
+      await programmerEvenement(pool, "monde", id, heures(8), "noter");
+
+      await avancer(pool, "monde", id, essai.regles, heures(10));
+      expect(essai.releves).toEqual([]);
+      await avancer(pool, "monde", id, essai.regles, heures(13));
+      expect(essai.releves).toEqual([{ id, heure: 12, stock: 120 }]);
+    });
+
+    it("ne déplace ni un événement déjà traité, ni celui d'un autre élément", async () => {
+      const essai = compteurDEssai();
+      const [id, autre] = [await mondeDEssai(), await mondeDEssai()];
+      await programmerEvenement(pool, "monde", id, heures(1), "noter");
+      await programmerEvenement(pool, "monde", autre, heures(5), "noter");
+      const { rows } = await pool.query<{ id: string; elementId: number }>(
+        `select id, element_id as "elementId" from evenement where element = 'monde' and element_id = any($1::int[])`,
+        [[id, autre]],
+      );
+      const deId = Number(rows.find((r) => r.elementId === id)!.id);
+      const deLAutre = Number(rows.find((r) => r.elementId === autre)!.id);
+      await avancer(pool, "monde", id, essai.regles, heures(2));
+
+      expect(await deplacerEvenement(pool, "monde", id, deId, heures(3))).toBe(false);
+      expect(await deplacerEvenement(pool, "monde", id, deLAutre, heures(3))).toBe(false);
+      expect(await deplacerEvenement(pool, "monde", autre, deLAutre, heures(3))).toBe(true);
+    });
+
+    it("relit la file quand l'évolution y a déplacé un événement sans s'arrêter plus tôt : chacun s'applique une fois", async () => {
+      const essai = compteurDEssai();
+      const id = await mondeDEssai();
+      await programmerEvenement(pool, "monde", id, heures(5), "prelevement");
+      await programmerEvenement(pool, "monde", id, heures(8), "noter");
+      let deplace = false;
+      const regles: Regles = {
+        ...essai.regles,
+        evoluer: async (client, monde, depuis, jusqua) => {
+          await essai.regles.evoluer!(client, monde, depuis, jusqua);
+          if (deplace || jusqua.getTime() !== heures(5).getTime()) return;
+          deplace = true;
+          // Le relevé de 8 h avancé à 4 h, en arrivant au prélèvement de 5 h, sans arrêt anticipé : il s'applique à 5 h.
+          const { rows } = await client.query<{ id: string }>("select id from evenement where element = 'monde' and element_id = $1 and type = 'noter'", [monde]);
+          await deplacerEvenement(client, "monde", monde, Number(rows[0].id), heures(4));
+        },
+      };
+
+      expect(await avancer(pool, "monde", id, regles, heures(10))).toMatchObject({ evenements: 2 });
+      expect(essai.releves).toEqual([{ id, heure: 5, stock: 50 }]);
+      expect(essai.stock.get(id)).toBeCloseTo(75, 9);
     });
 
     it("n'avance pas au-delà d'une évolution qui s'arrête sans fin au même instant", async () => {

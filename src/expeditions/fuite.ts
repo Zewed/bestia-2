@@ -2,8 +2,14 @@
 // rappelée en séjour (US-0920) : son retour dure le temps de l'aller (src/expeditions/phase.ts), avec tous ses
 // explorateurs, jamais blessés ni tués, et les Bêtes de son escorte qui restent ; attaquée sans escorte, elle fuit de même,
 // sans rien perdre. Sa fuite s'écrit comme un rappel, à l'instant de l'attaque, marquée en fuite (expedition.en_fuite), et
-// son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact. Côté
-// serveur uniquement.
+// son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact.
+//
+// Cas accepté, jusqu'à US-0965 : la fuite s'écrit au rattrapage du Territoire de l'Expédition. Un autre Territoire qui
+// partage sa Case, rattrapé avant lui au-delà de la fuite, la voit encore sur la Case jusqu'à la fin prévue de son
+// séjour : le tirage d'une Bête apparue après la fuite (US-0963) peut alors la lui donner, et personne ne l'emmène. Quand
+// une Expédition fuit d'une Case partagée avec un autre Territoire, ce qui s'y passe ensuite dépend donc de l'ordre des
+// rattrapages. US-0965, qui décide quelle Expédition une Bête attaque parmi toutes celles de la Case, calculera les
+// fuites pour la Case entière, de tous les Territoires. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { HorairesDUneExpedition } from "./phase";
@@ -16,7 +22,7 @@ export type Fuite = { expeditionId: number; le: Date };
  * US-0945 : met en fuite chacune des Expéditions `fuites`, à l'instant de son attaque : elle fait demi-tour (rappelee_le),
  * en fuite, et son retour au Foyer est avancé (deplacerLeRetour). Une Expédition déjà rentrée, ou qui avait déjà fait
  * demi-tour avant, n'a pas à fuir ; un rappel du joueur plus tardif, écrit avant que l'attaque ne soit retenue, cède à
- * la fuite. Dans la transaction de retenirLesRencontres (src/expeditions/rencontres.ts).
+ * la fuite. Dans la transaction du mécanisme du temps, juste après retenirLesRencontres (src/temps/regles.ts).
  */
 export async function mettreEnFuite(base: Pool | PoolClient, fuites: readonly Fuite[]): Promise<void> {
   // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
