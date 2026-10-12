@@ -252,6 +252,16 @@ function combat({ le, bete, escorte, sansEscorte }: CombatDuRetour): string {
 export const FUITE_DES_EXPLORATEURS = "Vos explorateurs ont fui et sont tous rentrés au Foyer.";
 
 /**
+ * US-0947 : la fin du récit d'une Expédition attaquée : chaque combat, puis ses pertes (US-0951), « Aucune perte. » sans
+ * perte, et la fuite des explorateurs. Sans combat, les seules pertes, s'il y en a.
+ */
+function finDuRecit(combats: readonly CombatDuRetour[], pertes: readonly PerteRacontee[]): string[] {
+  const lignePertes = pertes.length ? [pertesAuCombat(pertes)] : [];
+  if (combats.length === 0) return lignePertes;
+  return [...combats.map(combat), ...(lignePertes.length ? lignePertes : ["Aucune perte."]), FUITE_DES_EXPLORATEURS];
+}
+
+/**
  * US-0917 : le Récit du retour d'une Expédition, daté de l'instant où elle est rentrée : « Retour d'Expédition », puis une
  * ligne par fait : sa destination et son Biome, ses durées, les Cases sorties du brouillard, et les Bêtes qui se sont
  * montrées, ou la phrase qui dit qu'aucune ne l'a fait : il n'est jamais vide. US-0920 : rappelée, une ligne le dit, et
@@ -294,10 +304,7 @@ export function recitDeRetour({
         ? [vuesSansQueRienNeSuive(vuesSansSuite, tropFortes)]
         : [betesMontrees(rencontres), ...(tropFortes?.length ? [resteesSurLeurCase(tropFortes)] : [])]),
       ...(ramenees?.length ? [betesRamenees(ramenees)] : []),
-      // US-0947 : le récit de chaque combat, puis ses pertes (US-0951), et la fuite des explorateurs.
-      ...(combats?.length ? combats.map(combat) : []),
-      ...(pertes?.length ? [pertesAuCombat(pertes)] : combats?.length ? ["Aucune perte."] : []),
-      ...(combats?.length ? [FUITE_DES_EXPLORATEURS] : []),
+      ...finDuRecit(combats ?? [], pertes ?? []),
     ].join("\n"),
     survenuLe: rentreeLe,
   };
