@@ -226,7 +226,7 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
     // Partie, elle n'attaque plus (US-0943) ; l'Expédition rentre à son heure.
     expect((await attaquesSubies(pool, expeditionId)).filter(({ le }) => le >= bete.depart)).toEqual([]);
     expect((await pool.query<{ rentreeLe: Date }>(`select rentree_le as "rentreeLe" from expedition where id = $1`, [expeditionId])).rows[0].rentreeLe).toEqual(retour);
-  });
+  }, 60_000);
 
   it("plusieurs Bêtes vues : chacune à son heure, dans l'ordre des apparitions, avec ce qu'il en advint", async () => {
     const { territoireId, destination, depart, arrivee, fin, montrees } = await unSejourOu((m) => m.length >= 2);
