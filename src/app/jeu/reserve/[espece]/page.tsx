@@ -7,7 +7,7 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
-import { coupleEnReserve } from "@/monde/couple";
+import { especeDuTerritoire } from "@/monde/effectif";
 import { caracteristiqueAffichee as nombre } from "@/monde/quantite";
 import styles from "./page.module.css";
 
@@ -20,48 +20,63 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
 /**
  * US-0803 : la fiche de l'Espèce d'un Couple de la Réserve, qu'ouvre sa carte : son illustration en grand, son nom en
  * titre et sa Rareté, sur la pastille de ses couleurs. « Fermer » ramène à la Réserve. Seulement pour une Espèce dont le
- * joueur a réuni le Couple : toute autre adresse est introuvable, sans dire si un autre joueur l'a réuni.
+ * joueur a réuni le Couple ou, US-0810, a des Bêtes : toute autre adresse est introuvable, sans dire si un autre joueur en
+ * a.
  *
- * US-0804 : sous le nom, ses caractéristiques telles que la base les a enregistrées, les mêmes pour tous les joueurs :
+ * US-0810 : elle s'ouvre aussi depuis la page Bêtes (especeDuTerritoire), et rappelle l'effectif de l'Espèce, vide quand
+ * ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes (`?depuis=betes`), « Fermer » y ramène.
+ *
+ * US-0804 : sous l'effectif, ses caractéristiques telles que la base les a enregistrées, les mêmes pour tous les joueurs :
  * l'attaque, la vie, la vitesse en km/h et la charge, un nom et une valeur chacune, sans phrase (leurs explications
  * arrivent avec US-0807). Toutes sont toujours là : une Espèce à qui il en manque une ne se charge pas en base
  * (src/donnees/jeux.ts).
  */
-export default async function FicheDeLEspece({ params }: { params: Promise<{ espece: string }> }) {
+export default async function FicheDeLEspece({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ espece: string }>;
+  searchParams: Promise<{ depuis?: string | string[] }>;
+}) {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { espece } = await params;
   if (!IDENTIFIANT.test(espece)) notFound();
   const { territoireId } = await exigerCompte(`/jeu/reserve/${espece}`);
-  const couple = territoireId === null ? null : await coupleEnReserve(getPool(), territoireId, espece);
-  if (!couple) notFound();
+  // US-0810 : l'Espèce de la fiche, dont le joueur a réuni le Couple ou a des Bêtes, avec son effectif.
+  const fiche = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
+  if (!fiche) notFound();
+  const retour = (await searchParams).depuis === "betes" ? "/jeu/betes" : "/jeu/reserve";
   return (
     <main className={styles.page}>
       <article className={styles.fiche}>
-        <IllustrationEspece espece={couple} format="grand" className={styles.illustration} />
+        <IllustrationEspece espece={fiche} format="grand" className={styles.illustration} />
         <div className={styles.entete}>
-          <h1 className={styles.nom}>{couple.nom}</h1>
-          <PastilleRarete rarete={couple.rarete} />
+          <h1 className={styles.nom}>{fiche.nom}</h1>
+          <PastilleRarete rarete={fiche.rarete} />
+          <p className={styles.effectif}>
+            <span>Effectif</span> <strong className={styles.nombre}>{fiche.effectif}</strong>
+          </p>
           <dl className={styles.caracteristiques}>
             <div>
               <dt>Attaque</dt>
-              <dd>{nombre(couple.attaque)}</dd>
+              <dd>{nombre(fiche.attaque)}</dd>
             </div>
             <div>
               <dt>Vie</dt>
-              <dd>{nombre(couple.vie)}</dd>
+              <dd>{nombre(fiche.vie)}</dd>
             </div>
             <div>
               <dt>Vitesse</dt>
-              <dd>{nombre(couple.vitesse)}&nbsp;km/h</dd>
+              <dd>{nombre(fiche.vitesse)}&nbsp;km/h</dd>
             </div>
             <div>
               <dt>Charge</dt>
-              <dd>{nombre(couple.charge)}</dd>
+              <dd>{nombre(fiche.charge)}</dd>
             </div>
           </dl>
         </div>
-        <Link href="/jeu/reserve" className={styles.fermer}>
+        <Link href={retour} className={styles.fermer}>
           Fermer
         </Link>
       </article>
