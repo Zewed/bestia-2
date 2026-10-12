@@ -96,7 +96,8 @@ describe.skipIf(!URL_TEST)("voir l'effectif par Espèce, sur base (US-0810)", ()
     await ajouter(voisin.territoireId, [["poule", "femelle", 5]]);
 
     expect(await page(t.territoireId)).toEqual({
-      texte: "Bêtes · 9 · Bêtes · Pigeon biset · Commune · 2 · Souris grise · Commune · 7",
+      // US-0822 : 7 souris (1 Place chacune) et 2 pigeons (8,556 chacun) prennent 25 Places de l'Habitat du Foyer.
+      texte: "Bêtes · 9 · Bêtes · Places : · 25 / 500 · Pigeon biset · Commune · 2 · Souris grise · Commune · 7",
       liens: ["/jeu/reserve/pigeon?depuis=betes", "/jeu/reserve/souris?depuis=betes"],
     });
   });
@@ -109,11 +110,12 @@ describe.skipIf(!URL_TEST)("voir l'effectif par Espèce, sur base (US-0810)", ()
       ["poule", "male", 1],
       ["poule", "femelle", 1],
     ]);
-    expect((await page(t.territoireId)).texte).toBe("Bêtes · 5 · Bêtes · Poule · Commune · 2 · Souris grise · Commune · 3");
+    // US-0822 : 3 souris et 2 poules (31,623 Places chacune) : 67 Places.
+    expect((await page(t.territoireId)).texte).toBe("Bêtes · 5 · Bêtes · Places : · 67 / 500 · Poule · Commune · 2 · Souris grise · Commune · 3");
 
     expect(await reunir(t)).toEqual(["poule", "souris"]);
     // Les deux poules du Couple sont en Réserve : la poule quitte la liste, une souris reste.
-    expect((await page(t.territoireId)).texte).toBe("Bêtes · 1 · Bête · Souris grise · Commune · 1");
+    expect((await page(t.territoireId)).texte).toBe("Bêtes · 1 · Bête · Places : · 1 / 500 · Souris grise · Commune · 1");
   });
 
   it("sans aucune Bête, ne dit que « Aucune Bête pour l'instant » et mène à l'Expédition ; la première Bête ramenée y met la liste (US-0811)", async () => {
@@ -122,6 +124,6 @@ describe.skipIf(!URL_TEST)("voir l'effectif par Espèce, sur base (US-0810)", ()
 
     // La première Bête ramenée au Foyer entre dans l'effectif (US-0938).
     await faireEntrerDansLEffectif(pool, t.territoireId, [{ especeId: "souris", sexe: "femelle" }]);
-    expect(await page(t.territoireId)).toEqual({ texte: "Bêtes · 1 · Bête · Souris grise · Commune · 1", liens: ["/jeu/reserve/souris?depuis=betes"] });
+    expect(await page(t.territoireId)).toEqual({ texte: "Bêtes · 1 · Bête · Places : · 1 / 500 · Souris grise · Commune · 1", liens: ["/jeu/reserve/souris?depuis=betes"] });
   });
 });
