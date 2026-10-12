@@ -66,6 +66,11 @@ export type RetourARaconter = {
   /** US-0962 : l'Expédition d'un autre joueur était sur la Case à un instant de son séjour ; absent : aucune. */
   autresExpeditions?: boolean;
   /**
+   * US-0964 : les Espèces des Bêtes vues parties avec une autre Expédition, chacune une fois, dans l'ordre des apparitions ;
+   * absentes ou vides : aucune.
+   */
+  emmenees?: string[];
+  /**
    * US-0949 : les Espèces des Bêtes que le joueur avait repérées sur la Case à son départ et qui n'y étaient plus à son
    * arrivée, chacune une fois (betesPartiesAvantLArrivee) ; absentes ou vides : aucune.
    */
@@ -211,6 +216,14 @@ function resteesSurLeurCase(tropFortes: TropForte[]): string {
 }
 
 /**
+ * US-0964 : « Écureuil roux a suivi une autre Expédition. », « Écureuil roux et Lièvre ont suivi d'autres Expéditions. » :
+ * sans nommer le chef qui l'a emportée (décidé le 2026-10-12).
+ */
+function suiviesAilleurs(especes: string[]): string {
+  return especes.length > 1 ? `${enumeres(especes)} ont suivi d'autres Expéditions.` : `${especes[0]} a suivi une autre Expédition.`;
+}
+
+/**
  * US-0917 : le Récit du retour d'une Expédition, daté de l'instant où elle est rentrée : « Retour d'Expédition », puis une
  * ligne par fait : sa destination et son Biome, ses durées, les Cases sorties du brouillard, et les Bêtes qui se sont
  * montrées, ou la phrase qui dit qu'aucune ne l'a fait : il n'est jamais vide. US-0920 : rappelée, une ligne le dit, et
@@ -219,7 +232,8 @@ function resteesSurLeurCase(tropFortes: TropForte[]): string {
  * trop fortes pour l'escorte, et la force qui lui manquait ; quand d'autres ont suivi, une ligne après elle le dit des
  * Bêtes restées sur leur Case. US-0938 : puis, si des Bêtes ont suivi l'Expédition, une ligne les dit arrivées au Foyer.
  * US-0962 : quand d'autres joueurs séjournaient sur la Case, une ligne le dit, avant les Bêtes. US-0949 : puis, quand des
- * Bêtes que le joueur y avait repérées en étaient parties avant l'arrivée, une ligne les nomme.
+ * Bêtes que le joueur y avait repérées en étaient parties avant l'arrivée, une ligne les nomme. US-0964 : quand des Bêtes
+ * vues ont suivi une autre Expédition, une ligne le dit, avant celle des Bêtes ramenées au Foyer.
  */
 export function recitDeRetour({
   destination,
@@ -233,6 +247,7 @@ export function recitDeRetour({
   ramenees,
   autresExpeditions,
   partiesAvant,
+  emmenees,
 }: RetourARaconter): NouveauRecit {
   const sejour = durees.sejour === 0 ? "sans séjour" : `séjour ${formaterMinutes(durees.sejour)}`;
   return {
@@ -248,6 +263,7 @@ export function recitDeRetour({
       ...(vuesSansSuite?.length
         ? [vuesSansQueRienNeSuive(vuesSansSuite, tropFortes)]
         : [betesMontrees(rencontres), ...(tropFortes?.length ? [resteesSurLeurCase(tropFortes)] : [])]),
+      ...(emmenees?.length ? [suiviesAilleurs(emmenees)] : []),
       ...(ramenees?.length ? [betesRamenees(ramenees)] : []),
     ].join("\n"),
     survenuLe: rentreeLe,
@@ -292,6 +308,9 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   const autresExpeditions = await dAutresJoueursSurLaCase(client, territoireId, caseId, sejourDUneExpedition(horaires));
   // US-0949 : les Bêtes que le joueur y avait repérées à son départ, parties avant son arrivée.
   const partiesAvant = await betesPartiesAvantLArrivee(client, territoireId, destination, horaires, vues);
+  // US-0964 : les Bêtes vues parties avec une autre Expédition, que dit son récit de Rencontre.
+  const idsEmmenees = [...new Set(detail.filter((r) => r.issue === "emmenee").map((r) => r.especeId))];
+  const emmenees = idsEmmenees.length > 0 ? await nomsDesEspeces(client, idsEmmenees) : undefined;
   await ecrireUnRecit(
     client,
     territoireId,
@@ -308,6 +327,7 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
       ramenees,
       autresExpeditions,
       partiesAvant,
+      emmenees,
     }),
     detail,
   );
