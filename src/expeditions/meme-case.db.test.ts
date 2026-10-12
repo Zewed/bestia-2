@@ -122,100 +122,125 @@ describe.skipIf(!URL_TEST)("deux Expéditions du même joueur sur une Case (US-0
     expect(enCours.lues).toEqual(enCours.ids.map((id) => ({ id, ...destination })));
   });
 
-  describe("une Bête vue au même instant par ses deux Expéditions", () => {
-    let bete: BeteSauvage;
-    let nomDeLEspece: string;
-    const bilans = {} as Record<"page ouverte" | "d'un bloc", Bilan>;
+  /** Les Cases déjà prises par un tirage de l'essai : chacun a la sienne. */
+  const prises = new Set<number>();
 
-    beforeAll(async () => {
-      // Une Case libre à 2 à 6 Cases du Foyer, sans Bête de naissance, où une Bête commune d'une autre Espèce que la souris
-      // apparaît seule : le tirage la donne à la seconde Expédition, partie après la première, d'escorte trois fois plus forte.
-      const { rows: cases } = await pool.query<Coordonnees & { id: number }>(
-        `select c.id, c.q, c.r from case_du_monde c where c.monde_id = $1 and c.chef_id is null
-           and greatest(abs(c.q - $2), abs(c.r - $3), abs(c.q - $2 + c.r - $3)) between 2 and 6
-           and not exists (select 1 from bete_de_naissance n where n.case_id = c.id)
-         order by c.id`,
-        [mondeId, foyer.q, foyer.r],
+  /**
+   * Deux Expéditions du joueur, escortées d'une Souris puis de trois (ESCORTES), parties au même instant vers une Case
+   * libre à 2 à 6 Cases du Foyer, sans Bête de naissance, où une Bête commune d'une autre Espèce que la souris apparaît
+   * seule une heure après leur arrivée, et que le tirage donne à celle de rang `gagnante` (0 : la première partie, la plus
+   * faible ; 1 : la seconde, trois fois plus forte). Vécues page ouverte, relue toutes les 10 minutes et autour de
+   * l'apparition, puis d'un bloc : la Bête, le nom de son Espèce et ce que chaque manière laisse au joueur.
+   */
+  const unTirage = async (gagnante: 0 | 1) => {
+    const { rows: cases } = await pool.query<Coordonnees & { id: number }>(
+      `select c.id, c.q, c.r from case_du_monde c where c.monde_id = $1 and c.chef_id is null
+         and greatest(abs(c.q - $2), abs(c.r - $3), abs(c.q - $2 + c.r - $3)) between 2 and 6
+         and not exists (select 1 from bete_de_naissance n where n.case_id = c.id)
+       order by c.id`,
+      [mondeId, foyer.q, foyer.r],
+    );
+    const [de, a] = [apres(ne, 3 * JOUR), apres(ne, 40 * JOUR)];
+    const parCase = await betesSauvagesDesCases(pool, cases.filter((c) => !prises.has(c.id)).map((c) => c.id), de, a);
+    let trouve: { destination: Coordonnees; bete: BeteSauvage } | null = null;
+    for (const c of cases.filter((x) => !prises.has(x.id))) {
+      const betes = parCase.get(c.id)!;
+      const bete = betes.find(
+        (x, i) =>
+          x.rareteId === "commune" &&
+          x.especeId !== "souris" &&
+          x.arrivee >= apres(de, CALME) &&
+          x.arrivee <= apres(a, -CALME) &&
+          (i === 0 || betes[i - 1].arrivee <= apres(x.arrivee, -CALME)) &&
+          (i === betes.length - 1 || betes[i + 1].arrivee >= apres(x.arrivee, CALME)) &&
+          // Le tirage range les Expéditions par identifiant : la première partie a le plus petit.
+          lExpeditionSuivie(
+            { ...x, force: 0, caseId: c.id, beteDeNaissanceId: null },
+            ESCORTES.map((n, k) => ({ id: k + 1, arrivee: apres(x.arrivee, -HEURE), depart: apres(x.arrivee, SEJOUR - HEURE), escorte: n * souris.force })),
+          )?.expeditionId === gagnante + 1,
       );
-      const [de, a] = [apres(ne, 3 * JOUR), apres(ne, 40 * JOUR)];
-      const parCase = await betesSauvagesDesCases(pool, cases.map((c) => c.id), de, a);
-      let destination: Coordonnees | null = null;
-      for (const c of cases) {
-        const betes = parCase.get(c.id)!;
-        const trouvee = betes.find(
-          (x, i) =>
-            x.rareteId === "commune" &&
-            x.especeId !== "souris" &&
-            x.arrivee >= apres(de, CALME) &&
-            x.arrivee <= apres(a, -CALME) &&
-            (i === 0 || betes[i - 1].arrivee <= apres(x.arrivee, -CALME)) &&
-            (i === betes.length - 1 || betes[i + 1].arrivee >= apres(x.arrivee, CALME)) &&
-            lExpeditionSuivie(
-              { ...x, force: 0, caseId: c.id, beteDeNaissanceId: null },
-              ESCORTES.map((n, k) => ({ id: k + 1, arrivee: apres(x.arrivee, -HEURE), depart: apres(x.arrivee, SEJOUR - HEURE), escorte: n * souris.force })),
-            )?.expeditionId === 2,
+      if (bete) {
+        prises.add(c.id);
+        trouve = { destination: { q: c.q, r: c.r }, bete };
+        break;
+      }
+    }
+    if (!trouve) throw new Error(`Aucune Bête commune seule que le tirage donne à l'Expédition de rang ${gagnante}.`);
+    const { destination, bete } = trouve;
+    const { rows: especes } = await pool.query<{ nom: string }>("select nom from espece where id = $1", [bete.especeId]);
+    // Les deux partent au même instant, à l'allure de la souris, et arrivent une heure avant la Bête.
+    const aller = dureeDuTrajetMinutes(distance(foyer, destination), [{ vitesse: souris.vitesse, nombre: 1 }]);
+    const depart = apres(bete.arrivee, -HEURE - aller);
+    const retour = retourDUneExpedition({ partLe: depart, trajetMinutes: aller, sejourMinutes: SEJOUR })!;
+    const fin = apres(retour, HEURE);
+    const instants = new Set([fin.getTime()]);
+    for (let t = depart.getTime(); t < fin.getTime(); t += 10 * MINUTE_MS) instants.add(t);
+    for (const ms of [-1, 0, 1]) instants.add(bete.arrivee.getTime() + ms);
+    const page = [...instants].filter((t) => t >= depart.getTime()).sort((x, y) => x - y).map((t) => new Date(t));
+    const bilans = {} as Record<"page ouverte" | "d'un bloc", Bilan>;
+    for (const maniere of ["page ouverte", "d'un bloc"] as const) {
+      bilans[maniere] = await enEssai(async (client, jeu) => {
+        await rattraper("territoire", territoireId, { pool: jeu, jusqua: depart });
+        const ids = [await partir(jeu, destination, depart, ESCORTES[0]), await partir(jeu, destination, depart, ESCORTES[1])];
+        for (const instant of maniere === "page ouverte" ? page : [fin]) await rattraper("territoire", territoireId, { pool: jeu, jusqua: instant });
+        const recits = (await recitsDuTerritoire(jeu, territoireId)).filter((r) => r.titre === RETOUR);
+        // Les deux rentrent au même instant : leurs récits, dans l'ordre de leur départ (le premier écrit, le plus ancien).
+        const parDepart = [...recits].sort((x, y) => x.id - y.id);
+        expect(parDepart).toHaveLength(ids.length);
+        const { rows: effectif } = await client.query<Bilan["effectif"][number]>(
+          'select espece_id as "especeId", sexe, nombre from effectif where territoire_id = $1 and espece_id = $2 order by sexe',
+          [territoireId, bete.especeId],
         );
-        if (trouvee) {
-          [destination, bete] = [{ q: c.q, r: c.r }, trouvee];
-          break;
-        }
-      }
-      if (!destination) throw new Error("Aucune Bête commune seule que le tirage donne à la seconde Expédition.");
-      const { rows: especes } = await pool.query<{ nom: string }>("select nom from espece where id = $1", [bete.especeId]);
-      nomDeLEspece = especes[0].nom;
-      // Les deux partent au même instant, à l'allure de la souris, et arrivent une heure avant la Bête.
-      const aller = dureeDuTrajetMinutes(distance(foyer, destination), [{ vitesse: souris.vitesse, nombre: 1 }]);
-      const depart = apres(bete.arrivee, -HEURE - aller);
-      const retour = retourDUneExpedition({ partLe: depart, trajetMinutes: aller, sejourMinutes: SEJOUR })!;
-      const fin = apres(retour, HEURE);
-      const dest = destination;
-      for (const maniere of ["page ouverte", "d'un bloc"] as const) {
-        bilans[maniere] = await enEssai(async (client, jeu) => {
-          await rattraper("territoire", territoireId, { pool: jeu, jusqua: depart });
-          const ids = [await partir(jeu, dest, depart, ESCORTES[0]), await partir(jeu, dest, depart, ESCORTES[1])];
-          if (maniere === "page ouverte") {
-            for (let t = depart; t < fin; t = apres(t, 10)) await rattraper("territoire", territoireId, { pool: jeu, jusqua: t });
-            for (const ms of [-1, 0, 1]) await rattraper("territoire", territoireId, { pool: jeu, jusqua: new Date(bete.arrivee.getTime() + ms) });
-          }
-          await rattraper("territoire", territoireId, { pool: jeu, jusqua: fin });
-          const recits = (await recitsDuTerritoire(jeu, territoireId)).filter((r) => r.titre === RETOUR);
-          // Les deux rentrent au même instant : leurs récits, dans l'ordre de leur départ (le premier écrit, le plus ancien).
-          const parDepart = [...recits].sort((x, y) => x.id - y.id);
-          expect(parDepart).toHaveLength(ids.length);
-          const { rows: effectif } = await client.query<Bilan["effectif"][number]>(
-            'select espece_id as "especeId", sexe, nombre from effectif where territoire_id = $1 and espece_id = $2 order by sexe',
-            [territoireId, bete.especeId],
-          );
-          return {
-            recits: parDepart.map(({ texte, survenuLe, rencontres }) => ({ texte, survenuLe, rencontres })),
-            bestiaire: (await bestiaireDuTerritoire(jeu, territoireId)).filter((e) => e.especeId === bete.especeId),
-            effectif,
-          };
-        });
-      }
-    }, 120_000);
+        return {
+          recits: parDepart.map(({ texte, survenuLe, rencontres }) => ({ texte, survenuLe, rencontres })),
+          bestiaire: (await bestiaireDuTerritoire(jeu, territoireId)).filter((e) => e.especeId === bete.especeId),
+          effectif,
+        };
+      });
+    }
+    return { bete, nomDeLEspece: especes[0].nom, bilans };
+  };
 
-    it("chacune a sa propre chance au tirage selon sa force : ici la seconde, trois fois plus forte, l'emporte, et non la première partie", () => {
-      const [premiere, seconde] = bilans["page ouverte"].recits;
-      expect(seconde.rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, vueLe: bete.arrivee, issue: "apprivoisee" })]);
-      expect(premiere.rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, vueLe: bete.arrivee, issue: "emmenee", repartieLe: bete.arrivee, sexe: null })]);
-    });
+  for (const gagnante of [1, 0] as const) {
+    const perdante = (1 - gagnante) as 0 | 1;
+    const qui = gagnante === 1 ? "la seconde, trois fois plus forte" : "la première, la plus faible";
+    describe(`une Bête vue au même instant par ses deux Expéditions, que le tirage donne à ${qui}`, () => {
+      let tirage: Awaited<ReturnType<typeof unTirage>>;
 
-    it("une Bête ne suit jamais qu'une seule d'entre elles : une seule arrive au Foyer, et l'Espèce est apprivoisée", () => {
-      const { effectif, bestiaire, recits } = bilans["page ouverte"];
-      expect(effectif.reduce((n, l) => n + l.nombre, 0)).toBe(1);
-      expect(effectif[0].sexe).toBe(recits[1].rencontres![0].sexe);
-      expect(bestiaire).toEqual([{ especeId: bete.especeId, etat: "apprivoisee", croiseeLe: bete.arrivee }]);
-    });
+      beforeAll(async () => {
+        tirage = await unTirage(gagnante);
+      }, 120_000);
 
-    it("la première l'apprend dans son récit, qui ne dit pas qu'un autre joueur séjournait sur la Case : l'autre Expédition est la sienne", () => {
-      const [premiere, seconde] = bilans["page ouverte"].recits;
-      expect(premiere.texte.split("\n")).toContain(`${nomDeLEspece} a suivi une autre Expédition.`);
-      for (const recit of [premiere, seconde]) expect(recit.texte.split("\n")).not.toContain(AUTRES_EXPEDITIONS);
-    });
+      it("chacune a sa propre chance au tirage selon sa force : celle qu'il désigne l'emporte, quel que soit son rang au départ", () => {
+        const { bete, bilans } = tirage;
+        const recits = bilans["page ouverte"].recits;
+        expect(recits[gagnante].rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, vueLe: bete.arrivee, issue: "apprivoisee" })]);
+        expect(recits[perdante].rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, vueLe: bete.arrivee, issue: "emmenee", repartieLe: bete.arrivee, sexe: null })]);
+      });
 
-    it("le même résultat page ouverte et d'un bloc", () => {
-      expect(bilans["d'un bloc"]).toEqual(bilans["page ouverte"]);
+      it("une Bête ne suit jamais qu'une seule d'entre elles : une seule arrive au Foyer, et l'Espèce est apprivoisée", () => {
+        const { bete, bilans } = tirage;
+        const { effectif, bestiaire, recits } = bilans["page ouverte"];
+        expect(effectif.reduce((n, l) => n + l.nombre, 0)).toBe(1);
+        expect(effectif[0].sexe).toBe(recits[gagnante].rencontres![0].sexe);
+        expect(bestiaire).toEqual([{ especeId: bete.especeId, etat: "apprivoisee", croiseeLe: bete.arrivee }]);
+      });
+
+      it("l'autre l'apprend dans son récit, qui ne dit pas qu'un autre joueur séjournait sur la Case : l'autre Expédition est la sienne", () => {
+        const { nomDeLEspece, bilans } = tirage;
+        const recits = bilans["page ouverte"].recits;
+        expect(recits[perdante].texte.split("\n")).toContain(`${nomDeLEspece} a suivi une autre Expédition.`);
+        for (const recit of recits) expect(recit.texte.split("\n")).not.toContain(AUTRES_EXPEDITIONS);
+      });
+
+      it("« Nouvelle Espèce au Bestiaire » va à la Rencontre de la première partie, qui l'a inscrite (US-0933), qu'elle ait gagné ou non", () => {
+        const recits = tirage.bilans["page ouverte"].recits;
+        expect(recits.map((r) => r.rencontres![0].nouvelleEspece)).toEqual([true, false]);
+      });
+
+      it("le même résultat page ouverte et d'un bloc", () => {
+        expect(tirage.bilans["d'un bloc"]).toEqual(tirage.bilans["page ouverte"]);
+      });
     });
-  });
+  }
 });
