@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { dureesReelles, especesTropFortes, especesVuesSansSuite, type RetourARaconter, rappelDUneExpedition, recitDeRetour } from "./recit-de-retour";
+import {
+  type CombatDuRetour,
+  dureesReelles,
+  especesTropFortes,
+  especesVuesSansSuite,
+  type RetourARaconter,
+  rappelDUneExpedition,
+  recitDeRetour,
+} from "./recit-de-retour";
 
 const MINUTE = 60_000;
 /** Une heure de Paris en octobre (UTC+2), comme le jeu l'enregistre, en temps universel. */
@@ -262,5 +270,57 @@ describe("la Bête repérée partie avant l'arrivée (US-0949)", () => {
 
   it("aucune ligne quand aucune Bête repérée n'était partie", () => {
     for (const partiesAvant of [[], undefined]) expect(recitDeRetour(retour({ partiesAvant })).texte.split("\n")).toHaveLength(4);
+  });
+});
+
+describe("le récit du combat (US-0947)", () => {
+  /** Un Pigeon biset, posé là en Bête trop forte, contre une escorte de Poules et de Souris grises, à 14:05 à Paris. */
+  const combat = (autre: Partial<CombatDuRetour> = {}): CombatDuRetour => ({
+    le: aParis(9, 14, 5),
+    bete: { nom: "Pigeon biset", force: 37_340 },
+    escorte: 35_900,
+    pertes: [
+      { nom: "Poule", nombre: 2 },
+      { nom: "Souris grise", nombre: 1 },
+    ],
+    ...autre,
+  });
+  const lignes = (autre: Partial<RetourARaconter>) => recitDeRetour(retour({ rencontres: 1, ...autre })).texte.split("\n");
+
+  it("après tout le reste, donne l'heure du combat, l'Espèce et la force exacte de la Bête, la force de l'escorte, ses pertes Espèce par Espèce, et finit par la fuite et le retour des explorateurs", () => {
+    const texte = lignes({ ramenees: [{ nom: "Souris grise", sexe: "male" }], combats: [combat()] });
+    expect(texte.slice(-4)).toEqual([
+      "Bête ramenée au Foyer : Souris grise (mâle).",
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre votre escorte, de force 35 900.",
+      "Pertes : Poule × 2 et Souris grise × 1.",
+      "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+    ]);
+  });
+
+  it("une seule Espèce perdue, une seule Bête : la même ligne, sans liste", () => {
+    expect(lignes({ combats: [combat({ pertes: [{ nom: "Poule", nombre: 1 }] })] }).at(-2)).toBe("Pertes : Poule × 1.");
+  });
+
+  it("attaquée sans escorte, l'Expédition ne perd rien : le récit le dit, et la fuite de ses explorateurs", () => {
+    expect(lignes({ combats: [combat({ escorte: 0, pertes: [] })] }).slice(-3)).toEqual([
+      "Attaque le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre vos explorateurs, sans escorte.",
+      "Aucune perte.",
+      "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+    ]);
+  });
+
+  it("plusieurs combats, chacun à son heure, dans l'ordre du temps, puis une seule fois la fuite", () => {
+    const second = combat({ le: aParis(10, 0, 30), bete: { nom: "Poule", force: 40_000 }, escorte: 30_000, pertes: [{ nom: "Souris grise", nombre: 4 }] });
+    expect(lignes({ combats: [combat(), second] }).slice(-5)).toEqual([
+      "Combat le 9 octobre à 14:05 : Pigeon biset, de force 37 340, contre votre escorte, de force 35 900.",
+      "Pertes : Poule × 2 et Souris grise × 1.",
+      "Combat le 10 octobre à 00:30 : Poule, de force 40 000, contre votre escorte, de force 30 000.",
+      "Pertes : Souris grise × 4.",
+      "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+    ]);
+  });
+
+  it("rien de plus sans combat", () => {
+    for (const combats of [[], undefined]) expect(lignes({ combats })).toEqual(lignes({}));
   });
 });

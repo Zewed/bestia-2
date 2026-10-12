@@ -36,7 +36,8 @@ export type IssueDUneRencontre = "apprivoisee" | "restee" | "repartie";
  * entrer son Espèce au Bestiaire (US-0933). Restée sur sa Case, la force qui manquait à l'escorte (US-0942). US-0950 :
  * repartie, l'instant du jeu où elle a quitté sa Case ; un Récit d'avant cette story ne le retient pas. US-0949 : une Bête
  * sauvage restée sur sa Case, sa Case et son numéro sur sa Case, pour revenir la chercher tant qu'elle y est ; absents des
- * Récits écrits avant.
+ * Récits écrits avant. US-0947 : si elle a attaqué l'Expédition, les Bêtes que son escorte a perdues au combat, que le
+ * résumé du retour compte (US-0941) ; absent sinon, et des Récits écrits avant.
  */
 export type RencontreRacontee = {
   especeId: string;
@@ -48,6 +49,7 @@ export type RencontreRacontee = {
   manque?: number;
   laCase?: Coordonnees;
   numero?: number;
+  perdues?: number;
 };
 
 /** US-0940 : une Rencontre racontée telle que la page Récits la montre : avec le nom, l'illustration et la Rareté de son Espèce. */
