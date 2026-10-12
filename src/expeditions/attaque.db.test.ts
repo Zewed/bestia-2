@@ -298,7 +298,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
     await rattraperA(territoireId, apres(bete.depart, JOUR));
     expect(await attaques(courte.id)).toEqual([]);
     expect(await attaques(longue.id)).toEqual([]);
-  });
+  }, 60_000);
 
   it("partie avec une Expédition assez forte arrivée après, la Bête n'attaque plus celle qu'elle n'a pas suivie, ni celle qu'elle suit", async () => {
     const chef = await naitrePresDUneBeteRare();
@@ -322,7 +322,7 @@ describe.skipIf(!URL_TEST)("la Bête trop forte peut attaquer (US-0943, sur base
       const avantLeDepart = attaquePromise(chef, x, arriveeDeLaForte);
       expect({ x: x.id, attaques: await attaques(x.id) }).toEqual({ x: x.id, attaques: attendue(chef, avantLeDepart) });
     }
-  });
+  }, 60_000);
 
   it("trop forte, une Bête de naissance attaque de même l'Expédition de son Territoire, à l'heure que disent ses tirages, une seule fois", async () => {
     // Toujours communes, les Bêtes de naissance sont aujourd'hui toujours à portée : l'essai en pose une plus rare, sur une
