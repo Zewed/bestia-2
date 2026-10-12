@@ -342,10 +342,11 @@ describe.skipIf(!URL_TEST)("chaque Expédition présente voit la Bête (US-0962,
     });
     expect(vues.every((i) => i >= 0)).toBe(true);
     // Toutes deux la voient au même instant ; sans escorte, chacune avait la même chance (US-0963) : l'une la ramène, et
-    // l'autre, qu'elle a quittée pour la première, ne la dit pas « restée sur sa Case ».
+    // l'autre, qu'elle a quittée pour la première, ne la dit pas « restée sur sa Case ». US-0950 : repartie à cet instant
+    // même.
     const deux = vues.map((i, k) => recits[k].rencontres![i]);
     for (const r of deux) expect(r).toMatchObject({ especeId: bn.especeId, vueLe: arrivee });
     expect(deux.map((r) => r.issue).sort()).toEqual(["apprivoisee", "repartie"]);
-    expect(deux.find((r) => r.issue === "repartie")!.sexe).toBeNull();
+    expect(deux.find((r) => r.issue === "repartie")).toMatchObject({ repartieLe: arrivee, sexe: null });
   });
 });
