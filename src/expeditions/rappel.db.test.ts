@@ -2,6 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { betesSauvagesDesCases } from "@/monde/betes-sauvages";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { ficheDUneCase } from "@/monde/fiche";
@@ -71,6 +72,17 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
     ).rows;
   /** La première Case libre à ECART Cases du Foyer. */
   const uneCase = async (territoireId: number) => (await casesAPortee(territoireId))[0];
+  /**
+   * La première Case libre à ECART Cases du Foyer où aucune Bête sauvage ordinaire ne se montre de `de` à `a` : celles
+   * d'une Case dépendent de son Biome, que le hasard du Foyer choisit, et de l'heure du jeu, celle de la naissance.
+   */
+  const uneCaseCalme = async (territoireId: number, de: Date, a: Date) => {
+    const cases = await casesAPortee(territoireId);
+    const sauvages = await betesSauvagesDesCases(pool, cases.map((c) => c.id), de, a);
+    const calme = cases.find((c) => sauvages.get(c.id)!.length === 0);
+    if (!calme) throw new Error(`Aucune Case à ${ECART} Cases où rien ne se montre pendant le séjour.`);
+    return calme;
+  };
   /**
    * Une souris de naissance du Territoire (US-0975) posée sur la Case `caseId` du départ `depart` jusqu'à la fin du séjour
    * qu'y ferait une Expédition partie alors : sans rappel, elle l'y verrait, et la suivrait (une commune, toujours à
@@ -195,11 +207,12 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
   it("en séjour, y met fin et lance le retour aussitôt, aussi long que l'aller (décidé le 2026-10-08)", async () => {
     const { territoireId, ne } = await naitre();
     const depart = apres(ne, MINUTE);
-    const destination = await uneCase(territoireId);
+    const arrivee = apres(depart, ALLER * MINUTE);
+    // Sur une Case où ne se montre aucune Bête sauvage ordinaire, ni commune qui suivrait, ni trop forte qui resterait.
+    const destination = await uneCaseCalme(territoireId, arrivee, apres(arrivee, SEJOUR * MINUTE));
     // La même souris que l'Expédition rappelée à l'aller ne verra pas : arrivée, celle-ci la voit, et la ramène.
     await uneBeteSurLaCase(territoireId, destination.id, depart);
     const expeditionId = await partir(territoireId, destination, depart);
-    const arrivee = apres(depart, ALLER * MINUTE);
     const rappel = apres(arrivee, 30 * MINUTE);
     await aLHeure(territoireId, rappel);
 
@@ -212,10 +225,9 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
 
     await aLHeure(territoireId, retour);
     expect((await enBase(expeditionId)).rentreeLe).toEqual(retour);
-    // Les Bêtes sauvages de la Case, au hasard de son Biome, peuvent s'y être montrées aussi.
-    expect(await rencontresDUneExpedition(pool, expeditionId)).toEqual(
-      expect.arrayContaining([expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arrivee })]),
-    );
+    expect(await rencontresDUneExpedition(pool, expeditionId)).toEqual([
+      expect.objectContaining({ beteDeNaissanceId: expect.any(Number), vueLe: arrivee, apprivoisee: true }),
+    ]);
     const [recit] = await recitsDeRetour(territoireId);
     const fiche = await ficheDUneCase(pool, territoireId, destination);
     expect(recit.texte.split("\n")).toEqual([
@@ -223,9 +235,9 @@ describe.skipIf(!URL_TEST)("rappeler une Expédition (US-0920, sur base)", () =>
       `Rappelée pendant le séjour le ${formaterJourEtHeure(rappel, "Europe/Paris")}.`,
       `Aller ${formaterMinutes(ALLER)}, séjour 30 min, retour ${formaterMinutes(ALLER)}.`,
       expect.stringMatching(/sorties? du brouillard\.$/),
-      expect.stringMatching(/^(Une Bête s'est montrée|\d+ Bêtes se sont montrées)\.$/),
-      // US-0938 : la souris qui la suit arrive au Foyer avec elle, et peut-être d'autres Bêtes de la Case.
-      expect.stringMatching(/^Bêtes? ramenées? au Foyer : .*Souris grise \(/),
+      "Une Bête s'est montrée.",
+      // US-0938 : la souris qui la suit arrive au Foyer avec elle.
+      expect.stringMatching(/^Bête ramenée au Foyer : Souris grise \((mâle|femelle)\)\.$/),
     ]);
   });
 
