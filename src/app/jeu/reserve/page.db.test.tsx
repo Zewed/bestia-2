@@ -5,7 +5,7 @@ import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { reunirLesCouples } from "@/monde/couple";
 import { lireMarquePage } from "@/temps/marque-page";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; la page lit pour de bon la base de test.
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
@@ -25,6 +25,8 @@ describe.skipIf(!URL_TEST)("voir ses Couples réunis, sur base (US-0802)", () =>
   let pool: Pool;
   let mondeId: number;
   const lancement = `reserve-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les comptes des Territoires nés pendant l'essai en cours. */
   const nes: string[] = [];
@@ -34,8 +36,7 @@ describe.skipIf(!URL_TEST)("voir ses Couples réunis, sur base (US-0802)", () =>
     const n = ++numero;
     nes.push(`${lancement}-${n}@essai.test`);
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Rsv${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
-    expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
+    expect(await enregistrerNomDeChef(pool, compte.id, nomDEssai("Rsv", suffixe, n), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
