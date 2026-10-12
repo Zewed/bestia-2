@@ -9,10 +9,11 @@ import { PLACES_DE_L_HABITAT_DU_FOYER } from "@/reglages";
 export type PlacesDeLHabitat = { occupees: number; total: number };
 
 /**
- * US-0822 : les Places de l'Habitat du Foyer du Territoire : PLACES_DE_L_HABITAT_DU_FOYER en tout, et prises, la somme,
- * Espèce par Espèce, de son effectif fois la taille de l'Espèce (US-0824 le règlera), arrondie à la Place entière
- * supérieure. Les Bêtes sorties en escorte gardent la leur, pour rentrer ; les Blessés aussi. Les Bêtes du Couple, en
- * Réserve hors de l'effectif (US-0956), n'en prennent pas : la Réserve n'est pas l'Habitat du Foyer.
+ * US-0822 : les Places de l'Habitat du Foyer du Territoire : PLACES_DE_L_HABITAT_DU_FOYER en tout, et prises, la somme
+ * exacte, Espèce par Espèce, de son effectif fois la taille de l'Espèce (US-0824 le règlera) ; le compteur l'arrondit à
+ * la Place entière supérieure (PlacesDeLHabitat). Les Bêtes sorties en escorte gardent la leur, pour rentrer ; les
+ * Blessés aussi. Les Bêtes du Couple, en Réserve hors de l'effectif (US-0956), n'en prennent pas : la Réserve n'est pas
+ * l'Habitat du Foyer.
  */
 export async function placesDeLHabitat(base: Pool | PoolClient, territoireId: number): Promise<PlacesDeLHabitat> {
   const { rows } = await base.query<{ occupees: number }>(
@@ -21,6 +22,6 @@ export async function placesDeLHabitat(base: Pool | PoolClient, territoireId: nu
      where e.territoire_id = $1`,
     [territoireId],
   );
-  // Au millionième près d'abord : une somme de tailles décimales ne déborde pas d'une Place pour une poussière.
-  return { occupees: Math.ceil(Math.round(rows[0].occupees * 1e6) / 1e6), total: PLACES_DE_L_HABITAT_DU_FOYER };
+  // Au millionième près : les tailles ont trois décimales, et une poussière de calcul (894,000…1) ne fait pas une Place.
+  return { occupees: Math.round(rows[0].occupees * 1e6) / 1e6, total: PLACES_DE_L_HABITAT_DU_FOYER };
 }

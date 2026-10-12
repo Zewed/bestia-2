@@ -5,12 +5,13 @@ const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/
 
 /**
  * US-0822 : le compteur des Places de l'Habitat du Foyer, « Places : 21 / 500 » : celles que prennent les Bêtes du joueur,
- * puis toutes celles que l'Habitat offre (src/monde/habitat.ts). Le même sur la page Bêtes et dans le bloc « Élever ».
+ * leur somme exacte arrondie à la Place entière supérieure (une Place entamée est prise), puis toutes celles que
+ * l'Habitat offre (src/monde/habitat.ts). Le même sur la page Bêtes et dans le bloc « Élever ».
  */
 export function PlacesDeLHabitat({ occupees, total }: { occupees: number; total: number }) {
   return (
     <p className={styles.places}>
-      Places : <strong className={styles.nombres}>{`${entier(occupees)} / ${entier(total)}`}</strong>
+      Places : <strong className={styles.nombres}>{`${entier(Math.ceil(occupees))} / ${entier(total)}`}</strong>
     </p>
   );
 }

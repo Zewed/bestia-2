@@ -12,6 +12,11 @@ describe("le compteur des Places de l'Habitat du Foyer (US-0822)", () => {
     expect(html).toMatch(/<strong[^>]*>21 \/ 500<\/strong>/);
   });
 
+  it("compte une Place entamée comme prise : la somme des tailles arrondie à la Place entière supérieure", () => {
+    expect(texte(renderToStaticMarkup(<PlacesDeLHabitat occupees={20.112} total={500} />))).toBe("Places : 21 / 500");
+    expect(texte(renderToStaticMarkup(<PlacesDeLHabitat occupees={894} total={500} />))).toBe("Places : 894 / 500");
+  });
+
   it("écrit les grands nombres à la française, sans couper un nombre en fin de ligne", () => {
     expect(texte(renderToStaticMarkup(<PlacesDeLHabitat occupees={12_819} total={1_500} />))).toBe("Places : 12 819 / 1 500");
   });

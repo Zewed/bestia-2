@@ -50,7 +50,7 @@ describe.skipIf(!URL_TEST)("les Places de l'Habitat du Foyer (US-0822, sur base)
     expect(await placesDeLHabitat(pool, t)).toEqual({ occupees: 0, total: PLACES_DE_L_HABITAT_DU_FOYER });
   });
 
-  it("compte prises les Places de chaque Bête de l'effectif selon la taille de son Espèce, arrondies à la Place entière supérieure", async () => {
+  it("compte prises les Places de chaque Bête de l'effectif selon la taille de son Espèce : leur somme exacte", async () => {
     const [t, voisin] = [await nouveauTerritoire(), await nouveauTerritoire()];
     await ajouter(t, [
       ["souris", "male", 2],
@@ -58,11 +58,19 @@ describe.skipIf(!URL_TEST)("les Places de l'Habitat du Foyer (US-0822, sur base)
       ["pigeon", "femelle", 2],
     ]);
     await ajouter(voisin, [["poule", "male", 5]]);
-    const attendues = Math.ceil(3 * (await taille("souris")) + 2 * (await taille("pigeon")));
-    // Une souris occupe 1 Place, un pigeon plus de 8 (docs/adr/0007) ; jamais les Bêtes d'un autre joueur.
-    expect(await taille("souris")).toBe(1);
-    expect(attendues).toBe(21);
-    expect(await placesDeLHabitat(pool, t)).toEqual({ occupees: 21, total: PLACES_DE_L_HABITAT_DU_FOYER });
+    // Une souris occupe 1 Place, un pigeon 8,556 (docs/adr/0007) ; jamais les Bêtes d'un autre joueur.
+    expect([await taille("souris"), await taille("pigeon")]).toEqual([1, 8.556]);
+    expect(await placesDeLHabitat(pool, t)).toEqual({ occupees: 20.112, total: PLACES_DE_L_HABITAT_DU_FOYER });
+  });
+
+  it("ne laisse pas une poussière de calcul déborder d'une Place : 1 pigeon et 28 poules prennent 894 Places tout rond", async () => {
+    const t = await nouveauTerritoire();
+    await ajouter(t, [
+      ["pigeon", "femelle", 1],
+      ["poule", "femelle", 28],
+    ]);
+    // 8,556 + 28 × 31,623 = 894 ; la somme en virgule flottante vaut 894,000…1 avant d'être arrondie au millionième.
+    expect((await placesDeLHabitat(pool, t)).occupees).toBe(894);
   });
 
   it("compte les Bêtes sorties en escorte, qui gardent leur Place pour rentrer, pas celles du Couple, en Réserve", async () => {
