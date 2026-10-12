@@ -321,9 +321,12 @@ export async function raconterLeRetour(client: PoolClient, territoireId: number,
   const autresExpeditions = await dAutresJoueursSurLaCase(client, territoireId, caseId, sejourDUneExpedition(horaires));
   // US-0949 : les Bêtes que le joueur y avait repérées à son départ, parties avant son arrivée.
   const partiesAvant = await betesPartiesAvantLArrivee(client, territoireId, destination, horaires, vues);
-  // US-0947 : ses combats, et sur la Rencontre de chaque Bête qui l'a attaquée, les Bêtes perdues, que le résumé compte.
+  // US-0947 : ses combats, et sur la Rencontre de chaque Bête qui l'a attaquée, les Bêtes perdues, que le résumé compte ;
+  // rien sur celle d'une attaque sans perte, sans escorte.
   const combats = await combatsDUneExpedition(client, expeditionId);
-  const perdues = new Map(combats.map((c) => [c.rencontreId, c.pertes.reduce((n, p) => n + p.nombre, 0)]));
+  const perdues = new Map(
+    combats.map((c): [number, number] => [c.rencontreId, c.pertes.reduce((n, p) => n + p.nombre, 0)]).filter(([, n]) => n > 0),
+  );
   await ecrireUnRecit(
     client,
     territoireId,
