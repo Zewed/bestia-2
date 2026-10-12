@@ -56,6 +56,12 @@ describe("le combat par la somme des forces (US-0944)", () => {
       expect(pertesDuCombat(1000, [de("poule", 450, 1), de("souris", 400, 1)])).toEqual([{ especeId: "souris", nombre: 1 }]);
       // À force égale, l'ordre des Espèces.
       expect(pertesDuCombat(1000, [de("souris", 400, 1), de("poule", 400, 1)])).toEqual([{ especeId: "poule", nombre: 1 }]);
+      // 4 Bêtes perdues sur 1 poule, 6 souris et 3 pigeons : 0,4, 2,4 et 1,2 ; la poule et les souris ont le même reste, la
+      // dernière Bête va aux souris, plus faibles, même quand le calcul en virgule les dirait différents.
+      expect(pertesDuCombat(1000, [de("poule", 100, 1), de("souris", 75, 6), de("pigeon", 34, 3)])).toEqual([
+        { especeId: "pigeon", nombre: 1 },
+        { especeId: "souris", nombre: 3 },
+      ]);
     });
 
     it("jamais plus de Bêtes d'une Espèce qu'elle n'en a dans l'escorte", () => {

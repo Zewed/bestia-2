@@ -36,10 +36,11 @@ export function pertesDuCombat(bete: number, escorte: readonly EspeceAuCombat[])
   if (total === 0 || part === 0) return [];
   // Un millionième de Bête de tolérance : 0,1 × 10 Bêtes en font une, pas deux.
   const perdues = Math.min(total, Math.ceil(part * total - 1e-6));
-  const parts = especes.map((e) => ({ ...e, exacte: (perdues * e.nombre) / total }));
-  const pertes = new Map(parts.map((e) => [e.especeId, Math.floor(e.exacte)]));
-  const restantes = perdues - [...pertes.values()].reduce((n, x) => n + x, 0);
-  const ordre = [...parts].sort((a, b) => b.exacte - Math.floor(b.exacte) - (a.exacte - Math.floor(a.exacte)) || a.force - b.force || (a.especeId < b.especeId ? -1 : 1));
+  // Les parts et leurs restes en entiers, rapportés au total : deux restes égaux le restent, sans bruit de virgule.
+  const parts = especes.map((e) => ({ ...e, entieres: Math.floor((perdues * e.nombre) / total), reste: (perdues * e.nombre) % total }));
+  const pertes = new Map(parts.map((e) => [e.especeId, e.entieres]));
+  const restantes = perdues - parts.reduce((n, e) => n + e.entieres, 0);
+  const ordre = [...parts].sort((a, b) => b.reste - a.reste || a.force - b.force || (a.especeId < b.especeId ? -1 : 1));
   for (const e of ordre.slice(0, restantes)) pertes.set(e.especeId, pertes.get(e.especeId)! + 1);
   return [...pertes]
     .filter(([, nombre]) => nombre > 0)

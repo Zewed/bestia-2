@@ -20,6 +20,7 @@ import { dureeDuTrajetMinutes } from "./allure";
 import { chanceDAttaqueParHeure, instantDeLAttaque, type Regime } from "./attaque";
 import { type Perte, pertesDuCombat } from "./combat";
 import { lancerLExpedition } from "./depart";
+import { subirLesCombats } from "./pertes";
 import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
 import { retourDUneExpedition } from "./phase";
@@ -336,5 +337,92 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
         ),
       );
     }, 60_000);
+  });
+  describe("plusieurs combats, dans l'ordre du temps (subirLesCombats)", () => {
+    /**
+     * Un essai dans une transaction annulée ensuite : un chef qui vient de naître, l'effectif `effectif` (Espèce, mâles,
+     * femelles), et des Expéditions posées en base sur une Case libre de son Monde, chacune avec son escorte (Espèce par
+     * Espèce, son nombre de Bêtes). `essai` reçoit le client de la transaction, le Territoire et les Expéditions.
+     */
+    const avecDesExpeditions = async (
+      effectif: [string, number, number][],
+      escortes: [string, number][][],
+      essai: (client: PoolClient, territoireId: number, ids: number[]) => Promise<void>,
+    ) => {
+      const { territoireId, ne } = await naitre();
+      const client = await pool.connect();
+      try {
+        await client.query("begin");
+        for (const [especeId, males, femelles] of effectif) {
+          await client.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', $3), ($1, $2, 'femelle', $4)", [
+            territoireId,
+            especeId,
+            males,
+            femelles,
+          ]);
+        }
+        const ids: number[] = [];
+        for (const escorte of escortes) {
+          const { rows } = await client.query<{ id: number }>(
+            `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+             select $1, c.id, $3, 30, 600 from case_du_monde c where c.monde_id = $2 and c.chef_id is null order by c.id limit 1 returning id`,
+            [territoireId, mondeId, ne],
+          );
+          for (const [especeId, nombre] of escorte) {
+            await client.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, $3)", [rows[0].id, especeId, nombre]);
+          }
+          ids.push(rows[0].id);
+        }
+        await essai(client, territoireId, ids);
+      } finally {
+        await client.query("rollback");
+        client.release();
+      }
+    };
+    /** Les Bêtes perdues de chaque Espèce de l'escorte de l'Expédition `id`. */
+    const perdues = async (client: PoolClient, id: number) =>
+      Object.fromEntries((await client.query("select espece_id, perdues from expedition_escorte where expedition_id = $1", [id])).rows.map((r) => [r.espece_id, r.perdues]));
+    /** L'effectif de l'Espèce `especeId` : ses mâles et ses femelles. */
+    const sexes = async (client: PoolClient, territoireId: number, especeId: string) =>
+      Object.fromEntries(
+        (await client.query("select sexe, nombre from effectif where territoire_id = $1 and espece_id = $2", [territoireId, especeId])).rows.map((r) => [r.sexe, r.nombre]),
+      );
+    const t0 = new Date(Date.UTC(2031, 0, 1));
+    const combat = (expeditionId: number, especeId: string, minutes: number) => ({ expeditionId, especeId, le: apres(t0, minutes), numero: null, beteDeNaissanceId: null });
+
+    it("le combat suivant ne compte que les survivantes ; une escorte perdue tout entière ne perd plus rien, et l'effectif jamais sous zéro", async () => {
+      // Dix Souris grises (473 chacune, 4 730) contre des poules (9 457) : la moitié, puis les trois quarts des survivantes, puis la dernière.
+      await avecDesExpeditions([["souris", 10, 0]], [[["souris", 10]]], async (client, territoireId, [x]) => {
+        const suite = [];
+        for (let i = 0; i < 4; i++) {
+          await subirLesCombats(client, [combat(x, "poule", i)]);
+          suite.push((await perdues(client, x)).souris);
+        }
+        expect(suite).toEqual([5, 9, 10, 10]);
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 0, femelle: 0 });
+      });
+    });
+
+    it("dans l'ordre du temps, quel que soit l'ordre où ils arrivent : l'escorte affaiblie par le premier perd davantage au second", async () => {
+      // Six Souris grises (2 838) : une poule (9 457) en emporte 5 ; un pigeon (2 216) n'en prend aucune à six, la dernière à une.
+      await avecDesExpeditions([["souris", 6, 0]], [[["souris", 6]]], async (client, _territoireId, [x]) => {
+        await subirLesCombats(client, [combat(x, "pigeon", 10), combat(x, "poule", 5)]);
+        expect(await perdues(client, x)).toEqual({ souris: 6 });
+      });
+      await avecDesExpeditions([["souris", 6, 0]], [[["souris", 6]]], async (client, _territoireId, [x]) => {
+        await subirLesCombats(client, [combat(x, "poule", 10), combat(x, "pigeon", 5)]);
+        expect(await perdues(client, x)).toEqual({ souris: 5 });
+      });
+    });
+
+    it("deux Expéditions du même Territoire prennent leurs pertes à l'effectif l'une après l'autre, chacune au sexe le plus nombreux d'alors", async () => {
+      // Trois mâles et deux femelles ; chaque escorte de deux souris en perd deux contre une poule.
+      await avecDesExpeditions([["souris", 3, 2]], [[["souris", 2]], [["souris", 2]]], async (client, territoireId, [x, y]) => {
+        await subirLesCombats(client, [combat(y, "poule", 1), combat(x, "poule", 1)]);
+        expect([await perdues(client, x), await perdues(client, y)]).toEqual([{ souris: 2 }, { souris: 2 }]);
+        // Mâle (3 contre 2), puis mâle à égalité (2 contre 2), puis femelle (1 contre 2), puis mâle à égalité (1 contre 1).
+        expect(await sexes(client, territoireId, "souris")).toEqual({ male: 0, femelle: 1 });
+      });
+    });
   });
 });

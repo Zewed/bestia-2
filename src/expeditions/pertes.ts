@@ -8,16 +8,24 @@ import type { Pool, PoolClient } from "pg";
 import { pertesDuCombat, sexesDesPertes } from "./combat";
 import { forceDUneBete } from "./force";
 
-/** US-0944 : un combat à livrer : l'Expédition attaquée, l'Espèce de la Bête qui l'attaque et l'instant de l'attaque. */
-export type Combat = { expeditionId: number; especeId: string; le: Date };
+/**
+ * US-0944 : un combat à livrer : l'Expédition attaquée, l'Espèce de la Bête qui l'attaque et l'instant de l'attaque ; et
+ * la Bête, par son numéro sur la Case (une Bête sauvage ordinaire) ou sa ligne (une Bête de naissance), l'autre null.
+ */
+export type Combat = { expeditionId: number; especeId: string; le: Date; numero: number | null; beteDeNaissanceId: number | null };
 
 /**
  * US-0944 : livre les combats `combats`, dans l'ordre du temps : l'escorte de chaque Expédition attaquée, telle qu'il en
- * reste à cet instant, combat la Bête, et ses pertes s'appliquent avant le combat suivant. Une Expédition sans escorte
- * n'en perd aucune. Dans la transaction de retenirLesRencontres (src/expeditions/rencontres.ts).
+ * reste à cet instant, combat la Bête, et ses pertes s'appliquent avant le combat suivant. Au même instant, l'ordre des
+ * Expéditions, puis celui des Bêtes, les sauvages ordinaires par leur numéro avant les Bêtes de naissance par leur ligne :
+ * le même quel que soit le découpage du temps. Une Expédition sans escorte n'en perd aucune. Dans la transaction de
+ * retenirLesRencontres (src/expeditions/rencontres.ts).
  */
 export async function subirLesCombats(base: Pool | PoolClient, combats: readonly Combat[]): Promise<void> {
-  const dansLOrdre = [...combats].sort((a, b) => a.le.getTime() - b.le.getTime() || a.expeditionId - b.expeditionId);
+  const rang = (c: Combat) => [c.numero ?? Infinity, c.beteDeNaissanceId ?? Infinity];
+  const dansLOrdre = [...combats].sort(
+    (a, b) => a.le.getTime() - b.le.getTime() || a.expeditionId - b.expeditionId || rang(a)[0] - rang(b)[0] || rang(a)[1] - rang(b)[1],
+  );
   // L'un après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
   for (const combat of dansLOrdre) await subirLeCombat(base, combat);
 }

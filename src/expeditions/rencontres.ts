@@ -227,21 +227,26 @@ async function retenirLesAttaques(base: Pool | PoolClient, ensembles: Ensemble[]
   }
   if (attaques.length === 0) return;
   // « attaque_le is null » : une attaque retenue ne change plus.
-  const { rows: retenues } = await base.query<{ expeditionId: number; especeId: string; le: Date }>(
+  const { rows: retenues } = await base.query<{ expeditionId: number; especeId: string; le: Date; numero: string | null; beteDeNaissanceId: number | null }>(
     `update rencontre r set attaque_le = v.le
      from unnest($1::int[], $2::bigint[], $3::int[], $4::timestamptz[]) as v(expedition_id, numero, bete_de_naissance_id, le)
      where r.expedition_id = v.expedition_id and (r.numero = v.numero or r.bete_de_naissance_id = v.bete_de_naissance_id)
        and r.attaque_le is null
-     returning r.expedition_id as "expeditionId", r.espece_id as "especeId", r.attaque_le as le`,
+     returning r.expedition_id as "expeditionId", r.espece_id as "especeId", r.attaque_le as le, r.numero,
+       r.bete_de_naissance_id as "beteDeNaissanceId"`,
     [attaques.map((x) => x.expeditionId), attaques.map((x) => x.numero), attaques.map((x) => x.beteDeNaissanceId), attaques.map((x) => x.le)],
   );
   // US-0944 : chaque attaque retenue livre son combat, à son instant (src/expeditions/pertes.ts).
-  await subirLesCombats(base, retenues);
+  await subirLesCombats(
+    base,
+    retenues.map((r) => ({ ...r, numero: r.numero === null ? null : Number(r.numero) })),
+  );
 }
 
 /**
  * US-0943 : les attaques de Bêtes trop fortes qu'a subies l'Expédition `expeditionId`, retenues jusqu'ici, dans l'ordre du
- * temps : au plus une par Bête vue. Le combat (US-0944) les lira.
+ * temps : au plus une par Bête vue. US-0944 : chacune a livré son combat à l'instant où elle a été retenue
+ * (retenirLesAttaques).
  */
 export async function attaquesSubies(base: Pool | PoolClient, expeditionId: number): Promise<AttaqueSubie[]> {
   const { rows } = await base.query<AttaqueSubie>(
