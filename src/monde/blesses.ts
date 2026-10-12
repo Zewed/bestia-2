@@ -16,9 +16,9 @@ export type GroupeDeBlesses = { nombre: number; gueriLe: Date };
  */
 export async function blessesAuFoyer(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<Map<string, GroupeDeBlesses[]>> {
   const { rows } = await base.query<{ especeId: string; nombre: number; gueriLe: Date }>(
-    `select s.espece_id as "especeId", sum(s.blessees)::int as nombre, x.rentree_le + make_interval(hours => $3) as "gueriLe"
+    `select s.espece_id as "especeId", sum(s.blessees)::int as nombre, x.rentree_le + $3 * interval '1 hour' as "gueriLe"
      from expedition_escorte s join expedition x on x.id = s.expedition_id
-     where x.territoire_id = $1 and x.rentree_le is not null and s.blessees > 0 and x.rentree_le + make_interval(hours => $3) > $2
+     where x.territoire_id = $1 and x.rentree_le is not null and s.blessees > 0 and x.rentree_le + $3 * interval '1 hour' > $2
      group by s.espece_id, x.rentree_le
      order by s.espece_id, x.rentree_le`,
     [territoireId, instant, GUERISON_DES_BLESSES_HEURES],

@@ -399,6 +399,32 @@ describe("les Blessés dans l'effectif (US-0952)", () => {
       ],
     });
   });
+
+  it("n'en montre jamais plus que de Bêtes de l'Espèce au Foyer : les derniers à guérir en premier retranchés", async () => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+    // Trois Souris grises au Foyer ; des Blessés rentrés repartis depuis en escorte : quatre en deux groupes, puis un.
+    blesses.blessesAuFoyer.mockResolvedValueOnce(
+      new Map([
+        [
+          "souris",
+          [
+            { nombre: 2, gueriLe: new Date("2026-10-09T12:42:13.250Z") },
+            { nombre: 2, gueriLe: new Date("2026-10-09T13:42:13.250Z") },
+            { nombre: 1, gueriLe: new Date("2026-10-09T14:42:13.250Z") },
+          ],
+        ],
+        ["pigeon", [{ nombre: 1, gueriLe: new Date("2026-10-09T12:42:13.250Z") }]],
+      ]),
+    );
+    // Aucun pigeon au Foyer : aucun de ses Blessés ne s'y montre.
+    expect(confie(await ouvrir(), "escorte").blesses).toEqual({
+      souris: [
+        { nombre: 2, dansMinutes: 300 },
+        { nombre: 1, dansMinutes: 360 },
+      ],
+    });
+  });
 });
 
 describe("partir sans escorte (US-0909)", () => {

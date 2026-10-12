@@ -82,14 +82,21 @@ async function betesAChercher(territoireId: number, c: Coordonnees, instant: Dat
 /**
  * US-0952 : les groupes de Blessés au Foyer du Territoire, Espèce par Espèce (blessesAuFoyer), tels que le bloc Escorte
  * les montre à l'heure du jeu `instant` : combien, et dans combien de minutes, à la minute supérieure, ils seront guéris.
+ * Jamais plus de Blessés que l'Espèce n'a de Bêtes au Foyer (`auFoyer`, ses disponibles) : jusqu'à US-0953, un Blessé
+ * peut repartir en escorte ; les derniers à guérir sont retranchés les premiers.
  */
-async function blessesDuFoyer(territoireId: number, instant: Date): Promise<Record<string, BlessesAffiches[]>> {
+async function blessesDuFoyer(territoireId: number, instant: Date, auFoyer: Map<string, number>): Promise<Record<string, BlessesAffiches[]>> {
   const groupes = await blessesAuFoyer(getPool(), territoireId, instant);
   return Object.fromEntries(
-    [...groupes].map(([especeId, liste]) => [
-      especeId,
-      liste.map(({ nombre, gueriLe }) => ({ nombre, dansMinutes: Math.ceil((gueriLe.getTime() - instant.getTime()) / 60_000) })),
-    ]),
+    [...groupes].flatMap(([especeId, liste]) => {
+      let reste = auFoyer.get(especeId) ?? 0;
+      const affiches = liste.flatMap(({ nombre, gueriLe }) => {
+        const montres = Math.min(nombre, reste);
+        reste -= montres;
+        return montres > 0 ? [{ nombre: montres, dansMinutes: Math.ceil((gueriLe.getTime() - instant.getTime()) / 60_000) }] : [];
+      });
+      return affiches.length > 0 ? [[especeId, affiches]] : [];
+    }),
   );
 }
 
@@ -127,7 +134,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
   const instant = maintenant();
   // US-0952 : les Blessés au Foyer de chaque Espèce, et le temps qui leur reste avant de guérir.
-  const blesses = territoireId !== null && escorte.length > 0 ? await blessesDuFoyer(territoireId, instant) : {};
+  const blesses =
+    territoireId !== null && escorte.length > 0 ? await blessesDuFoyer(territoireId, instant, new Map(escorte.map((e) => [e.id, e.disponibles]))) : {};
   const choisie = destination && "fiche" in destination ? destinationChoisie(destination.fiche) : null;
   // US-0949 : les Bêtes repérées sur la Case de destination ; aucune sans destination.
   const betes = choisie && territoireId !== null ? await betesAChercher(territoireId, choisie, instant) : [];
