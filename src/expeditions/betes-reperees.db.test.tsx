@@ -230,7 +230,8 @@ describe.skipIf(!URL_TEST)("les Bêtes repérées que la carte reçoit, sur base
     await rattraperA(voisin.territoireId, moi.retour);
     expect(await surLaCarte(moi.territoireId, moi.retour)).toEqual([repereDe(moi.place, moi.bete)]);
     expect(await surLaCarte(voisin.territoireId, moi.retour)).toEqual([]);
-  });
+    // 60 s : trouver une Bête rare seule coûte plus ou moins selon où naît le Foyer, et le chef peut renaître trois fois.
+  }, 60_000);
 
   it("disparaît à la fin de sa durée, sans qu'aucun récit le dise", async () => {
     const { territoireId, place, bete, retour } = await voirUneBeteTropForte();
@@ -259,5 +260,5 @@ describe.skipIf(!URL_TEST)("les Bêtes repérées que la carte reçoit, sur base
     expect(await surLaCarte(moi.territoireId, apres(arrivee, 1))).toEqual([]);
     await rattraperA(moi.territoireId, apres(arrivee, JOUR));
     expect(await recitsQuiLaNomment(moi.territoireId, moi.bete.especeId, moi.retour)).toEqual([]);
-  });
+  }, 60_000);
 });
