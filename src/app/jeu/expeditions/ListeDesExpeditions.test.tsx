@@ -37,8 +37,8 @@ const vers = (id: number, partLe: Date, autre: Partial<ExpeditionEnCours> = {}):
   ...autre,
 });
 
-/** Chaque Expédition de la liste : sa phase et son temps restant. */
-const comptes = () => [...document.querySelectorAll("li [data-ligne]")].map((l) => [...l.children].slice(2, 4).map((m) => m.textContent));
+/** Chaque Expédition de la liste : sa phase et son temps restant, dans la pastille posée sur son paysage. */
+const comptes = () => [...document.querySelectorAll("li [data-ligne]")].map((l) => [...l.children[2].children].map((m) => m.textContent));
 
 describe("la liste des Expéditions en cours, en direct (US-0918)", () => {
   it("montre chaque Expédition, dans l'ordre de la lecture, chacune avec son temps restant", () => {
