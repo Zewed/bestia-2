@@ -71,7 +71,7 @@ export async function betesReperees(base: Pool | PoolClient, territoireId: numbe
     // Toutes les Expéditions lues sont arrivées au plus tard à cet instant : celle que la Bête suivrait l'a déjà emmenée.
     .filter((b) => {
       const rivales = expeditions.get(b.caseId)!.map((x) => ({ id: x.id, arrivee: x.arrivee, depart: x.depart, escorte: escortes.get(x.id) ?? null }));
-      return lExpeditionSuivie(b, rivales) === null;
+      return lExpeditionSuivie({ ...b, numero: Number(b.numero), beteDeNaissanceId: null }, rivales) === null;
     })
     .sort((a, b) => a.id - b.id)
     .map((b) => ({ id: b.id, laCase: { q: b.q, r: b.r }, especeId: b.especeId, espece: b.espece, force: b.force, jusquA: b.depart }));

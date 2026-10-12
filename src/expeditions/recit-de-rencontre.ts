@@ -10,7 +10,7 @@ import type { PoolClient } from "pg";
 import type { Sexe } from "@/monde/betes-sauvages";
 import type { IssueDUneRencontre, RencontreRacontee } from "@/monde/recits";
 import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
-import { type BeteSurLaCase, type ExpeditionSurLaCase, forceQuiManque, lExpeditionSuivie } from "./apprivoisement";
+import { type BeteDisputee, type ExpeditionSurLaCase, forceQuiManque, lExpeditionSuivie } from "./apprivoisement";
 import { expeditionsPresentesSurLesCases } from "./presence";
 import { forcesDesEscortes, forcesDesEspeces, type Rencontre } from "./rencontres";
 
@@ -33,7 +33,7 @@ export function issueDUneRencontre(apprivoisee: boolean, depart: Date | null, fi
  * (lExpeditionSuivie). La règle même des Rencontres, sur des horaires et des escortes fixés au départ : le même instant
  * quel que soit le Territoire rattrapé en premier, que celui de l'autre Expédition ait déjà retenu son départ ou non.
  */
-export function departDUneBete(bete: BeteSurLaCase, expeditions: readonly ExpeditionSurLaCase[]): Date {
+export function departDUneBete(bete: BeteDisputee, expeditions: readonly ExpeditionSurLaCase[]): Date {
   const suivie = lExpeditionSuivie(bete, expeditions);
   return suivie && suivie.le < bete.depart ? suivie.le : bete.depart;
 }
@@ -97,7 +97,7 @@ async function betesRestees(client: PoolClient, expeditionId: number, vues: read
   return new Map([
     ...parties,
     ...restees.map((r): [number, { depart: Date; manque: number }] => {
-      const bete = { arrivee: r.apparueLe, depart: r.finDePresence, force: forces.get(r.especeId)!, rareteId: r.rareteId };
+      const bete = { ...r, arrivee: r.apparueLe, depart: r.finDePresence, force: forces.get(r.especeId)! };
       return [r.id, { depart: departDUneBete(bete, expeditions), manque: forceQuiManque(escortes.get(expeditionId) ?? null, bete) }];
     }),
   ]);

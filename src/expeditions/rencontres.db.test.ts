@@ -267,9 +267,13 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     expect(siennes.filter((r) => r.beteDeNaissanceId !== null)).toEqual([
       { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id, apprivoisee: true },
     ]);
-    // Le voisin voit les mêmes Bêtes sauvages, aux mêmes instants (US-0962), mais aucune ne le suit : arrivées au même
-    // instant, les communes ont suivi celle du joueur, de plus petit identifiant (US-0934, US-0935).
-    expect(await rencontres(chezLeVoisin)).toEqual(siennes.filter((r) => r.beteDeNaissanceId === null).map((r) => ({ ...r, apprivoisee: false })));
+    // Le voisin voit les mêmes Bêtes sauvages, aux mêmes instants (US-0962). Arrivées au même instant, sans escorte, les
+    // deux Expéditions ont la même chance : chaque commune suit l'une ou l'autre, tirée au sort (US-0963), jamais les deux ;
+    // une plus rare, aucune (US-0935).
+    const sauvages = siennes.filter((r) => r.beteDeNaissanceId === null);
+    const duVoisin = await rencontres(chezLeVoisin);
+    expect(duVoisin.map((r) => ({ ...r, apprivoisee: false }))).toEqual(sauvages.map((r) => ({ ...r, apprivoisee: false })));
+    for (const [i, r] of sauvages.entries()) expect(r.apprivoisee !== duVoisin[i].apprivoisee, `${r.numero}`).toBe(r.rareteId === "commune");
   });
 
   it("retient les mêmes Rencontres, aux mêmes instants, en direct, par morceaux, d'un bloc au rattrapage, ou par la tâche planifiée", async () => {
