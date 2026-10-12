@@ -6,7 +6,8 @@
 // planifiée, d'un bloc ou par morceaux, pour une Case seule ou avec d'autres, tant que la ligne de chacune reste en base.
 // Rien ne s'écrit : à la fin du séjour, l'Expédition repart seule vers le Foyer. US-0920 : rappelée, elle quitte sa Case
 // au rappel, ou n'y vient pas si elle était encore à l'aller (sejourDUneExpedition). US-0945 : en fuite, elle la quitte à
-// sa fuite, une fois écrite ; avant, les Rencontres la calculent pour toute la Case (src/expeditions/fuites-de-la-case.ts).
+// sa fuite, une fois écrite ; avant, les Rencontres, les récits et les Bêtes repérées la calculent pour toute la Case
+// (src/expeditions/fuites-des-cases.ts).
 // Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";

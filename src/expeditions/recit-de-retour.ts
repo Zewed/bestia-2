@@ -19,7 +19,7 @@ import { betesReperees } from "./betes-reperees";
 import { casesLeveesParLExpedition } from "./brouillard";
 import { casesDuFoyer } from "./choix-de-destination";
 import { demiTourDUneExpedition, type HorairesDUneExpedition, sejourDUneExpedition } from "./phase";
-import { expeditionsPresentesSurLaCase } from "./presence";
+import { expeditionsPresentesSurLaCaseApresLesFuites } from "./fuites-des-cases";
 import { rencontresARaconter } from "./recit-de-rencontre";
 import { type CombatARaconter, combatsDUneExpedition } from "./recit-du-combat";
 import { forcesDesEscortes, forcesDesEspeces, type Rencontre, rencontresDUneExpedition } from "./rencontres";
@@ -426,13 +426,13 @@ async function betesPartiesAvantLArrivee(
 
 /**
  * US-0962 : si l'Expédition d'un autre Territoire que `territoireId` était sur la Case `caseId` à un instant du séjour
- * `sejour` (expeditionsPresentesSurLaCase) ; celles du même joueur, qu'il connaît, ne comptent pas. Lue au retour : les
- * horaires de chacune sont fixés au départ, ou au rappel, d'où la même réponse en direct, au rattrapage ou par la tâche
- * planifiée. Sans séjour, aucune.
+ * `sejour` (expeditionsPresentesSurLaCaseApresLesFuites) ; celles du même joueur, qu'il connaît, ne comptent pas. Lue au
+ * retour : les horaires de chacune sont fixés au départ, ou au rappel, et sa fuite (US-0945) se calcule pour la Case
+ * entière, d'où la même réponse en direct, au rattrapage ou par la tâche planifiée. Sans séjour, aucune.
  */
 async function dAutresJoueursSurLaCase(client: PoolClient, territoireId: number, caseId: number, sejour: { debut: Date; fin: Date } | null): Promise<boolean> {
   if (!sejour || sejour.fin <= sejour.debut) return false;
-  return (await expeditionsPresentesSurLaCase(client, caseId, sejour.debut, sejour.fin)).some((x) => x.territoireId !== territoireId);
+  return (await expeditionsPresentesSurLaCaseApresLesFuites(client, caseId, sejour.debut, sejour.fin)).some((x) => x.territoireId !== territoireId);
 }
 
 /** US-0935 : le nom de chacune des Espèces `ids`, dans le même ordre. */

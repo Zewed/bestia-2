@@ -1,9 +1,10 @@
 // Les fuites d'une Case (US-0945) : une Expédition attaquée par une Bête trop forte (US-0943) fuit à l'instant de sa
 // première attaque, et quitte la Case pour tous : les Expéditions des autres Territoires ne l'y trouvent plus, même
 // avant que son propre Territoire ne soit rattrapé. Chaque Territoire calcule donc les fuites de toute la Case, de la même
-// façon et des mêmes faits : les Bêtes, les horaires et les escortes fixés au départ, les tirages, les fuites déjà
-// écrites, et l'instant jusqu'où chaque Territoire est calculé (avant lui, une fuite de ses Expéditions serait écrite,
-// comme src/expeditions/fuite.ts l'écrit) ; d'où les mêmes fuites, quel que soit l'ordre des rattrapages.
+// façon et des mêmes faits (lus en base par src/expeditions/fuites-des-cases.ts) : les Bêtes, les horaires et les escortes
+// fixés au départ, les tirages, les fuites déjà écrites, et l'instant jusqu'où chaque Territoire est calculé (avant lui,
+// une fuite de ses Expéditions serait écrite, comme src/expeditions/fuite.ts l'écrit) ; d'où les mêmes fuites, quel que
+// soit l'ordre des rattrapages.
 //
 // Les tirages d'une attaque ne dépendent que de la Bête, de l'Expédition et de l'heure comptée depuis leur Rencontre
 // (instantDeLAttaque) : l'instant qu'ils promettent est fixé d'avance, et l'attaque n'a lieu que si elles sont encore

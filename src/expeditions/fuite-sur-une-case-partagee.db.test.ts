@@ -2,15 +2,17 @@
 // A fuit à l'attaque d'une Bête rare ; puis une Bête commune se montre, que le tirage (US-0963) aurait donnée à X si elle
 // était restée. L'Expédition Y du joueur B, seule encore sur la Case, l'emmène : que A soit rattrapé avant B, après lui,
 // ou seulement à la fin pendant que B joue en ligne, les fuites de la Case se calculent des mêmes faits
-// (src/expeditions/fuites-de-la-case.ts), sans attendre le rattrapage du Territoire de X.
+// (src/expeditions/fuites-de-la-case.ts), sans attendre le rattrapage du Territoire de X : la Bête emmenée, les retours et
+// les récits des deux joueurs sont les mêmes dans toutes les manières.
 import type { Pool, PoolClient } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { type BeteSauvage, betesSauvagesDesCases } from "@/monde/betes-sauvages";
+import { recitsDuTerritoire } from "@/monde/recits";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { attaqueTiree, effacerLExpedition } from "@/test/attaques";
+import { attaqueTiree } from "@/test/attaques";
 import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lExpeditionSuivie } from "./apprivoisement";
 import { forceDUneBete } from "./force";
@@ -25,11 +27,20 @@ const TRAJET = 30;
 /** Au plus tant d'Expéditions X posées pour en trouver une que la Bête rare attaque. */
 const POSEES_AU_PLUS = 100;
 
+/** La ligne du récit de retour qui dit que d'autres joueurs séjournaient sur la Case, sans les nommer. */
+const AUTRES = "D'autres Expéditions séjournaient sur la Case.";
+
 /** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
 const MONDE_D_ESSAI = "Essai d'une fuite sur une Case partagée (US-0945)";
 
-/** Les manières de rattraper les deux joueurs : l'un puis l'autre, d'un bloc, ou B en ligne pendant que A est absent. */
-const MANIERES = ["d'un bloc, A d'abord", "d'un bloc, B d'abord", "B en ligne, A absent jusqu'à la fin"] as const;
+/** Les manières de rattraper les deux joueurs : l'un puis l'autre, d'un bloc, ou B pendant que A est absent. */
+const MANIERES = [
+  "d'un bloc, A d'abord",
+  "d'un bloc, B d'abord",
+  "B en ligne, A absent jusqu'à la fin",
+  // Le Territoire de B, déjà calculé après le départ de la Bête rare, reprend d'ici sans la revoir : la Case se relit plus tôt.
+  "B en deux fois, après le départ de la rare, A absent jusqu'à la fin",
+] as const;
 type Maniere = (typeof MANIERES)[number];
 
 /** Une Espèce telle que l'essai la choisit pour une escorte : sa Rareté et la force d'une de ses Bêtes (US-0905). */
@@ -59,7 +70,7 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
   let rare: BeteSauvage;
   let commune: BeteSauvage;
   /** Pour chaque manière : X et Y relues, l'instant de l'attaque sur X, et ce que l'effectif de chacun a gagné de l'Espèce de la commune. */
-  const lus = {} as Record<Maniere, { x: Lue; y: Lue; attaque: Date; gagnees: Record<"A" | "B", number> }>;
+  const lus = {} as Record<Maniere, { x: Lue; y: Lue; attaque: Date; gagnees: Record<"A" | "B", number>; recits: Record<"A" | "B", string[]> }>;
   let retourDeY: Date;
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
   const forceDe = (id: string) => especes.find((e) => e.id === id)!.force;
@@ -82,10 +93,10 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
    * L'Expédition d'un joueur sur la Case, posée en base comme un départ l'aurait fait, escortée d'une Bête de la commune
    * la plus faible, avec son retour au Foyer programmé (US-0916).
    */
-  const poser = async (client: PoolClient, territoireId: number, h: HorairesDUneExpedition) => {
+  const poser = async (client: PoolClient, territoireId: number, h: HorairesDUneExpedition, id?: number) => {
     const { rows } = await client.query<{ id: number }>(
-      "insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) values ($1, $2, $3, $4, $5) returning id",
-      [territoireId, caseId, h.partLe, h.trajetMinutes, h.sejourMinutes],
+      "insert into expedition (id, territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) overriding system value values (coalesce($1::int, nextval(pg_get_serial_sequence('expedition', 'id'))), $2, $3, $4, $5, $6) returning id",
+      [id ?? null, territoireId, caseId, h.partLe, h.trajetMinutes, h.sejourMinutes],
     );
     await client.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, 1)", [rows[0].id, faible.id]);
     await programmerLeRetour(client, territoireId, rows[0].id, h);
@@ -153,20 +164,21 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
     const deY = horaires(rare.depart, apres(commune.arrivee, HEURE));
     const fin = apres(retourDUneExpedition(deX)!, HEURE);
     retourDeY = retourDUneExpedition(deY)!;
+    // L'identifiant de X, tel que ses tirages la font attaquer par la rare : le même dans toutes les manières, pour que
+    // l'attaque, et tout ce qu'elle laisse, soient les mêmes.
+    let idDeX = 0;
+    let attaque: Date | null = null;
+    for (let essais = 0; !attaque; essais++) {
+      if (essais === POSEES_AU_PLUS) throw new Error(`${POSEES_AU_PLUS} identifiants essayés, aucun attaqué.`);
+      idDeX = Number((await pool.query<{ id: string }>("select nextval(pg_get_serial_sequence('expedition', 'id')) as id")).rows[0].id);
+      attaque = await attaqueTiree(pool, { caseId, especeId: rare.especeId, numero: rare.numero }, idDeX, { debut: rare.arrivee, fin: rare.depart });
+    }
     for (const maniere of MANIERES) {
       const client = await pool.connect();
       try {
         await client.query("begin");
         const jeu = poolDansLaTransaction(client);
-        // X, posée jusqu'à ce que la rare l'attaque : ses tirages dépendent de son identifiant.
-        let x = 0;
-        let attaque: Date | null = null;
-        for (let posees = 0; !attaque; posees++) {
-          if (posees === POSEES_AU_PLUS) throw new Error(`${POSEES_AU_PLUS} Expéditions posées, aucune attaquée.`);
-          if (x) await effacerLExpedition(client, x);
-          x = await poser(client, territoires.A, deX);
-          attaque = await attaqueTiree(client, { caseId, especeId: rare.especeId, numero: rare.numero }, x, { debut: rare.arrivee, fin: rare.depart });
-        }
+        const x = await poser(client, territoires.A, deX, idDeX);
         const y = await poser(client, territoires.B, deY);
         const effectif = async (territoireId: number) =>
           (await client.query<{ n: number }>("select coalesce(sum(nombre), 0)::int as n from effectif where territoire_id = $1 and espece_id = $2", [territoireId, commune.especeId]))
@@ -179,13 +191,20 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
         } else if (maniere === "d'un bloc, B d'abord") {
           await aLHeure("B", fin);
           await aLHeure("A", fin);
-        } else {
+        } else if (maniere === "B en ligne, A absent jusqu'à la fin") {
           for (let t = deY.partLe; t < fin; t = apres(t, 20)) await aLHeure("B", t);
           await aLHeure("B", fin);
           await aLHeure("A", fin);
+        } else {
+          await aLHeure("B", apres(rare.depart, 1));
+          await aLHeure("B", fin);
+          await aLHeure("A", fin);
         }
+        // Le récit de retour de chaque joueur, ligne à ligne.
+        const recitDe = async (joueur: "A" | "B") =>
+          (await recitsDuTerritoire(client, territoires[joueur])).filter((r) => r.titre === "Retour d'Expédition").flatMap((r) => r.texte.split("\n"));
         const gagnees = { A: (await effectif(territoires.A)) - avant.A, B: (await effectif(territoires.B)) - avant.B };
-        lus[maniere] = { x: await lire(client, x), y: await lire(client, y), attaque, gagnees };
+        lus[maniere] = { x: await lire(client, x), y: await lire(client, y), attaque, gagnees, recits: { A: await recitDe("A"), B: await recitDe("B") } };
       } finally {
         await client.query("rollback");
         client.release();
@@ -214,5 +233,13 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
       rencontres: [{ numero: commune.numero, apprivoisee: true, attaqueLe: null }],
     });
     expect(gagnees).toEqual({ A: 0, B: 1 });
+  });
+
+  it.each(MANIERES)("%s : le récit de retour de B ne compte pas X sur la Case, qui l'avait quittée, comme celui de A, qui ne la dit pas partie avec Y", (maniere) => {
+    const { recits } = lus[maniere];
+    // X est partie avant l'arrivée de Y : aucun joueur ne trouve l'autre sur la Case.
+    for (const joueur of ["A", "B"] as const) expect(recits[joueur]).not.toContain(AUTRES);
+    // Les mêmes récits, quelle que soit la manière de rattraper les deux joueurs.
+    expect(recits).toEqual(lus[MANIERES[0]].recits);
   });
 });

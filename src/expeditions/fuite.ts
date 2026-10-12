@@ -4,8 +4,9 @@
 // sans rien perdre. Sa fuite s'écrit comme un rappel, à l'instant de l'attaque, marquée en fuite (expedition.en_fuite), et
 // son retour au Foyer est avancé à sa nouvelle heure, que le mécanisme du temps applique à son instant exact. Elle
 // s'écrit au rattrapage du Territoire de l'Expédition ; les autres Territoires de la Case ne l'attendent pas : ils la
-// calculent eux-mêmes, des mêmes faits (src/expeditions/fuites-de-la-case.ts), et ne la trouvent plus sur la Case après
-// sa fuite, quel que soit l'ordre des rattrapages. Côté serveur uniquement.
+// calculent eux-mêmes, des mêmes faits (src/expeditions/fuites-de-la-case.ts, lue en base par src/expeditions/fuites-des-cases.ts),
+// et ne la trouvent plus sur la Case après sa fuite, quel que soit l'ordre des rattrapages ; les récits et les Bêtes
+// repérées lisent la même présence. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { HorairesDUneExpedition } from "./phase";

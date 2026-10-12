@@ -16,20 +16,15 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
-import { betesDeNaissanceDesCases, hasardsDeLAttaqueDUneBeteDeNaissance } from "@/monde/betes-de-naissance";
-import { betesSauvagesDesCases, emmenerUneBete, hasardsDeLAttaque } from "@/monde/betes-sauvages";
+import { betesDeNaissanceDesCases } from "@/monde/betes-de-naissance";
+import { betesSauvagesDesCases, emmenerUneBete } from "@/monde/betes-sauvages";
 import { type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
-import { chanceDAttaqueParHeure, type Regime } from "./attaque";
-import { forceDeLEscorte, forceDUneBete } from "./force";
+import { forcesDesEscortes, forcesDesEspeces } from "./forces-en-base";
 import type { Fuite } from "./fuite";
-import { type AttaqueDeLaCase, type BeteDeLaCase, type ExpeditionDeLaCase, fuitesDeLaCase } from "./fuites-de-la-case";
+import type { AttaqueDeLaCase } from "./fuites-de-la-case";
+import { fuitesDesCases } from "./fuites-des-cases";
 import { subirLesCombats } from "./pertes";
-import {
-  type ExpeditionPresenteEtSonTerritoire,
-  expeditionsPresentesDuTerritoire,
-  expeditionsPresentesEtLeurTerritoire,
-  expeditionsPresentesSurLesCases,
-} from "./presence";
+import { expeditionsPresentesDuTerritoire, expeditionsPresentesSurLesCases } from "./presence";
 import { sexesALApprivoisement } from "./sexe";
 
 /**
@@ -71,26 +66,8 @@ type AVoir = {
  */
 export type AttaqueSubie = { rencontreId: number; especeId: string; le: Date };
 
-/**
- * US-0934 : la force de l'escorte de chacune des Expéditions `ids` (US-0905), tirée des caractéristiques de ses Espèces ;
- * une Expédition sans escorte n'y figure pas.
- */
-export async function forcesDesEscortes(base: Pool | PoolClient, ids: number[]): Promise<Map<number, number>> {
-  const { rows } = await base.query<{ id: number; attaque: number; vie: number; nombre: number }>(
-    `select s.expedition_id as id, e.attaque, e.vie, s.nombre from expedition_escorte s join espece e on e.id = s.espece_id
-     where s.expedition_id = any($1::int[])`,
-    [ids],
-  );
-  const parExpedition = new Map<number, { force: number; nombre: number }[]>();
-  for (const { id, nombre, ...espece } of rows) parExpedition.set(id, [...(parExpedition.get(id) ?? []), { force: forceDUneBete(espece), nombre }]);
-  return new Map([...parExpedition].map(([id, betes]) => [id, forceDeLEscorte(betes)]));
-}
-
-/** US-0934 : la force d'une Bête de chacune des Espèces `ids` (US-0905). */
-export async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): Promise<Map<string, number>> {
-  const { rows } = await base.query<{ id: string; attaque: number; vie: number }>("select id, attaque, vie from espece where id = any($1::text[])", [ids]);
-  return new Map(rows.map(({ id, ...espece }) => [id, forceDUneBete(espece)]));
-}
+// US-0934 : la force des escortes et des Espèces, lue en base, d'où les récits la reprennent d'ici.
+export { forcesDesEscortes, forcesDesEspeces };
 
 /**
  * US-0932 : retient les Rencontres des Expéditions du Territoire `territoireId` qui tombent dans [de, a) : chaque Bête
@@ -128,12 +105,14 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   // Territoires, avec la force de leur escorte : celles qui ont pu emmener une Bête avant celles du Territoire.
   const depuis = new Date(Math.min(...betes.map((b) => b.arrivee.getTime())));
   // US-0945 : chaque Expédition de ces Cases, de tous les Territoires, n'y est plus après sa fuite.
-  const { fuites, attaques: attaquesDesCases } = await fuitesDesCases(base, territoireId, caseIds, depuis, de, a);
+  const { fuites, attaques: attaquesDesCases } = await fuitesDesCases(base, caseIds, depuis, a, { territoireId, de });
   const jusquALaFuite = <X extends { id: number; depart: Date }>(x: X): X => {
     const fuite = fuites.get(x.id);
     return fuite && fuite < x.depart ? { ...x, depart: fuite } : x;
   };
-  const expeditions = duTerritoire.map(jusquALaFuite);
+  // Celles du Territoire ne sont pas coupées : leurs Rencontres se retiennent jusqu'à leur première attaque, comprise, qu'une
+  // Rencontre à l'instant même de la fuite n'est pas perdue.
+  const expeditions = duTerritoire;
   const presentes = await expeditionsPresentesSurLesCases(base, caseIds, depuis, a);
   const escortes = await forcesDesEscortes(base, [...new Set([...presentes.values()].flat().map((x) => x.id))]);
   const forces = await forcesDesEspeces(base, [...new Set(betes.map((b) => b.especeId))]);
@@ -215,106 +194,6 @@ async function retenirLesVues(base: Pool | PoolClient, territoireId: number, aVo
   );
   // US-0933 : l'Espèce de chaque Bête vue entre au Bestiaire, qu'elle suive l'Expédition ou non.
   if (rowCount) await inscrireLesEspecesCroisees(base, territoireId);
-}
-
-/** US-0945 : au plus tant de relectures des Cases, chacune plus tôt, pour y trouver tout ce dont dépendent leurs fuites. */
-const RELECTURES_AU_PLUS = 8;
-
-/**
- * US-0945 : les fuites des Expéditions présentes sur les Cases `caseIds` jusqu'à `a`, de tous les Territoires, et les
- * attaques qui les causent (fuitesDeLaCase), calculées des mêmes faits par chaque Territoire : les attaques d'une
- * Expédition du Territoire `territoireId` sont connues jusqu'au début de sa tranche, `de`, celles d'une autre jusqu'à
- * l'instant où son Territoire est calculé (avant lui, sa fuite serait écrite). Les Cases se lisent depuis `depuis`, puis
- * plus tôt tant qu'il le faut : depuis l'arrivée de chaque Bête présente pendant qu'une attaque n'est pas encore connue,
- * avec chaque Expédition présente depuis, qu'elle a pu suivre. Dans la transaction de retenirLesRencontres.
- */
-async function fuitesDesCases(
-  base: Pool | PoolClient,
-  territoireId: number,
-  caseIds: number[],
-  depuis: Date,
-  de: Date,
-  a: Date,
-): Promise<{ fuites: Map<number, Date>; attaques: AttaqueDeLaCase[] }> {
-  const connuesJusqua = (x: ExpeditionPresenteEtSonTerritoire) => (x.territoireId === territoireId ? de : x.calculeJusqua);
-  let debut = depuis;
-  let expeditions: ExpeditionPresenteEtSonTerritoire[] = [];
-  let betes: BeteLue[] = [];
-  for (let lecture = 0; lecture < RELECTURES_AU_PLUS; lecture++) {
-    expeditions = await expeditionsPresentesEtLeurTerritoire(base, caseIds, debut, a);
-    // Les attaques encore inconnues tombent après ceci : seules les Bêtes présentes depuis peuvent les faire.
-    const inconnues = Math.min(a.getTime(), ...expeditions.filter((x) => !x.enFuite).map((x) => Math.max(connuesJusqua(x).getTime(), x.arrivee.getTime())));
-    betes = inconnues < a.getTime() ? await betesDesCases(base, caseIds, [...new Set(expeditions.map((x) => x.territoireId))], new Date(inconnues), a) : [];
-    // Qui suit chacune se décide dès son arrivée, parmi les Expéditions présentes depuis : la Case se relit de là.
-    const premiere = Math.min(debut.getTime(), ...betes.map((b) => b.arrivee.getTime()));
-    if (premiere >= debut.getTime()) break;
-    debut = new Date(premiere);
-  }
-  if (betes.length === 0) return { fuites: new Map(), attaques: [] };
-  const escortes = await forcesDesEscortes(base, expeditions.map((x) => x.id));
-  const forces = await forcesDesEspeces(base, [...new Set(betes.map((b) => b.especeId))]);
-  const { rows: especes } = await base.query<{ id: string; regime: Regime }>("select id, regime from espece where id = any($1::text[])", [
-    [...new Set(betes.map((b) => b.especeId))],
-  ]);
-  const regimes = new Map(especes.map((e) => [e.id, e.regime]));
-  const { rows: cases } = await base.query<{ id: number; q: number; r: number; graine: string }>(
-    "select c.id, c.q, c.r, m.graine from case_du_monde c join monde m on m.id = c.monde_id where c.id = any($1::int[])",
-    [caseIds],
-  );
-  const lesCases = new Map(cases.map((c) => [c.id, { q: c.q, r: c.r, graine: Number(c.graine) }]));
-  const fuites = new Map<number, Date>();
-  const attaques: AttaqueDeLaCase[] = [];
-  for (const caseId of caseIds) {
-    const laCase = lesCases.get(caseId)!;
-    const deLaCase: ExpeditionDeLaCase[] = expeditions
-      .filter((x) => x.caseId === caseId)
-      .map((x) => ({ id: x.id, territoireId: x.territoireId, arrivee: x.arrivee, depart: x.depart, escorte: escortes.get(x.id) ?? null, enFuite: x.enFuite, connuesJusqua: connuesJusqua(x) }));
-    const surLaCase: BeteDeLaCase[] = betes
-      .filter((b) => b.caseId === caseId)
-      .map((b) => ({
-        ...b,
-        force: forces.get(b.especeId)!,
-        chance: chanceDAttaqueParHeure(regimes.get(b.especeId)!),
-        // US-0943 : les tirages d'une Bête sauvage ordinaire, de la graine de son Monde, de sa Case et de son numéro ; ceux
-        // d'une Bête de naissance, de la graine et de sa ligne.
-        hasards: (expeditionId: number, heure: number) =>
-          b.numero !== null
-            ? hasardsDeLAttaque(laCase, b.numero, expeditionId, heure)
-            : hasardsDeLAttaqueDUneBeteDeNaissance(laCase.graine, b.beteDeNaissanceId!, expeditionId, heure),
-      }));
-    const deCetteCase = fuitesDeLaCase(deLaCase, surLaCase, a);
-    for (const [id, le] of deCetteCase.fuites) fuites.set(id, le);
-    attaques.push(...deCetteCase.attaques);
-  }
-  return { fuites, attaques };
-}
-
-/**
- * US-0945 : une Bête lue sur sa Case pour les fuites : sa présence, son Espèce et sa Rareté ; une Bête sauvage ordinaire
- * par son numéro, une Bête de naissance par sa ligne et son Territoire, à qui seul elle se montre.
- */
-type BeteLue = Omit<BeteDeLaCase, "force" | "chance" | "hasards">;
-
-/**
- * US-0945 : les Bêtes présentes à un moment de [de, a) sur les Cases `caseIds` qui peuvent attaquer une Expédition : les
- * Bêtes sauvages ordinaires, que toutes voient, comptées encore à l'instant où elles en suivent une (departCompris), et
- * les Bêtes de naissance des Territoires `territoires`, chacune à son seul Territoire (US-0975).
- */
-async function betesDesCases(base: Pool | PoolClient, caseIds: number[], territoires: number[], de: Date, a: Date): Promise<BeteLue[]> {
-  // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
-  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a, { departCompris: true });
-  const betes: BeteLue[] = caseIds.flatMap((caseId) =>
-    sauvages.get(caseId)!.map((b) => ({ arrivee: b.arrivee, depart: b.depart, especeId: b.especeId, rareteId: b.rareteId, caseId, numero: b.numero, beteDeNaissanceId: null, territoireId: null })),
-  );
-  for (const territoire of territoires) {
-    const deNaissance = await betesDeNaissanceDesCases(base, territoire, caseIds, de, a);
-    for (const caseId of caseIds) {
-      for (const b of deNaissance.get(caseId)!) {
-        betes.push({ arrivee: b.arrivee, depart: b.depart, especeId: b.especeId, rareteId: b.rareteId, caseId, numero: null, beteDeNaissanceId: b.id, territoireId: territoire });
-      }
-    }
-  }
-  return betes;
 }
 
 /**
