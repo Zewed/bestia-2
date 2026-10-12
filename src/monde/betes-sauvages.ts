@@ -197,16 +197,16 @@ type CaseEnBase = Coordonnees & {
  * seule, à la demande. Aucune sur une Case qui appartient à un Territoire ; une Case inconnue n'en a pas non plus.
  * US-0926 : une Bête partie en suivant une Expédition n'y est plus dès son départ. US-0927 : l'Anneau de chaque Case se
  * tire de la forme de son Monde. US-0928 : les Espèces sont celles de la base, lues une fois pour toutes les Cases.
- * US-0962 : `partiesComprises`, celles qui ont suivi une Expédition y comptent jusqu'à la fin de leur durée, comme si
- * elles n'étaient pas parties : pour les Rencontres, qui retrouvent d'elles-mêmes l'instant de ce départ
- * (lExpeditionSuivie), que le Territoire de l'Expédition suivie l'ait déjà retenu ou non.
+ * US-0962 : `departCompris`, celle qui a suivi une Expédition y compte encore à l'instant même de son départ : pour les
+ * Rencontres, où toutes les Expéditions présentes à cet instant la voient, que le Territoire de l'Expédition suivie ait
+ * déjà retenu ce départ ou non.
  */
 export async function betesSauvagesDesCases(
   base: Pool | PoolClient,
   caseIds: number[],
   de: Date,
   a: Date,
-  { partiesComprises = false }: { partiesComprises?: boolean } = {},
+  { departCompris = false }: { departCompris?: boolean } = {},
 ): Promise<Map<number, BeteSauvage[]>> {
   // US-0932 : l'une après l'autre : le mécanisme du temps l'appelle avec le client de sa transaction, où deux requêtes
   // ne partent pas à la fois.
@@ -225,7 +225,7 @@ export async function betesSauvagesDesCases(
       const c = parCase.get(id);
       if (!c?.libre) return [id, []];
       const laCase = { q: c.q, r: c.r, graine: Number(c.graine), anneau: anneauDUneCase(c, c.forme), biome: c.biome };
-      const parties = new Map(partiesComprises ? [] : c.parties.map((p) => [Number(p.numero), new Date(p.partie_le)]));
+      const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(new Date(p.partie_le).getTime() + (departCompris ? 1 : 0))]));
       return [id, betesSauvages(laCase, de, a, rangees, { parties })];
     }),
   );

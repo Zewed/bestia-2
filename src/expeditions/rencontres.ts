@@ -85,15 +85,15 @@ export async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): 
  * son apparition ; après cet instant, plus aucune autre ne la voit, même dans la même tranche. US-0962 : à cet instant,
  * toutes celles qui sont sur la Case la voient encore, de tous les joueurs, et son Espèce entre au Bestiaire de chacun.
  * Le Territoire de l'Expédition suivie retient seul son départ, à l'heure de l'Apprivoisement (emmenerUneBete) : les
- * autres le recalculent, sur les Bêtes lues jusqu'à la fin de leur durée (partiesComprises), d'où le même résultat quel
- * que soit l'ordre des rattrapages.
+ * autres le recalculent, sur les Bêtes lues jusqu'à l'instant de ce départ compris (departCompris), d'où le même
+ * résultat quel que soit l'ordre des rattrapages.
  */
 export async function retenirLesRencontres(base: Pool | PoolClient, territoireId: number, de: Date, a: Date): Promise<void> {
   const expeditions = await expeditionsPresentesDuTerritoire(base, territoireId, de, a);
   if (expeditions.length === 0) return;
   const caseIds = [...new Set(expeditions.map((x) => x.caseId))];
   // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
-  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a, { partiesComprises: true });
+  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a, { departCompris: true });
   const deNaissance = await betesDeNaissanceDesCases(base, territoireId, caseIds, de, a);
   const betes = caseIds.flatMap((caseId) => [
     ...sauvages.get(caseId)!.map((b) => ({ ...b, caseId, beteDeNaissanceId: null })),

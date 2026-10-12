@@ -250,6 +250,10 @@ describe.skipIf(!URL_TEST)("chaque Expédition présente voit la Bête (US-0962,
     // Une seule l'emmène : A, posée la première, à égalité d'instant (US-0934) ; ce que le récit de B en dit est US-0964.
     expect(B.recits[0].rencontres).toEqual([expect.objectContaining({ ...vue, sexe: null })]);
     expect(B.recits[0].rencontres![0].issue).not.toBe("apprivoisee");
+    // Le texte de chaque retour le dit : A la ramène au Foyer ; B l'a vue, et rien ne lui manquait pour l'emmener.
+    expect(A.recits[0].texte).toMatch(/^Une Bête s'est montrée\.\nBête ramenée au Foyer : .+\.$/m);
+    expect(B.recits[0].texte.split("\n").at(-1)).toBe("Une Bête s'est montrée.");
+    expect(B.recits[0].texte).not.toMatch(/ramenée|trop forte|aucune Bête ne les a suivis/);
     expect(A.bestiaire).toEqual([{ especeId: bete.especeId, etat: "apprivoisee", croiseeLe: bete.arrivee }]);
     expect(B.bestiaire).toEqual([{ especeId: bete.especeId, etat: "croisee", croiseeLe: bete.arrivee }]);
     for (const maniere of autres) {
