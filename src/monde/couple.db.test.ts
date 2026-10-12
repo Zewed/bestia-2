@@ -426,6 +426,16 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
         { le: retour, couples: [await espece(especeId)] },
       ]);
     });
+
+    it("le retour qui ramène ensuite une Bête de l'Espèce au Couple réuni, entrée dans l'effectif (US-0959), ne l'annonce pas de nouveau", async () => {
+      const { t, especeId, reuniLe, retour } = await unRetourApresLeCouple();
+
+      await aLHeure(t.territoireId, apres(retour, MINUTE));
+      expect(await retours(t.territoireId)).toEqual([
+        { le: retour, couples: undefined },
+        { le: reuniLe, couples: [await espece(especeId)] },
+      ]);
+    });
   });
 
   describe("le nombre de Couples réunis du joueur s'affiche et augmente d'un (US-0958)", () => {
