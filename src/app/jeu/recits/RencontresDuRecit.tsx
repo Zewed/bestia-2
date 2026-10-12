@@ -40,7 +40,7 @@ function ceQuIlAdvint({ issue, sexe, manque }: Pick<RencontreAffichee, "issue" |
 /** Le livre ouvert du Bestiaire : sur le ruban d'une nouvelle Espèce, et sur la puce du résumé qui les compte. */
 export function Livre({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className={className}>
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeWidth={1.2} strokeLinejoin="round">
       <path d="M8 4.2C6.6 3 4.4 2.7 2 3v9.6c2.4-.3 4.6 0 6 1.2 1.4-1.2 3.6-1.5 6-1.2V3c-2.4-.3-4.6 0-6 1.2zM8 4.2v9.6" />
     </svg>
   );

@@ -228,10 +228,7 @@
   width: 17px;
   height: 17px;
   margin-left: 4px;
-  fill: none;
-  stroke: var(--cuivre-clair);
-  stroke-width: 1.2;
-  stroke-linejoin: round;
+  color: var(--cuivre-clair);
 }
 
 /* Le trajet d'un retour d'Expédition : ses faits à gauche, la frise de l'aller, du séjour et du retour à droite. */
@@ -283,10 +280,10 @@
   min-width: 0;
 }
 
-/* Le texte des autres Récits, ses retours à la ligne gardés. */
+/* Le texte des autres Récits, ses retours à la ligne gardés, en lignes d'au plus 68 signes sous un filet de toute la largeur. */
 .texte {
-  max-width: 68ch;
   padding-top: 16px;
+  padding-right: max(0px, calc(100% - 68ch));
   border-top: 1px solid var(--filet-cuivre-doux);
   color: var(--parchemin);
   font: var(--graisse-texte) 14.5px / 1.5 var(--police);

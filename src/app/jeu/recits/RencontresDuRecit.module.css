@@ -50,6 +50,10 @@
   object-position: 50% 35%;
 }
 
+.rencontres[data-plusieurs] .corps {
+  justify-content: flex-start;
+}
+
 .rencontres[data-plusieurs] .peinture {
   border-right: 0;
   border-bottom: 1px solid var(--anneau-cuivre-fort);
