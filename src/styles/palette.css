@@ -88,6 +88,11 @@
   --eau-claire: oklch(0.746 0.043 184.8);
   --eau: oklch(0.611 0.052 185.9);
   --citron-lueur: oklch(0.94 0.08 100 / 0.25);
+  /* La brume posée sur la peinture d'une destination encore sous le brouillard : un voile gris-vert, plus dense au cœur,
+     léger au bord, un peu plus sombre en haut. */
+  --brume-coeur: oklch(0.903 0.014 174.1 / 0.4);
+  --brume-bord: oklch(0.903 0.014 174.1 / 0.12);
+  --brume-haut: oklch(0.758 0.025 183.5 / 0.25);
 
   /* Le disque crème des médaillons, sous les icônes peintes détourées sur blanc : clair au cœur, plus doré au bord. */
   --disque-coeur: oklch(0.974 0.017 88);
