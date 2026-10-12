@@ -12,7 +12,7 @@ import { recitsDuTerritoire } from "@/monde/recits";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire } from "@/monde/explorateurs";
 import { type Coordonnees, distance } from "@/monde/hex";
-import { PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages";
+import { GUERISON_DES_BLESSES_HEURES, PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
@@ -182,9 +182,9 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
   const escorteEnCours = async (territoireId: number, id: number, instant: Date, jeu: Pool = pool) =>
     Object.fromEntries((await expeditionsEnCours(jeu, territoireId, instant)).find((x) => x.id === id)!.escorte.map((e) => [e.id, e.nombre]));
   /** Ce que l'écran d'Expédition propose des Espèces de l'escorte : les disponibles, et les mâles et femelles possédés. */
-  const proposees = async (territoireId: number, escorte: Map<string, number>, jeu: Pool = pool) =>
+  const proposees = async (territoireId: number, escorte: Map<string, number>, jeu: Pool = pool, instant?: Date) =>
     Object.fromEntries(
-      (await betesDisponibles(jeu, territoireId)).filter((e) => escorte.has(e.id)).map((e) => [e.id, { disponibles: e.disponibles, males: e.males, femelles: e.femelles }]),
+      (await betesDisponibles(jeu, territoireId, instant)).filter((e) => escorte.has(e.id)).map((e) => [e.id, { disponibles: e.disponibles, males: e.males, femelles: e.femelles }]),
     );
   /** US-0951 : parmi les pertes `pertes`, combien de Bêtes de l'Espèce `id` sont mortes : les autres ne sont que blessées (blessesParmi). */
   const mortes = (pertes: Perte[], id: string) => {
@@ -253,18 +253,19 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect((await betesSauvagesDUneCase(pool, chef.caseId, le, apres(le, 1))).map((b) => b.numero)).toEqual([chef.bete.numero]);
     expect(await attaquesSubies(pool, x.id)).toEqual([expect.objectContaining({ especeId: chef.bete.especeId, le })]);
 
-    // Au retour, l'escorte rentre sans les Bêtes mortes, et avec ses Blessés (US-0951) : l'écran d'Expédition en propose
-    // d'autant moins que de mortes.
+    // Au retour, l'escorte rentre sans les Bêtes mortes, et avec ses Blessés (US-0951), qui guérissent au Foyer sans y
+    // être proposés (US-0953) ; guéris, l'écran d'Expédition en propose d'autant moins que de mortes.
     const retour = new Date(Math.max(...lancees.map((l) => l.retour.getTime())));
     await rattraperA(chef.territoireId, retour);
-    expect(await proposees(chef.territoireId, escorte)).toEqual(
+    const auRetour = (guerison: boolean) =>
       Object.fromEntries(
         [...escorte].map(([id, nombre]) => {
-          const morte = mortes(pertes, id);
-          return [id, { disponibles: nombre * LANCEES_AU_PLUS + 1 - morte, males: nombre * LANCEES_AU_PLUS - morte, femelles: 1 }];
+          const [morte, perdue] = [mortes(pertes, id), pertes.find((p) => p.especeId === id)?.nombre ?? 0];
+          return [id, { disponibles: nombre * LANCEES_AU_PLUS + 1 - (guerison ? morte : perdue), males: nombre * LANCEES_AU_PLUS - morte, femelles: 1 }];
         }),
-      ),
-    );
+      );
+    expect(await proposees(chef.territoireId, escorte, pool, retour)).toEqual(auRetour(false));
+    expect(await proposees(chef.territoireId, escorte, pool, apres(retour, GUERISON_DES_BLESSES_HEURES * HEURE))).toEqual(auRetour(true));
     expect(await explorateursDuTerritoire(pool, chef.territoireId)).toEqual({ libres: LANCEES_AU_PLUS, total: LANCEES_AU_PLUS });
   }, 60_000);
 
@@ -494,8 +495,8 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
           ]),
         );
       /** Ce que l'écran d'Expédition propose de l'Espèce `especeId` : ses disponibles, et ses mâles et femelles possédés. */
-      const proposee = async (client: PoolClient, territoireId: number, especeId: string) => {
-        const e = (await betesDisponibles(client, territoireId)).find((x) => x.id === especeId);
+      const proposee = async (client: PoolClient, territoireId: number, especeId: string, instant = t0) => {
+        const e = (await betesDisponibles(client, territoireId, instant)).find((x) => x.id === especeId);
         return e ? { disponibles: e.disponibles, males: e.males, femelles: e.femelles } : null;
       };
 
@@ -533,9 +534,15 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
           expect(await blessees(client, x)).toEqual({ souris: { perdues: 5, blessees: 3 } });
           // Les deux mortes ne sont plus à personne ; les trois Blessées restent avec l'Expédition : rien de plus au Foyer.
           expect(await proposee(client, territoireId, "souris")).toEqual({ disponibles: 2, males: 10, femelles: 0 });
-          // De retour au Foyer, les cinq survivantes et les trois Blessées y sont avec les deux qui n'étaient pas parties.
+          // De retour au Foyer, les cinq survivantes et les trois Blessées y sont avec les deux qui n'étaient pas parties ; les
+          // Blessées n'en repartent pas avant d'être guéries (US-0953).
           await client.query("update expedition set rentree_le = $2 where id = $1", [x, apres(t0, 60)]);
-          expect(await proposee(client, territoireId, "souris")).toEqual({ disponibles: 10, males: 10, femelles: 0 });
+          expect(await proposee(client, territoireId, "souris", apres(t0, 60))).toEqual({ disponibles: 7, males: 10, femelles: 0 });
+          expect(await proposee(client, territoireId, "souris", apres(t0, 60 + GUERISON_DES_BLESSES_HEURES * HEURE))).toEqual({
+            disponibles: 10,
+            males: 10,
+            femelles: 0,
+          });
           // Un second combat de la même Expédition ne compte que ses survivantes valides, sans ses Blessées.
           await client.query("update expedition set rentree_le = null where id = $1", [x]);
           await subirLesCombats(client, [combat(x, "poule", 2)]);

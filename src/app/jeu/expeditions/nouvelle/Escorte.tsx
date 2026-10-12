@@ -51,8 +51,9 @@ export const entier = (n: number) => new Intl.NumberFormat("fr-FR").format(n).re
  * Bête ajoutée ou retirée, comme au rechargement ; zéro tant qu'aucune Bête n'est choisie.
  * US-0937 : sous les disponibles de chaque Espèce, combien de mâles et de femelles le joueur en possède, Bêtes sorties
  * comprises, pour savoir lequel lui manque pour réunir son Couple. US-0956 : plus rien une fois son Couple réuni.
- * US-0952 : puis, parmi les disponibles, chaque groupe de Blessés de l'Espèce (`blesses`, par Espèce) et le temps qui
- * lui reste avant sa guérison ; rien sans Blessé.
+ * US-0952 : puis chaque groupe de Blessés de l'Espèce au Foyer (`blesses`, par Espèce) et le temps qui lui reste avant sa
+ * guérison ; rien sans Blessé. US-0953 : les Blessés ne sont pas parmi les disponibles, et ne partent pas ; une Espèce
+ * dont toutes les Bêtes au Foyer sont blessées a sa ligne, sans aucune à choisir.
  */
 export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]; blesses?: Record<string, BlessesAffiches[]> }) {
   const recherche = useSearchParams();
@@ -88,7 +89,7 @@ export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]
                 {!e.coupleReuni && <span className={styles.disponibles}>{sexes(e)}</span>}
                 {(blesses[e.id] ?? []).map((groupe, i) => (
                   <span key={i} className={styles.disponibles}>
-                    {`dont ${blessesDans(groupe)}`}
+                    {blessesDans(groupe)}
                   </span>
                 ))}
               </p>
