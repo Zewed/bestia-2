@@ -10,8 +10,8 @@ import styles from "./RencontresDuRecit.module.css";
  * US-0940 : une Rencontre telle que le Récit d'un retour la montre : son heure, déjà écrite par le serveur dans le fuseau du
  * joueur, l'Espèce de la Bête avec son illustration et sa Rareté, et ce qu'il en advint ; restée sur sa Case, la force
  * qui manquait à l'escorte (US-0942) ; repartie, ou emmenée par une autre Expédition (US-0964), l'heure de son départ
- * (US-0950), avec son jour s'il n'est plus celui de la Rencontre (`autreJour`). US-0949 : restée et toujours sur sa Case, l'adresse de l'écran d'Expédition qui revient la
- * chercher (`revenir`).
+ * (US-0950), avec son jour s'il n'est plus celui de la Rencontre (`autreJour`). US-0949 : restée et toujours sur sa Case,
+ * l'adresse de l'écran d'Expédition qui revient la chercher (`revenir`).
  */
 export type RencontreAffichee = {
   instant: string;
