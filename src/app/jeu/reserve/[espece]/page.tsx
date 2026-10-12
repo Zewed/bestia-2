@@ -11,6 +11,7 @@ import { blessesAuFoyer } from "@/monde/blesses";
 import { blessesAffiches, blessesDans } from "@/monde/blesses-affiches";
 import { especeDuTerritoire } from "@/monde/effectif";
 import { elevageAcquis } from "@/monde/elevage";
+import { placesDeLHabitat } from "@/monde/habitat";
 import { maintenant } from "@/temps/horloge";
 import { BlocElever } from "./BlocElever";
 import styles from "./page.module.css";
@@ -72,7 +73,7 @@ export default async function FicheDeLEspece({
           Fermer
         </Link>
       </article>
-      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} /> : null}
+      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} places={await placesDeLHabitat(getPool(), territoireId)} /> : null}
     </main>
   );
 }
