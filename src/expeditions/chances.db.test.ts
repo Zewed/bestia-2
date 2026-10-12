@@ -16,7 +16,7 @@ import { PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages"
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lExpeditionSuivie } from "./apprivoisement";
 import { forceDUneBete } from "./force";
 import { type HorairesDUneExpedition, retourDUneExpedition, sejourDUneExpedition } from "./phase";
@@ -51,6 +51,8 @@ describe.skipIf(!URL_TEST)("des chances proportionnelles à la force (US-0963, s
   let pool: Pool;
   let mondeId: number;
   const lancement = `chances-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms des chefs de ce lancement, qui n'y forme aucun mot interdit (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   let especes: Espece[];
   /** La commune la plus faible du jeu. */
@@ -68,7 +70,7 @@ describe.skipIf(!URL_TEST)("des chances proportionnelles à la force (US-0963, s
   const naitre = async () => {
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Chan${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Chan", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };

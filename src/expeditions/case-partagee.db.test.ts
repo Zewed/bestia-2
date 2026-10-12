@@ -15,7 +15,7 @@ import { PRESENCE_D_UNE_BETE_HEURES, RATTRAPER_APRES_MINUTES } from "@/reglages"
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lExpeditionSuivie } from "./apprivoisement";
 import { expeditionsEnCours } from "./en-cours";
 import { forceDUneBete } from "./force";
@@ -61,6 +61,8 @@ describe.skipIf(!URL_TEST)("chaque Expédition présente voit la Bête (US-0962,
   let pool: Pool;
   let mondeId: number;
   const lancement = `case-partagee-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms des chefs de ce lancement, qui n'y forme aucun mot interdit (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** L'Espèce la plus forte du jeu, qui escorte A, et la commune la plus faible, qui escorte B. */
   let [forte, faible]: Espece[] = [];
@@ -85,7 +87,7 @@ describe.skipIf(!URL_TEST)("chaque Expédition présente voit la Bête (US-0962,
   const naitre = async () => {
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Part${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Part", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
