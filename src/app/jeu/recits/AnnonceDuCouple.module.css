@@ -93,17 +93,18 @@
 }
 
 /*
- * Sur un téléphone, l'illustration au-dessus de son nom, aussi large que l'annonce : un seul écran suffit à tout voir,
- * entre la barre du haut et les onglets, la place de « Couple réuni » et d'un nom sur deux lignes gardée sous elle.
+ * Sur un téléphone en portrait, l'illustration au-dessus de son nom, aussi large que l'annonce : un seul écran suffit à
+ * tout voir, entre la barre du haut et les onglets, la place de « Couple réuni » et d'un nom sur deux lignes gardée sous
+ * elle ; jamais moins de 96 px. Couché, le téléphone garde l'illustration à côté du nom, bornée par la hauteur utile.
  */
-@media (max-width: 540px) {
+@media (max-width: 540px) and (orientation: portrait) {
   .annonce {
     justify-items: stretch;
     padding: 0 8px 8px;
   }
 
   .couple {
-    --cote: min(100%, calc(var(--hauteur-utile) - 160px));
+    --cote: min(100%, max(96px, calc(var(--hauteur-utile) - 160px)));
     grid-template-columns: minmax(0, 1fr);
     justify-items: center;
     gap: 14px;

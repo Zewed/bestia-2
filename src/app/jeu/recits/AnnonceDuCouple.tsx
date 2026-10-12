@@ -14,7 +14,7 @@ export function AnnonceDuCouple({ couples }: { couples: CoupleAffiche[] }) {
     <div className={styles.annonce} data-plusieurs={couples.length > 1 ? "" : undefined}>
       {couples.map((couple) => (
         <figure key={couple.nom} className={styles.couple}>
-          <IllustrationEspece espece={couple} format="grand" className={styles.illustration} />
+          <IllustrationEspece espece={couple} format="moyen" className={styles.illustration} />
           <figcaption className={styles.legende}>
             <span className={styles.etiquette}>Couple réuni</span> <strong className={styles.espece}>{couple.nom}</strong>
           </figcaption>
