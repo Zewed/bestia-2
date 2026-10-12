@@ -158,29 +158,37 @@ describe("page Voyageurs, l'historique des Voyageurs (US-0342)", () => {
   });
 });
 
-describe("page Voyageurs sur mobile (US-0342)", () => {
+describe("page Voyageurs sur le kit du jeu, et sur mobile (US-0342)", () => {
   const css = readFileSync(join(process.cwd(), "src/app/jeu/habitants/voyageurs/page.module.css"), "utf8");
   /** Les déclarations d'une règle, dans `texte` (toute la feuille par défaut). */
   const regle = (selecteur: string, texte = css) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
+  const mobile = css.slice(css.indexOf("@media (max-width: 760px)"));
 
   it("tient sur une seule colonne, sans défilement de côté : ni largeur fixe, ni colonne qui impose la sienne, ni texte qui refuse d'aller à la ligne", () => {
     for (const [, colonnes] of css.matchAll(/grid-template-columns: ([^;]+);/g)) {
       expect(colonnes.split(/ (?![^(]*\))/).every((c) => c === "auto" || c.startsWith("minmax(0,")), colonnes).toBe(true);
     }
-    expect(css).not.toMatch(/(?<![\w-])(min-)?width: \d/);
+    expect(css).not.toMatch(/(?<![\w-])(min-)?width: \d+px/);
     expect(css).not.toContain("nowrap");
     expect(regle(".voyageurs")).toContain("display: grid;");
     expect(regle(".voyageurs")).not.toContain("grid-template-columns");
   });
 
-  it("met le prénom et le sort sur une ligne, l'arrivée dessous, sur toute la largeur", () => {
-    expect(regle(".voyageur")).toContain("grid-template-columns: minmax(0, 1fr) auto;");
-    expect(regle(".arrivee")).toContain("grid-column: 1 / -1;");
+  it("met sur ordinateur le prénom, l'arrivée et le sort sur une ligne dense ; sur un téléphone, l'arrivée dessous, sur toute la largeur", () => {
+    expect(regle(".voyageur")).toContain('grid-template-areas: "prenom arrivee sort";');
+    expect(regle(".voyageur")).toContain("min-height: 40px;");
+    expect(regle(".voyageur", mobile)).toMatch(/grid-template-areas:\s*"prenom sort"\s*"arrivee arrivee";/);
+    expect(regle(".voyageur", mobile)).toContain("grid-template-columns: minmax(0, 1fr) auto;");
   });
 
-  it("marque chaque sort d'une pastille sobre : accueilli à la menthe, refusé en creux, reparti en rose", () => {
-    expect(regle('.voyageur[data-sort="accueilli"] .sort')).toMatch(/background: var\(--menthe\);[^}]*color: var\(--menthe-fonce\);/);
-    expect(regle('.voyageur[data-sort="refuse"] .sort')).toMatch(/background: var\(--bloc-3\);[^}]*color: var\(--texte-2\);/);
-    expect(regle('.voyageur[data-sort="reparti"] .sort')).toMatch(/background: var\(--rose\);[^}]*color: var\(--rose-fonce\);/);
+  it("marque chaque sort d'une pastille sobre, toujours avec son mot : accueilli à la feuille, refusé en creux, reparti en braise", () => {
+    expect(regle('.voyageur[data-sort="accueilli"] .sort')).toMatch(/border-color: var\(--feuille\);[^}]*color: var\(--feuille\);/);
+    expect(regle('.voyageur[data-sort="refuse"] .sort')).toContain("color: var(--mousse);");
+    expect(regle('.voyageur[data-sort="reparti"] .sort')).toMatch(/border-color: var\(--braise-filet\);[^}]*color: var\(--braise\);/);
+  });
+
+  it("n'écrit aucune couleur en clair, ni aucun des anciens noms : seulement ceux du kit", () => {
+    expect(css).not.toMatch(/#[0-9a-f]{3,8}\b|rgba?\(|oklch\(/i);
+    expect(css).not.toMatch(/var\(--(bloc|bloc-2|bloc-3|encre|menthe|menthe-fonce|rose|rose-fonce|texte-2|texte-discret|arrondi-petit)\)/);
   });
 });
