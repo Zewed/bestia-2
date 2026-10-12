@@ -5,9 +5,12 @@ import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { Bloc } from "@/components/Bloc";
 import { getPool } from "@/db";
+import { betesReperees } from "@/expeditions/betes-reperees";
+import { versLEcran } from "@/expeditions/choix-de-destination";
 import { RETOUR_D_EXPEDITION, resumeDUnRetour } from "@/expeditions/resume-du-retour";
-import { recitsDuTerritoire } from "@/monde/recits";
+import { type Recit, type RencontreRacontee, recitsDuTerritoire } from "@/monde/recits";
 import { formaterHeure, formaterInstant, formaterJourEtHeure } from "@/temps/affichage";
+import { maintenant } from "@/temps/horloge";
 import { ListeDesRecits } from "./ListeDesRecits";
 import styles from "./page.module.css";
 
@@ -27,16 +30,35 @@ function heureDUneRencontre(vueLe: Date, reference: Date): string {
   return jour(vueLe) === jour(reference) ? formaterHeure(vueLe, FUSEAU) : formaterJourEtHeure(vueLe, FUSEAU);
 }
 
+/** US-0949 : une Bête par sa Case et son numéro sur sa Case : « 3,-5,7 ». */
+const cle = (laCase: { q: number; r: number }, numero: number) => `${laCase.q},${laCase.r},${numero}`;
+
+/**
+ * US-0949 : les Bêtes restées sur leur Case que racontent les Récits `recits` et que le joueur a encore repérées à l'heure
+ * du jeu (betesReperees), par leur clé ; aucune lecture quand aucun Récit ne mène à la Case d'une Bête restée.
+ */
+async function encoreReperees(territoireId: number, recits: Recit[]): Promise<Set<string>> {
+  if (!recits.some((r) => r.rencontres?.some((x) => x.laCase))) return new Set();
+  return new Set((await betesReperees(getPool(), territoireId, maintenant())).map((b) => cle(b.laCase, b.numero)));
+}
+
+/** US-0949 : l'écran d'Expédition qui revient chercher la Bête restée de la Rencontre `r`, si elle est encore repérée. */
+function revenir({ issue, laCase, numero }: RencontreRacontee, reperees: Set<string>): string | undefined {
+  return issue === "restee" && laCase && numero !== undefined && reperees.has(cle(laCase, numero)) ? versLEcran(laCase) : undefined;
+}
+
 /**
  * La page Récits (US-0324), ouverte depuis la navigation : ce qui est arrivé sur le Territoire, du plus
  * récent au plus ancien, chaque Récit avec sa date et son heure. Sans session, la garde mène à la
- * connexion, qui ramène ici.
+ * connexion, qui ramène ici. US-0949 : une Bête restée sur sa Case, que le joueur a encore repérée, mène à l'écran
+ * d'Expédition qui revient la chercher.
  */
 export default async function Recits() {
   await connection();
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/recits");
   const recits = territoireId === null ? [] : await recitsDuTerritoire(getPool(), territoireId);
+  const reperees = territoireId === null ? new Set<string>() : await encoreReperees(territoireId, recits);
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Récits</h1>
@@ -57,17 +79,22 @@ export default async function Recits() {
               ...(r.titre === RETOUR_D_EXPEDITION && { resume: resumeDUnRetour(r.rencontres ?? [], 0) }),
               // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
               ...(r.rencontres && {
-                rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque }, i, toutes) => ({
-                  instant: vueLe.toISOString(),
-                  heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
-                  nom,
-                  illustration,
-                  rarete,
-                  issue,
-                  sexe,
-                  nouvelleEspece,
-                  ...(manque && { manque }),
-                })),
+                rencontres: r.rencontres.map((rencontre, i, toutes) => {
+                  const { vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque } = rencontre;
+                  const versLaBete = revenir(rencontre, reperees);
+                  return {
+                    instant: vueLe.toISOString(),
+                    heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
+                    nom,
+                    illustration,
+                    rarete,
+                    issue,
+                    sexe,
+                    nouvelleEspece,
+                    ...(manque && { manque }),
+                    ...(versLaBete && { revenir: versLaBete }),
+                  };
+                }),
               }),
             }))}
           />

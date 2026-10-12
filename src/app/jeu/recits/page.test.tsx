@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { BeteReperee } from "@/expeditions/betes-reperees";
 
 // La vraie garde, branchée sur une session simulée.
 const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
@@ -15,6 +16,11 @@ type Recit = { id: number; titre: string; texte: string; survenuLe: Date; luLe: 
 const recits = vi.hoisted(() => ({ recitsDuTerritoire: vi.fn(async (): Promise<Recit[]> => []), marquerUnRecitLu: vi.fn() }));
 vi.mock("@/monde/recits", () => recits);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
+// US-0949 : les Bêtes repérées du Territoire, lues sur base (betes-reperees.db.test.tsx), à l'heure du jeu.
+const reperees = vi.hoisted(() => ({ betesReperees: vi.fn(async (): Promise<BeteReperee[]> => []) }));
+vi.mock("@/expeditions/betes-reperees", () => reperees);
+const MAINTENANT = vi.hoisted(() => new Date("2026-10-12T22:00:00Z"));
+vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
@@ -159,6 +165,58 @@ describe("page Récits (US-0324)", () => {
     ]);
     // Restée sur sa Case, la force qui manquait à l'escorte (US-0942).
     expect(html).toContain("Trop forte, restée sur sa Case : il manquait 37 340 de force");
+  });
+
+  it("mène une Bête restée sur sa Case à « Revenir la chercher » tant qu'elle y est repérée, à l'heure du jeu (US-0949)", async () => {
+    const restee = (laCase?: { q: number; r: number }, numero?: number) => ({
+      especeId: "renard_roux",
+      vueLe: new Date("2026-10-12T18:46:00Z"),
+      issue: "restee" as const,
+      sexe: null,
+      nouvelleEspece: false,
+      manque: 37_340,
+      ...(laCase && { laCase, numero }),
+      nom: "Renard roux",
+      illustration: null,
+      rarete: { id: "peu_commune", nom: "Peu commune" },
+    });
+    connecte([
+      {
+        id: 53,
+        titre: "Retour d'Expédition",
+        texte: "3 Bêtes se sont montrées.",
+        survenuLe: new Date("2026-10-12T21:00:00Z"),
+        luLe: null,
+        // Encore là ; déjà partie ; un Récit écrit avant US-0949, sans sa Case.
+        rencontres: [restee({ q: 3, r: -5 }, 7), restee({ q: 3, r: -5 }, 8), restee()],
+      } as Recit,
+    ]);
+    const RENARD: BeteReperee = {
+      id: 41,
+      laCase: { q: 3, r: -5 },
+      numero: 7,
+      especeId: "renard_roux",
+      espece: "Renard roux",
+      rareteId: "peu_commune",
+      force: 37_340,
+      jusquA: new Date("2026-10-13T01:00:00Z"),
+    };
+    // Une autre Bête repérée ailleurs, au même numéro : elle ne compte pas.
+    reperees.betesReperees.mockResolvedValueOnce([RENARD, { ...RENARD, id: 42, laCase: { q: 4, r: -5 }, numero: 8 }]);
+    const html = renderToStaticMarkup(await Recits());
+    expect(reperees.betesReperees).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, MAINTENANT);
+    const liens = [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>Revenir la chercher<\/a>/g)].map(([, href]) => href.replace(/&amp;/g, "&"));
+    expect(liens).toEqual(["/jeu/expeditions/nouvelle?q=3&r=-5"]);
+    // Sous la première Rencontre seulement.
+    const liste = html.match(/<ol [^>]*aria-label="Rencontres"[^>]*>(.*?)<\/ol>/)![1];
+    expect(liste.split("</li>").slice(0, -1).map((ligne) => ligne.includes("Revenir la chercher"))).toEqual([true, false, false]);
+  });
+
+  it("ne lit aucune Bête repérée sans Bête restée qui mène à sa Case (US-0949)", async () => {
+    reperees.betesReperees.mockClear();
+    connecte();
+    renderToStaticMarkup(await Recits());
+    expect(reperees.betesReperees).not.toHaveBeenCalled();
   });
 
   it("résume un retour d'Expédition en une ligne en tête de son récit : Bêtes ramenées, nouvelles Espèces au Bestiaire (US-0941)", async () => {

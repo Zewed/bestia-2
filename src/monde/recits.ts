@@ -3,6 +3,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { Sexe } from "./betes-sauvages";
+import type { Coordonnees } from "./hex";
 
 /**
  * Un Récit tel que la page Récits le montre : luLe est null tant que le joueur ne l'a pas ouvert. US-0940 : le retour
@@ -19,9 +20,20 @@ export type IssueDUneRencontre = "apprivoisee" | "restee" | "repartie";
 /**
  * US-0940 : une Rencontre telle que le Récit d'un retour d'Expédition la retient : l'Espèce de la Bête, l'instant du jeu
  * où l'Expédition l'a vue, ce qu'il en advint, son sexe si elle l'a suivie (null sinon, US-0937), et si elle a fait
- * entrer son Espèce au Bestiaire (US-0933). Restée sur sa Case, la force qui manquait à l'escorte (US-0942).
+ * entrer son Espèce au Bestiaire (US-0933). Restée sur sa Case, la force qui manquait à l'escorte (US-0942). US-0949 :
+ * une Bête sauvage restée sur sa Case, sa Case et son numéro sur sa Case, pour revenir la chercher tant qu'elle y est ;
+ * absents des Récits écrits avant.
  */
-export type RencontreRacontee = { especeId: string; vueLe: Date; issue: IssueDUneRencontre; sexe: Sexe | null; nouvelleEspece: boolean; manque?: number };
+export type RencontreRacontee = {
+  especeId: string;
+  vueLe: Date;
+  issue: IssueDUneRencontre;
+  sexe: Sexe | null;
+  nouvelleEspece: boolean;
+  manque?: number;
+  laCase?: Coordonnees;
+  numero?: number;
+};
 
 /** US-0940 : une Rencontre racontée telle que la page Récits la montre : avec le nom, l'illustration et la Rareté de son Espèce. */
 export type RencontreDuRecit = RencontreRacontee & { nom: string; illustration: string | null; rarete: { id: string; nom: string } };

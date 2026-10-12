@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import type { Sexe } from "@/monde/betes-sauvages";
@@ -7,7 +8,8 @@ import styles from "./RencontresDuRecit.module.css";
 /**
  * US-0940 : une Rencontre telle que le Récit d'un retour la montre : son heure, déjà écrite par le serveur dans le fuseau du
  * joueur, l'Espèce de la Bête avec son illustration et sa Rareté, et ce qu'il en advint ; restée sur sa Case, la force
- * qui manquait à l'escorte (US-0942).
+ * qui manquait à l'escorte (US-0942). US-0949 : restée et toujours sur sa Case, l'adresse de l'écran d'Expédition qui
+ * revient la chercher (`revenir`).
  */
 export type RencontreAffichee = {
   instant: string;
@@ -19,6 +21,7 @@ export type RencontreAffichee = {
   sexe: Sexe | null;
   nouvelleEspece: boolean;
   manque?: number;
+  revenir?: string;
 };
 
 const SEXES: Record<Sexe, string> = { male: "mâle", femelle: "femelle" };
@@ -39,7 +42,8 @@ function ceQuIlAdvint({ issue, sexe, manque }: Pick<RencontreAffichee, "issue" |
 /**
  * US-0940 : le récit de Rencontre : chaque Bête vue, à son heure, dans l'ordre des apparitions, avec la vignette, le nom
  * et la Rareté de son Espèce, puis ce qu'il en advint. Une Bête apprivoisée, ou dont l'Espèce entre au Bestiaire, est mise
- * en avant ; « Nouvelle Espèce au Bestiaire » le dit en toutes lettres. Sur mobile, la vignette se réduit.
+ * en avant ; « Nouvelle Espèce au Bestiaire » le dit en toutes lettres. Sur mobile, la vignette se réduit. US-0949 : une
+ * Bête restée sur sa Case, tant qu'elle y est, finit sur « Revenir la chercher ».
  */
 export function RencontresDuRecit({ rencontres, id, hidden }: { rencontres: RencontreAffichee[]; id?: string; hidden?: boolean }) {
   return (
@@ -59,6 +63,11 @@ export function RencontresDuRecit({ rencontres, id, hidden }: { rencontres: Renc
               {ceQuIlAdvint(r)}
             </p>
             {r.nouvelleEspece ? <p className={styles.nouvelleEspece}>Nouvelle Espèce au Bestiaire</p> : null}
+            {r.revenir ? (
+              <Link href={r.revenir} className={styles.revenir}>
+                Revenir la chercher
+              </Link>
+            ) : null}
           </div>
         </li>
       ))}
