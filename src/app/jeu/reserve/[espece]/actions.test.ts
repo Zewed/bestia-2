@@ -53,6 +53,26 @@ describe("refuser l'Élevage d'une Espèce sans Couple (US-0812)", () => {
     expect(elevage.elevageAcquis).not.toHaveBeenCalled();
   });
 
+  it("refuse une demande forgée qui nomme deux Espèces, sans rien lire", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValue(true);
+    const formulaire = new FormData();
+    formulaire.append("espece", "poule");
+    formulaire.append("espece", "pigeon");
+    expect(await elever({ refus: null }, formulaire)).toEqual({ refus: ELEVAGE_SANS_COUPLE });
+    expect(elevage.elevageAcquis).not.toHaveBeenCalled();
+  });
+
+  it("ne croit pas un Territoire écrit dans le formulaire : seul celui de la garde compte", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValue(false);
+    const formulaire = new FormData();
+    formulaire.set("espece", "poule");
+    for (const champ of ["territoire", "territoireId", "territoire_id"]) formulaire.set(champ, "99");
+    expect(await elever({ refus: null }, formulaire)).toEqual({ refus: ELEVAGE_SANS_COUPLE });
+    expect(elevage.elevageAcquis).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, "poule");
+  });
+
   it("ne refuse pas l'Élevage d'une Espèce au Couple réuni : son lancement arrive avec US-0815", async () => {
     connecte();
     elevage.elevageAcquis.mockResolvedValue(true);
