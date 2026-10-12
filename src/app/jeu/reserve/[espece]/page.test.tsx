@@ -22,6 +22,9 @@ const blesses = vi.hoisted(() => ({ blessesAuFoyer: vi.fn(async (): Promise<Map<
 vi.mock("@/monde/blesses", () => blesses);
 const MAINTENANT = vi.hoisted(() => new Date("2026-10-09T07:42:13.250Z"));
 vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT }));
+// US-0812 : l'Élevage de l'Espèce, acquis ou non, lu sur base (page.db.test.tsx).
+const elevage = vi.hoisted(() => ({ elevageAcquis: vi.fn(async () => false) }));
+vi.mock("@/monde/elevage", async (original) => ({ ...(await original<object>()), elevageAcquis: elevage.elevageAcquis }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -83,6 +86,23 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     // Sans Blessé, rien de plus.
     connecte();
     expect(await ouvrir("poule")).not.toContain("Blessé");
+  });
+
+  it("propose sous la fiche le bloc « Élever » quand le joueur a réuni le Couple de l'Espèce (US-0812)", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    const html = await ouvrir("poule");
+    expect(elevage.elevageAcquis).toHaveBeenLastCalledWith(expect.anything(), 12, "poule");
+    expect(html).toMatch(/<div id="elever"[^>]*><section[^>]*><h2[^>]*>Élever<\/h2>/);
+    expect(html.indexOf("Fermer")).toBeLessThan(html.indexOf('id="elever"'));
+  });
+
+  it("ne le propose pas pour une Espèce sans Couple, même avec des Bêtes (US-0812)", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValueOnce(false);
+    const html = await ouvrir("poule");
+    expect(html).not.toContain('id="elever"');
+    expect(html).not.toContain(">Élever<");
   });
 
   it("ouverte depuis la page Bêtes, s'y referme : « Fermer » y ramène (US-0810)", async () => {

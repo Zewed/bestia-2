@@ -26,6 +26,10 @@ const betes = (nombre: number) => (nombre > 1 ? "Bêtes" : "Bête");
  * referme ici. Sans session, la garde mène à la connexion, qui ramène ici. US-0952 : sous le nom et la Rareté d'une Espèce,
  * chaque groupe de ses Blessés au Foyer (blessesAuFoyer, à l'heure du jeu, jamais plus que son effectif) et le temps qui lui
  * reste avant sa guérison : « dont 3 Blessés, guéris dans 5 h » ; rien sans Blessé.
+ *
+ * US-0811 : tant que le joueur n'a aucune Bête, la page, sobre, dit seulement « Aucune Bête pour l'instant », sans autre
+ * phrase, avec un bouton « Envoyer une Expédition » vers l'écran d'Expédition (US-0901), comme la Réserve vide (US-0809) ;
+ * dès la première Bête ramenée, le total et la liste prennent leur place.
  */
 export default async function Betes() {
   await connection();
@@ -39,11 +43,20 @@ export default async function Betes() {
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Bêtes</h1>
-      <Bloc>
-        <p className={styles.total}>
-          <strong className={styles.nombre}>{total}</strong> {betes(total)}
-        </p>
-      </Bloc>
+      {especes.length === 0 ? (
+        <Bloc>
+          <p className={styles.vide}>Aucune Bête pour l&apos;instant</p>
+          <Link href="/jeu/expeditions/nouvelle" className={styles.envoyer}>
+            Envoyer une Expédition
+          </Link>
+        </Bloc>
+      ) : (
+        <Bloc>
+          <p className={styles.total}>
+            <strong className={styles.nombre}>{total}</strong> {betes(total)}
+          </p>
+        </Bloc>
+      )}
       {especes.length > 0 ? (
         <ul className={styles.especes} aria-label="Effectif">
           {especes.map((espece) => {
