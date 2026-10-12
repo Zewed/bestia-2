@@ -60,6 +60,17 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
     await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur')", [territoireId]);
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
+  /** Un chef qui vient de naître : son Territoire et l'instant de sa naissance. */
+  type Ne = Awaited<ReturnType<typeof naitre>>;
+  /**
+   * `n` chefs nés l'un après l'autre, avant que leurs Bêtes de naissance ne soient choisies : un Foyer né ensuite sur la
+   * Case de l'une d'elles la ferait disparaître (aucune Bête sur une Case qui appartient à un Territoire, US-0975).
+   */
+  const nesDAbord = async (n: number) => {
+    const chefs: Ne[] = [];
+    for (let i = 0; i < n; i++) chefs.push(await naitre());
+    return chefs;
+  };
   /** Le Foyer du Territoire. */
   const foyer = async (territoireId: number) =>
     (await pool.query<Coordonnees>("select f.q, f.r from territoire t join case_du_monde f on f.id = t.foyer_case_id where t.id = $1", [territoireId])).rows[0];
@@ -124,11 +135,11 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
    * Un chef qui vient de naître et a déjà au Foyer, de l'Espèce de l'une de ses Bêtes de naissance, les Bêtes que `deja`
    * donne d'après le sexe de celle-ci (sexe et nombre) ; une Expédition part chercher cette Bête, qui la suivra jusqu'au
    * Foyer : son Territoire, la Bête, son sexe, l'Expédition et ses heures d'arrivée et de retour. Un Foyer né sans Bête à
-   * aller chercher, le chef renaît ailleurs, jusqu'à trois fois.
+   * aller chercher, le chef renaît ailleurs, jusqu'à trois fois. Avec `ne`, un chef déjà né (nesDAbord) l'essaie d'abord.
    */
-  const unRetourAvecLaBete = async (deja: (sexe: Sexe) => [Sexe, number][]) => {
+  const unRetourAvecLaBete = async (deja: (sexe: Sexe) => [Sexe, number][], ne?: Ne) => {
     for (let essai = 0; essai < 3; essai++) {
-      const t = await naitre();
+      const t = essai === 0 && ne ? ne : await naitre();
       const voulue = await uneBeteDeNaissanceACalme(t);
       if (!voulue) continue;
       for (const [sexe, nombre] of deja(voulue.sexe)) {
@@ -145,12 +156,13 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
    * Un mâle et une femelle de l'Espèce l'attendent, avec les Bêtes que `deja` donne d'après son sexe ; l'une d'elles part
    * aussitôt en escorte d'une première Expédition, vers une Case calme, et son retour réunit leur Couple (US-0956).
    * L'Expédition qui va chercher la Bête part ensuite : son Territoire, la Bête, son sexe, l'instant du Couple réuni,
-   * l'Expédition et ses heures d'arrivée et de retour.
+   * l'Expédition et ses heures d'arrivée et de retour. Avec `voulu`, une Bête de ce sexe : le chef renaît ailleurs tant
+   * que son Foyer n'en a pas, jusqu'à huit fois, comme quand rien n'est calme. Avec `ne`, comme unRetourAvecLaBete.
    */
-  const unRetourApresLeCouple = async (deja: (sexe: Sexe) => [Sexe, number][] = () => []) => {
-    for (let essai = 0; essai < 3; essai++) {
-      const t = await naitre();
-      const [bete] = await betesDeNaissance(t.territoireId);
+  const unRetourApresLeCouple = async ({ voulu, deja = () => [], ne }: { voulu?: Sexe; deja?: (sexe: Sexe) => [Sexe, number][]; ne?: Ne } = {}) => {
+    for (let essai = 0; essai < 8; essai++) {
+      const t = essai === 0 && ne ? ne : await naitre();
+      const bete = (await betesDeNaissance(t.territoireId)).find((b) => !voulu || sexeDUneBeteDeNaissance(graine, b.id) === voulu);
       if (!bete) continue;
       const { especeId } = bete;
       const sexe = sexeDUneBeteDeNaissance(graine, bete.id);
@@ -161,7 +173,9 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
           [t.territoireId, especeId, s, nombre],
         );
       }
-      const premiere = await partir(t.territoireId, await uneCaseCalme(t.territoireId, especeId, t.ne), especeId, t.ne);
+      const calme = await uneCaseCalme(t.territoireId, especeId, t.ne).catch(() => null);
+      if (!calme) continue;
+      const premiere = await partir(t.territoireId, calme, especeId, t.ne);
       const reuniLe = retourDUneExpedition(await horaires(premiere))!;
       const escorte = escorteDe(especeId);
       const depart = await unDepartACalme(t.territoireId, bete, escorte, reuniLe);
@@ -171,7 +185,7 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
       const prevus = await horaires(expeditionId);
       return { t, bete, escorte, depart, sexe, especeId, reuniLe, expeditionId, arrivee: sejourDUneExpedition(prevus)!.debut, retour: retourDUneExpedition(prevus)! };
     }
-    throw new Error("Trois Foyers sans Bête de naissance à aller chercher, Couple réuni, pendant un séjour calme.");
+    throw new Error("Huit Foyers sans Bête de naissance à aller chercher, Couple réuni, pendant un séjour calme.");
   };
   /**
    * Une Case libre à 2 à 4 Cases du Foyer du Territoire, sans Bête de naissance, où une Expédition escortée d'une Bête de
@@ -390,7 +404,8 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
     });
     const attendu = ({ especeId, retour }: { especeId: string; retour: Date }) => ({ couples: [{ especeId, reuniLe: retour }], effectif: VIDE, bestiaire: "couple_reuni" });
     const avecLAutre = (sexe: Sexe): [Sexe, number][] => [[AUTRE[sexe], 1]];
-    const [enDirect, dUnBloc, parLaTache] = [await unRetourAvecLaBete(avecLAutre), await unRetourAvecLaBete(avecLAutre), await unRetourAvecLaBete(avecLAutre)];
+    const [a, b, c] = await nesDAbord(3);
+    const [enDirect, dUnBloc, parLaTache] = [await unRetourAvecLaBete(avecLAutre, a), await unRetourAvecLaBete(avecLAutre, b), await unRetourAvecLaBete(avecLAutre, c)];
 
     for (let instant = enDirect.depart; instant < apres(enDirect.retour, HEURE); instant = apres(instant, 7 * MINUTE + 3_123)) {
       await aLHeure(enDirect.t.territoireId, instant);
@@ -408,8 +423,9 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
 
   describe("après le Couple, les Bêtes rejoignent l'effectif (US-0959)", () => {
     describe("une fois le Couple réuni, toute nouvelle Bête apprivoisée de l'Espèce rejoint l'effectif, quel que soit son sexe", () => {
-      it("la Bête qui arrive au Foyer après le Couple entre dans l'effectif, et l'écran d'Expédition la propose", async () => {
-        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple();
+      it.each<Sexe>(["male", "femelle"])("la Bête (%s) qui arrive au Foyer après le Couple entre dans l'effectif, et l'écran d'Expédition la propose", async (voulu) => {
+        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple({ voulu });
+        expect(sexe).toBe(voulu);
 
         await aLHeure(t.territoireId, apres(retour, -1));
         expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId, reuniLe }]);
@@ -427,7 +443,7 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
       });
 
       it("mâle ou femelle, elle y entre aussi quand une Bête de l'autre sexe l'attend au Foyer", async () => {
-        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple((sexe) => [[AUTRE[sexe], 1]]);
+        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple({ deja: (sexe) => [[AUTRE[sexe], 1]] });
 
         await aLHeure(t.territoireId, apres(retour, -1));
         expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE.map((l) => ({ ...l, nombre: l.sexe === sexe ? 0 : 1 })));
@@ -476,7 +492,12 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
           bestiaire: "couple_reuni",
         });
         const avecLAutre = (sexe: Sexe): [Sexe, number][] => [[AUTRE[sexe], 1]];
-        const [enDirect, dUnBloc, parLaTache] = [await unRetourApresLeCouple(avecLAutre), await unRetourApresLeCouple(avecLAutre), await unRetourApresLeCouple(avecLAutre)];
+        const [a, b, c] = await nesDAbord(3);
+        const [enDirect, dUnBloc, parLaTache] = [
+          await unRetourApresLeCouple({ deja: avecLAutre, ne: a }),
+          await unRetourApresLeCouple({ deja: avecLAutre, ne: b }),
+          await unRetourApresLeCouple({ deja: avecLAutre, ne: c }),
+        ];
 
         for (let instant = enDirect.t.ne; instant < apres(enDirect.retour, HEURE); instant = apres(instant, 7 * MINUTE + 3_123)) {
           await aLHeure(enDirect.t.territoireId, instant);
