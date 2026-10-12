@@ -16,14 +16,21 @@ describe("la fiche d'une Espèce (US-0803)", () => {
     expect(CSS).not.toMatch(/(?:^|[^-])width: \d{3,}px/);
   });
 
+  it("sur un téléphone couché, montre l'illustration en entier, pas plus haute que la place sous la barre", () => {
+    const couche = CSS.match(/@media \(max-height: 500px\) and \(orientation: landscape\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    expect(regle(".illustration", couche)).toContain("width: min(480px, calc(var(--hauteur-utile) - 48px));");
+    expect(regle(".fiche", couche)).toContain("grid-template-columns: auto minmax(0, 1fr);");
+  });
+
   it("met « Fermer » au pouce : 44 px de haut, avec un contour au clavier", () => {
     expect(regle(".fermer")).toContain("min-height: 44px;");
     expect(regle(".fermer:focus-visible")).toContain("outline: 2px solid var(--encre);");
   });
 
   it("pose l'illustration à côté du nom, au-dessus sur un téléphone tenu droit", () => {
-    const etroit = CSS.match(/@media \(max-width: 600px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
-    expect(regle(".fiche")).toMatch(/grid-template-columns: minmax\(0, 480px\) minmax\(0, 1fr\);/);
+    const etroit = CSS.match(/@media \(max-width: 600px\) and \(orientation: portrait\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+    // 480 px au plus, et jamais plus de 55 % de la fiche : entre 601 et 820 px, le nom garde sa colonne.
+    expect(regle(".fiche")).toMatch(/grid-template-columns: minmax\(0, min\(480px, 55%\)\) minmax\(0, 1fr\);/);
     expect(regle(".fiche", etroit)).toContain("grid-template-columns: minmax(0, 1fr);");
     expect(regle(".fiche", mobile)).toBe("");
   });

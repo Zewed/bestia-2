@@ -81,6 +81,16 @@ describe.skipIf(!URL_TEST)("ouvrir la fiche d'une Espèce, sur base (US-0803)", 
     expect(await fiche(t.territoireId, "pigeon")).toEqual({ titre: "Pigeon biset", rarete: "commune Commune", image: "especes/pigeon.webp" });
   });
 
+  it("ouvre, parmi les Couples du joueur, la fiche de l'Espèce demandée, et seulement elle", async () => {
+    const t = await naitre();
+    await reunir(t, "souris");
+    await reunir(t, "poule");
+
+    expect((await fiche(t.territoireId, "souris")).titre).toBe("Souris grise");
+    expect((await fiche(t.territoireId, "poule")).titre).toBe("Poule");
+    await expect(fiche(t.territoireId, "pigeon")).rejects.toMatchObject({ digest: expect.stringContaining("404") });
+  });
+
   it("n'ouvre ni la fiche d'une Espèce sans Couple, ni celle du Couple d'un autre joueur", async () => {
     const [a, b] = [await naitre(), await naitre()];
     await reunir(b, "souris");

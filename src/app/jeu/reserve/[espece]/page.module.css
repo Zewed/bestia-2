@@ -6,12 +6,13 @@
 }
 
 /*
- * L'illustration en grand à gauche, le nom et la Rareté à droite, « Fermer » dessous ; sur un téléphone tenu droit,
- * l'illustration au-dessus, de toute la largeur (couché, il garde les deux colonnes).
+ * L'illustration en grand à gauche, 480 px au plus et jamais plus de 55 % de la fiche, pour que le nom garde sa place ;
+ * le nom et la Rareté à droite, « Fermer » dessous. Sur un téléphone tenu droit, l'illustration au-dessus, de toute la
+ * largeur ; couché, il garde les deux colonnes.
  */
 .fiche {
   display: grid;
-  grid-template-columns: minmax(0, 480px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, min(480px, 55%)) minmax(0, 1fr);
   grid-template-areas: "illustration entete" "illustration fermer";
   grid-template-rows: auto 1fr;
   gap: var(--ecart) 24px;
@@ -79,7 +80,21 @@
   }
 }
 
-@media (max-width: 600px) {
+/*
+ * Sur un téléphone couché, l'illustration se voit en entier sans défiler : pas plus haute que la place sous la barre, et
+ * le nom juste à côté d'elle.
+ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .fiche {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .illustration {
+    width: min(480px, calc(var(--hauteur-utile) - 48px));
+  }
+}
+
+@media (max-width: 600px) and (orientation: portrait) {
   .fiche {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "illustration" "entete" "fermer";
