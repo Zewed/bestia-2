@@ -86,13 +86,24 @@
   min-width: 0;
 }
 
-/* Le bloc « Bêtes » ouvre la page Bêtes : tout le bloc se touche ; le total en grand. */
+/* Le bloc « Bêtes » ouvre la page Bêtes : tout le bloc se touche ; sur une ligne, « Bêtes » puis le total en grand. */
 .lienBetes {
   display: block;
   border-radius: var(--arrondi);
   color: var(--encre);
   text-decoration: none;
   cursor: pointer;
+}
+
+.lienBetes > section {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.lienBetes h2 {
+  margin-bottom: 0;
 }
 
 @media (hover: hover) {
@@ -222,6 +233,10 @@
   }
   .foyer img {
     object-position: 50% 25%;
+  }
+  /* US-0810 : la production se resserre, pour que le bloc « Bêtes » tienne dessous sans faire défiler le Foyer. */
+  .ligneProduction {
+    min-height: 28px;
   }
   .legende {
     padding: 56px 20px 20px;

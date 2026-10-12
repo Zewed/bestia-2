@@ -19,12 +19,11 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
 /**
  * US-0803 : la fiche de l'Espèce d'un Couple de la Réserve, qu'ouvre sa carte : son illustration en grand, son nom en
  * titre et sa Rareté, sur la pastille de ses couleurs. « Fermer » ramène à la Réserve. Seulement pour une Espèce dont le
- * joueur a réuni le Couple : toute autre adresse est introuvable, sans dire si un autre joueur l'a réuni. Ses
- * caractéristiques arrivent avec US-0804 à US-0806.
+ * joueur a réuni le Couple ou, US-0810, a des Bêtes : toute autre adresse est introuvable, sans dire si un autre joueur en
+ * a. Ses caractéristiques arrivent avec US-0804 à US-0806.
  *
- * US-0810 : elle s'ouvre aussi depuis la page Bêtes, pour toute Espèce dont le joueur a des Bêtes (especeDuTerritoire), et
- * rappelle l'effectif de l'Espèce, vide quand ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes
- * (`?depuis=betes`), « Fermer » y ramène.
+ * US-0810 : elle s'ouvre aussi depuis la page Bêtes (especeDuTerritoire), et rappelle l'effectif de l'Espèce, vide quand
+ * ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes (`?depuis=betes`), « Fermer » y ramène.
  */
 export default async function FicheDeLEspece({
   params,
@@ -39,18 +38,18 @@ export default async function FicheDeLEspece({
   if (!IDENTIFIANT.test(espece)) notFound();
   const { territoireId } = await exigerCompte(`/jeu/reserve/${espece}`);
   // US-0810 : l'Espèce de la fiche, dont le joueur a réuni le Couple ou a des Bêtes, avec son effectif.
-  const couple = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
-  if (!couple) notFound();
+  const fiche = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
+  if (!fiche) notFound();
   const retour = (await searchParams).depuis === "betes" ? "/jeu/betes" : "/jeu/reserve";
   return (
     <main className={styles.page}>
       <article className={styles.fiche}>
-        <IllustrationEspece espece={couple} format="grand" className={styles.illustration} />
+        <IllustrationEspece espece={fiche} format="grand" className={styles.illustration} />
         <div className={styles.entete}>
-          <h1 className={styles.nom}>{couple.nom}</h1>
-          <PastilleRarete rarete={couple.rarete} />
+          <h1 className={styles.nom}>{fiche.nom}</h1>
+          <PastilleRarete rarete={fiche.rarete} />
           <p className={styles.effectif}>
-            <span>Effectif</span> <strong className={styles.nombre}>{couple.effectif}</strong>
+            <span>Effectif</span> <strong className={styles.nombre}>{fiche.effectif}</strong>
           </p>
         </div>
         <Link href={retour} className={styles.fermer}>
