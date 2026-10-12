@@ -92,7 +92,8 @@ export type EspeceDeLEffectif = { especeId: string; nom: string; illustration: s
 /**
  * US-0810 : l'effectif du Territoire, Espèce par Espèce, pour la page Bêtes : toutes les Bêtes que le joueur possède,
  * mâles et femelles ensemble, celles sorties en escorte comprises (elles sont toujours à lui, US-0937) ; jamais celles d'un
- * Couple, parties en Réserve hors de l'effectif (US-0956), ni les Bêtes perdues au combat, qui l'ont quitté (US-0944).
+ * Couple, parties en Réserve hors de l'effectif (US-0956), ni les Bêtes mortes au combat, qui l'ont quitté (US-0944) ;
+ * les Blessés, eux, y restent et comptent (US-0951).
  * Seules les Espèces qui en ont au moins une, de la plus commune à la plus rare, puis par nom, comme l'escorte.
  */
 export async function effectifParEspece(base: Pool | PoolClient, territoireId: number): Promise<EspeceDeLEffectif[]> {
