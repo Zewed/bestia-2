@@ -361,8 +361,8 @@ export const PART_DES_BLESSES = 0.5;
 /**
  * US-0968 : la simulation des chances de la page de contrôle juge 10 000 Rencontres disputées (valeur provisoire, à régler
  * en jouant) entre des Expéditions de forces données, et échoue dès que la part des victoires d'une escorte s'écarte de
- * plus de 1 point de pourcentage (valeur provisoire, à régler en jouant) de sa part attendue, à proportion de sa force
- * (US-0963).
+ * plus de 2 points de pourcentage (valeur provisoire, à régler en jouant) de sa part attendue, à proportion de sa force
+ * (US-0963) : comme la simulation des sexes, plus de quatre écarts types à 10 000 tirages.
  */
 export const SIMULATION_DES_CHANCES_RENCONTRES = 10_000;
-export const SIMULATION_DES_CHANCES_TOLERANCE_POINTS = 1;
+export const SIMULATION_DES_CHANCES_TOLERANCE_POINTS = 2;

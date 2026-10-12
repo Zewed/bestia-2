@@ -4,7 +4,7 @@ import { SIMULATION_DES_CHANCES_RENCONTRES, SIMULATION_DES_CHANCES_TOLERANCE_POI
 import { lireDesForces, rencontreSimulee, simulerLesChances } from "./simulation";
 
 describe("la simulation des chances (US-0968)", () => {
-  it(`simule ${SIMULATION_DES_CHANCES_RENCONTRES} Rencontres disputées, chacune une Bête différente, à la tolérance de ${SIMULATION_DES_CHANCES_TOLERANCE_POINTS} point`, () => {
+  it(`simule ${SIMULATION_DES_CHANCES_RENCONTRES} Rencontres disputées, chacune une Bête différente, à la tolérance de ${SIMULATION_DES_CHANCES_TOLERANCE_POINTS} points`, () => {
     const simulation = simulerLesChances({ forces: [1, 3] });
     expect(simulation.rencontres).toBe(SIMULATION_DES_CHANCES_RENCONTRES);
     expect(simulation.tolerance).toBe(SIMULATION_DES_CHANCES_TOLERANCE_POINTS);

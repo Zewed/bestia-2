@@ -56,7 +56,7 @@ describe("page de simulation des chances (US-0968)", () => {
     expect(html).toMatch(/<a [^>]*href="\/controle"[^>]*>Contrôle<\/a>/);
     expect(html).toContain("Contrôle réussi");
     expect(html).not.toContain("Contrôle échoué");
-    expect(html).toContain(`${SIMULATION_DES_CHANCES_RENCONTRES.toLocaleString("fr-FR").replaceAll(" ", " ")} Rencontres par simulation · Tolérance : 1 point`);
+    expect(html).toContain(`${SIMULATION_DES_CHANCES_RENCONTRES.toLocaleString("fr-FR").replaceAll(" ", " ")} Rencontres par simulation · Tolérance : 2 points`);
     expect(html.indexOf("Contrôle réussi")).toBeLessThan(html.indexOf(">Forces 1 et 3</h2>"));
     expect(html.indexOf(">Forces 1 et 3</h2>")).toBeLessThan(html.indexOf(">Forces 1, 2 et 3</h2>"));
   });
