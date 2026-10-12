@@ -1317,6 +1317,14 @@ describe("repérer la Bête restée sur la carte (US-0948)", () => {
     expect(revenir.getAttribute("href")).toBe(`/jeu/expeditions/nouvelle?q=${PRAIRIE.q}&r=${PRAIRIE.r}`);
   });
 
+  it("pendant le choix d'une destination, ouverte au clavier, rend à l'écran d'Expédition les choix qu'il avait (US-0949)", async () => {
+    render(<CarteDuJeu carte={GRANDE} fonds={FONDS} destination="choix=destination&sejour=240" betes={[RENARD]} maintenant={MAINTENANT} />);
+    repere()!.focus();
+    await userEvent.setup().keyboard("{Enter}");
+    const revenir = within(ficheDeLaBete()!).getByRole("link", { name: "Revenir la chercher" });
+    expect(revenir.getAttribute("href")).toBe(`/jeu/expeditions/nouvelle?q=${PRAIRIE.q}&r=${PRAIRIE.r}&sejour=240`);
+  });
+
   it("se prend aussi au clavier, et se ferme comme la fiche d'une Case", async () => {
     render(carte([RENARD]));
     const user = userEvent.setup();

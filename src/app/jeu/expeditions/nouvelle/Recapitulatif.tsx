@@ -53,7 +53,7 @@ export type BeteAChercher = { espece: string; force: number; rareteId: string; j
  * vont au pas de sa Bête la plus lente, d'après la vitesse de son Espèce, ou des explorateurs s'ils sont plus lents.
  * US-0949 : pour chaque Bête repérée sur la destination (`betes`), son Espèce et sa force, puis si l'escorte est assez
  * forte pour elle (aPortee), ou la force qui lui manque (forceQuiManque) ; et, quand elle devrait être partie à
- * l'arrivée prévue, qui avance avec l'heure du jeu, une ligne le dit, gardée en vue même replié.
+ * l'arrivée prévue, qui avance avec l'heure du jeu, une ligne le dit en la nommant, gardée en vue même replié.
  */
 export function Recapitulatif({
   libres,
@@ -151,7 +151,7 @@ export function Recapitulatif({
                 {horaire && bete.jusquA <= horaire.debut ? (
                   <div data-essentiel="">
                     <dt>À l&apos;arrivée</dt>
-                    <dd>Elle sera déjà partie</dd>
+                    <dd>{`${bete.espece} ne sera plus là`}</dd>
                   </div>
                 ) : null}
               </Fragment>

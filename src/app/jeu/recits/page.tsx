@@ -9,6 +9,7 @@ import { betesReperees } from "@/expeditions/betes-reperees";
 import { versLEcran } from "@/expeditions/choix-de-destination";
 import { RETOUR_D_EXPEDITION, resumeDUnRetour } from "@/expeditions/resume-du-retour";
 import { type Recit, type RencontreRacontee, recitsDuTerritoire } from "@/monde/recits";
+import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { formaterHeure, formaterInstant, formaterJourEtHeure } from "@/temps/affichage";
 import { maintenant } from "@/temps/horloge";
 import { ListeDesRecits } from "./ListeDesRecits";
@@ -35,11 +36,13 @@ const cle = (laCase: { q: number; r: number }, numero: number) => `${laCase.q},$
 
 /**
  * US-0949 : les Bêtes restées sur leur Case que racontent les Récits `recits` et que le joueur a encore repérées à l'heure
- * du jeu (betesReperees), par leur clé ; aucune lecture quand aucun Récit ne mène à la Case d'une Bête restée.
+ * du jeu `instant` (betesReperees), par leur clé. Aucune lecture quand aucun Récit ne mène à la Case d'une Bête restée
+ * vue depuis moins longtemps que sa présence (PRESENCE_D_UNE_BETE_HEURES) : vue avant, elle est forcément partie.
  */
-async function encoreReperees(territoireId: number, recits: Recit[]): Promise<Set<string>> {
-  if (!recits.some((r) => r.rencontres?.some((x) => x.laCase))) return new Set();
-  return new Set((await betesReperees(getPool(), territoireId, maintenant())).map((b) => cle(b.laCase, b.numero)));
+async function encoreReperees(territoireId: number, recits: Recit[], instant: Date): Promise<Set<string>> {
+  const depuis = instant.getTime() - PRESENCE_D_UNE_BETE_HEURES * 3_600_000;
+  if (!recits.some((r) => r.rencontres?.some((x) => x.laCase && x.vueLe.getTime() > depuis))) return new Set();
+  return new Set((await betesReperees(getPool(), territoireId, instant)).map((b) => cle(b.laCase, b.numero)));
 }
 
 /** US-0949 : l'écran d'Expédition qui revient chercher la Bête restée de la Rencontre `r`, si elle est encore repérée. */
@@ -58,7 +61,7 @@ export default async function Recits() {
   if (!entreeDuJeuOuverte()) notFound();
   const { territoireId } = await exigerCompte("/jeu/recits");
   const recits = territoireId === null ? [] : await recitsDuTerritoire(getPool(), territoireId);
-  const reperees = territoireId === null ? new Set<string>() : await encoreReperees(territoireId, recits);
+  const reperees = territoireId === null ? new Set<string>() : await encoreReperees(territoireId, recits, maintenant());
   return (
     <main className={styles.page}>
       <h1 className={styles.titre}>Récits</h1>

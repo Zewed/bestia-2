@@ -1,6 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { BeteReperee } from "@/expeditions/betes-reperees";
+import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 
 // La vraie garde, branchée sur une session simulée.
 const cookie = vi.hoisted(() => ({ jetonDeSession: vi.fn() }));
@@ -212,10 +213,16 @@ describe("page Récits (US-0324)", () => {
     expect(liste.split("</li>").slice(0, -1).map((ligne) => ligne.includes("Revenir la chercher"))).toEqual([true, false, false]);
   });
 
-  it("ne lit aucune Bête repérée sans Bête restée qui mène à sa Case (US-0949)", async () => {
+  it("ne lit aucune Bête repérée sans Bête restée qui mène à sa Case, ni pour une vue depuis plus longtemps que sa présence (US-0949)", async () => {
     reperees.betesReperees.mockClear();
     connecte();
     renderToStaticMarkup(await Recits());
+    expect(reperees.betesReperees).not.toHaveBeenCalled();
+    // Vue plus de PRESENCE_D_UNE_BETE_HEURES avant l'heure du jeu : elle est forcément partie depuis.
+    const vueLe = new Date(MAINTENANT.getTime() - PRESENCE_D_UNE_BETE_HEURES * 3_600_000 - 1);
+    const ancienne = { especeId: "renard_roux", vueLe, issue: "restee" as const, sexe: null, nouvelleEspece: false, laCase: { q: 3, r: -5 }, numero: 7 };
+    connecte([{ id: 54, titre: "Retour d'Expédition", texte: "…", survenuLe: vueLe, luLe: null, rencontres: [{ ...ancienne, nom: "Renard roux", illustration: null, rarete: { id: "peu_commune", nom: "Peu commune" } }] } as Recit]);
+    expect(renderToStaticMarkup(await Recits())).not.toContain("Revenir la chercher");
     expect(reperees.betesReperees).not.toHaveBeenCalled();
   });
 

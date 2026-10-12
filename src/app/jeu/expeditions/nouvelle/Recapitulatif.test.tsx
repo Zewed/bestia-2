@@ -353,7 +353,7 @@ describe("revenir chercher une Bête repérée (US-0949)", () => {
   it("prévient, même replié, quand la Bête sera partie avant l'arrivée prévue, et pas sinon", () => {
     // Arrivée prévue à 12 h 02 à Paris (2 h 20 d'aller en forêt) : un Renard qui part à 12 h 02 pile est déjà parti.
     ouvrir("?explorateurs=1", { betes: [{ ...RENARD, jusquA: new Date("2026-10-09T10:02:13.250Z") }] });
-    expect(ligne("À l'arrivée")).toBe("Elle sera déjà partie");
+    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
     const essentielles = [...bloc().querySelectorAll("dl > [data-essentiel]")].map((l) => l.querySelector("dt")!.textContent);
     expect(essentielles).toEqual(["À l'arrivée", "Retour prévu"]);
     cleanup();
@@ -368,10 +368,17 @@ describe("revenir chercher une Bête repérée (US-0949)", () => {
     ouvrir("?explorateurs=1", { especes: [SOURIS, OURS], betes, vitesse: 60 });
     expect(ligne("À l'arrivée")).toBeUndefined();
     await act(async () => vi.advanceTimersByTime(1_000));
-    expect(ligne("À l'arrivée")).toBe("Elle sera déjà partie");
+    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
     // Une escorte ne va jamais plus vite que les explorateurs : avec l'Ours, toujours trop tard.
     choisir("?explorateurs=1&escorte=ours.1");
-    expect(ligne("À l'arrivée")).toBe("Elle sera déjà partie");
+    expect(ligne("À l'arrivée")).toBe("Renard roux ne sera plus là");
+  });
+
+  it("nomme chaque Bête qui ne sera plus là, pour que les lignes gardées en vue, replié, se distinguent", () => {
+    const tot = new Date("2026-10-09T09:00:00Z");
+    ouvrir("?explorateurs=1", { betes: [{ ...RENARD, jusquA: tot }, { ...RENARD, espece: "Loutre d'Europe", jusquA: tot }] });
+    const essentielles = [...bloc().querySelectorAll("dl > [data-essentiel]")].map((l) => l.querySelector("dd")!.textContent);
+    expect(essentielles).toEqual(["Renard roux ne sera plus là", "Loutre d'Europe ne sera plus là", "9 octobre à 15:22"]);
   });
 
   it("ne dit rien de plus sans Bête repérée sur la destination", () => {
