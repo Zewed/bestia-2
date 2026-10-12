@@ -61,7 +61,7 @@ describe.skipIf(!URL_TEST)("chaque Expédition présente voit la Bête (US-0962,
   let pool: Pool;
   let mondeId: number;
   const lancement = `case-partagee-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  /** La fin des noms des chefs de ce lancement, qui n'y forme aucun mot interdit (src/test/base.ts). */
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
   const suffixe = suffixeDEssai();
   let numero = 0;
   /** L'Espèce la plus forte du jeu, qui escorte A, et la commune la plus faible, qui escorte B. */
