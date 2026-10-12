@@ -15,7 +15,7 @@ import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_T
 import { sexeDUneBeteDeNaissance } from "./betes-de-naissance";
 import { betesSauvagesDUneCase, type Sexe } from "./betes-sauvages";
 import { type CoupleReuni, couplesDuTerritoire, reunirLesCouples } from "./couple";
-import { betesDisponibles } from "./effectif";
+import { betesDisponibles, faireEntrerDansLEffectif } from "./effectif";
 import { type Coordonnees, distance } from "./hex";
 
 const MINUTE = 60_000;
@@ -66,28 +66,43 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
   /** L'aller, en minutes de jeu, du Foyer du Territoire à la Case `c`, au pas d'une Bête de l'Espèce `escorte`. */
   const aller = async (territoireId: number, c: Coordonnees, escorte: string) =>
     dureeDuTrajetMinutes(distance(await foyer(territoireId), c), [{ vitesse: vitesses.get(escorte)!, nombre: 1 }]);
+  /** Les Bêtes de naissance du Territoire sur une Case libre, de la première posée à la dernière. */
+  const betesDeNaissance = async (territoireId: number) =>
+    (
+      await pool.query<BeteDeNaissance>(
+        `select b.id, b.case_id as "caseId", b.espece_id as "especeId", b.arrivee, b.depart, c.q, c.r
+         from bete_de_naissance b join case_du_monde c on c.id = b.case_id where b.territoire_id = $1 and c.chef_id is null order by b.id`,
+        [territoireId],
+      )
+    ).rows;
+  /** L'Espèce commune de l'escorte qui part chercher une Bête de l'Espèce `especeId` : une autre que la sienne. */
+  const escorteDe = (especeId: string) => (especeId === "souris" ? "poule" : "souris");
   /**
-   * Une Bête de naissance du Territoire, l'Espèce commune de l'escorte qui part la chercher (une autre que la sienne, une
-   * Bête dans l'effectif) et l'heure d'un départ d'où l'Expédition arrive sur sa Case pendant sa présence, pour un séjour
-   * où aucune Bête sauvage ordinaire ne se montre : seule elle peut suivre l'Expédition. Null si le Foyer n'en a aucune.
+   * L'heure d'un départ, à `desLe` au plus tôt, d'où une Expédition escortée d'une Bête de l'Espèce `escorte` arrive sur la
+   * Case de la Bête de naissance `bete` pendant sa présence, pour un séjour où aucune Bête sauvage ordinaire ne se montre :
+   * seule elle peut suivre l'Expédition. Null s'il n'y en a plus avant qu'elle ne s'en aille.
+   */
+  const unDepartACalme = async (territoireId: number, bete: BeteDeNaissance, escorte: string, desLe: Date) => {
+    const trajet = await aller(territoireId, bete, escorte);
+    for (let depart = desLe; ; depart = apres(depart, 30 * MINUTE)) {
+      const arrivee = apres(depart, trajet * MINUTE);
+      if (apres(arrivee, SEJOUR * MINUTE) > bete.depart) return null;
+      if (arrivee < bete.arrivee) continue;
+      if ((await betesSauvagesDUneCase(pool, bete.caseId, arrivee, apres(arrivee, SEJOUR * MINUTE))).length > 0) continue;
+      return depart;
+    }
+  };
+  /**
+   * Une Bête de naissance du Territoire, l'Espèce commune de l'escorte qui part la chercher (une Bête dans l'effectif) et
+   * l'heure d'un départ à calme (unDepartACalme), dès la naissance. Null si le Foyer n'en a aucune.
    */
   const uneBeteDeNaissanceACalme = async (t: { territoireId: number; ne: Date }) => {
-    const { rows } = await pool.query<BeteDeNaissance>(
-      `select b.id, b.case_id as "caseId", b.espece_id as "especeId", b.arrivee, b.depart, c.q, c.r
-       from bete_de_naissance b join case_du_monde c on c.id = b.case_id where b.territoire_id = $1 and c.chef_id is null order by b.id`,
-      [t.territoireId],
-    );
-    for (const bete of rows) {
-      const escorte = bete.especeId === "souris" ? "poule" : "souris";
-      const trajet = await aller(t.territoireId, bete, escorte);
-      for (let depart = t.ne; ; depart = apres(depart, 30 * MINUTE)) {
-        const arrivee = apres(depart, trajet * MINUTE);
-        if (apres(arrivee, SEJOUR * MINUTE) > bete.depart) break;
-        if (arrivee < bete.arrivee) continue;
-        if ((await betesSauvagesDUneCase(pool, bete.caseId, arrivee, apres(arrivee, SEJOUR * MINUTE))).length > 0) continue;
-        await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 1)", [t.territoireId, escorte]);
-        return { bete, escorte, depart, sexe: sexeDUneBeteDeNaissance(graine, bete.id) };
-      }
+    for (const bete of await betesDeNaissance(t.territoireId)) {
+      const escorte = escorteDe(bete.especeId);
+      const depart = await unDepartACalme(t.territoireId, bete, escorte, t.ne);
+      if (!depart) continue;
+      await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 1)", [t.territoireId, escorte]);
+      return { bete, escorte, depart, sexe: sexeDUneBeteDeNaissance(graine, bete.id) };
     }
     return null;
   };
@@ -124,6 +139,39 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
       return { t, ...voulue, especeId: voulue.bete.especeId, expeditionId, arrivee: sejourDUneExpedition(prevus)!.debut, retour: retourDUneExpedition(prevus)! };
     }
     throw new Error("Trois Foyers sans Bête de naissance à aller chercher pendant un séjour calme.");
+  };
+  /**
+   * US-0959 : comme unRetourAvecLaBete, mais le Couple de l'Espèce de la Bête est déjà réuni quand elle arrive au Foyer.
+   * Un mâle et une femelle de l'Espèce l'attendent, avec les Bêtes que `deja` donne d'après son sexe ; l'une d'elles part
+   * aussitôt en escorte d'une première Expédition, vers une Case calme, et son retour réunit leur Couple (US-0956).
+   * L'Expédition qui va chercher la Bête part ensuite : son Territoire, la Bête, son sexe, l'instant du Couple réuni,
+   * l'Expédition et ses heures d'arrivée et de retour.
+   */
+  const unRetourApresLeCouple = async (deja: (sexe: Sexe) => [Sexe, number][] = () => []) => {
+    for (let essai = 0; essai < 3; essai++) {
+      const t = await naitre();
+      const [bete] = await betesDeNaissance(t.territoireId);
+      if (!bete) continue;
+      const { especeId } = bete;
+      const sexe = sexeDUneBeteDeNaissance(graine, bete.id);
+      for (const [s, nombre] of [["male", 1], ["femelle", 1], ...deja(sexe)] as [Sexe, number][]) {
+        await pool.query(
+          `insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, $3, $4)
+           on conflict (territoire_id, espece_id, sexe) do update set nombre = effectif.nombre + excluded.nombre`,
+          [t.territoireId, especeId, s, nombre],
+        );
+      }
+      const premiere = await partir(t.territoireId, await uneCaseCalme(t.territoireId, especeId, t.ne), especeId, t.ne);
+      const reuniLe = retourDUneExpedition(await horaires(premiere))!;
+      const escorte = escorteDe(especeId);
+      const depart = await unDepartACalme(t.territoireId, bete, escorte, reuniLe);
+      if (!depart) continue;
+      await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $2, 'male', 1)", [t.territoireId, escorte]);
+      const expeditionId = await partir(t.territoireId, bete, escorte, depart);
+      const prevus = await horaires(expeditionId);
+      return { t, bete, escorte, depart, sexe, especeId, reuniLe, expeditionId, arrivee: sejourDUneExpedition(prevus)!.debut, retour: retourDUneExpedition(prevus)! };
+    }
+    throw new Error("Trois Foyers sans Bête de naissance à aller chercher, Couple réuni, pendant un séjour calme.");
   };
   /**
    * Une Case libre à 2 à 4 Cases du Foyer du Territoire, sans Bête de naissance, où une Expédition escortée d'une Bête de
@@ -357,6 +405,94 @@ describe.skipIf(!URL_TEST)("réunir le Couple (US-0956, sur base)", () => {
     expect(await etat(dUnBloc)).toEqual(attendu(dUnBloc));
     expect(await etat(parLaTache)).toEqual(attendu(parLaTache));
   }, 60_000);
+
+  describe("après le Couple, les Bêtes rejoignent l'effectif (US-0959)", () => {
+    describe("une fois le Couple réuni, toute nouvelle Bête apprivoisée de l'Espèce rejoint l'effectif, quel que soit son sexe", () => {
+      it("la Bête qui arrive au Foyer après le Couple entre dans l'effectif, et l'écran d'Expédition la propose", async () => {
+        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple();
+
+        await aLHeure(t.territoireId, apres(retour, -1));
+        expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId, reuniLe }]);
+        expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE);
+        expect(await proposee(t.territoireId, especeId)).toBeNull();
+        await aLHeure(t.territoireId, retour);
+        expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE.map((l) => ({ ...l, nombre: l.sexe === sexe ? 1 : 0 })));
+        expect(await proposee(t.territoireId, especeId)).toEqual({
+          disponibles: 1,
+          males: sexe === "male" ? 1 : 0,
+          femelles: sexe === "femelle" ? 1 : 0,
+          coupleReuni: true,
+        });
+        expect(await auBestiaire(t.territoireId, especeId)).toBe("couple_reuni");
+      });
+
+      it("mâle ou femelle, elle y entre aussi quand une Bête de l'autre sexe l'attend au Foyer", async () => {
+        const { t, especeId, sexe, reuniLe, retour } = await unRetourApresLeCouple((sexe) => [[AUTRE[sexe], 1]]);
+
+        await aLHeure(t.territoireId, apres(retour, -1));
+        expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE.map((l) => ({ ...l, nombre: l.sexe === sexe ? 0 : 1 })));
+        await aLHeure(t.territoireId, retour);
+        expect(await effectifDe(t.territoireId, especeId)).toEqual(VIDE.map((l) => ({ ...l, nombre: 1 })));
+        expect(await proposee(t.territoireId, especeId)).toEqual({ disponibles: 2, males: 1, femelles: 1, coupleReuni: true });
+        expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId, reuniLe }]);
+      });
+    });
+
+    describe("aucun second Couple de la même Espèce ne se forme", () => {
+      it("des mâles et des femelles entrés ensemble dans l'effectif après le Couple y restent tous, retour après retour", async () => {
+        const t = await naitre();
+        await pool.query("insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, 'poule', 'male', 1), ($1, 'poule', 'femelle', 1)", [
+          t.territoireId,
+        ]);
+        const le = apres(t.ne, HEURE);
+        const client = await pool.connect();
+        try {
+          expect(await reunirLesCouples(client, t.territoireId, le)).toEqual(["poule"]);
+          // Deux mâles et deux femelles apprivoisés ensuite, comme à l'arrivée au Foyer (US-0938) ; puis d'autres retours.
+          await faireEntrerDansLEffectif(client, t.territoireId, ["male", "femelle", "male", "femelle"].map((sexe) => ({ especeId: "poule", sexe: sexe as Sexe })));
+          for (const ensuite of [apres(le, HEURE), apres(le, 2 * HEURE)]) expect(await reunirLesCouples(client, t.territoireId, ensuite)).toEqual([]);
+        } finally {
+          client.release();
+        }
+        expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId: "poule", reuniLe: le }]);
+        expect(await effectifDe(t.territoireId, "poule")).toEqual(VIDE.map((l) => ({ ...l, nombre: 2 })));
+        expect(await proposee(t.territoireId, "poule")).toEqual({ disponibles: 4, males: 2, femelles: 2, coupleReuni: true });
+      });
+
+      /**
+       * Trois Territoires dont le Couple est réuni et qui ramènent ensuite une Bête de l'Espèce, une Bête de l'autre sexe
+       * au Foyer : l'un mis à l'heure page ouverte, par tranches de sept minutes, l'autre d'un bloc, le dernier par la
+       * tâche planifiée, dont un passage à l'instant même du retour.
+       */
+      it("le même effectif, sans second Couple, en direct, au rattrapage et par la tâche planifiée", async () => {
+        const etat = async ({ t, especeId }: Awaited<ReturnType<typeof unRetourApresLeCouple>>) => ({
+          couples: await couplesDuTerritoire(pool, t.territoireId),
+          effectif: await effectifDe(t.territoireId, especeId),
+          bestiaire: await auBestiaire(t.territoireId, especeId),
+        });
+        const attendu = ({ especeId, reuniLe }: { especeId: string; reuniLe: Date }) => ({
+          couples: [{ especeId, reuniLe }],
+          effectif: VIDE.map((l) => ({ ...l, nombre: 1 })),
+          bestiaire: "couple_reuni",
+        });
+        const avecLAutre = (sexe: Sexe): [Sexe, number][] => [[AUTRE[sexe], 1]];
+        const [enDirect, dUnBloc, parLaTache] = [await unRetourApresLeCouple(avecLAutre), await unRetourApresLeCouple(avecLAutre), await unRetourApresLeCouple(avecLAutre)];
+
+        for (let instant = enDirect.t.ne; instant < apres(enDirect.retour, HEURE); instant = apres(instant, 7 * MINUTE + 3_123)) {
+          await aLHeure(enDirect.t.territoireId, instant);
+        }
+        await aLHeure(enDirect.t.territoireId, apres(enDirect.retour, HEURE));
+        await aLHeure(dUnBloc.t.territoireId, apres(dUnBloc.retour, HEURE));
+        for (const instant of [apres(parLaTache.reuniLe, 10 * MINUTE), apres(parLaTache.arrivee, 10 * MINUTE), parLaTache.retour, apres(parLaTache.retour, 39 * MINUTE)]) {
+          expect(await rattraperLesAbsents({ pool, maintenant: instant, parmi: { territoire: [parLaTache.t.territoireId] } })).toMatchObject({ rattrapes: 1, echecs: 0 });
+        }
+
+        expect(await etat(enDirect)).toEqual(attendu(enDirect));
+        expect(await etat(dUnBloc)).toEqual(attendu(dUnBloc));
+        expect(await etat(parLaTache)).toEqual(attendu(parLaTache));
+      }, 90_000);
+    });
+  });
 
   it("réunit le Couple des effectifs qui comptaient déjà un mâle et une femelle au Foyer (migration 0061), une seule fois", async () => {
     const { t, bete, escorte, especeId, retour } = await unRetourAvecLaBete((sexe) => [[AUTRE[sexe], 1]]);
