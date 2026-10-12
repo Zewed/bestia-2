@@ -474,6 +474,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0943 · La Bête trop forte peut attaquer
 **En tant que** joueur, **je veux** qu'une Bête trop forte puisse s'en prendre à mon Expédition, **afin de** sentir le risque d'aller chercher plus fort que soi.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, THE-1461, Zewed/bestia-2#39). Une Bête trop forte pour l'escorte d'une Expédition qui la voit peut l'attaquer pendant son séjour, à un instant tiré selon son régime (migration 0062, colonne `attaque_le`) ; seule l'Expédition désignée par les tirages est attaquée, les autres non, et toutes rentrent à l'heure prévue. Le récit ne dit encore rien de l'attaque (la fuite et les pertes viennent avec US-0945 et l'étape 42). Tranché : chaque Bête attaque au plus une fois chaque Expédition qu'elle voit, et plusieurs Bêtes trop fortes peuvent attaquer la même. Une Expédition qui voit la Bête à l'instant où elle en suit une autre (US-0962) n'a plus le temps d'être attaquée. Vérifié en vrai avec trois Expéditions vers un Loup gris rare.
 - **Débloquée par** : US-0942
 - **Critères d'acceptation** :
   - Tant que la Bête et l'Expédition sont sur la même Case, la Bête peut attaquer, avec une chance par heure passée ensemble (chiffre à régler).
@@ -612,6 +613,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0957 · L'Élevage s'ouvre pour toujours
 **En tant que** joueur, **je veux** que l'Élevage d'une Espèce me reste acquis dès son Couple réuni, **afin de** ne jamais perdre ce que j'ai gagné.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#42). L'Élevage d'une Espèce est acquis dès que son Couple est réuni, à l'heure exacte du retour (en direct, au rattrapage ou par la tâche planifiée), et le reste pour toujours, même quand toutes ses Bêtes meurent ou que d'autres entrent dans l'effectif. Tranché : il est noté dans le Couple lui-même (table `couple`, qui ne se défait jamais), sans nouvelle table ni migration ; le sexe des Bêtes élevées n'a rien à décider tant qu'une Espèce élevée a déjà son Couple. Vérifié en vrai avec un Couple de poules.
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
   - Dès le Couple réuni, l'Élevage de l'Espèce est noté comme acquis pour toujours ; on s'en servira, avec un Habitant éleveur, à l'étape 34.
@@ -630,6 +632,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0959 · Après le Couple, les Bêtes rejoignent l'effectif
 **En tant que** joueur, **je veux** que les Bêtes apprivoisées après la réunion du Couple renforcent mon effectif, **afin de** ne rien perdre à continuer d'en apprivoiser.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#44). Une fois le Couple d'une Espèce réuni, chaque Bête de cette Espèce qui arrive au Foyer rejoint l'effectif, quel que soit son sexe, même quand une Bête de l'autre sexe attend déjà : aucun second Couple ne se forme, en direct, au rattrapage ou par la tâche planifiée. La règle venait déjà de US-0956 : la story est prouvée par des tests. Au passage, un test instable corrigé : les chefs d'un même Monde d'essai naissent d'abord, avant qu'on choisisse leurs Cases. Vérifié en vrai avec des poules.
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
   - Une fois le Couple réuni, toute nouvelle Bête apprivoisée de l'Espèce rejoint l'effectif, quel que soit son sexe.
