@@ -10,6 +10,7 @@ import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { lExpeditionSuivie } from "./apprivoisement";
 import { cheminDUneExpedition } from "./chemin";
 import { lancerLExpedition } from "./depart";
 import { rencontresDUneExpedition } from "./rencontres";
@@ -321,7 +322,8 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
         await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [territoireId] } });
       },
     ];
-    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit et quitte la Case (US-0935) : chaque
+    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit, ou l'une de celles qui la voient au
+    // même instant, tirée au sort (US-0963), et quitte la Case (US-0935) : chaque
     // façon de compter le temps y passe seule, puis la Case redevient ce qu'elle était, sans ses Expéditions ni la trace
     // des Bêtes parties avec elles.
     const vues = [];
@@ -334,9 +336,15 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
       await pool.query("delete from bete_partie where case_id = $1", [caseId]);
     }
     for (const autres of vues.slice(1)) expect(autres).toEqual(vues[0]);
-    // Celle qui séjourne douze heures voit chaque Bête présente pendant son séjour : dès son arrivée si elle était déjà là, à son apparition sinon.
+    // Celle qui séjourne douze heures voit chaque Bête présente pendant son séjour : dès son arrivée si elle était déjà là, à
+    // son apparition sinon. Elle emmène celles que la règle lui donne, parmi les quatre Expéditions (lExpeditionSuivie) :
+    // posées dans cet ordre, elles se rangent ainsi au tirage (US-0963).
     const [arrivee, depart] = [apres(debut, 40), apres(debut, 40 + 12 * HEURE)];
-    const attendues = (await betesSauvagesDUneCase(pool, caseId, arrivee, depart)).map((b) => vue(b, caseId, b.arrivee < arrivee ? arrivee : b.arrivee));
+    const sejours = HORAIRES.map(([partie, trajet, sejour], i) => ({ id: i, arrivee: apres(debut, partie + trajet), depart: apres(debut, partie + trajet + sejour), escorte: null }));
+    const attendues = (await betesSauvagesDUneCase(pool, caseId, arrivee, depart)).map((b) => ({
+      ...vue(b, caseId, b.arrivee < arrivee ? arrivee : b.arrivee),
+      apprivoisee: lExpeditionSuivie({ ...b, force: 0, caseId, beteDeNaissanceId: null }, sejours)?.expeditionId === 0,
+    }));
     expect(attendues.length).toBeGreaterThanOrEqual(2);
     expect(vues[0][0]).toEqual(attendues);
     // Près de 200 rattrapages à la suite : sous la charge de la suite complète, plus que les 20 s par défaut.
