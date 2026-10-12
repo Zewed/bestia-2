@@ -7,7 +7,10 @@ import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
+import { blessesAuFoyer } from "@/monde/blesses";
+import { blessesAffiches, blessesDans } from "@/monde/blesses-affiches";
 import { especeDuTerritoire } from "@/monde/effectif";
+import { maintenant } from "@/temps/horloge";
 import styles from "./page.module.css";
 
 // Le titre reste celui de la Réserve : le nom d'une Espèce ne se lit pas sans la garde.
@@ -24,6 +27,9 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
  *
  * US-0810 : elle s'ouvre aussi depuis la page Bêtes (especeDuTerritoire), et rappelle l'effectif de l'Espèce, vide quand
  * ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes (`?depuis=betes`), « Fermer » y ramène.
+ *
+ * US-0952 : sous l'effectif, chaque groupe de Blessés au Foyer de l'Espèce et le temps qui lui reste avant sa guérison,
+ * comme sur la page Bêtes ; rien sans Blessé.
  */
 export default async function FicheDeLEspece({
   params,
@@ -41,6 +47,9 @@ export default async function FicheDeLEspece({
   const fiche = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
   if (!fiche) notFound();
   const retour = (await searchParams).depuis === "betes" ? "/jeu/betes" : "/jeu/reserve";
+  const instant = maintenant();
+  const groupes = fiche.effectif > 0 && territoireId !== null ? ((await blessesAuFoyer(getPool(), territoireId, instant)).get(fiche.especeId) ?? []) : [];
+  const blesses = blessesAffiches(groupes, instant, fiche.effectif);
   return (
     <main className={styles.page}>
       <article className={styles.fiche}>
@@ -51,6 +60,11 @@ export default async function FicheDeLEspece({
           <p className={styles.effectif}>
             <span>Effectif</span> <strong className={styles.nombre}>{fiche.effectif}</strong>
           </p>
+          {blesses.map((groupe, i) => (
+            <p key={i} className={styles.blesses}>
+              {`dont ${blessesDans(groupe)}`}
+            </p>
+          ))}
         </div>
         <Link href={retour} className={styles.fermer}>
           Fermer

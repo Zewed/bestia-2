@@ -51,6 +51,13 @@
   color: var(--texte-2);
 }
 
+/* US-0952 : chaque groupe de Blessés, sous l'effectif. */
+.blesses {
+  color: var(--texte-2);
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
 .nombre {
   color: var(--encre);
   font-size: 22px;
