@@ -18,8 +18,9 @@ export const metadata: Metadata = { title: "Réserve" };
  * garde mène à la connexion, qui ramène ici.
  *
  * US-0802 : dessous, chaque Couple réuni, du premier au dernier : ses deux Bêtes, sous l'illustration de leur Espèce,
- * puis son nom et sa Rareté ; le sexe ne s'y dit pas. Seule la Réserve du joueur connecté : la page ne prend rien de
- * l'adresse, et ne lit que le Territoire de sa session.
+ * puis son nom et sa Rareté ; le sexe ne s'y dit pas. Un lecteur d'écran lit la paire d'un seul nom, « Poule, deux
+ * Bêtes ». Seule la Réserve du joueur connecté : la page ne prend rien de l'adresse, et ne lit que le Territoire de sa
+ * session.
  */
 export default async function Reserve() {
   await connection();
@@ -40,7 +41,7 @@ export default async function Reserve() {
           {couples.map((couple) => (
             <li key={couple.especeId}>
               <Bloc className={styles.couple}>
-                <div className={styles.betes}>
+                <div className={styles.betes} role="img" aria-label={`${couple.nom}, deux Bêtes`}>
                   <IllustrationEspece espece={couple} format="paire" className={styles.bete} />
                   <IllustrationEspece espece={couple} format="paire" className={styles.bete} />
                 </div>

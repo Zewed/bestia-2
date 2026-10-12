@@ -41,10 +41,13 @@ const texte = (html: string) =>
 /** Le nombre de Couples que la page dit abriter, et son nom : « 3 Couples ». */
 const nombre = (html: string) => texte(html).match(/ · (\d+ · Couples?)( · |$)/)?.[1].replace(" · ", " ");
 
-/** US-0802 : chaque Couple de la liste : le nom donné à chacune de ses illustrations, puis son texte. */
+/**
+ * US-0802 : chaque Couple de la liste : le nom donné à chacune de ses deux illustrations (une image, ou la tête de loup),
+ * sans celui de la paire, puis son texte.
+ */
 const couplesMontres = (html: string) =>
   [...(html.match(/<ul[^>]*>(.*?)<\/ul>/)?.[1] ?? "").matchAll(/<li[^>]*>(.*?)<\/li>/g)].map(([, li]) => ({
-    betes: [...li.matchAll(/<img[^>]*alt="([^"]*)"|role="img" aria-label="([^"]*)"/g)].map((m) => m[1] ?? m[2]),
+    betes: [...li.matchAll(/<img[^>]*alt="([^"]*)"|role="img" aria-label="([^"]*)"/g)].map((m) => m[1] ?? m[2]).filter((nom) => !nom.endsWith(", deux Bêtes")),
     texte: texte(li),
   }));
 
@@ -132,6 +135,12 @@ describe("voir ses Couples réunis (US-0802)", () => {
       ["Pigeon biset", "Pigeon biset"],
     ]);
     expect(texte(html)).not.toMatch(/mâle|femelle/i);
+    // Un lecteur d'écran lit la paire d'un seul nom, sans le répéter pour chaque Bête.
+    expect([...html.matchAll(/<div[^>]*role="img" aria-label="([^"]*, deux Bêtes)"/g)].map((m) => m[1])).toEqual([
+      "Souris grise, deux Bêtes",
+      "Poule, deux Bêtes",
+      "Pigeon biset, deux Bêtes",
+    ]);
   });
 
   it("ne montre que la Réserve du joueur connecté : celle de son Territoire, que rien dans l'adresse ne change", async () => {

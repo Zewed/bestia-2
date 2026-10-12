@@ -2,13 +2,14 @@ import { Illustration } from "./Illustration";
 
 /**
  * Les formats d'une illustration d'Espèce : en grand sur sa fiche, en vignette dans une liste ;
- * US-0802 : en paire, les deux Bêtes d'un Couple côte à côte dans la Réserve. L'optimiseur de
- * Next sert à chaque format la taille qu'il affiche.
+ * US-0802 : en paire, les deux Bêtes d'un Couple côte à côte dans la Réserve, près de la moitié de
+ * l'écran tant qu'une carte y prend toute la largeur. L'optimiseur de Next sert à chaque format la
+ * taille qu'il affiche.
  */
 export const FORMATS_ESPECE = {
   grand: "(max-width: 820px) 100vw, 480px",
   vignette: "96px",
-  paire: "(max-width: 820px) 45vw, 120px",
+  paire: "(max-width: 440px) 45vw, 130px",
 } as const;
 
 type IllustrationEspeceProps = {

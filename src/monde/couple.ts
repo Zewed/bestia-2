@@ -2,7 +2,8 @@
 // forment son Couple, sans action du joueur : tous deux quittent l'effectif et partent à l'abri, en Réserve (table
 // couple), d'où ils ne combattent plus et ne sortent plus ; les autres Bêtes de l'Espèce restent dans l'effectif, et
 // l'Espèce passe « Couple réuni » au Bestiaire. Un seul Couple par Espèce : il ne se défait pas, et aucun second ne se
-// forme. La page de la Réserve arrive à l'étape 33, l'annonce au récit avec US-0958. Côté serveur uniquement.
+// forme. La page de la Réserve les montre (US-0801, US-0802), l'annonce au récit arrive avec US-0958. Côté serveur
+// uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireAuBestiaire } from "@/bestiaire/bestiaire";
