@@ -16,7 +16,9 @@ import { attaqueTiree } from "@/test/attaques";
 import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lExpeditionSuivie } from "./apprivoisement";
 import { forceDUneBete } from "./force";
+import { expeditionsPresentesSurLaCaseApresLesFuites } from "./fuites-des-cases";
 import { type HorairesDUneExpedition, retourDUneExpedition } from "./phase";
+import { expeditionsPresentesSurLaCase } from "./presence";
 import { programmerLeRetour } from "./retour";
 
 const MINUTE_MS = 60_000;
@@ -70,7 +72,19 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
   let rare: BeteSauvage;
   let commune: BeteSauvage;
   /** Pour chaque manière : X et Y relues, l'instant de l'attaque sur X, et ce que l'effectif de chacun a gagné de l'Espèce de la commune. */
-  const lus = {} as Record<Maniere, { x: Lue; y: Lue; attaque: Date; gagnees: Record<"A" | "B", number>; recits: Record<"A" | "B", string[]> }>;
+  const lus = {} as Record<
+    Maniere,
+    {
+      x: Lue;
+      y: Lue;
+      attaque: Date;
+      gagnees: Record<"A" | "B", number>;
+      recits: Record<"A" | "B", string[]>;
+      /** Qui est sur la Case à l'apparition de la commune, selon les fuites écrites seules (brute) ou calculées (apres), avant tout rattrapage puis après tous. */
+      presents: Record<"avant" | "apres", { brute: number[]; apres: number[] }>;
+      ids: { x: number; y: number };
+    }
+  >;
   let retourDeY: Date;
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
   const forceDe = (id: string) => especes.find((e) => e.id === id)!.force;
@@ -180,6 +194,11 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
         const jeu = poolDansLaTransaction(client);
         const x = await poser(client, territoires.A, deX, idDeX);
         const y = await poser(client, territoires.B, deY);
+        const presents = async () => ({
+          brute: (await expeditionsPresentesSurLaCase(client, caseId, commune.arrivee)).map((e) => e.id).sort((p, q) => p - q),
+          apres: (await expeditionsPresentesSurLaCaseApresLesFuites(client, caseId, commune.arrivee)).map((e) => e.id).sort((p, q) => p - q),
+        });
+        const avantTout = await presents();
         const effectif = async (territoireId: number) =>
           (await client.query<{ n: number }>("select coalesce(sum(nombre), 0)::int as n from effectif where territoire_id = $1 and espece_id = $2", [territoireId, commune.especeId]))
             .rows[0].n;
@@ -204,7 +223,15 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
         const recitDe = async (joueur: "A" | "B") =>
           (await recitsDuTerritoire(client, territoires[joueur])).filter((r) => r.titre === "Retour d'Expédition").flatMap((r) => r.texte.split("\n"));
         const gagnees = { A: (await effectif(territoires.A)) - avant.A, B: (await effectif(territoires.B)) - avant.B };
-        lus[maniere] = { x: await lire(client, x), y: await lire(client, y), attaque, gagnees, recits: { A: await recitDe("A"), B: await recitDe("B") } };
+        lus[maniere] = {
+          x: await lire(client, x),
+          y: await lire(client, y),
+          attaque,
+          gagnees,
+          recits: { A: await recitDe("A"), B: await recitDe("B") },
+          presents: { avant: avantTout, apres: await presents() },
+          ids: { x, y },
+        };
       } finally {
         await client.query("rollback");
         client.release();
@@ -233,6 +260,15 @@ describe.skipIf(!URL_TEST)("une Expédition en fuite quitte la Case pour tous le
       rencontres: [{ numero: commune.numero, apprivoisee: true, attaqueLe: null }],
     });
     expect(gagnees).toEqual({ A: 0, B: 1 });
+  });
+
+  it.each(MANIERES)("%s : la présence que lisent les récits et les Bêtes repérées ne compte pas X, en fuite, même avant le rattrapage de A", (maniere) => {
+    const { presents, ids } = lus[maniere];
+    // Avant tout rattrapage, les fuites écrites seules la laissent sur la Case ; calculées pour la Case, elles la font partir.
+    expect(presents.avant.brute).toEqual([ids.x, ids.y].sort((p, q) => p - q));
+    expect(presents.avant.apres).toEqual([ids.y]);
+    // Tous rattrapés, sa fuite est écrite : les deux lectures disent la même chose.
+    expect(presents.apres).toEqual({ brute: [ids.y], apres: [ids.y] });
   });
 
   it.each(MANIERES)("%s : le récit de retour de B ne compte pas X sur la Case, qui l'avait quittée, comme celui de A, qui ne la dit pas partie avec Y", (maniere) => {
