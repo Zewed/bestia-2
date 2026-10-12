@@ -39,6 +39,13 @@ describe("la carte d'un Voyageur aux portes (US-0332, US-0343)", () => {
     expect(regle(".voyageur:has(> .metiers)", LARGE)).toMatch(/"portrait metier"\s*"metiers metiers"/);
   });
 
+  it("tient dans la colonne d'un grand écran : le portrait prend la hauteur qui reste, de 84 à 220 px, moins quand une phrase s'ajoute ou que plusieurs attendent", () => {
+    const grand = CSS.slice(CSS.indexOf("@media (min-width: 1024px) and (min-height: 600px)"));
+    expect(regle(".portrait", grand)).toContain("height: clamp(84px, calc(var(--hauteur-utile) - 600px), 220px);");
+    expect(regle(".auxPortes:has(> .plusDePlace, > .famine, > .annonce) .portrait", grand)).toContain("height: clamp(84px, calc(var(--hauteur-utile) - 650px), 220px);");
+    expect(regle(".voyageurs:has(> li + li) .portrait", grand)).toContain("height: 96px;");
+  });
+
   it("ne pousse jamais la page de côté : pas d'autre largeur fixe que celle des petits signes, aucun texte qui refuse d'aller à la ligne", () => {
     // (Hors de la condition du bloc @container, qui n'impose rien.)
     for (const [, largeur] of CSS.matchAll(/(?<![\w(-])(?:min-)?width: (\d+)px/g)) expect(Number(largeur)).toBeLessThanOrEqual(14);

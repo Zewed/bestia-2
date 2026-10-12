@@ -687,6 +687,12 @@ describe("page Habitants, l'écran de stratégie en trois zones (US-0302, US-030
     expect(regle(".phrase", registre)).toMatch(/overflow: hidden;[^}]*text-overflow: ellipsis;/);
   });
 
+  it("resserre le rail et la colonne de contexte entre 1 024 et 1 200 px, pour laisser sa place au registre", () => {
+    const entreDeux = depuis(page, "@media (min-width: 1024px) and (max-width: 1199px)");
+    expect(regle(".page", entreDeux)).toContain("grid-template-columns: 204px minmax(0, 1fr) 268px;");
+    expect(regle(".colonneMetier", depuis(registre, "@media (min-width: 1024px) and (max-width: 1199px)"))).toContain("width: 176px;");
+  });
+
   it("garde le rail entier à côté sur ordinateur : chaque compteur se partage la hauteur, entre 48 et 66 px", () => {
     expect(regle(".compteurs > li", registre)).toMatch(/flex: 1 1 0;[^}]*min-height: 48px;[^}]*max-height: 66px;/);
   });

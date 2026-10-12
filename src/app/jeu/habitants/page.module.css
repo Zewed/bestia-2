@@ -33,7 +33,15 @@
   .contexte {
     min-height: 0;
     overflow-y: auto;
-    scrollbar-width: none;
+    scrollbar-color: var(--anneau-cuivre-fort) transparent;
+    scrollbar-width: thin;
+  }
+}
+
+/* Entre 1 024 et 1 200 px, le rail et la colonne de contexte se resserrent pour laisser sa place au registre. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .page {
+    grid-template-columns: 204px minmax(0, 1fr) 268px;
   }
 }
 

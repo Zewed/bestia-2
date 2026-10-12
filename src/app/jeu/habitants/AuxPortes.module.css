@@ -7,7 +7,6 @@
  */
 .auxPortes {
   display: flex;
-  flex: none;
   flex-direction: column;
   gap: 10px;
   padding: 14px;
@@ -112,14 +111,10 @@
   border-top: 1px solid var(--filet-cuivre-doux);
 }
 
-/* Le portrait : la peinture, assombrie vers le bas pour le prénom ; plus haut quand l'écran l'est. */
+/* Le portrait : la peinture, assombrie vers le bas pour le prénom. */
 .portrait {
   grid-area: portrait;
-  height: clamp(84px, calc(var(--hauteur-utile) - 600px), 240px);
-}
-
-.voyageurs:has(> li + li) .portrait {
-  height: 96px;
+  height: 140px;
 }
 
 .portrait::after {
@@ -264,6 +259,25 @@
   background: var(--braise-claire);
 }
 
+/*
+ * Sur un grand écran, la colonne de contexte tient dans la fenêtre : le portrait prend la hauteur que lui laissent la
+ * carte, la place et l'Entretien, de 84 px à 220 px ; moins quand une phrase s'ajoute en tête de la partie, et à
+ * plusieurs Voyageurs ; au-delà, la colonne défile.
+ */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .portrait {
+    height: clamp(84px, calc(var(--hauteur-utile) - 600px), 220px);
+  }
+
+  .auxPortes:has(> .plusDePlace, > .famine, > .annonce) .portrait {
+    height: clamp(84px, calc(var(--hauteur-utile) - 650px), 220px);
+  }
+
+  .voyageurs:has(> li + li) .portrait {
+    height: 96px;
+  }
+}
+
 /* Dès que la carte a la place : le portrait à gauche, sur toute sa hauteur, le reste à côté. */
 @container (min-width: 320px) {
   .voyageur {
@@ -290,8 +304,7 @@
       "choix choix";
   }
 
-  .portrait,
-  .voyageurs:has(> li + li) .portrait {
+  .voyageur .portrait {
     align-self: stretch;
     height: auto;
     min-height: 140px;

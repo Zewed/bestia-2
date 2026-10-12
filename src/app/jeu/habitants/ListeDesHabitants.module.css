@@ -222,8 +222,7 @@
 }
 
 .vue {
-  flex: 1;
-  min-width: 0;
+  flex: 1 0 auto;
   padding-top: 5px;
   color: var(--mousse);
   font: var(--graisse-moyenne) 13px / 1 var(--police-etroite);
@@ -550,6 +549,39 @@
   background: var(--braise-claire);
 }
 
+/* Entre 1 024 et 1 200 px, le registre est plus étroit (page.module.css) : ses colonnes se resserrent, le rail aussi. */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .colonnePrenom {
+    width: 16%;
+  }
+
+  .colonneMetier {
+    width: 176px;
+  }
+
+  .colonneArrivee {
+    width: 112px;
+  }
+
+  .arrivee {
+    font-size: 12.5px;
+  }
+
+  .compteur {
+    gap: 9px;
+    padding: 0 12px 0 14px;
+  }
+
+  .nom {
+    font-size: 15px;
+  }
+
+  .part {
+    right: 12px;
+    left: 57px;
+  }
+}
+
 /* ---------- Tablette et téléphone : la page défile, le rail devient une bande ---------- */
 
 @media (max-width: 1023px) {
@@ -676,9 +708,11 @@
   /* Plus de colonnes : chaque ligne en deux rangées, le prénom et le Métier, puis l'état et la date. */
   .tableau,
   .tableau tbody,
-  .tableau tr,
+  .teteDeGroupe,
   .teteDeGroupe > th,
+  .depliant,
   .depliant > td,
+  .vide,
   .vide > td {
     display: block;
   }
@@ -780,7 +814,9 @@
   }
 
   .etat {
+    display: flex;
     grid-area: etat;
+    align-items: center;
   }
 
   .arrivee {
