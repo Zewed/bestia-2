@@ -163,15 +163,15 @@ describe("page Récits (US-0324)", () => {
 
   it("dit l'heure où une Bête est repartie de sa Case, dans le fuseau du joueur, et son jour s'il a changé depuis la Rencontre (US-0950)", async () => {
     const repartie = (vueLe: string, repartieLe?: string) => ({
-      especeId: "loup_gris",
+      especeId: "pigeon",
       vueLe: new Date(vueLe),
       issue: "repartie" as const,
       ...(repartieLe && { repartieLe: new Date(repartieLe) }),
       sexe: null,
       nouvelleEspece: false,
-      nom: "Loup gris",
+      nom: "Pigeon biset",
       illustration: null,
-      rarete: { id: "rare", nom: "Rare" },
+      rarete: { id: "commune", nom: "Commune" },
     });
     connecte([
       {
