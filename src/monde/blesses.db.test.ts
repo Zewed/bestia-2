@@ -139,6 +139,14 @@ describe.skipIf(!URL_TEST)("les Blessés au Foyer, groupe par groupe (US-0952, s
       expect(await proposees(territoireId, a(1))).toEqual({ pigeon: { disponibles: 0, blesses: 2, males: 1, femelles: 1 } });
     });
 
+    it("jamais plus de Blessés que de Bêtes au Foyer, ni moins de zéro disponible : un Couple réuni a pu en emmener en Réserve", async () => {
+      const territoireId = await naitre();
+      // Trois Blessées rentrées, mais deux souris seulement au Foyer depuis.
+      await effectif(territoireId, "souris", 1, 1);
+      await expedition(territoireId, 0, [["souris", 4, 3, 3]]);
+      expect(await proposees(territoireId, a(1))).toEqual({ souris: { disponibles: 0, blesses: 2, males: 1, femelles: 1 } });
+    });
+
     it("un départ qui emmènerait un Blessé est refusé, même envoyé d'un écran d'avant la blessure", async () => {
       const territoireId = await naitre();
       await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Essai', 'explorateur')", [territoireId]);

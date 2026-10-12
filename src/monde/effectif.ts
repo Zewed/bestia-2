@@ -7,10 +7,12 @@ import { forceDUneBete } from "@/expeditions/force";
 import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
 import { maintenant } from "@/temps/horloge";
 import type { Sexe } from "./betes-sauvages";
+import { gueriLe } from "./blesses";
 import { ELEVAGE_ACQUIS } from "./elevage";
 
 /**
- * US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte.
+ * US-0904 : une Espèce de l'effectif, avec son illustration (null : aucune) et ses Bêtes disponibles pour l'escorte, aucune
+ * quand toutes ses Bêtes au Foyer sont des Blessés (US-0953).
  * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes. US-0912 : et leur vitesse réelle, en km/h, qui règle
  * l'allure d'une escorte. US-0937 : et combien de mâles et de femelles le joueur en possède, Bêtes sorties comprises.
  * US-0956 : et si son Couple est réuni : le sexe ne compte plus. US-0953 : et ses Blessés au Foyer, qui guérissent sans être
@@ -41,16 +43,16 @@ export const BETES_SORTIES = `select coalesce(sum(s.nombre - s.perdues + s.bless
 
 /**
  * US-0953 : les Blessés au Foyer de l'Espèce (expression sur `e`, comme BETES_SORTIES) à l'instant du jeu $3 : ceux des
- * Expéditions rentrées, pas encore guéris $2 heures après leur retour (src/monde/blesses.ts).
+ * Expéditions rentrées, pas encore guéris $2 heures après leur retour, selon la règle même de blessesAuFoyer (gueriLe).
  */
 const BLESSES_EN_GUERISON = `select coalesce(sum(s.blessees), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
-  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null and x.rentree_le + $2 * interval '1 hour' > $3`;
+  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null and ${gueriLe("$2")} > $3`;
 
 /**
  * US-0904 : les Bêtes que le joueur peut emmener en escorte, Espèce par Espèce, lues à chaque affichage de l'écran
  * d'Expédition : l'effectif du Territoire, mâles et femelles ensemble (l'escorte ne choisit pas le sexe), moins les Bêtes
- * déjà sorties. Seules les Espèces qui en ont au moins une, de la plus commune à la plus rare, puis par nom ; aucune pour
- * un Territoire sans Bête. Lire ne retient rien : rien ne change avant le départ.
+ * déjà sorties. Seules les Espèces qui en ont au moins une au Foyer, de la plus commune à la plus rare, puis par nom ;
+ * aucune pour un Territoire sans Bête. Lire ne retient rien : rien ne change avant le départ.
  * US-0905 : la force d'une Bête vient de l'attaque et de la vie de son Espèce, rien du Territoire : aucune Recherche.
  * US-0937 : combien de mâles et de femelles le joueur en possède, au Foyer comme en escorte, pour savoir lequel lui manque
  * tant que le Couple de l'Espèce n'est pas réuni. US-0956 : les Bêtes d'un Couple réuni ont quitté l'effectif pour la

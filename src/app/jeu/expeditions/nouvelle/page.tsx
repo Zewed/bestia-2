@@ -83,14 +83,14 @@ async function betesAChercher(territoireId: number, c: Coordonnees, instant: Dat
 /**
  * US-0952 : les groupes de Blessés au Foyer du Territoire, Espèce par Espèce (blessesAuFoyer), tels que le bloc Escorte
  * les montre à l'heure du jeu `instant` : combien, et dans combien de minutes, à la minute supérieure, ils seront guéris.
- * Jamais plus que l'Espèce n'en compte au Foyer (`auFoyer`, ses Blessés selon betesDisponibles, bornés à ses Bêtes au
+ * Jamais plus que l'Espèce n'en compte au Foyer (`plafonds`, ses Blessés selon betesDisponibles, bornés à ses Bêtes au
  * Foyer) : les derniers à guérir sont retranchés les premiers.
  */
-async function blessesDuFoyer(territoireId: number, instant: Date, auFoyer: Map<string, number>): Promise<Record<string, BlessesAffiches[]>> {
+async function blessesDuFoyer(territoireId: number, instant: Date, plafonds: Map<string, number>): Promise<Record<string, BlessesAffiches[]>> {
   const groupes = await blessesAuFoyer(getPool(), territoireId, instant);
   return Object.fromEntries(
     [...groupes].flatMap(([especeId, liste]) => {
-      const affiches = blessesAffiches(liste, instant, auFoyer.get(especeId) ?? 0);
+      const affiches = blessesAffiches(liste, instant, plafonds.get(especeId) ?? 0);
       return affiches.length > 0 ? [[especeId, affiches]] : [];
     }),
   );
@@ -153,7 +153,8 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         )}
       </Bloc>
       <Explorateurs {...explorateurs} />
-      {/* US-0909 : sans Bête disponible, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. */}
+      {/* US-0909 : sans Bête au Foyer, pas d'escorte à choisir : l'Expédition part sans, et l'écran le dit à sa place. US-0953 :
+          avec des Blessés seulement, le bloc reste, pour les montrer, sans aucune Bête à choisir. */}
       {escorte.length > 0 ? <Escorte especes={escorte} blesses={blesses} /> : <SansEscorte />}
       <Sejour />
       {/* US-0910 : tout ce qui a été choisi, à relire avant de partir, à l'heure et au rythme du jeu ; rien d'une Case refusée. */}
