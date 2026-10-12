@@ -3,11 +3,13 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { Bloc } from "@/components/Bloc";
+import kit from "@/components/kit.module.css";
+import { Medaillon } from "@/components/Medaillon";
 import { getPool } from "@/db";
 import { RETOUR_D_EXPEDITION, resumeDUnRetour } from "@/expeditions/resume-du-retour";
 import { recitsDuTerritoire } from "@/monde/recits";
 import { formaterHeure, formaterInstant, formaterJourEtHeure } from "@/temps/affichage";
+import { MEDAILLON_DES_RECITS } from "./lecture-du-recit";
 import { ListeDesRecits } from "./ListeDesRecits";
 import styles from "./page.module.css";
 
@@ -30,7 +32,8 @@ function heureDUneRencontre(vueLe: Date, reference: Date): string {
 /**
  * La page Récits (US-0324), ouverte depuis la navigation : ce qui est arrivé sur le Territoire, du plus
  * récent au plus ancien, chaque Récit avec sa date et son heure. Sans session, la garde mène à la
- * connexion, qui ramène ici.
+ * connexion, qui ramène ici. Sur ordinateur, la liste à gauche et le Récit ouvert à droite, dans un panneau de la
+ * hauteur de l'écran (ListeDesRecits) ; sans Récit, un panneau, le médaillon des Récits et « Rien à raconter ».
  */
 export default async function Recits() {
   await connection();
@@ -39,40 +42,43 @@ export default async function Recits() {
   const recits = territoireId === null ? [] : await recitsDuTerritoire(getPool(), territoireId);
   return (
     <main className={styles.page}>
-      <h1 className={styles.titre}>Récits</h1>
-      <Bloc>
-        {recits.length === 0 ? (
+      <h1 className={`${kit.titreEcran} ${styles.titre}`}>Récits</h1>
+      {recits.length === 0 ? (
+        <section className={`${kit.panneau} ${styles.aucun}`}>
+          <Medaillon src={MEDAILLON_DES_RECITS} taille="xl" className={styles.medaillonAucun} />
           <p className={styles.vide}>Rien à raconter pour l&apos;instant.</p>
-        ) : (
-          <ListeDesRecits
-            recits={recits.map((r) => ({
-              id: r.id,
-              titre: r.titre,
-              texte: r.texte,
-              instant: r.survenuLe.toISOString(),
-              quand: formaterInstant(r.survenuLe, FUSEAU),
-              lu: r.luLe !== null,
-              // US-0941 : un retour d'Expédition se résume en une ligne, en tête de son récit, qu'il ait vu des Bêtes ou non ;
-              // sans combat (US-0944), son escorte ne perd encore aucune Bête.
-              ...(r.titre === RETOUR_D_EXPEDITION && { resume: resumeDUnRetour(r.rencontres ?? [], 0) }),
-              // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
-              ...(r.rencontres && {
-                rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque }, i, toutes) => ({
-                  instant: vueLe.toISOString(),
-                  heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
-                  nom,
-                  illustration,
-                  rarete,
-                  issue,
-                  sexe,
-                  nouvelleEspece,
-                  ...(manque && { manque }),
-                })),
-              }),
-            }))}
-          />
-        )}
-      </Bloc>
+        </section>
+      ) : (
+        <ListeDesRecits
+          recits={recits.map((r) => ({
+            id: r.id,
+            titre: r.titre,
+            texte: r.texte,
+            instant: r.survenuLe.toISOString(),
+            quand: formaterInstant(r.survenuLe, FUSEAU),
+            lu: r.luLe !== null,
+            // US-0941 : un retour d'Expédition se résume en une ligne, en tête de son récit, qu'il ait vu des Bêtes ou non ;
+            // sans combat (US-0944), son escorte ne perd encore aucune Bête.
+            ...(r.titre === RETOUR_D_EXPEDITION && {
+              resume: resumeDUnRetour(r.rencontres ?? [], 0),
+            }),
+            // US-0940 : les Rencontres d'un retour d'Expédition, chacune à son heure.
+            ...(r.rencontres && {
+              rencontres: r.rencontres.map(({ vueLe, nom, illustration, rarete, issue, sexe, nouvelleEspece, manque }, i, toutes) => ({
+                instant: vueLe.toISOString(),
+                heure: heureDUneRencontre(vueLe, i === 0 ? r.survenuLe : toutes[i - 1].vueLe),
+                nom,
+                illustration,
+                rarete,
+                issue,
+                sexe,
+                nouvelleEspece,
+                ...(manque && { manque }),
+              })),
+            }),
+          }))}
+        />
+      )}
     </main>
   );
 }
