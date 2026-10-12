@@ -54,9 +54,9 @@ describe("ouvrir la Réserve (US-0801)", () => {
     expect(renderToStaticMarkup(await Reserve())).toMatch(/<main[^>]*><h1[^>]*>Réserve<\/h1>/);
   });
 
-  it("la présente comme le lieu protégé où vivent les Couples, à l'abri, qui n'en sortent plus", async () => {
+  it("la présente comme le lieu protégé où vivent les Couples, à l'abri, qui ne combattent plus", async () => {
     connecte();
-    expect(texte(renderToStaticMarkup(await Reserve()))).toContain("Le lieu protégé de votre Territoire : vos Couples y vivent à l'abri, et n'en sortent plus.");
+    expect(texte(renderToStaticMarkup(await Reserve()))).toContain("Le lieu protégé de votre Territoire : vos Couples y vivent à l'abri, loin des combats.");
   });
 
   it("affiche le nombre de Couples qu'elle abrite : ceux que le Territoire a réunis", async () => {
