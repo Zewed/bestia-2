@@ -48,8 +48,8 @@ const uneEspece = (nom: string, nombre: number) => `${nom} × ${nombre}`;
  * page relue la montre au retour, d'où le bouton disparaît. Il attend la réponse du serveur, grisé : un double clic ne la
  * rappelle qu'une fois. Sans trajet chiffré (US-0912), aucun retour, donc rien à rappeler.
  *
- * US-0945 : en fuite après un combat, elle est au retour avec la mention « en fuite », dans la liste comme sur la carte :
- * « Retour · en fuite » ; sur la ligne repliable d'un téléphone, « En fuite », qui laisse sa place à la destination à 320 px.
+ * US-0945 : en fuite après un combat, elle est au retour avec la mention « en fuite » : « Retour · en fuite », sur la carte
+ * comme dans le panneau de la liste (src/app/jeu/expeditions/PanneauDeLExpedition.tsx).
  */
 export function DetailDeLExpedition({ expedition, instant, repliable = false }: { expedition: ExpeditionEnCours; instant: Date; repliable?: boolean }) {
   const [deplie, setDeplie] = useState(false);
@@ -71,14 +71,8 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
         </strong>
         <span className={styles.distance}>{casesDuFoyer(destination.distance)}</span>
         <span id={id("phase")} className={`${kit.puce} ${styles.phase}`}>
-          {phase === "retour" && expedition.enFuite ? (
-            <>
-              <span className={styles.fuiteLongue}>{`${PHASES.retour} · en fuite`}</span>
-              <span className={styles.fuiteCourte}>En fuite</span>
-            </>
-          ) : (
-            PHASES[phase]
-          )}
+          {PHASES[phase]}
+          {phase === "retour" && expedition.enFuite ? " · en fuite" : null}
         </span>
         <span id={id("reste")} className={styles.reste}>
           {reste === null ? (

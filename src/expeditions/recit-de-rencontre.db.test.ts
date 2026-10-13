@@ -228,7 +228,8 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
   it("une Bête plus rare emmenée par le voisin à l'instant même où l'Expédition quitte sa Case : restée tant qu'elle y était, pas emmenée (US-0964)", async () => {
     // Une Bête plus rare encore là après la fin du séjour.
     const { territoireId, caseId, destination, depart, fin, montrees } = await unSejourOu((m, _arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart > fin);
-    const { retour } = await partir(territoireId, destination, depart);
+    // US-0945 : épargnée par la Bête jusqu'à la fin du séjour : attaquée, elle fuirait avant, et l'égalité ne se jouerait pas.
+    const { retour } = await partir(territoireId, destination, depart, { caseId, betes: montrees });
     const [bete] = montrees;
     // L'Expédition d'un voisin, assez forte pour elle, arrive sur la Case à l'instant où celle du joueur en repart.
     const voisin = await naitre();

@@ -172,10 +172,7 @@ describe("rappeler une Expédition (US-0920)", () => {
     // Attaquée 1 h 30 après son arrivée : elle rentre en 1 h, comme rappelée en séjour.
     const enFuite = { ...FORET, rappeleeLe: apres(60 + 90), enFuite: true };
     render(<DetailDeLExpedition expedition={enFuite} instant={apres(60 + 100)} />);
-    // « Retour · en fuite », ou « En fuite » seul sur la ligne repliable d'un téléphone (DetailDeLExpedition.module.css).
-    const [, , phase, reste] = document.querySelectorAll("[data-ligne] > *");
-    expect([...phase.children].map((mention) => mention.textContent)).toEqual(["Retour · en fuite", "En fuite"]);
-    expect(reste.textContent).toBe("rentre dans 50 min");
+    expect(ligne().slice(2)).toEqual(["Retour · en fuite", "rentre dans 50 min"]);
     expect(detail()["Retour prévu"]).toBe("9 octobre à 13:12");
     expect(rappeler()).toBeNull();
   });
