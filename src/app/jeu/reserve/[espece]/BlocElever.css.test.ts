@@ -27,7 +27,8 @@ describe("choisir la quantité (US-0813)", () => {
     expect(regle(".champ", ELEVER)).toMatch(/flex: 0 1 96px;[^}]*min-width: 0;/);
     expect(regle(".quantite", ELEVER)).toContain("grid-template-columns: minmax(0, 1fr);");
     // Le pas du kit est fixe (flex: none) et son nombre a 40 px au moins : ici, l'un et l'autre cèdent.
-    expect(regle(".pas", ELEVER)).toMatch(/flex: 0 1 auto;[^}]*min-width: 0;/);
+    expect(regle(".quantite .pas", ELEVER)).toMatch(/flex: 0 1 auto;[^}]*min-width: 0;/);
+    expect(regle(".quantite .pas .pasBouton", ELEVER)).toContain("flex: none;");
     expect(regle(".quantite .pas .champ", ELEVER)).toContain("min-width: 0;");
     expect(ELEVER).not.toMatch(/(?:^|[^-])width: \d{3,}px/);
   });

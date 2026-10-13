@@ -33,10 +33,17 @@
   gap: 10px;
 }
 
-/* Le pas du kit (fixe chez lui), qui cède ici de sa largeur, celle du champ, quand la ligne manque de place. */
-.pas {
+/*
+ * Le pas du kit (fixe chez lui), qui cède ici de sa largeur quand la ligne manque de place : celle du champ seulement,
+ * « − » et « + » gardant la leur. Des sélecteurs plus forts que ceux du kit, quel que soit l'ordre des feuilles.
+ */
+.quantite .pas {
   flex: 0 1 auto;
   min-width: 0;
+}
+
+.quantite .pas .pasBouton {
+  flex: none;
 }
 
 /*
