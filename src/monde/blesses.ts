@@ -8,9 +8,9 @@ import type { Pool, PoolClient } from "pg";
 import { GUERISON_DES_BLESSES_HEURES, GUERISON_DES_BLESSES_SOIGNES_HEURES } from "@/reglages";
 
 /**
- * US-0955 : l'instant du jeu où guérissent les Blessés rentrés avec l'Expédition `x` (expression SQL), la même règle
- * partout où se lisent les Blessés : son retour, plus la durée de guérison en heures, `soignee` (paramètre SQL) s'ils ont
- * été soignés à leur retour, `normale` sinon.
+ * US-0952 : l'instant du jeu où guérissent les Blessés rentrés avec l'Expédition `x` (expression SQL), la même règle
+ * partout où se lisent les Blessés : son retour, plus la durée de guérison en heures ; US-0955 : `soignee` (paramètre
+ * SQL) s'ils ont été soignés à leur retour, `normale` sinon.
  */
 export const gueriLe = (normale: string, soignee: string) =>
   `x.rentree_le + (case when x.blesses_soignes then ${soignee}::float8 else ${normale}::float8 end) * interval '1 hour'`;

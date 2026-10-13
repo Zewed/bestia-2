@@ -261,10 +261,17 @@ describe("les Blessés de l'effectif (US-0952)", () => {
         }}
       />,
     );
-    expect(textes().slice(9, 15)).toEqual(["Souris grise", "6 disponibles", "2 mâles · 1 femelle", "dont 2 Blessés, guéris dans 5 h", "dont 1 Blessé, guéri dans 23 h", "−"]);
+    expect(textes().slice(9, 15)).toEqual(["Souris grise", "6 disponibles", "2 mâles · 1 femelle", "2 Blessés, guéris dans 5 h", "1 Blessé, guéri dans 23 h", "−"]);
   });
 
-  it("dit les Blessés soignés à leur retour : « dont 2 Blessés soignés, guéris dans 11 h » (US-0955)", () => {
+  it("une Espèce dont toutes les Bêtes au Foyer sont blessées n'en propose aucune : ses Blessés ne partent pas (US-0953)", () => {
+    render(<Escorte especes={[{ ...SOURIS, disponibles: 0, blesses: 3 }]} blesses={{ souris: [{ nombre: 3, dansMinutes: 60 }] }} />);
+    expect(within(ligne("Souris grise")).getByText("0 disponible")).toBeTruthy();
+    expect(within(ligne("Souris grise")).getByText("3 Blessés, guéris dans 1 h")).toBeTruthy();
+    expect(grises("Souris grise")).toEqual(["Une Bête de moins", "Une Bête de plus", "Toutes", "Aucune"]);
+  });
+
+  it("dit les Blessés soignés à leur retour : « 2 Blessés soignés, guéris dans 11 h » (US-0955)", () => {
     render(
       <Escorte
         especes={[POULE, { ...SOURIS, disponibles: 6 }]}
@@ -276,7 +283,7 @@ describe("les Blessés de l'effectif (US-0952)", () => {
         }}
       />,
     );
-    expect(textes().slice(12, 14)).toEqual(["dont 2 Blessés soignés, guéris dans 11 h", "dont 1 Blessé, guéri dans 23 h"]);
+    expect(textes().slice(12, 14)).toEqual(["2 Blessés soignés, guéris dans 11 h", "1 Blessé, guéri dans 23 h"]);
   });
 
   it("sans Blessé, rien de plus, pas même une ligne vide", () => {
