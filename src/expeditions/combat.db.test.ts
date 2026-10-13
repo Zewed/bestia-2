@@ -336,8 +336,11 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     const enFuite = (await expeditionsEnCours(pool, chef.territoireId, apres(le, 1 / 60_000))).find((e) => e.id === x.id)!;
     expect(enFuite).toMatchObject({ phase: "retour", enFuite: true, rappeleeLe: le });
     expect(retourDUneExpedition(enFuite)).toEqual(rentree);
-    // Elle a quitté sa Case : la Bête n'y voit plus personne.
-    expect((await expeditionsPresentesSurLaCase(pool, chef.caseId, apres(le, -1))).map((e) => e.id)).toContain(x.id);
+    // Elle a quitté sa Case : la Bête n'y voit plus personne. Avant, elle y était : à mi-chemin de son arrivée et de
+    // l'attaque, qui peut tomber dans la première minute de son séjour.
+    const arrivee = apres(x.partLe, x.aller);
+    const avant = new Date(Math.floor((arrivee.getTime() + le.getTime()) / 2));
+    expect((await expeditionsPresentesSurLaCase(pool, chef.caseId, avant)).map((e) => e.id)).toContain(x.id);
     expect((await expeditionsPresentesSurLaCase(pool, chef.caseId, le)).map((e) => e.id)).not.toContain(x.id);
     expect(await rappelerLExpedition(pool, chef.territoireId, x.id, apres(le, 1))).toEqual({ refus: RAPPEL_DEJA_AU_RETOUR });
 
