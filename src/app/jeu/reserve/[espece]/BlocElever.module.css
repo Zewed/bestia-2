@@ -1,104 +1,73 @@
-/* US-0812 : le bloc « Élever », sous la fiche de l'Espèce, dans sa largeur. */
+/* US-0812 : le bloc « Élever », un panneau orné sous la fiche de l'Espèce, dans sa largeur. */
 .elever {
   margin-top: var(--ecart);
   scroll-margin-top: calc(var(--hauteur-barre) + var(--ecart));
 }
 
-/* US-0822 : le bouton sous le compteur des Places de l'Habitat du Foyer. */
+/* US-0822 : les Places de l'Habitat du Foyer et leur jauge fine, sur la largeur d'une colonne. */
+.places {
+  display: grid;
+  gap: 8px;
+  max-width: 320px;
+}
+
+/* Le bouton sous le compteur. */
 .formulaire {
-  margin-top: 10px;
+  margin-top: 14px;
 }
 
 /*
- * US-0813 : la quantité, son étiquette au-dessus, puis « − », le champ, « + » et « Max » d'une ligne, au-dessus du bouton ;
- * la ligne ne déborde pas du bloc, même sur un écran de 320 px : le champ lui cède sa largeur.
+ * US-0813 : la quantité, son étiquette au-dessus, puis le pas du kit (« − », le champ, « + ») et « Max » d'une ligne,
+ * au-dessus du bouton ; la ligne ne déborde pas du panneau, même sur un écran de 320 px : le champ lui cède sa largeur.
  */
 .quantite {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.etiquette {
-  color: var(--texte-2);
-  font-size: 13.5px;
-  font-weight: var(--graisse-titre);
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .reglage {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
-/* Au pouce, comme l'escorte d'une Expédition : chaque bouton a sa surface de 44 px. */
+/* Le pas du kit, qui peut céder de sa largeur au champ. */
 .pas {
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  padding: 0;
-  border: 1px solid var(--trait);
-  border-radius: var(--arrondi-petit);
-  background: var(--bloc);
-  color: var(--encre);
-  font: inherit;
-  font-size: 18px;
-  font-weight: var(--graisse-titre);
-  cursor: pointer;
+  min-width: 0;
+}
+
+/*
+ * Le champ, dans le pas, à la place du nombre ; 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page.
+ * Il cède de sa largeur sur un petit écran.
+ */
+.champ {
+  flex: 0 1 96px;
+  min-width: 0;
+  height: 32px;
+  padding: 0 6px;
+  border-top: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  background: transparent;
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
+.champ:focus-visible {
+  outline: 2px solid var(--cuivre-clair);
+  outline-offset: -2px;
+}
+
+/* Une quantité refusée : le pas se borde de braise, et le message le dit en clair. */
+.pas:has(.champ[aria-invalid="true"]) {
+  border-color: var(--braise-filet);
 }
 
 .max {
-  width: auto;
-  min-width: 44px;
-  padding: 0 12px;
-  font-size: 13px;
-}
-
-/* Grisés, ils restent à leur place sans réagir. */
-.pas:disabled {
-  border-color: var(--trait-doux);
-  background: var(--bloc-2);
-  color: var(--galet);
-  cursor: default;
-}
-
-@media (hover: hover) {
-  .pas:enabled:hover {
-    border-color: var(--galet);
-    background: var(--bloc-3);
-  }
-}
-
-.pas:focus-visible,
-.champ:focus-visible {
-  outline: 2px solid var(--encre);
-  outline-offset: 2px;
-}
-
-/* Le champ, qui cède de sa largeur sur un petit écran ; 16 px au moins : sur iPhone, un champ plus petit fait zoomer la page. */
-.champ {
-  flex: 0 1 120px;
-  min-width: 0;
-  height: 44px;
-  padding: 0 10px;
-  border: 1px solid var(--trait-doux);
-  border-radius: var(--arrondi-petit);
-  background: var(--bloc-2);
-  color: var(--encre);
-  font: inherit;
-  font-size: 16px;
-  font-weight: var(--graisse-titre);
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-/* Une quantité refusée : contour et message dans la couleur d'alerte, le message en clair. */
-.champ[aria-invalid="true"] {
-  border-color: var(--mauvais);
+  flex: none;
+  min-height: 34px;
 }
 
 /* La quantité que « − », « + » ou « Max » viennent de donner, pour les lecteurs d'écran seulement. */
@@ -111,37 +80,51 @@
   white-space: nowrap;
 }
 
-/* Le bouton « Élever », au pouce, sur l'Encre ; grisé tant que l'Élevage ne se lance pas. */
+/* Le bouton « Élever », au pouce : l'action principale du kit, éteinte tant que l'Élevage ne se lance pas. */
 .bouton {
   min-height: 44px;
-  padding: 0 22px;
-  border: 0;
-  border-radius: var(--arrondi-moyen);
-  background: var(--encre);
-  color: var(--blanc-chaud);
-  font: inherit;
-  font-weight: var(--graisse-titre);
-  cursor: pointer;
-}
-
-.bouton:disabled {
-  cursor: not-allowed;
-  opacity: 0.45;
+  padding: 0 26px;
 }
 
 .bouton:focus-visible {
-  outline: 2px solid var(--encre);
+  outline: 2px solid var(--cuivre-clair);
   outline-offset: 2px;
 }
 
-/* Le refus, juste sous le bouton (ou sous le champ), dans la couleur d'alerte, son texte en clair : jamais la couleur seule. */
+/* Le refus, juste sous le bouton (ou sous la quantité), en braise, son texte en clair : jamais la couleur seule. */
 .refus {
-  margin-top: 8px;
-  color: var(--mauvais);
-  font-weight: var(--graisse-titre);
+  margin-top: 10px;
+  color: var(--braise);
+  font: var(--graisse-titre) 13.5px / 1.35 var(--police);
+}
+
+.quantite .refus {
+  margin-top: 0;
+}
+
+/* Au pouce, sur un téléphone : « − », « + » et « Max » ont 44 px de surface (plus précis que le pas du kit), comme l'escorte. */
+@media (max-width: 820px), (max-height: 500px) {
+  .pas .pasBouton {
+    width: 44px;
+    height: 44px;
+  }
+
+  .champ {
+    height: 44px;
+  }
+
+  /* Plus précis que le bouton du kit, qui monte à 36 px sur un téléphone. */
+  .reglage > .max {
+    min-width: 44px;
+    min-height: 44px;
+  }
 }
 
 @media (max-width: 600px) and (orientation: portrait) {
+  .places {
+    max-width: none;
+  }
+
   .bouton {
     width: 100%;
   }

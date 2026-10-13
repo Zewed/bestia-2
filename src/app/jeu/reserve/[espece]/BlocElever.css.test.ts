@@ -8,27 +8,30 @@ const ELEVER = readFileSync(join(process.cwd(), "src/app/jeu/reserve/[espece]/Bl
 /** Les déclarations de la règle `selecteur`, écrite en tête de ligne, dans `texte`. */
 const regle = (selecteur: string, texte: string) => texte.match(new RegExp(`(?:^|\\n)\\s*${selecteur.replace(/[.*+?^${}()|[\]\\:,="]/g, "\\$&")} \\{([^}]*)\\}`))?.[1] ?? "";
 
-describe("choisir la quantité au pouce (US-0813)", () => {
-  it("donne à « − », « + » et « Max » leur surface de 44 px, et un contour au clavier", () => {
-    expect(regle(".pas", ELEVER)).toMatch(/width: 44px;[^}]*height: 44px;/);
-    expect(regle(".pas", ELEVER)).toContain("cursor: pointer;");
-    expect(regle(".max", ELEVER)).toContain("min-width: 44px;");
-    expect(ELEVER).toMatch(/\.pas:focus-visible,\n\.champ:focus-visible \{[^}]*outline: 2px solid var\(--encre\);/);
+describe("choisir la quantité (US-0813)", () => {
+  const auPouce = ELEVER.match(/@media \(max-width: 820px\), \(max-height: 500px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
+
+  it("au pouce sur un téléphone : « − », « + » et « Max » ont 44 px de surface, le champ 44 px de haut", () => {
+    expect(regle(".pas .pasBouton", auPouce)).toMatch(/width: 44px;[^}]*height: 44px;/);
+    expect(regle(".reglage > .max", auPouce)).toMatch(/min-width: 44px;[^}]*min-height: 44px;/);
+    expect(regle(".champ", auPouce)).toContain("height: 44px;");
   });
 
-  it("écrit la quantité en 16 px au moins, pour que l'iPhone ne zoome pas, sur 44 px de haut", () => {
+  it("écrit la quantité en 16 px au moins, pour que l'iPhone ne zoome pas, et la montre au clavier", () => {
     expect(regle(".champ", ELEVER)).toContain("font-size: 16px;");
-    expect(regle(".champ", ELEVER)).toContain("height: 44px;");
+    expect(regle(".champ:focus-visible", ELEVER)).toContain("outline: 2px solid var(--cuivre-clair);");
   });
 
   it("tient sans défilement de côté : le champ cède de sa largeur, rien n'a de largeur fixe plus grande que l'écran", () => {
-    expect(regle(".champ", ELEVER)).toMatch(/flex: 0 1 120px;[^}]*min-width: 0;/);
+    expect(regle(".champ", ELEVER)).toMatch(/flex: 0 1 96px;[^}]*min-width: 0;/);
     expect(regle(".quantite", ELEVER)).toContain("grid-template-columns: minmax(0, 1fr);");
+    expect(regle(".pas", ELEVER)).toContain("min-width: 0;");
     expect(ELEVER).not.toMatch(/(?:^|[^-])width: \d{3,}px/);
   });
 
-  it("dit une quantité refusée par le contour et le message, dans la couleur d'alerte", () => {
-    expect(regle('.champ[aria-invalid="true"]', ELEVER)).toContain("border-color: var(--mauvais);");
-    expect(regle(".refus", ELEVER)).toContain("color: var(--mauvais);");
+  it("dit une quantité refusée par le bord du pas et le message, en braise, sans couleur écrite en clair", () => {
+    expect(regle('.pas:has(.champ[aria-invalid="true"])', ELEVER)).toContain("border-color: var(--braise-filet);");
+    expect(regle(".refus", ELEVER)).toContain("color: var(--braise);");
+    expect(ELEVER).not.toMatch(/oklch|#[0-9a-f]{3,8}\b|rgb\(/i);
   });
 });
