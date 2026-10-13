@@ -1,9 +1,80 @@
 {
-  "id": "c0a31e59-8d0b-4851-ad99-e1fc0165a9ea",
-  "prevId": "3d2ef4a7-6d13-43df-b1a3-75ac86219c92",
+  "id": "5dd8d3e7-5f7b-42b9-9413-c65e07886f2c",
+  "prevId": "877a42b6-01d1-431f-909e-4e7e97d1575a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
+    "public.affectation": {
+      "name": "affectation",
+      "schema": "",
+      "columns": {
+        "territoire_id": {
+          "name": "territoire_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "espece_id": {
+          "name": "espece_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "nombre": {
+          "name": "nombre",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "affectation_territoire_id_territoire_id_fk": {
+          "name": "affectation_territoire_id_territoire_id_fk",
+          "tableFrom": "affectation",
+          "tableTo": "territoire",
+          "columnsFrom": [
+            "territoire_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "affectation_espece_id_espece_id_fk": {
+          "name": "affectation_espece_id_espece_id_fk",
+          "tableFrom": "affectation",
+          "tableTo": "espece",
+          "columnsFrom": [
+            "espece_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "affectation_territoire_id_espece_id_pk": {
+          "name": "affectation_territoire_id_espece_id_pk",
+          "columns": [
+            "territoire_id",
+            "espece_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "affectation_jamais_negative": {
+          "name": "affectation_jamais_negative",
+          "value": "\"affectation\".\"nombre\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.bestiaire": {
       "name": "bestiaire",
       "schema": "",
@@ -1526,6 +1597,13 @@
         },
         "en_fuite": {
           "name": "en_fuite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "blesses_soignes": {
+          "name": "blesses_soignes",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

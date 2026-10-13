@@ -507,6 +507,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0946 · Toute l'escorte perdue
 **En tant que** joueur, **je veux** savoir clairement quand toute mon escorte a péri, **afin de** mesurer la leçon.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#81). Quand une Bête trop forte emporte toute l'escorte, le récit du retour remplace la ligne des pertes par « Toute votre escorte a été perdue au combat : Poule (1 Blessé) et Souris grise (1 mort, 1 Blessé). », en braise sur la page Récits, puis « Vos explorateurs ont fui et sont tous rentrés au Foyer. » ; l'Expédition rentre normalement, sans escorte, et l'effectif baisse du nombre de mortes, jusqu'à zéro. Tranché : « toute l'escorte perdue » compte les mortes et les Blessés (ce que le code compte déjà comme perdues) : avec la moitié de Blessés arrondie en leur faveur, « toutes mortes » n'arrive jamais, et les explorateurs rentrent « seuls » au sens de sans aucune Bête en état de combattre. Le résumé en tête du récit compte toujours les seules mortes (US-0947). Sans migration.
 - **Débloquée par** : US-0945
 - **Critères d'acceptation** :
   - Si toutes les Bêtes de l'escorte sont perdues, les explorateurs rentrent seuls et l'Expédition se termine normalement.
@@ -600,6 +601,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0955 · Soigner plus vite
 **En tant que** joueur, **je veux** m'occuper de mes Blessés pour qu'ils guérissent plus vite, **afin de** repartir plus tôt en Expédition.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#83, migration 0069). Les Blessés d'une Expédition qui rentre quand un éleveur libre est au Foyer sont soignés : ils guérissent en 12 h de jeu au lieu de 24, et le temps restant le dit partout (« dont 2 Blessés soignés, guéris dans 11 h 52 » sur la page Bêtes et la fiche, « 2 Blessés soignés, guéris dans 11 h 52 » dans le bloc Escorte) ; le Récit de guérison tombe au retour + 12 h, et ils redeviennent disponibles pour l'escorte à cet instant. L'éleveur « élève les Bêtes d'un Couple réuni et soigne les Blessés ». Tranché (provisoire, à revoir) : aucun des moyens proposés (construction, Poste, Bête à Rôle) n'existe encore, d'où l'éleveur libre (sans Élevage en cours) ; les soins se décident une fois pour toutes au retour (`expedition.blesses_soignes`), sans occuper l'éleveur ; 12 h pour toutes les Espèces (`GUERISON_DES_BLESSES_SOIGNES_HEURES`).
 - **Débloquée par** : US-0954
 - **Critères d'acceptation** :
   - Un Blessé dont on s'occupe guérit plus vite ; le moyen, construction, Poste ou Bête à Rôle (à décider).
@@ -702,6 +704,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0965 · Une Bête trop forte pour toutes
 **En tant que** joueur, **je veux** savoir ce qui arrive quand une Bête est trop forte pour toutes les Expéditions présentes, **afin de** mesurer le risque d'une Case disputée.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#84). Les règles en place la font : une Bête trop forte pour toutes les Expéditions de sa Case, de tous les joueurs, y reste et peut les attaquer toutes, chacune au plus une fois, à l'instant de ses propres tirages (comptés depuis sa propre Rencontre, US-0943) ; l'attaquée fuit (US-0945), les autres poursuivent leur séjour, toujours exposées. Tranché : laquelle est attaquée la première tient du hasard de ces tirages, sans préférence pour la plus faible. Prouvée par un essai à trois joueurs sur une Case disputée, rattrapés de quatre manières ; règle écrite en tête de `src/expeditions/attaque.ts`.
 - **Débloquée par** : US-0962, US-0943
 - **Critères d'acceptation** :
   - Si la Bête est trop forte pour chacune des Expéditions présentes, elle reste sur sa Case et peut attaquer.
