@@ -17,6 +17,7 @@ import { attaqueTiree } from "@/test/attaques";
 import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { forceDUneBete } from "./force";
 import { type HorairesDUneExpedition, retourDUneExpedition } from "./phase";
+import { FUITE_DES_EXPLORATEURS } from "./recit-de-retour";
 import { programmerLeRetour } from "./retour";
 
 const MINUTE_MS = 60_000;
@@ -64,11 +65,16 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
   const expeditions = {} as Record<Joueur, { id: number; attaque: Date | null }>;
   const lus = {} as Record<Maniere, { expeditions: Record<Joueur, Lue>; partie: boolean; recits: Record<Joueur, string[]> }>;
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
-  /** Les horaires des trois Expéditions : arrivées une heure avant la Bête, reparties une heure après son départ. */
-  const horaires = (): HorairesDUneExpedition => ({
-    partLe: apres(bete.arrivee, -HEURE - TRAJET),
+  /**
+   * L'arrivée sur la Case de l'Expédition du joueur `joueur` : A et C une heure avant la Bête, B une heure après elle, pour
+   * que ses tirages se comptent depuis sa propre Rencontre, et non depuis l'apparition de la Bête.
+   */
+  const arrivee = (joueur: Joueur) => apres(bete.arrivee, joueur === "B" ? HEURE : -HEURE);
+  /** Les horaires de l'Expédition du joueur `joueur` : de son arrivée à une heure après le départ de la Bête. */
+  const horaires = (joueur: Joueur): HorairesDUneExpedition => ({
+    partLe: apres(arrivee(joueur), -TRAJET),
     trajetMinutes: TRAJET,
-    sejourMinutes: Math.ceil((bete.depart.getTime() - bete.arrivee.getTime()) / MINUTE_MS) + 2 * HEURE,
+    sejourMinutes: Math.ceil((bete.depart.getTime() - arrivee(joueur).getTime()) / MINUTE_MS) + HEURE,
   });
 
   /** Un chef qui vient de naître dans le Monde d'essai : son Territoire et l'instant de sa naissance. */
@@ -84,7 +90,7 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
    * programmé (US-0916) : A sans escorte, B et C escortées d'une Bête de la plus faible commune.
    */
   const poser = async (client: PoolClient, joueur: Joueur, id: number) => {
-    const h = horaires();
+    const h = horaires(joueur);
     await client.query(
       "insert into expedition (id, territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) overriding system value values ($1, $2, $3, $4, $5, $6)",
       [id, territoires[joueur], caseId, h.partLe, h.trajetMinutes, h.sejourMinutes],
@@ -146,28 +152,38 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     }
     if (!caseId) throw new Error("Aucune Bête plus rare seule autour du Foyer de A.");
 
-    // Les identifiants des trois Expéditions, tels que la Bête en attaque deux, à des instants différents, et épargne la
-    // troisième : ses tirages dépendent de l'identifiant de chacune, le même dans toutes les manières.
-    const ensemble = { debut: bete.arrivee, fin: bete.depart };
-    const attaquees: { id: number; attaque: Date }[] = [];
-    let epargnee: number | null = null;
-    for (let essais = 0; attaquees.length < 2 || epargnee === null; essais++) {
-      if (essais === ESSAIS_AU_PLUS) throw new Error(`${ESSAIS_AU_PLUS} identifiants essayés sans deux attaquées et une épargnée.`);
+    // Les identifiants des trois Expéditions, tels que la Bête attaque A, puis B, plus tard, et épargne C : ses tirages
+    // dépendent de l'identifiant de chacune, le même dans toutes les manières, et se comptent depuis sa propre Rencontre,
+    // dès son arrivée ou celle de la Bête.
+    const promise = (joueur: Joueur, id: number) =>
+      attaqueTiree(pool, { caseId, especeId: bete.especeId, numero: bete.numero }, id, {
+        debut: new Date(Math.max(bete.arrivee.getTime(), arrivee(joueur).getTime())),
+        fin: bete.depart,
+      });
+    const candidats: Record<Joueur, { id: number; attaque: Date | null }[]> = { A: [], B: [], C: [] };
+    const trouves = () => {
+      for (const a of candidats.A) {
+        const b = candidats.B.find((x) => x.id !== a.id && x.attaque! > a.attaque!);
+        const c = candidats.C.find((x) => x.id !== a.id && x.id !== b?.id);
+        if (b && c) return { A: a, B: b, C: c };
+      }
+      return null;
+    };
+    for (let essais = 0; !trouves(); essais++) {
+      if (essais === ESSAIS_AU_PLUS) throw new Error(`${ESSAIS_AU_PLUS} identifiants essayés sans A attaquée, puis B, et C épargnée.`);
       const id = Number((await pool.query<{ id: string }>("select nextval(pg_get_serial_sequence('expedition', 'id')) as id")).rows[0].id);
-      const attaque = await attaqueTiree(pool, { caseId, especeId: bete.especeId, numero: bete.numero }, id, ensemble);
-      if (!attaque) epargnee ??= id;
-      else if (attaquees.length < 2 && attaquees.every((x) => x.attaque.getTime() !== attaque.getTime())) attaquees.push({ id, attaque });
+      const [a, b, c] = [await promise("A", id), await promise("B", id), await promise("C", id)];
+      if (a) candidats.A.push({ id, attaque: a });
+      if (b) candidats.B.push({ id, attaque: b });
+      if (!c) candidats.C.push({ id, attaque: null });
     }
-    // A, sans escorte, attaquée la première ; B, escortée, attaquée ensuite ; C, escortée, épargnée.
-    attaquees.sort((x, y) => x.attaque.getTime() - y.attaque.getTime());
-    expeditions.A = attaquees[0];
-    expeditions.B = attaquees[1];
-    expeditions.C = { id: epargnee!, attaque: null };
+    // A, sans escorte, attaquée la première ; B, escortée, arrivée après la Bête, attaquée ensuite ; C, escortée, épargnée.
+    Object.assign(expeditions, trouves());
 
-    const retour = retourDUneExpedition(horaires())!;
-    const fin = apres(retour, HEURE);
-    const passages = [apres(horaires().partLe, 7)];
-    while (passages.at(-1)! <= apres(retour, RATTRAPER_APRES_MINUTES)) passages.push(apres(passages.at(-1)!, HEURE));
+    const retour = (joueur: Joueur) => retourDUneExpedition(horaires(joueur))!;
+    const fin = apres(retour("A"), HEURE);
+    const passages = [apres(horaires("A").partLe, 7)];
+    while (passages.at(-1)! <= apres(retour("A"), RATTRAPER_APRES_MINUTES)) passages.push(apres(passages.at(-1)!, HEURE));
     for (const maniere of MANIERES) {
       const client = await pool.connect();
       try {
@@ -182,7 +198,7 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
         } else if (maniere === "page ouverte") {
           // Les trois pages ouvertes ensemble, mises à l'heure toutes les vingt minutes, chaque fois dans un autre ordre.
           let k = 0;
-          for (let t = horaires().partLe; t < fin; t = apres(t, 20), k++) for (const i of [0, 1, 2]) await aLHeure(JOUEURS[(i + k) % 3], t);
+          for (let t = horaires("A").partLe; t < fin; t = apres(t, 20), k++) for (const i of [0, 1, 2]) await aLHeure(JOUEURS[(i + k) % 3], t);
           for (const joueur of JOUEURS) await aLHeure(joueur, fin);
         } else {
           for (const instant of passages) {
@@ -215,7 +231,7 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     for (const joueur of JOUEURS) expect(lues[joueur].apprivoisee, joueur).toEqual([false]);
   });
 
-  it.each(MANIERES)("%s : elle attaque chacune à l'instant de ses propres tirages, au plus une fois : A d'abord, puis B, restée après la fuite de A", (maniere) => {
+  it.each(MANIERES)("%s : elle attaque chacune à l'instant de ses propres tirages, comptés depuis sa Rencontre, au plus une fois : A d'abord, puis B, restée après la fuite de A", (maniere) => {
     const { expeditions: lues } = lus[maniere];
     expect(lues.A.attaques).toEqual([expeditions.A.attaque]);
     expect(lues.B.attaques).toEqual([expeditions.B.attaque]);
@@ -238,14 +254,18 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     expect({ rappeleeLe: lues.C.rappeleeLe, enFuite: lues.C.enFuite, rentreeLe: lues.C.rentreeLe }).toEqual({
       rappeleeLe: null,
       enFuite: false,
-      rentreeLe: retourDUneExpedition(horaires()),
+      rentreeLe: retourDUneExpedition(horaires("C")),
     });
   });
 
   it.each(MANIERES)("%s : le récit de chaque joueur dit son combat et sa fuite, ou rien de tel ; les mêmes récits quelle que soit la manière", (maniere) => {
     const { recits } = lus[maniere];
-    for (const joueur of ["A", "B"] as const) expect(recits[joueur].some((l) => /^(Combat|Attaque) le /.test(l)), joueur).toBe(true);
+    // A, sans escorte, est attaquée ; B, escortée, livre un combat (US-0947) ; toutes deux ont fui. C n'a rien vécu de tel.
+    expect(recits.A.filter((l) => /^(Combat|Attaque) le /.test(l)).map((l) => l.split(" ")[0])).toEqual(["Attaque"]);
+    expect(recits.B.filter((l) => /^(Combat|Attaque) le /.test(l)).map((l) => l.split(" ")[0])).toEqual(["Combat"]);
+    for (const joueur of ["A", "B"] as const) expect(recits[joueur], joueur).toContain(FUITE_DES_EXPLORATEURS);
     expect(recits.C.some((l) => /^(Combat|Attaque) le /.test(l))).toBe(false);
+    expect(recits.C).not.toContain(FUITE_DES_EXPLORATEURS);
     expect(recits).toEqual(lus[MANIERES[0]].recits);
   });
 });
