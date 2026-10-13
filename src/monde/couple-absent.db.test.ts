@@ -202,6 +202,39 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
       expect(await souris(t.territoireId)).toEqual({ male: 2, femelle: 5 });
       expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([]);
     });
+
+    it("combat après combat, sur une escorte où les femelles sont les plus nombreuses : les mortes de chacun prises à l'escorte partie", async () => {
+      const t = await naitre();
+      // Un mâle et trois femelles au Foyer, comme après un Couple réuni : les quatre partent.
+      await ajouter(t.territoireId, 1, 3);
+      const x = await partir(t.territoireId, apres(t.ne, HEURE), 4);
+      expect(x.males).toBe(1);
+      // Un premier combat a déjà pris deux Bêtes, dont une Blessée : la morte, une femelle (la plus nombreuse), a quitté
+      // l'effectif.
+      await pool.query("update expedition_escorte set perdues = 2, blessees = 1 where expedition_id = $1", [x.expeditionId]);
+      await pool.query("update effectif set nombre = nombre - 1 where territoire_id = $1 and espece_id = 'souris' and sexe = 'femelle'", [t.territoireId]);
+      // Le second prend les deux qui restent : l'une Blessée, l'autre morte, encore une femelle.
+      await combat(t.territoireId, x, apres(t.ne, 2 * HEURE));
+      const { rows } = await pool.query("select perdues, blessees from expedition_escorte where expedition_id = $1", [x.expeditionId]);
+      expect(rows[0]).toEqual({ perdues: 4, blessees: 2 });
+      expect(await souris(t.territoireId)).toEqual({ male: 1, femelle: 1 });
+      // Le mâle et la femelle qui restent, Blessés, rentrent ensemble : le Couple se forme à leur retour.
+      await rattraper("territoire", t.territoireId, { pool, jusqua: x.retour });
+      expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId: "souris", reuniLe: x.retour }]);
+    });
+
+    it("une escorte partie avant que le départ ne retienne le sexe compte pour l'un et pour l'autre : le départ suivant ne sait pas non plus", async () => {
+      const t = await naitre();
+      await ajouter(t.territoireId, 2, 0);
+      const { rows } = await pool.query<{ id: number }>(
+        `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+         select $1, c.id, $2, 30, 60 from case_du_monde c where c.monde_id = $3 and c.chef_id is null order by c.id limit 1 returning id`,
+        [t.territoireId, t.ne, mondeId],
+      );
+      await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, 'souris', 1)", [rows[0].id]);
+      expect((await betesDisponibles(pool, t.territoireId, t.ne)).map((e) => [e.id, e.disponibles])).toEqual([["souris", 1]]);
+      expect((await partir(t.territoireId, apres(t.ne, 10 * MINUTE), 1)).males).toBeNull();
+    });
   });
 
   describe("si l'une est Blessée, le Couple se forme aussitôt et elle guérit en Réserve", () => {

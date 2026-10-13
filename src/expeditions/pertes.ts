@@ -83,7 +83,7 @@ async function subirLeCombat(base: Pool | PoolClient, { expeditionId, especeId }
      where s.expedition_id = $1 and s.espece_id = v.espece_id`,
     [expeditionId, pertes.map((p) => p.especeId), pertes.map((p) => p.nombre), blesses],
   );
-  // US-0951 : seules les mortes quittent l'effectif.
+  // US-0951 : seules les mortes quittent l'effectif. US-0960 : jamais plus qu'il n'en compte, filet de l'effectif jamais négatif.
   const mortes = pertes.map((p, i) => ({ especeId: p.especeId, nombre: p.nombre - blesses[i] })).filter((p) => p.nombre > 0);
   if (mortes.length === 0) return;
   const { rows: effectif } = await base.query<{ especeId: string; males: number; femelles: number }>(
@@ -106,7 +106,7 @@ async function subirLeCombat(base: Pool | PoolClient, { expeditionId, especeId }
   });
   if (sorties.length === 0) return;
   await base.query(
-    `update effectif e set nombre = e.nombre - v.nombre from unnest($2::text[], $3::sexe[], $4::int[]) as v(espece_id, sexe, nombre)
+    `update effectif e set nombre = e.nombre - least(v.nombre, e.nombre) from unnest($2::text[], $3::sexe[], $4::int[]) as v(espece_id, sexe, nombre)
      where e.territoire_id = $1 and e.espece_id = v.espece_id and e.sexe = v.sexe`,
     [territoireId, sorties.map((s) => s.especeId), sorties.map((s) => s.sexe), sorties.map((s) => s.nombre)],
   );
