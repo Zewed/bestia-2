@@ -8,10 +8,11 @@ import { recitsDuTerritoire } from "@/monde/recits";
 import { ABORDS_DU_FOYER_CASES, PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lancerLExpedition } from "./depart";
 import { forceDUneBete } from "./force";
 import { retourDUneExpedition, sejourDUneExpedition } from "./phase";
+import { attaquesSubies } from "./rencontres";
 
 const MINUTE = 60_000;
 const HEURE = 60 * MINUTE;
@@ -34,6 +35,8 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
   let pool: Pool;
   let mondeId: number;
   const lancement = `recit-rencontre-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les comptes des Territoires nés pendant l'essai en cours. */
   const nes: string[] = [];
@@ -47,7 +50,7 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
     const email = `${lancement}-${n}@essai.test`;
     nes.push(email);
     const compte = (await creerCompte(pool, email, "une phrase de passe"))!;
-    const nom = `Ren${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Ren", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur')", [territoireId]);
@@ -124,6 +127,9 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    // Les Bêtes que ce fichier a fait partir lors d'un lancement précédent sont revenues sur leur Case : un départ resté
+    // en base empêcherait de les apprivoiser de nouveau.
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
   });
   afterEach(async () => {
     // Chaque essai rend ses Foyers à la Couronne du Monde d'essai.
@@ -169,12 +175,15 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
         nouvelleEspece: true,
         // Sans escorte, il manquait toute sa force (US-0942).
         manque: await force(bete.especeId),
+        // US-0949 : sa Case et son numéro sur sa Case, pour revenir la chercher tant qu'elle y est.
+        laCase: destination,
+        numero: bete.numero,
         ...(await espece(bete.especeId)),
       },
     ]);
   });
 
-  it("une Bête plus rare emmenée pendant le séjour par l'Expédition plus forte d'un voisin : repartie, même avant que le voisin ne soit rattrapé", async () => {
+  it("une Bête plus rare emmenée pendant le séjour par l'Expédition plus forte d'un voisin : emmenée (US-0964), même avant que le voisin ne soit rattrapé", async () => {
     // Une Bête plus rare qui serait encore là à la fin du séjour, vue au moins deux heures avant.
     const { territoireId, caseId, destination, depart, arrivee, montrees } = await unSejourOu(
       (m, arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart >= fin && Math.max(m[0].arrivee.getTime(), arrivee.getTime()) < fin.getTime() - 2 * HEURE,
@@ -199,21 +208,62 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
     // Seul le Territoire du joueur avance : celui du voisin n'a pas encore retenu le départ de la Bête.
     await aLHeure(territoireId, retour);
     expect((await pool.query("select 1 from bete_partie where case_id = $1 and numero = $2", [caseId, bete.numero])).rowCount).toBe(0);
-    expect((await leRecit(territoireId)).rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, issue: "repartie", sexe: null })]);
+    expect((await leRecit(territoireId)).rencontres).toEqual([expect.objectContaining({ especeId: bete.especeId, issue: "emmenee", repartieLe: emmenee, sexe: null })]);
     expect((await leRecit(territoireId)).rencontres![0]).not.toHaveProperty("manque");
   });
 
-  it("une Bête plus rare partie de sa Case avant la fin du séjour : repartie à la fin de sa durée", async () => {
-    const { territoireId, destination, depart, arrivee, fin, montrees } = await unSejourOu((m, _arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart < fin);
+  it("une Bête plus rare emmenée par le voisin à l'instant même où l'Expédition quitte sa Case : restée tant qu'elle y était, pas emmenée (US-0964)", async () => {
+    // Une Bête plus rare encore là après la fin du séjour.
+    const { territoireId, caseId, destination, depart, fin, montrees } = await unSejourOu((m, _arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart > fin);
     const { retour } = await partir(territoireId, destination, depart);
+    const [bete] = montrees;
+    // L'Expédition d'un voisin, assez forte pour elle, arrive sur la Case à l'instant où celle du joueur en repart.
+    const voisin = await naitre();
+    const { rows: especes } = await pool.query<{ id: string; attaque: number; vie: number }>("select id, attaque, vie from espece");
+    const forte = especes.map((e) => ({ id: e.id, force: forceDUneBete(e) })).sort((x, y) => y.force - x.force)[0];
+    const { rows } = await pool.query<{ id: number }>(
+      "insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes) values ($1, $2, $3, 30, 60) returning id",
+      [voisin.territoireId, caseId, apres(fin, -30 * MINUTE)],
+    );
+    await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, $2, $3)", [
+      rows[0].id,
+      forte.id,
+      Math.ceil((await force(bete.especeId)) / forte.force),
+    ]);
+
+    await aLHeure(territoireId, retour);
+    const [rencontre] = (await leRecit(territoireId)).rencontres!;
+    expect(rencontre).toMatchObject({ especeId: bete.especeId, issue: "restee", manque: await force(bete.especeId), laCase: destination, numero: bete.numero, sexe: null });
+    expect(rencontre).not.toHaveProperty("repartieLe");
+    // Le voisin, mis à l'heure à son tour, l'a bien emmenée à cet instant-là.
+    await aLHeure(voisin.territoireId, apres(fin, 2 * HEURE));
+    const { rows: parties } = await pool.query<{ partieLe: Date }>('select partie_le as "partieLe" from bete_partie where case_id = $1 and numero = $2', [caseId, bete.numero]);
+    expect(parties).toEqual([{ partieLe: fin }]);
+  });
+
+  it("une Bête plus rare partie de sa Case avant la fin du séjour : repartie à la fin de sa durée, à son heure ; l'Expédition finit son séjour sans plus être attaquée (US-0950)", async () => {
+    const { territoireId, destination, depart, arrivee, fin, montrees } = await unSejourOu((m, _arrivee, fin) => m.length === 1 && !commune(m[0]) && m[0].depart < fin);
+    const { expeditionId, retour } = await partir(territoireId, destination, depart);
 
     await aLHeure(territoireId, retour);
     const [bete] = montrees;
     expect(bete.depart < fin).toBe(true);
     expect((await leRecit(territoireId)).rencontres).toEqual([
-      { especeId: bete.especeId, vueLe: bete.arrivee > arrivee ? bete.arrivee : arrivee, issue: "repartie", sexe: null, nouvelleEspece: true, ...(await espece(bete.especeId)) },
+      {
+        especeId: bete.especeId,
+        vueLe: bete.arrivee > arrivee ? bete.arrivee : arrivee,
+        issue: "repartie",
+        // US-0950 : l'heure où elle a quitté sa Case, à la fin de sa durée.
+        repartieLe: bete.depart,
+        sexe: null,
+        nouvelleEspece: true,
+        ...(await espece(bete.especeId)),
+      },
     ]);
-  });
+    // Partie, elle n'attaque plus (US-0943) ; l'Expédition rentre à son heure.
+    expect((await attaquesSubies(pool, expeditionId)).filter(({ le }) => le >= bete.depart)).toEqual([]);
+    expect((await pool.query<{ rentreeLe: Date }>(`select rentree_le as "rentreeLe" from expedition where id = $1`, [expeditionId])).rows[0].rentreeLe).toEqual(retour);
+  }, 60_000);
 
   it("plusieurs Bêtes vues : chacune à son heure, dans l'ordre des apparitions, avec ce qu'il en advint", async () => {
     const { territoireId, destination, depart, arrivee, fin, montrees } = await unSejourOu((m) => m.length >= 2);
@@ -233,7 +283,8 @@ describe.skipIf(!URL_TEST)("le récit de Rencontre (US-0940, sur base)", () => {
         sexe: issue === "apprivoisee" ? tirages.shift()!.sexe : null,
         // Une Espèce n'est nouvelle au Bestiaire qu'à sa première Rencontre.
         nouvelleEspece: !especesVues.has(b.especeId),
-        ...(issue === "restee" ? { manque: await force(b.especeId) } : {}),
+        ...(issue === "restee" ? { manque: await force(b.especeId), laCase: destination, numero: b.numero } : {}),
+        ...(issue === "repartie" ? { repartieLe: b.depart } : {}),
         ...(await espece(b.especeId)),
       });
       especesVues.add(b.especeId);

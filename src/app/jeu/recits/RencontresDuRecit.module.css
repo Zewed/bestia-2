@@ -152,6 +152,18 @@
   overflow-wrap: anywhere;
 }
 
+/* US-0949 : « Revenir la chercher », sous une Bête restée sur sa Case : le bouton au contour vert, haut de 44 px au doigt. */
+.revenir {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 4px;
+}
+
+.revenir:focus-visible {
+  outline: 2px solid var(--cuivre-clair);
+  outline-offset: 2px;
+}
+
 /* Sur un téléphone, la peinture au-dessus de son texte. */
 @media (max-width: 760px) {
   .rencontres {

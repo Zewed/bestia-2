@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState, useTransition } from "react";
 import kit from "@/components/kit.module.css";
 import { Medaillon } from "@/components/Medaillon";
 import { lireUnRecit } from "./actions";
+import { AnnonceDuCouple, type CoupleAffiche } from "./AnnonceDuCouple";
 import { MEDAILLON_DES_RECITS, medaillonDuRecit } from "./lecture-du-recit";
 import { LectureDuRecit } from "./LectureDuRecit";
 import styles from "./page.module.css";
@@ -12,6 +13,7 @@ import type { RencontreAffichee } from "./RencontresDuRecit";
 /**
  * Un Récit tel que la liste le montre : sa date déjà écrite par le serveur, dans le fuseau du joueur. US-0940 : et les
  * Rencontres d'un retour d'Expédition, le cas échéant. US-0941 : et les faits de son résumé, pour un retour d'Expédition.
+ * US-0958 : et les Couples qu'il a réunis, le cas échéant.
  */
 export type RecitAffiche = {
   id: number;
@@ -22,6 +24,7 @@ export type RecitAffiche = {
   lu: boolean;
   resume?: string[];
   rencontres?: RencontreAffichee[];
+  couples?: CoupleAffiche[];
 };
 
 /**
@@ -30,7 +33,7 @@ export type RecitAffiche = {
  * dont l'entrée « Récits » compte les non lus. Un Récit s'ouvre à la fois : sur ordinateur, il se lit à droite de la liste,
  * qui défile seule ; sur un téléphone, il se déplie sous sa ligne, qu'on ramène en vue si le Récit refermé au-dessus l'a
  * fait monter. Un second toucher le referme ; tant qu'aucun n'est ouvert, la place de la lecture garde le médaillon des
- * Récits.
+ * Récits. US-0958 : sous la ligne d'un retour qui a réuni un Couple, son annonce, visible sans l'ouvrir.
  */
 export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
   const [ouvert, setOuvert] = useState<number | null>(null);
@@ -89,6 +92,8 @@ export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
                   </span>
                 ) : null}
               </button>
+              {/* US-0958 : l'annonce du Couple réuni, en tête du récit du retour qui l'a réuni, se voit sans l'ouvrir. */}
+              {recit.couples?.length ? <AnnonceDuCouple couples={recit.couples} /> : null}
               <LectureDuRecit recit={recit} id={idLecture} hidden={!estOuvert} />
             </li>
           );

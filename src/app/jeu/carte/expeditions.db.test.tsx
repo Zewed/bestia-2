@@ -6,7 +6,7 @@ import { creerCompte } from "@/comptes/compte";
 import { lancerLExpedition } from "@/expeditions/depart";
 import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import type { Coordonnees } from "@/monde/hex";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 
 // La garde dit qui est connecté ; la page lit pour de bon la base de test.
 const garde = vi.hoisted(() => ({ exigerCompte: vi.fn() }));
@@ -25,12 +25,14 @@ describe.skipIf(!URL_TEST)("les Expéditions que la carte reçoit, sur base (US-
   let pool: Pool;
   let mondeId: number;
   const lancement = `carte-expeditions-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
 
   /** Un chef qui naît dans le Monde d'essai de ce fichier, et son Territoire. */
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
-    const nom = `Exp${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
+    const nom = nomDEssai("Exp", suffixe, numero);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     return (await territoireDuCompte(pool, compte.id))!;
   };
@@ -76,5 +78,27 @@ describe.skipIf(!URL_TEST)("les Expéditions que la carte reçoit, sur base (US-
       { id, ...destination, explorateurs: ["Joran"] },
     ]);
     expect(await envoyees(voisin)).toEqual([]);
+  });
+
+  it("US-0962 : deux joueurs en séjour sur la même Case : la carte de chacun ne montre que son Expédition, jamais celle de l'autre", async () => {
+    const moi = await naitre();
+    const voisin = await naitre();
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Ilda', 'explorateur')", [moi]);
+    const destination = await aLEcart(moi, 2);
+    // Mon Expédition, partie il y a deux heures, séjourne déjà sur la Case ; celle du voisin y séjourne depuis une
+    // demi-heure, posée en base comme un départ l'aurait fait, loin de son Foyer.
+    const instant = Date.now();
+    const depart = await lancerLExpedition(pool, moi, { destination, explorateurs: 1, escorte: new Map(), sejourMinutes: 240 }, new Date(instant - 2 * 3_600_000));
+    const mienne = (depart as { expeditionId: number }).expeditionId;
+    const { rows } = await pool.query<{ id: number }>(
+      `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+       select $1, c.id, $4, 30, 240 from territoire t join case_du_monde f on f.id = t.foyer_case_id
+         join case_du_monde c on c.monde_id = f.monde_id and c.q = $2 and c.r = $3
+       where t.id = $5 returning id`,
+      [voisin, destination.q, destination.r, new Date(instant - 3_600_000), moi],
+    );
+    const sienne = rows[0].id;
+    expect((await envoyees(moi)).map((e) => e.id)).toEqual([mienne]);
+    expect((await envoyees(voisin)).map((e) => e.id)).toEqual([sienne]);
   });
 });

@@ -32,7 +32,7 @@ function signalesEnMots(sansMetier: number, voyageurs: number): string | null {
 }
 
 /**
- * US-0302 : la navigation du jeu, une fois le joueur entré dans son Foyer : cinq entrées dans la barre du haut, sur
+ * US-0302 : la navigation du jeu, une fois le joueur entré dans son Foyer : six entrées dans la barre du haut, sur
  * toutes les tailles (sur un téléphone, une rangée sous les Stocks ; voir BarreHaut.module.css). Chaque entrée, son
  * médaillon peint (dessiné par la feuille de style, il ne sert qu'aux yeux) puis son nom ; l'Expédition, l'action du jeu,
  * a l'anneau de cuivre vif. L'entrée de la page affichée passe en crème, soulignée d'un trait de cuivre et marquée d'un

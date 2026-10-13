@@ -35,4 +35,9 @@ describe("le récit de Rencontre, en cartes (US-0940)", () => {
     expect(regle(".issue")).toContain("color: var(--mousse);");
     expect(regle('.issue[data-issue="apprivoisee"]')).toContain("color: var(--parchemin);");
   });
+
+  it("donne à « Revenir la chercher » une cible au doigt de 44 px, et un contour au clavier (US-0949)", () => {
+    expect(regle(".revenir")).toContain("min-height: 44px;");
+    expect(regle(".revenir:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
+  });
 });

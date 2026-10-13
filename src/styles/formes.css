@@ -83,7 +83,7 @@
 
 /*
  * Sur une tablette et un téléphone (comme la maquette, sous 1 024 px), le haut s'empile : la ligne du blason, du nom et
- * du compteur d'Habitants ; la rangée des Stocks, chacun son solde sous sa quantité (US-0319) ; la rangée des cinq
+ * du compteur d'Habitants ; la rangée des Stocks, chacun son solde sous sa quantité (US-0319) ; la rangée des six
  * onglets (US-0302). Toujours en haut, jamais au pied de l'écran.
  */
 @media (max-width: 1023px) {

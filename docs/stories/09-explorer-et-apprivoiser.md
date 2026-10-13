@@ -474,6 +474,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0943 · La Bête trop forte peut attaquer
 **En tant que** joueur, **je veux** qu'une Bête trop forte puisse s'en prendre à mon Expédition, **afin de** sentir le risque d'aller chercher plus fort que soi.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, THE-1461, Zewed/bestia-2#39). Une Bête trop forte pour l'escorte d'une Expédition qui la voit peut l'attaquer pendant son séjour, à un instant tiré selon son régime (migration 0062, colonne `attaque_le`) ; seule l'Expédition désignée par les tirages est attaquée, les autres non, et toutes rentrent à l'heure prévue. Le récit ne dit encore rien de l'attaque (la fuite et les pertes viennent avec US-0945 et l'étape 42). Tranché : chaque Bête attaque au plus une fois chaque Expédition qu'elle voit, et plusieurs Bêtes trop fortes peuvent attaquer la même. Une Expédition qui voit la Bête à l'instant où elle en suit une autre (US-0962) n'a plus le temps d'être attaquée. Vérifié en vrai avec trois Expéditions vers un Loup gris rare.
 - **Débloquée par** : US-0942
 - **Critères d'acceptation** :
   - Tant que la Bête et l'Expédition sont sur la même Case, la Bête peut attaquer, avec une chance par heure passée ensemble (chiffre à régler).
@@ -483,6 +484,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0944 · Le combat par la somme des forces
 **En tant que** joueur, **je veux** que le combat se règle par la simple somme des forces, **afin de** comprendre d'avance ce que je risque.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#54). Quand une Bête trop forte attaque (US-0943), le combat se livre à l'instant de l'attaque : la force de la Bête contre la simple somme des forces de l'escorte. La Bête l'emporte toujours et ne perd rien ; l'escorte perd des Bêtes, qui quittent aussitôt l'effectif ; jamais les explorateurs, ni les Bêtes restées au Foyer, ni les Couples. Les pertes sont les mêmes page ouverte, d'un bloc ou par la tâche planifiée. Tranché : part perdue = (force de la Bête − force de l'escorte) / force de la Bête × `PERTES_PAR_ECART_DES_FORCES` (1, provisoire), arrondie au-dessus et plafonnée à toute l'escorte ; répartition au prorata des effectifs, aux plus grands restes (à égalité, l'Espèce la plus faible) ; les pertes vont dans une colonne `perdues` (migration 0064), la force de départ reste celle qui décide qui suit qui jusqu'à la fuite (US-0945). Aucun texte de récit encore (US-0947). Vérifié en vrai : une escorte passe de 38 à 37 Souris grises.
 - **Débloquée par** : US-0943
 - **Critères d'acceptation** :
   - Le combat oppose la force de la Bête à la somme des forces de l'escorte, sans règle de taille.
@@ -513,6 +515,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0947 · Le récit du combat
 **En tant que** joueur, **je veux** un récit précis du combat, **afin de** savoir quelle force il m'aurait fallu.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#63). Au retour d'une Expédition attaquée, le récit finit par le combat, sans migration : une ligne par combat dans l'ordre du temps (« Combat le 14 octobre à 09:59 : Loup gris, de force 173 205, contre votre escorte, de force 170 280. », ou « Attaque … contre vos explorateurs, sans escorte. »), puis les pertes Espèce par Espèce telles qu'elles ont été retenues (US-0951), puis « Vos explorateurs ont fui et sont tous rentrés au Foyer. ». Le résumé en tête compte les Bêtes perdues. Tranché : la force exacte de la Bête est affichée (celle qu'il aurait fallu) ; le combat vient en fin de récit ; le résumé ne compte que les mortes (les Blessés rentrent), à reprendre avec US-0952 à US-0955. Vérifié en vrai avec 360 Souris grises contre un Loup gris.
 - **Débloquée par** : US-0944, US-0940
 - **Critères d'acceptation** :
   - Le récit donne l'heure du combat, l'Espèce de la Bête et la force de l'escorte ; afficher aussi la force exacte de la Bête (à décider).
@@ -522,6 +525,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0948 · Repérer la Bête restée sur la carte
 **En tant que** joueur, **je veux** voir sur ma carte où une Bête trop forte est restée, **afin de** ne pas oublier de revenir la chercher.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, THE-1466, Zewed/bestia-2#41). Au retour d'une Expédition qui a vu une Bête trop forte pour son escorte, la Case où elle est restée porte un repère « Bête repérée » (une empreinte sur une pastille pêche), visible du seul joueur dont l'Expédition l'a vue ; le toucher ouvre sa fiche : son Espèce et « jusqu'à 22 h environ ». Tranché : l'heure approximative, arrondie à l'heure la plus proche dans le fuseau du joueur (« minuit » pour 0 h) ; le repère disparaît à la fin de sa durée, ou quand la Bête suit une autre Expédition, sans récit. Vérifié en vrai avec trois chefs d'essai.
 - **Débloquée par** : US-0942, US-0917
 - **Critères d'acceptation** :
   - Au retour, la Case où la Bête est restée porte un repère « Bête repérée » avec son Espèce, visible du seul joueur dont l'Expédition l'a vue.
@@ -531,6 +535,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0949 · Revenir la chercher
 **En tant que** joueur, **je veux** renvoyer une escorte plus forte vers une Bête repérée, **afin de** l'apprivoiser tant qu'elle est là.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#52). « Revenir la chercher », au pied de la fiche du repère sur la carte et sous une Rencontre « restée » du récit (tant que la Bête est repérée), ouvre l'écran d'Expédition avec sa Case pour destination, sans perdre les choix déjà faits. Le récapitulatif nomme la Bête repérée et sa force, dit si l'escorte est « Assez forte » ou « Trop faible : il manque N de force », et prévient « À l'arrivée : X ne sera plus là » sans empêcher de partir. Revenue à temps et assez forte, l'Expédition la ramène (la règle d'Apprivoisement s'applique) ; sinon le récit dit « X n'était plus sur la Case à votre arrivée. », sans dire pourquoi. Tranché : le récit retient la Case et la Bête dans ses Rencontres, sans migration ; les Récits d'avant n'ont pas le lien. Vérifié en vrai, des Souris (trop faibles) à un Mammouth.
 - **Débloquée par** : US-0948, US-0932
 - **Critères d'acceptation** :
   - Depuis le repère ou le récit, « Revenir la chercher » ouvre l'écran d'Expédition avec cette Case comme destination.
@@ -541,6 +546,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0950 · La Bête s'en va pendant le séjour
 **En tant que** joueur, **je veux** que la menace cesse quand la Bête trop forte s'en va, **afin de** laisser mon Expédition finir son séjour tranquille.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#49). Quand une Bête trop forte quitte sa Case pendant le séjour, elle n'attaque plus et l'Expédition finit son séjour à l'heure prévue (déjà vrai depuis US-0943, désormais vérifié) ; le récit du retour dit l'heure de son départ, dans le fuseau du joueur : « Repartie à 03:13, à la fin de sa durée », avec le jour s'il a changé depuis la Rencontre. Les Récits écrits avant gardent leur texte, sans migration. Vérifié en vrai avec un Renard roux. Reste : « à la fin de sa durée » quand la Bête est partie avec une autre Expédition (US-0966).
 - **Débloquée par** : US-0942
 - **Critères d'acceptation** :
   - Quand la durée d'une Bête trop forte s'achève pendant le séjour, elle quitte la Case et ne peut plus attaquer.
@@ -552,6 +558,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0951 · Des Blessés parmi les pertes
 **En tant que** joueur, **je veux** qu'une partie de mes pertes soient seulement blessées, **afin de** ne pas tout perdre après un combat malheureux.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#58). Parmi les Bêtes qu'une Espèce de l'escorte perd au combat, une part ne sont que des Blessés : les mortes quittent l'effectif pour toujours, les Blessés rentrent au Foyer avec l'Expédition (et ne prennent pas part à un second combat). Le récit du retour le dit en une ligne, Espèce par Espèce : « Pertes au combat : Poule (2 morts, 2 Blessés) et Souris grise (6 morts, 6 Blessés). » (colonne `blessees`, migration 0066). Tranché : `PART_DES_BLESSES = 0.5` (provisoire) ; arrondi au plus proche, la demie aux Blessés, sans tirage (1 perdue = 1 Blessé), par combat et par Espèce. Vérifié en vrai contre un Loup gris. Restent les Blessés dans l'effectif, leur soin et leur guérison (US-0952 à US-0955).
 - **Débloquée par** : US-0944
 - **Critères d'acceptation** :
   - Parmi les pertes d'un combat, une part sont des Blessés (chiffre à régler), les autres meurent.
@@ -611,6 +618,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0957 · L'Élevage s'ouvre pour toujours
 **En tant que** joueur, **je veux** que l'Élevage d'une Espèce me reste acquis dès son Couple réuni, **afin de** ne jamais perdre ce que j'ai gagné.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#42). L'Élevage d'une Espèce est acquis dès que son Couple est réuni, à l'heure exacte du retour (en direct, au rattrapage ou par la tâche planifiée), et le reste pour toujours, même quand toutes ses Bêtes meurent ou que d'autres entrent dans l'effectif. Tranché : il est noté dans le Couple lui-même (table `couple`, qui ne se défait jamais), sans nouvelle table ni migration ; le sexe des Bêtes élevées n'a rien à décider tant qu'une Espèce élevée a déjà son Couple. Vérifié en vrai avec un Couple de poules.
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
   - Dès le Couple réuni, l'Élevage de l'Espèce est noté comme acquis pour toujours ; on s'en servira, avec un Habitant éleveur, à l'étape 34.
@@ -620,6 +628,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0958 · Annoncer le Couple réuni
 **En tant que** joueur, **je veux** que la réunion d'un Couple soit fêtée, **afin de** savourer le moment le plus important du jeu.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#45). Le Récit « Retour d'Expédition » qui réunit un Couple l'annonce en tête, sans le déplier : l'illustration de l'Espèce en grand, une pastille « Couple réuni » et son nom, sans autre phrase ni « mâle et femelle ». Le menu du chef montre « Couples réunis » et leur nombre (0 dès l'entrée au Foyer). Tranché : sans migration, chaque Couple est rapproché du Retour d'Expédition de son instant ; les Couples réunis avant la story s'annoncent aussi ; un retour qui ramène ensuite une Bête de l'Espèce (US-0959) ne l'annonce pas de nouveau. Vérifié en vrai avec un Couple de poules, de 320×568 à 1 440×900, téléphone couché compris.
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
   - Le récit du retour qui réunit le Couple l'annonce en tête, avec l'illustration de l'Espèce ; un bouton vers son Élevage s'y ajoutera à l'étape 34.
@@ -629,6 +638,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0959 · Après le Couple, les Bêtes rejoignent l'effectif
 **En tant que** joueur, **je veux** que les Bêtes apprivoisées après la réunion du Couple renforcent mon effectif, **afin de** ne rien perdre à continuer d'en apprivoiser.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#44). Une fois le Couple d'une Espèce réuni, chaque Bête de cette Espèce qui arrive au Foyer rejoint l'effectif, quel que soit son sexe, même quand une Bête de l'autre sexe attend déjà : aucun second Couple ne se forme, en direct, au rattrapage ou par la tâche planifiée. La règle venait déjà de US-0956 : la story est prouvée par des tests. Au passage, un test instable corrigé : les chefs d'un même Monde d'essai naissent d'abord, avant qu'on choisisse leurs Cases. Vérifié en vrai avec des poules.
 - **Débloquée par** : US-0956
 - **Critères d'acceptation** :
   - Une fois le Couple réuni, toute nouvelle Bête apprivoisée de l'Espèce rejoint l'effectif, quel que soit son sexe.
@@ -657,6 +667,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0962 · Chaque Expédition présente voit la Bête
 **En tant que** joueur, **je veux** voir une Bête même si d'autres joueurs ont une Expédition sur la même Case, **afin de** ne pas être privé de la Rencontre.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#43). À l'instant où une Bête se met à suivre une Expédition, toutes les Expéditions présentes sur la Case la voient (celle qui arrive à cet instant comprise) ; la Bête suit toujours celle que désigne US-0934. Tranché : un joueur n'apprend la présence d'autres Expéditions que par son récit de retour, en une ligne (« D'autres Expéditions séjournaient sur la Case. »), qui ne compte que les Expéditions des autres joueurs ayant partagé au moins un instant de séjour, sans nommer leurs chefs ; la carte ne montre que ses propres Expéditions. Le résultat ne dépend plus de l'ordre de mise à l'heure des Territoires. Vérifié en vrai avec deux comptes sur la même Prairie. Reste : le perdant lit encore « Repartie à la fin de sa durée » dans le détail de sa Rencontre (US-0964).
 - **Débloquée par** : US-0932
 - **Critères d'acceptation** :
   - Quand une Bête apparaît sur une Case où séjournent les Expéditions de plusieurs joueurs, toutes la voient, et son Espèce entre au Bestiaire de chacun.
@@ -666,6 +677,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0963 · Des chances proportionnelles à la force
 **En tant que** joueur, **je veux** que mes chances d'emporter une Bête disputée dépendent de la force de mon escorte, **afin de** tirer profit d'une escorte plus forte.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#51). Une Bête à portée de plusieurs Expéditions au même premier instant suit l'une d'elles, tirée au sort avec des chances proportionnelles à la force de chaque escorte (telle qu'elle est partie) ; le tirage ne dépend que de la Bête, et son résultat est le même quel que soit l'ordre de mise à l'heure des Territoires. Sans escorte, aucune chance face à une Expédition escortée ; entre Expéditions sans escorte, chances égales. Tranché : une Expédition pour qui la Bête est trop forte ne participe pas au tirage (chaque escorte garde sa propre portée, sans coopération entre joueurs, comme US-0962) ; une escorte de force nulle compte comme aucune escorte. Vérifié sur 10 000 tirages et en vrai avec trois comptes sur une même Forêt. Suite : une Bête ne doit jamais finir dans deux Foyers, même si les statistiques d'une Espèce changent entre deux mises à l'heure (correctif à part).
 - **Débloquée par** : US-0962, US-0934
 - **Critères d'acceptation** :
   - Si la Bête est à portée de plusieurs Expéditions, une seule l'emporte, tirée au sort avec des chances proportionnelles à la force de chaque escorte.
@@ -676,6 +688,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0964 · Le récit du perdant
 **En tant que** joueur, **je veux** apprendre qu'une Bête m'a échappé au profit d'une autre Expédition, **afin de** comprendre pourquoi je rentre les mains vides.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#59). Une Bête qui a suivi une autre Expédition avant la fin du séjour se lit « Partie à 17:12 avec une autre Expédition » dans la Rencontre du perdant (et non plus « Repartie à la fin de sa durée »), et le récit ajoute « Poule a suivi une autre Expédition. » ; le perdant ne perd rien, garde l'Espèce « croisée », et rentre à l'heure. Tranché : le chef qui l'a emportée n'est pas nommé (comme US-0962) ; la règle vaut pour le perdant du tirage (US-0963) comme pour celui qu'une escorte plus forte arrivée après dépasse (US-0966) ; une Bête emmenée à l'instant même du départ reste « restée ». Sans migration. Vérifié en vrai avec trois comptes sur une Prairie.
 - **Débloquée par** : US-0963, US-0940
 - **Critères d'acceptation** :
   - Au retour, le perdant reçoit un récit qui dit que la Bête a suivi une autre Expédition.
@@ -694,6 +707,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0966 · Une Expédition assez forte arrive ensuite
 **En tant que** joueur, **je veux** qu'une Bête restée sur une Case puisse suivre une Expédition plus forte arrivée après, **afin de** récompenser celui qui revient mieux préparé.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#67). Les règles déjà en place la font : une Bête restée trop forte suit une Expédition assez forte arrivée ensuite, dès son arrivée, du même joueur ou d'un autre (US-0934) ; plusieurs assez fortes au même instant passent par le tirage proportionnel à la force (US-0963) ; celle déjà présente l'apprend dans son récit (US-0964). La PR n'ajoute que des essais sur base qui épinglent ces comportements, dans les deux ordres de mise à l'heure et page ouverte. Vérifié en vrai : 2 Souris grises voient un Renard roux trop fort, « Revenir la chercher » renvoie 91 Souris grises, et le Renard les suit.
 - **Débloquée par** : US-0963, US-0949
 - **Critères d'acceptation** :
   - Si une Bête restée trop forte voit arriver une Expédition assez forte, du même joueur ou d'un autre, elle la suit dès son arrivée.

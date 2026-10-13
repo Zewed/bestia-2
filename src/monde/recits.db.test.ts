@@ -2,7 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { ecrireUnRecit, marquerUnRecitLu, nombreDeRecitsNonLus, recitsDuTerritoire } from "./recits";
 
 /** Le Monde d'essai de ce fichier, où naissent ses chefs : la Couronne d'Aube est partagée par toute la suite (src/test/base.ts). */
@@ -12,9 +12,11 @@ describe.skipIf(!URL_TEST)("les Récits d'un Territoire (US-0324, sur base)", ()
   let pool: Pool;
   let mondeId: number;
   const lancement = `recits-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Un nom de chef propre à ce lancement, pour ne pas croiser les autres essais. */
-  const nomUnique = () => `Recit${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(numero / 10) % 10]}${"abcdefghij"[numero % 10]}`;
+  const nomUnique = () => nomDEssai("Recit", suffixe, numero);
   const naitre = async () => {
     const compte = (await creerCompte(pool, `${lancement}-${++numero}@essai.test`, "une phrase de passe"))!;
     expect(await enregistrerNomDeChef(pool, compte.id, nomUnique(), Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
@@ -138,6 +140,33 @@ describe.skipIf(!URL_TEST)("les Récits d'un Territoire (US-0324, sur base)", ()
       { id: calme, titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("10:00"), luLe: null },
     ]);
     expect((await recitsDuTerritoire(pool, territoireId)).map((r) => "rencontres" in r)).toEqual([true, false, false]);
+  });
+
+  it("annonce en tête du retour qui l'a réuni chaque Couple réuni à son instant, avec le nom et l'illustration de son Espèce (US-0958)", async () => {
+    const [joueur, voisin] = [await naitre(), await naitre()];
+    /** Le nom et l'illustration de l'Espèce `id`, lus comme sur sa fiche. */
+    const espece = async (id: string) =>
+      (await pool.query<{ especeId: string; nom: string; illustration: string | null }>(`select id as "especeId", nom, illustration from espece where id = $1`, [id])).rows[0];
+    const reunir = (territoireId: number, especeId: string, heure: string) =>
+      pool.query("insert into couple (territoire_id, espece_id, reuni_le) values ($1, $2, $3)", [territoireId, especeId, a(heure)]);
+    // Deux Couples réunis par le même retour, un autre réuni sans retour à cet instant.
+    await reunir(joueur.territoireId, "souris", "12:00");
+    await reunir(joueur.territoireId, "poule", "12:00");
+    await reunir(joueur.territoireId, "pigeon", "09:00");
+    const retour = await ecrireUnRecit(pool, joueur.territoireId, { titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("12:00") });
+    // Un autre Récit au même instant, un retour plus tôt, et le retour d'un voisin au même instant ne l'annoncent pas.
+    const famine = await ecrireUnRecit(pool, joueur.territoireId, { titre: "Famine", texte: "Un Habitant est parti.", survenuLe: a("12:00") });
+    const plusTot = await ecrireUnRecit(pool, joueur.territoireId, { titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("10:00") });
+    await ecrireUnRecit(pool, voisin.territoireId, { titre: "Retour d'Expédition", texte: "Aucune Bête ne s'est montrée.", survenuLe: a("12:00") });
+
+    const recits = await recitsDuTerritoire(pool, joueur.territoireId);
+    expect(recits.map((r) => [r.id, r.couples])).toEqual([
+      [famine, undefined],
+      [retour, [await espece("poule"), await espece("souris")]],
+      [plusTot, undefined],
+    ]);
+    expect(recits.map((r) => "couples" in r)).toEqual([false, true, false]);
+    expect((await recitsDuTerritoire(pool, voisin.territoireId)).map((r) => "couples" in r)).toEqual([false]);
   });
 
   it("les retire avec leur Territoire", async () => {

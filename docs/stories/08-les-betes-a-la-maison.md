@@ -7,6 +7,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0801 · Ouvrir la Réserve
 **En tant que** joueur, **je veux** ouvrir la Réserve de mon Territoire, **afin de** voir les Couples que j'ai réunis.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#47). Une entrée « Réserve » de la navigation, entre « Expéditions » et « Habitants », ouvre /jeu/reserve : son titre, une phrase (« Le lieu protégé de votre Territoire : vos Couples y vivent à l'abri, loin des combats. ») et le nombre de Couples en grand. Sans Couple, la page dit désormais « Aucun Couple pour l'instant » (US-0809) ; sur mobile, six onglets égaux, noms en 11 px. La refonte AEOM de la navigation devra reprendre cette entrée.
 - **Débloquée par** : Étape 4, US-0956
 - **Critères d'acceptation** :
   - Une entrée « Réserve » de la navigation ouvre la page, sur ordinateur comme sur mobile.
@@ -16,6 +17,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0802 · Voir ses Couples réunis
 **En tant que** joueur, **je veux** voir dans la Réserve chaque Couple que j'ai réuni, **afin de** retrouver les Espèces que je peux élever.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#48). Dans la Réserve, sous le nombre de Couples, chaque Couple réuni a sa carte : ses deux Bêtes côte à côte, peintes de l'illustration de leur Espèce, puis le nom de l'Espèce et sa Rareté ; aucune étiquette de sexe. Chaque joueur ne voit que sa Réserve. Tranché : la même illustration deux fois (toutes les Bêtes d'une Espèce sont identiques) ; du premier Couple réuni au dernier ; cartes non cliquables (la fiche de l'Espèce est US-0803). Vérifié en vrai avec trois Couples (pigeon, poule, souris), téléphone couché compris.
 - **Débloquée par** : US-0801
 - **Critères d'acceptation** :
   - Chaque Couple réuni (US-0956) apparaît avec l'illustration de son Espèce, son nom et sa Rareté.
@@ -25,6 +27,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0803 · Ouvrir la fiche d'une Espèce
 **En tant que** joueur, **je veux** ouvrir la fiche de l'Espèce d'un Couple, **afin de** tout savoir sur elle.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#55). Dans la Réserve, toute la carte d'un Couple ouvre la fiche de son Espèce (/jeu/reserve/<Espèce>) : l'illustration en grand, le nom et la pastille de Rareté ; « Fermer » ramène à la Réserve. Une fiche n'existe que pour une Espèce dont le joueur a réuni le Couple ; sinon, page introuvable. Tranché : la fiche est une page, pas un panneau ; le repère de chaque Rareté est la pastille existante, sa couleur et son nom écrit (jamais la couleur seule) ; le titre de l'onglet reste « Réserve ». Vérifié en vrai de 320 × 480 à 1 440 px, téléphone couché compris.
 - **Débloquée par** : US-0802
 - **Critères d'acceptation** :
   - Toucher le Couple ouvre la fiche de son Espèce, avec l'illustration en grand, le nom et la Rareté.
@@ -34,6 +37,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0804 · Lire l'attaque, la vie, la vitesse et la charge
 **En tant que** joueur, **je veux** lire les chiffres de combat et de transport d'une Espèce, **afin de** savoir ce que vaut chacune de ses Bêtes.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#56). Sous l'effectif, la fiche d'une Espèce donne son Attaque, sa Vie, sa Vitesse (en km/h) et sa Charge, avec les valeurs de la base, à la française (« 14 953 », « 87,5 »). Tranché : une Espèce sans masse ou sans vitesse ne peut pas entrer en base (les données la refusent) ; la charge s'affiche sans unité, son explication vient avec US-0807. Reste : l'ordre de « Fermer » sur un téléphone couché, à revoir avec US-0807.
 - **Débloquée par** : US-0803
 - **Critères d'acceptation** :
   - La fiche affiche l'attaque, la vie, la vitesse et la charge de l'Espèce, avec les valeurs enregistrées pour elle.
@@ -78,6 +82,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0809 · Voir une Réserve vide
 **En tant que** joueur, **je veux** une Réserve sobre tant que je n'ai réuni aucun Couple, **afin de** savoir d'un coup d'œil qu'elle attend son premier Couple.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#53). Sans Couple, la Réserve n'affiche que son titre, « Aucun Couple pour l'instant » et le bouton « Envoyer une Expédition », qui ouvre l'écran d'Expédition ; dès le premier Couple, la phrase de présentation, le nombre de Couples et leurs cartes prennent sa place. Tranché : « sans autre phrase » pris à la lettre, la phrase de US-0801 et « 0 Couple » ne s'affichent plus sur une Réserve vide.
 - **Débloquée par** : US-0801
 - **Critères d'acceptation** :
   - Sans Couple, la Réserve affiche « Aucun Couple pour l'instant », sans autre phrase.
@@ -89,6 +94,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0810 · Voir l'effectif par Espèce
 **En tant que** joueur, **je veux** voir combien de Bêtes j'ai de chaque Espèce, **afin de** connaître la taille de mon armée.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#60). Une page Bêtes (/jeu/betes) donne le total en haut, puis une ligne par Espèce, de la plus commune à la plus rare : vignette, nom, Rareté et effectif. Les Bêtes d'un Couple ne comptent pas ; celles en escorte et les Blessés comptent ; les mortes au combat non. Toucher une Espèce ouvre sa fiche, qui rappelle « Effectif N » ; la fiche s'ouvre désormais pour toute Espèce dont le joueur a des Bêtes. Tranché : on y entre par un bloc « Bêtes » sur le Foyer, sous la production (pas de septième onglet) ; la fiche garde son adresse /jeu/reserve/<Espèce> et « Fermer » ramène d'où l'on vient ; la page ne dit jamais « armée ». Vérifié en vrai, téléphone couché compris.
 - **Débloquée par** : US-0803, US-0938
 - **Critères d'acceptation** :
   - Une page Bêtes liste chaque Espèce dont le joueur a des Bêtes, avec son illustration et son effectif.
@@ -99,6 +105,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0811 · Voir un effectif vide
 **En tant que** nouveau joueur, **je veux** une page Bêtes sobre tant que je n'ai aucune Bête, **afin de** savoir où aller en chercher.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#62). Sans aucune Bête, la page Bêtes dit seulement « Aucune Bête pour l'instant » avec le bouton « Envoyer une Expédition » ; dès la première Bête, le total et la liste reviennent. Tranché : « sans autre phrase » à la lettre, comme US-0809 ; le bloc « Bêtes » du Foyer garde « 0 ».
 - **Débloquée par** : US-0810
 - **Critères d'acceptation** :
   - Sans aucune Bête, la page Bêtes affiche « Aucune Bête pour l'instant », sans autre phrase.
@@ -108,6 +115,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0812 · Trouver l'Élevage d'une Espèce
 **En tant que** joueur, **je veux** trouver l'Élevage sur la fiche d'une Espèce dont j'ai réuni le Couple, **afin de** produire des Bêtes de cette Espèce.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#64). La fiche d'une Espèce dont le joueur a réuni le Couple montre un bloc « Élever » (ancre #elever) ; aucune autre fiche ne l'a. L'annonce du Couple réuni dans le récit (US-0958) porte un lien « Élever » vers ce bloc. Tranché : le bouton reste grisé tant que l'Élevage ne se lance pas (US-0813 à US-0815) ; l'action serveur `elever` est le seul chemin d'une demande, prend le Territoire de la session, relit l'Élevage acquis et refuse sans Couple (« Pas d'Élevage sans Couple réuni. »), de la même façon pour le Couple d'un autre ou une Espèce inconnue. Le vrai lancement (US-0815) devra relire l'Élevage acquis dans la transaction du paiement.
 - **Débloquée par** : US-0803, US-0957
 - **Critères d'acceptation** :
   - La fiche d'une Espèce dont le Couple est réuni propose un bloc « Élever ».
@@ -225,6 +233,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0822 · Voir les Places de l'Habitat du Foyer
 **En tant que** joueur, **je veux** voir combien de Places offre l'Habitat de mon Foyer et combien sont prises, **afin de** savoir combien de Bêtes je peux encore loger.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#68). La page Bêtes dit, sous le total, « Places : 16 / 500 », et le bloc « Élever » montre le même compteur. Les Places prises sont l'effectif fois la taille de chaque Espèce, arrondies à la Place entière supérieure. Tranché : `PLACES_DE_L_HABITAT_DU_FOYER = 500` (provisoire) ; les Bêtes en escorte et les Blessés gardent leur Place ; le Couple, en Réserve, n'en prend pas (le point « à décider » de US-0824, réglé en un seul endroit) ; un dépassement s'affiche tel quel (US-0939, US-0825).
 - **Débloquée par** : US-0810
 - **Critères d'acceptation** :
   - La page Bêtes affiche « Places : occupées / total » pour l'Habitat du Foyer.

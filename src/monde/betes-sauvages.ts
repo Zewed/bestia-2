@@ -2,13 +2,15 @@
 // Bête par apparition, que les joueurs soient là ou non ; plusieurs peuvent s'y trouver en même temps. Rien n'en est
 // écrit en base : les apparitions d'une Case sont une fonction de la graine de son Monde, de sa place et du temps du
 // jeu, calculée à la demande, pour une Case et une période. Aucune ne se voit sur la carte : seules les Expéditions
-// présentes sur sa Case la verront (étape 40). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
+// présentes sur sa Case la verront (étape 40) ; US-0948 : celle qu'une Expédition a vue sans qu'elle la suive y est
+// ensuite repérée, pour son seul joueur (src/expeditions/betes-reperees.ts). US-0926 : chacune reste un temps sur sa Case, puis s'en va pour toujours ;
 // seule une Bête partie plus tôt, en suivant une Expédition, laisse une trace en base (bete_partie). US-0927 : sa Rareté
 // se tire selon l'Anneau de sa Case ; US-0928 : son Espèce, parmi celles de cette Rareté qui vivent dans le Biome de sa
 // Case. US-0930 : tout se compte en temps du jeu, par tranches fixes : pour une Case et une période, les mêmes Bêtes,
 // qu'on les calcule en direct ou au rattrapage, d'un bloc ou par morceaux, seule ou avec tout le Monde ; la vitesse
 // accélérée du temps accélère d'autant leurs apparitions et leurs durées. US-0937 : apprivoisée, une Bête est mâle ou
-// femelle, tiré de même. Côté serveur et scripts uniquement.
+// femelle, tiré de même. US-0943 : trop forte, elle tire de même, heure par heure, si elle attaque l'Expédition qui la
+// voit. Côté serveur et scripts uniquement.
 import type { Pool, PoolClient } from "pg";
 import { type ChancesDeRarete, lireRaretesParAnneau } from "@/donnees/jeux";
 import { APPARITIONS_PAR_CASE_PAR_JOUR, PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
@@ -22,7 +24,7 @@ const JOUR_MS = 86_400_000;
 /** Au plus 100 apparitions par Case et par tranche (en moyenne, bien moins d'une), pour que leurs numéros ne se mêlent jamais. */
 const PAR_TRANCHE = 100;
 /** Ce que chaque tranche, puis chaque apparition, tire de son côté. */
-const TIRAGE = { nombre: 1, moment: 2, rarete: 3, espece: 4, sexe: 5 } as const;
+const TIRAGE = { nombre: 1, moment: 2, rarete: 3, espece: 4, sexe: 5, attaque: 6, momentDeLAttaque: 7 } as const;
 /** US-0926 : combien de temps une Bête reste sur sa Case, en temps du jeu. */
 const PRESENCE_MS = PRESENCE_D_UNE_BETE_HEURES * TRANCHE_MS;
 
@@ -124,6 +126,26 @@ export function sexeTire({ graine, q, r }: Pick<CaseSauvage, "graine" | "q" | "r
   return tirerUnSexe(hacher(graine, q, r, numero, TIRAGE.sexe));
 }
 
+/**
+ * US-0943 : les deux hasards, de 0 à 1, d'une heure passée par une Bête trop forte avec l'Expédition qui la voit : s'il
+ * tombe sous sa chance, `attaque` la fait attaquer pendant cette heure, au `moment` qu'il dit, de son début à sa fin
+ * (src/expeditions/attaque.ts).
+ */
+export type HasardsDeLAttaque = { attaque: number; moment: number };
+
+/**
+ * US-0943 : les hasards de l'heure `heure` passée par l'apparition `numero` de la Case `laCase` avec l'Expédition
+ * `expeditionId`, comptée depuis leur Rencontre (0 pour la première) : comme son sexe, une fonction de la graine de son
+ * Monde, de sa Case, de son numéro, de l'Expédition et de l'heure, par des tirages qui leur sont propres, jamais de
+ * l'heure qu'il est. Les mêmes en direct, au rattrapage ou par la tâche planifiée.
+ */
+export function hasardsDeLAttaque({ graine, q, r }: Pick<CaseSauvage, "graine" | "q" | "r">, numero: number, expeditionId: number, heure: number): HasardsDeLAttaque {
+  return {
+    attaque: hacher(graine, q, r, numero, expeditionId, heure, TIRAGE.attaque),
+    moment: hacher(graine, q, r, numero, expeditionId, heure, TIRAGE.momentDeLAttaque),
+  };
+}
+
 /** Le nombre d'apparitions d'une tranche, de moyenne `moyenne` : une loi de Poisson, celle d'apparitions indépendantes. */
 function combien(moyenne: number, hasard: number): number {
   let [n, probabilite] = [0, Math.exp(-moyenne)];
@@ -197,8 +219,17 @@ type CaseEnBase = Coordonnees & {
  * seule, à la demande. Aucune sur une Case qui appartient à un Territoire ; une Case inconnue n'en a pas non plus.
  * US-0926 : une Bête partie en suivant une Expédition n'y est plus dès son départ. US-0927 : l'Anneau de chaque Case se
  * tire de la forme de son Monde. US-0928 : les Espèces sont celles de la base, lues une fois pour toutes les Cases.
+ * US-0962 : `departCompris`, celle qui a suivi une Expédition y compte encore à l'instant même de son départ : pour les
+ * Rencontres, où toutes les Expéditions présentes à cet instant la voient, que le Territoire de l'Expédition suivie ait
+ * déjà retenu ce départ ou non.
  */
-export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: number[], de: Date, a: Date): Promise<Map<number, BeteSauvage[]>> {
+export async function betesSauvagesDesCases(
+  base: Pool | PoolClient,
+  caseIds: number[],
+  de: Date,
+  a: Date,
+  { departCompris = false }: { departCompris?: boolean } = {},
+): Promise<Map<number, BeteSauvage[]>> {
   // US-0932 : l'une après l'autre : le mécanisme du temps l'appelle avec le client de sa transaction, où deux requêtes
   // ne partent pas à la fois.
   const { rows } = await base.query<CaseEnBase>(
@@ -216,7 +247,7 @@ export async function betesSauvagesDesCases(base: Pool | PoolClient, caseIds: nu
       const c = parCase.get(id);
       if (!c?.libre) return [id, []];
       const laCase = { q: c.q, r: c.r, graine: Number(c.graine), anneau: anneauDUneCase(c, c.forme), biome: c.biome };
-      const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(p.partie_le)]));
+      const parties = new Map(c.parties.map((p) => [Number(p.numero), new Date(new Date(p.partie_le).getTime() + (departCompris ? 1 : 0))]));
       return [id, betesSauvages(laCase, de, a, rangees, { parties })];
     }),
   );

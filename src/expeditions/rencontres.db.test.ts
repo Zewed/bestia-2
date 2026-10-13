@@ -9,7 +9,8 @@ import { PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE, PRESENCE_D_UNE_BETE_HEURES } fro
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
+import { lExpeditionSuivie } from "./apprivoisement";
 import { cheminDUneExpedition } from "./chemin";
 import { lancerLExpedition } from "./depart";
 import { rencontresDUneExpedition } from "./rencontres";
@@ -31,6 +32,8 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
   let pool: Pool;
   let mondeId: number;
   const lancement = `rencontre-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /**
    * Les Cases déjà prises par un essai de ce fichier : chacun a la sienne. Sans escorte, une Bête commune suit l'Expédition
@@ -49,7 +52,7 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
   const naitre = async (explorateurs = 1) => {
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Renc${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Renc", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query(`insert into habitant (territoire_id, prenom, metier) select $1, 'Essai', 'explorateur' from generate_series(1, $2)`, [territoireId, explorateurs]);
@@ -267,9 +270,13 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
     expect(siennes.filter((r) => r.beteDeNaissanceId !== null)).toEqual([
       { vueLe: arrivee, caseId: bn.caseId, apparueLe: bn.arrivee, especeId: bn.especeId, rareteId: "commune", numero: null, beteDeNaissanceId: bn.id, apprivoisee: true },
     ]);
-    // Le voisin voit les mêmes Bêtes sauvages, sauf les communes : arrivées au même instant, elles ont suivi celle du joueur,
-    // de plus petit identifiant (US-0934, US-0935).
-    expect(await rencontres(chezLeVoisin)).toEqual(siennes.filter((r) => r.beteDeNaissanceId === null && !r.apprivoisee));
+    // Le voisin voit les mêmes Bêtes sauvages, aux mêmes instants (US-0962). Arrivées au même instant, sans escorte, les
+    // deux Expéditions ont la même chance : chaque commune suit l'une ou l'autre, tirée au sort (US-0963), jamais les deux ;
+    // une plus rare, aucune (US-0935).
+    const sauvages = siennes.filter((r) => r.beteDeNaissanceId === null);
+    const duVoisin = await rencontres(chezLeVoisin);
+    expect(duVoisin.map((r) => ({ ...r, apprivoisee: false }))).toEqual(sauvages.map((r) => ({ ...r, apprivoisee: false })));
+    for (const [i, r] of sauvages.entries()) expect(r.apprivoisee !== duVoisin[i].apprivoisee, `${r.numero}`).toBe(r.rareteId === "commune");
   });
 
   it("retient les mêmes Rencontres, aux mêmes instants, en direct, par morceaux, d'un bloc au rattrapage, ou par la tâche planifiée", async () => {
@@ -317,7 +324,8 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
         await rattraperLesAbsents({ pool, maintenant: fin, parmi: { territoire: [territoireId] } });
       },
     ];
-    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit et quitte la Case (US-0935) : chaque
+    // Sans escorte, une Bête commune suit la première de ces Expéditions qui la voit, ou l'une de celles qui la voient au
+    // même instant, tirée au sort (US-0963), et quitte la Case (US-0935) : chaque
     // façon de compter le temps y passe seule, puis la Case redevient ce qu'elle était, sans ses Expéditions ni la trace
     // des Bêtes parties avec elles.
     const vues = [];
@@ -330,11 +338,22 @@ describe.skipIf(!URL_TEST)("la Rencontre (US-0932, sur base)", () => {
       await pool.query("delete from bete_partie where case_id = $1", [caseId]);
     }
     for (const autres of vues.slice(1)) expect(autres).toEqual(vues[0]);
-    // Celle qui séjourne douze heures voit chaque Bête présente pendant son séjour : dès son arrivée si elle était déjà là, à son apparition sinon.
+    // Celle qui séjourne douze heures voit chaque Bête présente pendant son séjour : dès son arrivée si elle était déjà là, à
+    // son apparition sinon. Elle emmène celles que la règle lui donne, parmi les quatre Expéditions (lExpeditionSuivie) :
+    // posées dans cet ordre, elles se rangent ainsi au tirage (US-0963).
     const [arrivee, depart] = [apres(debut, 40), apres(debut, 40 + 12 * HEURE)];
-    const attendues = (await betesSauvagesDUneCase(pool, caseId, arrivee, depart)).map((b) => vue(b, caseId, b.arrivee < arrivee ? arrivee : b.arrivee));
+    const sejours = HORAIRES.map(([partie, trajet, sejour], i) => ({ id: i, arrivee: apres(debut, partie + trajet), depart: apres(debut, partie + trajet + sejour), escorte: null }));
+    const attendues = (await betesSauvagesDUneCase(pool, caseId, arrivee, depart)).map((b) => ({
+      ...vue(b, caseId, b.arrivee < arrivee ? arrivee : b.arrivee),
+      apprivoisee: lExpeditionSuivie({ ...b, force: 0, caseId, beteDeNaissanceId: null }, sejours)?.expeditionId === 0,
+    }));
     expect(attendues.length).toBeGreaterThanOrEqual(2);
     expect(vues[0][0]).toEqual(attendues);
+    // Et, sans s'en remettre à la règle : chaque Bête commune ne suit qu'une des quatre, une plus rare aucune.
+    for (const b of attendues) {
+      const suivies = vues[0].flat().filter((r) => r.numero === b.numero && r.apprivoisee);
+      expect(suivies.length, `${b.numero}`).toBe(b.rareteId === "commune" ? 1 : 0);
+    }
     // Près de 200 rattrapages à la suite : sous la charge de la suite complète, plus que les 20 s par défaut.
   }, 60_000);
 });

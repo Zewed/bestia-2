@@ -9,14 +9,19 @@
 // ne la rencontre plus. US-0937 : elle est alors mâle ou femelle, tiré au hasard (src/expeditions/sexe.ts), retenu avec sa
 // Rencontre. US-0933 : chaque Rencontre retenue inscrit son Espèce au Bestiaire du Territoire, dans la même transaction
 // (src/bestiaire/bestiaire.ts). L'arrivée au Foyer (US-0938, src/expeditions/arrivee-au-foyer.ts) les lit ici, comme le
-// fera le récit (US-0940). Côté serveur uniquement.
+// fera le récit (US-0940). US-0943 : la Bête trop forte, vue sans suivre l'Expédition, peut l'attaquer tant qu'elles sont
+// ensemble sur la Case (src/expeditions/attaque.ts) : son attaque est retenue avec sa Rencontre, à son instant, par le
+// même mécanisme, pour le combat (US-0944). US-0962 : chaque Expédition présente voit la Bête, de quelque joueur qu'elle
+// soit, même à l'instant où elle en suit une autre. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { inscrireLesEspecesCroisees } from "@/bestiaire/bestiaire";
-import { betesDeNaissanceDesCases } from "@/monde/betes-de-naissance";
-import { betesSauvagesDesCases, emmenerUneBete } from "@/monde/betes-sauvages";
+import { betesDeNaissanceDesCases, hasardsDeLAttaqueDUneBeteDeNaissance } from "@/monde/betes-de-naissance";
+import { betesSauvagesDesCases, emmenerUneBete, hasardsDeLAttaque } from "@/monde/betes-sauvages";
 import { type ExpeditionSurLaCase, lExpeditionSuivie, vueLe } from "./apprivoisement";
+import { chanceDAttaqueParHeure, instantDeLAttaque, type Regime } from "./attaque";
 import { forceDeLEscorte, forceDUneBete } from "./force";
+import { subirLesCombats } from "./pertes";
 import { expeditionsPresentesDuTerritoire, expeditionsPresentesSurLesCases } from "./presence";
 import { sexesALApprivoisement } from "./sexe";
 
@@ -54,6 +59,26 @@ type AVoir = {
 };
 
 /**
+ * US-0943 : une Bête trop forte et l'Expédition qui la voit sans qu'elle la suive, ensemble sur la Case de leur Rencontre
+ * (debut) jusqu'au départ de l'une ou de l'autre (fin, exclue) : le temps où la Bête peut attaquer.
+ */
+type Ensemble = {
+  expeditionId: number;
+  caseId: number;
+  numero: number | null;
+  beteDeNaissanceId: number | null;
+  especeId: string;
+  debut: Date;
+  fin: Date;
+};
+
+/**
+ * US-0943 : l'attaque d'une Bête trop forte qu'a subie une Expédition : la Rencontre de la Bête, son Espèce, et l'instant
+ * du jeu de l'attaque (`le`).
+ */
+export type AttaqueSubie = { rencontreId: number; especeId: string; le: Date };
+
+/**
  * US-0934 : la force de l'escorte de chacune des Expéditions `ids` (US-0905), tirée des caractéristiques de ses Espèces ;
  * une Expédition sans escorte n'y figure pas.
  */
@@ -81,16 +106,19 @@ export async function forcesDesEspeces(base: Pool | PoolClient, ids: string[]): 
  * retenue avec l'intervalle où elle tombait : rien ne se voit deux fois, quel que soit le découpage du temps. Appelée par
  * le mécanisme du temps, dans la transaction du rattrapage. US-0934 : la Bête suit la première Expédition qui la voit et
  * l'a à portée (lExpeditionSuivie), de ce Territoire ou d'un autre, lue parmi toutes celles présentes sur sa Case depuis
- * son apparition ; dès cet instant, plus aucune autre ne la voit, même dans la même tranche. Le Territoire de l'Expédition
- * suivie retient seul son départ, à l'heure de l'Apprivoisement (emmenerUneBete) : les autres le recalculent, d'où le
- * même résultat quel que soit l'ordre des rattrapages.
+ * son apparition ; après cet instant, plus aucune autre ne la voit, même dans la même tranche. US-0962 : à cet instant,
+ * toutes celles qui sont sur la Case la voient encore, de tous les joueurs, et son Espèce entre au Bestiaire de chacun.
+ * Le Territoire de l'Expédition suivie retient seul son départ, à l'heure de l'Apprivoisement (emmenerUneBete) : les
+ * autres le recalculent, sur les Bêtes lues jusqu'à l'instant de ce départ compris (departCompris), d'où le même
+ * résultat quel que soit l'ordre des rattrapages. US-0943 : puis les attaques des Bêtes trop fortes qui tombent dans
+ * [de, a) (retenirLesAttaques).
  */
 export async function retenirLesRencontres(base: Pool | PoolClient, territoireId: number, de: Date, a: Date): Promise<void> {
   const expeditions = await expeditionsPresentesDuTerritoire(base, territoireId, de, a);
   if (expeditions.length === 0) return;
   const caseIds = [...new Set(expeditions.map((x) => x.caseId))];
   // L'une après l'autre : sur le client d'une transaction, deux requêtes ne partent pas à la fois.
-  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a);
+  const sauvages = await betesSauvagesDesCases(base, caseIds, de, a, { departCompris: true });
   const deNaissance = await betesDeNaissanceDesCases(base, territoireId, caseIds, de, a);
   const betes = caseIds.flatMap((caseId) => [
     ...sauvages.get(caseId)!.map((b) => ({ ...b, caseId, beteDeNaissanceId: null })),
@@ -104,7 +132,8 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   const escortes = await forcesDesEscortes(base, [...new Set([...presentes.values()].flat().map((x) => x.id))]);
   const forces = await forcesDesEspeces(base, [...new Set(betes.map((b) => b.especeId))]);
   const aVoir: AVoir[] = [];
-  const emmenees: { caseId: number; numero: number; le: Date }[] = [];
+  const emmenees: Emmenee[] = [];
+  const ensembles: Ensemble[] = [];
   for (const b of betes) {
     // Une Bête de naissance ne se montre qu'aux Expéditions de son Territoire (US-0975).
     const rivales: ExpeditionSurLaCase[] = presentes
@@ -114,18 +143,46 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
     const suivie = lExpeditionSuivie({ ...b, force: forces.get(b.especeId)! }, rivales);
     for (const x of expeditions.filter((x) => x.caseId === b.caseId)) {
       const vue = vueLe(b, x);
-      if (!vue || vue < de || vue >= a) continue;
+      if (!vue) continue;
       const apprivoisee = suivie?.expeditionId === x.id;
-      // Partie avec une autre Expédition, la Bête n'est plus là pour celles qui la verraient ensuite, ou au même instant.
-      if (suivie && !apprivoisee && vue >= suivie.le) continue;
-      aVoir.push({ expeditionId: x.id, caseId: b.caseId, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, apparueLe: b.arrivee, vueLe: vue, apprivoisee });
-      if (apprivoisee && b.numero !== null) emmenees.push({ caseId: b.caseId, numero: b.numero, le: vue });
+      // Partie avec une autre Expédition, la Bête n'est plus là pour celles qui la verraient ensuite ; celles qui la voient
+      // au même instant la voient encore (US-0962).
+      if (suivie && !apprivoisee && vue > suivie.le) continue;
+      // US-0943 : vue sans la suivre, la Bête est trop forte pour l'escorte (US-0942) : elle peut attaquer l'Expédition
+      // jusqu'à son propre départ, à la fin de sa durée ou avec une autre Expédition, ou celui de l'Expédition, à la fin de
+      // son séjour ou à son rappel ; même vue dans une tranche passée, son attaque peut tomber dans celle-ci. Vue à l'instant
+      // même où elle en suit une autre (US-0962), elle n'a plus le temps d'attaquer : leur ensemble est vide.
+      const fin = new Date(Math.min(b.depart.getTime(), x.depart.getTime(), suivie?.le.getTime() ?? Infinity));
+      if (!apprivoisee && vue < a && fin > de) {
+        ensembles.push({ expeditionId: x.id, caseId: b.caseId, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, debut: vue, fin });
+      }
+      if (vue < de || vue >= a) continue;
+      const rencontre = { expeditionId: x.id, caseId: b.caseId, numero: b.numero, beteDeNaissanceId: b.beteDeNaissanceId, especeId: b.especeId, apparueLe: b.arrivee, vueLe: vue, apprivoisee };
+      aVoir.push(rencontre);
+      if (apprivoisee && b.numero !== null) emmenees.push({ caseId: b.caseId, numero: b.numero, le: vue, rencontre });
     }
   }
-  if (aVoir.length === 0) return;
+  if (aVoir.length > 0) await retenirLesVues(base, territoireId, aVoir, emmenees);
+  // US-0943 : après les Rencontres, qu'une attaque de la même tranche trouve retenues.
+  if (ensembles.length > 0) await retenirLesAttaques(base, ensembles, de, a);
+}
+
+/**
+ * US-0934 : une Bête sauvage ordinaire qui suit une Expédition : sa Case, son numéro, l'instant où elle la suit, et sa
+ * Rencontre à retenir.
+ */
+type Emmenee = { caseId: number; numero: number; le: Date; rencontre: AVoir };
+
+/**
+ * US-0932 : retient les Rencontres `aVoir` du Territoire `territoireId`, et (US-0934) le départ des Bêtes sauvages
+ * `emmenees` avec l'Expédition qu'elles suivent ; dans la transaction de retenirLesRencontres.
+ */
+async function retenirLesVues(base: Pool | PoolClient, territoireId: number, aVoir: AVoir[], emmenees: Emmenee[]): Promise<void> {
   // US-0934 : la Bête sauvage ordinaire qui suit une Expédition quitte sa Case (bete_partie) ; une Bête de naissance, par
-  // sa seule Rencontre apprivoisée.
-  for (const { caseId, numero, le } of emmenees) await emmenerUneBete(base, caseId, numero, le);
+  // sa seule Rencontre apprivoisée. Une Bête dont un autre Territoire a déjà retenu le départ à cet instant ne suit pas
+  // celle-ci, même si le tirage, recalculé sur des forces qui ont changé depuis (US-0963), la désignait : vue, elle n'est
+  // pas apprivoisée, et ne rejoint jamais deux Foyers.
+  for (const { caseId, numero, le, rencontre } of emmenees) if (!(await emmenerUneBete(base, caseId, numero, le))) rencontre.apprivoisee = false;
   // US-0937 : la Bête qui suit l'Expédition est mâle ou femelle, tiré à son Apprivoisement ; celle qui reste n'en a pas.
   const apprivoisees = aVoir.filter((r) => r.apprivoisee);
   const sexes = new Map((await sexesALApprivoisement(base, apprivoisees)).map((sexe, i) => [apprivoisees[i], sexe]));
@@ -147,6 +204,67 @@ export async function retenirLesRencontres(base: Pool | PoolClient, territoireId
   );
   // US-0933 : l'Espèce de chaque Bête vue entre au Bestiaire, qu'elle suive l'Expédition ou non.
   if (rowCount) await inscrireLesEspecesCroisees(base, territoireId);
+}
+
+/**
+ * US-0943 : retient, avec leur Rencontre, les attaques des Bêtes trop fortes qui tombent dans [de, a), chacune pendant
+ * son `Ensemble` avec l'Expédition qui la voit, à l'instant que disent ses tirages (instantDeLAttaque), à la chance de son
+ * régime : celle d'une Bête sauvage ordinaire tirée de la graine de son Monde, de sa Case et de son numéro, celle d'une
+ * Bête de naissance de la graine et de sa ligne. Seule la première attaque de chaque Bête compte, même tombée dans une
+ * tranche passée : au plus une par Bête et par Expédition, la même quel que soit le découpage du temps. Dans la
+ * transaction de retenirLesRencontres. US-0944 : chacune livre aussitôt son combat, et l'escorte y perd des Bêtes.
+ */
+async function retenirLesAttaques(base: Pool | PoolClient, ensembles: Ensemble[], de: Date, a: Date): Promise<void> {
+  const { rows: cases } = await base.query<{ id: number; q: number; r: number; graine: string }>(
+    "select c.id, c.q, c.r, m.graine from case_du_monde c join monde m on m.id = c.monde_id where c.id = any($1::int[])",
+    [[...new Set(ensembles.map((e) => e.caseId))]],
+  );
+  const lesCases = new Map(cases.map((c) => [c.id, { q: c.q, r: c.r, graine: Number(c.graine) }]));
+  const { rows: especes } = await base.query<{ id: string; regime: Regime }>("select id, regime from espece where id = any($1::text[])", [
+    [...new Set(ensembles.map((e) => e.especeId))],
+  ]);
+  const regimes = new Map(especes.map((e) => [e.id, e.regime]));
+  const attaques: (Ensemble & { le: Date })[] = [];
+  for (const e of ensembles) {
+    const laCase = lesCases.get(e.caseId)!;
+    const hasards = (heure: number) =>
+      e.numero !== null
+        ? hasardsDeLAttaque(laCase, e.numero, e.expeditionId, heure)
+        : hasardsDeLAttaqueDUneBeteDeNaissance(laCase.graine, e.beteDeNaissanceId!, e.expeditionId, heure);
+    const le = instantDeLAttaque(e, chanceDAttaqueParHeure(regimes.get(e.especeId)!), hasards);
+    if (le && le >= de && le < a) attaques.push({ ...e, le });
+  }
+  if (attaques.length === 0) return;
+  // « attaque_le is null » : une attaque retenue ne change plus.
+  const { rows: retenues } = await base.query<{ expeditionId: number; especeId: string; le: Date; numero: string | null; beteDeNaissanceId: number | null }>(
+    `update rencontre r set attaque_le = v.le
+     from unnest($1::int[], $2::bigint[], $3::int[], $4::timestamptz[]) as v(expedition_id, numero, bete_de_naissance_id, le)
+     where r.expedition_id = v.expedition_id and (r.numero = v.numero or r.bete_de_naissance_id = v.bete_de_naissance_id)
+       and r.attaque_le is null
+     returning r.expedition_id as "expeditionId", r.espece_id as "especeId", r.attaque_le as le, r.numero,
+       r.bete_de_naissance_id as "beteDeNaissanceId"`,
+    [attaques.map((x) => x.expeditionId), attaques.map((x) => x.numero), attaques.map((x) => x.beteDeNaissanceId), attaques.map((x) => x.le)],
+  );
+  // US-0944 : chaque attaque retenue livre son combat, à son instant (src/expeditions/pertes.ts).
+  await subirLesCombats(
+    base,
+    retenues.map((r) => ({ ...r, numero: r.numero === null ? null : Number(r.numero) })),
+  );
+}
+
+/**
+ * US-0943 : les attaques de Bêtes trop fortes qu'a subies l'Expédition `expeditionId`, retenues jusqu'ici, dans l'ordre du
+ * temps : au plus une par Bête vue. US-0944 : chacune a livré son combat à l'instant où elle a été retenue
+ * (retenirLesAttaques).
+ */
+export async function attaquesSubies(base: Pool | PoolClient, expeditionId: number): Promise<AttaqueSubie[]> {
+  const { rows } = await base.query<AttaqueSubie>(
+    `select id as "rencontreId", espece_id as "especeId", attaque_le as le from rencontre
+     where expedition_id = $1 and attaque_le is not null
+     order by attaque_le, id`,
+    [expeditionId],
+  );
+  return rows;
 }
 
 /**

@@ -54,13 +54,16 @@ describe("barre du haut", () => {
     expect(regleDe(moyen, ".barre:has(.navigation) .ressources")).toContain("grid-area: bande;");
   });
 
-  it("sur un téléphone, pose cinq onglets égaux sous les Stocks, le médaillon au-dessus du nom (US-0324, US-0417, US-0901)", () => {
+  it("sur un téléphone, pose six onglets égaux sous les Stocks, le médaillon au-dessus du nom (US-0324, US-0417, US-0901, US-0801)", () => {
     const mobile = tablette(feuille());
-    expect(regleDe(mobile, ".entrees")).toContain("grid-template-columns: repeat(5, minmax(0, 1fr));");
+    expect(regleDe(mobile, ".entrees")).toContain("grid-template-columns: repeat(6, minmax(0, 1fr));");
     const entree = regleDe(mobile, ".entree");
     expect(entree).toContain("flex-direction: column;");
-    // 64 px par place sur 320 px : le nom en 11,5 px, pour que « Expéditions », « Habitants » et son point y tiennent.
+    // 65 px par place sur 390 px : le nom en 11,5 px, pour que « Expéditions », « Habitants » et son point y tiennent.
     expect(entree).toContain("font-size: 11.5px;");
+    // 53 px par place sur 320 px : le nom en 10,5 px, un peu resserré.
+    const petit = feuille().slice(feuille().indexOf("@media (max-width: 380px) {"));
+    expect(regleDe(petit, ".entree")).toMatch(/font-size: 10\.5px;[^}]*letter-spacing: -0\.02em;/);
   });
 
   it("marque l'entrée affichée en crème, d'un trait de cuivre dessous et d'un losange : jamais la couleur seule", () => {

@@ -11,7 +11,7 @@ import { rattraperLesAbsents } from "@/temps/absents";
 import { formaterMinutes } from "@/temps/affichage";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { dureeDuTrajetMinutes } from "./allure";
 import { lancerLExpedition } from "./depart";
 import { forceDUneBete } from "./force";
@@ -43,9 +43,17 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   let pool: Pool;
   let mondeId: number;
   const lancement = `recit-retour-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les comptes des Territoires nés pendant l'essai en cours. */
   const nes: string[] = [];
+  /**
+   * Les Cases où une Expédition de ce fichier a déjà séjourné : chacune a la sienne. Deux Territoires nés côte à côte
+   * prendraient sinon la même première Case calme, aux mêmes heures, et leurs récits diraient que d'autres Expéditions
+   * y séjournaient (US-0962).
+   */
+  const prises = new Set<number>();
   const apres = (instant: Date, ms: number) => new Date(instant.getTime() + ms);
 
   /** Un chef qui vient de naître dans le Monde d'essai, avec deux explorateurs : son Territoire et l'instant de sa naissance. */
@@ -53,13 +61,16 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
     const n = ++numero;
     nes.push(`${lancement}-${n}@essai.test`);
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Rec${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Rec", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur'), ($1, 'Ilda', 'explorateur')", [territoireId]);
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
   };
-  /** Les Cases libres du Monde du Territoire à ECART Cases de son Foyer, hors de celles de ses Bêtes de naissance (US-0975). */
+  /**
+   * Les Cases libres du Monde du Territoire à ECART Cases de son Foyer, hors de celles de ses Bêtes de naissance (US-0975)
+   * et de celles qu'un autre essai a prises.
+   */
   const casesAPortee = async (territoireId: number) =>
     (
       await pool.query<Coordonnees & { id: number }>(
@@ -70,7 +81,7 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
          order by c.q, c.r`,
         [territoireId, ECART],
       )
-    ).rows;
+    ).rows.filter((c) => !prises.has(c.id));
   /**
    * La première Case à ECART Cases du Foyer où se montrent `betes` Bêtes sauvages pendant le séjour de `sejour` minutes d'une
    * Expédition partie à `depart` : aucune pour une Case calme.
@@ -78,7 +89,10 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
   const uneCaseOu = async (territoireId: number, depart: Date, sejour: number, betes: number): Promise<Coordonnees> => {
     const arrivee = apres(depart, ALLER * MINUTE);
     for (const c of await casesAPortee(territoireId)) {
-      if ((await betesSauvagesDUneCase(pool, c.id, arrivee, apres(arrivee, sejour * MINUTE))).length === betes) return { q: c.q, r: c.r };
+      if ((await betesSauvagesDUneCase(pool, c.id, arrivee, apres(arrivee, sejour * MINUTE))).length === betes) {
+        prises.add(c.id);
+        return { q: c.q, r: c.r };
+      }
     }
     throw new Error(`Aucune Case à ${ECART} Cases où se montrent ${betes} Bêtes.`);
   };
@@ -104,7 +118,10 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
       for (let depart = apresLe; depart < apres(apresLe, 9 * jour); depart = apres(depart, heure)) {
         const arrivee = apres(depart, aller * MINUTE);
         const montrees = betes.get(c.id)!.filter((b) => b.arrivee < apres(arrivee, sejour * MINUTE) && b.depart > arrivee);
-        if (conviennent(montrees)) return { destination: { q: c.q, r: c.r }, depart, montrees };
+        if (conviennent(montrees)) {
+          prises.add(c.id);
+          return { destination: { q: c.q, r: c.r }, depart, montrees };
+        }
       }
     }
     return null;
@@ -169,6 +186,9 @@ describe.skipIf(!URL_TEST)("le récit de retour d'une Expédition (US-0917, sur 
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    // Les Bêtes que ce fichier a fait partir lors d'un lancement précédent sont revenues sur leur Case : un départ resté
+    // en base empêcherait de les apprivoiser de nouveau.
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
   });
   afterEach(async () => {
     // Chaque essai rend ses Foyers à la Couronne du Monde d'essai.

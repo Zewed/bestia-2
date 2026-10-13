@@ -73,6 +73,15 @@ section.recap {
   margin: 16px 0 2px;
 }
 
+/* US-0949 : l'escorte face à la Bête repérée : « Assez forte » en feuille, « Trop faible : il manque… » en braise. */
+.lignes [data-force="assez"] {
+  color: var(--feuille);
+}
+
+.lignes [data-force="manque"] {
+  color: var(--braise);
+}
+
 /* Le retour prévu, entre deux filets : son libellé à gauche, l'heure en cuivre clair à droite. */
 .retourPrevu {
   margin: 14px 0 0;
@@ -93,6 +102,18 @@ section.recap {
   color: var(--cuivre-clair);
   font: var(--graisse-titre) 16px / 1 var(--police);
   font-variant-numeric: tabular-nums;
+}
+
+/* US-0949 : une Bête repérée qui ne sera plus là à l'arrivée, en braise, au-dessus du retour prévu. */
+.retourPrevu [data-partie] {
+  margin-bottom: 9px;
+}
+
+.retourPrevu [data-partie] dd {
+  color: var(--braise);
+  font-size: 14px;
+  line-height: 1.25;
+  text-align: right;
 }
 
 /* Ceux qui partent mangent toujours : un rappel discret, sous le retour prévu. */

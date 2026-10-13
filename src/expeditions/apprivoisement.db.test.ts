@@ -9,7 +9,7 @@ import { type Coordonnees, distance } from "@/monde/hex";
 import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { dureeDuTrajetMinutes } from "./allure";
 import { lancerLExpedition } from "./depart";
 import { forceDUneBete } from "./force";
@@ -35,6 +35,8 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
   let especes: Map<string, Espece>;
   let [forte, faible]: Espece[] = [];
   const lancement = `apprivoisement-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les Cases déjà prises par un essai de ce fichier : chacun a la sienne, sans Expédition d'un autre. */
   const prises = new Set<number>();
@@ -48,7 +50,7 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
   const naitre = async (explorateurs = 1) => {
     const n = ++numero;
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Appr${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Appr", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query(`insert into habitant (territoire_id, prenom, metier) select $1, 'Essai', 'explorateur' from generate_series(1, $2)`, [territoireId, explorateurs]);
@@ -223,10 +225,10 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
 
   /**
    * Trois Territoires sur la Case d'une Bête rare : avant l'Apprivoisement, une escorte trop faible et une Expédition sans
-   * escorte la voient ; l'escorte forte de B arrive une heure après elle et l'emmène ; ensuite, ni une autre de B, ni une
-   * escorte forte de A, ni celle de C arrivée au même instant mais partie plus tard, ne la voient. `rattrapages` met les
-   * Territoires à l'heure ; rend ce que chaque Expédition a vu et l'instant où la Bête est partie (vues), à côté de ce
-   * qu'on en attend (attendues).
+   * escorte la voient ; l'escorte forte de B arrive une heure après elle et l'emmène ; celle de C, trop faible, arrivée au
+   * même instant, la voit aussi (US-0962), sans prendre part au tirage (US-0963) ; ensuite, ni une autre de B, ni une
+   * escorte forte de A, ne la voient. `rattrapages` met les Territoires à l'heure ; rend ce que chaque Expédition a vu et
+   * l'instant où la Bête est partie (vues), à côté de ce qu'on en attend (attendues).
    */
   const troisTerritoires = async (rattrapages: (a: number, b: number, c: number, debut: Date, fin: Date) => Promise<void>) => {
     const [a, b, c] = [await naitre(), await naitre(), await naitre()];
@@ -235,7 +237,7 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
     const faibleDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, -2 * HEURE), 6 * HEURE, [[faible, 1]]);
     const sansEscorteDeC = await poser(c.territoireId, caseId, apres(bete.arrivee, 30), 4 * HEURE);
     const forteDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
-    const forteDeCEnMemeTemps = await poser(c.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[forte, 1]]);
+    const faibleDeCEnMemeTemps = await poser(c.territoireId, caseId, apres(bete.arrivee, HEURE), 4 * HEURE, [[faible, 1]]);
     const autreDeB = await poser(b.territoireId, caseId, apres(bete.arrivee, 90), 4 * HEURE, [[forte, 2]]);
     const forteDeA = await poser(a.territoireId, caseId, apres(bete.arrivee, 2 * HEURE), 4 * HEURE, [[forte, 5]]);
     await rattrapages(a.territoireId, b.territoireId, c.territoireId, debut, fin);
@@ -246,7 +248,7 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
         faibleDeA: [{ ...sans, depuisLApparition: 0, apprivoisee: false }],
         sansEscorteDeC: [{ ...sans, depuisLApparition: 30 * MINUTE_MS, apprivoisee: false }],
         forteDeB: [{ ...sans, depuisLApparition: HEURE * MINUTE_MS, apprivoisee: true }],
-        forteDeCEnMemeTemps: [],
+        faibleDeCEnMemeTemps: [{ ...sans, depuisLApparition: HEURE * MINUTE_MS, apprivoisee: false }],
         autreDeB: [],
         forteDeA: [],
         partie: apres(bete.arrivee, HEURE),
@@ -255,7 +257,7 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
         faibleDeA: await vues(faibleDeA),
         sansEscorteDeC: await vues(sansEscorteDeC),
         forteDeB: await vues(forteDeB),
-        forteDeCEnMemeTemps: await vues(forteDeCEnMemeTemps),
+        faibleDeCEnMemeTemps: await vues(faibleDeCEnMemeTemps),
         autreDeB: await vues(autreDeB),
         forteDeA: await vues(forteDeA),
         partie: await partieLe(caseId, bete.numero),
@@ -269,14 +271,15 @@ describe.skipIf(!URL_TEST)("la Bête à portée suit l'Expédition (US-0934, sur
       for (const t of [b, a, c]) await rattraperA(t, fin);
     });
     expect(vues).toEqual(attendues);
-  });
+    // 60 s, comme l'essai par tranches : trouver une Bête rare seule coûte plus ou moins selon où naît le Foyer.
+  }, 60_000);
 
   it("la même Bête suit la même Expédition quand son Territoire est rattrapé le dernier, après les autres", async () => {
     const { vues, attendues } = await troisTerritoires(async (a, b, c, _debut, fin) => {
       for (const t of [a, c, b]) await rattraperA(t, fin);
     });
     expect(vues).toEqual(attendues);
-  });
+  }, 60_000);
 
   it("la même Bête suit la même Expédition quand les Territoires sont rattrapés par tranches, chacun à ses heures", async () => {
     const { vues, attendues } = await troisTerritoires(async (a, b, c, debut, fin) => {

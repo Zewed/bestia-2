@@ -8,6 +8,7 @@ import { Bloc } from "@/components/Bloc";
 import kit from "@/components/kit.module.css";
 import { Paysage } from "@/components/Paysage";
 import { getPool } from "@/db";
+import { betesReperees } from "@/expeditions/betes-reperees";
 import { casesDuFoyer } from "@/expeditions/choix-de-destination";
 import { destinationDUneCase } from "@/expeditions/destination";
 import { betesDisponibles } from "@/monde/effectif";
@@ -19,7 +20,7 @@ import { AucunExplorateurLibre } from "./AucunExplorateurLibre";
 import { Escorte } from "./Escorte";
 import { Explorateurs } from "./Explorateurs";
 import styles from "./page.module.css";
-import { type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
+import { type BeteAChercher, type DestinationChoisie, Recapitulatif } from "./Recapitulatif";
 import { SansEscorte } from "./SansEscorte";
 import { Sejour } from "./Sejour";
 import { VersLaCarte } from "./VersLaCarte";
@@ -102,6 +103,17 @@ const destinationChoisie = (fiche: Fiche | FicheInconnue): DestinationChoisie =>
 });
 
 /**
+ * US-0949 : les Bêtes que le joueur a repérées sur la Case `c` (betesReperees), à l'heure du jeu `instant`, telles que le
+ * récapitulatif les compare à l'escorte : le nom et la force de leur Espèce, sa Rareté, et jusqu'à quand chacune devrait
+ * rester.
+ */
+async function betesAChercher(territoireId: number, c: Coordonnees, instant: Date): Promise<BeteAChercher[]> {
+  return (await betesReperees(getPool(), territoireId, instant))
+    .filter((b) => b.laCase.q === c.q && b.laCase.r === c.r)
+    .map(({ espece, force, rareteId, jusquA }) => ({ espece, force, rareteId, jusquA }));
+}
+
+/**
  * US-0901 : l'écran d'Expédition, une page du jeu. Depuis la fiche d'une Case, la Case est en paramètre et devient la
  * destination, lue dans le Monde du Territoire de la garde, jamais dans l'adresse, qui ne dit que la Case. Depuis la
  * navigation, sans Case, il n'a pas de destination et mène à la carte pour en choisir une ; de même pour une Case que
@@ -109,7 +121,8 @@ const destinationChoisie = (fiche: Fiche | FicheInconnue): DestinationChoisie =>
  * y touche revient ici ; une destination déjà choisie se change de même. Une Case d'un Territoire, le sien (son Foyer
  * compris) ou celui d'un autre joueur, est refusée par un message, à la place de la destination. Sur un téléphone,
  * une seule colonne, et chaque choix au pouce. Sans session, la garde mène à la connexion, qui ramène ici avec la
- * même Case. US-0910 : l'écran finit sur le récapitulatif, et son départ.
+ * même Case. US-0910 : l'écran finit sur le récapitulatif, et son départ. US-0949 : avec les Bêtes que le joueur a
+ * repérées sur la Case de destination, pour qu'il compare son escorte à chacune avant de partir la chercher.
  *
  * Sur ordinateur, deux colonnes sous le titre : à gauche la destination en bandeau, son paysage peint, puis les
  * explorateurs et l'escorte côte à côte, et le séjour ; à droite le récapitulatif, de toute la hauteur de l'écran, qui
@@ -137,6 +150,10 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
   const escorte = territoireId !== null ? await betesDisponibles(getPool(), territoireId) : [];
   const fiche = destination && "fiche" in destination ? destination.fiche : null;
   const refus = destination && "refus" in destination ? destination.refus : null;
+  const instant = maintenant();
+  const choisie = fiche ? destinationChoisie(fiche) : null;
+  // US-0949 : les Bêtes repérées sur la Case de destination ; aucune sans destination.
+  const betes = choisie && territoireId !== null ? await betesAChercher(territoireId, choisie, instant) : [];
   return (
     <main className={`${styles.page} ${styles.preparation}`}>
       <EnTete />
@@ -163,7 +180,7 @@ export default async function NouvelleExpedition({ searchParams }: PageProps<"/j
         <Sejour />
       </div>
       {/* US-0910 : tout ce qui a été choisi, à relire avant de partir, à l'heure et au rythme du jeu ; rien d'une Case refusée. */}
-      <Recapitulatif libres={explorateurs.libres} especes={escorte} destination={fiche ? destinationChoisie(fiche) : null} maintenant={maintenant()} vitesse={vitesse()} />
+      <Recapitulatif libres={explorateurs.libres} especes={escorte} destination={choisie} betes={betes} maintenant={instant} vitesse={vitesse()} />
     </main>
   );
 }

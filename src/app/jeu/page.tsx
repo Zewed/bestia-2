@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte, recitsNonLusALHeure, voyageursALHeure } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
+import { Bloc } from "@/components/Bloc";
 import { Illustration } from "@/components/Illustration";
 import kit from "@/components/kit.module.css";
 import { Medaillon } from "@/components/Medaillon";
 import { getPool } from "@/db";
 import { recapitulatifDAbsence } from "@/monde/absence";
+import { nombreDeBetes } from "@/monde/effectif";
 import { departsNonLus, departsPendantLAbsence } from "@/monde/famine";
 import { stocksDuTerritoire } from "@/monde/stocks";
 import { foyerDuTerritoire } from "@/monde/territoire";
@@ -48,6 +50,9 @@ const ecriteau = (...classes: string[]) => [kit.panneau, kit.verre, styles.ecrit
  *
  * Posés sur la scène comme des écriteaux, ce que la navigation signale déjà, lu de même : les Voyageurs qui attendent aux
  * portes (US-0332), « Voir » menant aux Habitants, et les Récits non lus (US-0324), « Lire » menant aux Récits.
+ *
+ * US-0810 : sous la production, le bloc « Bêtes » dit le total des Bêtes du Territoire et ouvre la page Bêtes : l'entrée
+ * de son effectif, sans septième onglet dans la navigation.
  */
 export default async function Foyer() {
   await connection();
@@ -58,6 +63,7 @@ export default async function Foyer() {
   const stocks = territoireId === null ? [] : await stocksDuTerritoire(getPool(), territoireId);
   const departs = territoireId === null ? null : await departsNonLus(getPool(), territoireId);
   const [voyageurs, nonLus] = territoireId === null ? [0, 0] : await Promise.all([voyageursALHeure(territoireId), recitsNonLusALHeure(territoireId)]);
+  const betes = territoireId === null ? 0 : await nombreDeBetes(getPool(), territoireId);
   return (
     <main className={`${styles.page} ${foyer ? styles.avecProduction : ""}`}>
       {departs ? (
@@ -101,6 +107,13 @@ export default async function Foyer() {
         </p>
       ) : null}
       {foyer ? <BlocProduction biome={foyer.biome.nom} productions={stocks} /> : null}
+      {foyer ? (
+        <Link href="/jeu/betes" className={styles.lienBetes}>
+          <Bloc titre="Bêtes" verre>
+            <strong className={styles.nombreDeBetes}>{betes}</strong>
+          </Bloc>
+        </Link>
+      ) : null}
     </main>
   );
 }

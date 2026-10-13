@@ -337,3 +337,39 @@ export const BROUILLARD_LEVE_AUTOUR_DE_LA_DESTINATION_CASES = 2;
  */
 export const SIMULATION_DES_SEXES_APPRIVOISEMENTS = 10_000;
 export const SIMULATION_DES_SEXES_TOLERANCE_POINTS = 2;
+
+/**
+ * US-0943 : tant qu'une Bête trop forte pour l'escorte et l'Expédition qui la voit sont sur la même Case, la Bête a 10 %
+ * de chance (valeur provisoire, à régler en jouant) d'attaquer l'Expédition par heure passée ensemble ; doublée pour un
+ * carnivore, divisée par deux pour un herbivore, telle quelle pour un omnivore (src/expeditions/attaque.ts).
+ */
+export const CHANCE_D_ATTAQUE_PAR_HEURE = 0.1;
+
+/**
+ * US-0944 : au combat, la Bête trop forte l'emporte toujours, et l'escorte perd une part de ses Bêtes qui grandit avec
+ * l'écart des forces : l'écart (force de la Bête moins celle de l'escorte) rapporté à la force de la Bête, multiplié par
+ * ce chiffre (valeur provisoire, à régler en jouant), jusqu'à toute l'escorte (src/expeditions/combat.ts).
+ */
+export const PERTES_PAR_ECART_DES_FORCES = 1;
+
+/**
+ * US-0951 : parmi les Bêtes qu'une Espèce de l'escorte perd au combat, la part qui n'est que blessée (valeur provisoire, à
+ * régler en jouant), arrondie au plus proche, la demie aux Blessés ; les autres meurent (src/expeditions/combat.ts).
+ */
+export const PART_DES_BLESSES = 0.5;
+
+/**
+ * US-0822 : les Places qu'offre l'Habitat du Foyer (valeur provisoire, à régler en jouant), où logent les Bêtes de
+ * l'effectif, chacune selon la taille de son Espèce : une souris en prend 1, un pigeon près de 9, une poule 32
+ * (docs/adr/0007) ; src/monde/habitat.ts. Rien à voir avec PLACES_DU_FOYER, les places d'Habitant (US-0305).
+ */
+export const PLACES_DE_L_HABITAT_DU_FOYER = 500;
+
+/**
+ * US-0968 : la simulation des chances de la page de contrôle juge 10 000 Rencontres disputées (valeur provisoire, à régler
+ * en jouant) entre des Expéditions de forces données, et échoue dès que la part des victoires d'une escorte s'écarte de
+ * plus de 2 points de pourcentage (valeur provisoire, à régler en jouant) de sa part attendue, à proportion de sa force
+ * (US-0963) : comme la simulation des sexes, au moins quatre écarts types à 10 000 tirages.
+ */
+export const SIMULATION_DES_CHANCES_RENCONTRES = 10_000;
+export const SIMULATION_DES_CHANCES_TOLERANCE_POINTS = 2;

@@ -734,7 +734,11 @@ export const expedition = pgTable(
 /**
  * L'escorte d'une Expédition (US-0911) : Espèce par Espèce, combien de ses Bêtes l'accompagnent. Elles restent dans
  * l'effectif du Territoire, qui les compte par sexe (ADR 0002) : l'escorte ne choisit pas le sexe, et les Bêtes sorties
- * se retranchent des disponibles (src/monde/effectif.ts). Elle part avec l'Expédition.
+ * se retranchent des disponibles (src/monde/effectif.ts). Elle part avec l'Expédition. US-0944 : `perdues`, combien de
+ * ces Bêtes l'escorte a perdues au combat (src/expeditions/pertes.ts), sorties de l'effectif à cet instant ; `nombre`
+ * reste celui du départ, dont se tire la force de l'escorte face aux Bêtes qu'elle rencontre (US-0934). US-0951 :
+ * `blessees`, combien des perdues ne sont que des Blessés : elles restent dans l'effectif et rentrent au Foyer avec
+ * l'Expédition ; seules les autres, mortes, en sont sorties.
  */
 export const expeditionEscorte = pgTable(
   "expedition_escorte",
@@ -746,8 +750,15 @@ export const expeditionEscorte = pgTable(
       .notNull()
       .references(() => espece.id),
     nombre: integer("nombre").notNull(),
+    perdues: integer("perdues").notNull().default(0),
+    blessees: integer("blessees").notNull().default(0),
   },
-  (t) => [primaryKey({ columns: [t.expeditionId, t.especeId] }), check("expedition_escorte_au_moins_une", sql`${t.nombre} > 0`)],
+  (t) => [
+    primaryKey({ columns: [t.expeditionId, t.especeId] }),
+    check("expedition_escorte_au_moins_une", sql`${t.nombre} > 0`),
+    check("expedition_escorte_perdues_parmi_elles", sql`${t.perdues} between 0 and ${t.nombre}`),
+    check("expedition_escorte_blessees_parmi_les_perdues", sql`${t.blessees} between 0 and ${t.perdues}`),
+  ],
 );
 
 /**
@@ -761,7 +772,9 @@ export const expeditionEscorte = pgTable(
  * `vue_le` : c'est l'Apprivoisement, et elle a quitté sa Case (src/expeditions/apprivoisement.ts). Une seule Expédition
  * par Bête : une Bête sauvage ordinaire laisse sa trace dans bete_partie, une Bête de naissance ici. US-0937 : `sexe`,
  * celui de la Bête apprivoisée, tiré à chances égales à l'Apprivoisement (src/expeditions/sexe.ts), qui ne change plus ;
- * null pour une Bête restée sur sa Case.
+ * null pour une Bête restée sur sa Case. US-0943 : `attaque_le`, l'instant du jeu où la Bête, trop forte pour l'escorte et
+ * restée sur sa Case, a attaqué l'Expédition, au plus une fois par Bête et par Expédition (src/expeditions/attaque.ts) ;
+ * null tant qu'elle ne l'a pas fait. Le combat (US-0944) la lira.
  */
 export const rencontre = pgTable(
   "rencontre",
@@ -780,6 +793,7 @@ export const rencontre = pgTable(
     vueLe: timestamp("vue_le", { withTimezone: true }).notNull(),
     apprivoisee: boolean("apprivoisee").notNull().default(false),
     sexe: sexe("sexe"),
+    attaqueLe: timestamp("attaque_le", { withTimezone: true }),
   },
   (t) => [
     unique("rencontre_une_par_bete_sauvage").on(t.expeditionId, t.numero),
@@ -789,6 +803,8 @@ export const rencontre = pgTable(
     check("rencontre_une_bete", sql`(${t.numero} is null) <> (${t.beteDeNaissanceId} is null)`),
     check("rencontre_apres_l_apparition", sql`${t.vueLe} >= ${t.apparueLe}`),
     check("rencontre_sexe_de_l_apprivoisee", sql`(${t.sexe} is not null) = ${t.apprivoisee}`),
+    // US-0943 : seule une Bête restée sur sa Case attaque, jamais avant sa Rencontre.
+    check("rencontre_attaque_de_la_bete_restee", sql`${t.attaqueLe} is null or (not ${t.apprivoisee} and ${t.attaqueLe} >= ${t.vueLe})`),
   ],
 );
 

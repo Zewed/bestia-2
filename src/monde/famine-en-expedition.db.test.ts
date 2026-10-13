@@ -3,10 +3,11 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { lancerLExpedition } from "@/expeditions/depart";
+import { betesSauvagesDesCases } from "@/monde/betes-sauvages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
-import { mondeDEssai, poolDeTest, preparerMondeDeTest, territoireDuCompte, URL_TEST } from "@/test/base";
+import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { EN_EXPEDITION } from "./etat-habitant";
 import { DEPART_DE_FAMINE } from "./famine";
 import { entretienDesHabitants, habitantsDuTerritoire } from "./habitants";
@@ -28,6 +29,8 @@ describe.skipIf(!URL_TEST)("ceux qui sont partis mangent toujours (US-0921, sur 
   let pool: Pool;
   let mondeId: number;
   const lancement = `partis-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
+  const suffixe = suffixeDEssai();
   let numero = 0;
   /** Les comptes des Territoires nés pendant l'essai en cours. */
   const nes: string[] = [];
@@ -40,7 +43,7 @@ describe.skipIf(!URL_TEST)("ceux qui sont partis mangent toujours (US-0921, sur 
     const n = ++numero;
     nes.push(`${lancement}-${n}@essai.test`);
     const compte = (await creerCompte(pool, `${lancement}-${n}@essai.test`, "une phrase de passe"))!;
-    const nom = `Part${lancement.slice(-5).replace(/[^a-z]/g, "x")}${"abcdefghij"[Math.floor(n / 10) % 10]}${"abcdefghij"[n % 10]}`;
+    const nom = nomDEssai("Part", suffixe, n);
     expect(await enregistrerNomDeChef(pool, compte.id, nom, Math.random, mondeId)).toMatchObject({ statut: "enregistre" });
     const territoireId = (await territoireDuCompte(pool, compte.id))!;
     await pool.query(
@@ -71,16 +74,23 @@ describe.skipIf(!URL_TEST)("ceux qui sont partis mangent toujours (US-0921, sur 
   const vingtHeures = () => naitre(VINGT, "72", "288");
   const apres = (ne: Date, ms: number) => new Date(ne.getTime() + ms);
 
-  /** Une Case libre du Monde du Territoire, à deux Cases de son Foyer. */
-  const destination = async (territoireId: number): Promise<Coordonnees> => {
-    const { rows } = await pool.query<Coordonnees>(
-      `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
+  /**
+   * Une Case libre du Monde du Territoire, à deux Cases de son Foyer, où ne se montre aucune Bête sauvage plus rare que
+   * commune pendant les 40 heures des essais : trop forte pour l'escorte, elle pourrait l'attaquer, et le combat lui
+   * coûterait des Bêtes (US-0944) ; une commune suit l'Expédition (US-0935), et n'entrerait dans l'effectif qu'au retour.
+   */
+  const destination = async (t: { territoireId: number; ne: Date }): Promise<Coordonnees> => {
+    const { rows } = await pool.query<Coordonnees & { id: number }>(
+      `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
          join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
        where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = 2
-       order by c.q, c.r limit 1`,
-      [territoireId],
+       order by c.q, c.r`,
+      [t.territoireId],
     );
-    return rows[0];
+    const betes = await betesSauvagesDesCases(pool, rows.map((c) => c.id), t.ne, apres(t.ne, 40 * HEURE));
+    const calme = rows.find((c) => betes.get(c.id)!.every((b) => b.rareteId === "commune"));
+    if (!calme) throw new Error("Aucune Case à deux Cases du Foyer sans Bête plus rare que commune pendant les essais.");
+    return { q: calme.q, r: calme.r };
   };
   /**
    * US-0911 : tous les explorateurs du Territoire partent en Expédition à sa naissance, escortés de deux souris, pour
@@ -94,7 +104,7 @@ describe.skipIf(!URL_TEST)("ceux qui sont partis mangent toujours (US-0921, sur 
     const depart = await lancerLExpedition(
       pool,
       t.territoireId,
-      { destination: await destination(t.territoireId), explorateurs: rows[0].n, escorte: new Map([["souris", 2]]), sejourMinutes: 7 * 24 * 60 },
+      { destination: await destination(t), explorateurs: rows[0].n, escorte: new Map([["souris", 2]]), sejourMinutes: 7 * 24 * 60 },
       t.ne,
     );
     expect(depart).toEqual({ expeditionId: expect.any(Number) });
@@ -158,6 +168,9 @@ describe.skipIf(!URL_TEST)("ceux qui sont partis mangent toujours (US-0921, sur 
     pool = poolDeTest();
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
+    // Les Bêtes que ce fichier a fait partir lors d'un lancement précédent sont revenues sur leur Case : un départ resté
+    // en base empêcherait de les apprivoiser de nouveau.
+    await pool.query("delete from bete_partie p using case_du_monde c where c.id = p.case_id and c.monde_id = $1", [mondeId]);
   });
   afterEach(async () => {
     // Chaque essai rend ses Foyers à la Couronne du Monde d'essai, que les autres fichiers remplissent en même temps.
