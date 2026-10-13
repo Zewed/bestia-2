@@ -3,7 +3,7 @@
 // Nourriture se disent avec US-0814 et se paient au lancement (US-0815). Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import type { Regime } from "@/expeditions/attaque";
+import type { Regime } from "./effectif";
 import { JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE } from "@/reglages";
 
 /** La Nourriture en Stock au Territoire, Viande et Végétaux, en quantités exactes. */
