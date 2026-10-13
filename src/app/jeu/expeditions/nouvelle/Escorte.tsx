@@ -33,7 +33,6 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
 
-
 /** US-0937 : « 2 mâles · 1 femelle », « 0 mâle · 3 femelles ». */
 const sexes = ({ males, femelles }: Pick<EspeceDisponible, "males" | "femelles">) =>
   `${males} mâle${males > 1 ? "s" : ""} · ${femelles} femelle${femelles > 1 ? "s" : ""}`;

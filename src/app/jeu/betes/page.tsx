@@ -11,7 +11,7 @@ import { PastilleRarete } from "@/components/PastilleRarete";
 import { Paysage } from "@/components/Paysage";
 import { PlacesDeLHabitat } from "@/components/PlacesDeLHabitat";
 import { getPool } from "@/db";
-import { blessesAuFoyer } from "@/monde/blesses";
+import { blessesAuFoyer, type GroupeDeBlesses } from "@/monde/blesses";
 import { blessesAffiches, blessesDans } from "@/monde/blesses-affiches";
 import { effectifParEspece } from "@/monde/effectif";
 import { placesDeLHabitat } from "@/monde/habitat";
@@ -50,7 +50,7 @@ export default async function Betes() {
   const { territoireId } = await exigerCompte("/jeu/betes");
   const especes = territoireId === null ? [] : await effectifParEspece(getPool(), territoireId);
   const instant = maintenant();
-  const groupes = territoireId === null || especes.length === 0 ? new Map() : await blessesAuFoyer(getPool(), territoireId, instant);
+  const groupes = territoireId === null || especes.length === 0 ? new Map<string, GroupeDeBlesses[]>() : await blessesAuFoyer(getPool(), territoireId, instant);
   const blesses = (especeId: string, effectif: number) => blessesAffiches(groupes.get(especeId) ?? [], instant, effectif).map((g) => `dont ${blessesDans(g)}`);
   const total = especes.reduce((somme, espece) => somme + espece.effectif, 0);
   const places = territoireId === null || especes.length === 0 ? null : await placesDeLHabitat(getPool(), territoireId);
