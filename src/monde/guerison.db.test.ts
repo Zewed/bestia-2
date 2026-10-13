@@ -22,7 +22,7 @@ import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMond
 import { blessesAuFoyer } from "./blesses";
 import { blessesAffiches } from "./blesses-affiches";
 import { type BeteSauvage, betesSauvagesDesCases } from "./betes-sauvages";
-import { effectifParEspece } from "./effectif";
+import { betesDisponibles, effectifParEspece } from "./effectif";
 import type { Coordonnees } from "./hex";
 import { estUnRecitDeGuerison } from "./recit-de-guerison";
 import { recitsDuTerritoire } from "./recits";
@@ -568,4 +568,18 @@ describe.skipIf(!URL_TEST)("la guérison des Blessés avec le temps (US-0954, su
     // Rien n'est resté des deux essais : ni l'un ni l'autre n'est encore rentré.
     expect([await lus(avecEleveur, a.retour), await lus(sansEleveur, b.retour)]).toEqual([{}, {}]);
   }, 120_000);
+
+  it("soignés, ils redeviennent disponibles pour une escorte à leur guérison, GUERISON_DES_BLESSES_SOIGNES_HEURES après leur retour (US-0953, US-0955)", async () => {
+    const t = await naitre();
+    await engagerUnEleveur(t.territoireId);
+    const { retour } = await partir(t.territoireId, t.ne, [["souris", 2]], [["souris", 2, 2]]);
+    const guerison = apres(retour, GUERISON_DES_BLESSES_SOIGNES_HEURES * HEURE);
+    const souris = async (instant: Date) => {
+      await rattraper("territoire", t.territoireId, { pool, jusqua: instant });
+      const { disponibles, blesses } = (await betesDisponibles(pool, t.territoireId, instant)).find((e) => e.id === "souris")!;
+      return { disponibles, blesses };
+    };
+    expect(await souris(apres(guerison, -1))).toEqual({ disponibles: 2, blesses: 2 });
+    expect(await souris(guerison)).toEqual({ disponibles: 4, blesses: undefined });
+  }, 60_000);
 });
