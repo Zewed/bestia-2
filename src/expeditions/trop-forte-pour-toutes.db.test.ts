@@ -66,10 +66,11 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
   const lus = {} as Record<Maniere, { expeditions: Record<Joueur, Lue>; partie: boolean; recits: Record<Joueur, string[]> }>;
   const apres = (instant: Date, minutes: number) => new Date(instant.getTime() + minutes * MINUTE_MS);
   /**
-   * L'arrivée sur la Case de l'Expédition du joueur `joueur` : A et C une heure avant la Bête, B une heure après elle, pour
-   * que ses tirages se comptent depuis sa propre Rencontre, et non depuis l'apparition de la Bête.
+   * L'arrivée sur la Case de l'Expédition du joueur `joueur` : A et C une heure avant la Bête, B une heure et demie après
+   * elle, pour que ses tirages se comptent depuis sa propre Rencontre, et non depuis l'apparition de la Bête, à une heure
+   * près comme à la minute.
    */
-  const arrivee = (joueur: Joueur) => apres(bete.arrivee, joueur === "B" ? HEURE : -HEURE);
+  const arrivee = (joueur: Joueur) => apres(bete.arrivee, joueur === "B" ? HEURE + 30 : -HEURE);
   /** Les horaires de l'Expédition du joueur `joueur` : de son arrivée à une heure après le départ de la Bête. */
   const horaires = (joueur: Joueur): HorairesDUneExpedition => ({
     partLe: apres(arrivee(joueur), -TRAJET),
@@ -152,9 +153,9 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     }
     if (!caseId) throw new Error("Aucune Bête plus rare seule autour du Foyer de A.");
 
-    // Les identifiants des trois Expéditions, tels que la Bête attaque A, puis B, plus tard, et épargne C : ses tirages
-    // dépendent de l'identifiant de chacune, le même dans toutes les manières, et se comptent depuis sa propre Rencontre,
-    // dès son arrivée ou celle de la Bête.
+    // Les identifiants des trois Expéditions, tels que la Bête attaque A une fois B arrivée, puis B, plus tard, et épargne
+    // C : ses tirages dépendent de l'identifiant de chacune, le même dans toutes les manières, et se comptent depuis sa
+    // propre Rencontre, dès son arrivée ou celle de la Bête. A et B sont ainsi ensemble sur la Case quand A fuit.
     const promise = (joueur: Joueur, id: number) =>
       attaqueTiree(pool, { caseId, especeId: bete.especeId, numero: bete.numero }, id, {
         debut: new Date(Math.max(bete.arrivee.getTime(), arrivee(joueur).getTime())),
@@ -163,6 +164,7 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     const candidats: Record<Joueur, { id: number; attaque: Date | null }[]> = { A: [], B: [], C: [] };
     const trouves = () => {
       for (const a of candidats.A) {
+        if (a.attaque! <= arrivee("B")) continue;
         const b = candidats.B.find((x) => x.id !== a.id && x.attaque! > a.attaque!);
         const c = candidats.C.find((x) => x.id !== a.id && x.id !== b?.id);
         if (b && c) return { A: a, B: b, C: c };
@@ -236,7 +238,8 @@ describe.skipIf(!URL_TEST)("une Bête trop forte pour toutes les Expéditions de
     expect(lues.A.attaques).toEqual([expeditions.A.attaque]);
     expect(lues.B.attaques).toEqual([expeditions.B.attaque]);
     expect(lues.C.attaques).toEqual([]);
-    expect(expeditions.A.attaque! < expeditions.B.attaque!).toBe(true);
+    // B était déjà sur la Case quand A a fui : elle y est restée, exposée, et la Bête l'a attaquée à son tour.
+    expect(arrivee("B") < expeditions.A.attaque! && expeditions.A.attaque! < expeditions.B.attaque!).toBe(true);
   });
 
   it.each(MANIERES)("%s : chaque attaquée fuit et rentre aussitôt ; l'épargnée poursuit son séjour jusqu'au bout", (maniere) => {
