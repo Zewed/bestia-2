@@ -670,6 +670,26 @@ export const effectif = pgTable(
 );
 
 /**
+ * US-0837 : les Bêtes d'un Territoire affectées au Rôle de leur Espèce, quand ce Rôle sert au Foyer (src/monde/roles.ts) :
+ * une ligne par Espèce, avec leur nombre, jamais négatif. Comptées et non désignées, comme l'effectif (ADR 0002), dont
+ * elles font toujours partie. Le nombre retenu peut dépasser celui des Bêtes valides au Foyer, quand des affectées sortent
+ * en escorte ou rentrent blessées : seules les valides se lisent affectées. Elle part avec le Territoire.
+ */
+export const affectation = pgTable(
+  "affectation",
+  {
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    nombre: integer("nombre").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.territoireId, t.especeId] }), check("affectation_jamais_negative", sql`${t.nombre} >= 0`)],
+);
+
+/**
  * Une Bête de naissance (US-0975) : une Bête sauvage commune posée à la naissance d'un Foyer sur une Case libre à portée
  * d'exploration de départ, une par Case, réservée à son Territoire : les Expéditions des autres ne la rencontrent pas.
  * Contrairement aux apparitions ordinaires, qui se recalculent à la demande (src/monde/betes-sauvages.ts), elle est
