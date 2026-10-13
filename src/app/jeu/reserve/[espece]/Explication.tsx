@@ -7,7 +7,9 @@ import styles from "./page.module.css";
 /**
  * US-0807 : une explication qu'ouvre le nom d'une caractéristique : ouverte, un toucher ailleurs, Échap ou son bouton la
  * referment ; Échap et le bouton rendent le regard au nom. Un toucher sur l'explication elle-même la laisse ouverte. Une
- * à la fois : en ouvrir une autre, c'est toucher ailleurs.
+ * à la fois : en ouvrir une autre, c'est toucher ailleurs. Le toucher ailleurs se lit au clic, pas à l'appui : fermée dès
+ * l'appui, l'explication remontait les lignes du dessous avant que le doigt ne se lève, et le clic tombait à côté du nom
+ * touché. Faire défiler la page ne la ferme pas.
  */
 function useExplication() {
   const [ouverte, setOuverte] = useState(false);
@@ -16,7 +18,7 @@ function useExplication() {
 
   useEffect(() => {
     if (!ouverte) return;
-    const toucherAilleurs = (evenement: PointerEvent) => {
+    const toucherAilleurs = (evenement: MouseEvent) => {
       const cible = evenement.target as Node;
       if (!nom.current?.contains(cible) && !explication.current?.contains(cible)) setOuverte(false);
     };
@@ -25,10 +27,10 @@ function useExplication() {
       setOuverte(false);
       nom.current?.focus();
     };
-    document.addEventListener("pointerdown", toucherAilleurs);
+    document.addEventListener("click", toucherAilleurs);
     document.addEventListener("keydown", touche);
     return () => {
-      document.removeEventListener("pointerdown", toucherAilleurs);
+      document.removeEventListener("click", toucherAilleurs);
       document.removeEventListener("keydown", touche);
     };
   }, [ouverte]);
