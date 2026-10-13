@@ -33,8 +33,9 @@
   gap: 10px;
 }
 
-/* Le pas du kit, qui peut céder de sa largeur au champ. */
+/* Le pas du kit (fixe chez lui), qui cède ici de sa largeur, celle du champ, quand la ligne manque de place. */
 .pas {
+  flex: 0 1 auto;
   min-width: 0;
 }
 
@@ -53,6 +54,11 @@
   background: transparent;
   font-size: 16px;
   font-variant-numeric: tabular-nums;
+}
+
+/* Plus fort que le nombre du pas du kit (40 px au moins), pour que le champ puisse céder toute sa largeur. */
+.quantite .pas .champ {
+  min-width: 0;
 }
 
 .champ:focus-visible {
@@ -102,9 +108,12 @@
   margin-top: 0;
 }
 
-/* Au pouce, sur un téléphone : « − », « + » et « Max » ont 44 px de surface (plus précis que le pas du kit), comme l'escorte. */
+/*
+ * Au pouce, sur un téléphone : « − », « + » et « Max » ont 44 px de surface, comme l'escorte ; des sélecteurs plus forts que
+ * ceux du kit (son pas en grand, son bouton qui monte à 36 px sous 760 px), quel que soit l'ordre des feuilles.
+ */
 @media (max-width: 820px), (max-height: 500px) {
-  .pas .pasBouton {
+  .quantite .pas .pasBouton {
     width: 44px;
     height: 44px;
   }
@@ -113,8 +122,7 @@
     height: 44px;
   }
 
-  /* Plus précis que le bouton du kit, qui monte à 36 px sur un téléphone. */
-  .reglage > .max {
+  .quantite .reglage > .max {
     min-width: 44px;
     min-height: 44px;
   }

@@ -12,8 +12,9 @@ describe("choisir la quantité (US-0813)", () => {
   const auPouce = ELEVER.match(/@media \(max-width: 820px\), \(max-height: 500px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
 
   it("au pouce sur un téléphone : « − », « + » et « Max » ont 44 px de surface, le champ 44 px de haut", () => {
-    expect(regle(".pas .pasBouton", auPouce)).toMatch(/width: 44px;[^}]*height: 44px;/);
-    expect(regle(".reglage > .max", auPouce)).toMatch(/min-width: 44px;[^}]*min-height: 44px;/);
+    // Plus forts que le pas en grand du kit (.pasGrand .pasBouton) et que son bouton sur un téléphone (.bouton:not(.discret)).
+    expect(regle(".quantite .pas .pasBouton", auPouce)).toMatch(/width: 44px;[^}]*height: 44px;/);
+    expect(regle(".quantite .reglage > .max", auPouce)).toMatch(/min-width: 44px;[^}]*min-height: 44px;/);
     expect(regle(".champ", auPouce)).toContain("height: 44px;");
   });
 
@@ -25,7 +26,9 @@ describe("choisir la quantité (US-0813)", () => {
   it("tient sans défilement de côté : le champ cède de sa largeur, rien n'a de largeur fixe plus grande que l'écran", () => {
     expect(regle(".champ", ELEVER)).toMatch(/flex: 0 1 96px;[^}]*min-width: 0;/);
     expect(regle(".quantite", ELEVER)).toContain("grid-template-columns: minmax(0, 1fr);");
-    expect(regle(".pas", ELEVER)).toContain("min-width: 0;");
+    // Le pas du kit est fixe (flex: none) et son nombre a 40 px au moins : ici, l'un et l'autre cèdent.
+    expect(regle(".pas", ELEVER)).toMatch(/flex: 0 1 auto;[^}]*min-width: 0;/);
+    expect(regle(".quantite .pas .champ", ELEVER)).toContain("min-width: 0;");
     expect(ELEVER).not.toMatch(/(?:^|[^-])width: \d{3,}px/);
   });
 
