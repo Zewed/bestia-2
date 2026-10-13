@@ -1,7 +1,6 @@
 /*
- * Le médaillon peint (Medaillon.tsx) : un rond (--taille), le disque crème dessous, plus clair au cœur ; l'icône fondue
- * dedans (multiply : le blanc de son détourage disparaît dans la crème) ; l'anneau de cuivre sombre puis clair, et une
- * ombre. Une page peut donner une autre taille : `--taille: 38px` sur sa classe.
+ * Le médaillon peint (Medaillon.tsx) : un rond (--taille), le disque sombre dessous, un peu plus clair au cœur ; l'icône
+ * posée dedans (détourée, sur fond transparent) ; l'anneau de sapin sombre puis clair, et une ombre. Une page peut donner une autre taille : `--taille: 38px` sur sa classe.
  */
 .medaillon {
   --taille: 34px;
@@ -24,7 +23,6 @@
   height: 84%;
   margin: 8%;
   object-fit: contain;
-  mix-blend-mode: multiply;
 }
 
 .xs {
@@ -58,7 +56,6 @@
   height: 100%;
   margin: 0;
   object-fit: cover;
-  mix-blend-mode: normal;
   transform: scale(1.08);
 }
 

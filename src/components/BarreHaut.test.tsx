@@ -70,10 +70,10 @@ describe("barre du haut", () => {
     expect(regleDe(css, '.entree[aria-current="page"] .libelle::after')).toContain("rotate(45deg)");
   });
 
-  it("peint le médaillon de chaque entrée sur son disque crème, l'anneau de cuivre autour", () => {
+  it("pose le médaillon de chaque entrée sur son disque sombre, sans le fondre, l'anneau autour", () => {
     const medaillon = regleDe(feuille(), ".entree::before");
     expect(medaillon).toContain("background: var(--icone) 50% 50% / 84% no-repeat, var(--fond-disque);");
-    expect(medaillon).toContain("background-blend-mode: multiply, normal;");
+    expect(medaillon).not.toContain("background-blend-mode");
     expect(medaillon).toContain("box-shadow: var(--anneau-medaillon);");
   });
 

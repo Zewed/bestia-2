@@ -94,10 +94,11 @@
   --brume-bord: oklch(0.895 0 0 / 0.12);
   --brume-haut: oklch(0.741 0.001 165.1 / 0.25);
 
-  /* Le disque crème des médaillons, sous les icônes peintes détourées sur blanc : clair au cœur, plus doré au bord. */
-  --disque-coeur: oklch(0.963 0 0);
-  --disque: oklch(0.882 0 0);
-  --disque-bord: oklch(0.755 0.086 163.3);
+  /* Le disque sombre des médaillons, sous les icônes peintes (détourées, sur fond transparent) : un peu plus clair au
+     cœur, à peine teinté de sapin ; il ne tranche pas sur le noir (Antoine, 2026-10-13 : le disque blanc contrastait trop). */
+  --disque-coeur: oklch(0.325 0.012 160);
+  --disque: oklch(0.262 0.009 160);
+  --disque-bord: oklch(0.218 0.007 160);
 
   /* Lumières et creux : la lumière en haut d'un panneau, le trait clair de son bord haut et celui du bouton principal,
      le creux d'une jauge ; le creux sombre d'un compteur ou d'une rangée ; les ombres, de la plus douce (un médaillon) à
