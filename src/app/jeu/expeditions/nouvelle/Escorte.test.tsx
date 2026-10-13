@@ -264,6 +264,21 @@ describe("les Blessés de l'effectif (US-0952)", () => {
     expect(textes().slice(9, 15)).toEqual(["Souris grise", "6 disponibles", "2 mâles · 1 femelle", "dont 2 Blessés, guéris dans 5 h", "dont 1 Blessé, guéri dans 23 h", "−"]);
   });
 
+  it("dit les Blessés soignés à leur retour : « dont 2 Blessés soignés, guéris dans 11 h » (US-0955)", () => {
+    render(
+      <Escorte
+        especes={[POULE, { ...SOURIS, disponibles: 6 }]}
+        blesses={{
+          souris: [
+            { nombre: 2, dansMinutes: 660, soignes: true },
+            { nombre: 1, dansMinutes: 1_380 },
+          ],
+        }}
+      />,
+    );
+    expect(textes().slice(12, 14)).toEqual(["dont 2 Blessés soignés, guéris dans 11 h", "dont 1 Blessé, guéri dans 23 h"]);
+  });
+
   it("sans Blessé, rien de plus, pas même une ligne vide", () => {
     render(<Escorte especes={[POULE, SOURIS]} blesses={{ souris: [] }} />);
     const sansBlesses = textes();
