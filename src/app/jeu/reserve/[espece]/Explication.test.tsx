@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { Caracteristique, Effectif } from "./Explication";
@@ -16,6 +16,9 @@ function fiche() {
         <Caracteristique nom="Charge">500</Caracteristique>
       </dl>
       <p>Ailleurs sur la page</p>
+      <label>
+        Quantité <input defaultValue="1" />
+      </label>
     </main>,
   );
 }
@@ -98,5 +101,30 @@ describe("comprendre une caractéristique de la fiche d'une Espèce (US-0807)", 
   it("l'effectif garde son nombre à côté de son nom", () => {
     fiche();
     expect(nom("Effectif").closest("p")?.textContent).toBe("Effectif 12");
+  });
+  it("un appui sur ce qui n'active rien la ferme aussitôt, sans attendre de clic, que Safari sur iPhone n'envoie pas", async () => {
+    fiche();
+    await userEvent.click(nom("Vie"));
+    fireEvent.pointerDown(screen.getByText("Ailleurs sur la page"));
+    expect(ouverte("Vie")).toBe(false);
+  });
+
+  it("un appui sur le nom d'une autre caractéristique attend son clic : rien ne bouge sous le doigt avant qu'il se lève", async () => {
+    fiche();
+    await userEvent.click(nom("Attaque"));
+    fireEvent.pointerDown(nom("Vie"));
+    expect(ouverte("Attaque")).toBe(true);
+    fireEvent.click(nom("Vie"));
+    expect([ouverte("Attaque"), ouverte("Vie")]).toEqual([false, true]);
+  });
+
+  it("Échap tapé dans un champ ailleurs la ferme sans prendre le regard au champ", async () => {
+    fiche();
+    await userEvent.click(nom("Attaque"));
+    const champ = screen.getByRole("textbox", { name: "Quantité" });
+    champ.focus();
+    await userEvent.keyboard("{Escape}");
+    expect(ouverte("Attaque")).toBe(false);
+    expect(document.activeElement).toBe(champ);
   });
 });

@@ -11,8 +11,8 @@ export const EXPLICATIONS = {
   Taille: "Les Places qu'une Bête prend dans l'Habitat du Foyer.",
   Régime: "Ce que mange l'Espèce, et donc la Nourriture de son Entretien.",
   Entretien: "La Nourriture qu'une Bête mange chaque heure.",
-  Habitat: "Le Biome dont l'Espèce a besoin pour être logée et élevée.",
-  Rôle: "Un usage qu'ont certaines Espèces en plus du combat ; une Bête affectée à son Rôle ne combat plus.",
+  Habitat: "Le Biome où vit l'Espèce à l'état sauvage.",
+  Rôle: "Un usage qu'ont certaines Espèces en plus du combat.",
 } as const;
 
 /** US-0807 : le nom d'une caractéristique de la fiche, ou l'effectif. */

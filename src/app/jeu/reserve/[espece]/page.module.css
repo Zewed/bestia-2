@@ -52,7 +52,10 @@
   margin-top: 6px;
 }
 
+/* US-0807 : la petite étiquette est un bouton, sa cible portée à 24 px de haut au moins. */
 .effectif > .terme {
+  margin: -7px -4px;
+  padding: 7px 4px;
   color: var(--cuivre);
   font: var(--graisse-moyenne) var(--taille-etiquette) / 1 var(--police-etroite);
   letter-spacing: var(--espacement-etiquette);
@@ -80,6 +83,8 @@
   grid-template-columns: max-content minmax(0, 1fr);
   gap: 9px 28px;
   align-self: stretch;
+  /* US-0807 : de toute la largeur de sa colonne, qu'une explication soit ouverte ou non. */
+  justify-self: stretch;
   align-items: baseline;
   margin: 8px 0 0;
   padding-top: 14px;
@@ -110,7 +115,7 @@
   align-self: center;
 }
 
-.caracteristiques > .habitat > dd {
+.caracteristiques > .habitat > dd:not(.explication) {
   display: flex;
   gap: 10px;
   align-items: center;
