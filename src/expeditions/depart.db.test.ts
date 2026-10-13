@@ -15,6 +15,7 @@ import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai,
 import { CASE_D_UN_TERRITOIRE, CASE_HORS_DE_PORTEE } from "./choix-de-destination";
 import { BETE_PLUS_DISPONIBLE, type ChoixDuDepart, ECLAIREUR_SANS_LE_ROLE, EXPLORATEUR_PLUS_LIBRE, lancerLExpedition } from "./depart";
 import { expeditionsEnCours } from "./en-cours";
+import { forcesDesEscortes } from "./forces-en-base";
 
 const MINUTE_MS = 60_000;
 
@@ -290,6 +291,9 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       const depart = await lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, [["pigeon", 1], ["souris", 1]], [["pigeon", 2]]), part);
       expect(depart).toEqual({ expeditionId: expect.any(Number) });
       expect(await eclaireursPartis(t)).toEqual({ pigeon: 2 });
+      // La force de l'Expédition, celle que lisent les Rencontres disputées de tous les joueurs (US-0963) : son escorte seule.
+      const { expeditionId } = depart as { expeditionId: number };
+      expect(await forcesDesEscortes(pool, [expeditionId])).toEqual(new Map([[expeditionId, 2216 + 473]]));
       expect(await retenu(t)).toEqual({ expeditions: 1, escortes: 2, partis: 1 });
       // Le pigeon de l'escorte et les deux Éclaireurs sont sortis : il en reste un au Foyer.
       expect(await betesDisponibles(pool, t, part)).toEqual([
