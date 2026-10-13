@@ -33,9 +33,10 @@ export type RoleAuFoyer = { role: { id: string; nom: string }; affectees: number
  * Bêtes valides au Foyer à l'instant du jeu $3, et ses Bêtes affectées parmi elles. Valides : l'effectif, moins les
  * Bêtes sorties en escorte (BETES_SORTIES), moins les Blessés au Foyer pas encore guéris $2 heures après leur retour
  * (BLESSES_EN_GUERISON, jamais plus que les Bêtes au Foyer) : les disponibles de l'escorte (betesDisponibles). Les
- * affectées ne dépassent pas les valides ; least() ne fait que le garantir à la lecture.
+ * affectées ne dépassent pas les valides ; least() ne fait que le garantir à la lecture. Écrite à l'appel, comme les
+ * requêtes de couple.ts : un essai qui simule effectif.ts sans ses expressions SQL peut charger ce module.
  */
-const ROLES_DE_L_EFFECTIF = `
+const rolesDeLEffectif = () => `
   select e.espece_id, e.nombre, ro.id as role_id, ro.nom as role_nom, v.valides, least(coalesce(a.nombre, 0), v.valides) as affectees
   from (select territoire_id, espece_id, sum(nombre)::int as nombre from effectif where territoire_id = $1 group by territoire_id, espece_id) e
   join espece es on es.id = e.espece_id
@@ -51,7 +52,7 @@ const ROLES_DE_L_EFFECTIF = `
  */
 export async function rolesAuFoyer(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<Map<string, RoleAuFoyer>> {
   const { rows } = await base.query<{ espece_id: string; role_id: string; role_nom: string; valides: number; affectees: number }>(
-    `${ROLES_DE_L_EFFECTIF} where e.nombre > 0 order by e.espece_id`,
+    `${rolesDeLEffectif()} where e.nombre > 0 order by e.espece_id`,
     [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER],
   );
   return new Map(rows.map((r) => [r.espece_id, { role: { id: r.role_id, nom: r.role_nom }, affectees: r.affectees, valides: r.valides }]));
@@ -87,7 +88,7 @@ async function enTenantLeTerritoire(pool: Pool, territoireId: number, ecrire: (c
 export async function affecterUneBete(pool: Pool, territoireId: number, especeId: string, instant: Date): Promise<boolean> {
   return enTenantLeTerritoire(pool, territoireId, async (client) => {
     const { rowCount } = await client.query(
-      `with v as (${ROLES_DE_L_EFFECTIF} where e.espece_id = $5)
+      `with v as (${rolesDeLEffectif()} where e.espece_id = $5)
        insert into affectation (territoire_id, espece_id, nombre)
        select $1, $5, 1 from v where v.valides > 0
        on conflict (territoire_id, espece_id) do update set nombre = (select affectees from v) + 1
@@ -106,7 +107,7 @@ export async function affecterUneBete(pool: Pool, territoireId: number, especeId
 export async function retirerUneBete(pool: Pool, territoireId: number, especeId: string, instant: Date): Promise<boolean> {
   return enTenantLeTerritoire(pool, territoireId, async (client) => {
     const { rowCount } = await client.query(
-      `with v as (${ROLES_DE_L_EFFECTIF} where e.espece_id = $5)
+      `with v as (${rolesDeLEffectif()} where e.espece_id = $5)
        update affectation a set nombre = v.affectees - 1 from v
        where a.territoire_id = $1 and a.espece_id = $5 and v.affectees > 0`,
       [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER, especeId],
@@ -123,7 +124,7 @@ export async function retirerUneBete(pool: Pool, territoireId: number, especeId:
  */
 export async function bornerLesAffectations(client: PoolClient, territoireId: number, instant: Date): Promise<void> {
   await client.query(
-    `with v as (${ROLES_DE_L_EFFECTIF})
+    `with v as (${rolesDeLEffectif()})
      update affectation a set nombre = coalesce((select v.valides from v where v.espece_id = a.espece_id), 0)
      where a.territoire_id = $1 and a.nombre > coalesce((select v.valides from v where v.espece_id = a.espece_id), 0)`,
     [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER],

@@ -652,7 +652,8 @@ export const sexe = pgEnum("sexe", ["male", "femelle"]);
  * avec le Territoire. Personne n'a de Bête à sa naissance (ADR 0008) : la Bête apprivoisée y entre à son arrivée au Foyer
  * (US-0938), et l'Élevage des Couples réunis (jalon 8) la remplira aussi ; l'écran d'Expédition y lit les Bêtes
  * disponibles (src/monde/effectif.ts). US-0956 : le mâle et la femelle d'un Couple réuni la quittent pour la Réserve
- * (couple), d'où ils ne sortent plus.
+ * (couple), d'où ils ne sortent plus. US-0837 : tout ce qui retire des Bêtes valides du Foyer (un départ en escorte, un
+ * Couple réuni) y borne les Bêtes affectées à leur Rôle (affectation, bornerLesAffectations dans src/monde/roles.ts).
  */
 export const effectif = pgTable(
   "effectif",
