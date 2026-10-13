@@ -1,8 +1,9 @@
 // US-0954 : les Blessés guérissent seuls avec le temps, GUERISON_DES_BLESSES_HEURES après leur retour au Foyer, même le
 // joueur absent, et un Récit le dit, daté de la guérison. Le temps qui avance (src/temps/avancer.ts) l'écrit en chemin,
 // quel que soit son découpage : la même guérison est vécue ici page ouverte, d'un bloc au retour du joueur et par la seule
-// tâche planifiée, et ce qu'elle laisse se compare. Les Expéditions de ces essais séjournent là où rien ne se montre : aucune
-// Rencontre, donc aucun combat ; leurs Blessés sont posés sur l'escorte, comme un combat les y aurait laissés (US-0951).
+// tâche planifiée, et ce qu'elle laisse se compare. Les Expéditions qui rentrent avec des Blessés séjournent là où rien ne
+// se montre : aucune Rencontre, donc aucun combat ; leurs Blessés sont posés sur l'escorte, comme un combat les y aurait
+// laissés (US-0951). Seule l'Expédition B d'un essai est attaquée, pour que sa fuite arrête le temps (US-0945).
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
@@ -279,6 +280,7 @@ describe.skipIf(!URL_TEST)("la guérison des Blessés avec le temps (US-0954, su
       { titre: "2 Blessés ont guéri", texte: "De nouveau valides : Souris grise (2).", survenuLe: apres(retour, GUERISON_DES_BLESSES_HEURES * HEURE) },
     ]);
   }, 60_000);
+
   it(
     "une guérison qui tombe juste après l'attaque d'une autre Expédition, dans la même avancée, n'est dite qu'une fois (US-0945)",
     async () => {
@@ -357,6 +359,7 @@ describe.skipIf(!URL_TEST)("la guérison des Blessés avec le temps (US-0954, su
     },
     180_000,
   );
+
   it(
     "une durée de guérison qui n'est pas un nombre entier d'heures : le Récit tombe à l'instant même où blessesAuFoyer ne les compte plus",
     async () => {

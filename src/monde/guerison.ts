@@ -20,8 +20,9 @@ import { ecrireUnRecit } from "./recits";
  * Jamais plus de Blessés d'une Espèce que son effectif n'en compte, comme les pages les montrent juste avant (blessesAffiches) :
  * le groupe qui guérit est alors le premier à guérir de son Espèce. L'effectif baisse sans que les Blessés ne changent
  * (un Couple réuni part en Réserve, US-0956) : une Espèce sans plus aucune Bête n'a rien à dire, ni un Récit sans Espèce.
- * L'effectif est celui que le temps a déjà mis à l'heure : celui de l'instant de la guérison, sauf les morts d'une attaque
- * qui arrête l'évolution au même instant ou peu après (US-0945), déjà sorties.
+ * L'effectif lu est celui de la fin de l'intervalle : les morts d'une attaque qui arrête l'évolution à `jusqua` (US-0945),
+ * après la guérison, en sont déjà sorties. Seul écart connu au découpage, accepté : il faut que l'attaque tue, dans la même
+ * avancée, assez de Bêtes de la même Espèce pour que l'effectif passe sous le nombre de ses Blessés qui guérissent.
  */
 export async function guerirLesBlesses(client: PoolClient, territoireId: number, depuis: Date, jusqua: Date): Promise<void> {
   const { rows } = await client.query<GuerisonDUneEspece & { gueriLe: Date }>(
