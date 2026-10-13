@@ -7,6 +7,7 @@ import type { ExpeditionEnCours } from "@/expeditions/en-cours";
 import { finDeLaPhase, type Phase, phaseDUneExpedition, retourDUneExpedition } from "@/expeditions/phase";
 import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
 import styles from "./DetailDeLExpedition.module.css";
+import kit from "./kit.module.css";
 
 /** Le fuseau des joueurs, pour l'heure de retour prévue. */
 const FUSEAU = "Europe/Paris";
@@ -69,7 +70,7 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
           {"inconnue" in destination ? "Case inconnue" : destination.biome}
         </strong>
         <span className={styles.distance}>{casesDuFoyer(destination.distance)}</span>
-        <span id={id("phase")} className={styles.phase}>
+        <span id={id("phase")} className={`${kit.puce} ${styles.phase}`}>
           {phase === "retour" && expedition.enFuite ? (
             <>
               <span className={styles.fuiteLongue}>{`${PHASES.retour} · en fuite`}</span>
