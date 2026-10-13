@@ -95,9 +95,11 @@ body:has([data-onglets]) {
 }
 
 /*
- * Ce que la barre fixe couvre n'est pas à vue : le navigateur en tient compte pour amener un élément à l'écran, et Next.js
- * pour décider s'il remonte une page ouverte. Sans cela, la barre, toujours en haut, paraît à vue à sa place : une page
- * ouverte d'une page défilée (la fiche d'une Espèce depuis la Réserve, sur un téléphone) s'ouvrait défilée, son haut caché.
+ * Dans le jeu, la zone que couvre la barre fixe ne compte pas comme à vue. Ce n'est pas qu'un réglage des ancres : à chaque
+ * page ouverte, Next.js ne remonte la page que si le haut de ce qui a changé n'est pas à vue, sous ce bord (il lit cette
+ * valeur lui-même). Ce qui change d'abord est la navigation, dans la barre : sans ce bord, elle est toujours à vue, et une
+ * page ouverte d'une page défilée (la fiche d'une Espèce depuis la Réserve, sur un téléphone) s'ouvrait défilée, son haut
+ * caché sous la barre. Le navigateur s'en sert aussi pour amener un élément sous la barre.
  */
 html:has([data-onglets]) {
   scroll-padding-top: var(--hauteur-barre);
