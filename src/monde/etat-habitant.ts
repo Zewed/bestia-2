@@ -20,3 +20,9 @@ export type EtatHabitant = typeof LIBRE | typeof EN_EXPEDITION | ReturnType<type
  * renvoie pas avant d'en revenir. Tout état autre que « libre » l'est.
  */
 export const occupe = (etat: string) => etat !== LIBRE;
+
+/**
+ * US-0911, US-0843 : la même règle, en SQL, sur une ligne de `habitant` : ni parti en Expédition ni à l'Élevage. Seul un
+ * Habitant libre change de Métier, se renvoie, ou s'occupe d'un Élevage. Un état ajouté s'ajoute ici et à `occupe`.
+ */
+export const LIBRE_EN_SQL = "expedition_id is null and espece_elevee is null";

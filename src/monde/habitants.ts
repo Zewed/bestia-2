@@ -3,7 +3,7 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { DatabaseError } from "pg";
 import { ENTRETIEN_HABITANT_PAR_HEURE, PLACES_DU_FOYER } from "@/reglages";
-import { aLElevage, EN_EXPEDITION, type EtatHabitant, LIBRE } from "./etat-habitant";
+import { aLElevage, EN_EXPEDITION, type EtatHabitant, LIBRE, LIBRE_EN_SQL } from "./etat-habitant";
 import { ENTRETIEN_DU_TERRITOIRE } from "./production";
 import { ecrireUnRecit, type NouveauRecit } from "./recits";
 
@@ -32,12 +32,6 @@ export async function habitantsDuTerritoire(pool: Pool, territoireId: number): P
 }
 
 /**
- * US-0911, US-0843 : un Habitant libre de son Métier, ni parti en Expédition ni à l'Élevage (expression sur une ligne de
- * `habitant`) : seul son Métier se change ou se retire, et seul lui se renvoie.
- */
-const LIBRE_DE_SON_METIER = "expedition_id is null and espece_elevee is null";
-
-/**
  * US-0308 : donne le Métier `metierId` à l'Habitant `habitantId` du Territoire ; US-0310 : ou le change, s'il
  * en a déjà un, enregistré de la même façon ; US-0311 : ou le lui retire (null), sur la même règle. Gratuit et
  * immédiat, sans temps d'apprentissage : aucune Ressource n'est touchée. Rend false sans rien changer pour un
@@ -48,7 +42,7 @@ const LIBRE_DE_SON_METIER = "expedition_id is null and espece_elevee is null";
  */
 export async function enregistrerLeMetier(base: Pool | PoolClient, territoireId: number, habitantId: number, metierId: string | null): Promise<boolean> {
   try {
-    const { rowCount } = await base.query(`update habitant set metier = $3 where id = $2 and territoire_id = $1 and ${LIBRE_DE_SON_METIER}`, [
+    const { rowCount } = await base.query(`update habitant set metier = $3 where id = $2 and territoire_id = $1 and ${LIBRE_EN_SQL}`, [
       territoireId,
       habitantId,
       metierId,
@@ -98,8 +92,8 @@ export async function ajouterUnHabitantAuMetier(base: Pool | PoolClient, territo
 export async function retirerUnHabitantDuMetier(base: Pool | PoolClient, territoireId: number, metierId: string): Promise<number | null> {
   const { rows } = await base.query<{ id: number }>(
     `update habitant set metier = null
-     where id = (select id from habitant where territoire_id = $1 and metier = $2 and ${LIBRE_DE_SON_METIER} order by id desc limit 1 for update skip locked)
-       and metier = $2 and ${LIBRE_DE_SON_METIER}
+     where id = (select id from habitant where territoire_id = $1 and metier = $2 and ${LIBRE_EN_SQL} order by id desc limit 1 for update skip locked)
+       and metier = $2 and ${LIBRE_EN_SQL}
      returning id`,
     [territoireId, metierId],
   );
@@ -134,7 +128,7 @@ export async function ajouterUnHabitant(
  * plus, avant la fin.
  */
 const RENVOYER = `
-  with parti as (delete from habitant where id = $2 and territoire_id = $1 and ${LIBRE_DE_SON_METIER} returning prenom, metier)
+  with parti as (delete from habitant where id = $2 and territoire_id = $1 and ${LIBRE_EN_SQL} returning prenom, metier)
   select parti.prenom, m.nom as metier from parti left join metier m on m.id = parti.metier`;
 
 /**

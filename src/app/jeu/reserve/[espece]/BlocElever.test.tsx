@@ -36,7 +36,7 @@ describe("le bloc « Élever » de la fiche d'une Espèce (US-0812)", () => {
     expect(new FormData(formulaire).get("espece")).toBe("poule");
   });
 
-  it("n'ajoute aucune phrase : le titre, les Places de l'Habitat du Foyer (US-0822) et le bouton", () => {
+  it("n'ajoute aucune phrase : le titre, les Places de l'Habitat du Foyer (US-0822), l'éleveur libre (US-0843), la quantité (US-0813) et le bouton", () => {
     render(<BlocElever especeId="poule" places={PLACES} max={MAX} eleveur="Brune" />);
     expect(bloc().textContent).toBe("ÉleverPlaces : 21 / 500Éleveur : BruneQuantité−+MaxÉlever");
   });
