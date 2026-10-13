@@ -95,6 +95,12 @@
   min-height: 34px;
 }
 
+/* US-0814 : le coût et la durée de l'Élevage, libellés à gauche et valeurs à droite (kit.cles), au-dessus du bouton. */
+.formulaire .cout {
+  margin-bottom: 16px;
+  font-variant-numeric: tabular-nums;
+}
+
 /* La quantité que « − », « + » ou « Max » viennent de donner, pour les lecteurs d'écran seulement. */
 .annonce {
   position: absolute;

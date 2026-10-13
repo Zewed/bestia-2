@@ -35,7 +35,8 @@ const habitat = vi.hoisted(() => ({ placesDeLHabitat: vi.fn(async () => ({ occup
 vi.mock("@/monde/habitat", () => habitat);
 // US-0813 : les Bêtes que les Stocks de Nourriture permettent de payer, lues sur base (src/monde/cout-d-elevage.db.test.ts).
 const cout = vi.hoisted(() => ({ maxAElever: vi.fn(async () => 7) }));
-vi.mock("@/monde/cout-d-elevage", () => cout);
+// US-0814 : le coût et la durée d'une Bête, eux, se calculent pour de bon (src/monde/cout-d-elevage.test.ts).
+vi.mock("@/monde/cout-d-elevage", async (original) => ({ ...(await original<object>()), maxAElever: cout.maxAElever }));
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -161,6 +162,29 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     expect(sans).toContain('id="elever"');
     expect(sans.slice(sans.indexOf('id="elever"')).replace(/<[^>]+>/g, "")).toContain("Aucun éleveur libre. Habitants");
     expect(sans).toMatch(/<a[^>]*href="\/jeu\/habitants"[^>]*>Habitants<\/a>/);
+  });
+
+  it("y chiffre l'Élevage d'une Bête de l'Espèce : son coût dans la Nourriture de son régime, sa durée, et l'heure de la dernière (US-0814)", async () => {
+    /** Les lignes du coût et de la durée du bloc « Élever », libellé et valeur. */
+    const chiffres = (html: string) =>
+      [...html.slice(html.indexOf('id="elever"')).matchAll(/<dt>([^<]+)<\/dt><dd>([^<]+)<\/dd>/g)].map(([, libelle, valeur]) => [libelle, valeur]);
+    connecte();
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    // La poule : 5 Nourriture par heure pendant 7 jours, 31,623 Places de 15 minutes ; la fiche s'ouvre à 9:42 à Paris.
+    expect(chiffres(await ouvrir("poule"))).toEqual([
+      ["Coût", "840 Viande ou Végétaux"],
+      ["Durée par Bête", "7 h 54"],
+      ["Durée totale", "7 h 54"],
+      ["Dernière Bête", "9 octobre à 17:36"],
+    ]);
+    connecte({ ...POULE, especeId: "pigeon", nom: "Pigeon biset", taille: 8.556, regime: "herbivore", entretienParHeure: 1.25 });
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    expect(chiffres(await ouvrir("pigeon"))).toEqual([
+      ["Coût", "210 Végétaux"],
+      ["Durée par Bête", "2 h 08"],
+      ["Durée totale", "2 h 08"],
+      ["Dernière Bête", "9 octobre à 11:50"],
+    ]);
   });
 
   it("ne le propose pas pour une Espèce sans Couple, même avec des Bêtes (US-0812)", async () => {
