@@ -11,7 +11,7 @@
 // Bêtes de l'escorte, sorties dès leur départ, et les Bêtes tuées aussi. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
+import { dureesDeGuerison } from "./blesses";
 import { BETES_SORTIES, BLESSES_EN_GUERISON } from "./effectif";
 
 /**
@@ -28,11 +28,11 @@ export const ROLES_AU_FOYER: readonly string[] = ["nourricier"];
 export type RoleAuFoyer = { role: { id: string; nom: string }; affectees: number; valides: number };
 
 /**
- * US-0837 : chaque Espèce de l'effectif du Territoire $1 dont le Rôle est l'un des Rôles $4, ligne par ligne (`e`,
+ * US-0837 : chaque Espèce de l'effectif du Territoire $1 dont le Rôle est l'un des Rôles $5, ligne par ligne (`e`,
  * regroupée par Territoire et Espèce, et `nombre`, son effectif, nul quand ses Bêtes sont en Réserve) : son Rôle, ses
  * Bêtes valides au Foyer à l'instant du jeu $3, et ses Bêtes affectées parmi elles. Valides : l'effectif, moins les
- * Bêtes sorties en escorte (BETES_SORTIES), moins les Blessés au Foyer pas encore guéris $2 heures après leur retour
- * (BLESSES_EN_GUERISON, jamais plus que les Bêtes au Foyer) : les disponibles de l'escorte (betesDisponibles). Les
+ * Bêtes sorties en escorte (BETES_SORTIES), moins les Blessés au Foyer pas encore guéris $2 heures après leur retour, $4
+ * s'ils ont été soignés (BLESSES_EN_GUERISON, jamais plus que les Bêtes au Foyer) : les disponibles de l'escorte (betesDisponibles). Les
  * affectées ne dépassent pas les valides ; least() ne fait que le garantir à la lecture. Écrite à l'appel, comme les
  * requêtes de couple.ts : un essai qui simule effectif.ts sans ses expressions SQL peut charger ce module.
  */
@@ -40,10 +40,16 @@ const rolesDeLEffectif = () => `
   select e.espece_id, e.nombre, ro.id as role_id, ro.nom as role_nom, v.valides, least(coalesce(a.nombre, 0), v.valides) as affectees
   from (select territoire_id, espece_id, sum(nombre)::int as nombre from effectif where territoire_id = $1 group by territoire_id, espece_id) e
   join espece es on es.id = e.espece_id
-  join role ro on ro.id = es.role_id and ro.id = any($4::text[])
+  join role ro on ro.id = es.role_id and ro.id = any($5::text[])
   cross join lateral (select greatest(0, e.nombre - (${BETES_SORTIES})) as au_foyer) f
   cross join lateral (select f.au_foyer - least(f.au_foyer, (${BLESSES_EN_GUERISON})) as valides) v
   left join affectation a on a.territoire_id = e.territoire_id and a.espece_id = e.espece_id`;
+
+/** US-0837 : les paramètres $1 à $5 de rolesDeLEffectif : le Territoire, les durées de guérison, l'instant, les Rôles. */
+const parametres = (territoireId: number, instant: Date) => {
+  const [normale, soignee] = dureesDeGuerison();
+  return [territoireId, normale, instant, soignee, ROLES_AU_FOYER];
+};
 
 /**
  * US-0837 : les Espèces de l'effectif du Territoire dont le Rôle sert au Foyer, à l'instant du jeu `instant`, avec leur
@@ -53,7 +59,7 @@ const rolesDeLEffectif = () => `
 export async function rolesAuFoyer(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<Map<string, RoleAuFoyer>> {
   const { rows } = await base.query<{ espece_id: string; role_id: string; role_nom: string; valides: number; affectees: number }>(
     `${rolesDeLEffectif()} where e.nombre > 0 order by e.espece_id`,
-    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER],
+    parametres(territoireId, instant),
   );
   return new Map(rows.map((r) => [r.espece_id, { role: { id: r.role_id, nom: r.role_nom }, affectees: r.affectees, valides: r.valides }]));
 }
@@ -88,12 +94,12 @@ async function enTenantLeTerritoire(pool: Pool, territoireId: number, ecrire: (c
 export async function affecterUneBete(pool: Pool, territoireId: number, especeId: string, instant: Date): Promise<boolean> {
   return enTenantLeTerritoire(pool, territoireId, async (client) => {
     const { rowCount } = await client.query(
-      `with v as (${rolesDeLEffectif()} where e.espece_id = $5)
+      `with v as (${rolesDeLEffectif()} where e.espece_id = $6)
        insert into affectation (territoire_id, espece_id, nombre)
-       select $1, $5, 1 from v where v.valides > 0
+       select $1, $6, 1 from v where v.valides > 0
        on conflict (territoire_id, espece_id) do update set nombre = (select affectees from v) + 1
          where (select affectees from v) < (select valides from v)`,
-      [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER, especeId],
+      [...parametres(territoireId, instant), especeId],
     );
     return rowCount === 1;
   });
@@ -107,10 +113,10 @@ export async function affecterUneBete(pool: Pool, territoireId: number, especeId
 export async function retirerUneBete(pool: Pool, territoireId: number, especeId: string, instant: Date): Promise<boolean> {
   return enTenantLeTerritoire(pool, territoireId, async (client) => {
     const { rowCount } = await client.query(
-      `with v as (${rolesDeLEffectif()} where e.espece_id = $5)
+      `with v as (${rolesDeLEffectif()} where e.espece_id = $6)
        update affectation a set nombre = v.affectees - 1 from v
-       where a.territoire_id = $1 and a.espece_id = $5 and v.affectees > 0`,
-      [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER, especeId],
+       where a.territoire_id = $1 and a.espece_id = $6 and v.affectees > 0`,
+      [...parametres(territoireId, instant), especeId],
     );
     return rowCount === 1;
   });
@@ -127,6 +133,6 @@ export async function bornerLesAffectations(client: PoolClient, territoireId: nu
     `with v as (${rolesDeLEffectif()})
      update affectation a set nombre = coalesce((select v.valides from v where v.espece_id = a.espece_id), 0)
      where a.territoire_id = $1 and a.nombre > coalesce((select v.valides from v where v.espece_id = a.espece_id), 0)`,
-    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER],
+    parametres(territoireId, instant),
   );
 }
