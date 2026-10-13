@@ -4,7 +4,9 @@ import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
 import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
+import { lancerLExpedition } from "@/expeditions/depart";
 import { reunirLesCouples } from "./couple";
+import { betesDisponibles, faireEntrerDansLEffectif } from "./effectif";
 import { placesDeLHabitat } from "./habitat";
 import { affecterUneBete, retirerUneBete, rolesAuFoyer } from "./roles";
 
@@ -61,6 +63,31 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
       blessees,
     ]);
     return rows[0].id;
+  };
+  /** Réunit les Couples du Territoire à l'instant t0, comme au retour d'une Expédition (US-0956) : les Espèces réunies. */
+  const reunir = async (territoireId: number) => {
+    const client = await pool.connect();
+    try {
+      return await reunirLesCouples(client, territoireId, t0);
+    } finally {
+      client.release();
+    }
+  };
+  /**
+   * Une Expédition lancée pour de bon à t0 (lancerLExpedition), un explorateur du Territoire et `nombre` poules en escorte,
+   * vers une Case libre à deux Cases du Foyer ; son identifiant.
+   */
+  const partir = async (territoireId: number, nombre: number) => {
+    await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Joran', 'explorateur')", [territoireId]);
+    const { rows } = await pool.query<{ q: number; r: number }>(
+      `select c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
+         join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
+       where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = 2 order by c.q, c.r limit 1`,
+      [territoireId],
+    );
+    const depart = await lancerLExpedition(pool, territoireId, { destination: rows[0], explorateurs: 1, escorte: new Map([["poule", nombre]]), sejourMinutes: 60 }, t0);
+    if (!("expeditionId" in depart)) throw new Error(depart.refus);
+    return depart.expeditionId;
   };
   /** Les Rôles au Foyer du Territoire à l'instant `instant`, Espèce par Espèce, en objet simple. */
   const lus = async (territoireId: number, instant = t0) => Object.fromEntries(await rolesAuFoyer(pool, territoireId, instant));
@@ -138,23 +165,37 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
     await expedition(t, -1, "poule", 1, 1);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 3 } });
     expect(await plus(t, "poule", 4)).toEqual([true, true, true, false]);
+    // Les valides sont les Bêtes que l'escorte peut emmener (US-0953) : une seule règle.
+    expect((await betesDisponibles(pool, t, t0)).find((e) => e.id === "poule")?.disponibles).toBe(3);
     // Guérie, la Blessée peut l'être à son tour.
     const gueries = a(GUERISON_DES_BLESSES_HEURES);
     expect(await lus(t, gueries)).toEqual({ poule: { role: NOURRICIER, affectees: 3, valides: 4 } });
     expect(await plus(t, "poule", 2, gueries)).toEqual([true, false]);
   });
 
-  it("une Bête affectée qui sort ou se blesse cesse de compter parmi les affectées : « − » part de celles qui le sont encore", async () => {
+  it("l'escorte emmène d'abord les Bêtes non affectées ; au-delà, celles qui partent ne sont plus affectées, même rentrées", async () => {
     const t = await naitre();
-    await ajouter(t, [["poule", "femelle", 4]]);
-    expect(await plus(t, "poule", 4)).toEqual([true, true, true, true]);
-    // Une Expédition emmène trois poules (US-0842 les retirera de l'escorte) : il n'en reste qu'une au Foyer.
-    const partie = await expedition(t, null, "poule", 3);
+    await ajouter(t, [["poule", "femelle", 6]]);
+    expect(await plus(t, "poule", 2)).toEqual([true, true]);
+    // Trois poules partent (US-0842 retirera les affectées de l'escorte) : il en reste trois au Foyer, dont les deux affectées.
+    const premiere = await partir(t, 3);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 2, valides: 3 } });
+    // Deux de plus : il n'en reste qu'une, et une seule affectée.
+    const seconde = await partir(t, 2);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 1, valides: 1 } });
-    expect(await moins(t, "poule", 2)).toEqual([true, false]);
-    // Rentrées, les trois poules sont valides, et aucune n'est affectée.
-    await pool.query("update expedition set rentree_le = $2 where id = $1", [partie, a(1)]);
-    expect(await lus(t, a(2))).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 4 } });
+    // Rentrées, les cinq poules sont de nouveau valides ; aucune n'est redevenue affectée.
+    await pool.query("update expedition set rentree_le = $2 where id = any($1)", [[premiere, seconde], a(3)]);
+    expect(await lus(t, a(4))).toEqual({ poule: { role: NOURRICIER, affectees: 1, valides: 6 } });
+  });
+
+  it("si le nombre retenu dépassait les valides, la lecture, « + » et « − » partiraient des valides", async () => {
+    const t = await naitre();
+    await ajouter(t, [["poule", "femelle", 3]]);
+    await pool.query("insert into affectation (territoire_id, espece_id, nombre) values ($1, 'poule', 9)", [t]);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 3, valides: 3 } });
+    expect(await plus(t, "poule", 1)).toEqual([false]);
+    expect(await moins(t, "poule", 1)).toEqual([true]);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 2, valides: 3 } });
   });
 
   it("une Bête affectée reste dans l'effectif, avec ses Places : elle continue de les occuper", async () => {
@@ -175,15 +216,37 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
       ["poule", "male", 1],
       ["poule", "femelle", 2],
     ]);
-    const client = await pool.connect();
-    try {
-      expect(await reunirLesCouples(client, t, t0)).toEqual(["poule"]);
-    } finally {
-      client.release();
-    }
+    expect(await reunir(t)).toEqual(["poule"]);
     // Le Couple est en Réserve : seule la troisième poule, restée dans l'effectif, peut l'être.
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 1 } });
     expect(await plus(t, "poule", 2)).toEqual([true, false]);
+  });
+
+  it("des poules affectées qui partent en Réserve avec leur Couple ne le sont plus, même quand d'autres arrivent", async () => {
+    const [t, autre] = [await naitre(), await naitre()];
+    await ajouter(t, [
+      ["poule", "male", 1],
+      ["poule", "femelle", 2],
+    ]);
+    await ajouter(autre, [
+      ["poule", "male", 1],
+      ["poule", "femelle", 1],
+    ]);
+    expect(await plus(t, "poule", 3)).toEqual([true, true, true]);
+    expect(await plus(autre, "poule", 2)).toEqual([true, true]);
+    expect(await reunir(t)).toEqual(["poule"]);
+    expect(await reunir(autre)).toEqual(["poule"]);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 1, valides: 1 } });
+    // Toutes les poules de l'autre sont en Réserve : plus aucune sur la page Bêtes.
+    expect(await lus(autre)).toEqual({});
+    // Deux poules arrivent chez l'un, une chez l'autre (US-0938) : aucune n'est affectée d'elle-même.
+    await faireEntrerDansLEffectif(pool, t, [
+      { especeId: "poule", sexe: "male" },
+      { especeId: "poule", sexe: "male" },
+    ]);
+    await faireEntrerDansLEffectif(pool, autre, [{ especeId: "poule", sexe: "femelle" }]);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 1, valides: 3 } });
+    expect(await lus(autre)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 1 } });
   });
 
   it("des « + » envoyés au même instant n'affectent jamais plus de Bêtes qu'il n'y en a de valides", async () => {
