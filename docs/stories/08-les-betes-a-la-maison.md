@@ -57,6 +57,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0806 · Lire le Biome d'Habitat et le Rôle
 **En tant que** joueur, **je veux** lire où vit une Espèce et à quoi elle sert en dehors du combat, **afin de** savoir où l'élever et comment l'employer.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#75). La fiche d'une Espèce se termine par son Habitat, le nom du Biome précédé de son pictogramme (« Prairie »), et son Rôle (« Nourricier » pour la poule, « Éclaireur » pour le pigeon, « Aucun Rôle » pour la souris), dans le bloc des caractéristiques de la refonte. Tranché : le pictogramme est la Case du Biome telle que la carte et sa légende la dessinent (même couleur, même motif) ; une Espèce d'eau prend la Case de mer.
 - **Débloquée par** : US-0803
 - **Critères d'acceptation** :
   - La fiche affiche le Biome d'Habitat de l'Espèce, avec son nom et son pictogramme.
@@ -137,6 +138,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0813 · Choisir combien de Bêtes élever
 **En tant que** joueur, **je veux** choisir le nombre de Bêtes à élever, **afin de** doser ce que j'investis.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#74). Le bloc « Élever » de la fiche propose la quantité : « − », le champ (1 d'abord), « + » et « Max », qui donne le plus grand nombre de Bêtes que les Stocks de Nourriture paient (poule, 1 000 Viande et 1 000 Végétaux : 2). Une quantité nulle, négative ou non entière (« 0 », « -2 », « 2,5 », « deux ») est refusée sous le champ : « La quantité doit être un nombre entier, d'au moins 1. », et par le serveur pour une demande forgée. Le bouton « Élever » reste grisé jusqu'à US-0815. Tranché : une Bête élevée coûte la Nourriture qu'elle mange en 7 jours (`JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE`, provisoire ; poule 840, souris 28) ; un carnivore paie en Viande, un herbivore en Végétaux, un omnivore avec les deux additionnés ; « Max » ne compte pas encore les Places (US-0825) ni les Élevages en cours (US-0819).
 - **Débloquée par** : US-0812
 - **Critères d'acceptation** :
   - Le bloc « Élever » propose un champ de quantité, des boutons « − » et « + », et un bouton « Max ».
