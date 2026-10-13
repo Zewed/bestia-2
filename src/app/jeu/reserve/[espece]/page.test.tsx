@@ -144,6 +144,7 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
   it("dit les Blessés soignés à leur retour, et le temps plus court qui leur reste (US-0955)", async () => {
     connecte();
     blesses.blessesAuFoyer.mockResolvedValueOnce(new Map([["poule", [{ nombre: 2, gueriLe: new Date("2026-10-09T12:42:13.250Z"), soignes: true }]]]));
+    effectif.blessesParEspece.mockResolvedValueOnce(new Map([["poule", 2]]));
     expect(await ouvrir("poule")).toMatch(/<strong[^>]*>12<\/strong><\/p><p[^>]*>dont 2 Blessés soignés, guéris dans 5 h<\/p>/);
   });
 
