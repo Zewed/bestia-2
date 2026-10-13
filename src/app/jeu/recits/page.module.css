@@ -275,6 +275,36 @@
   transform: rotate(45deg);
 }
 
+/*
+ * US-0947 : un combat, sa ligne en crème sur un losange de braise ; US-0951 : ses pertes, en braise ; la fuite des
+ * explorateurs, et une Bête partie ailleurs (US-0964, US-0949), en mousse. Les mots le disent toujours.
+ */
+.faits li[data-fait="combat"] {
+  color: var(--creme);
+  font-weight: var(--graisse-titre);
+}
+
+.faits li[data-fait="combat"]::before,
+.faits li[data-fait="pertes"]::before {
+  background: var(--braise);
+  box-shadow: 0 0 6px var(--braise-lueur);
+}
+
+.faits li[data-fait="pertes"] {
+  color: var(--braise-claire);
+  font-weight: var(--graisse-moyenne);
+}
+
+.faits li[data-fait="fuite"],
+.faits li[data-fait="ailleurs"] {
+  color: var(--mousse);
+}
+
+.faits li[data-fait="fuite"]::before,
+.faits li[data-fait="ailleurs"]::before {
+  background: var(--lichen);
+}
+
 .frise {
   align-self: start;
   min-width: 0;

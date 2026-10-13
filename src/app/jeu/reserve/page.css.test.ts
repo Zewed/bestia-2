@@ -33,7 +33,7 @@ describe("la Réserve sur un téléphone (US-0801)", () => {
   it("sans Couple, met le bouton « Envoyer une Expédition » au pouce : 44 px de haut, toute la largeur sur mobile (US-0809)", () => {
     expect(regle(".envoyer")).toContain("min-height: 44px;");
     expect(regle(".envoyer")).toContain("cursor: pointer;");
-    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
     expect(regle(".envoyer", mobile)).toMatch(/display: flex;[^}]*width: 100%;/);
   });
 });

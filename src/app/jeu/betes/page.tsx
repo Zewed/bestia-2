@@ -4,11 +4,13 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
-import { Bloc } from "@/components/Bloc";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
+import { Jauge } from "@/components/Jauge";
+import kit from "@/components/kit.module.css";
 import { PastilleRarete } from "@/components/PastilleRarete";
-import { getPool } from "@/db";
+import { Paysage } from "@/components/Paysage";
 import { PlacesDeLHabitat } from "@/components/PlacesDeLHabitat";
+import { getPool } from "@/db";
 import { effectifParEspece } from "@/monde/effectif";
 import { placesDeLHabitat } from "@/monde/habitat";
 import styles from "./page.module.css";
@@ -30,6 +32,11 @@ const betes = (nombre: number) => (nombre > 1 ? "Bêtes" : "Bête");
  *
  * US-0822 : sous le total, « Places : occupées / total » pour l'Habitat du Foyer (placesDeLHabitat) ; pas sur la page
  * vide, qui n'a pas d'autre phrase.
+ *
+ * Sur le fond du jeu : le titre de l'écran, puis un panneau orné, le total en grand et, à côté, les Places et leur jauge
+ * fine (qui ne sert qu'aux yeux) ; dessous, un panneau orné, une ligne par Espèce sous un filet doux : sa peinture dans
+ * un rond, son nom en Bree Serif et sa Rareté en puce, son effectif en grand. Vide, le mammouth en bandeau, le mot et le
+ * bouton principal, comme les Expéditions en cours.
  */
 export default async function Betes() {
   await connection();
@@ -40,24 +47,30 @@ export default async function Betes() {
   const places = territoireId === null || especes.length === 0 ? null : await placesDeLHabitat(getPool(), territoireId);
   return (
     <main className={styles.page}>
-      <h1 className={styles.titre}>Bêtes</h1>
+      <h1 className={`${kit.titreEcran} ${styles.titre}`}>Bêtes</h1>
       {especes.length === 0 ? (
-        <Bloc>
+        <section className={`${kit.panneau} ${styles.aucune}`}>
+          <Paysage peinture="accueil/mammouth.webp" sizes="(max-width: 760px) 100vw, 640px" className={styles.paysage} />
           <p className={styles.vide}>Aucune Bête pour l&apos;instant</p>
-          <Link href="/jeu/expeditions/nouvelle" className={styles.envoyer}>
+          <Link href="/jeu/expeditions/nouvelle" className={`${kit.bouton} ${kit.principal} ${kit.grand} ${styles.envoyer}`}>
             Envoyer une Expédition
           </Link>
-        </Bloc>
+        </section>
       ) : (
-        <Bloc>
+        <section className={`${kit.panneau} ${styles.bilan}`}>
           <p className={styles.total}>
             <strong className={styles.nombre}>{total}</strong> {betes(total)}
           </p>
-          {places ? <PlacesDeLHabitat {...places} /> : null}
-        </Bloc>
+          {places ? (
+            <div className={styles.places}>
+              <PlacesDeLHabitat {...places} />
+              <Jauge valeur={Math.ceil(places.occupees)} max={places.total} fine />
+            </div>
+          ) : null}
+        </section>
       )}
       {especes.length > 0 ? (
-        <ul className={styles.especes} aria-label="Effectif">
+        <ul className={`${kit.panneau} ${styles.especes}`} aria-label="Effectif">
           {especes.map((espece) => (
             <li key={espece.especeId}>
               <Link
@@ -67,7 +80,7 @@ export default async function Betes() {
               >
                 <IllustrationEspece espece={espece} format="vignette" className={styles.vignette} />
                 <span className={styles.identite}>
-                  <span className={styles.nom}>{espece.nom}</span>
+                  <span className={`${kit.titreServif} ${styles.nom}`}>{espece.nom}</span>
                   <PastilleRarete rarete={espece.rarete} />
                 </span>
                 <span className={styles.effectif}>{espece.effectif}</span>

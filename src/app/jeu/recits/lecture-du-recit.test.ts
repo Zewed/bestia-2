@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lireUnRetour, medaillonDuRecit, minutesDUneDuree } from "./lecture-du-recit";
+import { lireUnRetour, medaillonDuRecit, minutesDUneDuree, sorteDUnFait } from "./lecture-du-recit";
 
 describe("la lecture d'un Récit sur la page Récits", () => {
   it("lit une durée telle que le jeu l'écrit, en minutes", () => {
@@ -55,5 +55,22 @@ describe("la lecture d'un Récit sur la page Récits", () => {
       "/illustrations/icones/habitants.webp",
       "/illustrations/icones/habitants.webp",
     ]);
+  });
+
+  it("reconnaît les faits d'un combat, de ses pertes, de la fuite et d'une Bête partie ailleurs, pour les marquer (US-0947, US-0951, US-0964)", () => {
+    expect(
+      [
+        "Combat le 14 octobre à 09:59 : Loup gris, de force 173 205, contre votre escorte, de force 170 280.",
+        "Attaque le 14 octobre à 10:30 : Loup gris, de force 173 205, contre vos explorateurs, sans escorte.",
+        "Pertes au combat : Souris grise (2 morts, 1 Blessé) et Pigeon biset (2 Blessés).",
+        "Aucune perte.",
+        "Vos explorateurs ont fui et sont tous rentrés au Foyer.",
+        "Poule a suivi une autre Expédition.",
+        "Écureuil roux et Lièvre ont suivi d'autres Expéditions.",
+        "Pigeon biset n'était plus sur la Case à votre arrivée.",
+        "Une Bête s'est montrée.",
+        "Destination : Prairie, à 8 Cases de votre Foyer.",
+      ].map(sorteDUnFait),
+    ).toEqual(["combat", "combat", "pertes", "pertes", "fuite", "ailleurs", "ailleurs", "ailleurs", null, null]);
   });
 });

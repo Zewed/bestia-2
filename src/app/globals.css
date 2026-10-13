@@ -10,8 +10,9 @@
  *    qui alerte. Les titres en --police-titre (Marcellus, toujours en 400 : elle n'a pas de gras), le texte et les nombres
  *    en --police (Barlow : 500 pour l'interface, 600 pour ce qui compte), les étiquettes en --police-etroite.
  * 2. Le cadre. La barre du haut est la même sur chaque écran, et aucune page ne la refait (components/BarreHaut et ses
- *    pièces) : le blason du loup, le nom du chef et son menu, les cinq entrées et leurs médaillons (Foyer, Carte,
- *    Expéditions, Habitants, Récits), les quatre Stocks et le compteur d'Habitants ; dessous, l'avertissement de famine.
+ *    pièces) : le blason du loup, le nom du chef et son menu, les six entrées et leurs médaillons (Foyer, Carte,
+ *    Expéditions, Réserve, Habitants, Récits), les quatre Stocks et le compteur d'Habitants ; dessous, l'avertissement de
+ *    famine.
  *    Elle est en haut sur toutes les tailles, jamais au pied de l'écran ; la page commence sous elle (--hauteur-barre).
  * 3. Le fond. Chaque écran du jeu est posé sur le dégradé sarcelle et son grain (la règle « body » ci-dessous) : plus de
  *    peinture derrière les pages. Deux écrans seulement sont des scènes pleines : le Foyer (la hutte, d'un bord à

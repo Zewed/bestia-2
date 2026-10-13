@@ -27,7 +27,7 @@ describe("la page Bêtes (US-0810)", () => {
   });
 
   it("se touche au pouce et se voit au clavier", () => {
-    expect(regle(".espece:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    expect(regle(".espece:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
   });
 });
 
@@ -37,7 +37,7 @@ describe("la page Bêtes vide (US-0811)", () => {
   it("met le bouton « Envoyer une Expédition » au pouce : 44 px de haut, toute la largeur sur mobile", () => {
     expect(regle(".envoyer")).toContain("min-height: 44px;");
     expect(regle(".envoyer")).toContain("cursor: pointer;");
-    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--encre);");
+    expect(regle(".envoyer:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
     expect(regle(".envoyer", mobile)).toMatch(/display: flex;[^}]*width: 100%;/);
   });
 });

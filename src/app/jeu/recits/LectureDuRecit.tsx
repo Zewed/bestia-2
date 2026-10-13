@@ -3,7 +3,7 @@ import kit from "@/components/kit.module.css";
 import { Medaillon } from "@/components/Medaillon";
 import { Paysage } from "@/components/Paysage";
 import { RETOUR_D_EXPEDITION } from "@/expeditions/resume-du-retour";
-import { CASE_INCONNUE, lireUnRetour, medaillonDuRecit } from "./lecture-du-recit";
+import { CASE_INCONNUE, lireUnRetour, medaillonDuRecit, sorteDUnFait } from "./lecture-du-recit";
 import type { RecitAffiche } from "./ListeDesRecits";
 import styles from "./page.module.css";
 import { Livre, RencontresDuRecit } from "./RencontresDuRecit";
@@ -42,7 +42,9 @@ function PucesDuResume({ resume, rencontres }: Pick<RecitAffiche, "resume" | "re
  *
  * Un retour d'Expédition (US-0917) : les puces de son résumé (US-0941), ses faits ligne à ligne, ses durées sur la frise de
  * l'aller, du séjour et du retour ; puis chaque Bête vue, en carte (US-0940) ; sans Bête vue, le paysage de sa destination,
- * ou la brume d'une Case inconnue. Les autres Récits, leur texte, ses retours à la ligne gardés.
+ * ou la brume d'une Case inconnue. Parmi les faits, un combat et ses pertes se marquent de braise (US-0947, US-0951), la
+ * fuite des explorateurs et une Bête partie ailleurs (US-0964, US-0949) passent en discret (sorteDUnFait). Les autres
+ * Récits, leur texte, ses retours à la ligne gardés.
  */
 export function LectureDuRecit({ recit, id, hidden }: { recit: RecitAffiche; id: string; hidden: boolean }) {
   const retour = recit.titre === RETOUR_D_EXPEDITION ? lireUnRetour(recit.texte) : null;
@@ -60,7 +62,9 @@ export function LectureDuRecit({ recit, id, hidden }: { recit: RecitAffiche; id:
         <div className={styles.trajet}>
           <ul className={styles.faits}>
             {retour.faits.map((fait, i) => (
-              <li key={i}>{fait}</li>
+              <li key={i} data-fait={sorteDUnFait(fait) ?? undefined}>
+                {fait}
+              </li>
             ))}
           </ul>
           {retour.durees ? <Frise durees={retour.durees} className={styles.frise} /> : null}

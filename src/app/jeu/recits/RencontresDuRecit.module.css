@@ -141,6 +141,12 @@
   color: var(--parchemin);
 }
 
+/* US-0950, US-0964 : l'heure où une Bête est repartie, ou partie avec une autre Expédition, en parchemin. */
+.issue time {
+  color: var(--parchemin);
+  font-weight: var(--graisse-titre);
+}
+
 /* « Nouvelle Espèce au Bestiaire » : le ruban de cuivre ; il passe à la ligne plutôt que de déborder. */
 .nouvelleEspece {
   max-width: 100%;
