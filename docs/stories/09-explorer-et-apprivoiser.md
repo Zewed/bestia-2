@@ -569,6 +569,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0952 · Voir ses Blessés
 **En tant que** joueur, **je veux** voir mes Blessés à part dans l'effectif, **afin de** savoir sur quelles Bêtes je peux compter.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#61). Les Blessés au Foyer se lisent à part dans l'effectif de chaque Espèce, un groupe par ligne avec le temps avant sa guérison : page Bêtes (« Poule, Commune, 797 Bêtes, dont 2 Blessés, guéris dans 5 h »), fiche de l'Espèce sous l'Effectif (« dont 6 Blessés, guéris dans 5 h ») et bloc Escorte de l'écran d'Expédition. Sans Blessé, aucune ligne. Tranché : un groupe = les Blessés d'une Espèce rentrés au Foyer au même instant ; guérison 24 h de jeu après le retour (`GUERISON_DES_BLESSES_HEURES`, provisoire, à régler avec US-0954) ; rien ne s'écrit en base, tout se relit du retour ; les Blessés comptent dans l'effectif (« dont ») ; dans l'Escorte, ils restent parmi les disponibles jusqu'à US-0953 ; jamais plus de Blessés affichés que l'Espèce n'en a. Vérifié en vrai après un vrai combat contre un Loup gris.
 - **Débloquée par** : US-0951
 - **Critères d'acceptation** :
   - L'effectif de chaque Espèce distingue les Bêtes valides et les Blessés.
@@ -717,6 +718,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0967 · Deux Expéditions du même joueur sur une Case
 **En tant que** joueur, **je veux** savoir si je peux envoyer deux Expéditions sur la même Case, **afin de** ne pas gaspiller mes explorateurs.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#72). Un joueur peut envoyer une seconde Expédition vers une Case où il en a déjà une, sans message (US-0919 : aucune limite sauf les explorateurs libres). Ses deux Expéditions passent par le même tirage proportionnel à la force (US-0963), qui ne sait pas à qui elles sont ; celle qui perd lit « X a suivi une autre Expédition. » (US-0964), sans la ligne des autres joueurs. Les règles en place font la story : elle est prouvée par des tests. « Nouvelle Espèce au Bestiaire » reste sur la Rencontre de la première Expédition lancée (US-0933).
 - **Débloquée par** : US-0963
 - **Critères d'acceptation** :
   - Envoyer une seconde Expédition vers une Case où l'on en a déjà une : autorisé ou refusé avec un message (à décider).
@@ -725,6 +727,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0968 · La simulation des chances
 **En tant que** développeur, **je veux** simuler un grand nombre de Rencontres disputées, **afin de** vérifier que les chances suivent bien les forces.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#70). La page de contrôle interne mène à « Simulation des chances » (/controle/chances) : 10 000 Rencontres disputées jugées par le vrai tirage du jeu (US-0963), un tableau par simulation (forces, victoires, part obtenue et attendue) et le contrôle en tête ; d'emblée 1 et 3 (24,8 % pour 25 % attendus), puis 1, 2 et 3, et des forces saisies. Tranché : tolérance de 2 points à 10 000 Rencontres (`SIMULATION_DES_CHANCES_TOLERANCE_POINTS`, provisoire) ; même protection et même apparence que la simulation des Raretés ; rien n'est lu ni écrit en base.
 - **Débloquée par** : US-0963
 - **Critères d'acceptation** :
   - Un outil de la page de contrôle interne simule un grand nombre de Rencontres entre plusieurs Expéditions de forces différentes.
