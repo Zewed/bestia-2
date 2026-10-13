@@ -118,10 +118,11 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
       ["pigeon", "male", 2],
       ["souris", "male", 2],
     ]);
+    // Le voisin n'a pas encore de poule.
+    expect(await plus(voisin, "poule", 1)).toEqual([false]);
     await ajouter(voisin, [["poule", "male", 2]]);
     expect(await plus(t, "pigeon", 1)).toEqual([false]);
     expect(await plus(t, "souris", 1)).toEqual([false]);
-    expect(await plus(t, "renard", 1)).toEqual([false]);
     expect(await plus(t, "inconnue", 1)).toEqual([false]);
     expect(await plus(voisin, "poule", 1)).toEqual([true]);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 2 } });
