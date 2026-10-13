@@ -892,6 +892,8 @@ export const elevage = pgTable(
   },
   (t) => [
     index("elevage_par_territoire").on(t.territoireId),
+    // Un Habitant qui s'en va met son Élevage sans éleveur (set null) : retrouvé par cet index.
+    index("elevage_par_eleveur").on(t.eleveurId),
     check("elevage_au_moins_une_bete", sql`${t.quantite} > 0`),
     check("elevage_duree_positive", sql`${t.dureeMinutes} > 0`),
     check("elevage_cout_positif", sql`${t.cout} >= 0`),

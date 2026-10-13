@@ -219,15 +219,17 @@ describe("lancer l'Élevage (US-0815)", () => {
     expect(cache.refresh).toHaveBeenCalledOnce();
   });
 
-  it("ne lance rien pour une demande refusée d'avance : sans Couple, sans éleveur, ou d'une quantité refusée", async () => {
+  it("ne lance rien pour une demande refusée d'avance : sans Couple, sans éleveur, ou d'une quantité refusée ; la page est relue quand même", async () => {
     connecte();
     elevage.elevageAcquis.mockResolvedValue(false);
     expect(await demander("pigeon")).toEqual({ refus: ELEVAGE_SANS_COUPLE });
     elevage.elevageAcquis.mockResolvedValue(true);
     expect(await demander("poule", "0")).toEqual({ refus: QUANTITE_REFUSEE });
+    // Un autre appareil a occupé l'éleveur : la page relue le dira.
     elevage.eleveurLibre.mockResolvedValueOnce(null);
     expect(await demander("poule")).toEqual({ refus: ELEVAGE_SANS_ELEVEUR });
     expect(lancement.lancerUnElevage).not.toHaveBeenCalled();
+    expect(cache.refresh).toHaveBeenCalledTimes(3);
   });
 });
 

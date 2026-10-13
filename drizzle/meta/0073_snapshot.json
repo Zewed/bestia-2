@@ -1,5 +1,5 @@
 {
-  "id": "afedb030-a883-4893-a0f7-78f08e53d82d",
+  "id": "c0a31e59-8d0b-4851-ad99-e1fc0165a9ea",
   "prevId": "3d2ef4a7-6d13-43df-b1a3-75ac86219c92",
   "version": "7",
   "dialect": "postgresql",
@@ -1105,6 +1105,21 @@
           "columns": [
             {
               "expression": "territoire_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "elevage_par_eleveur": {
+          "name": "elevage_par_eleveur",
+          "columns": [
+            {
+              "expression": "eleveur_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"

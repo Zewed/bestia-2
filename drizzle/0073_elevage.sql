@@ -18,4 +18,5 @@ CREATE TABLE "elevage" (
 ALTER TABLE "elevage" ADD CONSTRAINT "elevage_territoire_id_territoire_id_fk" FOREIGN KEY ("territoire_id") REFERENCES "public"."territoire"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "elevage" ADD CONSTRAINT "elevage_espece_id_espece_id_fk" FOREIGN KEY ("espece_id") REFERENCES "public"."espece"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "elevage" ADD CONSTRAINT "elevage_eleveur_id_habitant_id_fk" FOREIGN KEY ("eleveur_id") REFERENCES "public"."habitant"("id") ON DELETE set null ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "elevage_par_territoire" ON "elevage" USING btree ("territoire_id");
+CREATE INDEX "elevage_par_territoire" ON "elevage" USING btree ("territoire_id");--> statement-breakpoint
+CREATE INDEX "elevage_par_eleveur" ON "elevage" USING btree ("eleveur_id");

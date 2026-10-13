@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useRef, useState } from "react";
 import { Bloc } from "@/components/Bloc";
 import { Jauge } from "@/components/Jauge";
 import kit from "@/components/kit.module.css";
@@ -84,6 +84,11 @@ export function BlocElever({
   vitesse?: number;
 }) {
   const [{ refus, lance }, envoyer, enCours] = useActionState(elever, SANS_REFUS);
+  // US-0815 : l'Élevage lancé, dit dans une région toujours là (annoncée à coup sûr), où va la main : le bouton s'est grisé.
+  const dit = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (lance) dit.current?.focus();
+  }, [lance]);
   const idRefus = useId();
   const idSansEleveur = useId();
   const idQuantite = useId();
@@ -200,11 +205,9 @@ export function BlocElever({
               {refus}
             </p>
           ) : null}
-          {lance ? (
-            <p className={styles.lance} role="status">
-              {`Élevage lancé : ${lance.quantite} ${lance.quantite > 1 ? "Bêtes" : "Bête"}, confié à ${lance.eleveur}.`}
-            </p>
-          ) : null}
+          <p ref={dit} className={styles.lance} role="status" tabIndex={-1}>
+            {lance ? `Élevage lancé : ${lance.quantite} ${lance.quantite > 1 ? "Bêtes" : "Bête"}, confié à ${lance.eleveur}.` : ""}
+          </p>
         </form>
       </Bloc>
     </div>

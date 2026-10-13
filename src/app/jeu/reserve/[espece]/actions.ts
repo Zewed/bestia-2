@@ -34,12 +34,19 @@ export async function elever(_avant: EtatDeLElevage, formulaire: FormData): Prom
   const especes = formulaire.getAll("espece");
   const especeId = especes.length === 1 && typeof especes[0] === "string" && IDENTIFIANT.test(especes[0]) ? especes[0] : null;
   const { territoireId } = await exigerCompte(especeId ? `/jeu/reserve/${especeId}` : "/jeu/reserve");
+  const etat = await demander(territoireId, especeId, formulaire);
+  // La page relue fait foi, refus compris : un autre appareil a pu lancer l'Élevage ou occuper l'éleveur entre-temps.
+  refresh();
+  return etat;
+}
+
+/** US-0815 : la demande, une fois le joueur connu : ses refus d'avance, puis le lancement, qui relit tout. */
+async function demander(territoireId: number | null, especeId: string | null, formulaire: FormData): Promise<EtatDeLElevage> {
   if (territoireId === null || especeId === null || !(await elevageAcquis(getPool(), territoireId, especeId))) return { refus: ELEVAGE_SANS_COUPLE };
   if ((await eleveurLibre(getPool(), territoireId)) === null) return { refus: ELEVAGE_SANS_ELEVEUR };
   const quantites = formulaire.getAll("quantite");
   const quantite = quantites.length === 1 && typeof quantites[0] === "string" ? lireUneQuantite(quantites[0]) : null;
   if (quantite === null) return { refus: QUANTITE_REFUSEE };
   const lancement = await lancerUnElevage(getPool(), territoireId, especeId, quantite, maintenant());
-  refresh();
   return "refus" in lancement ? { refus: lancement.refus } : { refus: null, lance: lancement.lance };
 }

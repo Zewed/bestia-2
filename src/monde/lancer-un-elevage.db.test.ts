@@ -3,6 +3,7 @@ import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
 import { lireMarquePage } from "@/temps/marque-page";
+import { rattraper } from "@/temps/rattraper";
 import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { reunirLesCouples } from "./couple";
 import { coutDUneBeteElevee, dureeDUneBeteEleveeMinutes } from "./cout-d-elevage";
@@ -197,4 +198,76 @@ describe.skipIf(!URL_TEST)("lancer un Élevage (US-0815, sur base)", () => {
     const restants = (await pool.query<{ id: number }>("select id from habitant where territoire_id = $1 order by id", [t.territoireId])).rows.map((h) => h.id);
     expect(restants).toEqual([t.habitants[2]]);
   });
+
+  it("paie au millionième près, sans toucher au reste d'un Stock, et le temps reprend de là", async () => {
+    const t = await naitre();
+    await reunir(t, "souris");
+    await eleveurs([t.habitants[0]]);
+    const unite = await cout("souris");
+    // Des Stocks comme la production les laisse : des millionièmes, et un reste sous le millionième.
+    await pool.query(
+      `update stock set quantite = case ressource_id when 'viande' then 20.5 else 10.25 end, reste = case ressource_id when 'viande' then 1800 else 7 end,
+         limite = 100000, plein_depuis = null
+       where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')`,
+      [t.territoireId],
+    );
+    expect(await lancerUnElevage(pool, t.territoireId, "souris", 1, t.ne)).toMatchObject({ lance: { quantite: 1 } });
+    const apres = async () =>
+      (
+        await pool.query<{ ressource_id: string; quantite: string; reste: string }>(
+          "select ressource_id, quantite::text, reste::text from stock where territoire_id = $1 and ressource_id in ('viande', 'vegetaux') order by ressource_id",
+          [t.territoireId],
+        )
+      ).rows;
+    // La Viande, la plus fournie, donne tout (20,5) ; les Végétaux le reste ; les restes n'ont pas bougé.
+    expect(await apres()).toEqual([
+      { ressource_id: "vegetaux", quantite: (10.25 - (unite - 20.5)).toFixed(6), reste: "7.000000" },
+      { ressource_id: "viande", quantite: "0.000000", reste: "1800.000000" },
+    ]);
+    // Le temps reprend de là : une heure de production plus tard, les Stocks ont monté.
+    await rattraper("territoire", t.territoireId, { pool, jusqua: new Date(t.ne.getTime() + 3_600_000) });
+    const [vegetaux, viande] = await apres();
+    expect(Number(vegetaux.quantite)).toBeGreaterThan(10.25 - (unite - 20.5));
+    expect(Number(viande.quantite)).toBeGreaterThan(0);
+  });
+
+  it("par le temps qui avance, ne fait jamais partir en Famine un éleveur à l'Élevage : la Famine dure, ses éleveurs restent (US-0834)", async () => {
+    const t = await naitre();
+    await reunir(t, "souris");
+    await reunir(t, "pigeon");
+    await eleveurs([t.habitants[0], t.habitants[1]]);
+    await pool.query("update habitant set metier = 'chasseur' where id = $1", [t.habitants[2]]);
+    await nourriture(t.territoireId, "1000", "1000");
+    expect(await lancerUnElevage(pool, t.territoireId, "souris", 1, t.ne)).toMatchObject({ lance: { quantite: 1 } });
+    expect(await lancerUnElevage(pool, t.territoireId, "pigeon", 1, t.ne)).toMatchObject({ lance: { quantite: 1 } });
+    // Plus de Nourriture, et plus de production : le Foyer passe à un voisin (comme pour les explorateurs, US-0921).
+    await nourriture(t.territoireId, "0", "0");
+    const voisin = await naitre();
+    await pool.query("update case_du_monde set chef_id = (select chef_id from territoire where id = $2) where id = (select foyer_case_id from territoire where id = $1)", [
+      t.territoireId,
+      voisin.territoireId,
+    ]);
+    await rattraper("territoire", t.territoireId, { pool, jusqua: new Date(t.ne.getTime() + 10 * 3_600_000) });
+    // Le chasseur, seul libre, est parti ; les deux éleveurs restent à l'Élevage, et la Famine dure.
+    const restants = (await pool.query<{ id: number; espece_elevee: string | null }>("select id, espece_elevee from habitant where territoire_id = $1 order by id", [t.territoireId])).rows;
+    expect(restants.map((h) => h.id).sort()).toEqual([t.habitants[0], t.habitants[1]].sort());
+    expect(restants.every((h) => h.espece_elevee !== null)).toBe(true);
+    expect((await pool.query("select famine_depuis is not null as famine from territoire where id = $1", [t.territoireId])).rows[0]).toEqual({ famine: true });
+  });
+
+  it("se lance pendant que le temps du Territoire avance, l'un après l'autre : un Élevage, jamais de Stock sous zéro", async () => {
+    const t = await naitre();
+    await reunir(t, "souris");
+    await eleveurs([t.habitants[0]]);
+    await nourriture(t.territoireId, "100", "100");
+    const [, lance] = await Promise.all([
+      rattraper("territoire", t.territoireId, { pool, jusqua: new Date(t.ne.getTime() + 5 * 3_600_000) }),
+      lancerUnElevage(pool, t.territoireId, "souris", 2, t.ne),
+    ]);
+    expect(lance).toMatchObject({ lance: { quantite: 2 } });
+    expect(await elevages(t.territoireId)).toHaveLength(1);
+    const apres = await stocks(t.territoireId);
+    expect(Math.min(apres.viande, apres.vegetaux)).toBeGreaterThanOrEqual(0);
+  });
 });
+

@@ -103,7 +103,8 @@ describe("choisir combien de Bêtes élever (US-0813)", () => {
   it("dit aux lecteurs d'écran la quantité que « − », « + » ou « Max » donnent, la main restant sur le bouton ; rien quand on l'écrit", async () => {
     const u = userEvent.setup();
     render(<BlocElever especeId="poule" places={PLACES} max={MAX} eleveur="Brune" elevage={POULE_ELEVEE} maintenant={MAINTENANT} />);
-    const annonce = () => screen.getByRole("status").textContent;
+    // La sortie de la quantité, à côté de la région de l'Élevage lancé (US-0815).
+    const annonce = () => screen.getAllByRole("status").find((r) => r.tagName === "OUTPUT")!.textContent;
     expect(annonce()).toBe("");
     await u.click(bouton("Une Bête de plus"));
     expect(annonce()).toBe("Quantité : 2");
@@ -323,10 +324,17 @@ describe("lancer l'Élevage (US-0815)", () => {
     await u.type(champ(), "3");
     await u.click(boutonElever());
     const dit = await within(bloc()).findByText("Élevage lancé : 3 Bêtes, confié à Brune.");
-    // Dit aux lecteurs d'écran aussi, sans voler la main.
+    // Dit aux lecteurs d'écran dans une région toujours là, où va la main, le bouton s'étant grisé.
     expect(dit.getAttribute("role")).toBe("status");
+    expect(document.activeElement).toBe(dit);
     const envoye = actions.elever.mock.lastCall![1];
     expect([envoye.get("espece"), envoye.get("quantite")]).toEqual(["poule", "3"]);
+  });
+
+  it("garde la région de l'Élevage lancé dans le bloc, vide tant que rien n'est lancé", () => {
+    render(<BlocElever especeId="poule" places={PLACES} max={MAX} eleveur="Brune" elevage={POULE_ELEVEE} maintenant={MAINTENANT} />);
+    const regions = within(bloc()).getAllByRole("status").filter((r) => r.tagName === "P");
+    expect(regions.map((r) => r.textContent)).toEqual([""]);
   });
 
   it("grise « Élever » d'une quantité refusée, et pendant l'envoi : un double clic n'envoie qu'une demande", async () => {
