@@ -6,7 +6,7 @@
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
-import { BETES_SORTIES } from "./effectif";
+import { BETES_SORTIES, BLESSES_EN_GUERISON } from "./effectif";
 
 /**
  * US-0837 : les Rôles qui servent au Foyer, et s'affectent depuis la page Bêtes : le Nourricier. L'Éclaireur, lui,
@@ -23,10 +23,11 @@ export type RoleAuFoyer = { role: { id: string; nom: string }; affectees: number
 
 /**
  * US-0837 : chaque Espèce de l'effectif du Territoire dont le Rôle sert au Foyer, ligne par ligne (`e`, regroupée par
- * Territoire et Espèce, et `nombre`, son effectif) : son Rôle, ses Bêtes valides au Foyer à l'instant du jeu $2, et ses
+ * Territoire et Espèce, et `nombre`, son effectif) : son Rôle, ses Bêtes valides au Foyer à l'instant du jeu $3, et ses
  * Bêtes affectées parmi elles. Valides : l'effectif, moins les Bêtes sorties en escorte (BETES_SORTIES), moins les Blessés
- * au Foyer pas encore guéris $3 heures après leur retour (la règle de blessesAuFoyer). Le nombre retenu (affectation)
- * peut les dépasser quand des affectées sortent ou se blessent : seules les valides se lisent affectées.
+ * au Foyer pas encore guéris $2 heures après leur retour (BLESSES_EN_GUERISON, jamais plus que les Bêtes au Foyer), comme
+ * les disponibles de l'escorte. Le nombre retenu (affectation) peut les dépasser quand des affectées sortent ou se
+ * blessent : seules les valides se lisent affectées.
  */
 const ROLES_DE_L_EFFECTIF = `
   select e.espece_id, ro.id as role_id, ro.nom as role_nom, v.valides, least(coalesce(a.nombre, 0), v.valides) as affectees
@@ -34,13 +35,7 @@ const ROLES_DE_L_EFFECTIF = `
   join espece es on es.id = e.espece_id
   join role ro on ro.id = es.role_id and ro.id = any($4::text[])
   cross join lateral (select greatest(0, e.nombre - (${BETES_SORTIES})) as au_foyer) f
-  cross join lateral (
-    select f.au_foyer - least(f.au_foyer, (
-      select coalesce(sum(s.blessees), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
-      where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null
-        and x.rentree_le + $3 * interval '1 hour' > $2
-    )) as valides
-  ) v
+  cross join lateral (select f.au_foyer - least(f.au_foyer, (${BLESSES_EN_GUERISON})) as valides) v
   left join affectation a on a.territoire_id = e.territoire_id and a.espece_id = e.espece_id
   where e.nombre > 0`;
 
@@ -51,7 +46,7 @@ const ROLES_DE_L_EFFECTIF = `
 export async function rolesAuFoyer(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<Map<string, RoleAuFoyer>> {
   const { rows } = await base.query<{ espece_id: string; role_id: string; role_nom: string; valides: number; affectees: number }>(
     `${ROLES_DE_L_EFFECTIF} order by e.espece_id`,
-    [territoireId, instant, GUERISON_DES_BLESSES_HEURES, ROLES_AU_FOYER],
+    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER],
   );
   return new Map(rows.map((r) => [r.espece_id, { role: { id: r.role_id, nom: r.role_nom }, affectees: r.affectees, valides: r.valides }]));
 }
@@ -70,7 +65,7 @@ export async function affecterUneBete(base: Pool | PoolClient, territoireId: num
      select $1, $5, 1 from v where v.valides > 0
      on conflict (territoire_id, espece_id) do update set nombre = least(affectation.nombre, (select valides from v)) + 1
        where least(affectation.nombre, (select valides from v)) < (select valides from v)`,
-    [territoireId, instant, GUERISON_DES_BLESSES_HEURES, ROLES_AU_FOYER, especeId],
+    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER, especeId],
   );
   return rowCount === 1;
 }
@@ -85,7 +80,7 @@ export async function retirerUneBete(base: Pool | PoolClient, territoireId: numb
     `with v as (${ROLES_DE_L_EFFECTIF} and e.espece_id = $5)
      update affectation a set nombre = least(a.nombre, v.valides) - 1 from v
      where a.territoire_id = $1 and a.espece_id = $5 and least(a.nombre, v.valides) > 0`,
-    [territoireId, instant, GUERISON_DES_BLESSES_HEURES, ROLES_AU_FOYER, especeId],
+    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, ROLES_AU_FOYER, especeId],
   );
   return rowCount === 1;
 }
