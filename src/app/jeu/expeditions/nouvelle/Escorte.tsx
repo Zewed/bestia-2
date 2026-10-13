@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { useId } from "react";
 import { Bloc } from "@/components/Bloc";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
+import kit from "@/components/kit.module.css";
 import { forceDeLEscorte } from "@/expeditions/force";
 import { type BlessesAffiches, blessesDans } from "@/monde/blesses-affiches";
 import type { EspeceDisponible } from "@/monde/effectif";
@@ -31,7 +32,6 @@ export function escorteChoisie(recherche: URLSearchParams, especes: Pick<EspeceD
 
 /** « 3 disponibles », « 1 disponible ». */
 const disponibles = (n: number) => `${n} disponible${n > 1 ? "s" : ""}`;
-
 
 /** US-0937 : « 2 mâles · 1 femelle », « 0 mâle · 3 femelles ». */
 const sexes = ({ males, femelles }: Pick<EspeceDisponible, "males" | "femelles">) =>
@@ -94,20 +94,20 @@ export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]
                 ))}
               </p>
               <div role="group" aria-labelledby={idNom} className={styles.choix}>
-                <span className={styles.paire}>
-                  <button type="button" className={styles.bouton} aria-label="Une Bête de moins" disabled={nombre === 0} onClick={() => choisir(e.id, nombre - 1)}>
+                <span className={kit.pas}>
+                  <button type="button" className={`${kit.pasBouton} ${styles.bouton}`} aria-label="Une Bête de moins" disabled={nombre === 0} onClick={() => choisir(e.id, nombre - 1)}>
                     −
                   </button>
-                  <output className={styles.nombre}>{nombre}</output>
-                  <button type="button" className={styles.bouton} aria-label="Une Bête de plus" disabled={nombre >= e.disponibles} onClick={() => choisir(e.id, nombre + 1)}>
+                  <output className={kit.pasValeur}>{nombre}</output>
+                  <button type="button" className={`${kit.pasBouton} ${styles.bouton}`} aria-label="Une Bête de plus" disabled={nombre >= e.disponibles} onClick={() => choisir(e.id, nombre + 1)}>
                     +
                   </button>
                 </span>
                 <span className={styles.paire}>
-                  <button type="button" className={`${styles.bouton} ${styles.mot}`} disabled={nombre >= e.disponibles} onClick={() => choisir(e.id, e.disponibles)}>
+                  <button type="button" className={`${kit.bouton} ${kit.discret} ${styles.mot}`} disabled={nombre >= e.disponibles} onClick={() => choisir(e.id, e.disponibles)}>
                     Toutes
                   </button>
-                  <button type="button" className={`${styles.bouton} ${styles.mot}`} disabled={nombre === 0} onClick={() => choisir(e.id, 0)}>
+                  <button type="button" className={`${kit.bouton} ${kit.discret} ${styles.mot}`} disabled={nombre === 0} onClick={() => choisir(e.id, 0)}>
                     Aucune
                   </button>
                 </span>

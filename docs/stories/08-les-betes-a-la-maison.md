@@ -37,6 +37,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0804 · Lire l'attaque, la vie, la vitesse et la charge
 **En tant que** joueur, **je veux** lire les chiffres de combat et de transport d'une Espèce, **afin de** savoir ce que vaut chacune de ses Bêtes.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#56). Sous l'effectif, la fiche d'une Espèce donne son Attaque, sa Vie, sa Vitesse (en km/h) et sa Charge, avec les valeurs de la base, à la française (« 14 953 », « 87,5 »). Tranché : une Espèce sans masse ou sans vitesse ne peut pas entrer en base (les données la refusent) ; la charge s'affiche sans unité, son explication vient avec US-0807. Reste : l'ordre de « Fermer » sur un téléphone couché, à revoir avec US-0807.
 - **Débloquée par** : US-0803
 - **Critères d'acceptation** :
   - La fiche affiche l'attaque, la vie, la vitesse et la charge de l'Espèce, avec les valeurs enregistrées pour elle.
@@ -46,6 +47,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0805 · Lire la taille, le régime et l'Entretien
 **En tant que** joueur, **je veux** lire ce qu'une Bête occupe et ce qu'elle mange, **afin de** savoir combien je peux en loger et en nourrir.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#71). La fiche d'une Espèce ajoute sa Taille (« 31,623 Places », « 1 Place »), son Régime (« Omnivore ») et son Entretien (« 5 Viande ou Végétaux / h » ; un carnivore mange de la Viande, un herbivore des Végétaux), dans le bloc des caractéristiques de la refonte. Tranché : « Viande ou Végétaux » pour un omnivore, à reprendre si US-0826 choisit un partage fixe.
 - **Débloquée par** : US-0803
 - **Critères d'acceptation** :
   - La fiche affiche la taille de l'Espèce, en Places occupées par Bête.
@@ -104,6 +106,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0811 · Voir un effectif vide
 **En tant que** nouveau joueur, **je veux** une page Bêtes sobre tant que je n'ai aucune Bête, **afin de** savoir où aller en chercher.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#62). Sans aucune Bête, la page Bêtes dit seulement « Aucune Bête pour l'instant » avec le bouton « Envoyer une Expédition » ; dès la première Bête, le total et la liste reviennent. Tranché : « sans autre phrase » à la lettre, comme US-0809 ; le bloc « Bêtes » du Foyer garde « 0 ».
 - **Débloquée par** : US-0810
 - **Critères d'acceptation** :
   - Sans aucune Bête, la page Bêtes affiche « Aucune Bête pour l'instant », sans autre phrase.
@@ -113,6 +116,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0812 · Trouver l'Élevage d'une Espèce
 **En tant que** joueur, **je veux** trouver l'Élevage sur la fiche d'une Espèce dont j'ai réuni le Couple, **afin de** produire des Bêtes de cette Espèce.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#64). La fiche d'une Espèce dont le joueur a réuni le Couple montre un bloc « Élever » (ancre #elever) ; aucune autre fiche ne l'a. L'annonce du Couple réuni dans le récit (US-0958) porte un lien « Élever » vers ce bloc. Tranché : le bouton reste grisé tant que l'Élevage ne se lance pas (US-0813 à US-0815) ; l'action serveur `elever` est le seul chemin d'une demande, prend le Territoire de la session, relit l'Élevage acquis et refuse sans Couple (« Pas d'Élevage sans Couple réuni. »), de la même façon pour le Couple d'un autre ou une Espèce inconnue. Le vrai lancement (US-0815) devra relire l'Élevage acquis dans la transaction du paiement.
 - **Débloquée par** : US-0803, US-0957
 - **Critères d'acceptation** :
   - La fiche d'une Espèce dont le Couple est réuni propose un bloc « Élever ».
@@ -230,6 +234,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0822 · Voir les Places de l'Habitat du Foyer
 **En tant que** joueur, **je veux** voir combien de Places offre l'Habitat de mon Foyer et combien sont prises, **afin de** savoir combien de Bêtes je peux encore loger.
 
+- **Statut** : Livrée le 2026-10-12 (autopilot, Zewed/bestia-2#68). La page Bêtes dit, sous le total, « Places : 16 / 500 », et le bloc « Élever » montre le même compteur. Les Places prises sont l'effectif fois la taille de chaque Espèce, arrondies à la Place entière supérieure. Tranché : `PLACES_DE_L_HABITAT_DU_FOYER = 500` (provisoire) ; les Bêtes en escorte et les Blessés gardent leur Place ; le Couple, en Réserve, n'en prend pas (le point « à décider » de US-0824, réglé en un seul endroit) ; un dépassement s'affiche tel quel (US-0939, US-0825).
 - **Débloquée par** : US-0810
 - **Critères d'acceptation** :
   - La page Bêtes affiche « Places : occupées / total » pour l'Habitat du Foyer.
