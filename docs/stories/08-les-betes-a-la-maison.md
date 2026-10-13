@@ -139,7 +139,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0813 · Choisir combien de Bêtes élever
 **En tant que** joueur, **je veux** choisir le nombre de Bêtes à élever, **afin de** doser ce que j'investis.
 
-- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#74). Le bloc « Élever » de la fiche propose la quantité : « − », le champ (1 d'abord), « + » et « Max », qui donne le plus grand nombre de Bêtes que les Stocks de Nourriture paient (poule, 1 000 Viande et 1 000 Végétaux : 2). Une quantité nulle, négative ou non entière (« 0 », « -2 », « 2,5 », « deux ») est refusée sous le champ : « La quantité doit être un nombre entier, d'au moins 1. », et par le serveur pour une demande forgée. Le bouton « Élever » reste grisé jusqu'à US-0815. Tranché : une Bête élevée coûte la Nourriture qu'elle mange en 7 jours (`JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE`, provisoire ; poule 840, souris 28) ; un carnivore paie en Viande, un herbivore en Végétaux, un omnivore avec les deux additionnés ; « Max » ne compte pas encore les Places (US-0825) ni les Élevages en cours (US-0819).
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#74). Le bloc « Élever » de la fiche propose la quantité : « − », le champ (1 d'abord), « + » et « Max », qui donne le plus grand nombre de Bêtes que les Stocks de Nourriture paient (poule, 1 000 Viande et 1 000 Végétaux : 2). Une quantité nulle, négative ou non entière (« 0 », « -2 », « 2,5 », « deux ») est refusée sous le champ : « La quantité doit être un nombre entier, d'au moins 1. », et par le serveur pour une demande forgée. Le bouton « Élever » reste grisé jusqu'à US-0815. Tranché : une Bête élevée coûte la Nourriture qu'elle mange en 7 jours (`JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE`, provisoire ; poule 840, souris 29 depuis US-0814, qui arrondit le coût d'une Bête à l'unité supérieure) ; un carnivore paie en Viande, un herbivore en Végétaux, un omnivore avec les deux additionnés ; « Max » ne compte pas encore les Places (US-0825) ni les Élevages en cours (US-0819).
 - **Débloquée par** : US-0812
 - **Critères d'acceptation** :
   - Le bloc « Élever » propose un champ de quantité, des boutons « − » et « + », et un bouton « Max ».
@@ -149,6 +149,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0814 · Voir le coût et la durée d'un Élevage
 **En tant que** joueur, **je veux** voir ce que coûte un Élevage et combien de temps il prend, **afin de** décider avant de payer.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#82). Le bloc « Élever » affiche le coût total en Nourriture, la durée d'Élevage d'une Bête, la durée totale et l'heure où naîtra la dernière Bête (à l'heure du jeu, l'année quand ce n'est pas l'année en cours) ; les quatre suivent chaque changement de quantité. Tranché (provisoire) : le coût se paie selon le régime de l'Espèce (US-0813) ; il est arrondi à la Nourriture entière supérieure, pour que le coût affiché et « Max » ne contredisent jamais les Stocks (souris 29, poule 840) ; une Bête met 15 minutes par Place qu'elle occupe (`MINUTES_D_ELEVAGE_PAR_PLACE` : souris 15 min, pigeon 2 h 08, poule 7 h 54), sans migration.
 - **Débloquée par** : US-0813
 - **Critères d'acceptation** :
   - Le bloc affiche le coût total en Nourriture : le coût d'une Bête (chiffre à régler par Espèce) fois la quantité choisie.
@@ -247,6 +248,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0823 · Loger au Foyer les Bêtes de tout Biome
 **En tant que** joueur, **je veux** loger au Foyer toutes les Bêtes que je ramène, quel que soit leur Biome, **afin de** ne pas être bloqué avant d'avoir des Habitats.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#80). Les règles en place la font : le Foyer, en prairie, accueille les Bêtes de tous les Biomes, et leurs Places comptent toutes ; la fiche dit quand même leur Habitat (« Habitat Eau », « Habitat Montagne »). Prouvée par un essai qui ramène une Bête commune de chaque Biome hors prairie (désert, eau, forêt, montagne, savane, toundra) et vérifie l'effectif, les Places et les fiches ; vérifiée en vrai avec une gerboise, une grenouille, un écureuil, une marmotte et un suricate.
 - **Débloquée par** : US-0822
 - **Critères d'acceptation** :
   - Jusqu'aux Habitats par Biome (étape 51), les Places du Foyer accueillent les Bêtes de toutes les Espèces, quel que soit leur Biome d'Habitat.
