@@ -210,6 +210,15 @@ describe("la carte ouverte pour choisir la destination d'une Expédition (US-090
     expect(proprietes(renderToStaticMarkup(await Carte(ouverte({ choix: "destination", sejour: "60" })))).destination).toBe("choix=destination&sejour=60");
   });
 
+  it("le dit aussi au joueur, d'un écriteau en haut de la carte : « Choisir une destination », sans autre phrase", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Carte(ouverte({ choix: "destination", sejour: "60" })));
+    expect(html).toMatch(/^<main[^>]*><h1[^>]*>Carte<\/h1><p[^>]*>(?:(?!<\/p>).)*Choisir une destination<\/p><canvas/);
+    // Ouverte depuis la navigation, ou pour un autre choix, la carte n'a pas d'écriteau.
+    expect(renderToStaticMarkup(await Carte(ouverte()))).not.toContain("Choisir une destination");
+    expect(renderToStaticMarkup(await Carte(ouverte({ choix: "autre" })))).not.toContain("Choisir une destination");
+  });
+
   it("ouverte depuis la navigation, ou pour un autre choix, ne choisit pas de destination", async () => {
     connecte();
     expect(proprietes(renderToStaticMarkup(await Carte(ouverte()))).destination).toBeNull();

@@ -47,6 +47,8 @@
   --ombre-verre: 0 10px 30px -10px var(--ombre-profonde);
   --anneau-medaillon: 0 0 0 1px var(--cuivre-sombre), 0 0 0 2px var(--anneau-cuivre), 0 2px 6px var(--ombre-medaillon);
   --anneau-medaillon-vif: 0 0 0 1px var(--cuivre-sombre), 0 0 0 2px var(--cuivre), 0 0 14px var(--cuivre-lueur);
+  /* L'anneau de l'action du jeu (l'entrée « Expéditions ») : le cuivre plein, sans la lueur de ce qui est choisi. */
+  --anneau-medaillon-action: 0 0 0 1px var(--cuivre-sombre), 0 0 0 2px var(--cuivre), 0 2px 6px var(--ombre-medaillon);
   --ombre-bouton-principal: inset 0 1px 0 var(--lumiere-bouton), 0 4px 14px -4px var(--cuivre-lueur);
   --ombre-texte-peinture: 0 2px 14px var(--ombre-noire);
 

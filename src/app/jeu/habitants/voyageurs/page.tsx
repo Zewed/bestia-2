@@ -4,6 +4,7 @@ import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
 import kit from "@/components/kit.module.css";
+import { Paysage } from "@/components/Paysage";
 import { getPool } from "@/db";
 import { type SortDuVoyageur, voyageursPasses } from "@/monde/voyageurs";
 import { formaterInstant } from "@/temps/affichage";
@@ -20,9 +21,10 @@ const SORTS: Record<SortDuVoyageur, string> = { accueilli: "accueilli", refuse: 
 
 /**
  * La page Voyageurs (US-0342), ouverte par « Historique » depuis la partie « Aux portes » de la page Habitants : sur le
- * fond sarcelle, le titre en Marcellus, puis un panneau orné ; en tête, les Voyageurs accueillis et les Voyageurs perdus,
- * refusés ou repartis d'eux-mêmes, en grands nombres ; puis une ligne dense par Voyageur passé, du plus récent sort au
- * plus ancien, avec son prénom, l'heure de son arrivée et son sort, en pastille ; le tout sur les
+ * fond du jeu, à la marge des autres écrans, le titre, puis un panneau orné de toute la largeur ; à gauche, la hutte au
+ * bout de son chemin, peinte en bandeau, et sous elle les Voyageurs accueillis et les Voyageurs perdus, refusés ou repartis
+ * d'eux-mêmes, en grands nombres ; à droite, une ligne par Voyageur passé, du plus récent sort au plus ancien, avec son
+ * prénom, l'heure de son arrivée et son sort, en pastille, en colonnes alignées ; le tout sur les
  * HISTORIQUE_VOYAGEURS_JOURS derniers jours de jeu. Sans session, la garde mène à la connexion, qui ramène ici.
  */
 export default async function Voyageurs() {
@@ -35,6 +37,7 @@ export default async function Voyageurs() {
     <main className={styles.page}>
       <h1 className={`${kit.titreEcran} ${styles.titre}`}>Voyageurs</h1>
       <section className={`${kit.panneau} ${styles.registre}`}>
+        <Paysage peinture="entree/connexion.webp" sizes="(max-width: 1023px) 100vw, 340px" className={`${kit.vignette} ${styles.portes}`} />
         <dl className={styles.compteurs}>
           <div className={styles.compteur}>
             <dt className={kit.etiquette}>Accueillis</dt>

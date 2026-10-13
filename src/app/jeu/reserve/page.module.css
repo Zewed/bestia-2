@@ -14,22 +14,35 @@
   margin: 2px 2px 14px;
 }
 
-/* ---------- Sans Couple : les castors à l'abri en bandeau, le mot, et le bouton ---------- */
+/* ---------- Sans Couple : les castors à l'abri, en grand, le mot, et le bouton ---------- */
 
+/*
+ * Toute la largeur de l'écran, presque toute sa hauteur : les castors peints remplissent le panneau à droite et se fondent
+ * vers la gauche, où se posent le mot en grand et le bouton.
+ */
 .aucun {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  max-width: 640px;
-  padding-bottom: 24px;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: clamp(320px, calc(var(--hauteur-utile) - 104px), 640px);
+  padding: 40px 52% 40px 44px;
   overflow: hidden;
-  text-align: center;
 }
 
-.paysage {
-  align-self: stretch;
-  height: 240px;
-  margin-bottom: 20px;
+.aucun > :not(.paysage) {
+  position: relative;
+  z-index: 1;
+}
+
+.aucun > .paysage {
+  position: absolute;
+  inset: 0 0 0 28%;
+  mask-image: linear-gradient(90deg, transparent, var(--noir) 38%);
+}
+
+.paysage img {
+  object-position: 50% 40%;
 }
 
 .paysage::after,
@@ -47,13 +60,13 @@
 
 .vide {
   color: var(--creme);
-  font: 400 24px / 1.15 var(--police-titre);
+  font: 400 32px / 1.15 var(--police-titre);
 }
 
 /* Au pouce : 44 px de haut, toute la largeur sur mobile. */
 .envoyer {
   min-height: 44px;
-  margin-top: 16px;
+  margin-top: 22px;
   cursor: pointer;
 }
 
@@ -186,18 +199,31 @@
     margin-bottom: 12px;
   }
 
+  /* Sur un téléphone : les castors en bandeau en haut du panneau, fondus vers le bas, le mot et le bouton dessous. */
   .aucun {
+    align-items: center;
+    min-height: 0;
     padding: 0 16px 16px;
+    text-align: center;
   }
 
-  .paysage {
-    height: 180px;
+  .aucun > .paysage {
+    position: relative;
+    inset: auto;
+    align-self: stretch;
+    height: 220px;
     margin: 0 -16px 16px;
+    mask-image: none;
+  }
+
+  .vide {
+    font-size: 24px;
   }
 
   .envoyer {
     display: flex;
     width: 100%;
+    margin-top: 16px;
   }
 }
 

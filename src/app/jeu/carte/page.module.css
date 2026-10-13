@@ -122,3 +122,49 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
+
+/*
+ * US-0907 : la carte ouverte pour choisir la destination d'une Expédition : un écriteau de verre en haut, au milieu,
+ * cerclé de cuivre clair, le médaillon des Expéditions et « Choisir une destination » en Bree Serif. Il laisse la carte se
+ * manier au travers. Entre 821 et 1 100 px, il se pose à droite de la place de la fiche d'une Case (330 px, en haut à
+ * gauche) ; sur un téléphone, en haut à gauche, à côté du bouton de la légende.
+ */
+.choix {
+  position: absolute;
+  top: calc(var(--hauteur-barre) + 12px);
+  left: 50%;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  max-width: calc(100% - 300px);
+  min-height: 44px;
+  margin: 0;
+  padding: 6px 18px 6px 8px;
+  border: 1px solid var(--cuivre);
+  border-radius: var(--arrondi-net);
+  background: var(--fond-verre);
+  backdrop-filter: blur(6px);
+  box-shadow: var(--ombre-verre), inset 0 0 0 1px var(--cuivre-brume);
+  color: var(--creme);
+  font: 400 17px / 1.15 var(--police-titre);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+@media (min-width: 821px) and (max-width: 1099px) {
+  .choix {
+    left: calc(354px + var(--bord-gauche));
+    transform: none;
+  }
+}
+
+@media (max-width: 820px) {
+  .choix {
+    left: calc(12px + var(--bord-gauche));
+    max-width: calc(100% - 160px - var(--bord-gauche) - var(--bord-droit));
+    padding-right: 14px;
+    font-size: 15.5px;
+    transform: none;
+  }
+}

@@ -1,12 +1,10 @@
 /*
- * US-0810 : la page Bêtes, posée sur le fond du jeu : le titre de l'écran, le panneau du total et des Places, puis le
- * panneau de l'effectif, une ligne par Espèce sous un filet doux. Vide (US-0811), le mammouth en bandeau, le mot et le
- * bouton principal, comme les Expéditions en cours.
+ * US-0810 : la page Bêtes, posée sur le fond du jeu, à la marge des autres écrans (Habitants, Récits) : le titre de
+ * l'écran, le panneau en bandeau du total et des Places, le mammouth peint à droite ; puis l'effectif, une carte ornée par
+ * Espèce, autant par ligne que la largeur en tient. Vide (US-0811), le mammouth remplit le panneau, le mot et le bouton
+ * principal à sa gauche, comme la Réserve vide.
  */
 .page {
-  width: 100%;
-  max-width: 880px;
-  margin: 0 auto;
   padding: 16px 18px 28px;
 }
 
@@ -17,16 +15,43 @@
   margin: 2px 2px 14px;
 }
 
-/* ---------- Le total et les Places ---------- */
+/* ---------- Le total et les Places, en bandeau ---------- */
 
-/* Le total des Bêtes en grand, son nom à côté ; US-0822 : à droite, les Places de l'Habitat et leur jauge fine. */
+/*
+ * Le bandeau : à gauche le total des Bêtes en grand et, dessous, les Places de l'Habitat (US-0822) et leur jauge fine ;
+ * à droite le mammouth peint, qui se fond dans le panneau vers la gauche.
+ */
 .bilan {
   display: flex;
-  flex-wrap: wrap;
-  gap: 12px 32px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 22px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 18px;
+  min-height: 188px;
+  padding: 22px 56% 22px 24px;
+  overflow: hidden;
+}
+
+.bilan > :not(.bandeau) {
+  position: relative;
+  z-index: 1;
+}
+
+.bilan > .bandeau {
+  position: absolute;
+  inset: 0 0 0 34%;
+  mask-image: linear-gradient(90deg, transparent, var(--noir) 42%);
+}
+
+.bandeau img {
+  object-position: 50% 34%;
+}
+
+/* Son ombre, qui assombrit la peinture vers le bas. */
+.bandeau::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, var(--voile-sarcelle-leger), var(--voile-sarcelle));
 }
 
 /*
@@ -36,7 +61,7 @@
 .total {
   display: flex;
   flex-direction: column-reverse;
-  gap: 9px;
+  gap: 10px;
   align-items: flex-start;
   color: var(--cuivre);
   font: var(--graisse-moyenne) var(--taille-etiquette) / 1 var(--police-etroite);
@@ -47,7 +72,7 @@
 .nombre {
   color: var(--creme);
   font-family: var(--police);
-  font-size: 28px;
+  font-size: 40px;
   font-weight: var(--graisse-titre);
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -57,62 +82,72 @@
 .places {
   display: grid;
   gap: 9px;
-  flex: 0 1 280px;
+  max-width: 320px;
   min-width: 0;
 }
 
-/* ---------- L'effectif : une ligne par Espèce ---------- */
+/* ---------- L'effectif : une carte par Espèce ---------- */
 
+/* Autant de cartes par ligne que la largeur en tient ; deux sur un téléphone. */
 .especes {
   display: grid;
-  margin-top: var(--ecart);
-  padding: 4px 0;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--ecart);
+  margin: var(--ecart) 0 0;
+  padding: 0;
   list-style: none;
 }
 
-.especes > li + li {
-  border-top: 1px solid var(--filet-cuivre-doux);
+.especes > li {
+  min-width: 0;
 }
 
-/* Sa peinture dans un rond, son nom et sa Rareté, puis l'effectif en grand, à droite ; toute la ligne ouvre la fiche. */
+/*
+ * Une carte ornée, toute entière le lien vers la fiche de l'Espèce : sa peinture, carrée, puis son nom et sa Rareté à
+ * gauche, son effectif en grand à droite. Au survol, son filet passe au vert.
+ */
 .espece {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) auto;
-  gap: 14px;
+  grid-template-areas:
+    "peinture peinture"
+    "identite effectif";
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px 10px;
   align-items: center;
+  height: 100%;
   min-width: 0;
-  padding: 10px 22px 10px 14px;
+  padding: 10px 12px 14px 10px;
   color: inherit;
   text-decoration: none;
   cursor: pointer;
+  transition: border-color 0.15s;
 }
 
 @media (hover: hover) {
   .espece:hover {
-    background: var(--cuivre-survol);
+    border-color: var(--cuivre);
   }
 }
 
 .espece:focus-visible {
   outline: 2px solid var(--cuivre-clair);
-  outline-offset: -2px;
+  outline-offset: 2px;
 }
 
-/* La peinture de l'Espèce, ronde, sur l'anneau des médaillons ; ou la tête de loup. */
-.vignette {
-  width: 56px;
-  aspect-ratio: 1;
-  border-radius: 50%;
-  box-shadow: var(--anneau-medaillon);
+/* La peinture de l'Espèce, dans son filet vert ; ou la tête de loup. */
+.peinture {
+  grid-area: peinture;
 }
 
 /* Le nom en Bree Serif, puis la Rareté en puce, qui passe à la ligne si le nom est long. */
 .identite {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 12px;
+  grid-area: identite;
+  gap: 6px 10px;
   align-items: center;
   min-width: 0;
+  padding-left: 2px;
 }
 
 .nom {
@@ -121,28 +156,39 @@
 }
 
 .effectif {
+  grid-area: effectif;
+  align-self: end;
   color: var(--creme);
-  font: var(--graisse-titre) 22px / 1 var(--police);
+  font: var(--graisse-titre) 26px / 1 var(--police);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-/* ---------- Sans Bête : le mammouth en bandeau, le mot, et le bouton ---------- */
+/* ---------- Sans Bête : le mammouth en grand, le mot, et le bouton ---------- */
 
+/*
+ * Toute la largeur de l'écran, presque toute sa hauteur : le mammouth peint remplit le panneau à droite et se fond vers
+ * la gauche, où se posent le mot en grand et le bouton.
+ */
 .aucune {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  max-width: 640px;
-  padding-bottom: 24px;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: clamp(320px, calc(var(--hauteur-utile) - 104px), 640px);
+  padding: 40px 52% 40px 44px;
   overflow: hidden;
-  text-align: center;
 }
 
-.paysage {
-  align-self: stretch;
-  height: 240px;
-  margin-bottom: 20px;
+.aucune > :not(.paysage) {
+  position: relative;
+  z-index: 1;
+}
+
+.aucune > .paysage {
+  position: absolute;
+  inset: 0 0 0 28%;
+  mask-image: linear-gradient(90deg, transparent, var(--noir) 38%);
 }
 
 .paysage img {
@@ -158,13 +204,13 @@
 
 .vide {
   color: var(--creme);
-  font: 400 24px / 1.15 var(--police-titre);
+  font: 400 32px / 1.15 var(--police-titre);
 }
 
 /* Au pouce : 44 px de haut, toute la largeur sur mobile. */
 .envoyer {
   min-height: 44px;
-  margin-top: 16px;
+  margin-top: 22px;
   cursor: pointer;
 }
 
@@ -173,7 +219,7 @@
   outline-offset: 2px;
 }
 
-/* Sur mobile, la page touche presque les bords et la peinture se réduit, sans que le texte déborde. */
+/* Sur mobile, la page touche presque les bords ; le mammouth passe en bandeau en haut du panneau vide. */
 @media (max-width: 820px), (max-height: 500px) {
   .page {
     padding: 12px;
@@ -184,34 +230,57 @@
   }
 
   .bilan {
-    padding: 14px 16px;
+    gap: 14px;
+    min-height: 0;
+    padding: 18px 44% 18px 16px;
   }
 
-  .places {
-    flex-basis: 100%;
+  .bilan > .bandeau {
+    inset: 0 0 0 40%;
+  }
+
+  .nombre {
+    font-size: 32px;
+  }
+
+  .especes {
+    grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+    gap: var(--ecart-mobile);
+    margin-top: var(--ecart-mobile);
   }
 
   .espece {
-    grid-template-columns: 44px minmax(0, 1fr) auto;
-    gap: 12px;
-    padding: 9px 16px 9px 12px;
+    gap: 10px 8px;
+    padding: 8px 10px 12px 8px;
   }
 
-  .vignette {
-    width: 44px;
+  .effectif {
+    font-size: 22px;
   }
 
   .aucune {
+    align-items: center;
+    min-height: 0;
     padding: 0 16px 16px;
+    text-align: center;
   }
 
-  .paysage {
-    height: 180px;
+  .aucune > .paysage {
+    position: relative;
+    inset: auto;
+    align-self: stretch;
+    height: 220px;
     margin: 0 -16px 16px;
+    mask-image: none;
+  }
+
+  .vide {
+    font-size: 24px;
   }
 
   .envoyer {
     display: flex;
     width: 100%;
+    margin-top: 16px;
   }
 }

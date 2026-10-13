@@ -73,6 +73,17 @@ describe("liste des Récits (US-0324)", () => {
     expect(replie("Du Bois.")).toBe(false);
   });
 
+  it("tant qu'aucun Récit n'est ouvert, dit à sa place « Choisissez un récit. », pour les yeux, sans en ouvrir ni en noter aucun", async () => {
+    render(<ListeDesRecits recits={RECITS} />);
+    const invite = screen.getByText("Choisissez un récit.");
+    expect(invite.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(screen.getAllByRole("button").map((b) => b.getAttribute("aria-expanded"))).toEqual(["false", "false"]);
+    expect(actions.lireUnRecit).not.toHaveBeenCalled();
+    // Un Récit ouvert prend sa place.
+    await userEvent.setup().click(ligne("Retour de Récolte"));
+    expect(screen.queryByText("Choisissez un récit.")).toBeNull();
+  });
+
   it("ouvre un Récit déjà lu sans rien noter", async () => {
     render(<ListeDesRecits recits={RECITS} />);
     await userEvent.setup().click(ligne("Retour de Récolte"));

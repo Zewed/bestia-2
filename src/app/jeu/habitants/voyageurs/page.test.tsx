@@ -110,8 +110,8 @@ describe("page Voyageurs, l'historique des Voyageurs (US-0342)", () => {
       ["Accueillis", "2"],
       ["Perdus", "3"],
     ]);
-    // Les compteurs passent avant la liste, dans le même bloc.
-    expect(html).toMatch(/<section[^>]*><dl[^>]*>.*?<\/dl><ul/);
+    // Les compteurs passent avant la liste, dans le même bloc, après la seule peinture (qui ne sert qu'aux yeux).
+    expect(html).toMatch(/<section[^>]*>(?:<div[^>]*aria-hidden="true"[^>]*>(?:(?!<\/div>).)*<\/div>)?<dl[^>]*>.*?<\/dl><ul/);
     connecte([CINQ[2]]);
     expect(compteurs(renderToStaticMarkup(await Voyageurs()))).toEqual([
       ["Accueillis", "0"],
@@ -128,6 +128,12 @@ describe("page Voyageurs, l'historique des Voyageurs (US-0342)", () => {
     ]);
     expect(html).toMatch(/<\/dl><p[^>]*>Aucun Voyageur n(&#x27;|')est encore passé\.<\/p><\/section>/);
     expect(html).not.toContain("<ul");
+  });
+
+  it("peint dans son panneau la hutte au bout de son chemin, pour les yeux seulement", async () => {
+    connecte();
+    const html = renderToStaticMarkup(await Voyageurs());
+    expect(html).toMatch(/<section[^>]*><div[^>]*aria-hidden="true"[^>]*><img[^>]*alt=""[^>]*connexion\.webp/);
   });
 
   it("n'ajoute aucune phrase d'explication : le titre, les compteurs, puis les Voyageurs", async () => {
@@ -168,10 +174,20 @@ describe("page Voyageurs sur le kit du jeu, et sur mobile (US-0342)", () => {
     for (const [, colonnes] of css.matchAll(/grid-template-columns: ([^;]+);/g)) {
       expect(colonnes.split(/ (?![^(]*\))/).every((c) => c === "auto" || c.startsWith("minmax(0,")), colonnes).toBe(true);
     }
-    expect(css).not.toMatch(/(?<![\w-])(min-)?width: \d+px/);
+    // Les seuils des tailles d'écran (@media) n'en sont pas.
+    expect(css.replace(/@media [^{]*\{/g, "")).not.toMatch(/(?<![\w-])(min-)?width: \d+px/);
     expect(css).not.toContain("nowrap");
     expect(regle(".voyageurs")).toContain("display: grid;");
     expect(regle(".voyageurs")).not.toContain("grid-template-columns");
+  });
+
+  it("commence à la marge des autres écrans, sur toute la largeur ; sur ordinateur, tient dans la fenêtre, la peinture et les compteurs à gauche, les Voyageurs à droite", () => {
+    expect(regle(".page")).toContain("padding: 16px 18px 28px;");
+    expect(regle(".page")).not.toMatch(/max-width|margin: 0 auto/);
+    const ordinateur = css.slice(css.indexOf("@media (min-width: 1024px) and (min-height: 600px)"), css.indexOf("@media (max-width: 760px)"));
+    expect(regle(".page", ordinateur)).toContain("height: var(--hauteur-utile);");
+    expect(regle(".registre", ordinateur)).toMatch(/grid-template-areas:\s*"portes liste"\s*"compteurs liste";/);
+    expect(regle(".voyageurs", ordinateur)).toContain("overflow-y: auto;");
   });
 
   it("met sur ordinateur le prénom, l'arrivée et le sort sur une ligne dense ; sur un téléphone, l'arrivée dessous, sur toute la largeur", () => {

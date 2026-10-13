@@ -3,6 +3,7 @@
 import { useEffect, useId, useRef, useState, useTransition } from "react";
 import kit from "@/components/kit.module.css";
 import { Medaillon } from "@/components/Medaillon";
+import { Paysage } from "@/components/Paysage";
 import { lireUnRecit } from "./actions";
 import { AnnonceDuCouple, type CoupleAffiche } from "./AnnonceDuCouple";
 import { MEDAILLON_DES_RECITS, medaillonDuRecit } from "./lecture-du-recit";
@@ -32,8 +33,10 @@ export type RecitAffiche = {
  * toucher ouvre le Récit et le note comme lu : la marque s'en va aussitôt, et l'action serveur relit la barre du haut,
  * dont l'entrée « Récits » compte les non lus. Un Récit s'ouvre à la fois : sur ordinateur, il se lit à droite de la liste,
  * qui défile seule ; sur un téléphone, il se déplie sous sa ligne, qu'on ramène en vue si le Récit refermé au-dessus l'a
- * fait monter. Un second toucher le referme ; tant qu'aucun n'est ouvert, la place de la lecture garde le médaillon des
- * Récits. US-0958 : sous la ligne d'un retour qui a réuni un Couple, son annonce, visible sans l'ouvrir.
+ * fait monter. Un second toucher le referme ; tant qu'aucun n'est ouvert, la place de la lecture montre le Monde peint
+ * sur sa table, le médaillon des Récits et « Choisissez un récit. » (pour les yeux : un lecteur d'écran a les lignes ;
+ * aucun Récit ne s'ouvre seul, l'ouvrir le noterait comme lu). US-0958 : sous la ligne d'un retour qui a réuni un Couple,
+ * son annonce, visible sans l'ouvrir.
  */
 export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
   const [ouvert, setOuvert] = useState<number | null>(null);
@@ -101,7 +104,9 @@ export function ListeDesRecits({ recits }: { recits: RecitAffiche[] }) {
       </ul>
       {ouvert === null ? (
         <div className={styles.attente} aria-hidden="true">
+          <Paysage peinture="accueil/plateau.webp" sizes="(max-width: 1023px) 1px, 60vw" className={`${kit.vignette} ${styles.peintureAttente}`} />
           <Medaillon src={MEDAILLON_DES_RECITS} taille="xl" className={styles.medaillonAttente} />
+          <p className={styles.choisir}>Choisissez un récit.</p>
         </div>
       ) : null}
     </div>

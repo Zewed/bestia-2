@@ -71,6 +71,16 @@ describe("barre du haut", () => {
     expect(regleDe(css, '.entree[aria-current="page"]')).toContain("color: var(--creme);");
     expect(regleDe(css, '.entree[aria-current="page"]::after')).toContain("height: 2px;");
     expect(regleDe(css, '.entree[aria-current="page"] .libelle::after')).toContain("rotate(45deg)");
+    // Son médaillon seul prend l'anneau vif et sa lueur.
+    expect(regleDe(css, '.entree[aria-current="page"]::before')).toContain("box-shadow: var(--anneau-medaillon-vif);");
+  });
+
+  it("distingue l'entrée « Expéditions », l'action du jeu, sans la faire paraître choisie : ni son nom en couleur, ni la lueur", () => {
+    const css = feuille();
+    expect(regleDe(css, ".entree[data-principale]")).toBe("");
+    expect(regleDe(css, ".entree[data-principale]::before")).toContain("box-shadow: var(--anneau-medaillon-action);");
+    expect(lire("src/styles/formes.css")).toMatch(/--anneau-medaillon-action: [^;]*var\(--cuivre\)[^;]*;/);
+    expect(lire("src/styles/formes.css").match(/--anneau-medaillon-action: ([^;]*);/)?.[1]).not.toContain("--cuivre-lueur");
   });
 
   it("pose le médaillon de chaque entrée sur son disque sombre, sans le fondre, l'anneau autour", () => {

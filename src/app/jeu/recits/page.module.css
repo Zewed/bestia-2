@@ -414,14 +414,47 @@
     min-height: 220px;
   }
 
+  /*
+   * Tant qu'aucun Récit n'est ouvert : le Monde peint sur sa table en bandeau, fondu dans le panneau vers le bas, puis le
+   * médaillon des Récits posé sur son bord et « Choisissez un récit. » en Bree Serif.
+   */
   .attente {
-    display: grid;
-    place-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    padding: 22px 26px 44px;
+  }
+
+  .peintureAttente {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-height: 0;
+  }
+
+  .peintureAttente img {
+    object-position: 50% 42%;
+  }
+
+  .peintureAttente::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 50%, var(--panneau-fondu));
+    box-shadow: inset 0 0 0 1px var(--anneau-cuivre);
   }
 
   .attente .medaillonAttente {
-    --taille: 96px;
-    opacity: 0.45;
+    --taille: 72px;
+    position: relative;
+    z-index: 1;
+    margin-top: -40px;
+  }
+
+  .choisir {
+    margin-top: 16px;
+    color: var(--creme);
+    font: 400 24px / 1.15 var(--police-titre);
   }
 }
 

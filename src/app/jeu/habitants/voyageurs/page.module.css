@@ -1,20 +1,45 @@
 /*
- * La page Voyageurs (US-0342), dans l'esprit du registre des Habitants : sur le fond sarcelle, le titre de l'écran en
- * Marcellus, puis un seul panneau orné ; en tête, les deux compteurs, une étiquette de cuivre sur un grand nombre ;
- * dessous, une ligne dense par Voyageur passé, séparées de filets doux. Sur un téléphone, l'arrivée passe sous le prénom.
+ * La page Voyageurs (US-0342), dans l'esprit du registre des Habitants et des Récits : sur le fond du jeu, à la marge des
+ * autres écrans, le titre de l'écran, puis un seul panneau orné de toute la largeur. Sur ordinateur, il tient dans la
+ * fenêtre, en deux zones : à gauche, la hutte au bout de son chemin peinte en bandeau, et sous elle les deux compteurs,
+ * une étiquette de cuivre sur un grand nombre ; à droite, une ligne par Voyageur passé, en colonnes alignées, séparées de
+ * filets doux, qui défilent seules. Sur une tablette et un téléphone, tout s'empile : la peinture en bandeau, les
+ * compteurs, puis les lignes ; sur un téléphone, l'arrivée passe sous le prénom.
  */
 .page {
-  width: 100%;
-  max-width: 880px;
-  margin: 0 auto;
-  padding: 18px 18px 28px;
+  padding: 16px 18px 28px;
 }
 
 .titre {
-  margin: 4px 2px 14px;
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  margin: 2px 2px 14px;
 }
 
-/* En tête du panneau, côte à côte, les Voyageurs accueillis et les Voyageurs perdus. */
+.registre {
+  overflow: hidden;
+}
+
+/* La hutte au bout de son chemin, où arrivent les Voyageurs : en bandeau, fondue dans le panneau vers le bas. */
+.portes {
+  height: 200px;
+  margin: 12px 12px 0;
+}
+
+.portes img {
+  object-position: 50% 38%;
+}
+
+.portes::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 45%, var(--panneau-fondu));
+  box-shadow: inset 0 0 0 1px var(--anneau-cuivre);
+}
+
+/* Côte à côte, les Voyageurs accueillis et les Voyageurs perdus. */
 .compteurs {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -41,9 +66,13 @@
   color: var(--mousse);
 }
 
-/* Une ligne par Voyageur passé : son prénom en Marcellus, son arrivée en discret, son sort en pastille, au bout. */
+/*
+ * Une ligne par Voyageur passé, en trois colonnes alignées d'une ligne à l'autre : son prénom en Bree Serif, son arrivée
+ * en discret, son sort en pastille, au bout, dans une colonne de la même largeur pour toutes.
+ */
 .voyageurs {
   display: grid;
+  align-content: start;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -52,7 +81,7 @@
 .voyageur {
   display: grid;
   grid-template-areas: "prenom arrivee sort";
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) auto;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 96px);
   align-items: center;
   gap: 4px 14px;
   min-height: 40px;
@@ -65,19 +94,22 @@
 }
 
 .voyageur:hover {
-  background: var(--lumiere-haut);
+  background: var(--cuivre-survol);
 }
 
 .prenom {
   grid-area: prenom;
-  color: var(--parchemin);
-  font: 400 16px / 1.15 var(--police-titre);
+  min-width: 0;
+  color: var(--creme);
+  font: 400 17px / 1.15 var(--police-titre);
+  overflow-wrap: anywhere;
 }
 
 .arrivee {
   grid-area: arrivee;
-  color: var(--lichen);
-  font: var(--graisse-texte) 13px / 1.3 var(--police);
+  min-width: 0;
+  color: var(--mousse);
+  font: var(--graisse-moyenne) 13.5px / 1.3 var(--police);
   font-variant-numeric: tabular-nums;
 }
 
@@ -103,9 +135,84 @@
   color: var(--braise);
 }
 
+/*
+ * Sur ordinateur, dans la hauteur de l'écran : à gauche la peinture, qui prend toute la place que les compteurs lui
+ * laissent dessous ; à droite, sous un filet, les lignes des Voyageurs, plus aérées, qui défilent seules.
+ */
+@media (min-width: 1024px) and (min-height: 600px) {
+  .page {
+    display: flex;
+    flex-direction: column;
+    height: var(--hauteur-utile);
+  }
+
+  .registre {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-areas:
+      "portes liste"
+      "compteurs liste";
+    grid-template-columns: minmax(0, 340px) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    min-height: 0;
+  }
+
+  .portes {
+    grid-area: portes;
+    height: auto;
+    margin: 14px 14px 0;
+  }
+
+  .compteurs {
+    grid-area: compteurs;
+    border-bottom: 0;
+  }
+
+  .compteur {
+    padding: 18px 24px 22px;
+  }
+
+  .voyageurs,
+  .vide {
+    grid-area: liste;
+    min-height: 0;
+    border-left: 1px solid var(--filet-cuivre);
+  }
+
+  .voyageurs {
+    padding: 6px 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--anneau-cuivre-fort) transparent;
+    scrollbar-width: thin;
+  }
+
+  .voyageur {
+    min-height: 54px;
+    padding: 8px 26px;
+  }
+
+  .voyageur:last-child {
+    border-bottom: 1px solid var(--filet-cuivre-doux);
+  }
+
+  .vide {
+    padding: 24px 26px;
+  }
+}
+
 @media (max-width: 760px) {
   .page {
     padding: 12px 12px 24px;
+  }
+
+  .titre {
+    margin-bottom: 12px;
+  }
+
+  .portes {
+    height: 150px;
+    margin: 10px 10px 0;
   }
 
   .compteur {

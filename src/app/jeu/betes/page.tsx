@@ -33,10 +33,11 @@ const betes = (nombre: number) => (nombre > 1 ? "Bêtes" : "Bête");
  * US-0822 : sous le total, « Places : occupées / total » pour l'Habitat du Foyer (placesDeLHabitat) ; pas sur la page
  * vide, qui n'a pas d'autre phrase.
  *
- * Sur le fond du jeu : le titre de l'écran, puis un panneau orné, le total en grand et, à côté, les Places et leur jauge
- * fine (qui ne sert qu'aux yeux) ; dessous, un panneau orné, une ligne par Espèce sous un filet doux : sa peinture dans
- * un rond, son nom en Bree Serif et sa Rareté en puce, son effectif en grand. Vide, le mammouth en bandeau, le mot et le
- * bouton principal, comme les Expéditions en cours.
+ * Sur le fond du jeu, à la marge des autres écrans : le titre de l'écran, puis un panneau orné en bandeau, le mammouth
+ * peint à droite, fondu vers la gauche, où se lisent le total en grand et les Places et leur jauge fine (qui ne sert
+ * qu'aux yeux) ; dessous, l'effectif en cartes ornées, autant par ligne que la largeur en tient : la peinture de l'Espèce,
+ * son nom en Bree Serif, sa Rareté en puce et son effectif en grand. Vide, le mammouth remplit le panneau, le mot et le
+ * bouton principal à sa gauche, comme la Réserve vide.
  */
 export default async function Betes() {
   await connection();
@@ -50,7 +51,7 @@ export default async function Betes() {
       <h1 className={`${kit.titreEcran} ${styles.titre}`}>Bêtes</h1>
       {especes.length === 0 ? (
         <section className={`${kit.panneau} ${styles.aucune}`}>
-          <Paysage peinture="accueil/mammouth.webp" sizes="(max-width: 760px) 100vw, 640px" className={styles.paysage} />
+          <Paysage peinture="accueil/mammouth.webp" sizes="(max-width: 820px) 100vw, 75vw" className={styles.paysage} />
           <p className={styles.vide}>Aucune Bête pour l&apos;instant</p>
           <Link href="/jeu/expeditions/nouvelle" className={`${kit.bouton} ${kit.principal} ${kit.grand} ${styles.envoyer}`}>
             Envoyer une Expédition
@@ -58,6 +59,7 @@ export default async function Betes() {
         </section>
       ) : (
         <section className={`${kit.panneau} ${styles.bilan}`}>
+          <Paysage peinture="accueil/mammouth.webp" sizes="(max-width: 820px) 60vw, 70vw" className={styles.bandeau} />
           <p className={styles.total}>
             <strong className={styles.nombre}>{total}</strong> {betes(total)}
           </p>
@@ -70,15 +72,15 @@ export default async function Betes() {
         </section>
       )}
       {especes.length > 0 ? (
-        <ul className={`${kit.panneau} ${styles.especes}`} aria-label="Effectif">
+        <ul className={styles.especes} aria-label="Effectif">
           {especes.map((espece) => (
             <li key={espece.especeId}>
               <Link
                 href={`/jeu/reserve/${espece.especeId}?depuis=betes`}
-                className={styles.espece}
+                className={`${kit.panneau} ${styles.espece}`}
                 aria-label={`${espece.nom}, ${espece.rarete.nom}, ${espece.effectif} ${betes(espece.effectif)}`}
               >
-                <IllustrationEspece espece={espece} format="vignette" className={styles.vignette} />
+                <IllustrationEspece espece={espece} format="carte" className={`${kit.vignette} ${styles.peinture}`} />
                 <span className={styles.identite}>
                   <span className={`${kit.titreServif} ${styles.nom}`}>{espece.nom}</span>
                   <PastilleRarete rarete={espece.rarete} />

@@ -349,13 +349,12 @@
   background: var(--icone) 50% 50% / 108% no-repeat, var(--noir);
 }
 
-/* L'Expédition, l'action du jeu : l'anneau de cuivre vif, et son nom en cuivre. */
-.entree[data-principale] {
-  color: var(--cuivre-clair);
-}
-
+/*
+ * L'Expédition, l'action du jeu : son médaillon cerclé d'un anneau de cuivre plein, sans lueur ; son nom reste celui des
+ * autres entrées, pour que seule la page affichée paraisse choisie.
+ */
 .entree[data-principale]::before {
-  box-shadow: var(--anneau-medaillon-vif);
+  box-shadow: var(--anneau-medaillon-action);
 }
 
 @media (hover: hover) {
@@ -370,9 +369,14 @@
   outline-offset: -6px;
 }
 
-/* La page affichée : son nom passe en crème, le trait de cuivre dessous et son losange. */
+/* La page affichée : son nom passe en crème, son médaillon prend l'anneau vif et sa lueur, le trait de cuivre dessous et
+   son losange. */
 .entree[aria-current="page"] {
   color: var(--creme);
+}
+
+.entree[aria-current="page"]::before {
+  box-shadow: var(--anneau-medaillon-vif);
 }
 
 .entree[aria-current="page"]::after {
