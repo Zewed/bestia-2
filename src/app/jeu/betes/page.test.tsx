@@ -20,7 +20,9 @@ const effectif = vi.hoisted(() => ({
 }));
 vi.mock("@/monde/effectif", () => effectif);
 // US-0952 : les Blessés au Foyer, lus sur base (src/monde/blesses.db.test.ts), à l'heure du jeu de la page.
-const blesses = vi.hoisted(() => ({ blessesAuFoyer: vi.fn(async (): Promise<Map<string, { nombre: number; gueriLe: Date }[]>> => new Map()) }));
+const blesses = vi.hoisted(() => ({
+  blessesAuFoyer: vi.fn(async (): Promise<Map<string, { nombre: number; gueriLe: Date; soignes?: true }[]>> => new Map()),
+}));
 vi.mock("@/monde/blesses", () => blesses);
 const MAINTENANT = vi.hoisted(() => new Date("2026-10-09T07:42:13.250Z"));
 vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT }));
@@ -175,6 +177,24 @@ describe("voir l'effectif par Espèce (US-0810)", () => {
     effectif.blessesParEspece.mockResolvedValueOnce(new Map([["souris", 3]]));
     const [, souris] = especesMontrees(renderToStaticMarkup(await Betes()));
     expect(souris.texte).toBe("Souris grise · Commune · dont 3 Blessés, guéris dans 5 h · 12");
+  });
+
+  it("dit les Blessés soignés à leur retour, et le temps plus court qui leur reste (US-0955)", async () => {
+    connecte();
+    blesses.blessesAuFoyer.mockResolvedValueOnce(
+      new Map([
+        [
+          "souris",
+          [
+            { nombre: 2, gueriLe: new Date("2026-10-09T18:42:13.250Z"), soignes: true },
+            { nombre: 1, gueriLe: new Date("2026-10-10T06:42:13.250Z") },
+          ],
+        ],
+      ]),
+    );
+    effectif.blessesParEspece.mockResolvedValueOnce(new Map([["souris", 3]]));
+    const [, souris] = especesMontrees(renderToStaticMarkup(await Betes()));
+    expect(souris.texte).toBe("Souris grise · Commune · dont 2 Blessés soignés, guéris dans 11 h · dont 1 Blessé, guéri dans 23 h · 12");
   });
 });
 

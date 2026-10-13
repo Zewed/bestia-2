@@ -1,6 +1,6 @@
 {
-  "id": "501353b1-d226-4562-81af-27bebd4a6366",
-  "prevId": "3d2ef4a7-6d13-43df-b1a3-75ac86219c92",
+  "id": "6589423a-9c6f-463f-8d7c-68192d266013",
+  "prevId": "1cc67b50-46af-4b90-af6a-af6e1de1cd8a",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1370,6 +1370,13 @@
         },
         "en_fuite": {
           "name": "en_fuite",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "blesses_soignes": {
+          "name": "blesses_soignes",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,

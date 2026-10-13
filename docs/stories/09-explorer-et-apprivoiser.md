@@ -507,6 +507,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0946 · Toute l'escorte perdue
 **En tant que** joueur, **je veux** savoir clairement quand toute mon escorte a péri, **afin de** mesurer la leçon.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#81). Quand une Bête trop forte emporte toute l'escorte, le récit du retour remplace la ligne des pertes par « Toute votre escorte a été perdue au combat : Poule (1 Blessé) et Souris grise (1 mort, 1 Blessé). », en braise sur la page Récits, puis « Vos explorateurs ont fui et sont tous rentrés au Foyer. » ; l'Expédition rentre normalement, sans escorte, et l'effectif baisse du nombre de mortes, jusqu'à zéro. Tranché : « toute l'escorte perdue » compte les mortes et les Blessés (ce que le code compte déjà comme perdues) : avec la moitié de Blessés arrondie en leur faveur, « toutes mortes » n'arrive jamais, et les explorateurs rentrent « seuls » au sens de sans aucune Bête en état de combattre. Le résumé en tête du récit compte toujours les seules mortes (US-0947). Sans migration.
 - **Débloquée par** : US-0945
 - **Critères d'acceptation** :
   - Si toutes les Bêtes de l'escorte sont perdues, les explorateurs rentrent seuls et l'Expédition se termine normalement.
@@ -580,6 +581,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0953 · Les Blessés restent au Foyer
 **En tant que** joueur, **je veux** que mes Blessés ne puissent pas repartir, **afin de** ne pas les exposer par erreur.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#66). Les Blessés ne sont plus proposés en escorte avant leur guérison : le bloc Escorte de l'écran d'Expédition dit « Poule · 795 disponibles · 2 Blessés, guéris dans 4 h », « Toutes » ne prend que les valides, et un départ qui en emmènerait un est refusé (le départ relit les disponibles à son propre instant). Ils restent dans l'effectif ; guéris, ils redeviennent disponibles. Une Espèce toute blessée garde sa ligne, à 0 disponible. Tranché : les Blessés ne défendront pas le Foyer (étape 54, aucun code encore) ; jamais plus de Blessés que de Bêtes au Foyer, jamais moins de zéro disponible.
 - **Débloquée par** : US-0951, US-0904
 - **Critères d'acceptation** :
   - Les Blessés ne sont jamais proposés dans une escorte (ni, plus tard, dans une Attaque).
@@ -701,6 +703,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0965 · Une Bête trop forte pour toutes
 **En tant que** joueur, **je veux** savoir ce qui arrive quand une Bête est trop forte pour toutes les Expéditions présentes, **afin de** mesurer le risque d'une Case disputée.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#84). Les règles en place la font : une Bête trop forte pour toutes les Expéditions de sa Case, de tous les joueurs, y reste et peut les attaquer toutes, chacune au plus une fois, à l'instant de ses propres tirages (comptés depuis sa propre Rencontre, US-0943) ; l'attaquée fuit (US-0945), les autres poursuivent leur séjour, toujours exposées. Tranché : laquelle est attaquée la première tient du hasard de ces tirages, sans préférence pour la plus faible. Prouvée par un essai à trois joueurs sur une Case disputée, rattrapés de quatre manières ; règle écrite en tête de `src/expeditions/attaque.ts`.
 - **Débloquée par** : US-0962, US-0943
 - **Critères d'acceptation** :
   - Si la Bête est trop forte pour chacune des Expéditions présentes, elle reste sur sa Case et peut attaquer.

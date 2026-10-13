@@ -5,10 +5,9 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import type { regime } from "@/db/schema";
 import { forceDUneBete } from "@/expeditions/force";
-import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
 import { maintenant } from "@/temps/horloge";
 import type { Sexe } from "./betes-sauvages";
-import { gueriLe } from "./blesses";
+import { dureesDeGuerison, gueriLe } from "./blesses";
 import { ELEVAGE_ACQUIS } from "./elevage";
 
 /**
@@ -80,18 +79,18 @@ const SORTIES_SANS_SEXE = `select count(*)::int ${ESCORTES_DEHORS} and s.males i
 
 /**
  * US-0953 : les Blessés au Foyer de l'Espèce (expression sur `e`, comme BETES_SORTIES) à l'instant du jeu $3 : ceux des
- * Expéditions rentrées, pas encore guéris $2 heures après leur retour, selon la règle même de blessesAuFoyer (gueriLe).
- * US-0960 : mâles et femelles à part, d'après le sexe de leur escorte (MALES_BLESSES) ; ceux d'une escorte sans sexe retenu
+ * Expéditions rentrées, pas encore guéris $2 heures après leur retour, selon la règle même de blessesAuFoyer (gueriLe) ;
+ * US-0955 : $4 heures, s'ils ont été soignés à leur retour. US-0960 : mâles et femelles à part, d'après le sexe de leur escorte (MALES_BLESSES) ; ceux d'une escorte sans sexe retenu
  * à part aussi.
  */
 const BLESSES_DU_SEXE = (blessees: string) => `select coalesce(sum(${blessees}), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
-  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null and ${gueriLe("$2")} > $3`;
+  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null and ${gueriLe("$2", "$4")} > $3`;
 const BLESSES_MALES = BLESSES_DU_SEXE(`case when s.males is null then 0 else ${MALES_BLESSES} end`);
 const BLESSES_FEMELLES = BLESSES_DU_SEXE(`case when s.males is null then 0 else s.blessees - ${MALES_BLESSES} end`);
 const BLESSES_SANS_SEXE = BLESSES_DU_SEXE("case when s.males is null then s.blessees else 0 end");
 
 /**
- * Les Bêtes au Foyer de chaque Espèce de l'effectif du Territoire $1, à l'instant du jeu $3 ($2 : la durée de guérison) :
+ * Les Bêtes au Foyer de chaque Espèce de l'effectif du Territoire $1, à l'instant du jeu $3 ($2 et $4 : les durées de guérison, dureesDeGuerison) :
  * mâles et femelles possédés, au Foyer, et ses Blessés, Espèce par Espèce. US-0960 : les Blessés au Foyer, jamais plus
  * que de Bêtes au Foyer, sexe par sexe quand tous les sexes sont connus : un Blessé parti en Réserve avec le Couple (src/monde/couple.ts)
  * n'en est plus un au Foyer, et le Couple prend d'abord des Bêtes valides.
@@ -129,6 +128,7 @@ const AU_FOYER = `select y.*, least(y.au_foyer, case when y.sorties_sans_sexe > 
  * sans aucune disponible, pour que ses Blessés se lisent (US-0952).
  */
 export async function betesDisponibles(base: Pool | PoolClient, territoireId: number, instant: Date = maintenant()): Promise<EspeceDisponible[]> {
+  const [normale, soignee] = dureesDeGuerison();
   const { rows } = await base.query<Omit<EspeceDisponible, "force"> & { attaque: number; vie: number }>(
     `select es.id, es.nom, es.illustration, x.au_foyer - x.blesses as disponibles, x.blesses,
        es.attaque, es.vie, es.vitesse, x.males, x.femelles, x."coupleReuni"
@@ -137,7 +137,7 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
      join rarete r on r.id = es.rarete_id
      where x.au_foyer > 0
      order by r.rang, es.nom`,
-    [territoireId, GUERISON_DES_BLESSES_HEURES, instant],
+    [territoireId, normale, instant, soignee],
   );
   return rows.map(({ attaque, vie, blesses, ...espece }) => ({ ...espece, ...(blesses ? { blesses } : {}), force: forceDUneBete({ attaque, vie }) }));
 }
@@ -149,9 +149,10 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
  * ont.
  */
 export async function blessesParEspece(base: Pool | PoolClient, territoireId: number, instant: Date): Promise<Map<string, number>> {
+  const [normale, soignee] = dureesDeGuerison();
   const { rows } = await base.query<{ especeId: string; blesses: number }>(
     `select x.espece_id as "especeId", x.blesses from (${AU_FOYER}) x where x.blesses > 0`,
-    [territoireId, GUERISON_DES_BLESSES_HEURES, instant],
+    [territoireId, normale, instant, soignee],
   );
   return new Map(rows.map((r) => [r.especeId, r.blesses]));
 }
@@ -166,13 +167,14 @@ export type ValidesParSexe = { males: number; femelles: number };
  * son escorte ; absente pour une Espèce sans Bête au Foyer.
  */
 export async function validesParSexe(base: Pool | PoolClient, territoireId: number, especes: readonly string[], instant: Date): Promise<Map<string, ValidesParSexe | null>> {
+  const [normale, soignee] = dureesDeGuerison();
   const { rows } = await base.query<{ especeId: string; males: number; femelles: number; connus: boolean }>(
     `select x.espece_id as "especeId", x.sorties_sans_sexe = 0 and x.blesses_sans_sexe = 0 as connus,
        greatest(x.males_au_foyer, 0) - least(greatest(x.males_au_foyer, 0), x.blesses_males) as males,
        greatest(x.femelles_au_foyer, 0) - least(greatest(x.femelles_au_foyer, 0), x.blesses_femelles) as femelles
      from (${AU_FOYER}) x
-     where x.espece_id = any($4::text[]) and x.au_foyer > 0`,
-    [territoireId, GUERISON_DES_BLESSES_HEURES, instant, especes],
+     where x.espece_id = any($5::text[]) and x.au_foyer > 0`,
+    [territoireId, normale, instant, soignee, especes],
   );
   return new Map(rows.map(({ especeId, connus, males, femelles }) => [especeId, connus ? { males, femelles } : null]));
 }

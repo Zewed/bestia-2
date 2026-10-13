@@ -458,9 +458,16 @@
       "breakpoints": true
     },
     {
+      "idx": 69,
+      "version": "7",
+      "when": 1791892814679,
+      "tag": "0069_blesses_soignes",
+      "breakpoints": true
+    },
+    {
       "idx": 71,
       "version": "7",
-      "when": 1791894713392,
+      "when": 1791896236871,
       "tag": "0071_sexes_de_l_escorte",
       "breakpoints": true
     }
