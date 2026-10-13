@@ -8,6 +8,7 @@
 // les Attaques s'ajouteront ici.
 import "server-only";
 import { leverLeBrouillard } from "@/expeditions/brouillard";
+import { mettreEnFuite } from "@/expeditions/fuite";
 import { retenirLesRencontres } from "@/expeditions/rencontres";
 import { RETOUR_EXPEDITION, rentrerAuFoyer } from "@/expeditions/retour";
 import { guerirLesBlesses } from "@/monde/guerison";
@@ -20,10 +21,17 @@ export const REGLES: Record<ElementSuivi, Regles> = {
   monde: {},
   territoire: {
     evoluer: async (client, id, depuis, jusqua) => {
-      await produire(client, id, depuis, jusqua);
-      await retenirLesRencontres(client, id, depuis, jusqua);
-      await leverLeBrouillard(client, id, depuis, jusqua);
-      await guerirLesBlesses(client, id, depuis, jusqua);
+      // US-0945 : les Rencontres d'abord : une attaque met son Expédition en fuite, et avance son retour ; le temps s'arrête
+      // alors à son instant (arret), et reprend après, le retour à son heure exacte.
+      const { jusqua: arret, fuites } = await retenirLesRencontres(client, id, depuis, jusqua);
+      await mettreEnFuite(client, fuites);
+      if (arret.getTime() > depuis.getTime()) {
+        await produire(client, id, depuis, arret);
+        await leverLeBrouillard(client, id, depuis, arret);
+        // US-0954 : jusqu'à l'arrêt seulement : le temps reprend de là, et chaque guérison n'est dite qu'une fois.
+        await guerirLesBlesses(client, id, depuis, arret);
+      }
+      return arret;
     },
     evenements: { [ARRIVEE_VOYAGEUR]: arriveeDUnVoyageur, [DEPART_VOYAGEUR]: departDUnVoyageur, [RETOUR_EXPEDITION]: rentrerAuFoyer },
   },
