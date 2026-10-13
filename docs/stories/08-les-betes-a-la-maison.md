@@ -57,6 +57,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0806 · Lire le Biome d'Habitat et le Rôle
 **En tant que** joueur, **je veux** lire où vit une Espèce et à quoi elle sert en dehors du combat, **afin de** savoir où l'élever et comment l'employer.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#75). La fiche d'une Espèce se termine par son Habitat, le nom du Biome précédé de son pictogramme (« Prairie »), et son Rôle (« Nourricier » pour la poule, « Éclaireur » pour le pigeon, « Aucun Rôle » pour la souris), dans le bloc des caractéristiques de la refonte. Tranché : le pictogramme est la Case du Biome telle que la carte et sa légende la dessinent (même couleur, même motif) ; une Espèce d'eau prend la Case de mer.
 - **Débloquée par** : US-0803
 - **Critères d'acceptation** :
   - La fiche affiche le Biome d'Habitat de l'Espèce, avec son nom et son pictogramme.
@@ -127,6 +128,7 @@ Le joueur retrouve dans la Réserve les Couples réunis en explorant, découvre 
 ### US-0843 · Confier l'Élevage à un éleveur
 **En tant que** joueur, **je veux** confier l'Élevage d'une Espèce à un Habitant éleveur, **afin de** faire naître des Bêtes de son Couple.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#78, migration 0068). Le bloc « Élever » dit quel éleveur libre s'en occupera (« Éleveur : Hael ») ; sans éleveur libre, « Aucun éleveur libre. » avec un lien vers la page Habitants, et « Élever » grisé avec cette raison. Pendant son Élevage, l'éleveur est « à l'Élevage · Poule » sur la page Habitants, son Métier verrouillé comme celui d'un explorateur parti (ni changé, ni retiré, ni renvoyé). L'Élevage reste acquis sans éleveur. Tranché : colonne `habitant.espece_elevee` (null = libre), posée par le lancement (US-0815) ; le premier éleveur libre par prénom, sans choix entre éleveurs (US-0844) ; refus dans l'ordre Couple, éleveur, quantité. Reste à trancher avec US-0815 et US-0834 : une Famine peut encore faire partir un éleveur à l'Élevage.
 - **Débloquée par** : US-0812, Étape 14
 - **Critères d'acceptation** :
   - Le bloc « Élever » demande un éleveur libre : un Habitant au Métier d'éleveur qui ne s'occupe d'aucun autre Élevage.
