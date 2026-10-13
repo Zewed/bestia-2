@@ -2,7 +2,7 @@ import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
-import { GUERISON_DES_BLESSES_HEURES } from "@/reglages";
+import { GUERISON_DES_BLESSES_HEURES, GUERISON_DES_BLESSES_SOIGNES_HEURES } from "@/reglages";
 import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lancerLExpedition } from "@/expeditions/depart";
 import { reunirLesCouples } from "./couple";
@@ -171,6 +171,23 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
     const gueries = a(GUERISON_DES_BLESSES_HEURES);
     expect(await lus(t, gueries)).toEqual({ poule: { role: NOURRICIER, affectees: 3, valides: 4 } });
     expect(await plus(t, "poule", 2, gueries)).toEqual([true, false]);
+  });
+
+  it("une Blessée soignée à son retour redevient valide plus tôt, comme pour l'escorte (US-0955)", async () => {
+    expect(GUERISON_DES_BLESSES_SOIGNES_HEURES).toBeLessThan(GUERISON_DES_BLESSES_HEURES - 1);
+    const t = await naitre();
+    await ajouter(t, [["poule", "femelle", 3]]);
+    // Une poule rentrée blessée il y a une heure, soignée à son retour.
+    const soignee = await expedition(t, -1, "poule", 1, 1);
+    await pool.query("update expedition set blesses_soignes = true where id = $1", [soignee]);
+    const disponibles = async (instant: Date) => (await betesDisponibles(pool, t, instant)).find((e) => e.id === "poule")?.disponibles;
+    const avant = a(GUERISON_DES_BLESSES_SOIGNES_HEURES - 1.5);
+    expect(await lus(t, avant)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 2 } });
+    expect(await disponibles(avant)).toBe(2);
+    // Guérie au bout de la guérison des soignés, bien avant celle des autres Blessés.
+    const gueries = a(GUERISON_DES_BLESSES_SOIGNES_HEURES - 1);
+    expect(await lus(t, gueries)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 3 } });
+    expect(await disponibles(gueries)).toBe(3);
   });
 
   it("l'escorte emmène d'abord les Bêtes non affectées ; au-delà, celles qui partent ne sont plus affectées, même rentrées", async () => {
