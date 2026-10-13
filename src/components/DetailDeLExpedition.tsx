@@ -56,7 +56,7 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
   const [rappelEnCours, demarrer] = useTransition();
   const prefixe = useId();
   const id = (morceau: string) => `${prefixe}-${morceau}`;
-  const { destination, explorateurs, escorte } = expedition;
+  const { destination, explorateurs, escorte, eclaireurs = [] } = expedition;
   const phase = phaseDUneExpedition(expedition, instant);
   const fin = finDeLaPhase(expedition, instant);
   const retour = retourDUneExpedition(expedition);
@@ -112,6 +112,13 @@ export function DetailDeLExpedition({ expedition, instant, repliable = false }: 
           <dt>Escorte</dt>
           <dd>{escorte.length === 0 ? "Sans escorte" : escorte.map((e) => uneEspece(e.nom, e.nombre)).join(", ")}</dd>
         </div>
+        {/* US-0976 : ses Éclaireurs, partis à côté de l'escorte. */}
+        {eclaireurs.length > 0 ? (
+          <div>
+            <dt>Éclaireurs</dt>
+            <dd>{eclaireurs.map((e) => uneEspece(e.nom, e.nombre)).join(", ")}</dd>
+          </div>
+        ) : null}
         <div>
           <dt>Retour prévu</dt>
           <dd>{retour ? <time dateTime={retour.toISOString()}>{formaterJourEtHeure(retour, FUSEAU)}</time> : AUCUNE}</dd>

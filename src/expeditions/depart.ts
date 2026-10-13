@@ -11,9 +11,16 @@ import { programmerLeRetour } from "./retour";
 
 /**
  * US-0911 : ce que le joueur a choisi sur l'écran d'Expédition : la destination, le nombre d'explorateurs qui partent,
- * l'escorte (Espèce par Espèce, le nombre de Bêtes) et la durée du séjour, en minutes de jeu.
+ * l'escorte (Espèce par Espèce, le nombre de Bêtes) et la durée du séjour, en minutes de jeu. US-0976 : et ses
+ * Éclaireurs, Espèce par Espèce, à côté de l'escorte (absents : aucun).
  */
-export type ChoixDuDepart = { destination: Coordonnees; explorateurs: number; escorte: ReadonlyMap<string, number>; sejourMinutes: number };
+export type ChoixDuDepart = {
+  destination: Coordonnees;
+  explorateurs: number;
+  escorte: ReadonlyMap<string, number>;
+  eclaireurs?: ReadonlyMap<string, number>;
+  sejourMinutes: number;
+};
 
 /** US-0911 : un départ fait, et l'Expédition qu'il a lancée, ou le refus que le joueur lit à la place. */
 export type Depart = { expeditionId: number } | { refus: string };
@@ -23,6 +30,9 @@ export const EXPLORATEUR_PLUS_LIBRE = "Départ refusé : un explorateur n'est pl
 
 /** US-0911 : le refus d'un départ dont une Bête de l'escorte n'est plus disponible au moment de confirmer. */
 export const BETE_PLUS_DISPONIBLE = "Départ refusé : une Bête de l'escorte n'est plus disponible.";
+
+/** US-0976 : le refus d'un départ dont des Éclaireurs seraient d'une Espèce qui n'a pas ce Rôle ; l'écran ne l'envoie jamais. */
+export const ECLAIREUR_SANS_LE_ROLE = "Départ refusé : seule une Espèce Éclaireuse part en Éclaireurs.";
 
 /** US-0911 : les refus d'un départ sans destination que le Monde du joueur connaisse, ou sans explorateur (US-0910). */
 export const SANS_DESTINATION = "Il faut une destination.";
@@ -44,6 +54,10 @@ class Refus extends Error {}
  * du même Territoire envoyés au même instant passent l'un après l'autre, et le second relit ce que le premier a pris ;
  * jamais deux fois le même explorateur ni la même Bête. Les lignes de l'effectif des Espèces de l'escorte et celles des
  * explorateurs qui partent sont tenues aussi, contre tout autre changement envoyé au même instant.
+ *
+ * US-0976 : ses Éclaireurs partent avec elle, à côté de l'escorte (expedition_eclaireur) : seules des Bêtes d'une Espèce
+ * Éclaireuse, et une même Bête est l'un ou l'autre : l'escorte et les Éclaireurs d'une Espèce ne dépassent jamais ses
+ * disponibles. Ils ne règlent pas l'allure, et ne comptent pas dans la force de l'escorte.
  */
 export async function lancerLExpedition(pool: Pool, territoireId: number, choix: ChoixDuDepart, instant: Date): Promise<Depart> {
   const client = await pool.connect();
@@ -74,12 +88,18 @@ async function betesDeLEscorte(client: PoolClient, betes: [string, number][]): P
 }
 
 /** US-0911 : le départ, dans la transaction de lancerLExpedition ; un Refus l'annule. */
-async function partir(client: PoolClient, territoireId: number, { destination, explorateurs, escorte, sejourMinutes }: ChoixDuDepart, instant: Date): Promise<number> {
+async function partir(
+  client: PoolClient,
+  territoireId: number,
+  { destination, explorateurs, escorte, eclaireurs = new Map(), sejourMinutes }: ChoixDuDepart,
+  instant: Date,
+): Promise<number> {
   if (explorateurs < 1) throw new Refus(SANS_EXPLORATEUR);
   const laCase = await destinationDUneCase(client, territoireId, destination);
   if (!laCase) throw new Refus(SANS_DESTINATION);
   if ("refus" in laCase) throw new Refus(laCase.refus);
   const betes = [...escorte].filter(([, nombre]) => nombre > 0);
+  const eclaireuses = [...eclaireurs].filter(([, nombre]) => nombre > 0);
   const trajetMinutes = dureeDuTrajetMinutes(laCase.fiche.distance, await betesDeLEscorte(client, betes));
   const { rows } = await client.query<{ id: number }>(
     `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
@@ -104,20 +124,31 @@ async function partir(client: PoolClient, territoireId: number, { destination, e
   );
   if (partis.rowCount !== explorateurs) throw new Refus(EXPLORATEUR_PLUS_LIBRE);
 
-  if (betes.length === 0) return expeditionId;
+  if (betes.length === 0 && eclaireuses.length === 0) return expeditionId;
   await client.query("select 1 from effectif where territoire_id = $1 and espece_id = any($2) order by espece_id, sexe for update", [
     territoireId,
-    betes.map(([especeId]) => especeId),
+    [...new Set([...betes, ...eclaireuses].map(([especeId]) => especeId))],
   ]);
   // US-0953 : les Blessés au Foyer à l'instant du départ ne sont pas disponibles.
-  const disponibles = new Map((await betesDisponibles(client, territoireId, instant)).map((e) => [e.id, e.disponibles]));
-  if (betes.some(([especeId, nombre]) => nombre > (disponibles.get(especeId) ?? 0))) throw new Refus(BETE_PLUS_DISPONIBLE);
-  await client.query(`insert into expedition_escorte (expedition_id, espece_id, nombre) select $1, e, n from unnest($2::text[], $3::int[]) as l(e, n)`, [
-    expeditionId,
-    betes.map(([especeId]) => especeId),
-    betes.map(([, nombre]) => nombre),
-  ]);
-  // US-0837 : l'escorte emmène d'abord les Bêtes non affectées à leur Rôle ; au-delà, celles qui partent ne le sont plus.
+  const proposees = new Map((await betesDisponibles(client, territoireId, instant)).map((e) => [e.id, e]));
+  // US-0976 : seule une Espèce Éclaireuse part en Éclaireurs ; une même Bête est l'un ou l'autre.
+  if (eclaireuses.some(([especeId]) => proposees.has(especeId) && !proposees.get(especeId)!.eclaireuse)) throw new Refus(ECLAIREUR_SANS_LE_ROLE);
+  const [enEscorte, enEclaireurs] = [new Map(betes), new Map(eclaireuses)];
+  const sorties = (especeId: string) => (enEscorte.get(especeId) ?? 0) + (enEclaireurs.get(especeId) ?? 0);
+  if ([...betes, ...eclaireuses].some(([especeId]) => sorties(especeId) > (proposees.get(especeId)?.disponibles ?? 0))) throw new Refus(BETE_PLUS_DISPONIBLE);
+  for (const [table, lignes] of [
+    ["expedition_escorte", betes],
+    ["expedition_eclaireur", eclaireuses],
+  ] as const) {
+    if (lignes.length === 0) continue;
+    await client.query(`insert into ${table} (expedition_id, espece_id, nombre) select $1, e, n from unnest($2::text[], $3::int[]) as l(e, n)`, [
+      expeditionId,
+      lignes.map(([especeId]) => especeId),
+      lignes.map(([, nombre]) => nombre),
+    ]);
+  }
+  // US-0837 : l'escorte et les Éclaireurs (US-0976) emmènent d'abord les Bêtes non affectées à leur Rôle au Foyer ; au-delà,
+  // celles qui partent ne le sont plus.
   await bornerLesAffectations(client, territoireId, instant);
   return expeditionId;
 }

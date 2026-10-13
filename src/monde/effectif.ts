@@ -16,7 +16,8 @@ import { ELEVAGE_ACQUIS } from "./elevage";
  * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes. US-0912 : et leur vitesse réelle, en km/h, qui règle
  * l'allure d'une escorte. US-0937 : et combien de mâles et de femelles le joueur en possède, Bêtes sorties comprises.
  * US-0956 : et si son Couple est réuni : le sexe ne compte plus. US-0953 : et ses Blessés au Foyer, qui guérissent sans être
- * disponibles (absent : aucun).
+ * disponibles (absent : aucun). US-0976 : et si elle est Éclaireuse, son Rôle (US-0806) : ses Bêtes peuvent partir en
+ * Éclaireurs (absent : non).
  */
 export type EspeceDisponible = {
   id: string;
@@ -29,6 +30,7 @@ export type EspeceDisponible = {
   femelles: number;
   coupleReuni: boolean;
   blesses?: number;
+  eclaireuse?: boolean;
 };
 
 /**
@@ -36,10 +38,13 @@ export type EspeceDisponible = {
  * regroupées par Territoire et Espèce). US-0911 : celles des escortes de ses Expéditions en cours, jusqu'à leur retour.
  * US-0916 : rentrées, elles n'en sont plus. US-0956 : sorties, elles ne sont pas au Foyer pour réunir un Couple
  * (src/monde/couple.ts). US-0944 : sans celles que l'escorte a perdues au combat, sorties de l'effectif. US-0951 : sauf ses
- * Blessés, restés dans l'effectif, qui rentrent au Foyer avec l'Expédition.
+ * Blessés, restés dans l'effectif, qui rentrent au Foyer avec l'Expédition. US-0976 : et ses Éclaireurs, partis à côté de
+ * l'escorte, qui rentrent tous avec elle.
  */
-export const BETES_SORTIES = `select coalesce(sum(s.nombre - s.perdues + s.blessees), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
-  where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is null`;
+export const BETES_SORTIES = `select (select coalesce(sum(s.nombre - s.perdues + s.blessees), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
+    where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is null)
+  + (select coalesce(sum(c.nombre), 0)::int from expedition_eclaireur c join expedition x on x.id = c.expedition_id
+    where x.territoire_id = e.territoire_id and c.espece_id = e.espece_id and x.rentree_le is null)`;
 
 /**
  * US-0953 : les Blessés au Foyer de l'Espèce (expression sur `e`, comme BETES_SORTIES) à l'instant du jeu $3 : ceux des
@@ -69,7 +74,7 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
   const [normale, soignee] = dureesDeGuerison();
   const { rows } = await base.query<Omit<EspeceDisponible, "force"> & { attaque: number; vie: number }>(
     `select es.id, es.nom, es.illustration, x.au_foyer - least(x.au_foyer, x.blesses) as disponibles, least(x.au_foyer, x.blesses) as blesses,
-       es.attaque, es.vie, es.vitesse, x.males, x.femelles, x."coupleReuni"
+       es.attaque, es.vie, es.vitesse, x.males, x.femelles, x."coupleReuni", es.role_id = 'eclaireur' as eclaireuse
      from (
        select e.espece_id, sum(e.nombre)::int - (${BETES_SORTIES}) as au_foyer, (${BLESSES_EN_GUERISON}) as blesses,
          coalesce(sum(e.nombre) filter (where e.sexe = 'male'), 0)::int as males,
@@ -85,7 +90,12 @@ export async function betesDisponibles(base: Pool | PoolClient, territoireId: nu
      order by r.rang, es.nom`,
     [territoireId, normale, instant, soignee],
   );
-  return rows.map(({ attaque, vie, blesses, ...espece }) => ({ ...espece, ...(blesses ? { blesses } : {}), force: forceDUneBete({ attaque, vie }) }));
+  return rows.map(({ attaque, vie, blesses, eclaireuse, ...espece }) => ({
+    ...espece,
+    ...(blesses ? { blesses } : {}),
+    ...(eclaireuse ? { eclaireuse } : {}),
+    force: forceDUneBete({ attaque, vie }),
+  }));
 }
 
 /**
