@@ -45,8 +45,10 @@ export type ElevageDUneBete = { cout: number; nourriture: string; dureeMinutes: 
 /**
  * US-0812 : le bloc « Élever » de la fiche d'une Espèce dont le joueur a réuni le Couple (la fiche ne le pose que pour
  * elles), ancré en « #elever » pour que le récit du Couple réuni y mène (US-0958). Son bouton « Élever » demande
- * l'Élevage de l'Espèce (actions.ts), qui refuse toute Espèce sans Couple et le dit, juste dessous ; il reste grisé tant
- * que l'Élevage ne se lance pas : le lancement arrive avec US-0815.
+ * l'Élevage de l'Espèce (actions.ts), qui refuse toute Espèce sans Couple et le dit, juste dessous.
+ * US-0815 : « Élever » lance l'Élevage de la quantité choisie ; actif avec un éleveur libre et une quantité valable, grisé
+ * pendant l'envoi (un double clic n'envoie qu'une demande, et le serveur n'en lance qu'une) ; lancé, le bloc le dit
+ * (combien de Bêtes, confiées à quel éleveur), et la page relue montre les Stocks payés.
  * US-0822 : au-dessus du bouton, le même compteur des Places de l'Habitat du Foyer que la page Bêtes, et sa jauge fine
  * (qui ne sert qu'aux yeux). Le bouton est celui de l'action principale du kit, éteint tant qu'il est grisé ; le refus
  * se dit en braise.
@@ -81,7 +83,7 @@ export function BlocElever({
   maintenant: Date;
   vitesse?: number;
 }) {
-  const [{ refus }, envoyer] = useActionState(elever, SANS_REFUS);
+  const [{ refus, lance }, envoyer, enCours] = useActionState(elever, SANS_REFUS);
   const idRefus = useId();
   const idSansEleveur = useId();
   const idQuantite = useId();
@@ -185,12 +187,22 @@ export function BlocElever({
             <dt>Dernière Bête</dt>
             <dd>{derniere === null || Number.isNaN(derniere.getTime()) ? AUCUNE : quand(derniere, lancement)}</dd>
           </dl>
-          <button type="submit" className={`${kit.bouton} ${kit.principal} ${kit.grand} ${styles.bouton}`} disabled aria-describedby={[eleveur === null ? idSansEleveur : null, refus ? idRefus : null].filter(Boolean).join(" ") || undefined}>
+          <button
+            type="submit"
+            className={`${kit.bouton} ${kit.principal} ${kit.grand} ${styles.bouton}`}
+            disabled={eleveur === null || quantite === null || enCours}
+            aria-describedby={[eleveur === null ? idSansEleveur : null, refus ? idRefus : null].filter(Boolean).join(" ") || undefined}
+          >
             Élever
           </button>
           {refus ? (
             <p id={idRefus} className={styles.refus} role="alert">
               {refus}
+            </p>
+          ) : null}
+          {lance ? (
+            <p className={styles.lance} role="status">
+              {`Élevage lancé : ${lance.quantite} ${lance.quantite > 1 ? "Bêtes" : "Bête"}, confié à ${lance.eleveur}.`}
             </p>
           ) : null}
         </form>

@@ -133,6 +133,13 @@
   font: var(--graisse-titre) 13.5px / 1.35 var(--police);
 }
 
+/* US-0815 : l'Élevage lancé, juste sous le bouton, en vert clair, son texte en clair. */
+.lance {
+  margin-top: 10px;
+  color: var(--cuivre-clair);
+  font: var(--graisse-titre) 13.5px / 1.35 var(--police);
+}
+
 .quantite .refus {
   margin-top: 0;
 }
