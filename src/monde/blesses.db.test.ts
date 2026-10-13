@@ -147,7 +147,11 @@ describe.skipIf(!URL_TEST)("les Blessés au Foyer, groupe par groupe (US-0952, s
       expect(await proposees(territoireId, a(1))).toEqual({ souris: { disponibles: 0, blesses: 2, males: 1, femelles: 1 } });
     });
 
-    it("un départ qui emmènerait un Blessé est refusé, même envoyé d'un écran d'avant la blessure", async () => {
+    /**
+     * Un joueur avec un explorateur et trois souris au Foyer, dont deux Blessées rentrées à t0 : le départ d'un explorateur
+     * escorté de `nombre` souris à `instant`, vers une Case libre à 2 Cases du Foyer, comme « Partir » le fait.
+     */
+    const unDepart = async () => {
       const territoireId = await naitre();
       await pool.query("insert into habitant (territoire_id, prenom, metier) values ($1, 'Essai', 'explorateur')", [territoireId]);
       await effectif(territoireId, "souris", 3, 0);
@@ -159,10 +163,20 @@ describe.skipIf(!URL_TEST)("les Blessés au Foyer, groupe par groupe (US-0952, s
          order by c.q, c.r limit 1`,
         [territoireId],
       );
-      const partir = (nombre: number) =>
-        lancerLExpedition(pool, territoireId, { destination: rows[0], explorateurs: 1, escorte: new Map([["souris", nombre]]), sejourMinutes: 60 }, a(1));
-      expect(await partir(2)).toEqual({ refus: BETE_PLUS_DISPONIBLE });
-      expect(await partir(1)).toEqual({ expeditionId: expect.any(Number) });
+      return (nombre: number, instant: Date) =>
+        lancerLExpedition(pool, territoireId, { destination: rows[0], explorateurs: 1, escorte: new Map([["souris", nombre]]), sejourMinutes: 60 }, instant);
+    };
+
+    it("un départ qui emmènerait un Blessé est refusé, même envoyé d'un écran d'avant la blessure", async () => {
+      const partir = await unDepart();
+      expect(await partir(2, a(1))).toEqual({ refus: BETE_PLUS_DISPONIBLE });
+      expect(await partir(1, a(1))).toEqual({ expeditionId: expect.any(Number) });
+    });
+
+    it("le départ relit les Blessés à son propre instant : une minute avant leur guérison, refusés ; guéris, ils repartent", async () => {
+      const partir = await unDepart();
+      expect(await partir(3, new Date(guerison(0).getTime() - 60_000))).toEqual({ refus: BETE_PLUS_DISPONIBLE });
+      expect(await partir(3, guerison(0))).toEqual({ expeditionId: expect.any(Number) });
     });
   });
 });
