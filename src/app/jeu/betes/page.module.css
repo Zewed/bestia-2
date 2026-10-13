@@ -29,12 +29,19 @@
   padding: 16px 22px;
 }
 
+/*
+ * Comme les compteurs des Voyageurs : le nom en petite étiquette verte, au-dessus du nombre en grand (le texte se lit
+ * toujours « 16 Bêtes »).
+ */
 .total {
   display: flex;
+  flex-direction: column-reverse;
   gap: 9px;
-  align-items: baseline;
-  color: var(--mousse);
-  font: var(--graisse-titre) 14px / 1 var(--police);
+  align-items: flex-start;
+  color: var(--cuivre);
+  font: var(--graisse-moyenne) var(--taille-etiquette) / 1 var(--police-etroite);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
 }
 
 .nombre {
@@ -49,8 +56,8 @@
 
 .places {
   display: grid;
-  gap: 8px;
-  flex: 0 1 260px;
+  gap: 9px;
+  flex: 0 1 280px;
   min-width: 0;
 }
 

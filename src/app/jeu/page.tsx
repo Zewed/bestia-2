@@ -111,6 +111,9 @@ export default async function Foyer() {
         <Link href="/jeu/betes" className={styles.lienBetes}>
           <Bloc titre="Bêtes" verre>
             <strong className={styles.nombreDeBetes}>{betes}</strong>
+            <svg viewBox="0 0 12 12" className={styles.flecheBetes} aria-hidden="true">
+              <path d="M4.5 2.5 8 6l-3.5 3.5" />
+            </svg>
           </Bloc>
         </Link>
       ) : null}

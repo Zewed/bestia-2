@@ -225,10 +225,30 @@
 }
 
 .nombreDeBetes {
+  margin-left: auto;
   color: var(--creme);
   font: var(--graisse-titre) 28px / 1 var(--police);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/* La flèche verte qui dit que le panneau s'ouvre ; elle avance un peu au survol. */
+.flecheBetes {
+  flex: none;
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: var(--cuivre-clair);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s;
+}
+
+@media (hover: hover) {
+  .lienBetes:hover .flecheBetes {
+    transform: translateX(2px);
+  }
 }
 
 /* Sur une tablette et un téléphone : la hutte en tête de la page, le titre posé sur son pied, la colonne en dessous. */

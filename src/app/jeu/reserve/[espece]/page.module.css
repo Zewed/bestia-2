@@ -1,9 +1,10 @@
-/* US-0803 : la fiche d'une Espèce de la Réserve, sur le fond du jeu, dans la largeur de la Réserve. */
+/* US-0803 : la fiche d'une Espèce de la Réserve, sur le fond du jeu, à la place de la Réserve ; le bloc « Élever » dessous. */
 .page {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
   padding: 16px 18px 28px;
+}
+
+.page > * {
+  max-width: 1040px;
 }
 
 /*

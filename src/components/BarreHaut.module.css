@@ -42,7 +42,8 @@
   top: 0;
   right: 0;
   left: 0;
-  grid-template-columns: max-content max-content max-content minmax(0, 1fr) max-content;
+  /* Le nom du chef cède sa place le premier : un nom trop long pour l'écran se coupe, la navigation et les Stocks restent. */
+  grid-template-columns: max-content minmax(0, max-content) max-content minmax(0, 1fr) max-content;
   grid-template-areas:
     "logo chef nav . stocks"
     "bande bande bande bande bande"
@@ -864,10 +865,28 @@
   }
 }
 
-/* Entre deux tailles, les entrées se serrent un peu. */
+/*
+ * Entre deux tailles, les six entrées se serrent (US-0801) : leur médaillon un peu plus petit, moins d'air autour, pour
+ * que la navigation et les Stocks tiennent sur une ligne dès 1 200 px.
+ */
 @media (min-width: 1024px) and (max-width: 1279px) {
+  .barre:has(.navigation) .navigation {
+    margin-left: 14px;
+  }
+
   .entree {
-    padding: 0 9px;
+    --taille-medaillon: 24px;
+    gap: 6px;
+    padding: 0 7px;
+  }
+
+  .repere {
+    top: calc(50% - 17px);
+    left: 25px;
+  }
+
+  .barre:has(.navigation) .ressources {
+    margin-left: 10px;
   }
 }
 

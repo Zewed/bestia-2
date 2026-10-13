@@ -4,9 +4,6 @@
  * mot et le bouton principal, comme les Expéditions en cours.
  */
 .page {
-  width: 100%;
-  max-width: 1180px;
-  margin: 0 auto;
   padding: 16px 18px 28px;
 }
 
@@ -73,12 +70,13 @@
  */
 .abri {
   display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  grid-template-rows: 1fr auto;
-  gap: 6px 22px;
-  align-items: end;
-  min-height: 128px;
-  padding: 10px 22px 16px 10px;
+  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  gap: 16px 24px;
+  align-content: center;
+  max-width: 980px;
+  min-height: 136px;
+  padding: 10px 22px 10px 10px;
 }
 
 .bandeau {
@@ -93,13 +91,19 @@
   font: var(--graisse-texte) 14.5px / 1.45 var(--police);
 }
 
-/* Le nombre de Couples qu'elle abrite, en grand et en crème, son nom à côté, en mousse. */
+/*
+ * Le nombre de Couples qu'elle abrite, comme les compteurs des Voyageurs : son nom en petite étiquette verte, au-dessus
+ * du nombre, en grand et en crème (le texte se lit toujours « 3 Couples »).
+ */
 .couples {
   display: flex;
+  flex-direction: column-reverse;
   gap: 9px;
-  align-items: baseline;
-  color: var(--mousse);
-  font: var(--graisse-titre) 14px / 1 var(--police);
+  align-items: flex-start;
+  color: var(--cuivre);
+  font: var(--graisse-moyenne) var(--taille-etiquette) / 1 var(--police-etroite);
+  letter-spacing: var(--espacement-etiquette);
+  text-transform: uppercase;
 }
 
 .nombre {
