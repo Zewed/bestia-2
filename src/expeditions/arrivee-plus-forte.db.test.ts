@@ -13,6 +13,7 @@ import { recitsDuTerritoire } from "@/monde/recits";
 import { PRESENCE_D_UNE_BETE_HEURES } from "@/reglages";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
+import { attaqueTiree, effacerLExpedition } from "@/test/attaques";
 import { mondeDEssai, nomDEssai, poolDansLaTransaction, poolDeTest, preparerMondeDeTest, suffixeDEssai, territoireDuCompte, URL_TEST } from "@/test/base";
 import { lExpeditionSuivie } from "./apprivoisement";
 import { chanceDAttaqueParHeure, instantDeLAttaque, type Regime } from "./attaque";
@@ -92,6 +93,20 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
     return rows[0].id;
   };
   /**
+   * L'Expédition `x` posée comme `poser`. US-0945 : sans escorte, la Bête, trop forte pour elle, ne l'attaque pas avant
+   * l'arrivée des Expéditions assez fortes : attaquée, elle fuirait, et ne serait plus sur la Case pour la perdre. Celle
+   * que ses tirages feraient attaquer avant est effacée avant de vivre, et une autre posée.
+   */
+  const poserEpargnee = async (client: PoolClient, x: APoser) => {
+    for (let posees = 0; posees < 100; posees++) {
+      const id = await poser(client, x);
+      const ensemble = { debut: new Date(Math.max(bete.arrivee.getTime(), x.arrivee.getTime())), fin: ensuite() };
+      if (x.escorte || !(await attaqueTiree(client, { caseId: laCase.id, especeId: bete.especeId, numero: bete.numero }, id, ensemble))) return id;
+      await effacerLExpedition(client, id);
+    }
+    throw new Error("100 Expéditions posées, toutes attaquées avant l'arrivée des assez fortes.");
+  };
+  /**
    * Les Expéditions `posees`, vécues dans une transaction annulée ensuite jusqu'au retour de toutes, à la manière
    * `maniere` : pour chacune, sa Rencontre de la Bête et ses attaques subies ; pour chaque joueur, ses Récits de retour,
    * l'effectif de l'Espèce de la Bête et son état au Bestiaire.
@@ -102,7 +117,7 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
       await client.query("begin");
       const jeu = poolDansLaTransaction(client);
       const ids: number[] = [];
-      for (const x of posees) ids.push(await poser(client, x));
+      for (const x of posees) ids.push(await poserEpargnee(client, x));
       const fin = apres(new Date(Math.max(...posees.map((x) => retourDUneExpedition(arriveeA(x.arrivee, x.sejour))!.getTime()))), HEURE);
       const instants = [fin];
       if (pas) for (let t = apres(bete.arrivee, -2 * HEURE); t < fin; t = apres(t, pas)) instants.splice(-1, 0, t);
@@ -146,7 +161,8 @@ describe.skipIf(!URL_TEST)("une Expédition assez forte arrive ensuite (US-0966,
   /**
    * Les attaques que l'Expédition `x` de A, vue la Bête à son apparition, doit avoir subies : la première que lui promettent
    * ses tirages si elles étaient restées ensemble jusqu'au départ de la Bête à la fin de sa durée (instantDeLAttaque),
-   * seulement si elle tombe avant l'arrivée de l'Expédition assez forte, qui l'emmène : après, plus aucune.
+   * seulement si elle tombe avant l'arrivée de l'Expédition assez forte, qui l'emmène : après, plus aucune. US-0945 :
+   * posée épargnée jusque-là (poserEpargnee), elle n'en a aucune.
    */
   const attaquesAttendues = (x: Vecue) => {
     const promise = instantDeLAttaque({ debut: bete.arrivee, fin: bete.depart }, chanceDAttaqueParHeure(espece.regime), (heure) =>
