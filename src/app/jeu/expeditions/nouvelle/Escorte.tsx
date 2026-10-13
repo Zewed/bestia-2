@@ -149,9 +149,6 @@ export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]
               </div>
               {e.eclaireuse ? (
                 <div role="group" aria-labelledby={`${idNom}-eclaireurs ${idNom}`} className={styles.eclaireurs}>
-                  <span id={`${idNom}-eclaireurs`} className={styles.role}>
-                    Éclaireurs
-                  </span>
                   <span className={kit.pas}>
                     <button
                       type="button"
@@ -172,6 +169,9 @@ export function Escorte({ especes, blesses = {} }: { especes: EspeceDisponible[]
                     >
                       +
                     </button>
+                  </span>
+                  <span id={`${idNom}-eclaireurs`} className={styles.role}>
+                    Éclaireurs
                   </span>
                 </div>
               ) : null}
