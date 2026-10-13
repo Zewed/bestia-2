@@ -346,14 +346,16 @@ describe.skipIf(!URL_TEST)("le combat par la somme des forces (US-0944, sur base
     expect(await rentreeLe(x.id)).toBeNull();
     await rattraperA(chef.territoireId, rentree);
     expect(await rentreeLe(x.id)).toEqual(rentree);
-    // Son explorateur est de retour ; ses Bêtes survivantes, Blessés compris (US-0951), sont de nouveau proposées, les autres
-    // Expéditions toujours dehors.
+    // Son explorateur est de retour ; ses Bêtes survivantes aussi, les autres Expéditions toujours dehors : les valides de
+    // nouveau proposées, ses Blessés (US-0951) au Foyer, mais pas proposés tant qu'ils guérissent (US-0953).
     const { rows } = await pool.query("select count(*)::int as n from habitant where expedition_id = $1", [x.id]);
     expect(rows[0].n).toBe(0);
     expect((await explorateursDuTerritoire(pool, chef.territoireId)).libres).toBe(LANCEES_AU_PLUS - (lancees.length - 1));
-    const disponibles = Object.fromEntries((await betesDisponibles(pool, chef.territoireId)).map((e) => [e.id, e.disponibles]));
+    const auFoyer = Object.fromEntries((await betesDisponibles(pool, chef.territoireId, rentree)).map((e) => [e.id, e]));
     for (const [id, nombre] of escorte) {
-      expect(disponibles[id], id).toBe(nombre * LANCEES_AU_PLUS + 1 - (lancees.length - 1) * nombre - mortes(pertes, id));
+      const perdues = pertes.find((p) => p.especeId === id)?.nombre ?? 0;
+      expect(auFoyer[id].disponibles, id).toBe(nombre * LANCEES_AU_PLUS + 1 - (lancees.length - 1) * nombre - perdues);
+      expect(auFoyer[id].blesses ?? 0, id).toBe(perdues - mortes(pertes, id));
     }
     expect(pertes.reduce((n, p) => n + p.nombre, 0)).toBeLessThan(total);
     // Son récit ne la dit pas rappelée : son séjour s'est arrêté à l'attaque.
