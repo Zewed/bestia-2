@@ -3,7 +3,8 @@
 // quel que soit son découpage : la même guérison est vécue ici page ouverte, d'un bloc au retour du joueur et par la seule
 // tâche planifiée, et ce qu'elle laisse se compare. Les Expéditions qui rentrent avec des Blessés séjournent là où rien ne
 // se montre : aucune Rencontre, donc aucun combat ; leurs Blessés sont posés sur l'escorte, comme un combat les y aurait
-// laissés (US-0951). Seule l'Expédition B d'un essai est attaquée, pour que sa fuite arrête le temps (US-0945).
+// laissés (US-0951). Seule l'Expédition B d'un essai est attaquée, pour que sa fuite arrête le temps (US-0945). US-0955 :
+// un éleveur libre au Foyer au retour soigne les Blessés, qui guérissent alors en GUERISON_DES_BLESSES_SOIGNES_HEURES.
 import type { Pool } from "pg";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
@@ -12,7 +13,7 @@ import { lancerLExpedition } from "@/expeditions/depart";
 import { forceDUneBete } from "@/expeditions/force";
 import { type HorairesDUneExpedition, retourDUneExpedition } from "@/expeditions/phase";
 import { programmerLeRetour } from "@/expeditions/retour";
-import { GUERISON_DES_BLESSES_HEURES, PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
+import { GUERISON_DES_BLESSES_HEURES, GUERISON_DES_BLESSES_SOIGNES_HEURES, PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE } from "@/reglages";
 import { rattraperLesAbsents } from "@/temps/absents";
 import { lireMarquePage } from "@/temps/marque-page";
 import { rattraper } from "@/temps/rattraper";
@@ -81,6 +82,11 @@ describe.skipIf(!URL_TEST)("la guérison des Blessés avec le temps (US-0954, su
       territoireId,
     ]);
     return { territoireId, ne: await lireMarquePage(pool, "territoire", territoireId) };
+  };
+
+  /** US-0955 : Hael, un éleveur au Foyer du Territoire : libre, ou à l'Élevage d'une Espèce (US-0843). */
+  const engagerUnEleveur = async (territoireId: number, aLElevage: string | null = null) => {
+    await pool.query("insert into habitant (territoire_id, prenom, metier, espece_elevee) values ($1, 'Hael', 'eleveur', $2)", [territoireId, aLElevage]);
   };
 
   /**
@@ -417,6 +423,67 @@ describe.skipIf(!URL_TEST)("la guérison des Blessés avec le temps (US-0954, su
     await rattraper("territoire", t.territoireId, { pool, jusqua: apres(guerisons[1], HEURE) });
     expect((await bilan(pool, t.territoireId, guerisons[1])).guerisons).toEqual([
       { titre: "1 Blessé a guéri", texte: "De nouveau valide : Souris grise (1).", survenuLe: guerisons[0] },
+    ]);
+  }, 60_000);
+
+  it(
+    "un éleveur libre au Foyer au retour soigne les Blessés : ils guérissent en GUERISON_DES_BLESSES_SOIGNES_HEURES, le temps affiché en tient compte, le même de trois manières (US-0955)",
+    async () => {
+      expect(GUERISON_DES_BLESSES_SOIGNES_HEURES).toBeLessThan(GUERISON_DES_BLESSES_HEURES);
+      const t = await naitre();
+      await engagerUnEleveur(t.territoireId);
+      const { retour } = await partir(t.territoireId, t.ne, [["souris", 2]], [["souris", 2, 2]]);
+      const guerison = apres(retour, GUERISON_DES_BLESSES_SOIGNES_HEURES * HEURE);
+
+      const bilans = await vivreDeTroisManieres(t, apres(guerison, HEURE), guerison);
+      expect(bilans.justeAvant).toEqual({ guerisons: [], blesses: { souris: [{ nombre: 2, gueriLe: guerison, soignes: true }] } });
+      expect(bilans.aLInstant).toEqual({
+        guerisons: [{ titre: "2 Blessés ont guéri", texte: "De nouveau valides : Souris grise (2).", survenuLe: guerison }],
+        blesses: {},
+      });
+      expect(bilans["d'un bloc"]).toEqual(bilans["page ouverte"]);
+      expect(bilans["par la tâche planifiée"]).toEqual(bilans["page ouverte"]);
+    },
+    120_000,
+  );
+
+  it("sans éleveur libre au retour, ni soins ni gain : l'éleveur à l'Élevage n'en donne pas, ni celui engagé après le retour (US-0955)", async () => {
+    const t = await naitre();
+    await engagerUnEleveur(t.territoireId, "souris");
+    const { retour } = await partir(t.territoireId, t.ne, [["souris", 2]], [["souris", 1, 1]]);
+    await rattraper("territoire", t.territoireId, { pool, jusqua: retour });
+    // Le retour a eu lieu : un éleveur libre engagé maintenant n'y change rien.
+    await pool.query("update habitant set espece_elevee = null where territoire_id = $1 and metier = 'eleveur'", [t.territoireId]);
+    await rattraper("territoire", t.territoireId, { pool, jusqua: apres(retour, HEURE) });
+    expect(Object.fromEntries(await blessesAuFoyer(pool, t.territoireId, apres(retour, HEURE)))).toEqual({
+      souris: [{ nombre: 1, gueriLe: apres(retour, GUERISON_DES_BLESSES_HEURES * HEURE) }],
+    });
+  }, 60_000);
+
+  it("des Blessés soignés, rentrés plus tard, guérissent avant d'autres qui ne le sont pas : les pages les montrent dans l'ordre de leur guérison (US-0955)", async () => {
+    const t = await naitre();
+    const premiere = await partir(t.territoireId, t.ne, [["souris", 2]], [["souris", 1, 1]]);
+    const seconde = await partir(t.territoireId, apres(t.ne, HEURE), [["souris", 2]], [["souris", 2, 2]]);
+    // La première rentre sans éleveur ; un éleveur arrive ; la seconde rentre, et ses Blessés sont soignés.
+    await rattraper("territoire", t.territoireId, { pool, jusqua: premiere.retour });
+    await engagerUnEleveur(t.territoireId);
+    await rattraper("territoire", t.territoireId, { pool, jusqua: seconde.retour });
+    const [g1, g2] = [apres(premiere.retour, GUERISON_DES_BLESSES_HEURES * HEURE), apres(seconde.retour, GUERISON_DES_BLESSES_SOIGNES_HEURES * HEURE)];
+    expect(g2.getTime()).toBeLessThan(g1.getTime());
+    const groupes = await blessesAuFoyer(pool, t.territoireId, seconde.retour);
+    expect(Object.fromEntries(groupes)).toEqual({
+      souris: [
+        { nombre: 2, gueriLe: g2, soignes: true },
+        { nombre: 1, gueriLe: g1 },
+      ],
+    });
+    // Plafonnés à deux, les derniers à guérir sont retranchés les premiers : les soignés restent.
+    expect(blessesAffiches(groupes.get("souris")!, seconde.retour, 2).map((g) => g.nombre)).toEqual([2]);
+
+    await rattraper("territoire", t.territoireId, { pool, jusqua: apres(g1, HEURE) });
+    expect((await bilan(pool, t.territoireId, apres(g1, HEURE))).guerisons).toEqual([
+      { titre: "1 Blessé a guéri", texte: "De nouveau valide : Souris grise (1).", survenuLe: g1 },
+      { titre: "2 Blessés ont guéri", texte: "De nouveau valides : Souris grise (2).", survenuLe: g2 },
     ]);
   }, 60_000);
 });
