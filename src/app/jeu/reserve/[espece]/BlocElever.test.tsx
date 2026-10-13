@@ -262,16 +262,28 @@ describe("voir le coût et la durée d'un Élevage (US-0814)", () => {
     expect(valeur("Durée par Bête")).toBe("7 h 54");
   });
 
-  it("arrondit un coût fractionnaire à la Nourriture supérieure : jamais moins que ce qui sera payé", async () => {
+  it("dit le coût d'une Bête fois la quantité, tel qu'il sera payé, dans la Nourriture du régime", async () => {
     const u = userEvent.setup();
-    const souris = { cout: 28.056, nourriture: "Viande ou Végétaux", dureeMinutes: 15 };
+    const souris = { cout: 29, nourriture: "Viande ou Végétaux", dureeMinutes: 15 };
     render(<BlocElever especeId="souris" places={PLACES} max={MAX} eleveur="Brune" elevage={souris} maintenant={MAINTENANT} />);
     expect(valeur("Coût")).toBe("29 Viande ou Végétaux");
     await u.clear(champ());
     await u.type(champ(), "10");
-    // 280,56 : 281.
-    expect(valeur("Coût")).toBe("281 Viande ou Végétaux");
+    expect(valeur("Coût")).toBe("290 Viande ou Végétaux");
     expect(valeur("Durée totale")).toBe("2 h 30");
+    cleanup();
+    render(<BlocElever especeId="chasseur" places={PLACES} max={MAX} eleveur="Brune" elevage={{ cout: 84, nourriture: "Viande", dureeMinutes: 30 }} maintenant={MAINTENANT} />);
+    expect(valeur("Coût")).toBe("84 Viande");
+  });
+
+  it("donne l'année de la dernière Bête quand elle n'est pas celle d'aujourd'hui", async () => {
+    const u = userEvent.setup();
+    render(<BlocElever especeId="poule" places={PLACES} max={MAX} eleveur="Brune" elevage={POULE_ELEVEE} maintenant={MAINTENANT} />);
+    await u.clear(champ());
+    // 1 200 poules de 7 h 54 : 395 jours, jusqu'au 12 novembre de l'an prochain (midi à Paris, à l'heure d'hiver, 11 h).
+    await u.type(champ(), "1200");
+    expect(valeur("Dernière Bête")).toBe("12 novembre 2027 à 11:00");
+    expect(valeur("Durée totale")).toBe("395 j");
   });
 
   it("ne se trompe pas d'heure pour une quantité immense : la dernière Bête, hors du calendrier, n'est pas datée", async () => {

@@ -6,7 +6,11 @@ describe("ce que coûte une Bête élevée, et combien les Stocks en paient (US-
   it("coûte autant de Nourriture que son Entretien pendant les jours des réglages", () => {
     expect(JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE).toBeGreaterThan(0);
     expect(coutDUneBeteElevee(5)).toBe(5 * 24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE);
-    expect(coutDUneBeteElevee(0.167)).toBeCloseTo(0.167 * 24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE, 9);
+    // US-0814 : en Nourriture entière, arrondi au-dessus : la souris (0,167 par heure) ne coûte pas 28,056, mais 29 aux réglages d'aujourd'hui.
+    expect(coutDUneBeteElevee(0.167)).toBe(Math.ceil(0.167 * 24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE));
+    expect(Number.isInteger(coutDUneBeteElevee(0.167))).toBe(true);
+    // Un produit qui tombe juste ne monte pas d'une Nourriture pour une poussière de calcul.
+    expect(coutDUneBeteElevee(10 / (24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE))).toBe(10);
   });
 
   it("se paie dans la Nourriture de son régime : la Viande pour un carnivore, les Végétaux pour un herbivore, l'une ou l'autre pour un omnivore", () => {

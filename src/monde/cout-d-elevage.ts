@@ -15,9 +15,11 @@ const NOURRITURE_DU_REGIME: Record<Regime, ("viande" | "vegetaux")[]> = { carniv
 /**
  * US-0813 : le coût en Nourriture d'une Bête élevée, un chiffre par Espèce : ce qu'elle mange pendant
  * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE jours (son Entretien, ramené à l'heure, docs/adr/0007) ; à régler en jouant.
+ * US-0814 : en Nourriture entière, arrondi au-dessus (au millionième près d'abord, comme les Stocks) : le coût affiché
+ * est celui qui sera payé, et « Max » ne propose que ce que les Stocks paient à ce prix.
  */
 export function coutDUneBeteElevee(entretienParHeure: number): number {
-  return entretienParHeure * 24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE;
+  return Math.ceil(Math.round(entretienParHeure * 24 * JOURS_D_ENTRETIEN_PAR_BETE_ELEVEE * 1e6) / 1e6);
 }
 
 /**

@@ -1,3 +1,4 @@
+import { isValidElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Echantillon } from "@/app/jeu/carte/Echantillon";
@@ -22,7 +23,8 @@ vi.mock("@/monde/effectif", () => effectif);
 const blesses = vi.hoisted(() => ({ blessesAuFoyer: vi.fn(async (): Promise<Map<string, { nombre: number; gueriLe: Date }[]>> => new Map()) }));
 vi.mock("@/monde/blesses", () => blesses);
 const MAINTENANT = vi.hoisted(() => new Date("2026-10-09T07:42:13.250Z"));
-vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT }));
+// US-0814 : et la vitesse du jeu, que le bloc « Élever » reçoit pour faire avancer l'heure de la dernière Bête.
+vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT, vitesse: () => 3 }));
 // US-0812 : l'Élevage de l'Espèce, acquis ou non, lu sur base (page.db.test.tsx).
 // US-0843 : et l'éleveur libre du Territoire (src/monde/eleveur.db.test.ts).
 const elevage = vi.hoisted(() => ({
@@ -41,6 +43,9 @@ vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
 
+import { coutDUneBeteElevee, dureeDUneBeteEleveeMinutes } from "@/monde/cout-d-elevage";
+import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
+import { BlocElever } from "./BlocElever";
 import FicheDeLEspece, { metadata } from "./page";
 
 /** La fiche de la poule, son effectif, et les caractéristiques que donne pour elle la base (donnees/especes.yaml, par le barème). */
@@ -168,23 +173,38 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     /** Les lignes du coût et de la durée du bloc « Élever », libellé et valeur. */
     const chiffres = (html: string) =>
       [...html.slice(html.indexOf('id="elever"')).matchAll(/<dt>([^<]+)<\/dt><dd>([^<]+)<\/dd>/g)].map(([, libelle, valeur]) => [libelle, valeur]);
+    /** Ce que le bloc doit dire d'une Bête de l'Espèce, d'après son Entretien et sa taille, aux réglages du moment. */
+    const attendus = (entretienParHeure: number, taille: number, nourriture: string) => {
+      const duree = dureeDUneBeteEleveeMinutes(taille);
+      return [
+        ["Coût", `${coutDUneBeteElevee(entretienParHeure)} ${nourriture}`],
+        ["Durée par Bête", formaterMinutes(duree)],
+        ["Durée totale", formaterMinutes(duree)],
+        ["Dernière Bête", formaterJourEtHeure(new Date(MAINTENANT.getTime() + duree * 60_000), "Europe/Paris")],
+      ];
+    };
     connecte();
     elevage.elevageAcquis.mockResolvedValueOnce(true);
-    // La poule : 5 Nourriture par heure pendant 7 jours, 31,623 Places de 15 minutes ; la fiche s'ouvre à 9:42 à Paris.
-    expect(chiffres(await ouvrir("poule"))).toEqual([
-      ["Coût", "840 Viande ou Végétaux"],
-      ["Durée par Bête", "7 h 54"],
-      ["Durée totale", "7 h 54"],
-      ["Dernière Bête", "9 octobre à 17:36"],
-    ]);
+    // La poule : son Entretien pour le coût, sa taille pour la durée, son régime pour la Nourriture, l'heure de la fiche.
+    expect(chiffres(await ouvrir("poule"))).toEqual(attendus(5, 31.623, "Viande ou Végétaux"));
     connecte({ ...POULE, especeId: "pigeon", nom: "Pigeon biset", taille: 8.556, regime: "herbivore", entretienParHeure: 1.25 });
     elevage.elevageAcquis.mockResolvedValueOnce(true);
-    expect(chiffres(await ouvrir("pigeon"))).toEqual([
-      ["Coût", "210 Végétaux"],
-      ["Durée par Bête", "2 h 08"],
-      ["Durée totale", "2 h 08"],
-      ["Dernière Bête", "9 octobre à 11:50"],
-    ]);
+    expect(chiffres(await ouvrir("pigeon"))).toEqual(attendus(1.25, 8.556, "Végétaux"));
+  });
+
+  it("donne au bloc « Élever » l'heure et la vitesse du jeu, pour que l'heure de la dernière Bête avance à son rythme (US-0814)", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    /** Le bloc « Élever » dans l'arbre que rend la page, avant tout rendu en HTML. */
+    const trouver = (noeud: unknown): { props: Record<string, unknown> } | null => {
+      if (Array.isArray(noeud)) return noeud.map(trouver).find(Boolean) ?? null;
+      if (!isValidElement(noeud)) return null;
+      if (noeud.type === BlocElever) return noeud as { props: Record<string, unknown> };
+      return trouver((noeud.props as { children?: unknown }).children);
+    };
+    const bloc = trouver(await FicheDeLEspece({ params: Promise.resolve({ espece: "poule" }), searchParams: Promise.resolve({}) }));
+    expect(bloc?.props.maintenant).toEqual(MAINTENANT);
+    expect(bloc?.props.vitesse).toBe(3);
   });
 
   it("ne le propose pas pour une Espèce sans Couple, même avec des Bêtes (US-0812)", async () => {

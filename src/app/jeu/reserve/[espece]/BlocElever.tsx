@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useActionState, useEffect, useId, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { Bloc } from "@/components/Bloc";
 import { Jauge } from "@/components/Jauge";
 import kit from "@/components/kit.module.css";
 import { PlacesDeLHabitat } from "@/components/PlacesDeLHabitat";
 import { formaterJourEtHeure, formaterMinutes } from "@/temps/affichage";
+import { useHeureDuJeu } from "@/temps/heure-du-jeu";
 import { type EtatDeLElevage, elever } from "./actions";
 import styles from "./BlocElever.module.css";
 import { lireUneQuantite, QUANTITE_LA_PLUS_GRANDE, QUANTITE_REFUSEE } from "./quantite";
@@ -21,12 +22,22 @@ const MINUTE_MS = 60_000;
 /** US-0814 : ce que le bloc dit d'un coût ou d'une durée qu'il ne peut pas chiffrer (une quantité refusée, une date hors du calendrier). */
 const AUCUNE = "—";
 
-/** US-0814 : un coût en Nourriture, à la Nourriture entière supérieure (au millionième près d'abord, comme les Stocks) : « 1 680 ». */
-const nourriture = (n: number) => new Intl.NumberFormat("fr-FR").format(Math.ceil(Math.round(n * 1e6) / 1e6)).replace(/\s/g, "\u00a0");
+/** US-0814 : un coût en Nourriture, entier (celui d'une Bête l'est), à la française : « 1 680 », sans coupure. */
+const nourriture = (n: number) => new Intl.NumberFormat("fr-FR").format(n).replace(/\s/g, "\u00a0");
+
+const annee = new Intl.DateTimeFormat("fr-FR", { year: "numeric", timeZone: FUSEAU });
+const jourHeureEtAnnee = new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: FUSEAU });
+
+/**
+ * US-0814 : l'heure où naîtra la dernière Bête, « 14 octobre à 03:48 », avec l'année quand ce n'est pas celle de l'heure
+ * du jeu (`maintenant`) : « 12 novembre 2027 à 11:00 », pour un long Élevage.
+ */
+const quand = (derniere: Date, maintenant: Date) =>
+  annee.format(derniere) === annee.format(maintenant) ? formaterJourEtHeure(derniere, FUSEAU) : jourHeureEtAnnee.format(derniere);
 
 /**
  * US-0814 : ce que coûte et ce que dure l'Élevage d'une Bête de l'Espèce (src/monde/cout-d-elevage.ts) : son coût en
- * Nourriture, la Nourriture de son régime qui le paie, telle que la fiche la dit (« Viande ou Végétaux »), et sa durée
+ * Nourriture entière, la Nourriture de son régime qui le paie, telle que la fiche la dit (« Viande ou Végétaux »), et sa durée
  * d'Élevage en minutes.
  */
 export type ElevageDUneBete = { cout: number; nourriture: string; dureeMinutes: number };
@@ -48,9 +59,9 @@ export type ElevageDUneBete = { cout: number; nourriture: string; dureeMinutes: 
  * avec un lien vers la page Habitants, et « Élever » grisé qui la donne pour description. Le bloc reste : l'Élevage de
  * l'Espèce est acquis sans éleveur, seul son lancement en demande un.
  * US-0814 : sous la quantité, ce qu'elle coûte et ce qu'elle dure, mis à jour à chaque changement : le coût total en
- * Nourriture (celui d'une Bête fois la quantité, à la Nourriture supérieure), la durée d'Élevage d'une Bête, la durée
- * totale, et l'heure où naîtra la dernière Bête d'un Élevage lancé maintenant : l'heure du jeu à l'ouverture de la fiche
- * (`maintenant`), qui avance en direct au rythme du jeu (`vitesse`), comme le retour prévu d'une Expédition (US-0910).
+ * Nourriture (celui d'une Bête fois la quantité), la durée d'Élevage d'une Bête, la durée totale, et l'heure où naîtra
+ * la dernière Bête d'un Élevage lancé maintenant : l'heure du jeu à l'ouverture de la fiche (`maintenant`), qui avance en
+ * direct au rythme du jeu (`vitesse`, useHeureDuJeu), comme les Expéditions en cours (US-0918).
  * Une quantité refusée ne se chiffre pas.
  */
 export function BlocElever({
@@ -82,16 +93,8 @@ export function BlocElever({
   const quantite = lireUneQuantite(texte);
   const refusee = quantite === null && (texte.trim() !== "" || quitte);
   const plafond = Math.min(max, QUANTITE_LA_PLUS_GRANDE);
-  const base = maintenant.getTime();
-  // Le temps écoulé depuis l'affichage, mesuré pour cette heure du jeu-là : celui d'une heure déjà dépassée ne compte plus.
-  const [ecoule, setEcoule] = useState<{ base: number; ms: number } | null>(null);
-  useEffect(() => {
-    const depart = performance.now();
-    const battement = setInterval(() => setEcoule({ base, ms: performance.now() - depart }), 1000);
-    return () => clearInterval(battement);
-  }, [base]);
-  const lancement = base + (ecoule?.base === base ? vitesse * ecoule.ms : 0);
-  const derniere = quantite === null ? null : new Date(lancement + quantite * elevage.dureeMinutes * MINUTE_MS);
+  const lancement = useHeureDuJeu(maintenant, vitesse);
+  const derniere = quantite === null ? null : new Date(lancement.getTime() + quantite * elevage.dureeMinutes * MINUTE_MS);
   const choisir = (n: number) => {
     setTexte(String(n));
     setQuitte(false);
@@ -180,7 +183,7 @@ export function BlocElever({
             <dt>Durée totale</dt>
             <dd>{quantite === null ? AUCUNE : formaterMinutes(quantite * elevage.dureeMinutes)}</dd>
             <dt>Dernière Bête</dt>
-            <dd>{derniere === null || Number.isNaN(derniere.getTime()) ? AUCUNE : formaterJourEtHeure(derniere, FUSEAU)}</dd>
+            <dd>{derniere === null || Number.isNaN(derniere.getTime()) ? AUCUNE : quand(derniere, lancement)}</dd>
           </dl>
           <button type="submit" className={`${kit.bouton} ${kit.principal} ${kit.grand} ${styles.bouton}`} disabled aria-describedby={[eleveur === null ? idSansEleveur : null, refus ? idRefus : null].filter(Boolean).join(" ") || undefined}>
             Élever
