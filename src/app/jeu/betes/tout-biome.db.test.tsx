@@ -68,7 +68,7 @@ describe.skipIf(!URL_TEST)("loger au Foyer les Bêtes de tout Biome (US-0823, su
    * (hors des Cases des Bêtes de naissance du Territoire) où, dans les jours qui suivent la naissance du chef, une Bête
    * commune se montre seule pendant tout un séjour, à son apparition : l'Expédition qui arrive à cet instant ne voit
    * qu'elle, l'a à portée même sans escorte (US-0935) et ne peut la perdre au profit d'une autre ; aucune Bête rare ne
-   * l'attaque. Toutes les Cases du Biome sont lues d'un coup : loin du cœur, les communes se font rares (US-0927).
+   * l'attaque. Toutes les Cases du Biome sont lues d'un coup : il peut être loin du Foyer.
    */
   const uneBeteSeule = async (t: { territoireId: number; ne: Date; foyer: Coordonnees }, biome: string) => {
     const { rows } = await pool.query<Coordonnees & { id: number }>(
@@ -89,6 +89,7 @@ describe.skipIf(!URL_TEST)("loger au Foyer les Bêtes de tout Biome (US-0823, su
           bete.rareteId === "commune" &&
           bete.arrivee >= apres(t.ne, trajet * MINUTE) &&
           repart <= fin &&
+          bete.depart >= repart &&
           betes.every((autre) => autre === bete || autre.arrivee >= repart || autre.depart <= bete.arrivee)
         );
       });
