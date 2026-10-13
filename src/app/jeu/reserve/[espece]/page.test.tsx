@@ -177,7 +177,8 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     const attendus = (entretienParHeure: number, taille: number, nourriture: string) => {
       const duree = dureeDUneBeteEleveeMinutes(taille);
       return [
-        ["Coût", `${coutDUneBeteElevee(entretienParHeure)} ${nourriture}`],
+        // Le coût à la française, comme le bloc l'écrit (« 1 080 » à espace insécable dès le millier).
+        ["Coût", `${new Intl.NumberFormat("fr-FR").format(coutDUneBeteElevee(entretienParHeure)).replace(/\s/g, "\u00a0")} ${nourriture}`],
         ["Durée par Bête", formaterMinutes(duree)],
         ["Durée totale", formaterMinutes(duree)],
         ["Dernière Bête", formaterJourEtHeure(new Date(MAINTENANT.getTime() + duree * 60_000), "Europe/Paris")],
