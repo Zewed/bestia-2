@@ -119,7 +119,10 @@
   }
 }
 
-/* Le lien vers la fiche : sa peinture, carrée, puis son nom et sa Rareté à gauche, son effectif en grand à droite. */
+/*
+ * Le lien vers la fiche : sa peinture, carrée, puis son nom et sa Rareté à gauche, son effectif en grand à droite ; tassés
+ * en haut, à la même hauteur d'une carte à l'autre, qu'elle porte un Rôle ou non.
+ */
 .espece {
   display: grid;
   flex: 1;
@@ -127,6 +130,7 @@
     "peinture peinture"
     "identite effectif";
   grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
   gap: 12px 10px;
   align-items: center;
   min-width: 0;

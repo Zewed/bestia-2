@@ -39,6 +39,8 @@ describe("la page Bêtes (US-0810)", () => {
   it("met le pas du Rôle au pied de la carte, hors du lien, sous un filet doux ; sur une carte étroite, il passe sous le Rôle (US-0837)", () => {
     expect(regle(".carte")).toMatch(/display: flex;[^}]*flex-direction: column;/);
     expect(regle(".espece")).toContain("flex: 1;");
+    // Tassés en haut : la peinture et le nom à la même hauteur d'une carte à l'autre, qu'elle porte un Rôle ou non.
+    expect(regle(".espece")).toContain("align-content: start;");
     expect(regle(".carte:has(.espece:hover)")).toContain("border-color: var(--cuivre);");
     expect(regle(".role")).toContain("flex-wrap: wrap;");
     expect(regle(".role")).toContain("min-width: 0;");
