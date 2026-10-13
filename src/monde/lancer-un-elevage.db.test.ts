@@ -255,19 +255,32 @@ describe.skipIf(!URL_TEST)("lancer un Élevage (US-0815, sur base)", () => {
     expect((await pool.query("select famine_depuis is not null as famine from territoire where id = $1", [t.territoireId])).rows[0]).toEqual({ famine: true });
   });
 
-  it("se lance pendant que le temps du Territoire avance, l'un après l'autre : un Élevage, jamais de Stock sous zéro", async () => {
-    const t = await naitre();
+  it("se lance pendant que le temps du Territoire avance, l'un après l'autre : le coût est payé une fois, jamais perdu par le rattrapage", async () => {
+    // Deux Territoires nés de même (Foyer en prairie, trois Habitants), aux mêmes Stocks ; l'un lance un Élevage pendant
+    // qu'il rattrape cinq heures, l'autre (le témoin) rattrape seulement : l'écart de leur Nourriture est le coût, à l'unité.
+    const [t, temoin] = [await naitre(), await naitre()];
     await reunir(t, "souris");
     await eleveurs([t.habitants[0]]);
     await nourriture(t.territoireId, "100", "100");
+    await nourriture(temoin.territoireId, "100", "100");
+    const cinqHeures = (x: { ne: Date }) => new Date(x.ne.getTime() + 5 * 3_600_000);
     const [, lance] = await Promise.all([
-      rattraper("territoire", t.territoireId, { pool, jusqua: new Date(t.ne.getTime() + 5 * 3_600_000) }),
+      rattraper("territoire", t.territoireId, { pool, jusqua: cinqHeures(t) }),
       lancerUnElevage(pool, t.territoireId, "souris", 2, t.ne),
     ]);
+    await rattraper("territoire", temoin.territoireId, { pool, jusqua: cinqHeures(temoin) });
     expect(lance).toMatchObject({ lance: { quantite: 2 } });
-    expect(await elevages(t.territoireId)).toHaveLength(1);
-    const apres = await stocks(t.territoireId);
-    expect(Math.min(apres.viande, apres.vegetaux)).toBeGreaterThanOrEqual(0);
+    /** La Nourriture du Territoire, à la plus petite unité de la production (US-0219). */
+    const total = async (territoireId: number) =>
+      Number(
+        (
+          await pool.query<{ total: string }>(
+            "select sum(quantite * 3600000000 + reste)::text as total from stock where territoire_id = $1 and ressource_id in ('viande', 'vegetaux')",
+            [territoireId],
+          )
+        ).rows[0].total,
+      ) / 3_600_000_000;
+    expect((await total(temoin.territoireId)) - (await total(t.territoireId))).toBeCloseTo(2 * (await cout("souris")), 6);
   });
 });
 
