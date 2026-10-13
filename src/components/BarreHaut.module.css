@@ -866,10 +866,10 @@
 }
 
 /*
- * Entre deux tailles, les six entrées se serrent (US-0801) : leur médaillon un peu plus petit, moins d'air autour, pour
- * que la navigation et les Stocks tiennent sur une ligne dès 1 200 px.
+ * Jusqu'à 1 400 px, les six entrées se serrent (US-0801) : leur médaillon un peu plus petit, moins d'air autour, pour
+ * que le nom du chef, la navigation et les Stocks tiennent sur une ligne dès 1 200 px.
  */
-@media (min-width: 1024px) and (max-width: 1279px) {
+@media (min-width: 1024px) and (max-width: 1399px) {
   .barre:has(.navigation) .navigation {
     margin-left: 14px;
   }
