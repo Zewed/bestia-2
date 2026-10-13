@@ -12,7 +12,7 @@ describe("la page Bêtes (US-0810)", () => {
   const mobile = CSS.match(/@media \(max-width: 820px\), \(max-height: 500px\) \{([\s\S]*?)\n\}/)?.[1] ?? "";
 
   it("range l'effectif en cartes, autant par ligne que la largeur en tient : la peinture, le nom et la Rareté, puis l'effectif à droite", () => {
-    expect(regle(".especes")).toContain("grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));");
+    expect(regle(".especes")).toContain("grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));");
     expect(regle(".especes")).toContain("list-style: none;");
     expect(regle(".espece")).toMatch(/grid-template-areas:\s*"peinture peinture"\s*"identite effectif";/);
     expect(regle(".espece")).toContain("grid-template-columns: minmax(0, 1fr) auto;");
