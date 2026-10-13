@@ -53,3 +53,23 @@ describe("la fiche d'une Espèce (US-0803)", () => {
     expect(regle(".caracteristiques")).toContain("align-items: baseline;");
   });
 });
+
+describe("comprendre une caractéristique de la fiche (US-0807)", () => {
+  it("son nom se touche : un pointillé de cuivre le souligne, plein une fois ouvert, et un contour au clavier", () => {
+    expect(regle(".terme")).toContain("text-decoration: underline dotted var(--cuivre);");
+    expect(CSS).toMatch(/\n\.terme\[aria-expanded="true"\] \{\s*text-decoration-style: solid;/);
+    expect(regle(".terme:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
+    // Sa cible déborde le texte sans bouger la ligne.
+    expect(regle(".terme")).toMatch(/margin: -5px -4px;[^}]*padding: 5px 4px;/);
+  });
+
+  it("son explication prend toute la largeur de la liste, et ne se voit pas tant qu'elle est fermée", () => {
+    expect(regle(".entete .explication")).toContain("grid-column: 1 / -1;");
+    expect(regle(".entete .explication[hidden]")).toContain("display: none;");
+  });
+
+  it("le bouton qui la referme a sa cible et son contour au clavier", () => {
+    expect(regle(".fermerExplication")).toMatch(/width: 32px;[^}]*height: 32px;/);
+    expect(regle(".fermerExplication:focus-visible")).toContain("outline: 2px solid var(--cuivre-clair);");
+  });
+});
