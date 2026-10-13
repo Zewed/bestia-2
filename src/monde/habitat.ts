@@ -1,6 +1,9 @@
 // Les Places de l'Habitat du Foyer (US-0822) : combien il en offre, un chiffre des réglages du jeu, et combien en
 // prennent les Bêtes de l'effectif, chacune selon la taille de son Espèce (docs/adr/0007 : une souris 1, une poule 32).
-// La page Bêtes et le bloc « Élever » les disent. Côté serveur uniquement.
+// La page Bêtes et le bloc « Élever » les disent. US-0823 : jusqu'aux Habitats par Biome (étape 51), elles accueillent
+// les Bêtes de toutes les Espèces, quel que soit leur Biome d'Habitat : le Foyer, toujours en prairie (US-0152), n'en
+// refuse aucune ; ce que deviennent celles des autres Biomes au passage aux Habitats se règle alors (US-1130). Côté
+// serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { PLACES_DE_L_HABITAT_DU_FOYER } from "@/reglages";
