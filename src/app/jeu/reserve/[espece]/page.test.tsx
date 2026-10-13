@@ -1,5 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { Echantillon } from "@/app/jeu/carte/Echantillon";
 import { FORMATS_ESPECE } from "@/components/IllustrationEspece";
 import type { FicheDEspece } from "@/monde/effectif";
 
@@ -17,12 +18,20 @@ vi.mock("@/chefs/chef", () => chefs);
 // une Espèce dont le joueur a des Bêtes, ou dont il a réuni le Couple.
 const effectif = vi.hoisted(() => ({ especeDuTerritoire: vi.fn(async (): Promise<FicheDEspece | null> => null) }));
 vi.mock("@/monde/effectif", () => effectif);
+// US-0952 : les Blessés au Foyer, lus sur base (src/monde/blesses.db.test.ts), à l'heure du jeu de la fiche.
+const blesses = vi.hoisted(() => ({ blessesAuFoyer: vi.fn(async (): Promise<Map<string, { nombre: number; gueriLe: Date }[]>> => new Map()) }));
+vi.mock("@/monde/blesses", () => blesses);
+const MAINTENANT = vi.hoisted(() => new Date("2026-10-09T07:42:13.250Z"));
+vi.mock("@/temps/horloge", async (original) => ({ ...(await original<object>()), maintenant: () => MAINTENANT }));
 // US-0812 : l'Élevage de l'Espèce, acquis ou non, lu sur base (page.db.test.tsx).
 const elevage = vi.hoisted(() => ({ elevageAcquis: vi.fn(async () => false) }));
 vi.mock("@/monde/elevage", async (original) => ({ ...(await original<object>()), elevageAcquis: elevage.elevageAcquis }));
 // US-0822 : les Places de l'Habitat du Foyer, lues sur base (src/monde/habitat.db.test.ts).
 const habitat = vi.hoisted(() => ({ placesDeLHabitat: vi.fn(async () => ({ occupees: 21, total: 500 })) }));
 vi.mock("@/monde/habitat", () => habitat);
+// US-0813 : les Bêtes que les Stocks de Nourriture permettent de payer, lues sur base (src/monde/cout-d-elevage.db.test.ts).
+const cout = vi.hoisted(() => ({ maxAElever: vi.fn(async () => 7) }));
+vi.mock("@/monde/cout-d-elevage", () => cout);
 vi.mock("@/temps/rattraper", () => ({ rattraper: vi.fn(async () => new Date()) }));
 vi.mock("@/db", () => ({ getPool: () => ({}) }));
 vi.mock("next/server", async (original) => ({ ...(await original<object>()), connection: async () => {} }));
@@ -43,6 +52,8 @@ const POULE: FicheDEspece = {
   taille: 31.623,
   regime: "omnivore",
   entretienParHeure: 5,
+  biome: { id: "prairie", nom: "Prairie" },
+  role: { id: "nourricier", nom: "Nourricier" },
 };
 
 /** US-0804 : les caractéristiques de la fiche, nom et valeur, les espaces des milliers lues comme des espaces. */
@@ -96,6 +107,17 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     expect(await ouvrir("poule")).toMatch(/<span>Effectif<\/span> <strong[^>]*>0<\/strong>/);
   });
 
+  it("distingue, sous l'effectif, chaque groupe de Blessés au Foyer et le temps qui lui reste avant sa guérison (US-0952)", async () => {
+    connecte();
+    blesses.blessesAuFoyer.mockResolvedValueOnce(new Map([["poule", [{ nombre: 3, gueriLe: new Date("2026-10-09T12:42:13.250Z") }]]]));
+    const html = await ouvrir("poule");
+    expect(blesses.blessesAuFoyer).toHaveBeenCalledExactlyOnceWith(expect.anything(), 12, MAINTENANT);
+    expect(html).toMatch(/<strong[^>]*>12<\/strong><\/p><p[^>]*>dont 3 Blessés, guéris dans 5 h<\/p>/);
+    // Sans Blessé, rien de plus.
+    connecte();
+    expect(await ouvrir("poule")).not.toContain("Blessé");
+  });
+
   it("propose sous la fiche le bloc « Élever » quand le joueur a réuni le Couple de l'Espèce (US-0812)", async () => {
     connecte();
     elevage.elevageAcquis.mockResolvedValueOnce(true);
@@ -106,6 +128,21 @@ describe("ouvrir la fiche d'une Espèce (US-0803)", () => {
     // US-0822 : avec les Places de l'Habitat du Foyer, comme la page Bêtes.
     expect(habitat.placesDeLHabitat).toHaveBeenLastCalledWith(expect.anything(), 12);
     expect(html.slice(html.indexOf('id="elever"')).replace(/<[^>]+>/g, "")).toContain("Places : 21 / 500");
+  });
+
+  it("y propose la quantité, et « Max » au nombre de Bêtes que les Stocks du joueur permettent de payer (US-0813)", async () => {
+    connecte();
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    const html = await ouvrir("poule");
+    expect(cout.maxAElever).toHaveBeenLastCalledWith(expect.anything(), 12, "poule");
+    const bloc = html.slice(html.indexOf('id="elever"'));
+    expect(bloc).toMatch(/<input[^>]*name="quantite"[^>]*value="1"/);
+    expect(bloc).toMatch(/<button type="button"[^>]*>Max<\/button>/);
+    expect(bloc).not.toMatch(/<button[^>]*disabled=""[^>]*>Max<\/button>/);
+    // Des Stocks qui ne paient pas une Bête : « Max » est grisé.
+    cout.maxAElever.mockResolvedValueOnce(0);
+    elevage.elevageAcquis.mockResolvedValueOnce(true);
+    expect(await ouvrir("poule")).toMatch(/<button[^>]*disabled=""[^>]*>Max<\/button>/);
   });
 
   it("ne le propose pas pour une Espèce sans Couple, même avec des Bêtes (US-0812)", async () => {
@@ -203,7 +240,7 @@ describe("lire la taille, le régime et l'Entretien (US-0805)", () => {
   /** Les caractéristiques de US-0805, après celles de US-0804. */
   const dernieres = async (fiche: FicheDEspece) => {
     connecte(fiche);
-    return caracteristiques(await ouvrir(fiche.especeId)).slice(4);
+    return caracteristiques(await ouvrir(fiche.especeId)).slice(4, 7);
   };
 
   it("affiche la taille en Places occupées par Bête, le régime et l'Entretien par heure dans la Nourriture du régime", async () => {
@@ -237,5 +274,52 @@ describe("lire la taille, le régime et l'Entretien (US-0805)", () => {
     const html = await ouvrir("poule");
     expect(html).toContain("<dd>31,623\u00a0Places</dd>");
     expect(html).toContain("<dd>5\u00a0Viande ou Végétaux\u00a0/\u00a0h</dd>");
+  });
+});
+
+describe("lire le Biome d'Habitat et le Rôle (US-0806)", () => {
+  afterEach(() => {
+    session.compteDeLaSession.mockReset();
+    cookie.jetonDeSession.mockReset();
+    effectif.especeDuTerritoire.mockReset();
+  });
+
+  /** La fiche telle que la page l'envoie, et ses deux dernières caractéristiques, celles de US-0806. */
+  const fiche = async (donnee: FicheDEspece) => {
+    cookie.jetonDeSession.mockResolvedValue("jeton-de-session");
+    session.compteDeLaSession.mockResolvedValue({ id: 7, email: "nom@exemple.fr" });
+    effectif.especeDuTerritoire.mockResolvedValue(donnee);
+    const html = await ouvrir(donnee.especeId);
+    return { html, dernieres: caracteristiques(html).slice(7) };
+  };
+
+  it("affiche le Biome d'Habitat, son nom avec son pictogramme, puis le Rôle", async () => {
+    const { html, dernieres } = await fiche(POULE);
+    expect(dernieres).toEqual([
+      ["Habitat", "Prairie"],
+      ["Rôle", "Nourricier"],
+    ]);
+    // Le pictogramme du Biome : sa Case, dessinée comme sur la carte et sa légende, de la couleur du Biome.
+    const habitat = html.match(/<dt>Habitat<\/dt><dd[^>]*>(.*?)<\/dd>/)?.[1] ?? "";
+    expect(habitat).toMatch(/^<svg[^>]*aria-hidden="true"/);
+    expect(habitat).toContain("fill:var(--biome-prairie)");
+  });
+
+  it("donne à chaque Biome son pictogramme : sa Case de la carte, de sa couleur et de son motif", async () => {
+    const habitat = async (biome: { id: string; nom: string }) =>
+      (await fiche({ ...POULE, biome })).html.match(/<dt>Habitat<\/dt><dd[^>]*>(.*?)<\/dd>/)?.[1] ?? "";
+    const foret = await habitat({ id: "foret", nom: "Forêt" });
+    expect(foret).toBe(`${renderToStaticMarkup(<Echantillon teinte="foret" />)}Forêt`);
+    expect(foret).toContain("fill:var(--biome-foret)");
+    expect(await habitat({ id: "prairie", nom: "Prairie" })).toBe(`${renderToStaticMarkup(<Echantillon teinte="prairie" />)}Prairie`);
+    // L'eau, que la carte ne dessine que par ses formes : la mer, de la couleur de l'eau, la représente.
+    expect(await habitat({ id: "eau", nom: "Eau" })).toBe(`${renderToStaticMarkup(<Echantillon teinte="mer" />)}Eau`);
+  });
+
+  it("dit « Aucun Rôle » pour une Espèce qui n'en a pas", async () => {
+    expect((await fiche({ ...POULE, especeId: "souris", nom: "Souris grise", role: null })).dernieres).toEqual([
+      ["Habitat", "Prairie"],
+      ["Rôle", "Aucun Rôle"],
+    ]);
   });
 });

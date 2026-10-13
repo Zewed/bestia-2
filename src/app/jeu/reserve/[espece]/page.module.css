@@ -59,6 +59,11 @@
   text-transform: uppercase;
 }
 
+/* US-0952 : chaque groupe de Blessés, en note discrète (kit.note), sous l'effectif. */
+.blesses {
+  overflow-wrap: anywhere;
+}
+
 .nombre {
   color: var(--creme);
   font: var(--graisse-titre) 28px / 1 var(--police);
@@ -95,6 +100,21 @@
   color: var(--creme);
   font: var(--graisse-titre) 15px / 1.25 var(--police);
   font-variant-numeric: tabular-nums;
+}
+
+/*
+ * US-0806 : le Biome d'Habitat, son pictogramme (la Case de la légende de la carte) devant son nom ; plus haut qu'une
+ * ligne de texte, il cale son nom et sa valeur sur son milieu.
+ */
+.caracteristiques > .habitat > * {
+  align-self: center;
+}
+
+.caracteristiques > .habitat > dd {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
 }
 
 /* « Fermer », au pouce : 44 px de haut, le bouton au contour vert d'une action secondaire. */

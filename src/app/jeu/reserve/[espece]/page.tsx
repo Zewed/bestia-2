@@ -4,14 +4,19 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { exigerCompte } from "@/comptes/garde";
 import { entreeDuJeuOuverte } from "@/comptes/ouverture";
+import { Echantillon } from "@/app/jeu/carte/Echantillon";
 import { IllustrationEspece } from "@/components/IllustrationEspece";
 import kit from "@/components/kit.module.css";
 import { PastilleRarete } from "@/components/PastilleRarete";
 import { getPool } from "@/db";
+import { blessesAuFoyer } from "@/monde/blesses";
+import { blessesAffiches, blessesDans } from "@/monde/blesses-affiches";
+import { maxAElever } from "@/monde/cout-d-elevage";
 import { especeDuTerritoire, type Regime } from "@/monde/effectif";
 import { elevageAcquis } from "@/monde/elevage";
 import { placesDeLHabitat } from "@/monde/habitat";
 import { caracteristiqueAffichee as nombre } from "@/monde/quantite";
+import { maintenant } from "@/temps/horloge";
 import { BlocElever } from "./BlocElever";
 import styles from "./page.module.css";
 
@@ -31,6 +36,12 @@ const REGIMES: Record<Regime, { nom: string; nourriture: string }> = {
   omnivore: { nom: "Omnivore", nourriture: "Viande ou Végétaux" },
 };
 
+/**
+ * US-0806 : la teinte de la carte qui sert de pictogramme au Biome d'Habitat : la sienne, sauf pour l'eau, que la carte
+ * ne dessine que par ses formes (côte, lac, rivière, mer) : la mer, de la couleur de l'eau, la représente.
+ */
+const teinteDuBiome = (biome: string) => (biome === "eau" ? "mer" : biome);
+
 /** US-0803 : un identifiant d'Espèce, tel que les données du jeu les écrivent (« souris », « peu_commune »). */
 const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
 
@@ -43,11 +54,15 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
  * US-0810 : elle s'ouvre aussi depuis la page Bêtes (especeDuTerritoire), et rappelle l'effectif de l'Espèce, vide quand
  * ses seules Bêtes forment le Couple. Ouverte depuis la page Bêtes (`?depuis=betes`), « Fermer » y ramène.
  *
+ * US-0952 : sous l'effectif, avant les caractéristiques, chaque groupe de Blessés au Foyer de l'Espèce et le temps qui lui
+ * reste avant sa guérison, comme sur la page Bêtes, en note discrète ; rien sans Blessé.
+ *
  * US-0804 : sous l'effectif, ses caractéristiques telles que la base les a enregistrées, les mêmes pour tous les joueurs :
  * l'attaque, la vie, la vitesse en km/h et la charge, un nom et une valeur chacune, sans phrase (leurs explications
  * arrivent avec US-0807). Toutes sont toujours là : une Espèce à qui il en manque une ne se charge pas en base
  * (src/donnees/jeux.ts). US-0805 : puis sa taille en Places occupées par Bête, son régime et son Entretien par heure et
- * par Bête, dans la Nourriture de son régime.
+ * par Bête, dans la Nourriture de son régime. US-0806 : enfin son Biome d'Habitat, son nom précédé de son pictogramme,
+ * la Case du Biome dessinée comme sur la carte et sa légende, et son Rôle, ou « Aucun Rôle ».
  *
  * Sur le fond du jeu, un panneau orné : la peinture de l'Espèce dans son filet vert ; son nom en Bree Serif, sa Rareté
  * en puce, l'effectif en grand, puis ses caractéristiques sous un filet doux ; « Fermer », un bouton au contour vert.
@@ -68,6 +83,9 @@ export default async function FicheDeLEspece({
   const fiche = territoireId === null ? null : await especeDuTerritoire(getPool(), territoireId, espece);
   if (!fiche) notFound();
   const retour = (await searchParams).depuis === "betes" ? "/jeu/betes" : "/jeu/reserve";
+  const instant = maintenant();
+  const groupes = fiche.effectif > 0 && territoireId !== null ? ((await blessesAuFoyer(getPool(), territoireId, instant)).get(fiche.especeId) ?? []) : [];
+  const blesses = blessesAffiches(groupes, instant, fiche.effectif);
   return (
     <main className={styles.page}>
       <article className={`${kit.panneau} ${styles.fiche}`}>
@@ -78,6 +96,11 @@ export default async function FicheDeLEspece({
           <p className={styles.effectif}>
             <span>Effectif</span> <strong className={styles.nombre}>{fiche.effectif}</strong>
           </p>
+          {blesses.map((groupe, i) => (
+            <p key={i} className={`${kit.note} ${styles.blesses}`}>
+              {`dont ${blessesDans(groupe)}`}
+            </p>
+          ))}
           <dl className={styles.caracteristiques}>
             <div>
               <dt>Attaque</dt>
@@ -109,13 +132,24 @@ export default async function FicheDeLEspece({
                 {nombre(fiche.entretienParHeure)}&nbsp;{REGIMES[fiche.regime].nourriture}&nbsp;/&nbsp;h
               </dd>
             </div>
+            <div className={styles.habitat}>
+              <dt>Habitat</dt>
+              <dd>
+                <Echantillon teinte={teinteDuBiome(fiche.biome.id)} />
+                {fiche.biome.nom}
+              </dd>
+            </div>
+            <div>
+              <dt>Rôle</dt>
+              <dd>{fiche.role ? fiche.role.nom : "Aucun Rôle"}</dd>
+            </div>
           </dl>
         </div>
         <Link href={retour} className={`${kit.bouton} ${kit.secondaire} ${styles.fermer}`}>
           Fermer
         </Link>
       </article>
-      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} places={await placesDeLHabitat(getPool(), territoireId)} /> : null}
+      {territoireId !== null && (await elevageAcquis(getPool(), territoireId, espece)) ? <BlocElever especeId={espece} places={await placesDeLHabitat(getPool(), territoireId)} max={await maxAElever(getPool(), territoireId, espece)} /> : null}
     </main>
   );
 }

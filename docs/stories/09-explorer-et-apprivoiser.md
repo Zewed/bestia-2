@@ -496,6 +496,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0945 · Les explorateurs fuient
 **En tant que** joueur, **je veux** que mes explorateurs s'enfuient après un combat, **afin de** ne jamais perdre d'Habitants en Expédition.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#65, migration 0067). Après un combat, l'Expédition abandonne son séjour et rentre aussitôt avec tous ses explorateurs et les Bêtes qui lui restent, Blessés compris ; attaquée sans escorte, elle fuit sans rien perdre. Dans la liste et sur la carte : « Retour · en fuite », « rentre dans … » compté jusqu'à sa nouvelle heure ; elle ne peut plus être rappelée. Tranché : la fuite s'écrit comme un rappel (`rappelee_le` à l'instant de l'attaque, colonne `en_fuite`) et le retour dure le temps de l'aller (US-0920) ; plusieurs attaques au même instant font une seule fuite ; le premier demi-tour l'emporte sur l'autre ; le temps s'arrête à la première attaque. Une Expédition en fuite quitte la Case pour tous les joueurs, quel que soit l'ordre des rattrapages : chaque Territoire calcule les fuites de toute la Case des mêmes faits (`src/expeditions/fuites-de-la-case.ts`).
 - **Débloquée par** : US-0944
 - **Critères d'acceptation** :
   - Après un combat, l'Expédition abandonne son séjour et rentre aussitôt au Foyer avec les Bêtes survivantes.
@@ -569,6 +570,7 @@ Le joueur envoie ses explorateurs, seuls ou avec une escorte de Bêtes, vers des
 ### US-0952 · Voir ses Blessés
 **En tant que** joueur, **je veux** voir mes Blessés à part dans l'effectif, **afin de** savoir sur quelles Bêtes je peux compter.
 
+- **Statut** : Livrée le 2026-10-13 (autopilot, Zewed/bestia-2#61). Les Blessés au Foyer se lisent à part dans l'effectif de chaque Espèce, un groupe par ligne avec le temps avant sa guérison : page Bêtes (« Poule, Commune, 797 Bêtes, dont 2 Blessés, guéris dans 5 h »), fiche de l'Espèce sous l'Effectif (« dont 6 Blessés, guéris dans 5 h ») et bloc Escorte de l'écran d'Expédition. Sans Blessé, aucune ligne. Tranché : un groupe = les Blessés d'une Espèce rentrés au Foyer au même instant ; guérison 24 h de jeu après le retour (`GUERISON_DES_BLESSES_HEURES`, provisoire, à régler avec US-0954) ; rien ne s'écrit en base, tout se relit du retour ; les Blessés comptent dans l'effectif (« dont ») ; dans l'Escorte, ils restent parmi les disponibles jusqu'à US-0953 ; jamais plus de Blessés affichés que l'Espèce n'en a. Vérifié en vrai après un vrai combat contre un Loup gris.
 - **Débloquée par** : US-0951
 - **Critères d'acceptation** :
   - L'effectif de chaque Espèce distingue les Bêtes valides et les Blessés.
