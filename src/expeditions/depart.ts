@@ -46,8 +46,9 @@ class Refus extends Error {}
  * explorateurs qui partent sont tenues aussi, contre tout autre changement envoyé au même instant.
  *
  * US-0960 : le départ retient le sexe des Bêtes de son escorte (expedition_escorte.males), que le joueur ne choisit pas :
- * prises parmi les Bêtes valides au Foyer, une à une au sexe le plus nombreux, un mâle à égalité (la règle des pertes,
- * sexesDesPertes). Tant que son Couple n'est pas réuni, une Espèce n'a au Foyer que des Bêtes d'un seul sexe : un mâle et
+ * prises parmi les Bêtes valides au Foyer (celles affectées à leur Rôle, US-0842, comprises : leur sexe n'est pas retenu à
+ * part ; combien peuvent partir, c'est betesDisponibles), une à une au sexe le plus nombreux, un mâle à égalité (la règle
+ * des pertes, sexesDesPertes). Tant que son Couple n'est pas réuni, une Espèce n'a au Foyer que des Bêtes d'un seul sexe : un mâle et
  * une femelle au Foyer le réunissent aussitôt (src/monde/couple.ts) ; ce sont elles qui partent. Le sexe reste inconnu
  * (null) quand celui des Bêtes au Foyer ne se sait pas (validesParSexe).
  */

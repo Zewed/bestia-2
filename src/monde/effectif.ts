@@ -212,9 +212,10 @@ export type ValidesParSexe = { males: number; femelles: number };
 
 /**
  * US-0960 : les Bêtes valides au Foyer, sexe par sexe, de chaque Espèce `especes` de l'effectif du Territoire, à l'instant
- * du jeu `instant` : celles que le départ peut emmener (betesDisponibles en donne le total). Null pour une Espèce dont un
- * sexe ne se sait pas : une escorte encore dehors ou des Blessés au Foyer partis avant que le départ ne retienne le sexe de
- * son escorte ; absente pour une Espèce sans Bête au Foyer.
+ * du jeu `instant` : celles dont le départ tire le sexe de son escorte. Les Bêtes affectées à leur Rôle (US-0842) en font
+ * partie, leur sexe n'étant pas retenu à part : le total que le départ peut emmener est celui de betesDisponibles, sans
+ * elles. Null pour une Espèce dont un sexe ne se sait pas : une escorte encore dehors ou des Blessés au Foyer partis avant
+ * que le départ ne retienne le sexe de son escorte ; absente pour une Espèce sans Bête au Foyer.
  */
 export async function validesParSexe(base: Pool | PoolClient, territoireId: number, especes: readonly string[], instant: Date): Promise<Map<string, ValidesParSexe | null>> {
   const [normale, soignee] = dureesDeGuerison();
