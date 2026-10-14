@@ -652,8 +652,9 @@ export const sexe = pgEnum("sexe", ["male", "femelle"]);
  * avec le Territoire. Personne n'a de Bête à sa naissance (ADR 0008) : la Bête apprivoisée y entre à son arrivée au Foyer
  * (US-0938), et l'Élevage des Couples réunis (jalon 8) la remplira aussi ; l'écran d'Expédition y lit les Bêtes
  * disponibles (src/monde/effectif.ts). US-0956 : le mâle et la femelle d'un Couple réuni la quittent pour la Réserve
- * (couple), d'où ils ne sortent plus. US-0837 : tout ce qui retire des Bêtes valides du Foyer (un départ en escorte, un
- * Couple réuni) y borne les Bêtes affectées à leur Rôle (affectation, bornerLesAffectations dans src/monde/roles.ts).
+ * (couple), d'où ils ne sortent plus. US-0837 : tout ce qui retire des Bêtes valides du Foyer (un Couple réuni) y borne
+ * les Bêtes affectées à leur Rôle (affectation, bornerLesAffectations dans src/monde/roles.ts) ; US-0842 : l'escorte
+ * n'emmène jamais une Bête affectée.
  */
 export const effectif = pgTable(
   "effectif",
@@ -894,4 +895,36 @@ export const couple = pgTable(
     reuniLe: timestamp("reuni_le", { withTimezone: true }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.territoireId, t.especeId] })],
+);
+
+/**
+ * US-0815 : un Élevage lancé au Territoire : l'Espèce, l'éleveur qui s'en occupe (l'Habitant qui l'élève,
+ * habitant.espece_elevee ; null s'il n'est plus là), le nombre de Bêtes demandées, la durée d'Élevage d'une Bête et le coût
+ * payé, fixés au lancement, et l'heure du clic. Les naissances (US-0817), le suivi (US-0818), la file (US-0819) et
+ * l'annulation (US-0820) le liront.
+ */
+export const elevage = pgTable(
+  "elevage",
+  {
+    id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
+    territoireId: integer("territoire_id")
+      .notNull()
+      .references(() => territoire.id, { onDelete: "cascade" }),
+    especeId: text("espece_id")
+      .notNull()
+      .references(() => espece.id),
+    eleveurId: integer("eleveur_id").references(() => habitant.id, { onDelete: "set null" }),
+    quantite: integer("quantite").notNull(),
+    dureeMinutes: integer("duree_minutes").notNull(),
+    cout: bigint("cout", { mode: "number" }).notNull(),
+    lanceLe: timestamp("lance_le", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    index("elevage_par_territoire").on(t.territoireId),
+    // Un Habitant qui s'en va met son Élevage sans éleveur (set null) : retrouvé par cet index.
+    index("elevage_par_eleveur").on(t.eleveurId),
+    check("elevage_au_moins_une_bete", sql`${t.quantite} > 0`),
+    check("elevage_duree_positive", sql`${t.dureeMinutes} > 0`),
+    check("elevage_cout_positif", sql`${t.cout} >= 0`),
+  ],
 );

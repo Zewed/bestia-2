@@ -16,7 +16,7 @@ import { ELEVAGE_ACQUIS } from "./elevage";
  * US-0905 : avec la force d'une de ses Bêtes, la même pour toutes. US-0912 : et leur vitesse réelle, en km/h, qui règle
  * l'allure d'une escorte. US-0937 : et combien de mâles et de femelles le joueur en possède, Bêtes sorties comprises.
  * US-0956 : et si son Couple est réuni : le sexe ne compte plus. US-0953 : et ses Blessés au Foyer, qui guérissent sans être
- * disponibles (absent : aucun).
+ * disponibles (absent : aucun). US-0842 : et ses Bêtes affectées à leur Rôle, qui ne combattent plus (absent : aucune).
  */
 export type EspeceDisponible = {
   id: string;
@@ -29,6 +29,7 @@ export type EspeceDisponible = {
   femelles: number;
   coupleReuni: boolean;
   blesses?: number;
+  affectees?: number;
 };
 
 /**
@@ -102,7 +103,8 @@ const blessesPlafonnes = (b: { auFoyer: string; males: string; femelles: string;
 
 /**
  * Les Bêtes au Foyer de chaque Espèce de l'effectif du Territoire $1, à l'instant du jeu $3 ($2 et $4 : les durées de
- * guérison, dureesDeGuerison) : mâles et femelles possédés, au Foyer, et ses Blessés (blessesPlafonnes), Espèce par Espèce.
+ * guérison, dureesDeGuerison) : mâles et femelles possédés, au Foyer, et ses Blessés (blessesPlafonnes), Espèce par Espèce ;
+ * US-0842 : et ses Bêtes retenues à leur Rôle (affectation, `retenues`).
  */
 const AU_FOYER = `select y.*, ${blessesPlafonnes({
   auFoyer: "y.au_foyer",
@@ -121,6 +123,7 @@ const AU_FOYER = `select y.*, ${blessesPlafonnes({
       coalesce(sum(e.nombre) filter (where e.sexe = 'femelle'), 0)::int - (${FEMELLES_SORTIES}) as femelles_au_foyer,
       (${BLESSES_MALES}) as blesses_males, (${BLESSES_FEMELLES}) as blesses_femelles, (${BLESSES_SANS_SEXE}) as blesses_sans_sexe,
       (${SORTIES_SANS_SEXE}) as sorties_sans_sexe,
+      (select a.nombre from affectation a where a.territoire_id = e.territoire_id and a.espece_id = e.espece_id) as retenues,
       ${ELEVAGE_ACQUIS} as "coupleReuni"
     from effectif e
     where e.territoire_id = $1
@@ -161,20 +164,32 @@ export const BLESSES_EN_GUERISON = `select ${blessesPlafonnes({
  * les femelles, mais ne sont jamais disponibles : le départ, qui relit les disponibles, les refuse (src/expeditions/depart.ts).
  * Jamais plus de Blessés que de Bêtes au Foyer. Une Espèce dont toutes les Bêtes au Foyer sont blessées reste proposée,
  * sans aucune disponible, pour que ses Blessés se lisent (US-0952).
+ * US-0842 : les Bêtes affectées à leur Rôle (affectation, jamais plus que les Bêtes valides, src/monde/roles.ts) ne
+ * combattent plus : elles ne sont pas disponibles, et le départ les refuse de même ; une Espèce dont toutes les Bêtes
+ * valides sont affectées reste proposée, sans aucune disponible. Les disponibles sont les Bêtes qui peuvent combattre :
+ * l'Attaque (étape 57) partira d'elles comme l'escorte, et la défense du Foyer contre une Incursion (étape 54) ne comptera
+ * qu'elles, sans perte pour les affectées.
  */
 export async function betesDisponibles(base: Pool | PoolClient, territoireId: number, instant: Date = maintenant()): Promise<EspeceDisponible[]> {
   const [normale, soignee] = dureesDeGuerison();
   const { rows } = await base.query<Omit<EspeceDisponible, "force"> & { attaque: number; vie: number }>(
-    `select es.id, es.nom, es.illustration, x.au_foyer - x.blesses as disponibles, x.blesses,
+    `select es.id, es.nom, es.illustration, v.valides - v.affectees as disponibles, x.blesses, v.affectees,
        es.attaque, es.vie, es.vitesse, x.males, x.femelles, x."coupleReuni"
      from (${AU_FOYER}) x
+     cross join lateral (select x.au_foyer - x.blesses as valides) w
+     cross join lateral (select w.valides, least(coalesce(x.retenues, 0), w.valides) as affectees) v
      join espece es on es.id = x.espece_id
      join rarete r on r.id = es.rarete_id
      where x.au_foyer > 0
      order by r.rang, es.nom`,
     [territoireId, normale, instant, soignee],
   );
-  return rows.map(({ attaque, vie, blesses, ...espece }) => ({ ...espece, ...(blesses ? { blesses } : {}), force: forceDUneBete({ attaque, vie }) }));
+  return rows.map(({ attaque, vie, blesses, affectees, ...espece }) => ({
+    ...espece,
+    ...(blesses ? { blesses } : {}),
+    ...(affectees ? { affectees } : {}),
+    force: forceDUneBete({ attaque, vie }),
+  }));
 }
 
 /**

@@ -4,7 +4,6 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { betesDisponibles, validesParSexe } from "@/monde/effectif";
 import type { Coordonnees } from "@/monde/hex";
-import { bornerLesAffectations } from "@/monde/roles";
 import { type BetesDeLEscorte, dureeDuTrajetMinutes } from "./allure";
 import { sexesDesPertes } from "./combat";
 import { destinationDUneCase } from "./destination";
@@ -116,7 +115,7 @@ async function partir(client: PoolClient, territoireId: number, { destination, e
     territoireId,
     betes.map(([especeId]) => especeId),
   ]);
-  // US-0953 : les Blessés au Foyer à l'instant du départ ne sont pas disponibles.
+  // US-0953 : les Blessés au Foyer à l'instant du départ ne sont pas disponibles ; US-0842 : ni les Bêtes affectées à leur Rôle.
   const disponibles = new Map((await betesDisponibles(client, territoireId, instant)).map((e) => [e.id, e.disponibles]));
   if (betes.some(([especeId, nombre]) => nombre > (disponibles.get(especeId) ?? 0))) throw new Refus(BETE_PLUS_DISPONIBLE);
   const valides = await validesParSexe(
@@ -135,7 +134,5 @@ async function partir(client: PoolClient, territoireId: number, { destination, e
     `insert into expedition_escorte (expedition_id, espece_id, nombre, males) select $1, e, n, m from unnest($2::text[], $3::int[], $4::int[]) as l(e, n, m)`,
     [expeditionId, betes.map(([especeId]) => especeId), betes.map(([, nombre]) => nombre), males],
   );
-  // US-0837 : l'escorte emmène d'abord les Bêtes non affectées à leur Rôle ; au-delà, celles qui partent ne le sont plus.
-  await bornerLesAffectations(client, territoireId, instant);
   return expeditionId;
 }

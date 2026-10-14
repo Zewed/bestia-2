@@ -1,5 +1,5 @@
 {
-  "id": "7683ebf6-febb-4a80-b9c6-502aac713a2e",
+  "id": "5dd8d3e7-5f7b-42b9-9413-c65e07886f2c",
   "prevId": "877a42b6-01d1-431f-909e-4e7e97d1575a",
   "version": "7",
   "dialect": "postgresql",
@@ -1106,6 +1106,162 @@
       },
       "isRLSEnabled": false
     },
+    "public.elevage": {
+      "name": "elevage",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "elevage_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "2147483647",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "territoire_id": {
+          "name": "territoire_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "espece_id": {
+          "name": "espece_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eleveur_id": {
+          "name": "eleveur_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "quantite": {
+          "name": "quantite",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "duree_minutes": {
+          "name": "duree_minutes",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "cout": {
+          "name": "cout",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "lance_le": {
+          "name": "lance_le",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "elevage_par_territoire": {
+          "name": "elevage_par_territoire",
+          "columns": [
+            {
+              "expression": "territoire_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "elevage_par_eleveur": {
+          "name": "elevage_par_eleveur",
+          "columns": [
+            {
+              "expression": "eleveur_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "elevage_territoire_id_territoire_id_fk": {
+          "name": "elevage_territoire_id_territoire_id_fk",
+          "tableFrom": "elevage",
+          "tableTo": "territoire",
+          "columnsFrom": [
+            "territoire_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "elevage_espece_id_espece_id_fk": {
+          "name": "elevage_espece_id_espece_id_fk",
+          "tableFrom": "elevage",
+          "tableTo": "espece",
+          "columnsFrom": [
+            "espece_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "elevage_eleveur_id_habitant_id_fk": {
+          "name": "elevage_eleveur_id_habitant_id_fk",
+          "tableFrom": "elevage",
+          "tableTo": "habitant",
+          "columnsFrom": [
+            "eleveur_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "elevage_au_moins_une_bete": {
+          "name": "elevage_au_moins_une_bete",
+          "value": "\"elevage\".\"quantite\" > 0"
+        },
+        "elevage_duree_positive": {
+          "name": "elevage_duree_positive",
+          "value": "\"elevage\".\"duree_minutes\" > 0"
+        },
+        "elevage_cout_positif": {
+          "name": "elevage_cout_positif",
+          "value": "\"elevage\".\"cout\" >= 0"
+        }
+      },
+      "isRLSEnabled": false
+    },
     "public.espece": {
       "name": "espece",
       "schema": "",
@@ -1572,12 +1728,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
-        },
-        "males": {
-          "name": "males",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -1632,10 +1782,6 @@
         "expedition_escorte_blessees_parmi_les_perdues": {
           "name": "expedition_escorte_blessees_parmi_les_perdues",
           "value": "\"expedition_escorte\".\"blessees\" between 0 and \"expedition_escorte\".\"perdues\""
-        },
-        "expedition_escorte_males_parmi_elles": {
-          "name": "expedition_escorte_males_parmi_elles",
-          "value": "\"expedition_escorte\".\"males\" between 0 and \"expedition_escorte\".\"nombre\""
         }
       },
       "isRLSEnabled": false
