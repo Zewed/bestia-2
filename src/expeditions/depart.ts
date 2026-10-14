@@ -28,8 +28,8 @@ export type Depart = { expeditionId: number } | { refus: string };
 /** US-0911 : le refus d'un départ dont un explorateur choisi n'est plus libre au moment de confirmer. */
 export const EXPLORATEUR_PLUS_LIBRE = "Départ refusé : un explorateur n'est plus libre.";
 
-/** US-0911 : le refus d'un départ dont une Bête de l'escorte n'est plus disponible au moment de confirmer. */
-export const BETE_PLUS_DISPONIBLE = "Départ refusé : une Bête de l'escorte n'est plus disponible.";
+/** US-0911 : le refus d'un départ dont une Bête de l'escorte, ou US-0976 un Éclaireur, n'est plus disponible au moment de confirmer. */
+export const BETE_PLUS_DISPONIBLE = "Départ refusé : une Bête n'est plus disponible.";
 
 /** US-0976 : le refus d'un départ dont des Éclaireurs seraient d'une Espèce qui n'a pas ce Rôle ; l'écran ne l'envoie jamais. */
 export const ECLAIREUR_SANS_LE_ROLE = "Départ refusé : seule une Espèce Éclaireuse part en Éclaireurs.";

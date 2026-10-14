@@ -330,6 +330,43 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       expect(await eclaireursPartis(t)).toEqual({});
     });
 
+    it("n'emmène jamais deux fois le même pigeon, en escorte comme en Éclaireur, même pour deux départs envoyés au même instant", async () => {
+      const t = await nouveauTerritoire();
+      await explorateurs(t, 2);
+      await betes(t, [["pigeon", "male", 3]]);
+      const destination = await aLEcart(t, 3);
+      const departs = await Promise.all([
+        lancerLExpedition(pool, t, choix(destination, 1, [], [["pigeon", 2]]), INSTANT),
+        lancerLExpedition(pool, t, choix(destination, 1, [["pigeon", 1]], [["pigeon", 1]]), INSTANT),
+      ]);
+      expect(departs).toEqual(expect.arrayContaining([{ expeditionId: expect.any(Number) }, { refus: BETE_PLUS_DISPONIBLE }]));
+      expect(await retenu(t)).toEqual(expect.objectContaining({ expeditions: 1, partis: 1 }));
+      expect(await betesDisponibles(pool, t, INSTANT)).toEqual([expect.objectContaining({ id: "pigeon", disponibles: 1 })]);
+    });
+
+    it("des Éclaireurs sortis ne réunissent pas le Couple de leur Espèce : il attend leur retour (US-0956)", async () => {
+      const t = await nouveauTerritoire();
+      await explorateurs(t, 2);
+      // Deux mâles et une femelle : un mâle part en Éclaireur, et la femelle pourrait l'être, faute de savoir qui est sorti.
+      await betes(t, [
+        ["pigeon", "male", 2],
+        ["pigeon", "femelle", 1],
+        ["souris", "male", 1],
+      ]);
+      const part = await lireMarquePage(pool, "territoire", t);
+      await lancerLExpedition(pool, t, choix(await aLEcart(t, 3), 1, [], [["pigeon", 1]]), part);
+      // Une autre Expédition, plus courte, rentre la première : le temps du Territoire repasse par la réunion des Couples.
+      await lancerLExpedition(pool, t, { ...choix(await aLEcart(t, 1), 1, [["souris", 1]]), sejourMinutes: 30 }, part);
+      const [longue, courte] = await expeditionsEnCours(pool, t, part);
+      const rentree = (x: typeof longue) => new Date(x.partLe.getTime() + (2 * x.trajetMinutes! + x.sejourMinutes) * MINUTE_MS);
+      expect(rentree(courte) < rentree(longue)).toBe(true);
+      await rattraper("territoire", t, { pool, jusqua: rentree(courte) });
+      expect((await pool.query("select espece_id from couple where territoire_id = $1", [t])).rows).toEqual([]);
+      // Au retour de l'Éclaireur, le Couple se réunit.
+      await rattraper("territoire", t, { pool, jusqua: rentree(longue) });
+      expect((await pool.query("select espece_id from couple where territoire_id = $1", [t])).rows).toEqual([{ espece_id: "pigeon" }]);
+    });
+
     it("les Éclaireurs ne règlent pas l'allure : sans escorte, l'Expédition va au pas de ses explorateurs", async () => {
       const t = await nouveauTerritoire();
       await explorateurs(t, 1);
