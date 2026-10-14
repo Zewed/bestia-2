@@ -58,11 +58,12 @@ const IDENTIFIANT = /^[a-z0-9_]{1,64}$/;
  * US-0952 : sous l'effectif, avant les caractéristiques, chaque groupe de Blessés au Foyer de l'Espèce et le temps qui lui
  * reste avant sa guérison, comme sur la page Bêtes, en note discrète ; rien sans Blessé.
  *
- * US-0804 : sous l'effectif, ses caractéristiques telles que la base les a enregistrées, les mêmes pour tous les joueurs :
- * l'attaque, la vie, la vitesse en km/h et la charge, un nom et une valeur chacune, sans phrase à vue. Toutes sont
- * toujours là : une Espèce à qui il en manque une ne se charge pas en base (src/donnees/jeux.ts). US-0805 : puis sa taille en Places occupées par Bête, son régime et son Entretien par heure et
- * par Bête, dans la Nourriture de son régime. US-0806 : enfin son Biome d'Habitat, son nom précédé de son pictogramme,
- * la Case du Biome dessinée comme sur la carte et sa légende, et son Rôle, ou « Aucun Rôle ».
+ * US-0804 : sous l'effectif, ses caractéristiques telles que la base les a enregistrées, les mêmes pour tous les
+ * joueurs : l'attaque, la vie, la vitesse en km/h et la charge, un nom et une valeur chacune, sans phrase à vue. Toutes
+ * sont toujours là : une Espèce à qui il en manque une ne se charge pas en base (src/donnees/jeux.ts). US-0805 : puis
+ * sa taille en Places occupées par Bête, son régime et son Entretien par heure et par Bête, dans la Nourriture de son
+ * régime. US-0806 : enfin son Biome d'Habitat, son nom précédé de son pictogramme, la Case du Biome dessinée comme sur
+ * la carte et sa légende, et son Rôle, ou « Aucun Rôle ».
  *
  * US-0807 : le nom de l'effectif et de chaque caractéristique ouvre son explication d'une phrase, dessous ; un toucher
  * ailleurs, Échap ou son bouton la referment (Explication.tsx, explications.ts). Au clavier, l'ordre reste celui de la

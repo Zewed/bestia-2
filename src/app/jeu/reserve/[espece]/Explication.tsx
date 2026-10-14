@@ -8,14 +8,37 @@ import styles from "./page.module.css";
 const INTERACTIF = "a, button, input, select, textarea, label, summary, [role='button'], [tabindex]";
 
 /**
+ * US-0807 : le clic qui suit le toucher qui vient de fermer une explication ne va nulle part : il est arrêté avant tout le
+ * reste (à la capture, sur le document). S'il ne vient pas, comme sur iPhone, le toucher suivant, ou une seconde, lève
+ * l'arrêt : un clic voulu commence toujours par son propre appui.
+ */
+function avalerLeClicQuiSuit() {
+  const arreter = (evenement: Event) => {
+    evenement.preventDefault();
+    evenement.stopPropagation();
+    lever();
+  };
+  const lever = () => {
+    document.removeEventListener("click", arreter, true);
+    document.removeEventListener("pointerdown", lever, true);
+    clearTimeout(delai);
+  };
+  document.addEventListener("click", arreter, true);
+  document.addEventListener("pointerdown", lever, true);
+  const delai = setTimeout(lever, 1_000);
+}
+
+/**
  * US-0807 : une explication qu'ouvre le nom d'une caractéristique : ouverte, un toucher ailleurs, Échap ou son bouton la
  * referment ; le bouton rend le regard au nom, Échap aussi quand le regard était sur l'explication ou son nom. Un toucher
  * sur l'explication elle-même la laisse ouverte. Une à la fois : en ouvrir une autre, c'est toucher ailleurs.
  *
- * Le toucher ailleurs : sur ce qui n'active rien (du texte, le fond), elle se ferme dès l'appui, car Safari sur iPhone ne
- * remonte pas jusqu'au document le clic d'un tel toucher. Sur un lien ou un bouton (le nom d'une autre caractéristique,
- * « Fermer »), elle attend le clic : fermée dès l'appui, elle remontait les lignes du dessous avant que le doigt ne se lève,
- * et le clic tombait à côté de ce qu'il visait. Faire défiler la page ne la ferme pas.
+ * Le toucher ailleurs ne la ferme jamais pendant le geste : fermée, elle fait remonter les lignes du dessous, et ce qui
+ * passerait alors sous le doigt (« Fermer », le bloc « Élever ») recevrait le toucher. Sur un lien ou un bouton (le nom
+ * d'une autre caractéristique, « Fermer »), elle se ferme à son clic, qui l'atteint avant que rien ne bouge. Ailleurs (du
+ * texte, le fond), au doigt levé, car Safari sur iPhone ne remonte pas jusqu'au document le clic d'un tel toucher ; et le
+ * clic qui suit, s'il vient, n'active rien : il tomberait sur ce qui a glissé sous le doigt. Un défilement au doigt, que le
+ * navigateur annule comme toucher (pointercancel), ne la ferme pas.
  */
 function useExplication() {
   const [ouverte, setOuverte] = useState(false);
@@ -25,9 +48,20 @@ function useExplication() {
   useEffect(() => {
     if (!ouverte) return;
     const dedans = (cible: Node) => Boolean(nom.current?.contains(cible) || explication.current?.contains(cible));
+    /** Le toucher en cours, posé ailleurs sur ce qui n'active rien : son identifiant ; null sans tel toucher. */
+    let toucher: { id: number | undefined } | null = null;
     const appui = (evenement: PointerEvent) => {
       const cible = evenement.target as Element;
-      if (!dedans(cible) && !cible.closest?.(INTERACTIF)) setOuverte(false);
+      toucher = dedans(cible) || cible.closest?.(INTERACTIF) ? null : { id: evenement.pointerId };
+    };
+    const annulation = (evenement: PointerEvent) => {
+      if (toucher?.id === evenement.pointerId) toucher = null;
+    };
+    const releve = (evenement: PointerEvent) => {
+      if (!toucher || toucher.id !== evenement.pointerId) return;
+      toucher = null;
+      setOuverte(false);
+      avalerLeClicQuiSuit();
     };
     const clic = (evenement: MouseEvent) => {
       if (!dedans(evenement.target as Node)) setOuverte(false);
@@ -39,10 +73,14 @@ function useExplication() {
       if (!regard || regard === document.body || dedans(regard)) nom.current?.focus();
     };
     document.addEventListener("pointerdown", appui);
+    document.addEventListener("pointercancel", annulation);
+    document.addEventListener("pointerup", releve);
     document.addEventListener("click", clic);
     document.addEventListener("keydown", touche);
     return () => {
       document.removeEventListener("pointerdown", appui);
+      document.removeEventListener("pointercancel", annulation);
+      document.removeEventListener("pointerup", releve);
       document.removeEventListener("click", clic);
       document.removeEventListener("keydown", touche);
     };

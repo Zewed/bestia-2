@@ -1,12 +1,12 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { Caracteristique, Effectif } from "./Explication";
 import { EXPLICATIONS } from "./explications";
 
 /** Trois lignes de la fiche, et l'effectif au-dessus, comme la page les pose. */
-function fiche() {
+function fiche(elever = () => {}) {
   render(
     <main>
       <Effectif nombre={12} />
@@ -19,6 +19,9 @@ function fiche() {
       <label>
         Quantité <input defaultValue="1" />
       </label>
+      <button type="button" onClick={elever}>
+        Élever
+      </button>
     </main>,
   );
 }
@@ -102,11 +105,36 @@ describe("comprendre une caractéristique de la fiche d'une Espèce (US-0807)", 
     fiche();
     expect(nom("Effectif").closest("p")?.textContent).toBe("Effectif 12");
   });
-  it("un appui sur ce qui n'active rien la ferme aussitôt, sans attendre de clic, que Safari sur iPhone n'envoie pas", async () => {
+  it("un toucher sur ce qui n'active rien ne la ferme qu'au doigt levé : rien ne bouge sous le doigt pendant le geste", async () => {
     fiche();
     await userEvent.click(nom("Vie"));
-    fireEvent.pointerDown(screen.getByText("Ailleurs sur la page"));
+    fireEvent.pointerDown(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
+    expect(ouverte("Vie")).toBe(true);
+    // Safari sur iPhone n'envoie pas de clic pour ce toucher : le doigt levé suffit.
+    fireEvent.pointerUp(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
     expect(ouverte("Vie")).toBe(false);
+  });
+
+  it("faire défiler la page au doigt ne la ferme pas : le navigateur annule le toucher", async () => {
+    fiche();
+    await userEvent.click(nom("Vie"));
+    fireEvent.pointerDown(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
+    fireEvent.pointerCancel(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
+    expect(ouverte("Vie")).toBe(true);
+  });
+
+  it("le clic qui suit le toucher qui la ferme n'active rien de ce qui a glissé sous le doigt ; le toucher suivant, si", async () => {
+    const elever = vi.fn();
+    fiche(elever);
+    await userEvent.click(nom("Vie"));
+    // Le doigt se pose et se lève sur du texte ; la page remonte, et le clic tombe sur « Élever ».
+    fireEvent.pointerDown(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
+    fireEvent.pointerUp(screen.getByText("Ailleurs sur la page"), { pointerId: 1 });
+    fireEvent.click(screen.getByRole("button", { name: "Élever" }));
+    expect(elever).not.toHaveBeenCalled();
+    // Un vrai toucher sur « Élever », ensuite, l'active.
+    await userEvent.click(screen.getByRole("button", { name: "Élever" }));
+    expect(elever).toHaveBeenCalledOnce();
   });
 
   it("un appui sur le nom d'une autre caractéristique attend son clic : rien ne bouge sous le doigt avant qu'il se lève", async () => {
