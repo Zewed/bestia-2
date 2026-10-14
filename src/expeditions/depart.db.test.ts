@@ -4,6 +4,7 @@ import type { Pool } from "pg";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { enregistrerNomDeChef } from "@/chefs/chef";
 import { creerCompte } from "@/comptes/compte";
+import { betesSauvagesDUneCase } from "@/monde/betes-sauvages";
 import { betesDisponibles } from "@/monde/effectif";
 import { explorateursDuTerritoire, prochainRetourDUnExplorateur } from "@/monde/explorateurs";
 import { enregistrerLeMetier, habitantsDuTerritoire, renvoyerLHabitant, retirerUnHabitantDuMetier } from "@/monde/habitants";
@@ -79,6 +80,27 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
     ...(eclaireurs ? { eclaireurs: new Map(eclaireurs) } : {}),
     sejourMinutes: 240,
   });
+  /**
+   * US-0976 : une Case libre à `ecart` Cases du Foyer du Territoire où ne se montre aucune Bête, sauvage ni de naissance,
+   * pendant toute l'Expédition qui y part à `part` au pas des explorateurs pour `sejour` minutes : elle y séjourne sans
+   * Rencontre, sans Bête qui la suive ni l'attaque, et rentre à son heure. Elle s'éloigne d'une Case, jusqu'à trois fois,
+   * s'il n'y en a aucune ; rend la Case et sa distance.
+   */
+  const uneCaseSansBete = async (territoireId: number, ecart: number, part: Date, sejour = 240): Promise<Coordonnees & { distance: number }> => {
+    for (let d = ecart; d <= ecart + 3; d++) {
+      const { rows } = await pool.query<Coordonnees & { id: number }>(
+        `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
+           join case_du_monde c on c.monde_id = f.monde_id and c.chef_id is null
+         where t.id = $1 and greatest(abs(c.q - f.q), abs(c.r - f.r), abs(c.q - f.q + c.r - f.r)) = $2
+           and not exists (select 1 from bete_de_naissance n where n.case_id = c.id)
+         order by c.q, c.r`,
+        [territoireId, d],
+      );
+      const fin = new Date(part.getTime() + (2 * d * PAS_DES_EXPLORATEURS_MINUTES_PAR_CASE + sejour) * MINUTE_MS);
+      for (const c of rows) if ((await betesSauvagesDUneCase(pool, c.id, part, fin)).length === 0) return { q: c.q, r: c.r, distance: d };
+    }
+    throw new Error(`Aucune Case sans Bête de ${ecart} à ${ecart + 3} Cases du Foyer.`);
+  };
   /** US-0976 : les Éclaireurs que le Territoire a fait partir, Espèce par Espèce. */
   const eclaireursPartis = async (territoireId: number) =>
     Object.fromEntries(
@@ -288,7 +310,8 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       ]);
       // Parti à l'heure de sa naissance, pour que le temps du Territoire le ramène.
       const part = await lireMarquePage(pool, "territoire", t);
-      const depart = await lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, [["pigeon", 1], ["souris", 1]], [["pigeon", 2]]), part);
+      const calme = await uneCaseSansBete(t, 2, part);
+      const depart = await lancerLExpedition(pool, t, choix({ q: calme.q, r: calme.r }, 1, [["pigeon", 1], ["souris", 1]], [["pigeon", 2]]), part);
       expect(depart).toEqual({ expeditionId: expect.any(Number) });
       expect(await eclaireursPartis(t)).toEqual({ pigeon: 2 });
       // La force de l'Expédition, celle que lisent les Rencontres disputées de tous les joueurs (US-0963) : son escorte seule.
@@ -354,9 +377,12 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
         ["souris", "male", 1],
       ]);
       const part = await lireMarquePage(pool, "territoire", t);
-      await lancerLExpedition(pool, t, choix(await aLEcart(t, 3), 1, [], [["pigeon", 1]]), part);
+      const loin = await uneCaseSansBete(t, 3, part);
+      await lancerLExpedition(pool, t, choix({ q: loin.q, r: loin.r }, 1, [], [["pigeon", 1]]), part);
       // Une autre Expédition, plus courte, rentre la première : le temps du Territoire repasse par la réunion des Couples.
-      await lancerLExpedition(pool, t, { ...choix(await aLEcart(t, 1), 1, [["souris", 1]]), sejourMinutes: 30 }, part);
+      const pres = await uneCaseSansBete(t, 1, part, 30);
+      expect(pres.distance).toBeLessThanOrEqual(loin.distance);
+      await lancerLExpedition(pool, t, { ...choix({ q: pres.q, r: pres.r }, 1, [["souris", 1]]), sejourMinutes: 30 }, part);
       const [longue, courte] = await expeditionsEnCours(pool, t, part);
       const rentree = (x: typeof longue) => new Date(x.partLe.getTime() + (2 * x.trajetMinutes! + x.sejourMinutes) * MINUTE_MS);
       expect(rentree(courte) < rentree(longue)).toBe(true);
