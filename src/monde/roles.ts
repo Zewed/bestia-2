@@ -9,7 +9,8 @@
 // combat plus ; elle n'est pas disponible pour l'escorte (betesDisponibles), et le départ ne l'emmène jamais. Les Blessés
 // sont des Bêtes de l'escorte, et les Bêtes tuées aussi. Tout ce qui retirera un jour des Bêtes valides du Foyer devra
 // borner les affectées de même ; la défense du Foyer (étape 54) et l'Attaque (étape 57) ne compteront que les disponibles.
-// Côté serveur uniquement.
+// Les Éclaireurs (US-0976), affectés à leur Rôle au départ d'une Expédition, suivent la même règle : seule l'escorte
+// (expedition_escorte) combat. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { dureesDeGuerison } from "./blesses";
