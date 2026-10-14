@@ -367,18 +367,35 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       expect(await betesDisponibles(pool, t, INSTANT)).toEqual([expect.objectContaining({ id: "pigeon", disponibles: 1 })]);
     });
 
-    it("des Éclaireurs sortis ne réunissent pas le Couple de leur Espèce : il attend leur retour (US-0956)", async () => {
+    it("retient le sexe des Éclaireurs comme celui de l'escorte, pris après elle aux Bêtes valides du Foyer (US-0960)", async () => {
+      const t = await nouveauTerritoire();
+      await explorateurs(t, 1);
+      // Le Couple déjà réuni : mâles et femelles au Foyer ensemble, sans Couple à former.
+      await pool.query("insert into couple (territoire_id, espece_id, reuni_le) values ($1, 'pigeon', $2)", [t, INSTANT]);
+      await betes(t, [
+        ["pigeon", "male", 3],
+        ["pigeon", "femelle", 2],
+      ]);
+      const depart = await lancerLExpedition(pool, t, choix(await aLEcart(t, 2), 1, [["pigeon", 2]], [["pigeon", 2]]), INSTANT);
+      const { expeditionId } = depart as { expeditionId: number };
+      // L'escorte d'abord, au sexe le plus nombreux, un mâle à égalité : deux mâles ; puis les Éclaireurs parmi les deux
+      // femelles et le mâle qui restent : une femelle, puis le mâle à égalité.
+      const males = async (table: string) => (await pool.query(`select males from ${table} where expedition_id = $1`, [expeditionId])).rows[0].males;
+      expect([await males("expedition_escorte"), await males("expedition_eclaireur")]).toEqual([2, 1]);
+    });
+
+    it("la seule Bête d'un sexe partie en Éclaireur ne réunit le Couple de son Espèce qu'à son retour (US-0956, US-0960)", async () => {
       const t = await nouveauTerritoire();
       await explorateurs(t, 2);
-      // Deux mâles et une femelle : un mâle part en Éclaireur, et la femelle pourrait l'être, faute de savoir qui est sorti.
       await betes(t, [
-        ["pigeon", "male", 2],
-        ["pigeon", "femelle", 1],
+        ["pigeon", "male", 1],
         ["souris", "male", 1],
       ]);
       const part = await lireMarquePage(pool, "territoire", t);
       const loin = await uneCaseSansBete(t, 3, part);
       await lancerLExpedition(pool, t, choix({ q: loin.q, r: loin.r }, 1, [], [["pigeon", 1]]), part);
+      // Une femelle arrive au Foyer pendant que le seul mâle est parti en Éclaireur.
+      await betes(t, [["pigeon", "femelle", 1]]);
       // Une autre Expédition, plus courte, rentre la première : le temps du Territoire repasse par la réunion des Couples.
       const pres = await uneCaseSansBete(t, 1, part, 30);
       expect(pres.distance).toBeLessThanOrEqual(loin.distance);
