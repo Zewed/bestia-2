@@ -384,18 +384,20 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       expect([await males("expedition_escorte"), await males("expedition_eclaireur")]).toEqual([2, 1]);
     });
 
-    it("la seule Bête d'un sexe partie en Éclaireur ne réunit le Couple de son Espèce qu'à son retour (US-0956, US-0960)", async () => {
+    /**
+     * US-0960 : un Territoire avec les pigeons `pigeons` au Foyer ; un pigeon part en Éclaireur pour une longue Expédition (au
+     * sexe retenu, ou inconnu avec `sansSexe`), puis `avant` s'ajoute à l'effectif, et une courte Expédition rentre la
+     * première. Les Couples réunis au retour de la courte, puis à celui de la longue.
+     */
+    const couplesAuxRetours = async (pigeons: [string, "male" | "femelle", number][], avant: [string, "male" | "femelle", number][], sansSexe = false) => {
       const t = await nouveauTerritoire();
       await explorateurs(t, 2);
-      await betes(t, [
-        ["pigeon", "male", 1],
-        ["souris", "male", 1],
-      ]);
+      await betes(t, [...pigeons, ["souris", "male", 1]]);
       const part = await lireMarquePage(pool, "territoire", t);
       const loin = await uneCaseSansBete(t, 3, part);
-      await lancerLExpedition(pool, t, choix({ q: loin.q, r: loin.r }, 1, [], [["pigeon", 1]]), part);
-      // Une femelle arrive au Foyer pendant que le seul mâle est parti en Éclaireur.
-      await betes(t, [["pigeon", "femelle", 1]]);
+      const { expeditionId } = (await lancerLExpedition(pool, t, choix({ q: loin.q, r: loin.r }, 1, [], [["pigeon", 1]]), part)) as { expeditionId: number };
+      if (sansSexe) await pool.query("update expedition_eclaireur set males = null where expedition_id = $1", [expeditionId]);
+      if (avant.length > 0) await betes(t, avant);
       // Une autre Expédition, plus courte, rentre la première : le temps du Territoire repasse par la réunion des Couples.
       const pres = await uneCaseSansBete(t, 1, part, 30);
       expect(pres.distance).toBeLessThanOrEqual(loin.distance);
@@ -403,11 +405,24 @@ describe.skipIf(!URL_TEST)("lancer l'Expédition (US-0911, sur base)", () => {
       const [longue, courte] = await expeditionsEnCours(pool, t, part);
       const rentree = (x: typeof longue) => new Date(x.partLe.getTime() + (2 * x.trajetMinutes! + x.sejourMinutes) * MINUTE_MS);
       expect(rentree(courte) < rentree(longue)).toBe(true);
+      const couples = async () => (await pool.query<{ espece_id: string }>("select espece_id from couple where territoire_id = $1", [t])).rows.map((c) => c.espece_id);
       await rattraper("territoire", t, { pool, jusqua: rentree(courte) });
-      expect((await pool.query("select espece_id from couple where territoire_id = $1", [t])).rows).toEqual([]);
-      // Au retour de l'Éclaireur, le Couple se réunit.
+      const auPremierRetour = await couples();
       await rattraper("territoire", t, { pool, jusqua: rentree(longue) });
-      expect((await pool.query("select espece_id from couple where territoire_id = $1", [t])).rows).toEqual([{ espece_id: "pigeon" }]);
+      return [auPremierRetour, await couples()];
+    };
+
+    it("la seule Bête d'un sexe partie en Éclaireur ne réunit le Couple de son Espèce qu'à son retour (US-0956, US-0960)", async () => {
+      // Le seul mâle part en Éclaireur ; une femelle arrive au Foyer pendant son absence.
+      expect(await couplesAuxRetours([["pigeon", "male", 1]], [["pigeon", "femelle", 1]])).toEqual([[], ["pigeon"]]);
+    });
+
+    it("le sexe retenu de l'Éclaireur compte pour le Couple ; inconnu, il compte pour l'un et pour l'autre (US-0960)", async () => {
+      // Deux mâles et une femelle : un mâle part en Éclaireur ; le mâle et la femelle restés au Foyer réunissent le Couple dès
+      // le premier retour.
+      expect(await couplesAuxRetours([["pigeon", "male", 2], ["pigeon", "femelle", 1]], [])).toEqual([["pigeon"], ["pigeon"]]);
+      // Le sexe de l'Éclaireur inconnu, il pourrait être la femelle : le Couple attend son retour.
+      expect(await couplesAuxRetours([["pigeon", "male", 2], ["pigeon", "femelle", 1]], [], true)).toEqual([[], ["pigeon"]]);
     });
 
     it("les Éclaireurs ne règlent pas l'allure : sans escorte, l'Expédition va au pas de ses explorateurs", async () => {
