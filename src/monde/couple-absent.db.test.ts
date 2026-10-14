@@ -18,8 +18,8 @@ import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai,
 import { betesSauvagesDesCases } from "./betes-sauvages";
 import { couplesDuTerritoire, reunirLesCouples } from "./couple";
 import { betesDisponibles, blessesParEspece, malesPris } from "./effectif";
-import { rolesAuFoyer } from "./roles";
 import type { Coordonnees } from "./hex";
+import { rolesAuFoyer } from "./roles";
 
 const MINUTE = 60_000;
 const HEURE = 60 * MINUTE;
@@ -70,7 +70,10 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
        on conflict (territoire_id, espece_id, sexe) do update set nombre = effectif.nombre + excluded.nombre`,
       [territoireId, males, femelles, espece],
     );
-  /** Des souris arrivent au Foyer à `le`, comme une Bête apprivoisée au retour d'une Expédition : le Couple se forme s'il le peut. */
+  /**
+   * Des Bêtes de l'Espèce `espece` (des souris d'abord) arrivent au Foyer à `le`, comme une Bête apprivoisée au retour d'une
+   * Expédition : le Couple se forme s'il le peut.
+   */
   const arrivent = async (territoireId: number, le: Date, males: number, femelles: number, espece = "souris") => {
     await rattraper("territoire", territoireId, { pool, jusqua: le });
     await ajouter(territoireId, males, femelles, espece);
