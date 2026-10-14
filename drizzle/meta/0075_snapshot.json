@@ -1,6 +1,6 @@
 {
-  "id": "e0b51d32-eb3a-485b-a299-4882041881c5",
-  "prevId": "5dd8d3e7-5f7b-42b9-9413-c65e07886f2c",
+  "id": "2c53fc66-7f2d-40cb-a4cd-7fc77313fbb1",
+  "prevId": "aa2b1b28-27fc-4640-843b-82b60e6fbc8f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1714,6 +1714,12 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": true
+        },
+        "males": {
+          "name": "males",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1760,6 +1766,10 @@
         "expedition_eclaireur_au_moins_un": {
           "name": "expedition_eclaireur_au_moins_un",
           "value": "\"expedition_eclaireur\".\"nombre\" > 0"
+        },
+        "expedition_eclaireur_males_parmi_eux": {
+          "name": "expedition_eclaireur_males_parmi_eux",
+          "value": "\"expedition_eclaireur\".\"males\" between 0 and \"expedition_eclaireur\".\"nombre\""
         }
       },
       "isRLSEnabled": false
@@ -1799,6 +1809,12 @@
           "primaryKey": false,
           "notNull": true,
           "default": 0
+        },
+        "males": {
+          "name": "males",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1853,6 +1869,10 @@
         "expedition_escorte_blessees_parmi_les_perdues": {
           "name": "expedition_escorte_blessees_parmi_les_perdues",
           "value": "\"expedition_escorte\".\"blessees\" between 0 and \"expedition_escorte\".\"perdues\""
+        },
+        "expedition_escorte_males_parmi_elles": {
+          "name": "expedition_escorte_males_parmi_elles",
+          "value": "\"expedition_escorte\".\"males\" between 0 and \"expedition_escorte\".\"nombre\""
         }
       },
       "isRLSEnabled": false

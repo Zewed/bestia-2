@@ -772,7 +772,10 @@ export const expedition = pgTable(
  * ces Bêtes l'escorte a perdues au combat (src/expeditions/pertes.ts), sorties de l'effectif à cet instant ; `nombre`
  * reste celui du départ, dont se tire la force de l'escorte face aux Bêtes qu'elle rencontre (US-0934). US-0951 :
  * `blessees`, combien des perdues ne sont que des Blessés : elles restent dans l'effectif et rentrent au Foyer avec
- * l'Expédition ; seules les autres, mortes, en sont sorties.
+ * l'Expédition ; seules les autres, mortes, en sont sorties. US-0960 : `males`, combien des Bêtes de l'escorte sont des
+ * mâles, les autres des femelles, que le départ retient (src/expeditions/depart.ts) : leurs mortes et leurs Blessés s'en
+ * tirent, et un Couple se forme dès qu'un mâle et une femelle sont au Foyer (src/monde/couple.ts). Null : une escorte
+ * partie avant US-0960, dont le sexe ne se sait pas.
  */
 export const expeditionEscorte = pgTable(
   "expedition_escorte",
@@ -786,12 +789,14 @@ export const expeditionEscorte = pgTable(
     nombre: integer("nombre").notNull(),
     perdues: integer("perdues").notNull().default(0),
     blessees: integer("blessees").notNull().default(0),
+    males: integer("males"),
   },
   (t) => [
     primaryKey({ columns: [t.expeditionId, t.especeId] }),
     check("expedition_escorte_au_moins_une", sql`${t.nombre} > 0`),
     check("expedition_escorte_perdues_parmi_elles", sql`${t.perdues} between 0 and ${t.nombre}`),
     check("expedition_escorte_blessees_parmi_les_perdues", sql`${t.blessees} between 0 and ${t.perdues}`),
+    check("expedition_escorte_males_parmi_elles", sql`${t.males} between 0 and ${t.nombre}`),
   ],
 );
 
@@ -800,7 +805,8 @@ export const expeditionEscorte = pgTable(
  * à leur Rôle, à côté de l'escorte : une même Bête est l'un ou l'autre. Comme celles de l'escorte, elles restent dans
  * l'effectif et se retranchent des disponibles jusqu'au retour (src/monde/effectif.ts) ; mais elles ne combattent pas,
  * n'ajoutent rien à la force de l'escorte, et rentrent toutes avec les explorateurs, jamais perdues. Elles partent avec
- * l'Expédition.
+ * l'Expédition. `males`, combien sont des mâles, les autres des femelles, que le départ retient comme pour l'escorte
+ * (US-0960) ; null quand le sexe des Bêtes au Foyer ne se savait pas.
  */
 export const expeditionEclaireur = pgTable(
   "expedition_eclaireur",
@@ -812,8 +818,13 @@ export const expeditionEclaireur = pgTable(
       .notNull()
       .references(() => espece.id),
     nombre: integer("nombre").notNull(),
+    males: integer("males"),
   },
-  (t) => [primaryKey({ columns: [t.expeditionId, t.especeId] }), check("expedition_eclaireur_au_moins_un", sql`${t.nombre} > 0`)],
+  (t) => [
+    primaryKey({ columns: [t.expeditionId, t.especeId] }),
+    check("expedition_eclaireur_au_moins_un", sql`${t.nombre} > 0`),
+    check("expedition_eclaireur_males_parmi_eux", sql`${t.males} between 0 and ${t.nombre}`),
+  ],
 );
 
 /**
