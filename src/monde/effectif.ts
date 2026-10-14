@@ -36,9 +36,8 @@ export type EspeceDisponible = {
  * regroupées par Territoire et Espèce). US-0911 : celles des escortes de ses Expéditions en cours, jusqu'à leur retour.
  * US-0916 : rentrées, elles n'en sont plus. US-0956 : sorties, elles ne sont pas au Foyer pour réunir un Couple ;
  * US-0960 : le Couple les compte sexe par sexe (MALES_SORTIS, FEMELLES_SORTIES, dont la somme est celle-ci pour les
- * escortes au sexe retenu). US-0944 : sans
- * celles que l'escorte a perdues au combat, sorties de l'effectif. US-0951 : sauf ses Blessés, restés dans l'effectif, qui
- * rentrent au Foyer avec l'Expédition.
+ * escortes au sexe retenu). US-0944 : sans celles que l'escorte a perdues au combat, sorties de l'effectif. US-0951 : sauf
+ * ses Blessés, restés dans l'effectif, qui rentrent au Foyer avec l'Expédition.
  */
 export const BETES_SORTIES = `select coalesce(sum(s.nombre - s.perdues + s.blessees), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
   where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is null`;
@@ -139,7 +138,7 @@ const EFFECTIF_DE = (sexe?: "male" | "femelle") =>
  * betesDisponibles les compte (blessesPlafonnes).
  */
 export const BLESSES_EN_GUERISON = `select ${blessesPlafonnes({
-  auFoyer: `(${EFFECTIF_DE()} - (${BETES_SORTIES}))`,
+  auFoyer: `greatest(0, ${EFFECTIF_DE()} - (${BETES_SORTIES}))`,
   males: `(${EFFECTIF_DE("male")} - (${MALES_SORTIS}))`,
   femelles: `(${EFFECTIF_DE("femelle")} - (${FEMELLES_SORTIES}))`,
   blessesMales: `(${BLESSES_MALES})`,
@@ -147,7 +146,6 @@ export const BLESSES_EN_GUERISON = `select ${blessesPlafonnes({
   blessesSansSexe: `(${BLESSES_SANS_SEXE})`,
   sansSexeDehors: `(${SORTIES_SANS_SEXE})`,
 })}`;
-
 
 /**
  * US-0904 : les Bêtes que le joueur peut emmener en escorte, Espèce par Espèce, lues à chaque affichage de l'écran

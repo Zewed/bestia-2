@@ -18,6 +18,7 @@ import { mondeDEssai, nomDEssai, poolDeTest, preparerMondeDeTest, suffixeDEssai,
 import { betesSauvagesDesCases } from "./betes-sauvages";
 import { couplesDuTerritoire, reunirLesCouples } from "./couple";
 import { betesDisponibles, blessesParEspece, malesPris } from "./effectif";
+import { rolesAuFoyer } from "./roles";
 import type { Coordonnees } from "./hex";
 
 const MINUTE = 60_000;
@@ -31,8 +32,8 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
   let mondeId: number;
   /** La plus forte des Espèces du jeu : contre elle, toute escorte perd toutes ses Bêtes. */
   let fort: string;
-  /** La vitesse des souris, en km/h : celle des escortes des essais. */
-  let vitesseDesSouris: number;
+  /** La vitesse de chaque Espèce du jeu, en km/h : celle des escortes des essais. */
+  const vitesses = new Map<string, number>();
   const lancement = `couple-absent-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   /** La fin des noms de chef de ce lancement, qu'aucun mot interdit ne refuse (src/test/base.ts). */
   const suffixe = suffixeDEssai();
@@ -62,17 +63,17 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
     );
     return Object.fromEntries(rows.map((r) => [r.sexe, r.nombre]));
   };
-  /** Des souris de plus dans l'effectif du Territoire, `males` mâles et `femelles` femelles. */
-  const ajouter = (territoireId: number, males: number, femelles: number) =>
+  /** Des Bêtes de l'Espèce `espece` (des souris d'abord) de plus dans l'effectif du Territoire, `males` mâles et `femelles` femelles. */
+  const ajouter = (territoireId: number, males: number, femelles: number, espece = "souris") =>
     pool.query(
-      `insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, 'souris', 'male', $2), ($1, 'souris', 'femelle', $3)
+      `insert into effectif (territoire_id, espece_id, sexe, nombre) values ($1, $4, 'male', $2), ($1, $4, 'femelle', $3)
        on conflict (territoire_id, espece_id, sexe) do update set nombre = effectif.nombre + excluded.nombre`,
-      [territoireId, males, femelles],
+      [territoireId, males, femelles, espece],
     );
   /** Des souris arrivent au Foyer à `le`, comme une Bête apprivoisée au retour d'une Expédition : le Couple se forme s'il le peut. */
-  const arrivent = async (territoireId: number, le: Date, males: number, femelles: number) => {
+  const arrivent = async (territoireId: number, le: Date, males: number, femelles: number, espece = "souris") => {
     await rattraper("territoire", territoireId, { pool, jusqua: le });
-    await ajouter(territoireId, males, femelles);
+    await ajouter(territoireId, males, femelles, espece);
     const client = await pool.connect();
     try {
       await client.query("begin");
@@ -83,10 +84,10 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
     }
   };
   /**
-   * Un explorateur part à `instant`, escorté de `nombre` souris, vers une Case libre à deux Cases du Foyer où aucune Bête ne
+   * Un explorateur part à `instant`, escorté de `nombre` Bêtes de l'Espèce `espece` (des souris d'abord), vers une Case libre à deux Cases du Foyer où aucune Bête ne
    * se montre de son départ à son retour : son Expédition, le sexe retenu de son escorte et l'instant de son retour.
    */
-  const partir = async (territoireId: number, instant: Date, nombre: number) => {
+  const partir = async (territoireId: number, instant: Date, nombre: number, espece = "souris") => {
     await rattraper("territoire", territoireId, { pool, jusqua: instant });
     const { rows } = await pool.query<Coordonnees & { id: number }>(
       `select c.id, c.q, c.r from territoire t join case_du_monde f on f.id = t.foyer_case_id
@@ -96,14 +97,14 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
        order by c.q, c.r`,
       [territoireId],
     );
-    const aller = dureeDuTrajetMinutes(2, [{ vitesse: vitesseDesSouris, nombre }]);
+    const aller = dureeDuTrajetMinutes(2, [{ vitesse: vitesses.get(espece)!, nombre }]);
     const sauvages = await betesSauvagesDesCases(pool, rows.map((c) => c.id), instant, apres(instant, (2 * aller + 60 + 1) * MINUTE));
     const calme = rows.find((c) => sauvages.get(c.id)!.length === 0);
     if (!calme) throw new Error("Aucune Case à deux Cases du Foyer où rien ne se montre pendant l'Expédition.");
     const depart = await lancerLExpedition(
       pool,
       territoireId,
-      { destination: { q: calme.q, r: calme.r }, explorateurs: 1, escorte: new Map([["souris", nombre]]), sejourMinutes: 60 },
+      { destination: { q: calme.q, r: calme.r }, explorateurs: 1, escorte: new Map([[espece, nombre]]), sejourMinutes: 60 },
       instant,
     );
     if (!("expeditionId" in depart)) throw new Error(depart.refus);
@@ -128,7 +129,7 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
     await preparerMondeDeTest(pool);
     mondeId = await mondeDEssai(pool, MONDE_D_ESSAI);
     fort = (await pool.query<{ id: string }>("select id from espece order by attaque::numeric * vie desc, id limit 1")).rows[0].id;
-    vitesseDesSouris = (await pool.query<{ vitesse: number }>("select vitesse from espece where id = 'souris'")).rows[0].vitesse;
+    for (const { id, vitesse } of (await pool.query<{ id: string; vitesse: number }>("select id, vitesse from espece")).rows) vitesses.set(id, vitesse);
   });
   afterEach(async () => {
     await pool.query("delete from compte where email = any($1)", [nes.splice(0)]);
@@ -253,6 +254,30 @@ describe.skipIf(!URL_TEST)("le mâle ou la femelle n'est pas au Foyer (US-0960, 
       // Les deux femelles restées au Foyer sont valides : ni Blessées, ni retenues.
       expect(await blessesParEspece(pool, t.territoireId, x.retour)).toEqual(new Map());
       expect((await betesDisponibles(pool, t.territoireId, x.retour)).map((e) => [e.id, e.disponibles, e.blesses])).toEqual([["souris", 2, undefined]]);
+    });
+
+    it("les Bêtes valides que le joueur peut affecter à leur Rôle (US-0837) sont les disponibles de l'escorte : le Blessé parti en Réserve n'en retient aucune", async () => {
+      const t = await naitre();
+      await ajouter(t.territoireId, 2, 0, "poule");
+      const x = await partir(t.territoireId, apres(t.ne, HEURE), 2, "poule");
+      await arrivent(t.territoireId, apres(t.ne, 2 * HEURE), 0, 3, "poule");
+      await combat(t.territoireId, x, apres(t.ne, 3 * HEURE));
+      await rattraper("territoire", t.territoireId, { pool, jusqua: x.retour });
+      expect(await couplesDuTerritoire(pool, t.territoireId)).toEqual([{ especeId: "poule", reuniLe: x.retour }]);
+      expect((await betesDisponibles(pool, t.territoireId, x.retour)).map((e) => [e.id, e.disponibles])).toEqual([["poule", 2]]);
+      expect((await rolesAuFoyer(pool, t.territoireId, x.retour)).get("poule")).toMatchObject({ valides: 2 });
+    });
+
+    it("une escorte plus nombreuse que l'effectif, comme un état réparé à la main : aucune Bête valide au Foyer, jamais un nombre négatif", async () => {
+      const t = await naitre();
+      await ajouter(t.territoireId, 2, 0, "poule");
+      const { rows } = await pool.query<{ id: number }>(
+        `insert into expedition (territoire_id, case_id, part_le, trajet_minutes, sejour_minutes)
+         select $1, c.id, $2, 30, 60 from case_du_monde c where c.monde_id = $3 and c.chef_id is null order by c.id limit 1 returning id`,
+        [t.territoireId, t.ne, mondeId],
+      );
+      await pool.query("insert into expedition_escorte (expedition_id, espece_id, nombre) values ($1, 'poule', 10)", [rows[0].id]);
+      expect((await rolesAuFoyer(pool, t.territoireId, t.ne)).get("poule")).toMatchObject({ valides: 0 });
     });
 
     it("parmi plusieurs Bêtes d'un sexe, le Couple en prend une valide : les Blessés restent au Foyer, à guérir", async () => {
