@@ -4,7 +4,6 @@ import "server-only";
 import type { Pool, PoolClient } from "pg";
 import { betesDisponibles } from "@/monde/effectif";
 import type { Coordonnees } from "@/monde/hex";
-import { bornerLesAffectations } from "@/monde/roles";
 import { type BetesDeLEscorte, dureeDuTrajetMinutes } from "./allure";
 import { destinationDUneCase } from "./destination";
 import { programmerLeRetour } from "./retour";
@@ -129,7 +128,7 @@ async function partir(
     territoireId,
     [...new Set([...betes, ...eclaireuses].map(([especeId]) => especeId))],
   ]);
-  // US-0953 : les Blessés au Foyer à l'instant du départ ne sont pas disponibles.
+  // US-0953 : les Blessés au Foyer à l'instant du départ ne sont pas disponibles ; US-0842 : ni les Bêtes affectées à leur Rôle.
   const proposees = new Map((await betesDisponibles(client, territoireId, instant)).map((e) => [e.id, e]));
   // US-0976 : seule une Espèce Éclaireuse part en Éclaireurs ; une même Bête est l'un ou l'autre.
   if (eclaireuses.some(([especeId]) => proposees.has(especeId) && !proposees.get(especeId)!.eclaireuse)) throw new Refus(ECLAIREUR_SANS_LE_ROLE);
@@ -147,8 +146,5 @@ async function partir(
       lignes.map(([, nombre]) => nombre),
     ]);
   }
-  // US-0837 : l'escorte et les Éclaireurs (US-0976) emmènent d'abord les Bêtes non affectées à leur Rôle au Foyer ; au-delà,
-  // celles qui partent ne le sont plus.
-  await bornerLesAffectations(client, territoireId, instant);
   return expeditionId;
 }

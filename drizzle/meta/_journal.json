@@ -472,10 +472,17 @@
       "breakpoints": true
     },
     {
-      "idx": 72,
+      "idx": 73,
       "version": "7",
-      "when": 1791903685900,
-      "tag": "0072_eclaireurs_de_l_expedition",
+      "when": 1791898149086,
+      "tag": "0073_elevage",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1791970610150,
+      "tag": "0075_eclaireurs_de_l_expedition",
       "breakpoints": true
     }
   ]
