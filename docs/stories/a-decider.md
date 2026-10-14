@@ -2,7 +2,7 @@
 
 Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les tranche au moment d'attaquer la story concernée, pas avant. Une fois décidé, on remplace la mention dans la story par la règle retenue, et on met à jour [CONTEXT.md](../../CONTEXT.md) si un mot du jeu change.
 
-197 points au total.
+195 points au total.
 
 ## [Jalon 0 · Les fondations](00-fondations.md)
 
@@ -80,7 +80,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : un Élevage en cours continue pendant la Famine, ou se suspend.
 - [US-0832](08-les-betes-a-la-maison.md) · Voir des Bêtes affamées retourner à l'état sauvage : les Bêtes parties réapparaissent comme Bêtes sauvages sur la carte, ou disparaissent.
 - [US-0836](08-les-betes-a-la-maison.md) · Partager la Nourriture entre Habitants et Bêtes : quand la Nourriture ne suffit pas pour tous, les Habitants mangent d'abord, les Bêtes d'abord, ou chacun reçoit une part égale.
-- [US-0837](08-les-betes-a-la-maison.md) · Affecter une Bête à son Rôle : les Bêtes d'un Couple en Réserve peuvent être affectées à leur Rôle, ou non.
 - [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : les poules produisent de la Viande, des Végétaux, ou les deux.
 - [US-0838](08-les-betes-a-la-maison.md) · Nourrir le Territoire avec les poules : une poule rapporte plus de Nourriture qu'elle ne coûte d'Entretien.
 
@@ -89,7 +88,6 @@ Tous les « (à décider) » laissés dans les stories, jalon par jalon. On les 
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : la Densité ne change pas les pourcentages de Rareté.
 - [US-0929](09-explorer-et-apprivoiser.md) · La Densité change la fréquence : elle n'est jamais affichée en chiffre ; que le récit en donne une impression, comme « la faune semblait abondante ».
 - [US-0939](09-explorer-et-apprivoiser.md) · Une Bête apprivoisée sans Place libre : quand l'Habitat du Foyer n'a plus de Place libre pour elle, la Bête rejoint quand même le joueur en surnombre, attend une Place, ou repart au sauvage.
-- [US-0955](09-explorer-et-apprivoiser.md) · Soigner plus vite : un Blessé dont on s'occupe guérit plus vite ; le moyen, construction, Poste ou Bête à Rôle.
 - [US-0960](09-explorer-et-apprivoiser.md) · Le mâle ou la femelle n'est pas au Foyer : si l'une est Blessée, le Couple se forme aussitôt et elle guérit en Réserve, ou il attend sa guérison.
 - [US-0961](09-explorer-et-apprivoiser.md) · Prévenir avant de risquer une Bête précieuse : si l'escorte emmène la seule Bête d'un sexe d'une Espèce sans Couple, le récapitulatif le signale ; simple avertissement ou confirmation demandée.
 - [US-0970](09-explorer-et-apprivoiser.md) · Les pigeons gardent les Bêtes en vue : la forme exacte de l'effet, présence prolongée ou Bêtes repérées sur les Cases voisines.

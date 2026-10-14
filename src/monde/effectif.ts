@@ -82,8 +82,8 @@ const SORTIES_SANS_SEXE = `select count(*)::int ${ESCORTES_DEHORS} and s.males i
 /**
  * US-0953 : les Blessés au Foyer de l'Espèce (expression sur `e`, comme BETES_SORTIES) à l'instant du jeu $3 : ceux des
  * Expéditions rentrées, pas encore guéris $2 heures après leur retour, selon la règle même de blessesAuFoyer (gueriLe) ;
- * US-0955 : $4 heures, s'ils ont été soignés à leur retour. US-0960 : mâles et femelles à part, d'après le sexe de leur escorte (MALES_BLESSES) ; ceux d'une escorte sans sexe retenu
- * à part aussi.
+ * US-0955 : $4 heures, s'ils ont été soignés à leur retour. US-0960 : mâles et femelles à part, d'après le sexe de leur
+ * escorte (MALES_BLESSES) ; ceux d'une escorte sans sexe retenu à part aussi.
  */
 const BLESSES_DU_SEXE = (blessees: string) => `select coalesce(sum(${blessees}), 0)::int from expedition_escorte s join expedition x on x.id = s.expedition_id
   where x.territoire_id = e.territoire_id and s.espece_id = e.espece_id and x.rentree_le is not null and ${gueriLe("$2", "$4")} > $3`;
@@ -92,13 +92,28 @@ const BLESSES_FEMELLES = BLESSES_DU_SEXE(`case when s.males is null then 0 else 
 const BLESSES_SANS_SEXE = BLESSES_DU_SEXE("case when s.males is null then s.blessees else 0 end");
 
 /**
- * Les Bêtes au Foyer de chaque Espèce de l'effectif du Territoire $1, à l'instant du jeu $3 ($2 et $4 : les durées de guérison, dureesDeGuerison) :
- * mâles et femelles possédés, au Foyer, et ses Blessés, Espèce par Espèce. US-0960 : les Blessés au Foyer, jamais plus
- * que de Bêtes au Foyer, sexe par sexe quand tous les sexes sont connus : un Blessé parti en Réserve avec le Couple (src/monde/couple.ts)
- * n'en est plus un au Foyer, et le Couple prend d'abord des Bêtes valides.
+ * US-0960 : les Blessés au Foyer d'une Espèce, jamais plus que de Bêtes au Foyer (`auFoyer`), et sexe par sexe quand tous
+ * les sexes se savent (aucune escorte sans sexe dehors, `sansSexeDehors`) : jamais plus de Blessés d'un sexe que de Bêtes de
+ * ce sexe au Foyer (`males`, `femelles`). Un Blessé parti en Réserve avec le Couple (src/monde/couple.ts) n'en est plus un
+ * au Foyer, et le Couple prend d'abord des Bêtes valides. Les arguments sont des expressions SQL.
  */
-const AU_FOYER = `select y.*, least(y.au_foyer, case when y.sorties_sans_sexe > 0 then y.blesses_males + y.blesses_femelles + y.blesses_sans_sexe
-    else least(greatest(y.males_au_foyer, 0), y.blesses_males) + least(greatest(y.femelles_au_foyer, 0), y.blesses_femelles) + y.blesses_sans_sexe end) as blesses
+const blessesPlafonnes = (b: { auFoyer: string; males: string; femelles: string; blessesMales: string; blessesFemelles: string; blessesSansSexe: string; sansSexeDehors: string }) =>
+  `least(${b.auFoyer}, case when ${b.sansSexeDehors} > 0 then ${b.blessesMales} + ${b.blessesFemelles} + ${b.blessesSansSexe}
+    else least(greatest(${b.males}, 0), ${b.blessesMales}) + least(greatest(${b.femelles}, 0), ${b.blessesFemelles}) + ${b.blessesSansSexe} end)`;
+
+/**
+ * Les Bêtes au Foyer de chaque Espèce de l'effectif du Territoire $1, à l'instant du jeu $3 ($2 et $4 : les durées de
+ * guérison, dureesDeGuerison) : mâles et femelles possédés, au Foyer, et ses Blessés (blessesPlafonnes), Espèce par Espèce.
+ */
+const AU_FOYER = `select y.*, ${blessesPlafonnes({
+  auFoyer: "y.au_foyer",
+  males: "y.males_au_foyer",
+  femelles: "y.femelles_au_foyer",
+  blessesMales: "y.blesses_males",
+  blessesFemelles: "y.blesses_femelles",
+  blessesSansSexe: "y.blesses_sans_sexe",
+  sansSexeDehors: "y.sorties_sans_sexe",
+})} as blesses
   from (
     select e.espece_id, sum(e.nombre)::int - (${BETES_SORTIES}) as au_foyer,
       coalesce(sum(e.nombre) filter (where e.sexe = 'male'), 0)::int as males,
@@ -112,6 +127,26 @@ const AU_FOYER = `select y.*, least(y.au_foyer, case when y.sorties_sans_sexe > 
     where e.territoire_id = $1
     group by e.territoire_id, e.espece_id
   ) y`;
+
+/** Les Bêtes de l'Espèce (sur `e`) dans l'effectif, d'un sexe, ou des deux. */
+const EFFECTIF_DE = (sexe?: "male" | "femelle") =>
+  `(select coalesce(sum(f.nombre), 0)::int from effectif f where f.territoire_id = e.territoire_id and f.espece_id = e.espece_id${sexe ? ` and f.sexe = '${sexe}'` : ""})`;
+
+/**
+ * US-0837 : les Blessés au Foyer de l'Espèce (expression sur `e`, une ligne qui porte `territoire_id` et `espece_id`), à
+ * l'instant du jeu $3 ($2 et $4 : les durées de guérison) : les Bêtes valides au Foyer, que le joueur peut affecter à leur
+ * Rôle, s'en déduisent (src/monde/roles.ts), comme les disponibles de l'escorte. US-0960 : plafonnés sexe par sexe, comme
+ * betesDisponibles les compte (blessesPlafonnes).
+ */
+export const BLESSES_EN_GUERISON = `select ${blessesPlafonnes({
+  auFoyer: `(${EFFECTIF_DE()} - (${BETES_SORTIES}))`,
+  males: `(${EFFECTIF_DE("male")} - (${MALES_SORTIS}))`,
+  femelles: `(${EFFECTIF_DE("femelle")} - (${FEMELLES_SORTIES}))`,
+  blessesMales: `(${BLESSES_MALES})`,
+  blessesFemelles: `(${BLESSES_FEMELLES})`,
+  blessesSansSexe: `(${BLESSES_SANS_SEXE})`,
+  sansSexeDehors: `(${SORTIES_SANS_SEXE})`,
+})}`;
 
 
 /**
