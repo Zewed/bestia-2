@@ -222,11 +222,12 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
     expect(await escorte(t, a(4))).toEqual({ disponibles: 2, affectees: 4 });
   });
 
-  it("si le nombre retenu dépassait les valides, la lecture, « + » et « − » partiraient des valides", async () => {
+  it("si le nombre retenu dépassait les valides, la lecture, l'escorte, « + » et « − » partiraient des valides", async () => {
     const t = await naitre();
     await ajouter(t, [["poule", "femelle", 3]]);
     await pool.query("insert into affectation (territoire_id, espece_id, nombre) values ($1, 'poule', 9)", [t]);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 3, valides: 3 } });
+    expect(await escorte(t)).toEqual({ disponibles: 0, affectees: 3 });
     expect(await plus(t, "poule", 1)).toEqual([false]);
     expect(await moins(t, "poule", 1)).toEqual([true]);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 2, valides: 3 } });
@@ -281,6 +282,16 @@ describe.skipIf(!URL_TEST)("affecter une Bête à son Rôle (US-0837, sur base)"
     await faireEntrerDansLEffectif(pool, autre, [{ especeId: "poule", sexe: "femelle" }]);
     expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees: 1, valides: 3 } });
     expect(await lus(autre)).toEqual({ poule: { role: NOURRICIER, affectees: 0, valides: 1 } });
+  });
+
+  it("un départ et des « + » envoyés au même instant ne prennent jamais à eux deux plus de Bêtes qu'il n'y en a (US-0842)", async () => {
+    const t = await naitre();
+    await ajouter(t, [["poule", "femelle", 4]]);
+    const [depart, ...rendus] = await Promise.all([partir(t, 2), ...Array.from({ length: 4 }, () => affecterUneBete(pool, t, "poule", t0))]);
+    // L'un passe avant l'autre, dans un ordre ou dans l'autre : jamais une poule à la fois en escorte et affectée.
+    const [parties, affectees] = ["expeditionId" in depart ? 2 : 0, rendus.filter(Boolean).length];
+    expect(parties + affectees).toBe(4);
+    expect(await lus(t)).toEqual({ poule: { role: NOURRICIER, affectees, valides: 4 - parties } });
   });
 
   it("des « + » envoyés au même instant n'affectent jamais plus de Bêtes qu'il n'y en a de valides", async () => {
