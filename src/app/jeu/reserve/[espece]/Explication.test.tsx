@@ -22,6 +22,9 @@ function fiche(elever = () => {}) {
       <button type="button" onClick={elever}>
         Élever
       </button>
+      <button type="button" disabled>
+        Max
+      </button>
     </main>,
   );
 }
@@ -154,5 +157,14 @@ describe("comprendre une caractéristique de la fiche d'une Espèce (US-0807)", 
     await userEvent.keyboard("{Escape}");
     expect(ouverte("Attaque")).toBe(false);
     expect(document.activeElement).toBe(champ);
+  });
+  it("un toucher sur un bouton grisé, qui ne clique jamais, la ferme au doigt levé comme sur du texte", async () => {
+    fiche();
+    await userEvent.click(nom("Vie"));
+    const grise = screen.getByRole("button", { name: "Max" });
+    fireEvent.pointerDown(grise, { pointerId: 1 });
+    expect(ouverte("Vie")).toBe(true);
+    fireEvent.pointerUp(grise, { pointerId: 1 });
+    expect(ouverte("Vie")).toBe(false);
   });
 });

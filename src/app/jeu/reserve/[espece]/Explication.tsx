@@ -7,6 +7,12 @@ import styles from "./page.module.css";
 /** Ce qu'un toucher peut activer : un lien, un bouton, un champ. Un toucher ailleurs n'active rien. */
 const INTERACTIF = "a, button, input, select, textarea, label, summary, [role='button'], [tabindex]";
 
+/** Si un toucher sur `cible` peut activer quelque chose : un contrôle grisé, qui ne clique jamais, n'active rien. */
+const activable = (cible: Element) => {
+  const controle = cible.closest?.(INTERACTIF);
+  return Boolean(controle && !controle.matches(":disabled"));
+};
+
 /**
  * US-0807 : le clic qui suit le toucher qui vient de fermer une explication ne va nulle part : il est arrêté avant tout le
  * reste (à la capture, sur le document). S'il ne vient pas, comme sur iPhone, le toucher suivant, ou une seconde, lève
@@ -35,10 +41,10 @@ function avalerLeClicQuiSuit() {
  *
  * Le toucher ailleurs ne la ferme jamais pendant le geste : fermée, elle fait remonter les lignes du dessous, et ce qui
  * passerait alors sous le doigt (« Fermer », le bloc « Élever ») recevrait le toucher. Sur un lien ou un bouton (le nom
- * d'une autre caractéristique, « Fermer »), elle se ferme à son clic, qui l'atteint avant que rien ne bouge. Ailleurs (du
- * texte, le fond), au doigt levé, car Safari sur iPhone ne remonte pas jusqu'au document le clic d'un tel toucher ; et le
- * clic qui suit, s'il vient, n'active rien : il tomberait sur ce qui a glissé sous le doigt. Un défilement au doigt, que le
- * navigateur annule comme toucher (pointercancel), ne la ferme pas.
+ * d'une autre caractéristique, « Fermer »), elle se ferme à son clic, qui l'atteint avant que rien ne bouge. Ailleurs
+ * (du texte, le fond, un bouton grisé), au doigt levé, car Safari sur iPhone ne remonte pas jusqu'au document le clic
+ * d'un tel toucher ; et le clic qui suit, s'il vient, n'active rien : il tomberait sur ce qui a glissé sous le doigt.
+ * Un défilement au doigt, que le navigateur annule comme toucher (pointercancel), ne la ferme pas.
  */
 function useExplication() {
   const [ouverte, setOuverte] = useState(false);
@@ -52,7 +58,7 @@ function useExplication() {
     let toucher: { id: number | undefined } | null = null;
     const appui = (evenement: PointerEvent) => {
       const cible = evenement.target as Element;
-      toucher = dedans(cible) || cible.closest?.(INTERACTIF) ? null : { id: evenement.pointerId };
+      toucher = dedans(cible) || activable(cible) ? null : { id: evenement.pointerId };
     };
     const annulation = (evenement: PointerEvent) => {
       if (toucher?.id === evenement.pointerId) toucher = null;
