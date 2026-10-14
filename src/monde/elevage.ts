@@ -5,7 +5,7 @@
 // Espèce sans Couple. US-0843 : et l'éleveur libre que demande son lancement. Côté serveur uniquement.
 import "server-only";
 import type { Pool, PoolClient } from "pg";
-import { LIBRE_EN_SQL } from "./etat-habitant";
+import { ELEVEUR_LIBRE_EN_SQL } from "./etat-habitant";
 
 /**
  * US-0957 : vrai quand l'Élevage de l'Espèce est acquis au Territoire, dès son Couple réuni et à jamais (expression sur
@@ -44,7 +44,7 @@ export const ELEVAGE_SANS_ELEVEUR = "Aucun éleveur libre.";
 export async function eleveurLibre(base: Pool | PoolClient, territoireId: number): Promise<{ id: number; prenom: string } | null> {
   const { rows } = await base.query<{ id: number; prenom: string }>(
     `select id, prenom from habitant
-     where territoire_id = $1 and metier = 'eleveur' and ${LIBRE_EN_SQL}
+     where territoire_id = $1 and ${ELEVEUR_LIBRE_EN_SQL}
      order by prenom, id limit 1`,
     [territoireId],
   );

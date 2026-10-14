@@ -4,7 +4,7 @@ import type { Pool, PoolClient } from "pg";
 import { coutDUneBeteElevee, dureeDUneBeteEleveeMinutes, nourritureQuiPaie } from "./cout-d-elevage";
 import type { Regime } from "./effectif";
 import { ELEVAGE_SANS_COUPLE, ELEVAGE_SANS_ELEVEUR, elevageAcquis } from "./elevage";
-import { LIBRE_EN_SQL } from "./etat-habitant";
+import { ELEVEUR_LIBRE_EN_SQL } from "./etat-habitant";
 
 /** US-0815 : le refus d'un Élevage d'une Espèce qui a déjà le sien en cours : une Espèce n'a qu'un éleveur à la fois (US-0844). */
 export const ELEVAGE_DEJA_EN_COURS = "Un Élevage de cette Espèce est déjà en cours.";
@@ -58,8 +58,8 @@ async function lancer(client: PoolClient, territoireId: number, especeId: string
   // L'éleveur libre, pris et tenu d'une seule requête : un changement de Métier envoyé au même instant attend, puis relit.
   const { rows: pris } = await client.query<{ id: number; prenom: string }>(
     `update habitant set espece_elevee = $2
-     where id = (select id from habitant where territoire_id = $1 and metier = 'eleveur' and ${LIBRE_EN_SQL} order by prenom, id limit 1 for update)
-       and metier = 'eleveur' and ${LIBRE_EN_SQL}
+     where id = (select id from habitant where territoire_id = $1 and ${ELEVEUR_LIBRE_EN_SQL} order by prenom, id limit 1 for update)
+       and ${ELEVEUR_LIBRE_EN_SQL}
      returning id, prenom`,
     [territoireId, especeId],
   );
